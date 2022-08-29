@@ -25,10 +25,10 @@ class Clone:
         Repo.clone_from(self.git_url, str(self.local_path))
         os.chdir(str(self.local_path))
         try:
-            REVIEW_MANAGER = colrev.review_manager.ReviewManager(
+            review_manager = colrev.review_manager.ReviewManager(
                 path_str=str(self.local_path)
             )
-            REVIEW_MANAGER.check_repository_setup()
+            review_manager.check_repository_setup()
         except colrev_exceptions.RepoSetupError:
 
             print("Not a CoLRev repository.")
@@ -37,8 +37,8 @@ class Clone:
         colrev.environment.EnvironmentManager.register_repo(
             path_to_register=self.local_path
         )
-        LOCAL_INDEX = colrev.environment.LocalIndex()
-        LOCAL_INDEX.index_colrev_project(repo_source_path=str(self.local_path))
+        local_index = colrev.environment.LocalIndex()
+        local_index.index_colrev_project(repo_source_path=str(self.local_path))
         return
 
 

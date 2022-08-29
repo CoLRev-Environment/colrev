@@ -149,9 +149,9 @@ class Record:
     def update_by_record(self, *, UPDATE):
         self.data = UPDATE.copy_prep_rec().get_data()
 
-    def get_diff(self, *, OTHER_RECORD) -> list:
+    def get_diff(self, *, other_record) -> list:
 
-        diff = list(dictdiffer.diff(self.get_data(), OTHER_RECORD.get_data()))
+        diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
         return diff
 
     def format_bib_style(self) -> str:
@@ -172,21 +172,21 @@ class Record:
         return bib_formatted
 
     def get_data(self, *, stringify=False) -> dict:
-        def save_field_dict(*, input_dict: dict, key: str) -> list:
+        def save_field_dict(*, input_dict: dict, input_key: str) -> list:
             list_to_return = []
-            if "colrev_masterdata_provenance" == key:
-                for k, v in input_dict.items():
+            if "colrev_masterdata_provenance" == input_key:
+                for key, value in input_dict.items():
                     formated_node = ",".join(
-                        sorted(e for e in v["note"].split(",") if "" != e)
+                        sorted(e for e in value["note"].split(",") if "" != e)
                     )
-                    list_to_return.append(f"{k}:{v['source']};{formated_node};")
+                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
 
-            elif "colrev_data_provenance" == key:
-                for k, v in input_dict.items():
-                    list_to_return.append(f"{k}:{v['source']};{v['note']};")
+            elif "colrev_data_provenance" == input_key:
+                for key, value in input_dict.items():
+                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
 
             else:
-                print(f"error in to_string of dict_field: {key}")
+                print(f"error in to_string of dict_field: {input_key}")
 
             return list_to_return
 
@@ -202,7 +202,7 @@ class Record:
 
             data_copy = deepcopy(self.data)
 
-            # TODO : maybe add to ReviewDataset.list_fields_keys?
+            # TODO : maybe add to self.list_fields_keys?
             if ";" in data_copy.get("colrev_origin", ""):
                 data_copy["colrev_origin"] = ";".join(
                     sorted(list(set(data_copy["colrev_origin"].split(";"))))
@@ -228,7 +228,7 @@ class Record:
                 if key in data_copy:
                     if isinstance(data_copy[key], dict):
                         data_copy[key] = save_field_dict(
-                            input_dict=data_copy[key], key=key
+                            input_dict=data_copy[key], input_key=key
                         )
                     if isinstance(data_copy[key], list):
                         data_copy[key] = list_to_str(val=data_copy[key])
@@ -347,9 +347,9 @@ class Record:
 
         self.remove_field(key=key)
 
-    def change_ENTRYTYPE(self, *, NEW_ENTRYTYPE):
+    def change_entrytype(self, *, new_entrytype):
 
-        self.data["ENTRYTYPE"] = NEW_ENTRYTYPE
+        self.data["ENTRYTYPE"] = new_entrytype
 
         # TODO : reapply field requirements
 
@@ -385,9 +385,9 @@ class Record:
             if isinstance(self.data["colrev_id"], str):
                 print(f'Problem: colrev_id is str not list: {self.data["colrev_id"]}')
                 self.data["colrev_id"] = self.data["colrev_id"].split(";")
-        for r in records:
+        for record in records:
             try:
-                colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
+                colrev_id = self.create_colrev_id(alsoKnownAsRecord=record)
                 if "colrev_id" not in self.data:
                     self.data["colrev_id"] = [colrev_id]
                 elif colrev_id not in self.data["colrev_id"]:
@@ -530,7 +530,7 @@ class Record:
             return True
         return False
 
-    def merge(self, *, MERGING_RECORD, default_source: str) -> None:
+    def merge(self, *, merging_record, default_source: str) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
 
@@ -538,27 +538,27 @@ class Record:
         Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
-        if "colrev_origin" in MERGING_RECORD.data:
-            origins = self.data["colrev_origin"].split(";") + MERGING_RECORD.data[
+        if "colrev_origin" in merging_record.data:
+            origins = self.data["colrev_origin"].split(";") + merging_record.data[
                 "colrev_origin"
             ].split(";")
             self.data["colrev_origin"] = ";".join(list(set(origins)))
 
-        if not self.masterdata_is_curated() and MERGING_RECORD.masterdata_is_curated():
-            self.data["colrev_masterdata_provenance"] = MERGING_RECORD.data[
+        if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
+            self.data["colrev_masterdata_provenance"] = merging_record.data[
                 "colrev_masterdata_provenance"
             ]
             # Note : remove all masterdata fields
             # because the curated record may have fewer masterdata fields
-            # and we iterate over the curated record (MERGING_RECORD) in the next step
+            # and we iterate over the curated record (merging_record) in the next step
             for k in list(self.data.keys()):
                 if k in Record.identifying_field_keys and k != "pages":
                     del self.data[k]
 
         # TODO : TBD: merge colrev_ids?
         # TODO : provenance (especially not_missing in provenance but not in keys)
-        for key in list(MERGING_RECORD.data.keys()):
-            val = MERGING_RECORD.data.get(key, "")
+        for key in list(merging_record.data.keys()):
+            val = merging_record.data.get(key, "")
             if "" == val:
                 continue
             if not val:
@@ -576,7 +576,7 @@ class Record:
             ]:
                 continue
 
-            source, note = MERGING_RECORD.get_field_provenance(
+            source, note = merging_record.get_field_provenance(
                 key=key, default_source=default_source
             )
 
@@ -585,21 +585,21 @@ class Record:
             # Part 1: identifying fields
             if key in Record.identifying_field_keys:
 
-                # Always update from curated MERGING_RECORDs
-                if MERGING_RECORD.masterdata_is_curated():
-                    self.data[key] = MERGING_RECORD.data[key]
+                # Always update from curated merging_records
+                if merging_record.masterdata_is_curated():
+                    self.data[key] = merging_record.data[key]
 
                 # Do not change if MERGING_RECORD is not curated
                 elif (
                     self.masterdata_is_curated()
-                    and not MERGING_RECORD.masterdata_is_curated()
+                    and not merging_record.masterdata_is_curated()
                 ):
                     continue
 
                 # Fuse best fields if none is curated
                 else:
                     self.fuse_best_field(
-                        MERGING_RECORD=MERGING_RECORD,
+                        merging_record=merging_record,
                         key=key,
                         val=val,
                         source=source,
@@ -616,30 +616,30 @@ class Record:
                 else:
                     self.update_field(key=key, value=str(val), source=source, note=note)
 
-    def fuse_best_field(self, *, MERGING_RECORD, key, val, source, note) -> None:
+    def fuse_best_field(self, *, merging_record, key, val, source, note) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
-        def select_best_author(RECORD: Record, MERGING_RECORD: Record) -> str:
+        def select_best_author(record: Record, merging_record: Record) -> str:
             # pylint: disable=too-many-return-statements
-            if "colrev_masterdata_provenance" not in RECORD.data:
-                RECORD.data["colrev_masterdata_provenance"] = {}
-            record_a_prov = RECORD.data["colrev_masterdata_provenance"]
+            if "colrev_masterdata_provenance" not in record.data:
+                record.data["colrev_masterdata_provenance"] = {}
+            record_a_prov = record.data["colrev_masterdata_provenance"]
 
-            if "colrev_masterdata_provenance" not in MERGING_RECORD.data:
-                MERGING_RECORD.data["colrev_masterdata_provenance"] = {}
-            merging_record_a_prov = MERGING_RECORD.data["colrev_masterdata_provenance"]
+            if "colrev_masterdata_provenance" not in merging_record.data:
+                merging_record.data["colrev_masterdata_provenance"] = {}
+            merging_record_a_prov = merging_record.data["colrev_masterdata_provenance"]
 
             if "author" in record_a_prov and "author" not in merging_record_a_prov:
                 # Prefer non-defect version
                 if "quality_defect" in record_a_prov["author"].get("note", ""):
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
                 # Prefer complete version
                 if "incomplete" in record_a_prov["author"].get("note", ""):
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
             elif "author" in record_a_prov and "author" in merging_record_a_prov:
                 # Prefer non-defect version
                 if "quality_defect" in record_a_prov["author"].get(
@@ -647,7 +647,7 @@ class Record:
                 ) and "quality_defect" not in merging_record_a_prov["author"].get(
                     "note", ""
                 ):
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
 
                 # Prefer complete version
                 if "incomplete" in record_a_prov["author"].get(
@@ -655,20 +655,20 @@ class Record:
                 ) and "incomplete" not in merging_record_a_prov["author"].get(
                     "note", ""
                 ):
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
 
             if (
-                len(RECORD.data["author"]) > 0
-                and len(MERGING_RECORD.data["author"]) > 0
+                len(record.data["author"]) > 0
+                and len(merging_record.data["author"]) > 0
             ):
-                default_mostly_upper = percent_upper_chars(RECORD.data["author"]) > 0.8
+                default_mostly_upper = percent_upper_chars(record.data["author"]) > 0.8
                 candidate_mostly_upper = (
-                    percent_upper_chars(MERGING_RECORD.data["author"]) > 0.8
+                    percent_upper_chars(merging_record.data["author"]) > 0.8
                 )
 
                 # Prefer title case (not all-caps)
                 if default_mostly_upper and not candidate_mostly_upper:
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
 
             # Prefer sources
             if "author" in merging_record_a_prov:
@@ -676,21 +676,21 @@ class Record:
                     x in merging_record_a_prov["author"]["source"]
                     for x in self.preferred_sources
                 ):
-                    return MERGING_RECORD.data["author"]
+                    return merging_record.data["author"]
 
-            # self.REVIEW_MANAGER.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"best_author({default}, \n"
             #     f"                                      {candidate}) = \n"
             #     f"                                      {best_author}"
             # )
-            return RECORD.data["author"]
+            return record.data["author"]
 
         def select_best_pages(*, default: str, candidate: str) -> str:
             best_pages = default
             if "--" in candidate and "--" not in default:
                 best_pages = candidate
 
-            # self.REVIEW_MANAGER.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"best_pages({default}, {candidate}) = {best_pages}"
             # )
 
@@ -708,7 +708,7 @@ class Record:
                 if default_upper > candidate_upper:
                     best_title = candidate
 
-            # self.REVIEW_MANAGER.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"best_title({default},\n"
             #     f"                                      {candidate}) = \n"
             #     f"                                      {best_title}"
@@ -731,7 +731,7 @@ class Record:
             if default_upper > candidate_upper:
                 best_journal = candidate
 
-            # self.REVIEW_MANAGER.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"best_journal({default}, \n"
             #     f"                                      {candidate}) = \n"
             #     f"                                      {best_journal}"
@@ -741,7 +741,7 @@ class Record:
 
         if "author" == key:
             if "author" in self.data:
-                best_author = select_best_author(self, MERGING_RECORD)
+                best_author = select_best_author(self, merging_record)
                 if self.data["author"] != best_author:
                     self.update_field(key="author", value=best_author, source=source)
             else:
@@ -750,7 +750,7 @@ class Record:
         elif "pages" == key:
             if "pages" in self.data:
                 best_pages = select_best_pages(
-                    default=self.data["pages"], candidate=MERGING_RECORD.data["pages"]
+                    default=self.data["pages"], candidate=merging_record.data["pages"]
                 )
                 if self.data["pages"] != best_pages:
                     self.update_field(key="pages", value=best_pages, source=source)
@@ -761,7 +761,7 @@ class Record:
         elif "title" == key:
             if "title" in self.data:
                 best_title = select_best_title(
-                    default=self.data["title"], candidate=MERGING_RECORD.data["title"]
+                    default=self.data["title"], candidate=merging_record.data["title"]
                 )
                 self.update_field(key="title", value=best_title, source=source)
 
@@ -772,7 +772,7 @@ class Record:
             if "journal" in self.data:
                 best_journal = select_best_journal(
                     default=self.data["journal"],
-                    candidate=MERGING_RECORD.data["journal"],
+                    candidate=merging_record.data["journal"],
                 )
                 self.update_field(key="journal", value=best_journal, source=source)
             else:
@@ -782,7 +782,7 @@ class Record:
             if "booktitle" in self.data:
                 best_booktitle = select_best_journal(
                     default=self.data["booktitle"],
-                    candidate=MERGING_RECORD.data["booktitle"],
+                    candidate=merging_record.data["booktitle"],
                 )
                 # TBD: custom select_best_booktitle?
                 self.update_field(key="booktitle", value=best_booktitle, source=source)
@@ -793,31 +793,31 @@ class Record:
         elif "file" == key:
             if "file" in self.data:
                 self.data["file"] = (
-                    self.data["file"] + ";" + MERGING_RECORD.data.get("file", "")
+                    self.data["file"] + ";" + merging_record.data.get("file", "")
                 )
             else:
-                self.data["file"] = MERGING_RECORD.data["file"]
+                self.data["file"] = merging_record.data["file"]
         elif "UNKNOWN" == self.data.get(
             key, ""
-        ) and "UNKNOWN" != MERGING_RECORD.data.get(key, ""):
-            self.data[key] = MERGING_RECORD.data[key]
-        elif "UNKNOWN" == MERGING_RECORD.data.get(key, "UNKNOWN"):
+        ) and "UNKNOWN" != merging_record.data.get(key, ""):
+            self.data[key] = merging_record.data[key]
+        elif "UNKNOWN" == merging_record.data.get(key, "UNKNOWN"):
             pass
         else:
             try:
                 if key in self.identifying_field_keys:
-                    source = MERGING_RECORD.data["colrev_masterdata_provenance"][key][
+                    source = merging_record.data["colrev_masterdata_provenance"][key][
                         "source"
                     ]
                 else:
-                    source = MERGING_RECORD.data["colrev_data_provenance"][key][
+                    source = merging_record.data["colrev_data_provenance"][key][
                         "source"
                     ]
             except Exception:
                 # print(e)
                 pass
             self.update_field(
-                key=key, value=str(MERGING_RECORD.data[key]), source=source, note=note
+                key=key, value=str(merging_record.data[key]), source=source, note=note
             )
             # self.update_field(key=key, value=str(val), source=source, note=note)
 
@@ -1403,10 +1403,10 @@ class Record:
             # Note : pages not needed.
             # pages = record.get("pages", "")
             # srep = robust_append(srep, pages)
-        except KeyError as e:
-            if "ENTRYTYPE" in str(e):
+        except KeyError as exc:
+            if "ENTRYTYPE" in str(exc):
                 print(f"Missing ENTRYTYPE in {record['ID']}")
-            raise colrev_exceptions.NotEnoughDataToIdentifyException(str(e))
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(str(exc))
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 
@@ -1430,20 +1430,20 @@ class Record:
         # TODO : warn/remove from data extraction/synthesis?
 
         to_drop = []
-        for k, v in self.data.items():
-            if "UNKNOWN" == v:
-                to_drop.append(k)
-        for k in to_drop:
-            self.remove_field(key=k)
+        for key, value in self.data.items():
+            if "UNKNOWN" == value:
+                to_drop.append(key)
+        for key in to_drop:
+            self.remove_field(key=key)
 
     def extract_text_by_page(self, *, pages: list = None, project_path) -> str:
 
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
-        with open(pdf_path, "rb") as fh:
+        with open(pdf_path, "rb") as pdf_file:
             try:
                 for page in PDFPage.get_pages(
-                    fh,
+                    pdf_file,
                     pagenos=pages,  # note: maybe skip potential cover pages?
                     caching=True,
                     check_extractable=True,
@@ -1486,14 +1486,14 @@ class Record:
             #     f'{record["file"]}'.ljust(PAD, " ")
             #     + "PDF reader error: check whether is a pdf"
             # )
-            # self.REVIEW_MANAGER.report_logger.error(msg)
-            # self.REVIEW_MANAGER.logger.error(msg)
+            # self.review_manager.report_logger.error(msg)
+            # self.review_manager.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         except PDFTextExtractionNotAllowed:
             # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
-            # self.REVIEW_MANAGER.report_logger.error(msg)
-            # self.REVIEW_MANAGER.logger.error(msg)
+            # self.review_manager.report_logger.error(msg)
+            # self.review_manager.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
@@ -1502,18 +1502,18 @@ class Record:
     ) -> None:
 
         pdf_path = project_path / Path(self.data["file"])
-        pdfReader = PdfFileReader(pdf_path, strict=False)
+        pdf_reader = PdfFileReader(pdf_path, strict=False)
         writer = PdfFileWriter()
-        for i in range(0, pdfReader.getNumPages()):
+        for i in range(0, pdf_reader.getNumPages()):
             if i in pages:
                 continue
-            writer.addPage(pdfReader.getPage(i))
+            writer.addPage(pdf_reader.getPage(i))
         with open(pdf_path, "wb") as outfile:
             writer.write(outfile)
 
         if save_to_path:
             writer_cp = PdfFileWriter()
-            writer_cp.addPage(pdfReader.getPage(0))
+            writer_cp.addPage(pdf_reader.getPage(0))
             filepath = Path(pdf_path)
             with open(save_to_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)
@@ -1547,8 +1547,8 @@ class Record:
                 source_identifier_string = source_identifier.replace(
                     marker_string, marker_replacement
                 )
-            except KeyError as e:
-                print(e)
+            except KeyError as exc:
+                print(exc)
 
         for key in self.data.keys():
             if key in Record.identifying_field_keys:
@@ -1615,24 +1615,24 @@ class Record:
                         key=defect_field, note="quality_defect"
                     )
 
-    def pdf_get_man(self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40) -> None:
+    def pdf_get_man(self, *, review_manager, filepath: Path, PAD: int = 40) -> None:
 
         if filepath is not None:
             self.set_status(target_state=RecordState.pdf_imported)
             self.data.update(file=str(filepath))
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
-            REVIEW_MANAGER.logger.info(
+            review_manager.logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
         else:
-            if REVIEW_MANAGER.settings.pdf_get.pdf_required_for_screen_and_synthesis:
+            if review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
                 self.set_status(target_state=RecordState.pdf_not_available)
-                REVIEW_MANAGER.report_logger.info(
+                review_manager.report_logger.info(
                     f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
                 )
-                REVIEW_MANAGER.logger.info(
+                review_manager.logger.info(
                     f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
                 )
             else:
@@ -1642,29 +1642,29 @@ class Record:
                     key="file", source="pdf-get-man", note="not_available"
                 )
 
-                REVIEW_MANAGER.report_logger.info(
+                review_manager.report_logger.info(
                     f" {self.data['ID']}".ljust(PAD, " ")
                     + "recorded as not_available (and moved to screen)"
                 )
-                REVIEW_MANAGER.logger.info(
+                review_manager.logger.info(
                     f" {self.data['ID']}".ljust(PAD, " ")
                     + "recorded as not_available (and moved to screen)"
                 )
 
-        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
-        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        review_manager.dataset.add_record_changes()
 
-    def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
+    def pdf_man_prep(self, *, review_manager) -> None:
 
         self.set_status(target_state=RecordState.pdf_prepared)
         self.reset_pdf_provenance_notes()
 
-        pdf_path = Path(REVIEW_MANAGER.path / Path(self.data["file"]))
+        pdf_path = Path(review_manager.path / Path(self.data["file"]))
         self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
 
-        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
-        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
+        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        review_manager.dataset.add_changes(
+            path=str(review_manager.paths["RECORDS_FILE_RELATIVE"])
         )
 
     def get_toc_key(self) -> str:
@@ -1705,8 +1705,8 @@ class Record:
     @classmethod
     def print_diff_pair(cls, *, record_pair, keys):
         def print_diff(change: typing.Tuple) -> str:
-            d = difflib.Differ()
-            letters = list(d.compare(change[1], change[0]))
+            diff = difflib.Differ()
+            letters = list(diff.compare(change[1], change[0]))
             for i, letter in enumerate(letters):
                 if letter.startswith("  "):
                     letters[i] = letters[i][-1]
@@ -1809,14 +1809,14 @@ class PrepRecord(Record):
     def get_retrieval_similarity(
         cls,
         *,
-        RECORD_ORIGINAL: Record,
-        RETRIEVED_RECORD_ORIGINAL: Record,
+        record_original: Record,
+        retrieved_record_original: Record,
         same_record_type_required: bool = False,
     ) -> float:
-        def format_authors_string_for_comparison(REC_IN):
-            if "author" not in REC_IN.data:
+        def format_authors_string_for_comparison(rec_in):
+            if "author" not in rec_in.data:
                 return
-            authors = REC_IN.data["author"]
+            authors = rec_in.data["author"]
             authors = str(authors).lower()
             authors_string = ""
             authors = Record.remove_accents(input_str=authors)
@@ -1841,66 +1841,66 @@ class PrepRecord(Record):
                 else:
                     authors_string = authors_string + author + " "
             authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-            REC_IN.data["author"] = authors_string
+            rec_in.data["author"] = authors_string
             return
 
         if same_record_type_required:
-            if RECORD_ORIGINAL.data.get(
+            if record_original.data.get(
                 "ENTRYTYPE", "a"
-            ) != RETRIEVED_RECORD_ORIGINAL.data.get("ENTRYTYPE", "b"):
+            ) != retrieved_record_original.data.get("ENTRYTYPE", "b"):
                 return 0.0
 
-        RECORD = RECORD_ORIGINAL.copy_prep_rec()
-        RETRIEVED_RECORD = RETRIEVED_RECORD_ORIGINAL.copy_prep_rec()
+        record = record_original.copy_prep_rec()
+        retrieved_record = retrieved_record_original.copy_prep_rec()
 
-        if RECORD.container_is_abbreviated():
-            min_len = RECORD.get_abbrev_container_min_len()
-            RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
-            RECORD.abbreviate_container(min_len=min_len)
-        if RETRIEVED_RECORD.container_is_abbreviated():
-            min_len = RETRIEVED_RECORD.get_abbrev_container_min_len()
-            RECORD.abbreviate_container(min_len=min_len)
-            RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
+        if record.container_is_abbreviated():
+            min_len = record.get_abbrev_container_min_len()
+            retrieved_record.abbreviate_container(min_len=min_len)
+            record.abbreviate_container(min_len=min_len)
+        if retrieved_record.container_is_abbreviated():
+            min_len = retrieved_record.get_abbrev_container_min_len()
+            record.abbreviate_container(min_len=min_len)
+            retrieved_record.abbreviate_container(min_len=min_len)
 
-        if "title" in RECORD.data:
-            RECORD.data["title"] = RECORD.data["title"][:90]
-        if "title" in RETRIEVED_RECORD.data:
-            RETRIEVED_RECORD.data["title"] = RETRIEVED_RECORD.data["title"][:90]
+        if "title" in record.data:
+            record.data["title"] = record.data["title"][:90]
+        if "title" in retrieved_record.data:
+            retrieved_record.data["title"] = retrieved_record.data["title"][:90]
 
-        if "author" in RECORD.data:
-            format_authors_string_for_comparison(RECORD)
-            RECORD.data["author"] = RECORD.data["author"][:45]
-        if "author" in RETRIEVED_RECORD.data:
-            format_authors_string_for_comparison(RETRIEVED_RECORD)
-            RETRIEVED_RECORD.data["author"] = RETRIEVED_RECORD.data["author"][:45]
-        if not ("volume" in RECORD.data and "volume" in RETRIEVED_RECORD.data):
-            RECORD.data["volume"] = "nan"
-            RETRIEVED_RECORD.data["volume"] = "nan"
-        if not ("number" in RECORD.data and "number" in RETRIEVED_RECORD.data):
-            RECORD.data["number"] = "nan"
-            RETRIEVED_RECORD.data["number"] = "nan"
-        if not ("pages" in RECORD.data and "pages" in RETRIEVED_RECORD.data):
-            RECORD.data["pages"] = "nan"
-            RETRIEVED_RECORD.data["pages"] = "nan"
+        if "author" in record.data:
+            format_authors_string_for_comparison(record)
+            record.data["author"] = record.data["author"][:45]
+        if "author" in retrieved_record.data:
+            format_authors_string_for_comparison(retrieved_record)
+            retrieved_record.data["author"] = retrieved_record.data["author"][:45]
+        if not ("volume" in record.data and "volume" in retrieved_record.data):
+            record.data["volume"] = "nan"
+            retrieved_record.data["volume"] = "nan"
+        if not ("number" in record.data and "number" in retrieved_record.data):
+            record.data["number"] = "nan"
+            retrieved_record.data["number"] = "nan"
+        if not ("pages" in record.data and "pages" in retrieved_record.data):
+            record.data["pages"] = "nan"
+            retrieved_record.data["pages"] = "nan"
         # Sometimes, the number of pages is provided (not the range)
         elif not (
-            "--" in RECORD.data["pages"] and "--" in RETRIEVED_RECORD.data["pages"]
+            "--" in record.data["pages"] and "--" in retrieved_record.data["pages"]
         ):
-            RECORD.data["pages"] = "nan"
-            RETRIEVED_RECORD.data["pages"] = "nan"
+            record.data["pages"] = "nan"
+            retrieved_record.data["pages"] = "nan"
 
-        if "year" in RECORD.data and "year" in RETRIEVED_RECORD.data:
-            if "forthcoming" == RECORD.data["year"]:
-                RECORD.data["year"] = RETRIEVED_RECORD.data["year"]
-            if "forthcoming" == RETRIEVED_RECORD.data["year"]:
-                RETRIEVED_RECORD.data["year"] = RECORD.data["year"]
+        if "year" in record.data and "year" in retrieved_record.data:
+            if "forthcoming" == record.data["year"]:
+                record.data["year"] = retrieved_record.data["year"]
+            if "forthcoming" == retrieved_record.data["year"]:
+                retrieved_record.data["year"] = record.data["year"]
 
-        if "editorial" in RECORD.data.get("title", "NA").lower():
-            if not all(x in RECORD.data for x in ["volume", "number"]):
+        if "editorial" in record.data.get("title", "NA").lower():
+            if not all(x in record.data for x in ["volume", "number"]):
                 return 0
 
         similarity = Record.get_record_similarity(
-            RECORD_A=RECORD, RECORD_B=RETRIEVED_RECORD
+            RECORD_A=record, RECORD_B=retrieved_record
         )
 
         return similarity
@@ -2026,7 +2026,7 @@ class PrepRecord(Record):
             RecordState.md_imported,
         ]
 
-    def update_metadata_status(self, *, REVIEW_MANAGER):
+    def update_metadata_status(self, *, review_manager):
 
         self.check_potential_retracts()
 
@@ -2036,15 +2036,15 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
             return
 
-        REVIEW_MANAGER.logger.debug(
+        review_manager.logger.debug(
             f'is_incomplete({self.data["ID"]}): {not self.masterdata_is_complete()}'
         )
 
-        REVIEW_MANAGER.logger.debug(
+        review_manager.logger.debug(
             f'has_inconsistent_fields({self.data["ID"]}): '
             f"{self.has_inconsistent_fields()}"
         )
-        REVIEW_MANAGER.logger.debug(
+        review_manager.logger.debug(
             f'has_incomplete_fields({self.data["ID"]}): '
             f"{self.has_incomplete_fields()}"
         )
@@ -2060,7 +2060,7 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
     def update_masterdata_provenance(
-        self, *, UNPREPARED_RECORD, REVIEW_MANAGER
+        self, *, unprepared_record, review_manager
     ) -> None:
 
         if not self.masterdata_is_curated():
@@ -2136,10 +2136,10 @@ class PrepRecord(Record):
                 self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
         change = 1 - Record.get_record_similarity(
-            RECORD_A=self, RECORD_B=UNPREPARED_RECORD
+            RECORD_A=self, RECORD_B=unprepared_record
         )
         if change > 0.1:
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
             )
 
@@ -2176,29 +2176,29 @@ class PrescreenRecord(Record):
         return ret_str
 
     def prescreen(
-        self, *, REVIEW_MANAGER, prescreen_inclusion: bool, PAD: int = 40
+        self, *, review_manager, prescreen_inclusion: bool, PAD: int = 40
     ) -> None:
 
         if prescreen_inclusion:
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
-            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+            review_manager.dataset.replace_field(
                 IDs=[self.data["ID"]],
                 key="colrev_status",
                 val_str=str(RecordState.rev_prescreen_included),
             )
         else:
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
-            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+            review_manager.dataset.replace_field(
                 IDs=[self.data["ID"]],
                 key="colrev_status",
                 val_str=str(RecordState.rev_prescreen_excluded),
             )
 
-        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        review_manager.dataset.add_record_changes()
 
 
 class ScreenRecord(PrescreenRecord):
@@ -2208,7 +2208,7 @@ class ScreenRecord(PrescreenRecord):
     def screen(
         self,
         *,
-        REVIEW_MANAGER,
+        review_manager,
         screen_inclusion: bool,
         screening_criteria: str,
         PAD: int = 40,
@@ -2221,20 +2221,22 @@ class ScreenRecord(PrescreenRecord):
         if screen_inclusion:
             self.set_status(target_state=RecordState.rev_included)
 
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Included in screen"
             )
         else:
             self.set_status(target_state=RecordState.rev_excluded)
-            REVIEW_MANAGER.report_logger.info(
+            review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
             )
 
-        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
-        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        review_manager.dataset.add_record_changes()
 
 
 class RecordState(Enum):
+    # pylint: disable=invalid-name
+
     # without the md_retrieved state, we could not display the load transition
     md_retrieved = auto()
     """Record is retrieved and stored in the ./search directory"""

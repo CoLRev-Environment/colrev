@@ -18,7 +18,7 @@ class CustomScreen:
     def run_screen(self, SCREEN, records: dict, split: list) -> dict:
 
         screen_data = SCREEN.get_data()
-        screening_criteria = SCREEN.REVIEW_MANAGER.settings.screen.criteria
+        screening_criteria = SCREEN.review_manager.settings.screen.criteria
 
         if screening_criteria:
             screening_criteria_available = True
@@ -38,7 +38,7 @@ class CustomScreen:
                     # record criteria
                     pass
                 SCREEN_RECORD.screen(
-                    REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                    review_manager=SCREEN.review_manager,
                     screen_inclusion=True,
                     screening_criteria="...",
                 )
@@ -48,14 +48,14 @@ class CustomScreen:
                     # record criteria
                     pass
                 SCREEN_RECORD.screen(
-                    REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                    review_manager=SCREEN.review_manager,
                     screen_inclusion=False,
                     screening_criteria="...",
                 )
 
-        SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        SCREEN.REVIEW_MANAGER.create_commit(
+        SCREEN.review_manager.dataset.save_records_dict(records=records)
+        SCREEN.review_manager.dataset.add_record_changes()
+        SCREEN.review_manager.create_commit(
             msg="Screen (random)", manual_author=False, script_call="colrev screen"
         )
         return records

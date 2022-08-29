@@ -29,12 +29,14 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.cli_colors as colors
+import colrev.dataset
 import colrev.environment
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-import colrev.review_dataset
 import colrev.settings
+
+PASS, FAIL = 0, 1
 
 
 class ReviewManager:
@@ -44,7 +46,7 @@ class ReviewManager:
 
     notified_next_process = None
     """ReviewManager was notified for the upcoming process and
-    will provide access to the ReviewDataset"""
+    will provide access to the Dataset"""
 
     def __init__(
         self,
@@ -64,22 +66,22 @@ class ReviewManager:
             self.path = Path.cwd()
 
         if debug_mode:
-            self.DEBUG_MODE = True
+            self.debug_mode = True
         else:
-            self.DEBUG_MODE = False
+            self.debug_mode = False
 
         try:
             self.paths = self.__get_file_paths(repository_dir_str=self.path)
 
             self.settings = self.load_settings()
-        except Exception as e:
+        except Exception as exc:
             if force_mode:
-                print(e)
+                print(exc)
             else:
-                raise e
+                raise exc
 
         try:
-            if self.DEBUG_MODE:
+            if self.debug_mode:
                 self.report_logger = self.__setup_report_logger(level=logging.DEBUG)
                 """Logger for the commit report"""
                 self.logger = self.__setup_logger(level=logging.DEBUG)
@@ -87,11 +89,11 @@ class ReviewManager:
             else:
                 self.report_logger = self.__setup_report_logger(level=logging.INFO)
                 self.logger = self.__setup_logger(level=logging.INFO)
-        except Exception as e:
+        except Exception as exc:
             if force_mode:
-                print(e)
+                print(exc)
             else:
-                raise e
+                raise exc
 
         try:
             global_git_vars = (
@@ -102,21 +104,19 @@ class ReviewManager:
                     "Global git variables (user name and email) not available."
                 )
                 return
-            self.COMMITTER, self.EMAIL = global_git_vars
+            self.committer, self.email = global_git_vars
 
-            self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-            self.REVIEW_DATASET = colrev.review_dataset.ReviewDataset(
-                REVIEW_MANAGER=self
-            )
+            self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+            self.dataset = colrev.dataset.Dataset(review_manager=self)
             """The review dataset object"""
 
-        except Exception as e:
+        except Exception as exc:
             if force_mode:
-                print(e)
+                print(exc)
             else:
-                raise e
+                raise exc
 
-        if self.DEBUG_MODE:
+        if self.debug_mode:
             print("\n\n")
             self.logger.debug("Created review manager instance")
             self.logger.debug(f"Settings:\n{self.settings}")
@@ -146,18 +146,21 @@ class ReviewManager:
                 with open(self.paths["SETTINGS"], "w", encoding="utf8") as file:
                     json.dump(settings, file, indent=4)
 
-        with open(self.paths["SETTINGS"], encoding="utf-8") as f:
-            loaded_settings = json.load(f)
+        with open(self.paths["SETTINGS"], encoding="utf-8") as file:
+            loaded_settings = json.load(file)
 
         converters = {Path: Path, Enum: Enum}
 
-        # TODO : check validation
-        # (e..g, non-float values for prep/similarity do not through errors)
-        settings = from_dict(
-            data_class=colrev.settings.Configuration,
-            data=loaded_settings,
-            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
-        )
+        try:
+            # TODO : check validation
+            # (e..g, non-float values for prep/similarity do not through errors)
+            settings = from_dict(
+                data_class=colrev.settings.Configuration,
+                data=loaded_settings,
+                config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+            )
+        except ValueError as exc:
+            raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
 
         return settings
 
@@ -175,7 +178,7 @@ class ReviewManager:
         exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(exported_dict, outfile, indent=4)
-        self.REVIEW_DATASET.add_changes(path="settings.json")
+        self.dataset.add_changes(path="settings.json")
 
     def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
@@ -213,7 +216,7 @@ class ReviewManager:
         }
 
     def get_remote_url(self):
-        git_repo = self.REVIEW_DATASET.get_repo()
+        git_repo = self.dataset.get_repo()
         for remote in git_repo.remotes:
             if remote.url:
                 remote_url = remote.url.rstrip(".git")
@@ -287,7 +290,7 @@ class ReviewManager:
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
 
-        last_commit_message = self.REVIEW_DATASET.get_commit_message(commit_nr=0)
+        last_commit_message = self.dataset.get_commit_message(commit_nr=0)
         cmsg_lines = last_commit_message.split("\n")
         for cmsg_line in cmsg_lines[0:100]:
             if "colrev:" in cmsg_line and "version" in cmsg_line:
@@ -313,7 +316,7 @@ class ReviewManager:
         next_minor = str(int(current_version[current_version.rfind(".") + 1 :]) + 1)
         upcoming_version = cur_major + "." + next_minor
 
-        colrev.process.CheckProcess(REVIEW_MANAGER=self)  # to notify
+        colrev.process.CheckProcess(review_manager=self)  # to notify
 
         def print_release_notes(selected_version: str):
 
@@ -331,7 +334,7 @@ class ReviewManager:
                         print(line)
 
         def migrate_0_3_0(self) -> bool:
-            records = self.REVIEW_DATASET.load_records_dict()
+            records = self.dataset.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():
                     if "LOCAL_INDEX" == record.get("metadata_source", ""):
@@ -340,17 +343,17 @@ class ReviewManager:
                         record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
                         del record["pdf_hash"]
 
-                self.REVIEW_DATASET.save_records_dict(records=records)
-                self.REVIEW_DATASET.add_record_changes()
+                self.dataset.save_records_dict(records=records)
+                self.dataset.add_record_changes()
 
-            self.REVIEW_DATASET.inplace_change(
+            self.dataset.inplace_change(
                 filename=self.paths["SOURCES"],
                 old_string="search_type: LOCAL_PAPER_INDEX",
                 new_string="PDFS",
             )
-            self.REVIEW_DATASET.add_changes(path=str(self.paths["SOURCES_RELATIVE"]))
+            self.dataset.add_changes(path=str(self.paths["SOURCES_RELATIVE"]))
 
-            if self.REVIEW_DATASET.has_changes():
+            if self.dataset.has_changes():
                 return True
             return False
 
@@ -363,14 +366,14 @@ class ReviewManager:
                     return False
                 settings = json.loads(filedata.decode("utf-8"))
             else:
-                with open("settings.json", encoding="utf-8") as f:
-                    settings = json.load(f)
+                with open("settings.json", encoding="utf-8") as file:
+                    settings = json.load(file)
 
             old_sources_path = Path("sources.yaml")
             if old_sources_path.is_file():
                 if old_sources_path.is_file():
-                    with open(old_sources_path, encoding="utf-8") as f:
-                        sources_df = pd.json_normalize(yaml.safe_load(f))
+                    with open(old_sources_path, encoding="utf-8") as file:
+                        sources_df = pd.json_normalize(yaml.safe_load(file))
                         sources = sources_df.to_dict("records")
                         print(sources)
                 for source in sources:
@@ -458,13 +461,13 @@ class ReviewManager:
                 {"endpoint": "colrev_cli_pdf_prep_man"}
             ]
 
-            for x in settings["data"]["data_format"]:
-                if "MANUSCRIPT" == x["endpoint"]:
-                    if "paper_endpoint_version" not in x:
-                        x["paper_endpoint_version"] = "0.1"
-                if "STRUCTURED" == x["endpoint"]:
-                    if "structured_data_endpoint_version" not in x:
-                        x["structured_data_endpoint_version"] = "0.1"
+            for data_script in settings["data"]["data_format"]:
+                if "MANUSCRIPT" == data_script["endpoint"]:
+                    if "paper_endpoint_version" not in data_script:
+                        data_script["paper_endpoint_version"] = "0.1"
+                if "STRUCTURED" == data_script["endpoint"]:
+                    if "structured_data_endpoint_version" not in data_script:
+                        data_script["structured_data_endpoint_version"] = "0.1"
 
             if "curated_metadata" in str(self.path):
                 repo = git.Repo(str(self.path))
@@ -474,16 +477,16 @@ class ReviewManager:
 
             if old_sources_path.is_file():
                 old_sources_path.unlink()
-                self.REVIEW_DATASET.remove_file_from_git(path=str(old_sources_path))
+                self.dataset.remove_file_from_git(path=str(old_sources_path))
 
             if Path("shared_config.ini").is_file():
                 Path("shared_config.ini").unlink()
-                self.REVIEW_DATASET.remove_file_from_git(path="shared_config.ini")
+                self.dataset.remove_file_from_git(path="shared_config.ini")
             if Path("private_config.ini").is_file():
                 Path("private_config.ini").unlink()
 
             if "curated_metadata" in str(self.path):
-                settings["project"]["curated_masterdata"] = True
+                settings["project"]["curated_master_data"] = True
                 settings["project"]["curated_fields"] = [
                     "doi",
                     "url",
@@ -494,7 +497,7 @@ class ReviewManager:
 
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):
-                    settings["project"]["review_type"] = "curated_masterdata"
+                    settings["project"]["review_type"] = "curated_master_data"
                 else:
                     settings["project"]["review_type"] = "literature_review"
 
@@ -504,8 +507,8 @@ class ReviewManager:
             self.settings = self.load_settings()
             self.save_settings()
 
-            self.REVIEW_DATASET.add_setting_changes()
-            records = self.REVIEW_DATASET.load_records_dict()
+            self.dataset.add_setting_changes()
+            records = self.dataset.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():
                     if "manual_duplicate" in record:
@@ -551,24 +554,24 @@ class ReviewManager:
                     # Note : for curated repositories
                     # record["colrev_masterdata"] = "CURATED"
 
-                self.REVIEW_DATASET.save_records_dict(records=records)
-                self.REVIEW_DATASET.add_record_changes()
+                self.dataset.save_records_dict(records=records)
+                self.dataset.add_record_changes()
 
             self.retrieve_package_file(
                 template_file=Path("template/.pre-commit-config.yaml"),
                 target=Path(".pre-commit-config.yaml"),
             )
 
-            self.REVIEW_DATASET.add_changes(path=".pre-commit-config.yaml")
+            self.dataset.add_changes(path=".pre-commit-config.yaml")
             # Note: the order is important in this case.
-            self.REVIEW_DATASET.update_colrev_ids()
+            self.dataset.update_colrev_ids()
 
             return True
 
         def migrate_0_5_0(self) -> None:
 
-            with open("settings.json", encoding="utf-8") as f:
-                settings = json.load(f)
+            with open("settings.json", encoding="utf-8") as file:
+                settings = json.load(file)
 
             settings["pdf_get"]["scripts"] = [
                 s
@@ -623,6 +626,9 @@ class ReviewManager:
                     "data": settings["data"],
                 }
 
+            if "THREE_AUTHORS_YEAR" == settings["project"]["id_pattern"]:
+                settings["project"]["id_pattern"] = "three_authors_year"
+
             for source in settings["sources"]:
                 if "FEED" == source["search_type"]:
                     if "CROSSREF" == source["source_name"]:
@@ -650,7 +656,7 @@ class ReviewManager:
 
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):
-                    settings["project"]["review_type"] = "curated_masterdata"
+                    settings["project"]["review_type"] = "curated_master_data"
                 else:
                     settings["project"]["review_type"] = "literature_review"
 
@@ -716,9 +722,9 @@ class ReviewManager:
 
             self.settings = self.load_settings()
             self.save_settings()
-            self.REVIEW_DATASET.add_setting_changes()
+            self.dataset.add_setting_changes()
 
-            records = self.REVIEW_DATASET.load_records_dict()
+            records = self.dataset.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():
                     if "exclusion_criteria" in record:
@@ -729,8 +735,8 @@ class ReviewManager:
                         )
                         del record["exclusion_criteria"]
 
-                self.REVIEW_DATASET.save_records_dict(records=records)
-                self.REVIEW_DATASET.add_record_changes()
+                self.dataset.save_records_dict(records=records)
+                self.dataset.add_record_changes()
 
             print("Manual steps required to rename references.bib > records.bib.")
 
@@ -784,7 +790,7 @@ class ReviewManager:
             if last_version == upcoming_version:
                 break
 
-        if self.REVIEW_DATASET.has_changes():
+        if self.dataset.has_changes():
             self.create_commit(
                 msg=f"Upgrade to CoLRev {upcoming_version}",
                 script_call="colrev settings -u",
@@ -887,8 +893,8 @@ class ReviewManager:
 
     def __lsremote(self, *, url: str) -> dict:
         remote_refs = {}
-        g = git.cmd.Git()
-        for ref in g.ls_remote(url).split("\n"):
+        git_repo = git.cmd.Git()
+        for ref in git_repo.ls_remote(url).split("\n"):
             hash_ref_list = ref.split("\t")
             remote_refs[hash_ref_list[1]] = hash_ref_list[0]
         return remote_refs
@@ -913,8 +919,8 @@ class ReviewManager:
 
         pch_file = Path(".git/hooks/pre-commit")
         if pch_file.is_file():
-            with open(pch_file, encoding="utf8") as f:
-                if "File generated by pre-commit" not in f.read(4096):
+            with open(pch_file, encoding="utf8") as file:
+                if "File generated by pre-commit" not in file.read(4096):
                     raise colrev_exceptions.RepoSetupError(
                         "pre-commit hooks not installed (use pre-commit install)"
                     )
@@ -925,8 +931,8 @@ class ReviewManager:
 
         psh_file = Path(".git/hooks/pre-push")
         if psh_file.is_file():
-            with open(psh_file, encoding="utf8") as f:
-                if "File generated by pre-commit" not in f.read(4096):
+            with open(psh_file, encoding="utf8") as file:
+                if "File generated by pre-commit" not in file.read(4096):
                     raise colrev_exceptions.RepoSetupError(
                         "pre-commit push hooks not installed "
                         "(use pre-commit install --hook-type pre-push)"
@@ -939,8 +945,8 @@ class ReviewManager:
 
         pcmh_file = Path(".git/hooks/prepare-commit-msg")
         if pcmh_file.is_file():
-            with open(pcmh_file, encoding="utf8") as f:
-                if "File generated by pre-commit" not in f.read(4096):
+            with open(pcmh_file, encoding="utf8") as file:
+                if "File generated by pre-commit" not in file.read(4096):
                     raise colrev_exceptions.RepoSetupError(
                         "pre-commit prepare-commit-msg hooks not installed "
                         "(use pre-commit install --hook-type prepare-commit-msg)"
@@ -953,7 +959,7 @@ class ReviewManager:
 
         return True
 
-    def check_repo(self, *, DATA) -> dict:
+    def check_repo(self, *, data_operation) -> dict:
         """Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks
         """
@@ -962,7 +968,6 @@ class ReviewManager:
 
         # We work with exceptions because each issue may be raised in different checks.
         self.notified_next_process = colrev.process.ProcessType.check
-        PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
                 "script": colrev.environment.EnvironmentManager.check_git_installed,
@@ -991,43 +996,43 @@ class ReviewManager:
             # Note : retrieving data once is more efficient than
             # reading the RECORDS_FILE multiple times (for each check)
 
-            if self.REVIEW_DATASET.file_in_history(
+            if self.dataset.file_in_history(
                 filepath=self.paths["RECORDS_FILE_RELATIVE"]
             ):
-                prior = self.REVIEW_DATASET.retrieve_prior()
+                prior = self.dataset.retrieve_prior()
                 self.logger.debug("prior")
-                self.logger.debug(self.pp.pformat(prior))
+                self.logger.debug(self.p_printer.pformat(prior))
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
-            data = self.REVIEW_DATASET.retrieve_data(prior=prior)
+            data = self.dataset.retrieve_data(prior=prior)
             self.logger.debug("data")
-            self.logger.debug(self.pp.pformat(data))
+            self.logger.debug(self.p_printer.pformat(data))
 
             main_refs_checks = [
                 {
-                    "script": self.REVIEW_DATASET.check_persisted_ID_changes,
+                    "script": self.dataset.check_persisted_id_changes,
                     "params": {"prior": prior, "data": data},
                 },
-                {"script": self.REVIEW_DATASET.check_sources, "params": []},
+                {"script": self.dataset.check_sources, "params": []},
                 {
-                    "script": self.REVIEW_DATASET.check_main_records_duplicates,
+                    "script": self.dataset.check_main_records_duplicates,
                     "params": {"data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_records_origin,
+                    "script": self.dataset.check_main_records_origin,
                     "params": {"prior": prior, "data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_fields,
+                    "script": self.dataset.check_fields,
                     "params": {"data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_status_transitions,
+                    "script": self.dataset.check_status_transitions,
                     "params": {"data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_records_screen,
+                    "script": self.dataset.check_main_records_screen,
                     "params": {"data": data},
                 },
             ]
@@ -1047,8 +1052,8 @@ class ReviewManager:
 
             self.logger.debug("Checks for RECORDS_FILE activated")
 
-            PAPER = self.paths["PAPER"]
-            if not PAPER.is_file():
+            paper = self.paths["PAPER"]
+            if not paper.is_file():
                 self.logger.debug("Checks for PAPER not activated\n")
             else:
 
@@ -1059,7 +1064,7 @@ class ReviewManager:
                     #     "params": [self],
                     # },
                     {
-                        "script": DATA.main,
+                        "script": data_operation.main,
                         "params": [True],
                     },
                     {
@@ -1076,7 +1081,7 @@ class ReviewManager:
             #     data = pd.read_csv(DATA, dtype=str)
             #     check_duplicates_data(data)
             # check_screen_data(screen, data)
-            # DATA = REVIEW_MANAGER.paths['DATA']
+            # DATA = review_manager.paths['DATA']
 
         for check_script in check_scripts:
             try:
@@ -1102,8 +1107,8 @@ class ReviewManager:
                 colrev_exceptions.StatusTransitionError,
                 colrev_exceptions.UnstagedGitChangesError,
                 colrev_exceptions.StatusFieldValueError,
-            ) as e:
-                failure_items.append(f"{type(e).__name__}: {e}")
+            ) as exc:
+                failure_items.append(f"{type(exc).__name__}: {exc}")
 
         if len(failure_items) > 0:
             return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}
@@ -1115,22 +1120,22 @@ class ReviewManager:
         """
 
         update = False
-        with open(msg_file, encoding="utf8") as f:
-            contents = f.read()
+        with open(msg_file, encoding="utf8") as file:
+            contents = file.read()
             if "Command" not in contents:
                 update = True
             if "Properties" in contents:
                 update = False
-        with open(msg_file, "w", encoding="utf8") as f:
-            f.write(contents)
+        with open(msg_file, "w", encoding="utf8") as file:
+            file.write(contents)
             # Don't append if it's already there
             if update:
                 report = self.__get_commit_report(script_name="MANUAL", saved_args=None)
-                f.write(report)
+                file.write(report)
 
-        colrev.process.CheckProcess(REVIEW_MANAGER=self)  # to notify
+        colrev.process.CheckProcess(review_manager=self)  # to notify
 
-        self.REVIEW_DATASET.check_corrections_of_curated_records()
+        self.dataset.check_corrections_of_curated_records()
 
         return {"msg": "TODO", "status": 0}
 
@@ -1160,15 +1165,14 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        PASS, FAIL = 0, 1
         if not self.paths["RECORDS_FILE"].is_file():
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
 
-            colrev.process.FormatProcess(REVIEW_MANAGER=self)  # to notify
+            colrev.process.FormatProcess(review_manager=self)  # to notify
 
-            changed = self.REVIEW_DATASET.format_records_file()
+            changed = self.dataset.format_records_file()
             self.update_status_yaml()
 
             self.settings = self.load_settings()
@@ -1177,20 +1181,20 @@ class ReviewManager:
         except (
             colrev_exceptions.UnstagedGitChangesError,
             colrev_exceptions.StatusFieldValueError,
-        ) as e:
-            return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
+        ) as exc:
+            return {"status": FAIL, "msg": f"{type(exc).__name__}: {exc}"}
 
         if changed:
             return {"status": FAIL, "msg": "records file formatted"}
         return {"status": PASS, "msg": "Everything ok."}
 
     def notify(self, *, process: colrev.process.Process, state_transition=True) -> None:
-        """Notify the REVIEW_MANAGER about the next process"""
+        """Notify the review_manager about the next process"""
 
         if state_transition:
             process.check_precondition()
         self.notified_next_process = process.type
-        self.REVIEW_DATASET.reset_log_if_no_changes()
+        self.dataset.reset_log_if_no_changes()
 
     def __get_commit_report(
         self, *, script_name: str = None, saved_args: dict = None
@@ -1218,16 +1222,16 @@ class ReviewManager:
             report = report + "\n"
         else:
             report = report + " \\ \n"
-            for k, v in saved_args.items():
-                if isinstance(v, (bool, float, int, str)):
-                    if v == "":
-                        report = report + f"     --{k} \\\n"
+            for key, value in saved_args.items():
+                if isinstance(value, (bool, float, int, str)):
+                    if value == "":
+                        report = report + f"     --{key} \\\n"
                     else:
-                        report = report + f"     --{k}={v} \\\n"
+                        report = report + f"     --{key}={value} \\\n"
             # Replace the last backslash (for argument chaining across linebreaks)
             report = report.rstrip(" \\\n") + "\n"
             try:
-                last_commit_sha = self.REVIEW_DATASET.get_last_commit_sha()
+                last_commit_sha = self.dataset.get_last_commit_sha()
                 report = report + f"   On commit {last_commit_sha}\n"
             except ValueError:
                 pass
@@ -1235,14 +1239,14 @@ class ReviewManager:
         # url = g.execut['git', 'config', '--get remote.origin.url']
 
         # append status
-        f = io.StringIO()
-        with redirect_stdout(f):
+        file = io.StringIO()
+        with redirect_stdout(file):
             stat = self.get_status_freq()
             self.print_review_status(status_info=stat)
 
         # Remove colors for commit message
         status_page = (
-            f.getvalue()
+            file.getvalue()
             .replace(colors.RED, "")
             .replace(colors.GREEN, "")
             .replace(colors.ORANGE, "")
@@ -1252,7 +1256,7 @@ class ReviewManager:
         status_page = status_page.replace("Status\n\n", "Status\n")
         report = report + status_page
 
-        tree_hash = self.REVIEW_DATASET.get_tree_hash()
+        tree_hash = self.dataset.get_tree_hash()
         if self.paths["RECORDS_FILE"].is_file():
             tree_info = f"Properties for tree {tree_hash}\n"  # type: ignore
             report = report + "\n\n" + tree_info
@@ -1346,10 +1350,10 @@ class ReviewManager:
     def update_status_yaml(self) -> None:
 
         status_freq = self.get_status_freq()
-        with open(self.paths["STATUS"], "w", encoding="utf8") as f:
-            yaml.dump(status_freq, f, allow_unicode=True)
+        with open(self.paths["STATUS"], "w", encoding="utf8") as file:
+            yaml.dump(status_freq, file, allow_unicode=True)
 
-        self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
+        self.dataset.add_changes(path=self.paths["STATUS_RELATIVE"])
 
     def get_status(self) -> dict:
         status_dict = {}
@@ -1365,8 +1369,8 @@ class ReviewManager:
         self.report_logger.handlers[0].stream.close()  # type: ignore
         self.report_logger.removeHandler(self.report_logger.handlers[0])
 
-        with open("report.log", "r+", encoding="utf8") as f:
-            f.truncate(0)
+        with open("report.log", "r+", encoding="utf8") as file:
+            file.truncate(0)
 
         file_handler = logging.FileHandler("report.log")
         file_handler.setLevel(logging.INFO)
@@ -1388,10 +1392,10 @@ class ReviewManager:
         firsts = []
         ordered_items = ""
         consumed_items = []
-        with open("report.log", encoding="utf8") as r:
+        with open("report.log", encoding="utf8") as report_file:
             items = []  # type: ignore
             item = ""
-            for line in r.readlines():
+            for line in report_file.readlines():
                 if any(
                     x in line
                     for x in [
@@ -1431,18 +1435,18 @@ class ReviewManager:
             items.append(item.replace("\n\n", "\n").replace("\n\n", "\n"))
 
         if criterion is None:
-            for ID in IDs:
+            for record_id in IDs:
                 for item in items:
-                    if f"({ID})" in item:
+                    if f"({record_id})" in item:
                         formatted_item = item
                         if "] prepare(" in formatted_item:
                             formatted_item = f"\n\n{formatted_item}"
                         ordered_items = ordered_items + formatted_item
                         consumed_items.append(item)
 
-            for x in consumed_items:
-                if x in items:
-                    items.remove(x)
+            for consumed_item in consumed_items:
+                if consumed_item in items:
+                    items.remove(consumed_item)
 
         if criterion == "descending_thresholds":
             item_details = []
@@ -1469,8 +1473,8 @@ class ReviewManager:
         else:
             formatted_report = "".join(firsts)
 
-        with open("report.log", "w", encoding="utf8") as f:
-            f.write(formatted_report)
+        with open("report.log", "w", encoding="utf8") as file:
+            file.write(formatted_report)
 
         file_handler = logging.FileHandler("report.log")
         file_handler.setLevel(logging.INFO)
@@ -1494,10 +1498,10 @@ class ReviewManager:
         # if "realtime" == self.settings.project.review_type and not realtime_override:
         #     return False
 
-        if self.REVIEW_DATASET.has_changes():
+        if self.dataset.has_changes():
             self.logger.info("Preparing commit: checks and updates")
             self.update_status_yaml()
-            self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
+            self.dataset.add_changes(path=self.paths["STATUS_RELATIVE"])
 
             # TODO : hooks seem to fail most of the time
             hook_skipping = True
@@ -1514,8 +1518,8 @@ class ReviewManager:
                 ]
 
                 with tempfile.NamedTemporaryFile(mode="r+b", delete=False) as temp:
-                    with open(self.paths["REPORT"], "r+b") as f:
-                        shutil.copyfileobj(f, temp)
+                    with open(self.paths["REPORT"], "r+b") as file:
+                        shutil.copyfileobj(file, temp)
                 # self.paths["REPORT"].rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
                     self.paths["REPORT"], "w", encoding="utf8"
@@ -1535,8 +1539,8 @@ class ReviewManager:
 
                         line = reader.readline()
 
-                with open("report.log", encoding="utf8") as f:
-                    line = f.readline()
+                with open("report.log", encoding="utf8") as file:
+                    line = file.readline()
                     debug_part = False
                     while line:
                         # For more efficient debugging (loading of dict with Enum)
@@ -1552,12 +1556,12 @@ class ReviewManager:
                                 debug_part = False
                         if not debug_part:
                             processing_report = processing_report + line
-                        line = f.readline()
+                        line = file.readline()
 
                 processing_report = "\nProcessing report\n" + "".join(processing_report)
 
             if manual_author:
-                git_author = git.Actor(self.COMMITTER, self.EMAIL)
+                git_author = git.Actor(self.committer, self.email)
             else:
                 git_author = git.Actor(f"script:{script_call}", "")
             # TODO: test and update the following
@@ -1572,16 +1576,16 @@ class ReviewManager:
                     )
                     + processing_report
                 )
-            self.REVIEW_DATASET.create_commit(
+            self.dataset.create_commit(
                 msg=cmsg,
                 author=git_author,
-                committer=git.Actor(self.COMMITTER, self.EMAIL),
+                committer=git.Actor(self.committer, self.email),
                 hook_skipping=hook_skipping,
             )
 
             self.logger.info("Created commit")
             self.reset_log()
-            if self.REVIEW_DATASET.has_changes():
+            if self.dataset.has_changes():
                 raise colrev_exceptions.DirtyRepoAfterProcessingError(
                     "A clean repository is expected."
                 )
@@ -1596,12 +1600,10 @@ class ReviewManager:
             bib_files = search_dir.glob("*.bib")
             number_search = 0
             for search_file in bib_files:
-                number_search += self.REVIEW_DATASET.get_nr_in_bib(
-                    file_path=search_file
-                )
+                number_search += self.dataset.get_nr_in_bib(file_path=search_file)
             return number_search
 
-        record_header_list = self.REVIEW_DATASET.get_record_header_list()
+        record_header_list = self.dataset.get_record_header_list()
 
         status_list = [x["colrev_status"] for x in record_header_list]
         screening_criteria = [
@@ -1705,10 +1707,10 @@ class ReviewManager:
                 for t in colrev.process.ProcessModel.transitions
                 if current_state == t["dest"]
             ]
-            t: dict = t_list.pop()
+            transition: dict = t_list.pop()
             if current_state == colrev.record.RecordState.md_imported:
                 break
-            current_state = t["source"]  # go a step back
+            current_state = transition["source"]  # go a step back
             non_completed += stat["colrev_status"]["currently"][str(current_state)]
 
         stat["colrev_status"]["currently"]["non_completed"] = non_completed
@@ -1767,12 +1769,12 @@ class ReviewManager:
             - stat["colrev_status"]["currently"]["rev_synthesized"]
         )
         stat["completed_atomic_steps"] = completed_atomic_steps
-        self.logger.debug(f"stat: {self.pp.pformat(stat)}")
+        self.logger.debug(f"stat: {self.p_printer.pformat(stat)}")
         return stat
 
     def get_collaboration_instructions(self, *, stat) -> dict:
 
-        SHARE_STAT_REQ = self.settings.project.share_stat_req
+        share_stat_req = self.settings.project.share_stat_req
         found_a_conflict = False
 
         git_repo = git.Repo(str(self.paths["REPO_DIR"]))
@@ -1785,17 +1787,17 @@ class ReviewManager:
         nr_commits_behind, nr_commits_ahead = 0, 0
 
         collaboration_instructions: dict = {"items": []}
-        CONNECTED_REMOTE = 0 != len(git_repo.remotes)
-        if CONNECTED_REMOTE:
+        connected_remote = 0 != len(git_repo.remotes)
+        if connected_remote:
             origin = git_repo.remotes.origin
             if origin.exists():
                 (
                     nr_commits_behind,
                     nr_commits_ahead,
-                ) = self.REVIEW_DATASET.get_remote_commit_differences()
-        if CONNECTED_REMOTE:
+                ) = self.dataset.get_remote_commit_differences()
+        if connected_remote:
             collaboration_instructions["title"] = "Versioning and collaboration"
-            collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
+            collaboration_instructions["SHARE_STAT_REQ"] = share_stat_req
         else:
             collaboration_instructions[
                 "title"
@@ -1828,7 +1830,7 @@ class ReviewManager:
             collaboration_instructions["items"].append(item)
 
         elif not found_a_conflict:
-            if CONNECTED_REMOTE:
+            if connected_remote:
                 if nr_commits_behind > 0:
                     item = {
                         "title": "Remote changes available on the server",
@@ -1852,7 +1854,7 @@ class ReviewManager:
                     }
                     collaboration_instructions["items"].append(item)
 
-                if SHARE_STAT_REQ == "NONE":
+                if share_stat_req == "NONE":
                     collaboration_instructions["status"] = {
                         "title": "Sharing: currently ready for sharing",
                         "level": "SUCCESS",
@@ -1862,7 +1864,7 @@ class ReviewManager:
                     }
 
                 # TODO : all the following: should all search results be imported?!
-                if SHARE_STAT_REQ == "PROCESSED":
+                if share_stat_req == "PROCESSED":
                     if 0 == stat["colrev_status"]["currently"]["non_processed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
@@ -1883,7 +1885,7 @@ class ReviewManager:
                 # Note: if we use all(...) in the following,
                 # we do not need to distinguish whether
                 # a PRE_SCREEN or INCLUSION_SCREEN is needed
-                if SHARE_STAT_REQ == "SCREENED":
+                if share_stat_req == "SCREENED":
                     # TODO : the following condition is probably not sufficient
                     if 0 == stat["colrev_status"]["currently"]["pdf_prepared"]:
                         collaboration_instructions["status"] = {
@@ -1902,7 +1904,7 @@ class ReviewManager:
                             + "(see instructions above).",
                         }
 
-                if SHARE_STAT_REQ == "COMPLETED":
+                if share_stat_req == "COMPLETED":
                     if 0 == stat["colrev_status"]["currently"]["non_completed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
@@ -1920,7 +1922,7 @@ class ReviewManager:
                         }
 
         else:
-            if CONNECTED_REMOTE:
+            if connected_remote:
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently not ready for sharing",
                     "level": "WARNING",

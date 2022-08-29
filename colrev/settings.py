@@ -12,12 +12,14 @@ from pathlib import Path
 # Project
 
 
-class IDPpattern(Enum):
-    first_author_year = "FIRST_AUTHOR_YEAR"
-    three_authors_year = "THREE_AUTHORS_YEAR"
+class IDPattern(Enum):
+    # pylint: disable=C0103
+    first_author_year = "first_author_year"
+    three_authors_year = "three_authors_year"
 
 
 class ReviewType(Enum):
+    # pylint: disable=C0103
     curated_masterdata = "curated_masterdata"
     realtime = "realtime"
     literature_review = "literature_review"
@@ -63,7 +65,7 @@ class ProjectConfiguration:
     # protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
     review_type: ReviewType
-    id_pattern: IDPpattern
+    id_pattern: IDPattern
     share_stat_req: str
     delay_automated_processing: bool
     curation_url: typing.Optional[str]
@@ -246,6 +248,7 @@ class PDFPrepConfiguration:
 
 
 class ScreenCriterionType(Enum):
+    # pylint: disable=C0103
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
 

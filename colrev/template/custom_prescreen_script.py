@@ -27,9 +27,9 @@ class CustomPrescreen:
                     colrev_status=colrev.record.RecordState.rev_prescreen_excluded
                 )
 
-        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        PRESCREEN.REVIEW_MANAGER.create_commit(
+        PRESCREEN.review_manager.dataset.save_records_dict(records=records)
+        PRESCREEN.review_manager.dataset.add_record_changes()
+        PRESCREEN.review_manager.create_commit(
             msg="Pre-screen (random)",
             manual_author=False,
             script_call="colrev prescreen",
@@ -39,7 +39,7 @@ class CustomPrescreen:
         # presscreen_data = PRESCREEN.get_data()
         # for record in prescreen_data["items"]:
         #   PRESCREEN_RECORD = PrescreenRecord(data=record)
-        #   PRESCREEN_RECORD.prescreen(REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+        #   PRESCREEN_RECORD.prescreen(review_manager=PRESCREEN.review_manager,
         #                               prescreen_inclusion=True/False)
 
         return records

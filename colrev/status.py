@@ -13,9 +13,9 @@ import colrev.record
 
 
 class Status(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
         )
 
@@ -59,23 +59,25 @@ class Status(colrev.process.Process):
         active_processing_functions = []
         for state in current_origin_states_dict.values():
             srec = colrev.process.ProcessModel(state=state)
-            t = srec.get_valid_transitions()
-            active_processing_functions.extend(t)
+            valid_transitions = srec.get_valid_transitions()
+            active_processing_functions.extend(valid_transitions)
         return active_processing_functions
 
     def get_environment_instructions(self, *, stat: dict) -> list:
         from multiprocessing.dummy import Pool as ThreadPool
 
-        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+        EnvironmentManager = self.review_manager.get_environment_service(
             service_identifier="EnvironmentManager"
         )
 
         environment_instructions = []
 
         if stat["colrev_status"]["currently"]["md_imported"] > 10:
-            with open(self.REVIEW_MANAGER.paths["RECORDS_FILE"], encoding="utf8") as r:
+            with open(
+                self.review_manager.paths["RECORDS_FILE"], encoding="utf8"
+            ) as file:
                 outlets = []
-                for line in r.readlines():
+                for line in file.readlines():
 
                     if "journal" == line.lstrip()[:7]:
                         journal = line[line.find("{") + 1 : line.rfind("}")]
@@ -130,7 +132,7 @@ class Status(colrev.process.Process):
 
         environment_instructions += list(filter(None, add_instructions))
 
-        if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
+        if len(list(self.review_manager.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
                 "cmd": "colrev push -r",
@@ -157,7 +159,7 @@ class Status(colrev.process.Process):
 
             branch_name = str(git_repo.active_branch)
             tracking_branch_name = str(git_repo.active_branch.tracking_branch())
-            self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
+            self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
             commits_behind = git_repo.iter_commits(behind_operation)
@@ -205,11 +207,11 @@ class Status(colrev.process.Process):
 
         review_instructions = []
 
-        # git_repo = REVIEW_MANAGER.get_repo()
-        git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
-        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
+        # git_repo = review_manager.get_repo()
+        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
+        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
 
-        missing_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_missing_files()
+        missing_files = self.review_manager.dataset.get_missing_files()
 
         # Check pdf files
         if len(missing_files) > 0:
@@ -232,16 +234,14 @@ class Status(colrev.process.Process):
                 }
             )
 
-        current_origin_states_dict = (
-            self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict()
-        )
+        current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
 
         # temporarily override for testing
         # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
         # from colrev.process import ProcessModel
         # current_states_set = set([x['source'] for x in ProcessModel.transitions])
 
-        MAIN_RECS_CHANGED = str(RECORDS_FILE_RELATIVE) in [
+        main_recs_changed = str(records_file_relative) in [
             item.a_path for item in git_repo.index.diff(None)
         ] + [x.a_path for x in git_repo.head.commit.diff()]
 
@@ -249,20 +249,20 @@ class Status(colrev.process.Process):
             revlist = (
                 (
                     commit.hexsha,
-                    (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
+                    (commit.tree / str(records_file_relative)).data_stream.read(),
                 )
-                for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
+                for commit in git_repo.iter_commits(paths=str(records_file_relative))
             )
             filecontents = list(revlist)[0][1]
         except IndexError:
-            MAIN_RECS_CHANGED = False
+            main_recs_changed = False
 
         # If changes in RECORDS_FILE are staged, we need to detect the process type
-        if MAIN_RECS_CHANGED:
+        if main_recs_changed:
             # Detect and validate transitions
 
             committed_origin_states_dict = (
-                self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict(
+                self.review_manager.dataset.get_origin_state_dict(
                     file_object=io.StringIO(filecontents.decode("utf-8"))
                 )
             )
@@ -324,7 +324,7 @@ class Status(colrev.process.Process):
             in_progress_processes = list(
                 {x["process_type"] for x in transitioned_records}
             )
-            self.REVIEW_MANAGER.logger.debug(
+            self.review_manager.logger.debug(
                 f"in_progress_processes: {in_progress_processes}"
             )
             if len(in_progress_processes) == 1:
@@ -347,23 +347,23 @@ class Status(colrev.process.Process):
                 instruction["priority"] = "yes"
                 review_instructions.append(instruction)
 
-        self.REVIEW_MANAGER.logger.debug(
+        self.review_manager.logger.debug(
             f"current_origin_states_dict: {current_origin_states_dict}"
         )
         active_processing_functions = self.get_active_processing_functions(
             current_origin_states_dict=current_origin_states_dict
         )
-        self.REVIEW_MANAGER.logger.debug(
+        self.review_manager.logger.debug(
             f"active_processing_functions: {active_processing_functions}"
         )
         priority_processing_functions = self.get_priority_transition(
             current_origin_states_dict=current_origin_states_dict
         )
-        self.REVIEW_MANAGER.logger.debug(
+        self.review_manager.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )
         delay_automated_processing = (
-            self.REVIEW_MANAGER.settings.project.delay_automated_processing
+            self.review_manager.settings.project.delay_automated_processing
         )
         msgs = {
             "load": "Next step: Import search results",
@@ -407,7 +407,7 @@ class Status(colrev.process.Process):
                 ]:
                     review_instructions.append(instruction)
 
-        if not self.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
+        if not self.review_manager.paths["RECORDS_FILE"].is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
@@ -422,8 +422,8 @@ class Status(colrev.process.Process):
             and stat["colrev_status"]["currently"]["md_retrieved"] > 0
         ):
 
-            search_dir = str(self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]) + "/"
-            untracked_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_untracked_files()
+            search_dir = str(self.review_manager.paths["SEARCHDIR_RELATIVE"]) + "/"
+            untracked_files = self.review_manager.dataset.get_untracked_files()
             if not any(
                 search_dir in untracked_file for untracked_file in untracked_files
             ):
@@ -442,7 +442,7 @@ class Status(colrev.process.Process):
                 review_instructions.append(instruction)
 
         if "MANUSCRIPT" in [
-            s["endpoint"] for s in self.REVIEW_MANAGER.settings.data.scripts
+            s["endpoint"] for s in self.review_manager.settings.data.scripts
         ]:
             instruction = {
                 "msg": "Build the paper",
@@ -456,13 +456,13 @@ class Status(colrev.process.Process):
         instructions = {
             "review_instructions": self.get_review_instructions(stat=stat),
             "environment_instructions": self.get_environment_instructions(stat=stat),
-            "collaboration_instructions": self.REVIEW_MANAGER.get_collaboration_instructions(
+            "collaboration_instructions": self.review_manager.get_collaboration_instructions(
                 stat=stat
             ),
         }
 
-        self.REVIEW_MANAGER.logger.debug(
-            f"instructions: {self.REVIEW_MANAGER.pp.pformat(instructions)}"
+        self.review_manager.logger.debug(
+            f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
         )
         return instructions
 
@@ -470,7 +470,7 @@ class Status(colrev.process.Process):
 
         analytics_dict = {}
 
-        git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
 
         revlist = list(
             (

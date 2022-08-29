@@ -15,6 +15,6 @@ class CustomPDFRetrieval:
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
 
         RECORD.data["file"] = "filepath"
-        PDF_RETRIEVAL.REVIEW_MANAGER.REVIEW_DATASET.import_file(record=RECORD.data)
+        PDF_RETRIEVAL.review_manager.dataset.import_file(record=RECORD.data)
 
         return RECORD

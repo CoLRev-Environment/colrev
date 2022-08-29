@@ -20,14 +20,14 @@ class CustomSearch:
         )
 
     def run_search(slef, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev.review_dataset import ReviewDataset
+        from colrev.dataset import Dataset
 
         max_id = 1
         if not feed_file.is_file():
             records = {}
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                records = SEARCH.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
@@ -47,7 +47,7 @@ class CustomSearch:
         }
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        ReviewDataset.save_records_dict_to_file(records=records, save_path=feed_file)
+        Dataset.save_records_dict_to_file(records=records, save_path=feed_file)
         return
 
     @classmethod

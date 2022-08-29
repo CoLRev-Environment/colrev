@@ -14,7 +14,7 @@ import colrev.process
 import colrev.record
 
 
-class PDF_Retrieval(colrev.process.Process):
+class PDFRetrieval(colrev.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "unpaywall": {
@@ -31,35 +31,35 @@ class PDF_Retrieval(colrev.process.Process):
     def __init__(
         self,
         *,
-        REVIEW_MANAGER,
+        review_manager,
         notify_state_transition_process: bool = True,
     ):
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_get,
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.CPUS = 4
+        self.cpus = 4
         self.verbose = False
 
-        self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-        self.PDF_DIRECTORY.mkdir(exist_ok=True)
+        self.pdf_directory = self.review_manager.paths["PDF_DIRECTORY"]
+        self.pdf_directory.mkdir(exist_ok=True)
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+        AdapterManager = self.review_manager.get_environment_service(
             service_identifier="AdapterManager"
         )
         self.pdf_retrieval_scripts: typing.Dict[
             str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.pdf_get.scripts,
+            scripts=review_manager.settings.pdf_get.scripts,
         )
 
     def copy_pdfs_to_repo(self) -> None:
-        self.REVIEW_MANAGER.logger.info("Copy PDFs to dir")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        self.review_manager.logger.info("Copy PDFs to dir")
+        records = self.review_manager.dataset.load_records_dict()
 
         for record in records.values():
             if "file" in record:
@@ -70,87 +70,87 @@ class PDF_Retrieval(colrev.process.Process):
                     if linked_file.is_file():
                         fpath.unlink()
                         shutil.copyfile(linked_file, new_fpath)
-                        self.REVIEW_MANAGER.logger.info(f'Copied PDF ({record["ID"]})')
+                        self.review_manager.logger.info(f'Copied PDF ({record["ID"]})')
                 elif new_fpath.is_file():
-                    self.REVIEW_MANAGER.logger.warning(
+                    self.review_manager.logger.warning(
                         f'No need to copy PDF - already exits ({record["ID"]})'
                     )
 
-    def link_pdf(self, RECORD):
+    def link_pdf(self, record):
 
-        PDF_DIRECTORY_RELATIVE = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-        pdf_filepath = PDF_DIRECTORY_RELATIVE / Path(f"{RECORD.data['ID']}.pdf")
-        if pdf_filepath.is_file() and str(pdf_filepath) != RECORD.data.get(
+        pdf_filepath = self.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            f"{record.data['ID']}.pdf"
+        )
+        if pdf_filepath.is_file() and str(pdf_filepath) != record.data.get(
             "file", "NA"
         ):
-            RECORD.data.update(file=str(pdf_filepath))
+            record.data.update(file=str(pdf_filepath))
 
-        return RECORD
+        return record
 
     # Note : no named arguments (multiprocessing)
     def retrieve_pdf(self, item: dict) -> dict:
 
-        record = item["record"]
+        record_dict = item["record"]
 
         if str(colrev.record.RecordState.rev_prescreen_included) != str(
-            record["colrev_status"]
+            record_dict["colrev_status"]
         ):
-            return record
+            return record_dict
 
-        RECORD = colrev.record.Record(data=record)
+        record = colrev.record.Record(data=record_dict)
 
-        RECORD = self.link_pdf(RECORD)
+        record = self.link_pdf(record)
 
-        for PDF_GET_SCRIPT in self.REVIEW_MANAGER.settings.pdf_get.scripts:
+        for pdf_get_script in self.review_manager.settings.pdf_get.scripts:
 
-            ENDPOINT = self.pdf_retrieval_scripts[PDF_GET_SCRIPT["endpoint"]]
-            self.REVIEW_MANAGER.report_logger.info(
+            endpoint = self.pdf_retrieval_scripts[pdf_get_script["endpoint"]]
+            self.review_manager.report_logger.info(
                 # f'{retrieval_script["script"].__name__}({record["ID"]}) called'
-                f'{ENDPOINT.SETTINGS.name}({record["ID"]}) called'
+                f'{endpoint.settings.name}({record_dict["ID"]}) called'
             )
 
-            ENDPOINT.get_pdf(self, RECORD)
+            endpoint.get_pdf(self, record)
 
-            if "file" in RECORD.data:
-                self.REVIEW_MANAGER.report_logger.info(
+            if "file" in record.data:
+                self.review_manager.report_logger.info(
                     # f'{retrieval_script["script"].__name__}'
-                    f"{ENDPOINT.SETTINGS.name}"
-                    f'({record["ID"]}): retrieved {record["file"]}'
+                    f"{endpoint.settings.name}"
+                    f'({record_dict["ID"]}): retrieved {record_dict["file"]}'
                 )
-                RECORD.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
+                record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
                 break
-            RECORD.data.update(
+            record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
             )
 
-        return RECORD.get_data()
+        return record.get_data()
 
     def relink_files(self) -> None:
         def relink_pdf_files(records):
             # Relink files in source file
-            SOURCES = self.REVIEW_MANAGER.settings.sources
             feed_filename = ""
             feed_filepath = ""
             source_records = []
-            for SOURCE in SOURCES:
-                if "{{file}}" == SOURCE.source_identifier:
-                    feed_filepath = Path("search") / SOURCE.filename
+            for source in self.review_manager.settings.sources:
+                if "{{file}}" == source.source_identifier:
+                    feed_filepath = Path("search") / source.filename
                     if feed_filepath.is_file():
-                        feed_filename = SOURCE.filename
+                        feed_filename = source.filename
                         with open(
-                            Path("search") / SOURCE.filename, encoding="utf8"
+                            Path("search") / source.filename, encoding="utf8"
                         ) as target_db:
                             source_records_dict = (
-                                self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(
+                                self.review_manager.REVIEW_DATASEt.load_records_dict(
                                     load_str=target_db.read()
                                 )
                             )
                         source_records = source_records_dict.values()
 
-            self.REVIEW_MANAGER.logger.info("Calculate colrev_pdf_ids")
+            self.review_manager.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {
                 pdf_candidate.relative_to(
-                    self.REVIEW_MANAGER.path
+                    self.review_manager.path
                 ): colrev.record.Record.get_colrev_pdf_id(path=pdf_candidate)
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
@@ -179,22 +179,22 @@ class PDF_Retrieval(colrev.process.Process):
                             source_rec = source_rec_l[0]
 
                 if source_rec:
-                    if (self.REVIEW_MANAGER.path / Path(record["file"])).is_file() and (
-                        self.REVIEW_MANAGER.path / Path(source_rec["file"])
+                    if (self.review_manager.path / Path(record["file"])).is_file() and (
+                        self.review_manager.path / Path(source_rec["file"])
                     ).is_file():
                         continue
                 else:
-                    if (self.REVIEW_MANAGER.path / Path(record["file"])).is_file():
+                    if (self.review_manager.path / Path(record["file"])).is_file():
                         continue
 
-                self.REVIEW_MANAGER.logger.info(record["ID"])
+                self.review_manager.logger.info(record["ID"])
 
                 for pdf_candidate, cpid in pdf_candidates.items():
                     if record.get("colrev_pdf_id", "") == cpid:
                         record["file"] = str(pdf_candidate)
                         source_rec["file"] = str(pdf_candidate)
 
-                        self.REVIEW_MANAGER.logger.info(
+                        self.review_manager.logger.info(
                             f"Found and linked PDF: {pdf_candidate}"
                         )
 
@@ -202,24 +202,24 @@ class PDF_Retrieval(colrev.process.Process):
 
             if len(source_records) > 0:
                 source_records_dict = {r["ID"]: r for r in source_records}
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                self.review_manager.dataset.save_records_dict_to_file(
                     source_records_dict, save_path=feed_filepath
                 )
 
             if feed_filepath != "":
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_filepath))
+                self.review_manager.dataset.add_changes(path=str(feed_filepath))
             return records
 
-        self.REVIEW_MANAGER.logger.info(
+        self.review_manager.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         records = relink_pdf_files(records)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg="Relink PDFs", script_call="colrev pdf-get"
         )
 
@@ -234,28 +234,28 @@ class PDF_Retrieval(colrev.process.Process):
         ]
 
         pdf_files = glob(
-            str(self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
+            str(self.review_manager.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
         )
         unlinked_pdfs = [Path(x) for x in pdf_files if x not in linked_pdfs]
 
         if len(unlinked_pdfs) == 0:
             return records
 
-        GrobidService = self.REVIEW_MANAGER.get_environment_service(
+        GrobidService = self.review_manager.get_environment_service(
             service_identifier="GrobidService"
         )
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.start()
-        self.REVIEW_MANAGER.logger.info("Checking unlinked PDFs")
+        grobid_service = GrobidService()
+        grobid_service.start()
+        self.review_manager.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
-            self.REVIEW_MANAGER.logger.info(f"Checking unlinked PDF: {file}")
+            self.review_manager.logger.info(f"Checking unlinked PDF: {file}")
             if file.stem not in records.keys():
 
-                TEIParser = self.REVIEW_MANAGER.get_environment_service(
+                TEIParser = self.review_manager.get_environment_service(
                     service_identifier="TEIParser"
                 )
-                TEI_INSTANCE = TEIParser(pdf_path=file)
-                pdf_record = TEI_INSTANCE.get_metadata()
+                tei = TEIParser(pdf_path=file)
+                pdf_record = tei.get_metadata()
 
                 if "error" in pdf_record:
                     continue
@@ -283,10 +283,10 @@ class PDF_Retrieval(colrev.process.Process):
                             colrev_status=colrev.record.RecordState.pdf_imported
                         )
 
-                        self.REVIEW_MANAGER.report_logger.info(
+                        self.review_manager.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
                         )
-                        self.REVIEW_MANAGER.logger.info(
+                        self.review_manager.logger.info(
                             "linked unlinked pdf:" f" {file.name}"
                         )
                         # max_sim_record = \
@@ -298,12 +298,12 @@ class PDF_Retrieval(colrev.process.Process):
         return records
 
     def rename_pdfs(self) -> None:
-        self.REVIEW_MANAGER.logger.info("Rename PDFs")
+        self.review_manager.logger.info("Rename PDFs")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         # We may use other pdfs_search_files from the sources:
-        # REVIEW_MANAGER.settings.sources
+        # review_manager.settings.sources
         pdfs_search_file = Path("search/pdfs.bib")
 
         for record in records.values():
@@ -313,27 +313,27 @@ class PDF_Retrieval(colrev.process.Process):
             file = Path(record["file"])
             new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
             # Possible option: move to top (pdfs) directory:
-            # new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            # new_filename = self.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
             #     f"{record['ID']}.pdf"
             # )
             if str(file) == str(new_filename):
                 continue
 
             # This should replace the file fields
-            self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
-                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+            self.review_manager.dataset.inplace_change(
+                filename=self.review_manager.paths["RECORDS_FILE_RELATIVE"],
                 old_string="{" + str(file) + "}",
                 new_string="{" + str(new_filename) + "}",
             )
             # This should replace the provenance dict fields
-            self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
-                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+            self.review_manager.dataset.inplace_change(
+                filename=self.review_manager.paths["RECORDS_FILE_RELATIVE"],
                 old_string=":" + str(file) + ";",
                 new_string=":" + str(new_filename) + ";",
             )
 
             if pdfs_search_file.is_file():
-                self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                self.review_manager.dataset.inplace_change(
                     filename=pdfs_search_file,
                     old_string=str(file),
                     new_string=str(new_filename),
@@ -350,14 +350,14 @@ class PDF_Retrieval(colrev.process.Process):
                 os.rename(str(file), str(new_filename))
 
             record["file"] = str(new_filename)
-            self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
+            self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
 
         if pdfs_search_file.is_file():
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(pdfs_search_file))
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.review_manager.dataset.add_changes(path=str(pdfs_search_file))
+        self.review_manager.dataset.add_record_changes()
 
     def __get_data(self) -> dict:
-        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [
                 x
@@ -367,7 +367,7 @@ class PDF_Retrieval(colrev.process.Process):
             ]
         )
 
-        items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
+        items = self.review_manager.dataset.read_next_record(
             conditions=[
                 {"colrev_status": colrev.record.RecordState.rev_prescreen_included}
             ],
@@ -379,14 +379,16 @@ class PDF_Retrieval(colrev.process.Process):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(pdf_get_data))
-
-        self.REVIEW_MANAGER.logger.debug(
-            f"pdf_get_data: {self.REVIEW_MANAGER.pp.pformat(pdf_get_data)}"
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(pdf_get_data)
         )
 
-        self.REVIEW_MANAGER.logger.debug(
-            self.REVIEW_MANAGER.pp.pformat(pdf_get_data["items"])
+        self.review_manager.logger.debug(
+            f"pdf_get_data: {self.review_manager.p_printer.pformat(pdf_get_data)}"
+        )
+
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(pdf_get_data["items"])
         )
 
         return pdf_get_data
@@ -423,8 +425,8 @@ class PDF_Retrieval(colrev.process.Process):
             not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
             not_retrieved_string += f"{colors.END} PDFs"
 
-        self.REVIEW_MANAGER.logger.info(retrieved_string)
-        self.REVIEW_MANAGER.logger.info(not_retrieved_string)
+        self.review_manager.logger.info(retrieved_string)
+        self.review_manager.logger.info(not_retrieved_string)
 
     def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
 
@@ -443,8 +445,8 @@ class PDF_Retrieval(colrev.process.Process):
                             "Warning: record with file field but no existing PDF "
                             f'({record["ID"]}: {record["file"]}'
                         )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
         return records
 
@@ -455,13 +457,13 @@ class PDF_Retrieval(colrev.process.Process):
             with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_get_script.py")
+        self.review_manager.dataset.add_changes(path="custom_pdf_get_script.py")
 
-        self.REVIEW_MANAGER.settings.pdf_get.scripts.append(
+        self.review_manager.settings.pdf_get.scripts.append(
             {"endpoint": "custom_pdf_get_script"}
         )
 
-        self.REVIEW_MANAGER.save_settings()
+        self.review_manager.save_settings()
 
     def main(self) -> None:
 
@@ -469,10 +471,10 @@ class PDF_Retrieval(colrev.process.Process):
 
         # TODO : download if there is a fulltext link in the record
 
-        self.REVIEW_MANAGER.report_logger.info("Get PDFs")
-        self.REVIEW_MANAGER.logger.info("Get PDFs")
+        self.review_manager.report_logger.info("Get PDFs")
+        self.review_manager.logger.info("Get PDFs")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         records = self.__set_status_if_file_linked(records=records)
         records = self.check_existing_unlinked_pdfs(records=records)
 
@@ -482,31 +484,31 @@ class PDF_Retrieval(colrev.process.Process):
 
             retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+            self.review_manager.dataset.save_record_list_by_id(
                 record_list=retrieved_record_list
             )
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            self.REVIEW_MANAGER.reorder_log(
+            self.review_manager.reorder_log(
                 IDs=[x["ID"] for x in retrieved_record_list]
             )
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
-            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+            if self.review_manager.settings.pdf_get.rename_pdfs:
                 self.rename_pdfs()
 
             self._print_stats(retrieved_record_list=retrieved_record_list)
         else:
-            self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
+            self.review_manager.logger.info("No additional pdfs to retrieve")
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
-            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+            if self.review_manager.settings.pdf_get.rename_pdfs:
                 self.rename_pdfs()
 
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.create_commit(
             msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
         )
 

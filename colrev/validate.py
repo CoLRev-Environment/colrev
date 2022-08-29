@@ -11,19 +11,19 @@ import colrev.record
 
 
 class Validate(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager):
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.check,
         )
 
-        self.CPUS = 4
+        self.cpus = 4
 
     def load_search_records(self, *, bib_file: Path) -> list:
 
         with open(bib_file, encoding="utf8") as bibtex_file:
-            individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+            individual_bib_rd = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
             for record in individual_bib_rd.values():
@@ -33,7 +33,7 @@ class Validate(colrev.process.Process):
 
     def get_search_records(self) -> list:
 
-        search_dir = self.REVIEW_MANAGER.paths["SEARCHDIR"]
+        search_dir = self.review_manager.paths["SEARCHDIR"]
 
         records = []
         # records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
@@ -48,14 +48,14 @@ class Validate(colrev.process.Process):
 
         repo = git.Repo()
 
-        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
+        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / str(records_file_relative)).data_stream.read(),
             )
-            for commit in repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
+            for commit in repo.iter_commits(paths=str(records_file_relative))
         )
 
         found_target_commit = False
@@ -65,7 +65,7 @@ class Validate(colrev.process.Process):
                 continue
             if not found_target_commit:
                 continue
-            prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+            prior_records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")
             )
             break
@@ -77,7 +77,7 @@ class Validate(colrev.process.Process):
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
-        self.REVIEW_MANAGER.logger.debug("Calculating preparation differences...")
+        self.review_manager.logger.debug("Calculating preparation differences...")
         change_diff = []
         for record in records:
             # input(record)
@@ -144,9 +144,9 @@ class Validate(colrev.process.Process):
 
         if 0 == len(change_diff):
             if merged_records:
-                self.REVIEW_MANAGER.logger.info("No substantial differences found.")
+                self.review_manager.logger.info("No substantial differences found.")
             else:
-                self.REVIEW_MANAGER.logger.info("No merged records")
+                self.review_manager.logger.info("No merged records")
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)
@@ -156,35 +156,33 @@ class Validate(colrev.process.Process):
     def load_records(self, *, target_commit: str = None) -> typing.List[dict]:
 
         if target_commit is None:
-            self.REVIEW_MANAGER.logger.info("Loading data...")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-            for x in records.values():
-                x.update(changed_in_target_commit="True")
+            self.review_manager.logger.info("Loading data...")
+            records = self.review_manager.dataset.load_records_dict()
+            for record_dict in records.values():
+                record_dict.update(changed_in_target_commit="True")
             return records.values()
 
-        self.REVIEW_MANAGER.logger.info("Loading data from history...")
+        self.review_manager.logger.info("Loading data from history...")
         git_repo = git.Repo()
 
-        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
+        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / str(records_file_relative)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
+            for commit in git_repo.iter_commits(paths=str(records_file_relative))
         )
         found = False
         for commit, filecontents in list(revlist):
-            if found:  # load the RECORDS_FILE_RELATIVE in the following commit
-                prior_records_dict = (
-                    self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        load_str=filecontents.decode("utf-8")
-                    )
+            if found:  # load the records_file_relative in the following commit
+                prior_records_dict = self.review_manager.dataset.load_records_dict(
+                    load_str=filecontents.decode("utf-8")
                 )
                 break
             if commit == target_commit:
-                records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                records_dict = self.review_manager.dataset.load_records_dict(
                     load_str=filecontents.decode("utf-8")
                 )
                 found = True
@@ -204,51 +202,51 @@ class Validate(colrev.process.Process):
     def validate_properties(self, *, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)
 
-        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        git_repo = self.review_manager.dataset.get_repo()
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
-        self.REVIEW_MANAGER.logger.info(
+        self.review_manager.logger.info(
             f" Current commit: {cur_sha} (branch {cur_branch})"
         )
 
         if not target_commit:
             target_commit = cur_sha
         if git_repo.is_dirty() and not target_commit == cur_sha:
-            self.REVIEW_MANAGER.logger.error(
+            self.review_manager.logger.error(
                 "Error: Need a clean repository to validate properties "
                 "of prior commit"
             )
             return
         if not target_commit == cur_sha:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"Check out target_commit = {target_commit}"
             )
             git_repo.git.checkout(target_commit)
 
-        ret = self.REVIEW_MANAGER.check_repo()
+        ret = self.review_manager.check_repo()
         if 0 == ret["status"]:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 " Traceability of records".ljust(32, " ") + "YES (validated)"
             )
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 " Consistency (based on hooks)".ljust(32, " ") + "YES (validated)"
             )
         else:
-            self.REVIEW_MANAGER.logger.error(
+            self.review_manager.logger.error(
                 "Traceability of records".ljust(32, " ") + "NO"
             )
-            self.REVIEW_MANAGER.logger.error(
+            self.review_manager.logger.error(
                 "Consistency (based on hooks)".ljust(32, " ") + "NO"
             )
 
-        completeness_condition = self.REVIEW_MANAGER.get_completeness_condition()
+        completeness_condition = self.review_manager.get_completeness_condition()
         if completeness_condition:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 " Completeness of iteration".ljust(32, " ") + "YES (validated)"
             )
         else:
-            self.REVIEW_MANAGER.logger.error(
+            self.review_manager.logger.error(
                 "Completeness of iteration".ljust(32, " ") + "NO"
             )
 
@@ -258,7 +256,7 @@ class Validate(colrev.process.Process):
 
     def __set_scope_based_on_target_commit(self, *, target_commit):
 
-        target_commit = self.REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
+        target_commit = self.review_manager.dataset.get_last_commit_sha()
 
         repo = git.Repo()
 

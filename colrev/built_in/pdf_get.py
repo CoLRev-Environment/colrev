@@ -16,32 +16,32 @@ import colrev.record
 
 @zope.interface.implementer(colrev.process.PDFRetrievalEndpoint)
 class UnpaywallEndpoint:
-    def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, pdf_get, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
     def __unpaywall(
-        self, *, REVIEW_MANAGER, doi: str, retry: int = 0, pdfonly: bool = True
+        self, *, review_manager, doi: str, retry: int = 0, pdfonly: bool = True
     ) -> str:
 
         url = "https://api.unpaywall.org/v2/{doi}"
 
         try:
-            r = requests.get(url, params={"email": REVIEW_MANAGER.EMAIL})
+            ret = requests.get(url, params={"email": review_manager.email})
 
-            if r.status_code == 500 and retry < 3:
+            if ret.status_code == 500 and retry < 3:
                 return self.__unpaywall(
-                    REVIEW_MANAGER=REVIEW_MANAGER, doi=doi, retry=retry + 1
+                    review_manager=review_manager, doi=doi, retry=retry + 1
                 )
 
-            if r.status_code in [404, 500]:
+            if ret.status_code in [404, 500]:
                 return "NA"
 
             best_loc = None
-            best_loc = r.json()["best_oa_location"]
+            best_loc = ret.json()["best_oa_location"]
 
-            assert r.json()["is_oa"]
+            assert ret.json()["is_oa"]
             assert best_loc is not None
             assert not (pdfonly and best_loc["url_for_pdf"] is None)
 
@@ -62,16 +62,16 @@ class UnpaywallEndpoint:
         except PDFException:
             return False
 
-    def get_pdf(self, PDF_RETRIEVAL, RECORD):
+    def get_pdf(self, pdf_get, record):
 
-        if "doi" not in RECORD.data:
-            return RECORD
+        if "doi" not in record.data:
+            return record
 
-        pdf_filepath = PDF_RETRIEVAL.REVIEW_MANAGER.paths[
-            "PDF_DIRECTORY_RELATIVE"
-        ] / Path(f"{RECORD.data['ID']}.pdf")
+        pdf_filepath = pdf_get.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            f"{record.data['ID']}.pdf"
+        )
         url = self.__unpaywall(
-            REVIEW_MANAGER=PDF_RETRIEVAL.REVIEW_MANAGER, doi=RECORD.data["doi"]
+            review_manager=pdf_get.review_manager, doi=record.data["doi"]
         )
         if "NA" != url:
             if "Invalid/unknown DOI" not in url:
@@ -83,85 +83,83 @@ class UnpaywallEndpoint:
                     },
                 )
                 if 200 == res.status_code:
-                    with open(pdf_filepath, "wb") as f:
-                        f.write(res.content)
+                    with open(pdf_filepath, "wb") as file:
+                        file.write(res.content)
                     if self.__is_pdf(path_to_file=pdf_filepath):
-                        PDF_RETRIEVAL.REVIEW_MANAGER.report_logger.info(
+                        pdf_get.review_manager.report_logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
-                        PDF_RETRIEVAL.REVIEW_MANAGER.logger.info(
+                        pdf_get.review_manager.logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
-                        RECORD.data.update(file=str(pdf_filepath))
-                        RECORD.data.update(
+                        record.data.update(file=str(pdf_filepath))
+                        record.data.update(
                             colrev_status=colrev.record.RecordState.rev_prescreen_included
                         )
                     else:
                         os.remove(pdf_filepath)
                 else:
-                    PDF_RETRIEVAL.REVIEW_MANAGER.logger.info(
+                    pdf_get.review_manager.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code}/{url}"
                     )
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.PDFRetrievalEndpoint)
 class LocalIndexEndpoint:
-    def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, pdf_get, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_pdf(self, PDF_RETRIEVAL, RECORD):
+    def get_pdf(self, pdf_get, record):
 
-        LocalIndex = PDF_RETRIEVAL.REVIEW_MANAGER.get_environment_service(
+        LocalIndex = pdf_get.review_manager.get_environment_service(
             service_identifier="LocalIndex"
         )
 
-        LOCAL_INDEX = LocalIndex()
+        local_index = LocalIndex()
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(
-                record=RECORD.data, include_file=True
+            retrieved_record = local_index.retrieve(
+                record=record.data, include_file=True
             )
             # print(Record(retrieved_record))
         except colrev_exceptions.RecordNotInIndexException:
-            return RECORD
+            return record
 
         if "file" in retrieved_record:
-            RECORD.data["file"] = retrieved_record["file"]
-            PDF_RETRIEVAL.REVIEW_MANAGER.REVIEW_DATASET.import_file(record=RECORD.data)
+            record.data["file"] = retrieved_record["file"]
+            pdf_get.review_manager.dataset.import_file(record=record.data)
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.PDFRetrievalEndpoint)
 class WebsiteScreenshotEndpoint:
-    def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, pdf_get, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_pdf(self, PDF_RETRIEVAL, RECORD):
+    def get_pdf(self, pdf_get, record):
 
-        ScreenshotService = PDF_RETRIEVAL.REVIEW_MANAGER.get_environment_service(
+        ScreenshotService = pdf_get.review_manager.get_environment_service(
             service_identifier="ScreenshotService"
         )
 
-        if "online" == RECORD.data["ENTRYTYPE"]:
-            SCREENSHOT_SERVICE = ScreenshotService()
-            SCREENSHOT_SERVICE.start_screenshot_service()
+        if "online" == record.data["ENTRYTYPE"]:
+            screenshot_service = ScreenshotService()
+            screenshot_service.start_screenshot_service()
 
-            pdf_filepath = PDF_RETRIEVAL.REVIEW_MANAGER.paths[
+            pdf_filepath = pdf_get.review_manager.paths[
                 "PDF_DIRECTORY_RELATIVE"
-            ] / Path(f"{RECORD.data['ID']}.pdf")
-            RECORD = SCREENSHOT_SERVICE.add_screenshot(
-                RECORD=RECORD, pdf_filepath=pdf_filepath
+            ] / Path(f"{record.data['ID']}.pdf")
+            record = screenshot_service.add_screenshot(
+                record=record, pdf_filepath=pdf_filepath
             )
 
-            if "file" in RECORD.data:
-                PDF_RETRIEVAL.REVIEW_MANAGER.REVIEW_DATASET.import_file(
-                    record=RECORD.data
-                )
+            if "file" in record.data:
+                pdf_get.review_manager.dataset.import_file(record=record.data)
 
-        return RECORD
+        return record

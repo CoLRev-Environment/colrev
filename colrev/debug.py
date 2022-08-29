@@ -17,13 +17,13 @@ def debug_load() -> None:
 
     from colrev.load import Loader
 
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
-    LOADER = Loader(REVIEW_MANAGER=REVIEW_MANAGER)
+    review_manager = colrev.review_manager.ReviewManager()
+    loader = Loader(review_manager=review_manager)
 
-    # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
+    # rec_header_lis = loader.review_manager.dataset.get_record_header_list()
     # origin_list = [x['colrev_origin'] for x in rec_header_lis]
 
-    # search_files = LOADER.get_search_files(restrict=["bib"])
+    # search_files = loader.get_search_files(restrict=["bib"])
 
     # for search_file in search_files:
     #     print(search_file)
@@ -57,7 +57,7 @@ def debug_load() -> None:
         }
     ]
 
-    records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
+    records = loader.review_manager.dataset.set_ids(
         records, selected_IDs=[x["ID"] for x in records]
     )
     print(records)
@@ -65,9 +65,9 @@ def debug_load() -> None:
 
 def debug_pdf_get():
 
-    from colrev.pdf_get import PDF_Retrieval
+    from colrev.pdf_get import PDFRetrieval
 
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager()
 
     record = {
         "ENTRYTYPE": "article",
@@ -84,38 +84,38 @@ def debug_pdf_get():
         "doi": " 10.25300/MISQ/2020/14947",
     }
     print(record)
-    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=REVIEW_MANAGER)
-    print(PDF_RETRIEVAL)
+    pdf_retrieval = PDFRetrieval(review_manager=review_manager)
+    print(pdf_retrieval)
 
 
 def debug_data():
 
     from colrev.data import Data
 
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager()
 
-    DATA = Data(REVIEW_MANAGER=REVIEW_MANAGER)
-    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-    included = DATA.get_record_ids_for_synthesis(records)
+    data = Data(review_manager=review_manager)
+    records = data.review_manager.dataset.load_records_dict()
+    included = data.get_record_ids_for_synthesis(records)
     print(included)
 
 
 def debug_tei_tools(param) -> None:
 
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
-    GrobidService = REVIEW_MANAGER.get_environment_service(
+    review_manager = colrev.review_manager.ReviewManager()
+    GrobidService = review_manager.get_environment_service(
         service_identifier="GrobidService"
     )
-    TEIParser = REVIEW_MANAGER.get_environment_service(service_identifier="TEIParser")
+    TEIParser = review_manager.get_environment_service(service_identifier="TEIParser")
 
     logger.debug("Start grobid")
-    GROBID_SERVICE = GrobidService()
-    GROBID_SERVICE.start()
+    grobid_service = GrobidService()
+    grobid_service.start()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    TEI_INSTANCE = TEIParser(pdf_path=filepath)
-    res = TEI_INSTANCE.get_metadata()
+    tei = TEIParser(pdf_path=filepath)
+    res = tei.get_metadata()
     print(res)
 
 
@@ -124,7 +124,7 @@ def debug_pdf_prep():
     # from pdfminer.pdfdocument import PDFDocument
     # from pdfminer.pdfinterp import resolve1
     # from pdfminer.pdfparser import PDFParser
-    # records = REVIEW_MANAGER.load_records_dict()
+    # records = review_manager.load_records_dict()
     # record = records["Johns2006"]
     # with open(record["file"], "rb") as file:
     #     parser = PDFParser(file)
@@ -154,8 +154,8 @@ def debug_pdf_prep():
 def get_non_unique_colrev_pdf_ids() -> None:
     import pandas as pd
 
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
-    records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+    review_manager = colrev.review_manager.ReviewManager()
+    records = review_manager.dataset.load_records_dict()
 
     import collections
 
@@ -167,19 +167,19 @@ def get_non_unique_colrev_pdf_ids() -> None:
     colrev_pdf_ids = [
         item for item, count in collections.Counter(colrev_pdf_ids).items() if count > 1
     ]
-    df = pd.DataFrame(colrev_pdf_ids, columns=["colrev_pdf_ids"])
+    cpid_df = pd.DataFrame(colrev_pdf_ids, columns=["colrev_pdf_ids"])
 
-    df.to_csv("colrev_pdf_ids.csv", index=False)
-    return df
+    cpid_df.to_csv("colrev_pdf_ids.csv", index=False)
+    return cpid_df
 
 
-def local_index(param):
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
+def debug_local_index(param):
+    review_manager = colrev.review_manager.ReviewManager()
 
     # pylint: disable=no-member
-    LocalIndex = REVIEW_MANAGER.get_environment_service(service_identifier="LocalIndex")
+    LocalIndex = review_manager.get_environment_service(service_identifier="LocalIndex")
 
-    LOCAL_INDEX = LocalIndex()
+    local_index = LocalIndex()
     # To Test retrieval of record:
     record = {
         "ENTRYTYPE": "article",
@@ -196,7 +196,7 @@ def local_index(param):
         "ENTRYTYPE": "article",
         "doi": "10.17705/1JAIS.00570",
     }
-    record = LOCAL_INDEX.retrieve(record=record)
+    record = local_index.retrieve(record=record)
     pp.pprint(record)
 
     # To Test retrieval of global ID
@@ -280,12 +280,12 @@ def local_index(param):
 
 
 def corrections():
-    REVIEW_MANAGER = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager()
 
     from colrev.process import CheckProcess
 
-    CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
-    REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
+    CheckProcess(review_manager=review_manager)
+    review_manager.dataset.check_corrections_of_curated_records()
 
 
 def main(operation: str, param):
@@ -295,7 +295,7 @@ def main(operation: str, param):
         "pdf_get": debug_pdf_get,
         "pdf_prep": debug_pdf_prep,
         "data": debug_data,
-        "local_index": local_index,
+        "local_index": debug_local_index,
         "tei": debug_tei_tools,
         "corrections": corrections,
     }

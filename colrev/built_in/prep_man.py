@@ -12,20 +12,20 @@ import colrev.record
 
 @zope.interface.implementer(colrev.process.PreparationManualEndpoint)
 class CoLRevCLIManPrep:
-    def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, prep_man, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def prepare_manual(self, PREP_MAN, records):
+    def prepare_manual(self, prep_man, records):
 
         # saved_args = locals()
 
-        md_prep_man_data = PREP_MAN.get_data()
+        md_prep_man_data = prep_man.get_data()
         stat_len = md_prep_man_data["nr_tasks"]
 
         if 0 == stat_len:
-            PREP_MAN.REVIEW_MANAGER.logger.info("No records to prepare manually")
+            prep_man.review_manager.logger.info("No records to prepare manually")
 
         print("Man-prep is not fully implemented (yet).\n")
         print(
@@ -33,9 +33,9 @@ class CoLRevCLIManPrep:
             "create a commit.\n"  # call this script again to create a commit
         )
 
-        # if PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+        # if prep_man.review_manager.dataset.has_changes():
         #     if "y" == input("Create commit (y/n)?"):
-        #         PREP_MAN.REVIEW_MANAGER.create_commit(
+        #         prep_man.review_manager.create_commit(
         #            msg= "Manual preparation of records",
         #             manual_author=True,
         #             saved_args=saved_args,
@@ -50,14 +50,14 @@ class CoLRevCLIManPrep:
 
 @zope.interface.implementer(colrev.process.PreparationManualEndpoint)
 class ExportManPrep:
-    def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, prep_man, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def prepare_manual(self, PREP_MAN, records):
+    def prepare_manual(self, prep_man, records):
 
-        prep_man_path = PREP_MAN.REVIEW_MANAGER.path / Path("prep_man")
+        prep_man_path = prep_man.review_manager.path / Path("prep_man")
         prep_man_path.mkdir(exist_ok=True)
 
         export_path = prep_man_path / Path("records_prep_man.bib")
@@ -70,18 +70,18 @@ class ExportManPrep:
 
             for record in records.values():
                 if "file" in record:
-                    pdfReader = PdfFileReader(record["file"], strict=False)
-                    if pdfReader.getNumPages() >= 1:
+                    pdf_reader = PdfFileReader(record["file"], strict=False)
+                    if pdf_reader.getNumPages() >= 1:
 
                         writer = PdfFileWriter()
-                        writer.addPage(pdfReader.getPage(0))
+                        writer.addPage(pdf_reader.getPage(0))
                         target_path = prep_man_path / Path(record["file"])
                         target_path.parents[0].mkdir(exist_ok=True, parents=True)
                         with open(target_path, "wb") as outfile:
                             writer.write(outfile)
 
         if not export_path.is_file():
-            PREP_MAN.REVIEW_MANAGER.logger.info(
+            prep_man.review_manager.logger.info(
                 f"Export records for man-prep to {export_path}"
             )
 
@@ -91,7 +91,7 @@ class ExportManPrep:
                 if colrev.record.RecordState.md_needs_manual_preparation
                 == v["colrev_status"]
             }
-            PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            prep_man.review_manager.dataset.save_records_dict_to_file(
                 records=man_prep_recs, save_path=export_path
             )
             if any("file" in r for r in man_prep_recs.values()):
@@ -100,51 +100,47 @@ class ExportManPrep:
         else:
             if "y" == input(f"Import changes from {export_path} [y,n]?"):
 
-                PREP_MAN.REVIEW_MANAGER.logger.info(
+                prep_man.review_manager.logger.info(
                     f"Load import changes from {export_path}"
                 )
 
                 with open(export_path, encoding="utf8") as target_bib:
-                    man_prep_recs = (
-                        PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                            load_str=target_bib.read()
-                        )
+                    man_prep_recs = prep_man.review_manager.dataset.load_records_dict(
+                        load_str=target_bib.read()
                     )
 
-                records = PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-                for ID, record in man_prep_recs.items():
-                    RECORD = colrev.record.PrepRecord(data=record)
-                    RECORD.update_masterdata_provenance(
-                        UNPREPARED_RECORD=RECORD.copy(),
-                        REVIEW_MANAGER=PREP_MAN.REVIEW_MANAGER,
+                records = prep_man.review_manager.dataset.load_records_dict()
+                for record_id, record_dict in man_prep_recs.items():
+                    record = colrev.record.PrepRecord(data=record_dict)
+                    record.update_masterdata_provenance(
+                        unprepared_record=record.copy(),
+                        review_manager=prep_man.review_manager,
                     )
-                    RECORD.set_status(
+                    record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
                     )
-                    for k in list(RECORD.data.keys()):
+                    for k in list(record.data.keys()):
                         if k in ["colrev_status"]:
                             continue
-                        if k in records[ID]:
-                            if RECORD.data[k] != records[ID][k]:
-                                if k in RECORD.data.get(
+                        if k in records[record_id]:
+                            if record.data[k] != records[record_id][k]:
+                                if k in record.data.get(
                                     "colrev_masterdata_provenance", {}
                                 ):
-                                    RECORD.add_masterdata_provenance(
+                                    record.add_masterdata_provenance(
                                         key=k, source="man_prep"
                                     )
                                 else:
-                                    RECORD.add_data_provenance(key=k, source="man_prep")
+                                    record.add_data_provenance(key=k, source="man_prep")
 
-                    records[ID] = RECORD.get_data()
+                    records[record_id] = record.get_data()
 
-                PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
-                    records=records
-                )
-                PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-                PREP_MAN.REVIEW_MANAGER.create_commit(msg="Prep-man (ExportManPrep)")
+                prep_man.review_manager.dataset.save_records_dict(records=records)
+                prep_man.review_manager.dataset.add_record_changes()
+                prep_man.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
 
-                PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-                PREP_MAN.REVIEW_MANAGER.create_commit(
+                prep_man.review_manager.dataset.set_ids()
+                prep_man.review_manager.create_commit(
                     msg="Set IDs", script_call="colrev prep", saved_args={}
                 )
 
@@ -153,23 +149,23 @@ class ExportManPrep:
 
 @zope.interface.implementer(colrev.process.PreparationManualEndpoint)
 class CurationJupyterNotebookManPrep:
-    def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, prep_man, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():
-            PREP_MAN.REVIEW_MANAGER.logger.info(
+            prep_man.review_manager.logger.info(
                 f"Activated jupyter notebook to"
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )
-            PREP_MAN.REVIEW_MANAGER.retrieve_package_file(
+            prep_man.review_manager.retrieve_package_file(
                 template_file=Path("../template/prep_man_curation.ipynb"),
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )
 
-    def prepare_manual(self, PREP_MAN, records):
+    def prepare_manual(self, prep_man, records):
 
         input(
             "Navigate to the jupyter notebook available at\n"

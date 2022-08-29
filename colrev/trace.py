@@ -8,10 +8,10 @@ import colrev.process
 
 
 class Trace(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager):
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.check,
         )
 
@@ -21,14 +21,14 @@ class Trace(colrev.process.Process):
 
     def main(self, *, ID: str) -> None:
 
-        self.REVIEW_MANAGER.logger.info(f"Trace record by ID: {ID}")
+        self.review_manager.logger.info(f"Trace record by ID: {ID}")
 
-        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
-        DATA = self.REVIEW_MANAGER.paths["DATA"]
+        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
+        data = self.review_manager.paths["DATA"]
 
-        revlist = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo().iter_commits()
+        revlist = self.review_manager.dataset.get_repo().iter_commits()
 
-        pp = pprint.PrettyPrinter(indent=4)
+        _pp = pprint.PrettyPrinter(indent=4)
 
         prev_record: dict = {}
         prev_data = ""
@@ -44,12 +44,12 @@ class Trace(colrev.process.Process):
                 + f" {commit_message_first_line} (by {commit.author.name})"
             )
 
-            if str(RECORDS_FILE_RELATIVE) in commit.tree:
+            if str(records_file_relative) in commit.tree:
                 filecontents = (
-                    commit.tree / str(RECORDS_FILE_RELATIVE)
+                    commit.tree / str(records_file_relative)
                 ).data_stream.read()
 
-                records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                records_dict = self.review_manager.dataset.load_records_dict(
                     load_str=filecontents.decode("utf-8")
                 )
 
@@ -63,11 +63,11 @@ class Trace(colrev.process.Process):
                     diffs = list(dictdiffer.diff(prev_record, record))
                     if len(diffs) > 0:
                         for diff in diffs:
-                            print(self.__lpad_multiline(s=pp.pformat(diff), lpad=5))
+                            print(self.__lpad_multiline(s=_pp.pformat(diff), lpad=5))
                     prev_record = record
 
-            if DATA in commit.tree:
-                filecontents = (commit.tree / DATA).data_stream.read()
+            if data in commit.tree:
+                filecontents = (commit.tree / data).data_stream.read()
                 for line in str(filecontents).split("\\n"):
                     if ID in line:
                         if line != prev_data:

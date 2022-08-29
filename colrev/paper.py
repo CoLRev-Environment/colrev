@@ -10,9 +10,9 @@ import colrev.process
 
 
 class Paper(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
         )
 
@@ -20,7 +20,7 @@ class Paper(colrev.process.Process):
 
         paper_endpoint_settings_l = [
             s
-            for s in self.REVIEW_MANAGER.settings.data.scripts
+            for s in self.review_manager.settings.data.scripts
             if "MANUSCRIPT" == s["endpoint"]
         ]
 
@@ -29,46 +29,46 @@ class Paper(colrev.process.Process):
 
         paper_endpoint_settings = paper_endpoint_settings_l[0]
 
-        if not self.REVIEW_MANAGER.paths["PAPER"].is_file():
-            self.REVIEW_MANAGER.logger.error("File paper.md does not exist.")
-            self.REVIEW_MANAGER.logger.info("Complete processing and use colrev data")
+        if not self.review_manager.paths["PAPER"].is_file():
+            self.review_manager.logger.error("File paper.md does not exist.")
+            self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+        EnvironmentManager = self.review_manager.get_environment_service(
             service_identifier="EnvironmentManager"
         )
         EnvironmentManager.build_docker_images()
 
-        CSL_FILE = paper_endpoint_settings["csl_style"]
-        WORD_TEMPLATE = paper_endpoint_settings["word_template"]
+        csl_file = paper_endpoint_settings["csl_style"]
+        word_template = paper_endpoint_settings["word_template"]
 
-        if not Path(WORD_TEMPLATE).is_file():
+        if not Path(word_template).is_file():
             built_in_data.ManuscriptEndpoint.retrieve_default_word_template()
-        if not Path(CSL_FILE).is_file():
+        if not Path(csl_file).is_file():
             built_in_data.ManuscriptEndpoint.retrieve_default_csl()
-        assert Path(WORD_TEMPLATE).is_file()
-        assert Path(CSL_FILE).is_file()
+        assert Path(word_template).is_file()
+        assert Path(csl_file).is_file()
 
-        uid = os.stat(self.REVIEW_MANAGER.paths["RECORDS_FILE"]).st_uid
-        gid = os.stat(self.REVIEW_MANAGER.paths["RECORDS_FILE"]).st_gid
+        uid = os.stat(self.review_manager.paths["RECORDS_FILE"]).st_uid
+        gid = os.stat(self.review_manager.paths["RECORDS_FILE"]).st_gid
 
         script = (
             "paper.md --citeproc --bibliography records.bib "
-            + f"--csl {CSL_FILE} "
-            + f"--reference-doc {WORD_TEMPLATE} "
+            + f"--csl {csl_file} "
+            + f"--reference-doc {word_template} "
             + "--output paper.docx"
         )
 
         client = docker.from_env()
         try:
-            EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+            EnvironmentManager = self.review_manager.get_environment_service(
                 service_identifier="EnvironmentManager"
             )
 
             pandoc_img = EnvironmentManager.docker_images["pandoc/ubuntu-latex"]
             msg = "Running docker container created from " f"image {pandoc_img}"
-            self.REVIEW_MANAGER.report_logger.info(msg)
-            self.REVIEW_MANAGER.logger.info(msg)
+            self.review_manager.report_logger.info(msg)
+            self.review_manager.logger.info(msg)
             client.containers.run(
                 image=pandoc_img,
                 command=script,
@@ -76,7 +76,7 @@ class Paper(colrev.process.Process):
                 volumes=[os.getcwd() + ":/data"],
             )
         except docker.errors.ImageNotFound:
-            self.REVIEW_MANAGER.logger.error("Docker image not found")
+            self.review_manager.logger.error("Docker image not found")
 
         return
 

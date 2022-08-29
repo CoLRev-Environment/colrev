@@ -58,6 +58,16 @@ class ParameterError(CoLRevException):
         super().__init__(self.message)
 
 
+class InvalidSettingsError(CoLRevException):
+    """
+    Invalid value in settings.json.
+    """
+
+    def __init__(self, *, msg):
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Valid commits, data structures, and repo states
 
 
@@ -300,11 +310,11 @@ class ServiceNotAvailableException(CoLRevException):
         super().__init__(f"Service not available: {self.message}")
 
 
-class TEI_TimeoutException(CoLRevException):
+class TEITimeoutException(CoLRevException):
     pass
 
 
-class TEI_Exception(CoLRevException):
+class TEIException(CoLRevException):
     pass
 
 

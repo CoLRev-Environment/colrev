@@ -11,9 +11,9 @@ import colrev.review_manager
 
 
 class Push(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
         )
 
@@ -26,18 +26,18 @@ class Push(colrev.process.Process):
             self.push_record_corrections()
 
     def push_project(self) -> None:
-        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        git_repo = self.review_manager.dataset.get_repo()
         origin = git_repo.remotes.origin
-        self.REVIEW_MANAGER.logger.info(f"Push changes to {git_repo.remotes.origin}")
+        self.review_manager.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()
 
     def push_record_corrections(self) -> None:
 
-        self.REVIEW_MANAGER.logger.info("Collect corrections for curated repositories")
+        self.review_manager.logger.info("Collect corrections for curated repositories")
 
         # group by target-repo to bundle changes in a commit
         change_sets = {}  # type: ignore
-        for correction in self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"):
+        for correction in self.review_manager.paths["CORRECTIONS_PATH"].glob("*.json"):
             with open(correction, encoding="utf8") as json_file:
                 output = json.load(json_file)
             output["file"] = correction
@@ -57,9 +57,9 @@ class Push(colrev.process.Process):
                 continue
             print()
             if "metadata_source=" in source_url:
-                self.REVIEW_MANAGER.logger.info(f"Share corrections with {source_url}")
+                self.review_manager.logger.info(f"Share corrections with {source_url}")
             else:
-                self.REVIEW_MANAGER.logger.info(f"Apply corrections to {source_url}")
+                self.review_manager.logger.info(f"Apply corrections to {source_url}")
             # print(change_itemset)
             for item in change_itemset:
                 print()
@@ -85,7 +85,7 @@ class Push(colrev.process.Process):
                             + f": {values[0][1]}"
                         )
                     else:
-                        self.REVIEW_MANAGER.pp.pprint(change_item)
+                        self.review_manager.p_printer.pprint(change_item)
 
             response = ""
             while True:
@@ -119,7 +119,7 @@ class Push(colrev.process.Process):
                 }
             )
 
-        corrections = self.REVIEW_MANAGER.pp.pformat(prepared_change_list)
+        corrections = self.review_manager.p_printer.pformat(prepared_change_list)
 
         text = (
             "Dear Sir or Madam,\n\nwe have noticed potential corrections and "
@@ -148,10 +148,9 @@ class Push(colrev.process.Process):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_REVIEW_MANAGER = colrev.review_manager.ReviewManager(path_str=source_url)
-        CHECK_PROCESS = colrev.process.CheckProcess(REVIEW_MANAGER=check_REVIEW_MANAGER)
-        REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
-        git_repo = REVIEW_DATASET.get_repo()
+        check_review_manager = colrev.review_manager.ReviewManager(path_str=source_url)
+        check_process = colrev.process.CheckProcess(review_manager=check_review_manager)
+        git_repo = check_process.review_manager.dataset.get_repo()
 
         if git_repo.is_dirty():
             print(
@@ -160,15 +159,15 @@ class Push(colrev.process.Process):
             )
             return
 
-        if REVIEW_DATASET.behind_remote():
-            o = git_repo.remotes.origin
-            o.pull()
-            if not REVIEW_DATASET.behind_remote():
-                self.REVIEW_MANAGER.logger.info("Pulled changes")
+        if check_process.review_manager.dataset.behind_remote():
+            origin = git_repo.remotes.origin
+            origin.pull()
+            if not check_process.review_manager.dataset.behind_remote():
+                self.review_manager.logger.info("Pulled changes")
             else:
-                self.REVIEW_MANAGER.logger.error(
+                self.review_manager.logger.error(
                     "Repo behind remote. Pull first to avoid conflicts.\n"
-                    f"colrev env --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
+                    f"colrev env --update {check_process.review_manager.path}"
                 )
                 return
 
@@ -188,15 +187,17 @@ class Push(colrev.process.Process):
             "url",
         ]
 
-        records = REVIEW_DATASET.load_records_dict()
+        records = check_process.review_manager.dataset.load_records_dict()
         pull_request_msgs = []
         for change_item in change_list:
             original_curated_record = change_item["original_curated_record"]
 
             found = False
             try:
-                record = REVIEW_DATASET.retrieve_by_colrev_id(
-                    original_curated_record, records.values()
+                record_dict = (
+                    check_process.review_manager.dataset.retrieve_by_colrev_id(
+                        original_curated_record, records.values()
+                    )
                 )
                 found = True
             except colrev_exceptions.RecordNotInRepoException:
@@ -208,7 +209,7 @@ class Push(colrev.process.Process):
                     if original_curated_record.get("doi", "NDOI") == r.get("doi", "NA")
                 ]
                 if len(matching_doi_rec_l) == 1:
-                    record = matching_doi_rec_l[0]
+                    record_dict = matching_doi_rec_l[0]
                     found = True
 
                 matching_url_rec_l = [
@@ -217,14 +218,14 @@ class Push(colrev.process.Process):
                     if original_curated_record.get("url", "NURL") == r.get("url", "NA")
                 ]
                 if len(matching_url_rec_l) == 1:
-                    record = matching_url_rec_l[0]
+                    record_dict = matching_url_rec_l[0]
                     found = True
 
             if not found:
                 print(f'Record not found: {original_curated_record["ID"]}')
                 continue
 
-            record_branch_name = record["ID"]
+            record_branch_name = record_dict["ID"]
             counter = 1
             new_record_branch_name = record_branch_name
             while new_record_branch_name in [ref.name for ref in git_repo.references]:
@@ -240,7 +241,7 @@ class Push(colrev.process.Process):
                 if head.name == record_branch_name:
                     head.checkout()
 
-            rec_for_reset = record.copy()
+            rec_for_reset = record_dict.copy()
 
             for (edit_type, key, change) in list(change_item["changes"]):
                 # Note : by retricting changes to essential_md_keys,
@@ -252,39 +253,39 @@ class Push(colrev.process.Process):
                 if edit_type == "change":
                     if key not in essential_md_keys:
                         continue
-                    record[key] = change[1]
+                    record_dict[key] = change[1]
                 if edit_type == "add":
                     key = change[0][0]
                     value = change[0][1]
                     if key not in essential_md_keys:
                         continue
-                    record[key] = value
+                    record_dict[key] = value
                 # TODO : deal with remove/merge
 
-            RECORD = colrev.record.Record(data=record)
-            RECORD.add_colrev_ids(records=[record])
-            cids = RECORD.get_data()["colrev_id"]
-            record["colrev_id"] = cids
+            record = colrev.record.Record(data=record_dict)
+            record.add_colrev_ids(records=[record_dict])
+            cids = record.get_data()["colrev_id"]
+            record_dict["colrev_id"] = cids
 
-            REVIEW_DATASET.save_records_dict(records=records)
-            REVIEW_DATASET.add_record_changes()
-            CHECK_PROCESS.REVIEW_MANAGER.create_commit(
-                msg=f"Update {record['ID']}", script_call="colrev push"
+            check_process.review_manager.dataset.save_records_dict(records=records)
+            check_process.review_manager.dataset.add_record_changes()
+            check_process.review_manager.create_commit(
+                msg=f"Update {record_dict['ID']}", script_call="colrev push"
             )
 
             git_repo.remotes.origin.push(
                 refspec=f"{record_branch_name}:{record_branch_name}"
             )
-            self.REVIEW_MANAGER.logger.info("Pushed corrections")
+            self.review_manager.logger.info("Pushed corrections")
 
             for head in git_repo.heads:
                 if head.name == prev_branch_name:
                     head.checkout()
 
-            g = git.Git(source_url)
-            g.execute(["git", "branch", "-D", record_branch_name])
+            git_repo = git.Git(source_url)
+            git_repo.execute(["git", "branch", "-D", record_branch_name])
 
-            self.REVIEW_MANAGER.logger.info("Removed local corrections branch")
+            self.review_manager.logger.info("Removed local corrections branch")
 
             if "github.com" in remote.url:
                 pull_request_msgs.append(
@@ -295,11 +296,13 @@ class Push(colrev.process.Process):
             # reset the record - each branch should have changes for one record
             # Note : modify dict (do not replace it) - otherwise changes will not be
             # part of the records.
-            for k, v in rec_for_reset.items():
-                record[k] = v
-            keys_added = [k for k in record.keys() if k not in rec_for_reset.keys()]
+            for key, value in rec_for_reset.items():
+                record_dict[key] = value
+            keys_added = [
+                key for key in record_dict.keys() if key not in rec_for_reset.keys()
+            ]
             for key in keys_added:
-                del record[key]
+                del record_dict[key]
 
             if Path(change_item["file"]).is_file():
                 Path(change_item["file"]).unlink()

@@ -32,12 +32,12 @@ class CrossrefSearchEndpoint:
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
-    def __init__(self, *, SEARCH, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, search, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
         from colrev.built_in.database_connectors import (
             CrossrefConnector,
             DOIConnector,
@@ -63,7 +63,7 @@ class CrossrefSearchEndpoint:
             records = {}
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                records = search.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
@@ -72,7 +72,7 @@ class CrossrefSearchEndpoint:
                 max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
                 + 1
             )
-        CROSSREF = CrossrefConnector(REVIEW_MANAGER=SEARCH.REVIEW_MANAGER)
+        crossref_connector = CrossrefConnector(review_manager=search.review_manager)
 
         def get_crossref_query_return(params):
             if "selection_clause" in params:
@@ -82,12 +82,14 @@ class CrossrefSearchEndpoint:
                 #     container_title=
                 #       "Journal of the Association for Information Systems"
                 # )
-                yield from CROSSREF.get_bibliographic_query_return(**crossref_query)
+                yield from crossref_connector.get_bibliographic_query_return(
+                    **crossref_query
+                )
 
             if "journal_issn" in params.get("scope", {}):
 
                 for journal_issn in params["scope"]["journal_issn"].split("|"):
-                    yield from CROSSREF.get_journal_query_return(
+                    yield from crossref_connector.get_journal_query_return(
                         journal_issn=journal_issn
                     )
 
@@ -99,28 +101,28 @@ class CrossrefSearchEndpoint:
                     if "" == record.get("author", "") and "" == record.get("title", ""):
                         continue
 
-                    SEARCH.REVIEW_MANAGER.logger.info(" retrieved " + record["doi"])
+                    search.review_manager.logger.info(" retrieved " + record["doi"])
                     record["ID"] = str(max_id).rjust(6, "0")
 
-                    PREP_RECORD = colrev.record.PrepRecord(data=record)
+                    prep_record = colrev.record.PrepRecord(data=record)
                     DOIConnector.get_link_from_doi(
-                        RECORD=PREP_RECORD, REVIEW_MANAGER=SEARCH.REVIEW_MANAGER
+                        RECORD=prep_record, review_manager=search.review_manager
                     )
-                    record = PREP_RECORD.get_data()
+                    record = prep_record.get_data()
 
                     available_ids.append(record["doi"])
                     records[record["ID"]] = record
                     max_id += 1
-        except requests.exceptions.JSONDecodeError as e:
-            if "504 Gateway Time-out" in str(e):
+        except requests.exceptions.JSONDecodeError as exc:
+            if "504 Gateway Time-out" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "Crossref (check https://status.crossref.org/)"
                 )
             raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({e})"
+                f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-        SEARCH.save_feed_file(records, feed_file)
+        search.save_feed_file(records, feed_file)
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query and " WHERE " not in query:
@@ -142,12 +144,12 @@ class DBLPSearchEndpoint:
     source_identifier = "{{dblp_key}}"
     mode = "all"
 
-    def __init__(self, *, SEARCH, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, search, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -157,7 +159,7 @@ class DBLPSearchEndpoint:
         if "journal_abbreviated" not in params["scope"]:
             print("Error: journal_abbreviated not in params")
             return
-        SEARCH.REVIEW_MANAGER.logger.info(f"Retrieve DBLP: {params}")
+        search.review_manager.logger.info(f"Retrieve DBLP: {params}")
 
         available_ids = []
         max_id = 1
@@ -165,7 +167,7 @@ class DBLPSearchEndpoint:
             records = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = search.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
@@ -181,53 +183,53 @@ class DBLPSearchEndpoint:
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
-            if len(records) > 100 and not SEARCH.REVIEW_MANAGER.force_mode:
+            if len(records) > 100 and not search.review_manager.force_mode:
                 start = datetime.now().year - 2
             records_dict = {r["ID"]: r for r in records}
             for year in range(start, datetime.now().year):
-                SEARCH.REVIEW_MANAGER.logger.info(f"Retrieving year {year}")
+                search.review_manager.logger.info(f"Retrieving year {year}")
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
                 # query = params['scope']["venue_key"] + "+" + str(year)
-                f = 0
+                nr_retrieved = 0
                 batch_size = 250
-                DBLPConnector = colrev.built_in.database_connectors.DBLPConnector
+                dblp_connector = colrev.built_in.database_connectors.DBLPConnector
                 while True:
                     url = (
                         api_url
                         + query.replace(" ", "+")
-                        + f"&format=json&h={batch_size}&f={f}"
+                        + f"&format=json&h={batch_size}&f={nr_retrieved}"
                     )
-                    f += batch_size
-                    SEARCH.REVIEW_MANAGER.logger.debug(url)
+                    nr_retrieved += batch_size
+                    search.review_manager.logger.debug(url)
 
                     retrieved = False
-                    for RETRIEVED_RECORD in DBLPConnector.retrieve_dblp_records(
-                        REVIEW_MANAGER=SEARCH.REVIEW_MANAGER, url=url
+                    for retrieved_record in dblp_connector.retrieve_dblp_records(
+                        review_manager=search.review_manager, url=url
                     ):
-                        if "colrev_data_provenance" in RETRIEVED_RECORD.data:
-                            del RETRIEVED_RECORD.data["colrev_data_provenance"]
-                        if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
-                            del RETRIEVED_RECORD.data["colrev_masterdata_provenance"]
+                        if "colrev_data_provenance" in retrieved_record.data:
+                            del retrieved_record.data["colrev_data_provenance"]
+                        if "colrev_masterdata_provenance" in retrieved_record.data:
+                            del retrieved_record.data["colrev_masterdata_provenance"]
 
                         retrieved = True
 
                         if (
                             f"{params['scope']['venue_key']}/"
-                            not in RETRIEVED_RECORD.data["dblp_key"]
+                            not in retrieved_record.data["dblp_key"]
                         ):
                             continue
 
-                        if RETRIEVED_RECORD.data["dblp_key"] not in available_ids:
-                            RETRIEVED_RECORD.data["ID"] = str(max_id).rjust(6, "0")
-                            if RETRIEVED_RECORD.data.get("ENTRYTYPE", "") not in [
+                        if retrieved_record.data["dblp_key"] not in available_ids:
+                            retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
+                            if retrieved_record.data.get("ENTRYTYPE", "") not in [
                                 "article",
                                 "inproceedings",
                             ]:
                                 continue
                                 # retrieved_record["ENTRYTYPE"] = "misc"
-                            if "pages" in RETRIEVED_RECORD.data:
-                                del RETRIEVED_RECORD.data["pages"]
-                            available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
+                            if "pages" in retrieved_record.data:
+                                del retrieved_record.data["pages"]
+                            available_ids.append(retrieved_record.data["dblp_key"])
 
                             records = [
                                 {
@@ -236,7 +238,7 @@ class DBLPSearchEndpoint:
                                 }
                                 for r in records
                             ]
-                            records.append(RETRIEVED_RECORD.data)
+                            records.append(retrieved_record.data)
                             max_id += 1
 
                     if not retrieved:
@@ -258,7 +260,7 @@ class DBLPSearchEndpoint:
                         continue
 
                     records_dict = {r["ID"]: r for r in records}
-                SEARCH.save_feed_file(records_dict, feed_file)
+                search.save_feed_file(records_dict, feed_file)
 
         except requests.exceptions.HTTPError:
             pass
@@ -292,19 +294,19 @@ class BackwardSearchEndpoint:
     source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
 
-    def __init__(self, *, SEARCH, SETTINGS):
+    def __init__(self, *, search, settings):
 
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-        GrobidService = SEARCH.REVIEW_MANAGER.get_environment_service(
+        GrobidService = search.review_manager.get_environment_service(
             service_identifier="GrobidService"
         )
-        self.GROBID_SERVICE = GrobidService()
-        self.GROBID_SERVICE.start()
+        self.grobid_service = GrobidService()
+        self.grobid_service.start()
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
 
         if "colrev_status" in params["scope"]:
             if params["scope"]["colrev_status"] not in [
@@ -323,18 +325,18 @@ class BackwardSearchEndpoint:
             print("scope not yet implemented")
             return
 
-        if not SEARCH.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
+        if not search.review_manager.paths["RECORDS_FILE"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
-        records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = search.review_manager.dataset.load_records_dict()
 
         if feed_file.is_file():
             with open(feed_file, encoding="utf8") as bibtex_file:
                 if bibtex_file.read() == "":
                     feed_file_records = []
                 else:
-                    feed_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    feed_rd = search.review_manager.dataset.load_records_dict(
                         load_str=bibtex_file.read()
                     )
                     feed_file_records = list(feed_rd.values())
@@ -360,26 +362,26 @@ class BackwardSearchEndpoint:
                 ) and "pdfs/paper.pdf" != record.get("file", ""):
                     continue
 
-            SEARCH.REVIEW_MANAGER.logger.info(
+            search.review_manager.logger.info(
                 f'Running backward search for {record["ID"]} ({record["file"]})'
             )
 
-            pdf_path = SEARCH.REVIEW_MANAGER.path / Path(record["file"])
+            pdf_path = search.review_manager.path / Path(record["file"])
             if not Path(pdf_path).is_file():
-                SEARCH.REVIEW_MANAGER.logger.error(f'File not found for {record["ID"]}')
+                search.review_manager.logger.error(f'File not found for {record["ID"]}')
                 continue
 
             # pylint: disable=consider-using-with
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
-            r = requests.post(
-                self.GROBID_SERVICE.GROBID_URL + "/api/processReferences",
+            ret = requests.post(
+                self.grobid_service.GROBID_URL + "/api/processReferences",
                 files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
 
-            new_records_dict = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                load_str=r.text
+            new_records_dict = search.review_manager.dataset.load_records_dict(
+                load_str=ret.text
             )
             new_records = list(new_records_dict.values())
             for new_record in new_records:
@@ -391,11 +393,11 @@ class BackwardSearchEndpoint:
                     feed_file_records.append(new_record)
 
         feed_file_records_dict = {r["ID"]: r for r in feed_file_records}
-        SEARCH.save_feed_file(feed_file_records_dict, feed_file)
-        SEARCH.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
+        search.save_feed_file(feed_file_records_dict, feed_file)
+        search.review_manager.dataset.add_changes(path=str(feed_file))
 
-        if SEARCH.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            SEARCH.REVIEW_MANAGER.create_commit(
+        if search.review_manager.dataset.has_changes():
+            search.review_manager.create_commit(
                 msg="Backward search", script_call="colrev search"
             )
         else:
@@ -412,36 +414,36 @@ class ColrevProjectSearchEndpoint:
     source_identifier = "project"
     mode = "individual"
 
-    def __init__(self, *, SEARCH, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, search, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
 
         if not feed_file.is_file():
             records = []
             imported_ids = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = search.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
 
             imported_ids = [x["ID"] for x in records]
 
-        PROJECT_REVIEW_MANAGER = colrev.review_manager.ReviewManager(
+        project_review_manager = colrev.review_manager.ReviewManager(
             path_str=params["scope"]["url"]
         )
         colrev.load.Loader(
-            REVIEW_MANAGER=PROJECT_REVIEW_MANAGER,
+            review_manager=project_review_manager,
             notify_state_transition_process=False,
         )
-        SEARCH.REVIEW_MANAGER.logger.info(
+        search.review_manager.logger.info(
             f'Loading records from {params["scope"]["url"]}'
         )
-        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records_to_import = project_review_manager.dataset.load_records_dict()
         records_to_import = {
             ID: rec for ID, rec in records_to_import.items() if ID not in imported_ids
         }
@@ -449,7 +451,7 @@ class ColrevProjectSearchEndpoint:
             {k: str(v) for k, v in r.items()} for r in records_to_import.values()
         ]
 
-        SEARCH.REVIEW_MANAGER.logger.info("Importing selected records")
+        search.review_manager.logger.info("Importing selected records")
         for record_to_import in tqdm(records_to_import_list):
             if "selection_clause" in params:
                 res = []
@@ -463,7 +465,7 @@ class ColrevProjectSearchEndpoint:
 
                 if len(res) == 0:
                     continue
-            SEARCH.REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
+            search.review_manager.dataset.import_file(record_to_import)
 
             records = records + [record_to_import]
 
@@ -480,7 +482,7 @@ class ColrevProjectSearchEndpoint:
         if len(records) > 0:
             records_dict = {r["ID"]: r for r in records}
 
-            SEARCH.save_feed_file(records_dict, feed_file)
+            search.save_feed_file(records_dict, feed_file)
 
         else:
             print("No records retrieved.")
@@ -504,12 +506,12 @@ class IndexSearchEndpoint:
     source_identifier = "index"
     mode = "individual"
 
-    def __init__(self, *, SEARCH, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, search, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
         assert "selection_clause" in params
 
         if not feed_file.is_file():
@@ -518,17 +520,17 @@ class IndexSearchEndpoint:
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
 
-                feed_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = search.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
 
             imported_ids = [x["ID"] for x in records]
 
-        LocalIndex = SEARCH.REVIEW_MANAGER.get_environment_service(
+        LocalIndex = search.review_manager.get_environment_service(
             service_identifier="LocalIndex"
         )
-        LOCAL_INDEX = LocalIndex()
+        local_index = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
 
@@ -537,7 +539,7 @@ class IndexSearchEndpoint:
             # complex fields like lists of alsoKnownAs fields
 
             query = (
-                f"SELECT colrev_id FROM {LOCAL_INDEX.RECORD_INDEX} "
+                f"SELECT colrev_id FROM {local_index.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
             # TODO : update to opensearch standard (DSL?)
@@ -547,7 +549,7 @@ class IndexSearchEndpoint:
             #  ('POST', '/_plugins/_sql', body={'query': sql_str})
             # https://opensearch.org/docs/latest/search-plugins/sql/index/
             # see extract_references.py (methods repo)
-            # resp = LOCAL_INDEX.os.sql.query(body={"query": query})
+            # resp = local_index.open_search.sql.query(body={"query": query})
 
             print("WARNING: not yet fully implemented.")
             quick_fix_query = (
@@ -561,7 +563,7 @@ class IndexSearchEndpoint:
             )
             print(f"Working with quick-fix query: {quick_fix_query}")
             # input(query.replace(''))
-            # resp = LOCAL_INDEX.os.search(index=LOCAL_INDEX.RECORD_INDEX,
+            # resp = local_index.open_search.search(index=local_index.RECORD_INDEX,
             # body={"query":{"match_all":{}}})
 
             print("search currently restricted to title field")
@@ -581,8 +583,8 @@ class IndexSearchEndpoint:
             # Note : search(...) accepts the size keyword (tested & works)
             # https://opensearch-project.github.io/opensearch-py/
             # api-ref/client.html#opensearchpy.OpenSearch.search
-            resp = LOCAL_INDEX.os.search(
-                index=LOCAL_INDEX.RECORD_INDEX,
+            resp = local_index.open_search.search(
+                index=local_index.RECORD_INDEX,
                 size=10000,
                 body={
                     "query": {
@@ -628,13 +630,13 @@ class IndexSearchEndpoint:
             # for ID_to_retrieve in IDs_to_retrieve:
 
             #     hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-            #     res = LOCAL_INDEX.os.get(index=LOCAL_INDEX.RECORD_INDEX, id=hash)
+            #     res = local_index.open_search.get(index=local_index.RECORD_INDEX, id=hash)
             #     record_to_import = res["_source"]
             #     record_to_import = {k: str(v) for k, v in record_to_import.items()}
             #     record_to_import = {
             #         k: v for k, v in record_to_import.items() if "None" != v
             #     }
-            #     record_to_import = LOCAL_INDEX.prep_record_for_return(
+            #     record_to_import = local_index.prep_record_for_return(
             #         record=record_to_import, include_file=False
             #     )
 
@@ -670,7 +672,7 @@ class IndexSearchEndpoint:
 
         if len(records) > 0:
             records_dict = {r["ID"]: r for r in records}
-            SEARCH.save_feed_file(records_dict, feed_file)
+            search.save_feed_file(records_dict, feed_file)
 
         else:
             print("No records found")
@@ -685,35 +687,36 @@ class PDFSearchEndpoint:
     source_identifier = "{{file}}"
     mode = "all"
 
-    def __init__(self, *, SEARCH, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, search, settings):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, search, params: dict, feed_file: Path) -> None:
 
         skip_duplicates = True
 
-        self.PDF_PREPARATION = colrev.pdf_prep.PDF_Preparation(
-            REVIEW_MANAGER=SEARCH.REVIEW_MANAGER, notify_state_transition_process=False
+        self.pdf_preparation = colrev.pdf_prep.PDFPreparation(
+            review_manager=search.review_manager, notify_state_transition_process=False
         )
 
         def update_if_pdf_renamed(
-            x: dict, records: typing.Dict, search_source: Path
+            record_dict: dict, records: typing.Dict, search_source: Path
         ) -> bool:
-            UPDATED = True
-            NOT_UPDATED = False
+            updated = True
+            not_updated = False
 
             c_rec_l = [
                 r
                 for r in records.values()
-                if f"{search_source}/{x['ID']}" in r["colrev_origin"].split(";")
+                if f"{search_source}/{record_dict['ID']}"
+                in r["colrev_origin"].split(";")
             ]
             if len(c_rec_l) == 1:
                 c_rec = c_rec_l.pop()
                 if "colrev_pdf_id" in c_rec:
                     cpid = c_rec["colrev_pdf_id"]
-                    pdf_fp = SEARCH.REVIEW_MANAGER.path / Path(x["file"])
+                    pdf_fp = search.review_manager.path / Path(record_dict["file"])
                     pdf_path = pdf_fp.parents[0]
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search cpid {cpid}')
@@ -724,38 +727,38 @@ class PDFSearchEndpoint:
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
-                            x["file"] = str(
-                                potential_pdf.relative_to(SEARCH.REVIEW_MANAGER.path)
+                            record_dict["file"] = str(
+                                potential_pdf.relative_to(search.review_manager.path)
                             )
                             c_rec["file"] = str(
-                                potential_pdf.relative_to(SEARCH.REVIEW_MANAGER.path)
+                                potential_pdf.relative_to(search.review_manager.path)
                             )
-                            return UPDATED
-            return NOT_UPDATED
+                            return updated
+            return not_updated
 
         def remove_records_if_pdf_no_longer_exists() -> None:
 
-            SEARCH.REVIEW_MANAGER.logger.debug("Checking for PDFs that no longer exist")
+            search.review_manager.logger.debug("Checking for PDFs that no longer exist")
 
             if not feed_file.is_file():
                 return
 
             with open(feed_file, encoding="utf8") as target_db:
 
-                search_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                search_rd = search.review_manager.dataset.load_records_dict(
                     load_str=target_db.read()
                 )
 
             records = {}
-            if SEARCH.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
-                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+            if search.review_manager.paths["RECORDS_FILE"].is_file():
+                records = search.review_manager.dataset.load_records_dict()
 
             to_remove: typing.List[str] = []
-            for x in search_rd.values():
-                x_pdf_path = SEARCH.REVIEW_MANAGER.path / Path(x["file"])
+            for record_dict in search_rd.values():
+                x_pdf_path = search.review_manager.path / Path(record_dict["file"])
                 if not x_pdf_path.is_file():
                     if records:
-                        updated = update_if_pdf_renamed(x, records, feed_file)
+                        updated = update_if_pdf_renamed(record_dict, records, feed_file)
                         if updated:
                             continue
                     to_remove = to_remove + [
@@ -764,11 +767,11 @@ class PDFSearchEndpoint:
 
             search_rd = {x["ID"]: x for x in search_rd.values() if x_pdf_path.is_file()}
             if len(search_rd.values()) != 0:
-                SEARCH.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                search.review_manager.dataset.save_records_dict_to_file(
                     records=search_rd, save_path=feed_file
                 )
 
-            if SEARCH.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
+            if search.review_manager.paths["RECORDS_FILE"].is_file():
                 # Note : origins may contain multiple links
                 # but that should not be a major issue in indexing repositories
 
@@ -783,12 +786,12 @@ class PDFSearchEndpoint:
                             print("REMOVE " + record["colrev_origin"])
                             to_remove.append(record["colrev_origin"])
 
-                for r in to_remove:
-                    SEARCH.REVIEW_MANAGER.logger.debug(
-                        f"remove from index (PDF path no longer exists): {r}"
+                for record_dict in to_remove:
+                    search.review_manager.logger.debug(
+                        f"remove from index (PDF path no longer exists): {record_dict}"
                     )
-                    SEARCH.REVIEW_MANAGER.report_logger.info(
-                        f"remove from index (PDF path no longer exists): {r}"
+                    search.review_manager.report_logger.info(
+                        f"remove from index (PDF path no longer exists): {record_dict}"
                     )
 
                 records = {
@@ -796,21 +799,21 @@ class PDFSearchEndpoint:
                     for k, v in records.items()
                     if v["colrev_origin"] not in to_remove
                 }
-                SEARCH.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-                SEARCH.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                search.review_manager.dataset.save_records_dict(records=records)
+                search.review_manager.dataset.add_record_changes()
 
             return
 
         def get_pdf_links(*, bib_file: Path) -> list:
             pdf_list = []
             if bib_file.is_file():
-                with open(bib_file, encoding="utf8") as f:
-                    line = f.readline()
+                with open(bib_file, encoding="utf8") as file:
+                    line = file.readline()
                     while line:
                         if "file" == line.lstrip()[:4]:
-                            file = line[line.find("{") + 1 : line.rfind("}")]
-                            pdf_list.append(Path(file))
-                        line = f.readline()
+                            pdf_file = line[line.find("{") + 1 : line.rfind("}")]
+                            pdf_list.append(Path(pdf_file))
+                        line = file.readline()
             return pdf_list
 
         def get_pdf_cpid_path(path) -> typing.List[str]:
@@ -821,7 +824,7 @@ class PDFSearchEndpoint:
             records = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = search.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = list(feed_rd.values())
@@ -839,10 +842,10 @@ class PDFSearchEndpoint:
         remove_records_if_pdf_no_longer_exists()
 
         indexed_pdf_paths = get_pdf_links(bib_file=feed_file)
-        #  + get_pdf_links(REVIEW_MANAGER.paths["RECORDS_FILE"])
+        #  + get_pdf_links(review_manager.paths["RECORDS_FILE"])
 
         indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
-        SEARCH.REVIEW_MANAGER.logger.debug(f"indexed_pdf_paths: {indexed_pdf_path_str}")
+        search.review_manager.logger.debug(f"indexed_pdf_paths: {indexed_pdf_path_str}")
 
         overall_pdfs = path.glob("**/*.pdf")
 
@@ -850,7 +853,7 @@ class PDFSearchEndpoint:
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
         if skip_duplicates:
-            SEARCH.REVIEW_MANAGER.logger.info("Calculate PDF hashes to skip duplicates")
+            search.review_manager.logger.info("Calculate PDF hashes to skip duplicates")
             pdfs_path_cpid = p_map(get_pdf_cpid_path, pdfs_to_index)
             pdfs_cpid = [x[1] for x in pdfs_path_cpid]
             duplicate_cpids = [
@@ -864,7 +867,7 @@ class PDFSearchEndpoint:
         broken_filepaths = [str(x) for x in pdfs_to_index if ";" in str(x)]
         if len(broken_filepaths) > 0:
             broken_filepath_str = "\n ".join(broken_filepaths)
-            SEARCH.REVIEW_MANAGER.logger.error(
+            search.review_manager.logger.error(
                 f'skipping PDFs with ";" in filepath: \n{broken_filepath_str}'
             )
             pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
@@ -879,7 +882,7 @@ class PDFSearchEndpoint:
         ]
         if len(filepaths_to_skip) > 0:
             fp_to_skip_str = "\n ".join(filepaths_to_skip)
-            SEARCH.REVIEW_MANAGER.logger.info(
+            search.review_manager.logger.info(
                 f"Skipping PDFs with _ocr.pdf/_wo_cp.pdf: {fp_to_skip_str}"
             )
             pdfs_to_index = [
@@ -889,16 +892,16 @@ class PDFSearchEndpoint:
         # pdfs_to_index = list(set(overall_pdfs) - set(indexed_pdf_paths))
         # pdfs_to_index = ['/home/path/file.pdf']
         pdfs_to_index_str = "\n  ".join([str(x) for x in pdfs_to_index])
-        SEARCH.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
+        search.review_manager.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            GrobidService = SEARCH.REVIEW_MANAGER.get_environment_service(
+            GrobidService = search.review_manager.get_environment_service(
                 service_identifier="GrobidService"
             )
-            GROBID_SERVICE = GrobidService()
-            GROBID_SERVICE.start()
+            grobid_service = GrobidService()
+            grobid_service.start()
         else:
-            SEARCH.REVIEW_MANAGER.logger.info("No additional PDFs to index")
+            search.review_manager.logger.info("No additional PDFs to index")
             return
 
         def update_fields_based_on_pdf_dirs(record: dict) -> dict:
@@ -965,7 +968,7 @@ class PDFSearchEndpoint:
             ):
                 return record
 
-            pdf_path = SEARCH.REVIEW_MANAGER.path / Path(record["file"])
+            pdf_path = search.review_manager.path / Path(record["file"])
 
             # Note: activate the following when new grobid version is released (> 0.7)
             # Note: we have more control and transparency over the consolidation
@@ -981,12 +984,12 @@ class PDFSearchEndpoint:
             # )
 
             # if 200 == r.status_code:
-            #     rec_d = REVIEW_MANAGER.REVIEW_DATASET.
+            #     rec_d = review_manager.dataset.
             #               load_records_dict(load_str=r.text)
             #     record = rec_d.values()[0]
             #     return record
             # if 500 == r.status_code:
-            #     REVIEW_MANAGER.logger.error(f"Not a readable
+            #     review_manager.logger.error(f"Not a readable
             #           pdf file: {pdf_path.name}")
             #     print(f"Grobid: {r.text}")
             #     return {}
@@ -995,21 +998,21 @@ class PDFSearchEndpoint:
             # print(f"Response: {r.text}")
             # return {}
 
-            TEIParser = SEARCH.REVIEW_MANAGER.get_environment_service(
+            TEIParser = search.review_manager.get_environment_service(
                 service_identifier="TEIParser"
             )
-            TEI_INSTANCE = TEIParser(
+            tei = TEIParser(
                 pdf_path=pdf_path,
             )
 
-            extracted_record = TEI_INSTANCE.get_metadata()
+            extracted_record = tei.get_metadata()
 
             for key, val in extracted_record.items():
                 if val:
                     record[key] = str(val)
 
-            with open(pdf_path, "rb") as fp:
-                parser = PDFParser(fp)
+            with open(pdf_path, "rb") as file:
+                parser = PDFParser(file)
                 doc = PDFDocument(parser)
 
                 if record.get("title", "NA") in ["NA", ""]:
@@ -1036,7 +1039,7 @@ class PDFSearchEndpoint:
                 if "keywords" in record:
                     del record["keywords"]
 
-                EnvironmentManager = SEARCH.REVIEW_MANAGER.get_environment_service(
+                EnvironmentManager = search.review_manager.get_environment_service(
                     service_identifier="EnvironmentManager"
                 )
                 # to allow users to update/reindex with newer version:
@@ -1047,61 +1050,63 @@ class PDFSearchEndpoint:
 
         def index_pdf(*, pdf_path: Path) -> dict:
 
-            SEARCH.REVIEW_MANAGER.report_logger.info(
+            search.review_manager.report_logger.info(
                 f" extract metadata from {pdf_path}"
             )
-            SEARCH.REVIEW_MANAGER.logger.info(f" extract metadata from {pdf_path}")
+            search.review_manager.logger.info(f" extract metadata from {pdf_path}")
 
-            record: typing.Dict[str, typing.Any] = {
+            record_dict: typing.Dict[str, typing.Any] = {
                 "file": str(pdf_path),
                 "ENTRYTYPE": "misc",
             }
             try:
-                record = get_record_from_pdf_grobid(record=record)
+                record_dict = get_record_from_pdf_grobid(record=record_dict)
 
                 with open(pdf_path, "rb") as file:
                     parser = PDFParser(file)
                     document = PDFDocument(parser)
                     pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                     if pages_in_file < 6:
-                        RECORD = colrev.record.Record(data=record)
-                        RECORD.get_text_from_pdf(
-                            project_path=SEARCH.REVIEW_MANAGER.path
+                        record = colrev.record.Record(data=record_dict)
+                        record.get_text_from_pdf(
+                            project_path=search.review_manager.path
                         )
-                        record = RECORD.get_data()
-                        if "text_from_pdf" in record:
-                            text: str = record["text_from_pdf"]
+                        record_dict = record.get_data()
+                        if "text_from_pdf" in record_dict:
+                            text: str = record_dict["text_from_pdf"]
                             if "bookreview" in text.replace(" ", "").lower():
-                                record["ENTRYTYPE"] = "misc"
-                                record["note"] = "Book review"
+                                record_dict["ENTRYTYPE"] = "misc"
+                                record_dict["note"] = "Book review"
                             if "erratum" in text.replace(" ", "").lower():
-                                record["ENTRYTYPE"] = "misc"
-                                record["note"] = "Erratum"
+                                record_dict["ENTRYTYPE"] = "misc"
+                                record_dict["note"] = "Erratum"
                             if "correction" in text.replace(" ", "").lower():
-                                record["ENTRYTYPE"] = "misc"
-                                record["note"] = "Correction"
+                                record_dict["ENTRYTYPE"] = "misc"
+                                record_dict["note"] = "Correction"
                             if "contents" in text.replace(" ", "").lower():
-                                record["ENTRYTYPE"] = "misc"
-                                record["note"] = "Contents"
+                                record_dict["ENTRYTYPE"] = "misc"
+                                record_dict["note"] = "Contents"
                             if "withdrawal" in text.replace(" ", "").lower():
-                                record["ENTRYTYPE"] = "misc"
-                                record["note"] = "Withdrawal"
-                            del record["text_from_pdf"]
+                                record_dict["ENTRYTYPE"] = "misc"
+                                record_dict["note"] = "Withdrawal"
+                            del record_dict["text_from_pdf"]
                         # else:
-                        #     print(f'text extraction error in {record["ID"]}')
-                        if "pages_in_file" in record:
-                            del record["pages_in_file"]
+                        #     print(f'text extraction error in {record_dict["ID"]}')
+                        if "pages_in_file" in record_dict:
+                            del record_dict["pages_in_file"]
 
-                    record = {k: v for k, v in record.items() if v is not None}
-                    record = {k: v for k, v in record.items() if v != "NA"}
+                    record_dict = {
+                        k: v for k, v in record_dict.items() if v is not None
+                    }
+                    record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
 
                     # add details based on path
-                    record = update_fields_based_on_pdf_dirs(record)
+                    record_dict = update_fields_based_on_pdf_dirs(record_dict)
 
-            except colrev_exceptions.TEI_Exception:
+            except colrev_exceptions.TEIException:
                 pass
 
-            return record
+            return record_dict
 
         batch_size = 10
         pdf_batches = [
@@ -1109,12 +1114,12 @@ class PDFSearchEndpoint:
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
 
-        ID = int(SEARCH.REVIEW_MANAGER.REVIEW_DATASET.get_next_ID(bib_file=feed_file))
+        record_id = int(search.review_manager.dataset.get_next_id(bib_file=feed_file))
         for pdf_batch in pdf_batches:
 
             lenrec = len(indexed_pdf_paths)
             if len(list(overall_pdfs)) > 0:
-                SEARCH.REVIEW_MANAGER.logger.info(
+                search.review_manager.logger.info(
                     f"Number of indexed records: {lenrec} of {len(list(overall_pdfs))} "
                     f"({round(lenrec/len(list(overall_pdfs))*100, 2)}%)"
                 )
@@ -1132,8 +1137,8 @@ class PDFSearchEndpoint:
             if 0 != len(new_records):
                 for new_r in new_records:
                     indexed_pdf_paths.append(new_r["file"])
-                    ID += 1
-                    new_r["ID"] = f"{ID}".rjust(10, "0")
+                    record_id += 1
+                    new_r["ID"] = f"{record_id}".rjust(10, "0")
 
                     if "colrev_status" in new_r:
                         if colrev.record.Record(data=new_r).masterdata_is_curated():
@@ -1145,7 +1150,7 @@ class PDFSearchEndpoint:
 
         if len(records) > 0:
             records_dict = {r["ID"]: r for r in records}
-            SEARCH.save_feed_file(records_dict, feed_file)
+            search.save_feed_file(records_dict, feed_file)
 
         else:
             print("No records found")
