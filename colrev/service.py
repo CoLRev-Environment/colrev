@@ -112,18 +112,12 @@ class Service:
 
     def start_services(self):
         async def _start_grobid():
-            GrobidService = self.review_manager.get_environment_service(
-                service_identifier="GrobidService"
-            )
+            grobid_service = self.review_manager.get_grobid_serivce()
 
-            grobid_service = GrobidService()
             grobid_service.start()
 
         async def _start_index():
-            LocalIndex = self.review_manager.get_environment_service(
-                service_identifier="LocalIndex"
-            )
-            LocalIndex()
+            _ = self.review_manager.get_local_index()
 
         asyncio.ensure_future(_start_grobid())
         asyncio.ensure_future(_start_index())

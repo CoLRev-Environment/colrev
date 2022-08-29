@@ -2112,35 +2112,48 @@ class ReviewManager:
         return stat["completeness_condition"]
 
     @classmethod
-    def get_environment_service(cls, *, service_identifier):
-        # pylint: disable=too-many-return-statements
+    def get_local_index(cls, **kwargs) -> colrev.environment.LocalIndex:
+        return colrev.environment.LocalIndex(**kwargs)
 
-        if "AdapterManager" == service_identifier:
-            return colrev.environment.AdapterManager
-        if "GrobidService" == service_identifier:
-            return colrev.environment.GrobidService
-        if "TEIParser" == service_identifier:
-            return colrev.environment.TEIParser
-        if "EnvironmentManager" == service_identifier:
-            return colrev.environment.EnvironmentManager
-        if "CachedSession" == service_identifier:
-            cache_path = colrev.environment.EnvironmentManager.colrev_path / Path(
-                "prep_requests_cache"
-            )
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
-            return session
-        if "ZoteroTranslationService" == service_identifier:
-            return colrev.environment.ZoteroTranslationService
-        if "ScreenshotService" == service_identifier:
-            return colrev.environment.ScreenshotService
-        if "LocalIndex" == service_identifier:
-            return colrev.environment.LocalIndex
-        if "Resources" == service_identifier:
-            return colrev.environment.Resources
+    @classmethod
+    def get_adapter_manager(cls, **kwargs) -> colrev.environment.AdapterManager:
+        return colrev.environment.AdapterManager(**kwargs)
 
-        raise colrev_exceptions.ServiceNotAvailableException(service_identifier)
+    @classmethod
+    def get_grobid_service(cls, **kwargs) -> colrev.environment.GrobidService:
+        return colrev.environment.GrobidService(**kwargs)
+
+    @classmethod
+    def get_tei(cls, **kwargs) -> colrev.environment.TEIParser:
+        return colrev.environment.TEIParser(**kwargs)
+
+    @classmethod
+    def get_environment_manager(cls, **kwargs) -> colrev.environment.EnvironmentManager:
+        return colrev.environment.EnvironmentManager(**kwargs)
+
+    @classmethod
+    def get_cached_session(cls) -> requests_cache.CachedSession:
+
+        cache_path = colrev.environment.EnvironmentManager.colrev_path / Path(
+            "prep_requests_cache"
+        )
+        return requests_cache.CachedSession(
+            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+        )
+
+    @classmethod
+    def get_zotero_translation_service(
+        cls, **kwargs
+    ) -> colrev.environment.ZoteroTranslationService:
+        return colrev.environment.ZoteroTranslationService(**kwargs)
+
+    @classmethod
+    def get_screenshot_service(cls, **kwargs) -> colrev.environment.ScreenshotService:
+        return colrev.environment.ScreenshotService(**kwargs)
+
+    @classmethod
+    def get_resources(cls, **kwargs) -> colrev.environment.Resources:
+        return colrev.environment.Resources(**kwargs)
 
 
 if __name__ == "__main__":

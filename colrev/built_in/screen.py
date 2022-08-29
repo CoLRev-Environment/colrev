@@ -107,10 +107,7 @@ class CoLRevCLIScreenEndpoint:
             abstract_from_tei = False
             if "abstract" not in screen_record.data:
                 abstract_from_tei = True
-                TEIParser = screen.review_manager.get_environment_service(
-                    service_identifier="TEIParser"
-                )
-                tei = TEIParser(
+                tei = screen.review_manager.get_tei(
                     pdf_path=Path(screen_record.data["file"]),
                     tei_path=screen_record.get_tei_filename(),
                 )

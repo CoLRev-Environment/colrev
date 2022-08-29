@@ -1932,6 +1932,7 @@ class TEIParser:
 
     def __init__(
         self,
+        *,
         pdf_path: Path = None,
         tei_path: Path = None,
     ):

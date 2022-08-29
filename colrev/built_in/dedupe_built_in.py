@@ -621,10 +621,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         dedupe.review_manager.logger.info("Press Enter to start.")
         input()
 
-        LocalIndex = dedupe.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        local_index = LocalIndex()
+        local_index = dedupe.review_manager.get_local_index()
         finished = False
         use_previous = False
         keys = unique(

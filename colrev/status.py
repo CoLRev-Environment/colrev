@@ -66,9 +66,7 @@ class Status(colrev.process.Process):
     def get_environment_instructions(self, *, stat: dict) -> list:
         from multiprocessing.dummy import Pool as ThreadPool
 
-        EnvironmentManager = self.review_manager.get_environment_service(
-            service_identifier="EnvironmentManager"
-        )
+        environment_manager = self.review_manager.get_environment_manager()
 
         environment_instructions = []
 
@@ -96,7 +94,7 @@ class Status(colrev.process.Process):
                 if cumulative > 0.7:
                     break
             if len(selected) > 0:
-                curated_outlets = EnvironmentManager.get_curated_outlets()
+                curated_outlets = environment_manager.get_curated_outlets()
                 selected_journals = [
                     (candidate, freq)
                     for candidate, freq in selected
@@ -120,7 +118,7 @@ class Status(colrev.process.Process):
                     }
                     environment_instructions.append(instruction)
 
-        local_registry = EnvironmentManager.load_local_registry()
+        local_registry = environment_manager.load_local_registry()
         registered_paths = [Path(x["repo_source_path"]) for x in local_registry]
         # Note : we can use many parallel processes
         # because append_registered_repo_instructions mainly waits for the network

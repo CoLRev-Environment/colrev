@@ -115,11 +115,8 @@ class LocalIndexEndpoint:
 
     def get_pdf(self, pdf_get, record):
 
-        LocalIndex = pdf_get.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
+        local_index = pdf_get.review_manager.get_local_index()
 
-        local_index = LocalIndex()
         try:
             retrieved_record = local_index.retrieve(
                 record=record.data, include_file=True
@@ -144,12 +141,9 @@ class WebsiteScreenshotEndpoint:
 
     def get_pdf(self, pdf_get, record):
 
-        ScreenshotService = pdf_get.review_manager.get_environment_service(
-            service_identifier="ScreenshotService"
-        )
+        screenshot_service = pdf_get.review_manager.get_screenshot_service()
 
         if "online" == record.data["ENTRYTYPE"]:
-            screenshot_service = ScreenshotService()
             screenshot_service.start_screenshot_service()
 
             pdf_filepath = pdf_get.review_manager.paths[

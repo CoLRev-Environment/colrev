@@ -248,9 +248,7 @@ class RemoveError500URLsPrep:
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, preparation, record):
 
-        session = preparation.review_manager.get_environment_service(
-            service_identifier="CachedSession"
-        )
+        session = preparation.review_manager.get_cached_session()
 
         try:
             if "url" in record.data:
@@ -302,9 +300,7 @@ class RemoveBrokenIDPrep:
                 record.remove_field(key="doi")
         if "isbn" in record.data:
             try:
-                session = preparation.review_manager.get_environment_service(
-                    service_identifier="CachedSession"
-                )
+                session = preparation.review_manager.get_cached_session()
 
                 isbn = record.data["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
@@ -610,9 +606,7 @@ class SemanticScholarPrep:
         self, *, preparation, url: str, record_in: colrev.record.PrepRecord
     ) -> colrev.record.PrepRecord:
 
-        session = preparation.review_manager.get_environment_service(
-            service_identifier="CachedSession"
-        )
+        session = preparation.review_manager.get_cached_session()
 
         preparation.review_manager.logger.debug(url)
         headers = {"user-agent": f"{__name__} (mailto:{preparation.debug_mode})"}
@@ -754,9 +748,7 @@ class DOIFromURLsPrep:
             preparation.review_manager.settings.project.curated_masterdata
         )
 
-        session = preparation.review_manager.get_environment_service(
-            service_identifier="CachedSession"
-        )
+        session = preparation.review_manager.get_cached_session()
 
         url = record.data.get("url", record.data.get("fulltext", "NA"))
         if "NA" != url:
@@ -997,9 +989,7 @@ class OpenLibraryMetadataPrep:
         if record.data.get("ENTRYTYPE", "NA") != "book":
             return record
 
-        session = preparation.review_manager.get_environment_service(
-            service_identifier="CachedSession"
-        )
+        session = preparation.review_manager.get_cached_session()
 
         try:
             # TODO : integrate more functionality into open_library_json_to_record()
@@ -1133,9 +1123,7 @@ class CiteAsPrep:
                 preparation.review_manager.settings.project.curated_masterdata
             )
 
-            session = preparation.review_manager.get_environment_service(
-                service_identifier="CachedSession"
-            )
+            session = preparation.review_manager.get_cached_session()
             url = (
                 f"https://api.citeas.org/product/{record.data['title']}?"
                 + f"email={preparation.debug_mode}"
@@ -1261,14 +1249,11 @@ class LocalIndexPrep:
 
     def __init__(self, *, preparation, settings):
 
-        LocalIndex = preparation.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
+        self.local_index = preparation.review_manager.get_local_index()
 
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
-        self.local_index = LocalIndex()
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, preparation, record):
@@ -1426,12 +1411,9 @@ class DropFieldsPrep:
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
 
-            LocalIndex = preparation.review_manager.get_environment_service(
-                service_identifier="LocalIndex"
-            )
-            local_index = LocalIndex()
+            self.local_index = preparation.review_manager.get_local_index()
 
-            fields_to_remove = local_index.get_fields_to_remove(
+            fields_to_remove = self.local_index.get_fields_to_remove(
                 record=record.get_data()
             )
             for field_to_remove in fields_to_remove:

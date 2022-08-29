@@ -451,10 +451,7 @@ class Dataset:
         if records is None:
             records = {}
 
-        LocalIndex = self.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        self.local_index = LocalIndex()
+        self.local_index = self.review_manager.get_local_index()
 
         if len(records) == 0:
             records = self.load_records_dict()
@@ -1312,10 +1309,7 @@ class Dataset:
 
         self.review_manager.logger.debug("Start corrections")
 
-        LocalIndex = self.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        self.local_index = LocalIndex()
+        self.local_index = self.review_manager.get_local_index()
 
         # TODO : remove the following:
         # from colrev.prep import Preparation
@@ -1377,9 +1371,7 @@ class Dataset:
                     record_dict = list(records_dict.values())[0]
                     curated_records.append(record_dict)
 
-        resources = self.review_manager.get_environment_service(
-            service_identifier="Resources"
-        )
+        resources = self.review_manager.get_resources()
         for curated_record in curated_records:
 
             # TODO : use origin-indexed dict (discarding changes during merges)

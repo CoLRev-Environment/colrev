@@ -29,12 +29,10 @@ class PDFPrepMan(colrev.process.Process):
 
         self.verbose = True
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = self.review_manager.get_adapter_manager()
         self.pdf_prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
         )
@@ -227,10 +225,8 @@ class PDFPrepMan(colrev.process.Process):
 
     def extract_coverpage(self, *, filepath: Path) -> None:
 
-        LocalIndex = self.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
+        local_index = self.review_manager.get_local_index()
+        cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         pdf_reader = PdfFileReader(str(filepath), strict=False)

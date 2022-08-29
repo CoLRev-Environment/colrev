@@ -12,7 +12,6 @@
 disable=R0401,C0116,W0613,R0914,W0511,W0201,R0902,C0115,C0114,R0912,R0915,C0415,E0213,E0239,I1101,R1702,R0903,R1733,W1203,W0703,C0302,R0904
 # W0511 TODO
 
-# C0103 invalid names
 # W0201 attribute defined outside init
 # C0415 import outside toplevel
 # E0213 method should have self as first argument

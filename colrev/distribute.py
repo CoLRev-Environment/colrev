@@ -27,20 +27,12 @@ class Distribute(colrev.process.Process):
             if path.suffix == ".pdf":
 
                 # Note : this is actually correct: camel case for classes...
-                GrobidService = self.review_manager.get_environment_service(
-                    service_identifier="GrobidService"
-                )
-                grobid_service = GrobidService()
+                grobid_service = self.review_manager.get_grobid_service()
 
                 grobid_service.start()
 
-                TEIParser = self.review_manager.get_environment_service(
-                    service_identifier="TEIParser"
-                )
-
-                tei = TEIParser(
-                    self.review_manager,
-                    path,
+                tei = self.review_manager.get_tei(
+                    pdf_path=path,
                 )
                 record = tei.get_metadata()
 

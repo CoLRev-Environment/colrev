@@ -114,10 +114,8 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
-        EnvironmentManager = self.review_manager.get_environment_service(
-            service_identifier="EnvironmentManager"
-        )
-        EnvironmentManager.register_repo(path_to_register=Path.cwd())
+        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager.register_repo(path_to_register=Path.cwd())
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
@@ -516,12 +514,9 @@ class Initializer:
 
         self.review_manager.report_logger.handlers = []
 
-        # pylint: disable=no-member
-        LocalIndex: colrev.environment.LocalIndex = (
-            self.review_manager.get_environment_service(service_identifier="LocalIndex")
-        )
+        local_index = self.review_manager.get_local_index()
+        local_index_path = local_index.local_environment_path / Path("local_index")
 
-        local_index_path = LocalIndex.local_environment_path / Path("local_index")
         curdir = Path.cwd()
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)

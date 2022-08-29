@@ -51,11 +51,9 @@ class Loader(colrev.process.Process):
         )
         self.verbose = True
 
-        AdapterManager = review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = review_manager.get_adapter_manager()
 
-        self.load_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.load_scripts: typing.Dict[str, typing.Any] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.conversion_script

@@ -124,10 +124,8 @@ class PDFCoverPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, pdf_preparation, record, pad):
 
-        LocalIndex = pdf_preparation.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
+        local_index = pdf_preparation.review_manager.get_local_index()
+        cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         def __get_coverpages(*, pdf):
@@ -287,10 +285,8 @@ class PDFLastPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, pdf_preparation, record, pad):
 
-        LocalIndex = pdf_preparation.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        lp_path = LocalIndex.local_environment_path / Path(".lastpages")
+        local_index = pdf_preparation.review_manager.get_local_index()
+        lp_path = local_index.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         def __get_last_pages(*, pdf):
@@ -467,10 +463,7 @@ class PDFMetadataValidationEndpoint:
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
             return record.data
 
-        LocalIndex = pdf_preparation.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        local_index = LocalIndex()
+        local_index = pdf_preparation.review_manager.get_local_index()
 
         try:
             retrieved_record = local_index.retrieve(record=record.data)
@@ -662,10 +655,7 @@ class TEIEndpoint:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-        GrobidService = pdf_prep.review_manager.get_environment_service(
-            service_identifier="GrobidService"
-        )
-        grobid_service = GrobidService()
+        grobid_service = pdf_prep.review_manager.get_grobid_service()
         grobid_service.start()
         Path(".tei").mkdir(exist_ok=True)
 
@@ -676,10 +666,7 @@ class TEIEndpoint:
             f" creating tei: {record.data['ID']}"
         )
         if "file" in record.data:
-            TEIParser = pdf_preparation.review_manager.get_environment_service(
-                service_identifier="TEIParser"
-            )
-            _ = TEIParser(
+            _ = pdf_preparation.review_manager.get_tei(
                 pdf_path=Path(record.data["file"]),
                 tei_path=record.get_tei_filename(),
             )

@@ -47,12 +47,10 @@ class PDFRetrieval(colrev.process.Process):
         self.pdf_directory = self.review_manager.paths["PDF_DIRECTORY"]
         self.pdf_directory.mkdir(exist_ok=True)
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = self.review_manager.get_adapter_manager()
         self.pdf_retrieval_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.pdf_get.scripts,
         )
@@ -241,20 +239,14 @@ class PDFRetrieval(colrev.process.Process):
         if len(unlinked_pdfs) == 0:
             return records
 
-        GrobidService = self.review_manager.get_environment_service(
-            service_identifier="GrobidService"
-        )
-        grobid_service = GrobidService()
+        grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
         self.review_manager.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
             self.review_manager.logger.info(f"Checking unlinked PDF: {file}")
             if file.stem not in records.keys():
 
-                TEIParser = self.review_manager.get_environment_service(
-                    service_identifier="TEIParser"
-                )
-                tei = TEIParser(pdf_path=file)
+                tei = self.review_manager.get_tei(pdf_path=file)
                 pdf_record = tei.get_metadata()
 
                 if "error" in pdf_record:

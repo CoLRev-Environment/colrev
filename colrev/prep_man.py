@@ -31,12 +31,10 @@ class PrepMan(colrev.process.Process):
 
         self.verbose = True
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = self.review_manager.get_adapter_manager()
         self.prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.prep.man_prep_scripts,
         )

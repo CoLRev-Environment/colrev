@@ -34,10 +34,8 @@ class Paper(colrev.process.Process):
             self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        EnvironmentManager = self.review_manager.get_environment_service(
-            service_identifier="EnvironmentManager"
-        )
-        EnvironmentManager.build_docker_images()
+        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager.build_docker_images()
 
         csl_file = paper_endpoint_settings["csl_style"]
         word_template = paper_endpoint_settings["word_template"]
@@ -61,11 +59,9 @@ class Paper(colrev.process.Process):
 
         client = docker.from_env()
         try:
-            EnvironmentManager = self.review_manager.get_environment_service(
-                service_identifier="EnvironmentManager"
-            )
+            environment_manager = self.review_manager.get_environment_manager()
 
-            pandoc_img = EnvironmentManager.docker_images["pandoc/ubuntu-latex"]
+            pandoc_img = environment_manager.docker_images["pandoc/ubuntu-latex"]
             msg = "Running docker container created from " f"image {pandoc_img}"
             self.review_manager.report_logger.info(msg)
             self.review_manager.logger.info(msg)

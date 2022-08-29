@@ -48,10 +48,8 @@ class Data(colrev.process.Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.data_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.data_scripts: typing.Dict[str, typing.Any] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.data.scripts,
         )
@@ -72,10 +70,7 @@ class Data(colrev.process.Process):
         self, records: typing.Dict, included: typing.List[dict]
     ) -> typing.Dict:
 
-        GrobidService = self.review_manager.get_environment_service(
-            service_identifier="GrobidService"
-        )
-        grobid_service = GrobidService()
+        grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
 
         def create_tei(record: dict) -> None:
@@ -95,10 +90,7 @@ class Data(colrev.process.Process):
                     return
 
                 try:
-                    TEIParser = self.review_manager.get_environment_service(
-                        service_identifier="TEIParser"
-                    )
-                    TEIParser(pdf_path=pdf_path, tei_path=tei_path)
+                    self.review_manager.get_tei(pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
@@ -132,10 +124,7 @@ class Data(colrev.process.Process):
 
                 tei_path = Path(record["tei_file"])
                 try:
-                    TEIParser = self.review_manager.get_environment_service(
-                        service_identifier="TEIParser"
-                    )
-                    tei = TEIParser(self.review_manager, tei_path=tei_path)
+                    tei = self.review_manager.get_tei(tei_path=tei_path)
                     tei.mark_references(records=records.values())
                 except etree.XMLSyntaxError:
                     continue

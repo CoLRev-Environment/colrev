@@ -28,12 +28,10 @@ class PDFRetrievalMan(colrev.process.Process):
 
         self.verbose = True
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = self.review_manager.get_adapter_manager()
         self.pdf_get_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.pdf_get.man_pdf_get_scripts,
         )

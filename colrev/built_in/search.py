@@ -300,10 +300,7 @@ class BackwardSearchEndpoint:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-        GrobidService = search.review_manager.get_environment_service(
-            service_identifier="GrobidService"
-        )
-        self.grobid_service = GrobidService()
+        self.grobid_service = search.review_manager.get_grobid_service()
         self.grobid_service.start()
 
     def run_search(self, search, params: dict, feed_file: Path) -> None:
@@ -527,10 +524,7 @@ class IndexSearchEndpoint:
 
             imported_ids = [x["ID"] for x in records]
 
-        LocalIndex = search.review_manager.get_environment_service(
-            service_identifier="LocalIndex"
-        )
-        local_index = LocalIndex()
+        local_index = search.review_manager.get_local_index()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
 
@@ -895,10 +889,7 @@ class PDFSearchEndpoint:
         search.review_manager.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            GrobidService = search.review_manager.get_environment_service(
-                service_identifier="GrobidService"
-            )
-            grobid_service = GrobidService()
+            grobid_service = search.review_manager.get_grobid_service()
             grobid_service.start()
         else:
             search.review_manager.logger.info("No additional PDFs to index")
@@ -998,10 +989,7 @@ class PDFSearchEndpoint:
             # print(f"Response: {r.text}")
             # return {}
 
-            TEIParser = search.review_manager.get_environment_service(
-                service_identifier="TEIParser"
-            )
-            tei = TEIParser(
+            tei = search.review_manager.get_tei(
                 pdf_path=pdf_path,
             )
 
@@ -1039,11 +1027,9 @@ class PDFSearchEndpoint:
                 if "keywords" in record:
                     del record["keywords"]
 
-                EnvironmentManager = search.review_manager.get_environment_service(
-                    service_identifier="EnvironmentManager"
-                )
+                environment_manager = search.review_manager.get_environment_manager()
                 # to allow users to update/reindex with newer version:
-                record["grobid-version"] = EnvironmentManager.docker_images[
+                record["grobid-version"] = environment_manager.docker_images[
                     "lfoppiano/grobid"
                 ]
                 return record

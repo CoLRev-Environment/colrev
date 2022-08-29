@@ -49,10 +49,10 @@ class Search(colrev.process.Process):
 
         self.sources = review_manager.settings.sources
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.search_scripts: typing.Dict[
+            str, typing.Any
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.search_script for s in self.sources if "endpoint" in s.search_script
@@ -167,10 +167,8 @@ class Search(colrev.process.Process):
             s.search_script for s in self.review_manager.settings.sources
         ]
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.search_scripts = AdapterManager.load_scripts(
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.search_scripts = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=scripts + required_search_scripts,
         )

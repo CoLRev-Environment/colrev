@@ -46,14 +46,13 @@ class URLConnector:
     @classmethod
     def retrieve_md_from_url(cls, *, RECORD, preparation) -> None:
 
-        ZoteroTranslationService = preparation.review_manager.get_environment_service(
-            service_identifier="ZoteroTranslationService"
+        zotero_translation_service = (
+            preparation.review_manager.get_zotero_translation_service()
         )
 
         # Note: retrieve_md_from_url replaces prior data in RECORD
         # (RECORD.copy() - deepcopy() before if necessary)
 
-        zotero_translation_service = ZoteroTranslationService()
         zotero_translation_service.start_zotero_translators()
 
         # TODO : change to the similar merge()/fuse_best_field structure?
@@ -154,9 +153,7 @@ class DOIConnector:
 
         try:
 
-            session = review_manager.get_environment_service(
-                service_identifier="CachedSession"
-            )
+            session = review_manager.get_cached_session()
 
             # for testing:
             # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
@@ -248,9 +245,7 @@ class DOIConnector:
         try:
             url = doi_url
 
-            session = review_manager.get_environment_service(
-                service_identifier="CachedSession"
-            )
+            session = review_manager.get_cached_session()
 
             requests_headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -558,9 +553,7 @@ class CrossrefConnector:
         record_list = []
         try:
 
-            session = review_manager.get_environment_service(
-                service_identifier="CachedSession"
-            )
+            session = review_manager.get_cached_session()
 
             review_manager.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
@@ -855,9 +848,7 @@ class DBLPConnector:
 
             assert query is not None or url is not None
 
-            session = review_manager.get_environment_service(
-                service_identifier="CachedSession"
-            )
+            session = review_manager.get_cached_session()
 
             api_url = "https://dblp.org/search/publ/api?q="
             items = []

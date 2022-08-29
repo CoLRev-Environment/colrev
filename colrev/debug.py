@@ -103,18 +103,14 @@ def debug_data():
 def debug_tei_tools(param) -> None:
 
     review_manager = colrev.review_manager.ReviewManager()
-    GrobidService = review_manager.get_environment_service(
-        service_identifier="GrobidService"
-    )
-    TEIParser = review_manager.get_environment_service(service_identifier="TEIParser")
+    grobid_service = review_manager.get_grobid_service()
 
     logger.debug("Start grobid")
-    grobid_service = GrobidService()
     grobid_service.start()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    tei = TEIParser(pdf_path=filepath)
+    tei = review_manager.get_tei(pdf_path=filepath)
     res = tei.get_metadata()
     print(res)
 
@@ -177,9 +173,8 @@ def debug_local_index(param):
     review_manager = colrev.review_manager.ReviewManager()
 
     # pylint: disable=no-member
-    LocalIndex = review_manager.get_environment_service(service_identifier="LocalIndex")
+    local_index = review_manager.get_local_index()
 
-    local_index = LocalIndex()
     # To Test retrieval of record:
     record = {
         "ENTRYTYPE": "article",

@@ -484,10 +484,9 @@ class EndnoteEndpoint:
     def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
         def zotero_conversion(data):
 
-            ZoteroTranslationService = data.review_manager.get_environment_service(
-                service_identifier="ZoteroTranslationService"
+            zotero_translation_service = (
+                data.review_manager.get_zotero_translation_service()
             )
-            zotero_translation_service = ZoteroTranslationService()
             zotero_translation_service.start_zotero_translators()
 
             headers = {"Content-type": "text/plain"}

@@ -63,12 +63,10 @@ class PDFPreparation(colrev.process.Process):
 
         self.cpus = 8
 
-        AdapterManager = self.review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
+        adapter_manager = self.review_manager.get_adapter_manager()
         self.pdf_prep_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = adapter_manager.load_scripts(
             PROCESS=self,
             scripts=review_manager.settings.pdf_prep.scripts,
         )

@@ -185,10 +185,9 @@ class ZoteroTranslationLoader:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-        ZoteroTranslationService = load.review_manager.get_environment_service(
-            service_identifier="ZoteroTranslationService"
+        self.zotero_translation_service = (
+            load.review_manager.get_zotero_translation_service()
         )
-        self.zotero_translation_service = ZoteroTranslationService()
         self.zotero_translation_service.start_zotero_translators()
 
     def load(self, loader, source):
@@ -241,11 +240,8 @@ class MarkdownLoader:
 
     def load(self, loader, source):
 
-        GrobidService = loader.review_manager.get_environment_service(
-            service_identifier="GrobidService"
-        )
+        grobid_service = loader.review_manager.get_grobid_service()
 
-        grobid_service = GrobidService()
         grobid_service.check_grobid_availability()
         with open(source.filename, encoding="utf8") as file:
             if source.filename.suffix == ".md":

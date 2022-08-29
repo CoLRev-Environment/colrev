@@ -37,10 +37,10 @@ class SearchSources:
 
         self.type = colrev.process.ProcessType.check
 
-        Adaptermanager = review_manager.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.search_source_scripts: dict[str, typing.Any] = Adaptermanager.load_scripts(
+        adapter_manager = review_manager.get_adapter_manager()
+        self.search_source_scripts: dict[
+            str, typing.Any
+        ] = adapter_manager.load_scripts(
             PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 
