@@ -1,6 +1,9 @@
+import collections
 import logging
 import pprint
 from pathlib import Path  # noqa F401
+
+import pandas as pd
 
 import colrev.record
 import colrev.review_manager
@@ -148,12 +151,9 @@ def debug_pdf_prep():
 
 
 def get_non_unique_colrev_pdf_ids() -> None:
-    import pandas as pd
 
     review_manager = colrev.review_manager.ReviewManager()
     records = review_manager.dataset.load_records_dict()
-
-    import collections
 
     colrev_pdf_ids = [
         x["colrev_pdf_id"].split(":")[1]

@@ -16,6 +16,7 @@ class CoLRevCLIPDFRetrievalManual:
 
     def get_man_pdf(self, pdf_get_man, records):
         def get_pdf_from_google(record) -> dict:
+            # pylint: disable=import-outside-toplevel
             import urllib.parse
 
             # import webbrowser

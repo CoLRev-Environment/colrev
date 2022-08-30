@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import logging
 import os
+import time
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,7 +33,6 @@ def console_duplicate_instance_label(
     n_distinct,
     examples_buffer,
 ) -> str:
-    import time
 
     if manual:
         os.system("cls" if os.name == "nt" else "clear")
@@ -442,6 +442,7 @@ class ActiveLearningDedupeTrainingEndpoint:
 
     def setup_active_learning_dedupe(self, *, dedupe, retrain: bool, in_memory: bool):
         """Prepare data for active learning setup"""
+        # pylint: disable=import-outside-toplevel
         import dedupe as dedupe_io
         import random
 
@@ -604,6 +605,8 @@ class ActiveLearningDedupeTrainingEndpoint:
         > deduper.prepare_training(data)
         > dedupe.console_label(deduper)
         """
+
+        # pylint: disable=import-outside-toplevel
         from dedupe._typing import TrainingData
         from dedupe._typing import RecordDictPair as TrainingExample
 
@@ -765,6 +768,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         #     in_memory: bool = True,
         # ) -> None:
 
+        # pylint: disable=import-outside-toplevel
         import dedupe as dedupe_io
 
         # TODO : add something?
@@ -820,6 +824,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
     def run_dedupe(self, dedupe):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
+        # pylint: disable=import-outside-toplevel
         import statistics
 
         # TODO : CHECK:

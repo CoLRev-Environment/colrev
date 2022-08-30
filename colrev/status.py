@@ -3,6 +3,7 @@ import csv
 import io
 import typing
 from collections import Counter
+from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
 
 import git
@@ -64,7 +65,6 @@ class Status(colrev.process.Process):
         return active_processing_functions
 
     def get_environment_instructions(self, *, stat: dict) -> list:
-        from multiprocessing.dummy import Pool as ThreadPool
 
         environment_manager = self.review_manager.get_environment_manager()
 

@@ -38,6 +38,7 @@ class CrossrefSearchEndpoint:
         )
 
     def run_search(self, search, params: dict, feed_file: Path) -> None:
+        # pylint: disable=import-outside-toplevel
         from colrev.built_in.database_connectors import (
             CrossrefConnector,
             DOIConnector,

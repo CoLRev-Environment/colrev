@@ -271,6 +271,8 @@ class ASReviewPrescreenEndpoint:
         )
 
         try:
+            # pylint: disable=import-outside-toplevel
+
             import asreview  # noqa: F401
 
             _ = asreview
@@ -453,6 +455,7 @@ class ASReviewPrescreenEndpoint:
             print("\n\n  ASReview will open shortly.")
 
             # TODO : if not available: ask to "pip install asreview"
+            # pylint: disable=import-outside-toplevel
             from asreview.entry_points import LABEntryPoint
 
             try:

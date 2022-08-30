@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import json
 import logging
+import os
 import pkgutil
 import typing
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import TYPE_CHECKING
 
 import git
 
+import colrev.cli_colors as colors
 import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
@@ -411,7 +413,6 @@ class Initializer:
             )
 
     def __post_commit_edits(self) -> None:
-        import colrev.cli_colors as colors
 
         if "curated_masterdata" == self.review_type:
             self.review_manager.settings.project.curation_url = "TODO"
@@ -510,7 +511,6 @@ class Initializer:
         git_repo.index.add(["search/30_example_records.bib"])
 
     def __create_local_index(self) -> None:
-        import os
 
         self.review_manager.report_logger.handlers = []
 

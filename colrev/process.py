@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 import typing
 from dataclasses import dataclass
 from enum import auto
@@ -359,8 +360,6 @@ class ProcessModel:
     def __init__(
         self, *, state: str = None, process: ProcessType = None, review_manager=None
     ):
-
-        import logging
 
         if process is not None:
             start_states: typing.List[str] = [

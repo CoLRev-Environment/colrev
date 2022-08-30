@@ -8,6 +8,7 @@ import git
 import pandas as pd
 
 import colrev.built_in.dedupe_built_in as built_in_dedupe
+import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
@@ -315,8 +316,6 @@ class Dedupe(colrev.process.Process):
         # The merging also needs to consider whether IDs are propagated
         # Completeness of comparisons should be ensured by the
         # dedupe clustering routine
-
-        import colrev.cli_colors as colors
 
         def same_source_merge(main_record: dict, dupe_record: dict) -> bool:
 

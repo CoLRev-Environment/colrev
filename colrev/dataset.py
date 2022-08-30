@@ -14,8 +14,10 @@ from pathlib import Path
 
 import git
 import pandas as pd
+import pybtex.errors
 from dictdiffer import diff
 from git.exc import GitCommandError
+from pybtex.database.input import bibtex
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
@@ -246,11 +248,8 @@ class Dataset:
 
     def load_records_dict(self, *, load_str: str = None) -> dict:
         """Get the records (requires review_manager.notify(...))"""
-        from pybtex.database.input import bibtex
 
         # TODO : optional dict-key as a parameter
-
-        import pybtex.errors
 
         pybtex.errors.set_strict_mode(False)
 

@@ -2,14 +2,20 @@ import datetime
 import logging
 import os
 from pathlib import Path
+from time import sleep
 
 import click
 import click_completion.core
+import pandas as pd
+import requests
 from dacite.exceptions import MissingValueError
+from git.exc import InvalidGitRepositoryError
+from tqdm import tqdm
 
 import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
-
+import colrev.record
+import colrev.review_manager
 
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
@@ -244,8 +250,6 @@ def print_progress(stat: dict) -> None:
 
     sleep_interval = 1.1 / max(current, 100)
     print()
-    from time import sleep
-    from tqdm import tqdm
 
     for i in tqdm(
         range(100),
@@ -333,9 +337,7 @@ def print_project_status(status_operation) -> None:
 @click.pass_context
 def status(ctx, analytics) -> None:
     """Show status"""
-    from git.exc import InvalidGitRepositoryError
     import colrev.status
-    import colrev.review_manager
 
     if analytics:
 
@@ -402,7 +404,6 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
 def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
     """Retrieve search records"""
     import colrev.search
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force_mode)
@@ -446,14 +447,13 @@ def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
 @click.pass_context
 def load(ctx, keep_ids, combine_commits) -> None:
     """Import records"""
-    import colrev.review_manager
+
     import colrev.load
-    import colrev.environment
 
     try:
-        # already start LocalIndex (for set_ids)
-        colrev.environment.LocalIndex(startup_without_waiting=True)
         review_manager = colrev.review_manager.ReviewManager()
+        # already start LocalIndex (for set_ids)
+        review_manager.get_local_index(startup_without_waiting=True)
     except MissingValueError as exc:
         print(f"Error in settings.json: {exc}")
         print("To solve this, use\n  colrev settings --upgrade")
@@ -538,7 +538,9 @@ def prep(
     """Prepare records"""
 
     import colrev.prep
-    import colrev.review_manager
+
+    # pylint: disable=import-outside-toplevel
+    # TODO : catch inside prep:
     from sqlite3 import OperationalError
 
     try:
@@ -680,7 +682,6 @@ def dedupe(
         - Accidentally merging records from the same source
     """
     import colrev.dedupe
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
@@ -733,7 +734,6 @@ def dedupe(
 def prep_man(ctx, stats) -> None:
     """Manual preparation of records (not yet fully implemented)"""
     import colrev.prep_man
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -798,7 +798,6 @@ def prescreen(
 ) -> None:
     """Pre-screen based on titles and abstracts"""
     import colrev.prescreen
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -885,7 +884,6 @@ def screen(
 ) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
     import colrev.screen
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -947,7 +945,6 @@ def screen(
 def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> None:
     """Retrieve PDFs to the default pdf directory (/pdfs)"""
     import colrev.pdf_get
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1027,7 +1024,6 @@ def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) 
         - Checking for completeness (number of pages according to record metadata)
     """
     import colrev.pdf_prep
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1065,9 +1061,6 @@ def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) 
 def pdf_get_man(ctx, export) -> None:
     """Get PDFs manually"""
     import colrev.pdf_get_man
-    import colrev.review_manager
-    import colrev.record
-    import pandas as pd
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1168,7 +1161,6 @@ def delete_first_pages_cli(pdf_get_man_operation, record_id) -> None:
 def pdf_prep_man(ctx, delete_first_page, stats, extract, apply) -> None:
     """Prepare PDFs manually"""
     import colrev.pdf_prep_man
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1239,8 +1231,6 @@ def data(
 ) -> None:
     """Extract data"""
     import colrev.data
-    import colrev.review_manager
-    import requests
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
@@ -1354,6 +1344,7 @@ def validate_commit(ctx, param, value):
     if value is None:
         return value
 
+    # pylint: disable=import-outside-toplevel
     import git
 
     repo = git.Repo()
@@ -1399,7 +1390,6 @@ def validate_commit(ctx, param, value):
 def validate(ctx, scope, properties, commit) -> None:
     """Validate changes"""
     import colrev.validate
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1460,7 +1450,6 @@ def validate(ctx, scope, properties, commit) -> None:
 def trace(ctx, id) -> None:
     """Trace a record"""
     import colrev.trace
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1478,7 +1467,6 @@ def trace(ctx, id) -> None:
 def paper(ctx) -> None:
     """Build the paper"""
     import colrev.paper
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1509,10 +1497,11 @@ def paper(ctx) -> None:
 @click.pass_context
 def distribute(ctx, path) -> None:
     """Distribute records to other local CoLRev repositories"""
-    import pandas as pd
-    from yaml import safe_load
-    import colrev.review_manager
+
     import colrev.distribute
+
+    # pylint: disable=import-outside-toplevel
+    from yaml import safe_load
 
     # Note : distribute is designed with the assumption that it is called from
     # within a colrev project.
@@ -1674,7 +1663,8 @@ def env(
 ):
     """CoLRev environment commands"""
     import colrev.environment
-    import colrev.review_manager
+
+    # pylint: disable=import-outside-toplevel
     import webbrowser
     import docker
 
@@ -1772,7 +1762,14 @@ def env(
 @click.pass_context
 def settings(ctx, upgrade, update_hooks, modify):
     """Settings of the CoLRev project"""
-    import colrev.review_manager
+
+    # pylint: disable=import-outside-toplevel
+    from subprocess import check_call
+    from subprocess import DEVNULL
+    from subprocess import STDOUT
+    import json
+    import ast
+    import glom
 
     # from colrev.settings_editor import Settings
 
@@ -1786,9 +1783,6 @@ def settings(ctx, upgrade, update_hooks, modify):
         review_manager.upgrade_colrev()
 
     elif update_hooks:
-        from subprocess import check_call
-        from subprocess import DEVNULL
-        from subprocess import STDOUT
 
         review_manager = colrev.review_manager.ReviewManager()
         print("Update pre-commit hooks")
@@ -1815,10 +1809,6 @@ def settings(ctx, upgrade, update_hooks, modify):
         print("Successfully updated pre-commit hooks")
 
     elif modify:
-
-        import json
-        import ast
-        import glom
 
         review_manager = colrev.review_manager.ReviewManager()
         # TBD: maybe use glom.delete?
@@ -1907,7 +1897,6 @@ def sync(ctx):
 def pull(ctx, records_only, project_only):
     """Pull CoLRev project remote and record updates"""
     import colrev.pull
-    import colrev.review_manager
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1949,7 +1938,7 @@ def clone(ctx, git_url):
 @click.pass_context
 def push(ctx, records_only, project_only):
     """Push CoLRev project remote and record updates"""
-    import colrev.review_manager
+
     import colrev.push
 
     try:
@@ -1967,7 +1956,7 @@ def push(ctx, records_only, project_only):
 @click.pass_context
 def service(ctx):
     """Service for real-time reviews"""
-    import colrev.review_manager
+
     import colrev.service
 
     review_manager = colrev.review_manager.ReviewManager()
@@ -1997,9 +1986,8 @@ def validate_show(ctx, param, value):
 @click.pass_context
 def show(ctx, keyword, callback=validate_show, required=True):
     """Show aspects (sample, ...)"""
-    import colrev.review_manager
+
     import colrev.process
-    import colrev.record
 
     review_manager = colrev.review_manager.ReviewManager()
     if "sample" == keyword:
@@ -2036,8 +2024,10 @@ def show(ctx, keyword, callback=validate_show, required=True):
         )
 
     elif "venv" == keyword:
-        # TODO : test installation of colrev in venv
+        # pylint: disable=import-outside-toplevel
         import platform
+
+        # TODO : test installation of colrev in venv
 
         current_platform = platform.system()
         if "Linux" == current_platform:

@@ -292,6 +292,7 @@ class CrossrefConnector:
 
     def __init__(self, *, review_manager):
 
+        # pylint: disable=import-outside-toplevel
         from crossref.restful import Etiquette
         from importlib.metadata import version
 
@@ -337,6 +338,7 @@ class CrossrefConnector:
                 ) from exc
 
     def get_bibliographic_query_return(self, **kwargs):
+        # pylint: disable=import-outside-toplevel
         from crossref.restful import Works
 
         assert all(k in ["bibliographic"] for k in kwargs)
@@ -350,6 +352,7 @@ class CrossrefConnector:
             yield self.crossref_json_to_record(item=item)
 
     def get_journal_query_return(self, *, journal_issn):
+        # pylint: disable=import-outside-toplevel
         from crossref.restful import Journals
 
         assert re.match(self.issn_regex, journal_issn)
