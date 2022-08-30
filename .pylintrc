@@ -1,3 +1,10 @@
+[MASTER]
+
+# A comma-separated list of package or module names from where C extensions may
+# be loaded. Extensions are loading into the active Python interpreter and may
+# run arbitrary code
+extension-pkg-whitelist=lxml.etree
+
 [MESSAGES CONTROL]
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -9,13 +16,12 @@
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=R0401,C0116,W0613,R0914,W0511,R0902,C0115,C0114,R0912,R0915,C0415,E0213,E0239,I1101,R1702,R0903,R1733,W1203,W0703,C0302,R0904
+disable=R0401,C0116,W0613,R0914,W0511,R0902,C0115,C0114,R0912,R0915,C0415,E0213,E0239,R1702,R0903,R1733,W1203,W0703,C0302,R0904
 # W0511 TODO
 
 # C0415 import outside toplevel
 # E0213 method should have self as first argument
 # E0239 inherit non-class
-# I1101 c-extension-no-member
 # W1203 use lazy formatting
 # W0703 catching too general exception
 
