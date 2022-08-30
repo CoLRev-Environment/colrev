@@ -681,6 +681,8 @@ class PDFSearchEndpoint:
     source_identifier = "{{file}}"
     mode = "all"
 
+    pdf_preparation = None
+
     def __init__(self, *, search, settings):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings

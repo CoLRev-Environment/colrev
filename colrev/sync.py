@@ -13,6 +13,9 @@ import colrev.record
 
 
 class Sync:
+
+    cited_papers: list
+
     def __init__(self):
         self.records_to_import = []
         self.non_unique_for_import = []
@@ -61,11 +64,11 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            self.local_index = colrev.environment.LocalIndex()
+            local_index = colrev.environment.LocalIndex()
 
             query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
-            res = self.local_index.open_search.search(
-                index=self.local_index.RECORD_INDEX, body=query
+            res = local_index.open_search.search(
+                index=local_index.RECORD_INDEX, body=query
             )
 
             nr_hits = len(res["hits"]["hits"])  # type: ignore
@@ -79,7 +82,7 @@ class Sync:
                 record_to_import = {
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
-                record_to_import = self.local_index.prep_record_for_return(
+                record_to_import = local_index.prep_record_for_return(
                     record=record_to_import, include_file=False
                 )
 

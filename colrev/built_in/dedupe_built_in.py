@@ -479,10 +479,6 @@ class ActiveLearningDedupeTrainingEndpoint:
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
-        self.n_new = len(
-            [d for d, v in data_d.items() if "md_prepared" == v["colrev_status"]]
-        )
-
         dedupe.review_manager.logger.debug(
             dedupe.review_manager.p_printer.pformat(data_d)
         )

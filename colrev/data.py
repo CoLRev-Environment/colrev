@@ -22,6 +22,8 @@ class Data(colrev.process.Process):
 
     __pad = 0
 
+    verbose: bool
+
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "MANUSCRIPT": {
             "endpoint": built_in_data.ManuscriptEndpoint,

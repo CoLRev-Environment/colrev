@@ -27,6 +27,11 @@ class Preparation(colrev.process.Process):
     TIMEOUT = 10
     MAX_RETRIES_ON_ERROR = 3
 
+    first_round: bool
+    last_round: bool
+
+    prep_scripts: typing.Dict[str, typing.Any]
+
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
@@ -641,9 +646,7 @@ class Preparation(colrev.process.Process):
             required_prep_scripts.append({"endpoint": "update_metadata_status"})
 
             adapter_manager = self.review_manager.get_adapter_manager()
-            self.prep_scripts: typing.Dict[
-                str, typing.Any
-            ] = adapter_manager.load_scripts(
+            self.prep_scripts = adapter_manager.load_scripts(
                 PROCESS=self,
                 scripts=required_prep_scripts,
             )

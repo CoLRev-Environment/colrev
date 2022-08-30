@@ -17,6 +17,10 @@ import colrev.record
 
 class PDFPreparation(colrev.process.Process):
 
+    to_prepare: int
+    pdf_prepared: int
+    not_prepared: int
+
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "pdf_check_ocr": {
             "endpoint": built_in_pdf_prep.PDFCheckOCREndpoint,

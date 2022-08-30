@@ -16,6 +16,10 @@ import colrev.record
 
 class PDFRetrieval(colrev.process.Process):
 
+    to_retrieve: int
+    retrieved: int
+    not_retrieved: int
+
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "unpaywall": {
             "endpoint": built_in_pdf_get.UnpaywallEndpoint,

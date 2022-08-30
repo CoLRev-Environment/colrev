@@ -118,16 +118,14 @@ class Record:
 
     def __str__(self) -> str:
 
-        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+        identifying_keys_order = ["ID", "ENTRYTYPE"] + [
             k for k in self.identifying_field_keys if k in self.data
         ]
         complementary_keys_order = [
-            k for k, v in self.data.items() if k not in self.identifying_keys_order
+            k for k, v in self.data.items() if k not in identifying_keys_order
         ]
 
-        ik_sorted = {
-            k: v for k, v in self.data.items() if k in self.identifying_keys_order
-        }
+        ik_sorted = {k: v for k, v in self.data.items() if k in identifying_keys_order}
         ck_sorted = {
             k: v for k, v in self.data.items() if k in complementary_keys_order
         }

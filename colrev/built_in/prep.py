@@ -1247,6 +1247,8 @@ class LocalIndexPrep:
     )
     always_apply_changes = True
 
+    local_index = None
+
     def __init__(self, *, preparation, settings):
 
         self.local_index = preparation.review_manager.get_local_index()
@@ -1387,6 +1389,7 @@ class DropFieldsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
+    local_index = None
 
     def __init__(self, *, preparation, settings):
         self.settings = from_dict(
