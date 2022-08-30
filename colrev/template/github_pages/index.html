@@ -2,15 +2,15 @@
 layout: home
 ---
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/cr-1.5.6/sl-1.4.0/datatables.min.css" />
 
 <div class="container p-3 mt-3 border">
-    <button id="button-bib">Export selection as BibTeX</button>
-    <button id="button-ris">Export selection as RIS (Zotero)</button>
     <div id="literature-table"></div>
 </div>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/citation-js@0.6.1"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/datatables.min.js"></script>
+<script type="text/javascript"
+    src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/cr-1.5.6/sl-1.4.0/datatables.min.js"></script>
 <script type="text/javascript">
     const Cite = require('citation-js');
 
@@ -84,30 +84,46 @@ layout: home
     }
 
     function initDataTable() {
-        var table = $('#literature').DataTable();
-
-        $('#literature tbody').on('click', 'tr', function () {
-            $(this).toggleClass('selected');
-        });
-
-        $('#button-bib').click(function () {
-            let downloadData = filter(table);
-            if (downloadData.data.length > 0) {
-                download('export.bib', downloadData.format('bibtex'));
-            }
-        });
-
-        $('#button-ris').click(function () {
-            let downloadData = filter(table);
-            if (downloadData.data.length > 0) {
-                download('export.ris', downloadData.format('ris'));
-            }
-        });
-
-        $('#button-enw').click(function () {
-            let downloadData = filter(table);
-            if (downloadData.data.length > 0) {
-                download('export.enw', downloadData.format('enw'));
+        var table = $('#literature').DataTable({
+            dom: 'Blfrtip',
+            buttons: [
+                'colvis',
+                'selectAll',
+                'selectNone',
+                {
+                    text: 'Export selection as BibTeX',
+                    action: function (e, dt, button, config) {
+                        let downloadData = filter(table);
+                        if (downloadData.data.length > 0) {
+                            download('export.bib', downloadData.format('bibtex'));
+                        }
+                    }
+                },
+                {
+                    text: 'Export selection as RIS',
+                    action: function (e, dt, button, config) {
+                        let downloadData = filter(table);
+                        if (downloadData.data.length > 0) {
+                            download('export.ris', downloadData.format('ris'));
+                        }
+                    }
+                },
+                // enw export requires citation-js plugin
+                // {
+                //     text: 'Export selection as Endnote',
+                //     action: function (e, dt, button, config) {
+                //         let downloadData = filter(table);
+                //         if (downloadData.data.length > 0) {
+                //             download('export.enw', downloadData.format('enw'));
+                //         }
+                //     }
+                // }
+            ],
+            select: true,
+            language: {
+                buttons: {
+                    colvis: 'Column Visibility'
+                }
             }
         });
     }
