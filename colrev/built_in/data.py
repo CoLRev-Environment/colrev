@@ -965,12 +965,12 @@ class GithubPagesEndpoint:
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="index.html")
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/_config.yml"),
-                target=Path("index.html"),
+                target=Path("_config.yml"),
             )
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="_config.yml")
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/about.md"),
-                target=Path("index.html"),
+                target=Path("about.md"),
             )
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="about.md")
 
