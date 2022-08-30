@@ -814,17 +814,6 @@ pox = ">=0.3.1"
 ppft = ">=1.7.6.5"
 
 [[package]]
-name = "pdf2image"
-version = "1.16.0"
-description = "A wrapper around the pdftoppm and pdftocairo command line tools to convert PDF to a PIL Image list."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-pillow = "*"
-
-[[package]]
 name = "pdfminer.six"
 version = "20220524"
 description = "PDF parser and analyzer"
@@ -1046,6 +1035,22 @@ description = "A pure-python PDF library capable of splitting, merging, cropping
 category = "main"
 optional = false
 python-versions = ">=2.7"
+
+[[package]]
+name = "pypdfium2"
+version = "2.11.0"
+description = "Python bindings to PDFium"
+category = "main"
+optional = false
+python-versions = "!=3.7.6,!=3.8.1,>=3.5"
+
+[package.extras]
+autocomplete = ["argcomplete"]
+converters = ["pillow (>=6.0)"]
+docs = ["sphinx (>=4.4.0)", "sphinx-rtd-theme (>=1.0)", "sphinxcontrib-programoutput", "docutils (>=0.17)", "myst-parser"]
+inserttext = ["uharfbuzz"]
+test = ["pytest", "importlib-metadata (>=4)"]
+utilities = ["importchecker", "codespell", "reuse", "check-wheel-contents", "twine"]
 
 [[package]]
 name = "pytest"
@@ -1662,8 +1667,8 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.8"
-content-hash = "94dd85ca2f2abb0b4d3d6df99aacb985e81f20e1d2268e75ae1f443feafb8da4"
+python-versions = ">3.8.1"
+content-hash = "783620135d5efed5cbaa27f65ebd17ded12b581ce822e1d137db2d563e82ec64"
 
 [metadata.files]
 affinegap = [
@@ -2580,10 +2585,6 @@ pathos = [
     {file = "pathos-0.2.9-py3-none-any.whl", hash = "sha256:1c44373d8692897d5d15a8aa3b3a442ddc0814c5e848f4ff0ded5491f34b1dac"},
     {file = "pathos-0.2.9.tar.gz", hash = "sha256:a8dbddcd3d9af32ada7c6dc088d845588c513a29a0ba19ab9f64c5cd83692934"},
 ]
-pdf2image = [
-    {file = "pdf2image-1.16.0-py3-none-any.whl", hash = "sha256:84f79f2b8fad943e36323ea4e937fcb05f26ded0caa0a01181df66049e42fb65"},
-    {file = "pdf2image-1.16.0.tar.gz", hash = "sha256:d58ed94d978a70c73c2bb7fdf8acbaf2a7089c29ff8141be5f45433c0c4293bb"},
-]
 "pdfminer.six" = [
     {file = "pdfminer.six-20220524-py3-none-any.whl", hash = "sha256:7e19b857ec76bcbd35665909ad8965a481ad48d9bdff6c45f8522ee66f8a7aab"},
     {file = "pdfminer.six-20220524.tar.gz", hash = "sha256:5a64c924410ac48501d6060b21638bf401db69f5b1bd57207df7fbc070ac8ae2"},
@@ -2862,6 +2863,20 @@ pyparsing = [
 pypdf2 = [
     {file = "PyPDF2-1.28.5-py3-none-any.whl", hash = "sha256:5ee092a9bf5fb3aeb1e9a85fb6e15d746ebcdee65b5c8915d054d43476f5e73e"},
     {file = "PyPDF2-1.28.5.tar.gz", hash = "sha256:bc9619d9b8c33c66550a1f824ae884f99f33dd2ea64baf55d0e98ff6852bfb74"},
+]
+pypdfium2 = [
+    {file = "pypdfium2-2.11.0-py3-none-macosx_10_11_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:3f3e867f91292a9fee37cc809845f3ebc18922bc4901a0427e3ad63f4caae238"},
+    {file = "pypdfium2-2.11.0-py3-none-macosx_11_0_arm64.macosx_12_0_arm64.whl", hash = "sha256:a6cc465f42ce7019b6b5c2b856144b6bd44e71064f0bd6d9bde405d22b07d515"},
+    {file = "pypdfium2-2.11.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:99da436f3bb7ece889c2a76343abadb078fa165903bb0aa8cc09bda3dccbe8c7"},
+    {file = "pypdfium2-2.11.0-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:15b1909add16bcd54cb452fb9b94b023ec77cd08b71f1a69fad101258eec521b"},
+    {file = "pypdfium2-2.11.0-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:71afe5c2e6a0ca536316368657ab541ea18a83bc444ce5ba39f01e962d5390e8"},
+    {file = "pypdfium2-2.11.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6d441dc26ce885464c3502c6f1dff0d059e1310d21bc57bafbd1865446796f84"},
+    {file = "pypdfium2-2.11.0-py3-none-musllinux_1_2_i686.whl", hash = "sha256:85c3cc7dff6f35650d34409db4c0dcdb588e70b581b3ed1bbd3e3d60d5182bcc"},
+    {file = "pypdfium2-2.11.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:8bc307763bfb9e31441a9fdd348f7130054d1feb0164c293ba85a938bcd736d5"},
+    {file = "pypdfium2-2.11.0-py3-none-win32.whl", hash = "sha256:8ba68e2e09a909b04539d5260cba9545d5c70664f7e9dfe11db09eeda4e64df2"},
+    {file = "pypdfium2-2.11.0-py3-none-win_amd64.whl", hash = "sha256:32a096bec94bab1e9f43c0f79c5aba9900f395ab89d9a15ee14682ac23d6a9d6"},
+    {file = "pypdfium2-2.11.0-py3-none-win_arm64.whl", hash = "sha256:ec67bde6b0b2a64e491136f844cf7c0ba7aa6916fc3ebb3eb9b2762feeb6a553"},
+    {file = "pypdfium2-2.11.0.tar.gz", hash = "sha256:0610e2fd951ffd50ea577200f2b78b55c7a194a591e958dfd18bbcd81549e1ce"},
 ]
 pytest = [
     {file = "pytest-7.1.2-py3-none-any.whl", hash = "sha256:13d0e3ccfc2b6e26be000cb6568c832ba67ba32e719443bfe725814d3c42433c"},
