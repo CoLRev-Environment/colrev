@@ -995,6 +995,7 @@ class GithubPagesEndpoint:
             msg="Update sample", script_call="colrev data"
         )
 
+        # TODO: implement a setting to enable automatic push to remote
         # DATA.REVIEW_MANAGER.logger.info("Push to github pages")
         # try:
         #     remote_refs = git_repo.remote().refs
