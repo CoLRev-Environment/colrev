@@ -956,6 +956,8 @@ class GithubPagesEndpoint:
             DATA.REVIEW_MANAGER.logger.info("Setup github pages")
             git_repo.create_head(gh_pages_branch_name)
             git_repo.git.checkout(gh_pages_branch_name)
+            git_repo.git.rm('-rf', '.')
+            git_repo.git.checkout('HEAD', '--', '.gitignore')
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/index.html"),
                 target=Path("index.html"),
