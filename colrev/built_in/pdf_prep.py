@@ -4,12 +4,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import imagehash
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
-from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 
 import colrev.exceptions as colrev_exceptions
@@ -137,8 +135,11 @@ class PDFCoverPageEndpoint:
             if pdf_reader.getNumPages() == 1:
                 return coverpages
 
-            first_page_average_hash_16 = imagehash.average_hash(
-                convert_from_path(pdf, first_page=1, last_page=1)[0],
+            pdf_hash_service = pdf_preparation.review_manager.get_pdf_hash_service()
+
+            first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+                pdf_path=Path(pdf),
+                page_nr=1,
                 hash_size=16,
             )
 
@@ -297,10 +298,11 @@ class PDFLastPageEndpoint:
             pdf_reader = PdfFileReader(pdf, strict=False)
             last_page_nr = pdf_reader.getNumPages()
 
-            last_page_average_hash_16 = imagehash.average_hash(
-                convert_from_path(pdf, first_page=last_page_nr, last_page=last_page_nr)[
-                    0
-                ],
+            pdf_hash_service = pdf_preparation.review_manager.get_pdf_hash_service()
+
+            last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+                pdf_path=Path(pdf),
+                page_nr=last_page_nr,
                 hash_size=16,
             )
 
@@ -469,7 +471,9 @@ class PDFMetadataValidationEndpoint:
             retrieved_record = local_index.retrieve(record=record.data)
 
             pdf_path = pdf_preparation.review_manager.path / Path(record.data["file"])
-            current_cpid = record.get_colrev_pdf_id(path=pdf_path)
+            current_cpid = record.get_colrev_pdf_id(
+                review_manager=pdf_preparation.review_manager, pdf_path=pdf_path
+            )
 
             if "colrev_pdf_id" in retrieved_record:
                 if retrieved_record["colrev_pdf_id"] == str(current_cpid):

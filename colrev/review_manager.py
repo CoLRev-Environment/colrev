@@ -2155,6 +2155,10 @@ class ReviewManager:
         return colrev.environment.ScreenshotService(**kwargs)
 
     @classmethod
+    def get_pdf_hash_service(cls, **kwargs) -> colrev.environment.PDFHashService:
+        return colrev.environment.PDFHashService(**kwargs)
+
+    @classmethod
     def get_resources(cls, **kwargs) -> colrev.environment.Resources:
         return colrev.environment.Resources(**kwargs)
 

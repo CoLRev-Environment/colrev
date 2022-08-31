@@ -172,7 +172,11 @@ class PDFPreparation(colrev.process.Process):
         if colrev.record.RecordState.pdf_imported == record.data["colrev_status"]:
             record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
             pdf_path = self.review_manager.path / Path(record.data["file"])
-            record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(path=pdf_path))
+            record.data.update(
+                colrev_pdf_id=record.get_colrev_pdf_id(
+                    review_manager=self.review_manager, pdf_path=pdf_path
+                )
+            )
 
             # colrev_status == pdf_imported : means successful
             # create *_backup.pdf if record["file"] was changed
@@ -274,7 +278,7 @@ class PDFPreparation(colrev.process.Process):
             pdf_path = self.review_manager.path / Path(record["file"])
             record.update(
                 colrev_pdf_id=colrev.record.Record(data=record).get_colrev_pdf_id(
-                    path=pdf_path
+                    review_manager=self.review_manager, pdf_path=pdf_path
                 )
             )
         return record

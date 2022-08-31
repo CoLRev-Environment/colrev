@@ -14,10 +14,8 @@ from pathlib import Path
 
 import ansiwrap
 import dictdiffer
-import imagehash
 import pandas as pd
 from nameparser import HumanName
-from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
@@ -1517,14 +1515,16 @@ class Record:
                 writer_cp.write(outfile)
 
     @classmethod
-    def get_colrev_pdf_id(cls, *, path: Path) -> str:
+    def get_colrev_pdf_id(cls, *, review_manager, pdf_path: Path) -> str:
 
-        cpid1 = "cpid1:" + str(
-            imagehash.average_hash(
-                convert_from_path(path, first_page=1, last_page=1)[0],
-                hash_size=32,
-            )
+        pdf_hash_service = review_manager.get_pdf_hash_service()
+
+        cpid1 = "cpid1:" + pdf_hash_service.get_pdf_hash(
+            pdf_path=pdf_path,
+            page_nr=1,
+            hash_size=32,
         )
+
         return cpid1
 
     def import_provenance(self, *, source_identifier: str) -> None:
@@ -1658,7 +1658,11 @@ class Record:
         self.reset_pdf_provenance_notes()
 
         pdf_path = Path(review_manager.path / Path(self.data["file"]))
-        self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
+        self.data.update(
+            colrev_pdf_id=self.get_colrev_pdf_id(
+                review_manager=review_manager, pdf_path=pdf_path
+            )
+        )
 
         review_manager.dataset.update_record_by_id(new_record=self.get_data())
         review_manager.dataset.add_changes(

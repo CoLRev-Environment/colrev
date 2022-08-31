@@ -3,11 +3,9 @@ import binascii
 import collections
 import hashlib
 import importlib
-import io
 import json
 import logging
 import os
-import pkgutil
 import re
 import shutil
 import subprocess
@@ -348,6 +346,7 @@ class EnvironmentManager:
         "opensearchproject/opensearch-dashboards": os_db,
         "browserless/chrome": "browserless/chrome:latest",
         "bibutils": "bibutils:latest",
+        "pdf_hash": "pdf_hash:latest",
     }
 
     def __init__(self):
@@ -441,12 +440,16 @@ class EnvironmentManager:
 
                 if "bibutils" == img_name:
                     print("Building bibutils Docker image...")
-                    filedata = pkgutil.get_data(__name__, "docker/bibutils/Dockerfile")
-                    if filedata:
-                        fileobj = io.BytesIO(filedata)
-                        client.images.build(fileobj=fileobj, tag="bibutils:latest")
-                    else:
-                        print("Cannot retrieve image bibutils")
+                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                    context_path = colrev_path / Path("docker/bibutils")
+                    client.images.build(path=str(context_path), tag="bibutils:latest")
+
+                elif "pdf_hash" == img_name:
+                    print("Building pdf_hash Docker image...")
+                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                    context_path = colrev_path / Path("docker/pdf_hash")
+                    client.images.build(path=str(context_path), tag="pdf_hash:latest")
+
                 else:
                     print(f"Pulling {img_name} Docker image...")
                     client.images.pull(img_version)
@@ -2628,6 +2631,30 @@ class TEIParser:
             tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
 
         return self.root
+
+
+class PDFHashService:
+    def __init__(self):
+        pass
+
+    def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
+
+        assert isinstance(page_nr, int)
+        assert isinstance(hash_size, int)
+
+        if pdf_path.is_symlink():
+            pdf_path = pdf_path.resolve()
+        pdf_dir = pdf_path.parents[0]
+
+        command = (
+            f'docker run --rm -v "{pdf_dir}:/home/docker" '
+            f"pdf_hash python app.py {pdf_path.name} {page_nr} {hash_size}"
+        )
+        ret = subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
+
+        # TODO : raise exception if errors occur
+
+        return ret.decode("utf-8").replace("\n", "")
 
 
 if __name__ == "__main__":

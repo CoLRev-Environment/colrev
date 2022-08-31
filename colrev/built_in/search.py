@@ -719,7 +719,7 @@ class PDFSearchEndpoint:
                     # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
                         cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
-                            path=potential_pdf
+                            review_manager=search.review_manager, pdf_path=potential_pdf
                         )
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
@@ -814,7 +814,9 @@ class PDFSearchEndpoint:
             return pdf_list
 
         def get_pdf_cpid_path(path) -> typing.List[str]:
-            cpid = colrev.record.Record.get_colrev_pdf_id(path=path)
+            cpid = colrev.record.Record.get_colrev_pdf_id(
+                review_manager=search.review_manager, pdf_path=path
+            )
             return [str(path), str(cpid)]
 
         if not feed_file.is_file():
