@@ -16,8 +16,8 @@ import ansiwrap
 import dictdiffer
 import imagehash
 import pandas as pd
-import pypdfium2 as pdfium
 from nameparser import HumanName
+from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
@@ -1519,15 +1519,9 @@ class Record:
     @classmethod
     def get_colrev_pdf_id(cls, *, path: Path) -> str:
 
-        pdf = pdfium.PdfDocument(str(path))
-
-        page = pdf.get_page(0)
-        pil_image = page.render_topil()
-        page.close()
-
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
-                pil_image,
+                convert_from_path(path, first_page=1, last_page=1)[0],
                 hash_size=32,
             )
         )

@@ -5,11 +5,11 @@ import subprocess
 from pathlib import Path
 
 import imagehash
-import pypdfium2 as pdfium
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
+from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 
 import colrev.exceptions as colrev_exceptions
@@ -137,14 +137,8 @@ class PDFCoverPageEndpoint:
             if pdf_reader.getNumPages() == 1:
                 return coverpages
 
-            pdf_document = pdfium.PdfDocument(str(pdf))
-
-            page = pdf_document.get_page(0)
-            pil_image = page.render_topil()
-            page.close()
-
             first_page_average_hash_16 = imagehash.average_hash(
-                pil_image,
+                convert_from_path(pdf, first_page=1, last_page=1)[0],
                 hash_size=16,
             )
 
@@ -303,14 +297,10 @@ class PDFLastPageEndpoint:
             pdf_reader = PdfFileReader(pdf, strict=False)
             last_page_nr = pdf_reader.getNumPages()
 
-            pdf_document = pdfium.PdfDocument(str(pdf))
-
-            page = pdf_document.get_page(len(pdf_document) - 1)
-            pil_image = page.render_topil()
-            page.close()
-
             last_page_average_hash_16 = imagehash.average_hash(
-                pil_image,
+                convert_from_path(pdf, first_page=last_page_nr, last_page=last_page_nr)[
+                    0
+                ],
                 hash_size=16,
             )
 
