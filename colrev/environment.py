@@ -102,6 +102,7 @@ class AdapterManager:
             del scripts_dict[script_name]["settings"]["endpoint"]
 
         if colrev.process.ProcessType.search == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import SearchEndpoint
 
             for k, val in scripts_dict.items():
@@ -118,6 +119,7 @@ class AdapterManager:
                 verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.load == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import LoadEndpoint
 
             for k, val in scripts_dict.items():
@@ -132,6 +134,7 @@ class AdapterManager:
                 verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.prep == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PreparationEndpoint
 
             for k, val in scripts_dict.items():
@@ -148,6 +151,7 @@ class AdapterManager:
                 verifyObject(PreparationEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.prep_man == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PreparationManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -164,6 +168,7 @@ class AdapterManager:
                 verifyObject(PreparationManualEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.dedupe == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import DedupeEndpoint
 
             for k, val in scripts_dict.items():
@@ -180,6 +185,7 @@ class AdapterManager:
                 verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.prescreen == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PrescreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -196,6 +202,7 @@ class AdapterManager:
                 verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.pdf_get == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PDFRetrievalEndpoint
 
             for k, val in scripts_dict.items():
@@ -212,6 +219,7 @@ class AdapterManager:
                 verifyObject(PDFRetrievalEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.pdf_get_man == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PDFRetrievalManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -228,6 +236,7 @@ class AdapterManager:
                 verifyObject(PDFRetrievalManualEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.pdf_prep == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PDFPreparationEndpoint
 
             for k, val in scripts_dict.items():
@@ -244,6 +253,7 @@ class AdapterManager:
                 verifyObject(PDFPreparationEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.pdf_prep_man == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import PDFPreparationManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -260,6 +270,7 @@ class AdapterManager:
                 verifyObject(PDFPreparationManualEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.screen == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import ScreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -276,6 +287,7 @@ class AdapterManager:
                 verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
 
         elif colrev.process.ProcessType.data == PROCESS.type:
+            # pylint: disable=import-outside-toplevel
             from colrev.process import DataEndpoint
 
             for k, val in scripts_dict.items():
@@ -291,6 +303,7 @@ class AdapterManager:
 
         elif colrev.process.ProcessType.check == PROCESS.type:
             if "SearchSource" == script_type:
+                # pylint: disable=import-outside-toplevel
                 from colrev.process import SearchSourceEndpoint
 
                 for k, val in scripts_dict.items():
@@ -459,6 +472,7 @@ class EnvironmentManager:
             raise colrev_exceptions.MissingDependencyError("docker") from exc
 
     def get_environment_details(self) -> dict:
+        # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.review_manager
 
@@ -1046,6 +1060,7 @@ class LocalIndex:
         return retrieved_record
 
     def parse_record(self, *, record: dict) -> dict:
+        # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.dataset
 
@@ -1270,6 +1285,7 @@ class LocalIndex:
         return
 
     def index_colrev_project(self, *, repo_source_path):
+        # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.review_manager
 

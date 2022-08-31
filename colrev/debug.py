@@ -18,10 +18,8 @@ def debug_load() -> None:
     # Debugging: get all imported records, their origins
     # then compare them to the original search_files
 
-    from colrev.load import Loader
-
     review_manager = colrev.review_manager.ReviewManager()
-    loader = Loader(review_manager=review_manager)
+    load_operation = review_manager.get_load_operation()
 
     # rec_header_lis = loader.review_manager.dataset.get_record_header_list()
     # origin_list = [x['colrev_origin'] for x in rec_header_lis]
@@ -60,15 +58,13 @@ def debug_load() -> None:
         }
     ]
 
-    records = loader.review_manager.dataset.set_ids(
+    records = load_operation.review_manager.dataset.set_ids(
         records, selected_IDs=[x["ID"] for x in records]
     )
     print(records)
 
 
 def debug_pdf_get():
-
-    from colrev.pdf_get import PDFRetrieval
 
     review_manager = colrev.review_manager.ReviewManager()
 
@@ -87,19 +83,17 @@ def debug_pdf_get():
         "doi": " 10.25300/MISQ/2020/14947",
     }
     print(record)
-    pdf_retrieval = PDFRetrieval(review_manager=review_manager)
-    print(pdf_retrieval)
+    pdf_retrieval_operation = review_manager.get_pdf_get_operation()
+    print(pdf_retrieval_operation)
 
 
 def debug_data():
 
-    from colrev.data import Data
-
     review_manager = colrev.review_manager.ReviewManager()
 
-    data = Data(review_manager=review_manager)
-    records = data.review_manager.dataset.load_records_dict()
-    included = data.get_record_ids_for_synthesis(records)
+    data_operation = review_manager.get_data_operation()
+    records = data_operation.review_manager.dataset.load_records_dict()
+    included = data_operation.get_record_ids_for_synthesis(records)
     print(included)
 
 
@@ -275,10 +269,11 @@ def debug_local_index(param):
 
 
 def corrections():
-    review_manager = colrev.review_manager.ReviewManager()
+    # pylint: disable=import-outside-toplevel
 
     from colrev.process import CheckProcess
 
+    review_manager = colrev.review_manager.ReviewManager()
     CheckProcess(review_manager=review_manager)
     review_manager.dataset.check_corrections_of_curated_records()
 

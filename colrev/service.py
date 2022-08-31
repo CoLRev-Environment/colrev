@@ -189,34 +189,32 @@ class Service:
 
                 print()
                 if "colrev search" == item["cmd"]:
-                    from colrev.search import Search
 
-                    search = Search(review_manager=self.review_manager)
-                    search.main(selection_str=None)
+                    search_operation = self.review_manager.get_search_operation()
+                    search_operation.main(selection_str=None)
 
                 elif "colrev load" == item["cmd"]:
-                    from colrev.load import Loader
 
                     if len(list(self.review_manager.paths["SEARCHDIR"].glob("*"))) > 0:
 
                         self.logger.info(f"Running {item['name']}")
 
-                        loader = Loader(review_manager=self.review_manager)
+                        load_operation = self.review_manager.get_load_operation()
                         print()
-                        loader.check_update_sources()
-                        loader.main(keep_ids=False, combine_commits=False)
+                        load_operation.check_update_sources()
+                        load_operation.main(keep_ids=False, combine_commits=False)
                     else:
                         self.service_queue.task_done()
                         continue
 
                 elif "colrev prep" == item["cmd"]:
-                    from colrev.prep import Preparation
 
                     self.logger.info(f"Running {item['name']}")
-                    preparation = Preparation(review_manager=self.review_manager)
-                    preparation.main()
+                    preparation_operation = (
+                        self.review_manager.get_preparation_operation()
+                    )
+                    preparation_operation.main()
                 elif "colrev dedupe" == item["cmd"]:
-                    from colrev.dedupe import Dedupe
 
                     self.logger.info(f"Running {item['name']}")
 
@@ -224,61 +222,46 @@ class Service:
                     # simple_dedupe
                     # merge_threshold=0.5,
                     # partition_threshold=0.8,
-                    dedupe = Dedupe(review_manager=self.review_manager)
-                    dedupe.main()
+                    dedupe_operation = self.review_manager.get_dedupe_operation()
+                    dedupe_operation.main()
 
                 elif "colrev prescreen" == item["cmd"]:
-                    from colrev.prescreen import Prescreen
 
                     self.logger.info(f"Running {item['name']}")
-                    prescreen = Prescreen(review_manager=self.review_manager)
-                    prescreen.include_all_in_prescreen()
+                    prescreen_operation = self.review_manager.get_prescreen_operation()
+                    prescreen_operation.include_all_in_prescreen()
 
                 elif "colrev pdf-get" == item["cmd"]:
-                    from colrev.pdf_get import PDFRetrieval
 
                     self.logger.info(f"Running {item['name']}")
-                    pdf_retrieval = PDFRetrieval(review_manager=self.review_manager)
-                    pdf_retrieval.main()
+                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
+                    pdf_get_operation.main()
 
                 elif "colrev pdf-prep" == item["cmd"]:
-                    from colrev.pdf_prep import PDFPreparation
 
                     # TODO : this may be solved more elegantly,
                     # but we need colrev to link existing pdfs (file field)
-                    from colrev.pdf_get import PDFRetrieval
 
                     self.logger.info(f"Running {item['name']}")
-                    pdf_retrieval = PDFRetrieval(review_manager=self.review_manager)
-                    pdf_retrieval.main()
+                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
+                    pdf_get_operation.main()
 
-                    pdf_preparation = PDFPreparation(
-                        review_manager=self.review_manager, reprocess=False
+                    pdf_preparation_operation = (
+                        self.review_manager.get_pdf_prep_operation()
                     )
-                    pdf_preparation.main()
-
-                elif "colrev pdf-prep" == item["cmd"]:
-                    from colrev.pdf_prep import PDFPreparation
-
-                    self.logger.info(f"Running {item['name']}")
-                    pdf_preparation = PDFPreparation(
-                        review_manager=self.review_manager, reprocess=False
-                    )
-                    pdf_preparation.main()
+                    pdf_preparation_operation.main()
 
                 elif "colrev screen" == item["cmd"]:
-                    from colrev.screen import Screen
 
                     self.logger.info(f"Running {item['name']}")
-                    screen = Screen(review_manager=self.review_manager)
-                    screen.include_all_in_screen()
+                    screen_operation = self.review_manager.get_screen_operation()
+                    screen_operation.include_all_in_screen()
 
                 elif "colrev data" == item["cmd"]:
-                    from colrev.data import Data
 
                     self.logger.info(f"Running {item['name']}")
-                    data = Data(self.review_manager)
-                    data.main()
+                    data_operation = self.review_manager.get_data_operation()
+                    data_operation.main()
                     input("Waiting for synthesis (press enter to continue)")
 
                 elif item["cmd"] in [

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import importlib
 import io
 import json
@@ -35,6 +37,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 import colrev.settings
+
 
 PASS, FAIL = 0, 1
 
@@ -285,7 +288,7 @@ class ReviewManager:
             with open(target, "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-    def __get_colrev_versions(self) -> typing.List[str]:
+    def __get_colrev_versions(self) -> list[str]:
 
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
@@ -754,7 +757,7 @@ class ReviewManager:
         # ...
         # {'from': '0.4.0', "to": '0.5.0', 'script': migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': migrate_0_5_0}
-        migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+        migration_scripts: list[dict[str, typing.Any]] = [
             {"from": "0.3.0", "to": "0.4.0", "script": migrate_0_3_0},
             {"from": "0.4.0", "to": "0.5.0", "script": migrate_0_4_0},
             {"from": "0.5.0", "to": upcoming_version, "script": migrate_0_5_0},
@@ -968,7 +971,7 @@ class ReviewManager:
 
         # We work with exceptions because each issue may be raised in different checks.
         self.notified_next_process = colrev.process.ProcessType.check
-        check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+        check_scripts: list[dict[str, typing.Any]] = [
             {
                 "script": colrev.environment.EnvironmentManager.check_git_installed,
                 "params": [],
@@ -1660,7 +1663,7 @@ class ReviewManager:
                 st_o[str(current_state)] += md_duplicates_removed
 
             states_to_consider = [current_state]
-            predecessors: typing.List[typing.Dict[str, typing.Any]] = [
+            predecessors: list[dict[str, typing.Any]] = [
                 {
                     "trigger": "init",
                     "source": colrev.record.RecordState.md_imported,
@@ -2154,6 +2157,170 @@ class ReviewManager:
     @classmethod
     def get_resources(cls, **kwargs) -> colrev.environment.Resources:
         return colrev.environment.Resources(**kwargs)
+
+    @classmethod
+    def get_init_operation(cls, **kwargs) -> colrev.init.Initializer:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.init
+
+        return colrev.init.Initializer(**kwargs)
+
+    @classmethod
+    def get_sync_operation(cls, **kwargs) -> colrev.sync.Sync:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.sync
+
+        return colrev.sync.Sync(**kwargs)
+
+    @classmethod
+    def get_clone_operation(cls, **kwargs) -> colrev.clone.Clone:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.clone
+
+        return colrev.clone.Clone(**kwargs)
+
+    def get_search_operation(self, **kwargs) -> colrev.search.Search:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.search
+
+        return colrev.search.Search(review_manager=self, **kwargs)
+
+    def get_load_operation(self, **kwargs) -> colrev.load.Loader:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.load
+
+        return colrev.load.Loader(review_manager=self, **kwargs)
+
+    def get_prep_operation(self, **kwargs) -> colrev.prep.Preparation:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.prep
+
+        return colrev.prep.Preparation(review_manager=self, **kwargs)
+
+    def get_prep_man_operation(self, **kwargs) -> colrev.prep_man.PrepMan:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.prep_man
+
+        return colrev.prep_man.PrepMan(review_manager=self, **kwargs)
+
+    def get_dedupe_operation(self, **kwargs) -> colrev.dedupe.Dedupe:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.dedupe
+
+        return colrev.dedupe.Dedupe(review_manager=self, **kwargs)
+
+    def get_prescreen_operation(self, **kwargs) -> colrev.prescreen.Prescreen:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.prescreen
+
+        return colrev.prescreen.Prescreen(review_manager=self, **kwargs)
+
+    def get_pdf_get_operation(self, **kwargs) -> colrev.pdf_get.PDFRetrieval:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.pdf_get
+
+        return colrev.pdf_get.PDFRetrieval(review_manager=self, **kwargs)
+
+    def get_pdf_get_man_operation(self, **kwargs) -> colrev.pdf_get_man.PDFRetrievalMan:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.pdf_get_man
+
+        return colrev.pdf_get_man.PDFRetrievalMan(review_manager=self, **kwargs)
+
+    def get_pdf_prep_operation(self, **kwargs) -> colrev.pdf_prep.PDFPreparation:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.pdf_prep
+
+        return colrev.pdf_prep.PDFPreparation(review_manager=self, **kwargs)
+
+    def get_pdf_prep_man_operation(self, **kwargs) -> colrev.pdf_prep_man.PDFPrepMan:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.pdf_prep_man
+
+        return colrev.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
+
+    def get_screen_operation(self, **kwargs) -> colrev.screen.Screen:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.screen
+
+        return colrev.screen.Screen(review_manager=self, **kwargs)
+
+    def get_data_operation(self, **kwargs) -> colrev.data.Data:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.data
+
+        return colrev.data.Data(review_manager=self, **kwargs)
+
+    def get_status_operation(self, **kwargs) -> colrev.status.Status:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.status
+
+        return colrev.status.Status(review_manager=self, **kwargs)
+
+    def get_validate_operation(self, **kwargs) -> colrev.validate.Validate:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.validate
+
+        return colrev.validate.Validate(review_manager=self, **kwargs)
+
+    def get_trace_operation(self, **kwargs) -> colrev.trace.Trace:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.trace
+
+        return colrev.trace.Trace(review_manager=self, **kwargs)
+
+    def get_paper_operation(self, **kwargs) -> colrev.paper.Paper:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.paper
+
+        return colrev.paper.Paper(review_manager=self, **kwargs)
+
+    def get_distribute_operation(self, **kwargs) -> colrev.distribute.Distribute:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.distribute
+
+        return colrev.distribute.Distribute(review_manager=self, **kwargs)
+
+    def get_service_operation(self, **kwargs) -> colrev.service.Service:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.service
+
+        return colrev.service.Service(review_manager=self, **kwargs)
+
+    def get_push_operation(self, **kwargs) -> colrev.push.Push:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.push
+
+        return colrev.push.Push(review_manager=self, **kwargs)
+
+    def get_pull_operation(self, **kwargs) -> colrev.pull.Pull:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.pull
+
+        return colrev.pull.Pull(review_manager=self, **kwargs)
 
 
 if __name__ == "__main__":

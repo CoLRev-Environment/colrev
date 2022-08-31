@@ -1,15 +1,15 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import json
 import logging
 import os
 import pkgutil
-import typing
 from pathlib import Path
 from subprocess import CalledProcessError
 from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
-from typing import TYPE_CHECKING
 
 import git
 
@@ -18,9 +18,6 @@ import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
-
-if TYPE_CHECKING:
-    import colrev.environment
 
 
 class Initializer:
@@ -59,7 +56,7 @@ class Initializer:
                 options=colrev.settings.ReviewType._member_names_,
             )
 
-        self.instructions: typing.List[str] = []
+        self.instructions: list[str] = []
         self.share_stat_req = share_stat_req
         self.review_type = review_type
         self.url = url
