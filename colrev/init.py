@@ -88,6 +88,20 @@ class Initializer:
         for instruction in self.instructions:
             self.review_manager.logger.info(instruction)
 
+    @classmethod
+    def check_init_precondition(cls) -> None:
+        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
+
+        # pylint: disable=duplicate-code
+        if "venv" in cur_content:
+            cur_content.remove("venv")
+            # Note: we can use paths directly when initiating the project
+        if "report.log" in cur_content:
+            cur_content.remove("report.log")
+
+        if 0 != len(cur_content):
+            raise colrev_exceptions.NonEmptyDirectoryError()
+
     def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev-init_logger")
@@ -152,6 +166,7 @@ class Initializer:
             [Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")],
             [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
             [Path("template/.gitattributes"), Path(".gitattributes")],
+            [Path("template/gitignore"), Path(".gitignore")],
             [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
                 Path("template/docker-compose.yml"),
@@ -390,25 +405,6 @@ class Initializer:
             logging.error("Global git variables (user name and email) not available.")
             return
 
-        # Note: need to write the .gitignore because file would otherwise be
-        # ignored in the template directory.
-        with open(".gitignore", "w", encoding="utf8") as file:
-            file.write(
-                "*.bib.sav\n"
-                + "missing_pdf_files.csv\n"
-                + "manual_cleansing_statistics.csv\n"
-                + "data.csv\n"
-                + "venv\n"
-                + ".records_learned_settings\n"
-                + ".corrections\n"
-                + ".ipynb_checkpoints/\n"
-                + "pdfs\n"
-                + "report.log\n"
-                + "requests_cache.sqlite\n"
-                + "__pycache__\n"
-                + ".tei"
-            )
-
     def __post_commit_edits(self) -> None:
 
         if "curated_masterdata" == self.review_type:
@@ -480,7 +476,7 @@ class Initializer:
             ]
         )
 
-    def __require_empty_directory(self):
+    def __require_empty_directory(self) -> None:
 
         cur_content = [str(x) for x in Path.cwd().glob("**/*")]
 

@@ -1,14 +1,20 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import pprint
 import time
+from typing import TYPE_CHECKING
 
 import dictdiffer
 
 import colrev.process
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Trace(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(
             review_manager=review_manager,
@@ -19,9 +25,9 @@ class Trace(colrev.process.Process):
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
-    def main(self, *, ID: str) -> None:
+    def main(self, *, record_id: str) -> None:
 
-        self.review_manager.logger.info(f"Trace record by ID: {ID}")
+        self.review_manager.logger.info(f"Trace record by ID: {record_id}")
 
         records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
         data = self.review_manager.paths["DATA"]
@@ -53,12 +59,12 @@ class Trace(colrev.process.Process):
                     load_str=filecontents.decode("utf-8")
                 )
 
-                if ID not in records_dict:
+                if record_id not in records_dict:
                     continue
-                record = records_dict[ID]
+                record = records_dict[record_id]
 
                 if len(record) == 0:
-                    print(f"record {ID} not in commit.")
+                    print(f"record {record_id} not in commit.")
                 else:
                     diffs = list(dictdiffer.diff(prev_record, record))
                     if len(diffs) > 0:
@@ -69,7 +75,7 @@ class Trace(colrev.process.Process):
             if data in commit.tree:
                 filecontents = (commit.tree / data).data_stream.read()
                 for line in str(filecontents).split("\\n"):
-                    if ID in line:
+                    if record_id in line:
                         if line != prev_data:
                             print(f"Data: {line}")
                             prev_data = line

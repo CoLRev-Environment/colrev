@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import pkgutil
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import requests
@@ -13,7 +16,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
-# from p_tqdm import p_map
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class Data(colrev.process.Process):
@@ -24,7 +28,7 @@ class Data(colrev.process.Process):
 
     verbose: bool
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "MANUSCRIPT": {
             "endpoint": built_in_data.ManuscriptEndpoint,
         },
@@ -42,22 +46,27 @@ class Data(colrev.process.Process):
         },
     }
 
-    def __init__(self, review_manager, notify_state_transition_process=True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.data,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.data_scripts: typing.Dict[str, typing.Any] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.data_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.data.scripts,
         )
 
     @classmethod
-    def get_record_ids_for_synthesis(cls, records: typing.Dict) -> list:
+    def get_record_ids_for_synthesis(cls, records: dict) -> list:
         return [
             ID
             for ID, record in records.items()
@@ -68,9 +77,7 @@ class Data(colrev.process.Process):
             ]
         ]
 
-    def update_tei(
-        self, records: typing.Dict, included: typing.List[dict]
-    ) -> typing.Dict:
+    def update_tei(self, *, records: dict, included: list[dict]) -> dict:
 
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
@@ -152,7 +159,7 @@ class Data(colrev.process.Process):
 
         return records
 
-    def reading_heuristics(self):
+    def reading_heuristics(self) -> list:
 
         enlit_list = []
         records = self.review_manager.dataset.load_records_dict()
@@ -222,7 +229,7 @@ class Data(colrev.process.Process):
             return records_df
 
         def prep_observations(
-            *, prepared_records_df: dict, records: typing.Dict
+            *, prepared_records_df: dict, records: dict
         ) -> pd.DataFrame:
 
             included_papers = [
@@ -302,7 +309,7 @@ class Data(colrev.process.Process):
 
         self.review_manager.logger.info(f"Files are available in {output_dir.name}")
 
-    def add_data_endpoint(self, data_endpoint) -> None:
+    def add_data_endpoint(self, *, data_endpoint: dict) -> None:
 
         self.review_manager.settings.data.scripts.append(data_endpoint)
         self.review_manager.save_settings()
@@ -314,14 +321,14 @@ class Data(colrev.process.Process):
             with open("custom_data_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_data_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_data_script.py"))
 
         new_data_endpoint = {"endpoint": "custom_data_script"}
 
         self.review_manager.settings.data.scripts.append(new_data_endpoint)
         self.review_manager.save_settings()
 
-    def main(self, pre_commit_hook=False) -> dict:
+    def main(self, *, pre_commit_hook=False) -> dict:
 
         if pre_commit_hook:
             self.verbose = False
@@ -347,12 +354,8 @@ class Data(colrev.process.Process):
                 self.review_manager.logger.info("No records included yet")
 
         else:
-
-            check_process = colrev.process.CheckProcess(
-                review_manager=self.review_manager
-            )
             # TBD: do we assume that records are not changed by the processes?
-            records = check_process.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
 
             # synthesized_record_status_matrix (paper IDs x endpoint):
             # each endpoint sets synthesized = True/False
@@ -389,7 +392,7 @@ class Data(colrev.process.Process):
                     print(f"updated {endpoint.settings.name}")
 
                 # if "TEI" == data_script.endpoint:
-                #     records = self.update_tei(records, included)
+                #     records = self.update_tei(records=records, included=included)
                 #     self.review_manager.dataset.save_records_dict(records=records)
                 #     self.review_manager.dataset.add_record_changes()
 
@@ -418,8 +421,8 @@ class Data(colrev.process.Process):
             # if self.verbose:
             #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
-            check_process.review_manager.dataset.save_records_dict(records=records)
-            check_process.review_manager.dataset.add_record_changes()
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
 
             return {
                 "ask_to_commit": True,

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from dataclasses import asdict
+from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
@@ -74,12 +75,12 @@ def drop_fields(
 class AISeLibrarySearchSource:
     source_identifier = "https://aisel.aisnet.org/"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         if nr_ais_links > 0:
@@ -102,7 +103,7 @@ class AISeLibrarySearchSource:
 
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         ais_mapping: dict = {}
         record = apply_field_mapping(record=record, mapping=ais_mapping)
 
@@ -230,19 +231,19 @@ class AISeLibrarySearchSource:
 class GoogleScholarSearchSource:
     source_identifier = "https://scholar.google.com/"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
             return result
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         return record
 
@@ -253,12 +254,12 @@ class WebOfScienceSearchSource:
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
 
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
@@ -274,7 +275,7 @@ class WebOfScienceSearchSource:
 
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         return record
 
@@ -283,19 +284,19 @@ class WebOfScienceSearchSource:
 class ScopusSearchSource:
     source_identifier = "{{url}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
             return result
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":
@@ -343,12 +344,12 @@ class ACMDigitalLibrary:
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -358,7 +359,7 @@ class ACMDigitalLibrary:
         # We may also check whether the ID=doi=url
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
         return record
 
@@ -368,12 +369,12 @@ class PubMed:
 
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -386,7 +387,7 @@ class PubMed:
 
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         if "language" in record.data:
             record.data["language"] = record.data["language"].replace("eng", "en")
 
@@ -409,7 +410,7 @@ class PubMed:
             )
 
         # TBD: how to distinguish other types?
-        record.change_ENTRYTYPE(NEW_ENTRYTYPE="article")
+        record.change_entrytype(new_entrytype="article")
         record.import_provenance(source_identifier=self.source_identifier)
 
         return record
@@ -420,12 +421,12 @@ class WileyOnlineLibrary:
 
     source_identifier = "{{url}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -435,7 +436,7 @@ class WileyOnlineLibrary:
 
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
         return record
 
@@ -445,12 +446,12 @@ class DBLP:
 
     source_identifier = "{{biburl}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
@@ -458,7 +459,7 @@ class DBLP:
             return result
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
         return record
 
@@ -468,12 +469,12 @@ class TransportResearchInternationalDocumentation:
 
     source_identifier = "{{biburl}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
@@ -481,7 +482,7 @@ class TransportResearchInternationalDocumentation:
             return result
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
         return record
 
@@ -490,12 +491,12 @@ class TransportResearchInternationalDocumentation:
 class PDFSearchSource:
     source_identifier = "{{file}}"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Note : quick fix (passing the PDFSearchSource settings)
         backward_search_source = BackwardSearchSearchSource(
@@ -509,7 +510,7 @@ class PDFSearchSource:
 
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         return record
 
@@ -518,18 +519,18 @@ class PDFSearchSource:
 class BackwardSearchSearchSource:
     source_identifier = "{{cited_by_file}} (references)"
 
-    def __init__(self, *, settings):
+    def __init__(self, *, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0
             return result
         return result
 
-    def prepare(self, record):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         return record

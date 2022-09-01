@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import logging
 import os
 import pkgutil
 import subprocess
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import timeout_decorator
 from p_tqdm import p_map
@@ -14,14 +17,17 @@ import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
-class PDFPreparation(colrev.process.Process):
+
+class PDFPrep(colrev.process.Process):
 
     to_prepare: int
     pdf_prepared: int
     not_prepared: int
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "pdf_check_ocr": {
             "endpoint": built_in_pdf_prep.PDFCheckOCREndpoint,
         },
@@ -45,16 +51,16 @@ class PDFPreparation(colrev.process.Process):
     def __init__(
         self,
         *,
-        review_manager,
+        review_manager: colrev.review_manager.ReviewManager,
         reprocess: bool = False,
-        notify_state_transition_process: bool = True,
+        notify_state_transition_operation: bool = True,
         debug: bool = False,
-    ):
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_prep,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
             debug=debug,
         )
 
@@ -68,21 +74,10 @@ class PDFPreparation(colrev.process.Process):
         self.cpus = 8
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_prep_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.pdf_prep_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.pdf_prep.scripts,
         )
-
-    def __cleanup_pdf_processing_fields(self, *, record: dict) -> dict:
-
-        if "text_from_pdf" in record:
-            del record["text_from_pdf"]
-        if "pages_in_file" in record:
-            del record["pages_in_file"]
-
-        return record
 
     # Note : no named arguments (multiprocessing)
     def prepare_pdf(self, item: dict) -> dict:
@@ -108,7 +103,7 @@ class PDFPreparation(colrev.process.Process):
 
         # RECORD.data.update(colrev_status=RecordState.pdf_prepared)
         record = colrev.record.Record(data=record_dict)
-        record.get_text_from_pdf(project_path=self.review_manager.path)
+        record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
 
         self.review_manager.report_logger.info(f'prepare({record.data["ID"]})')
@@ -228,7 +223,7 @@ class PDFPreparation(colrev.process.Process):
             git_repo = item["REVIEW_MANAGER"].get_repo()
             git_repo.index.add([record.data["file"]])
 
-        record.data = self.__cleanup_pdf_processing_fields(record=record.data)
+        record.cleanup_pdf_processing_fields()
 
         return record.get_data()
 
@@ -257,7 +252,7 @@ class PDFPreparation(colrev.process.Process):
         )
         return prep_data
 
-    def __set_to_reprocess(self):
+    def __set_to_reprocess(self) -> None:
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
@@ -273,15 +268,15 @@ class PDFPreparation(colrev.process.Process):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_colrev_pdf_ids(self, *, record: dict) -> dict:
-        if "file" in record:
-            pdf_path = self.review_manager.path / Path(record["file"])
-            record.update(
-                colrev_pdf_id=colrev.record.Record(data=record).get_colrev_pdf_id(
+    def __update_colrev_pdf_ids(self, *, record_dict: dict) -> dict:
+        if "file" in record_dict:
+            pdf_path = self.review_manager.path / Path(record_dict["file"])
+            record_dict.update(
+                colrev_pdf_id=colrev.record.Record(data=record_dict).get_colrev_pdf_id(
                     review_manager=self.review_manager, pdf_path=pdf_path
                 )
             )
-        return record
+        return record_dict
 
     def update_colrev_pdf_ids(self) -> None:
         self.review_manager.logger.info("Update colrev_pdf_ids")
@@ -294,7 +289,7 @@ class PDFPreparation(colrev.process.Process):
             msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
         )
 
-    def _print_stats(self, *, pdf_prep_record_list) -> None:
+    def _print_stats(self, *, pdf_prep_record_list: list) -> None:
 
         self.pdf_prepared = len(
             [
@@ -342,7 +337,7 @@ class PDFPreparation(colrev.process.Process):
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_pdf_prep_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_pdf_prep_script.py"))
 
         self.review_manager.settings.pdf_prep.scripts.append(
             {"endpoint": "custom_pdf_prep_script"}
@@ -383,7 +378,7 @@ class PDFPreparation(colrev.process.Process):
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            self.review_manager.reorder_log(IDs=[x["ID"] for x in pdf_prep_record_list])
+            self.review_manager.reorder_log(ids=[x["ID"] for x in pdf_prep_record_list])
 
         self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 

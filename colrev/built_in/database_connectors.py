@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import html
 import json
 import re
 import sys
 import urllib
 from sqlite3 import OperationalError
+from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 import requests
@@ -14,10 +17,13 @@ from thefuzz import fuzz
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class OpenLibraryConnector:
     @classmethod
-    def check_status(cls, *, preparation) -> None:
+    def check_status(cls, *, prep_operation: colrev.prep.Prep) -> None:
 
         test_rec = {
             "ENTRYTYPE": "book",
@@ -30,13 +36,15 @@ class OpenLibraryConnector:
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
             ret = requests.get(
-                url, headers=preparation.requests_headers, timeout=preparation.TIMEOUT
+                url,
+                headers=prep_operation.requests_headers,
+                timeout=prep_operation.timeout,
             )
             if ret.status_code != 200:
-                if not preparation.force_mode:
+                if not prep_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException as exc:
-            if not preparation.force_mode:
+            if not prep_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "OPENLIBRARY"
                 ) from exc
@@ -44,14 +52,16 @@ class OpenLibraryConnector:
 
 class URLConnector:
     @classmethod
-    def retrieve_md_from_url(cls, *, RECORD, preparation) -> None:
+    def retrieve_md_from_url(
+        cls, *, record: colrev.record.Record, prep_operation: colrev.prep.Prep
+    ) -> None:
 
         zotero_translation_service = (
-            preparation.review_manager.get_zotero_translation_service()
+            prep_operation.review_manager.get_zotero_translation_service()
         )
 
         # Note: retrieve_md_from_url replaces prior data in RECORD
-        # (RECORD.copy() - deepcopy() before if necessary)
+        # (record.copy() - deepcopy() before if necessary)
 
         zotero_translation_service.start_zotero_translators()
 
@@ -59,12 +69,12 @@ class URLConnector:
 
         try:
             content_type_header = {"Content-type": "text/plain"}
-            headers = {**preparation.requests_headers, **content_type_header}
+            headers = {**prep_operation.requests_headers, **content_type_header}
             export = requests.post(
                 "http://127.0.0.1:1969/web",
                 headers=headers,
-                data=RECORD.data["url"],
-                timeout=preparation.TIMEOUT,
+                data=record.data["url"],
+                timeout=prep_operation.timeout,
             )
 
             if export.status_code != 200:
@@ -78,20 +88,20 @@ class URLConnector:
                 return
 
             # self.review_manager.p_printer.pprint(item)
-            RECORD.data["ID"] = item["key"]
-            RECORD.data["ENTRYTYPE"] = "article"  # default
+            record.data["ID"] = item["key"]
+            record.data["ENTRYTYPE"] = "article"  # default
             if "journalArticle" == item.get("itemType", ""):
-                RECORD.data["ENTRYTYPE"] = "article"
+                record.data["ENTRYTYPE"] = "article"
                 if "publicationTitle" in item:
-                    RECORD.data["journal"] = item["publicationTitle"]
+                    record.data["journal"] = item["publicationTitle"]
                 if "volume" in item:
-                    RECORD.data["volume"] = item["volume"]
+                    record.data["volume"] = item["volume"]
                 if "issue" in item:
-                    RECORD.data["number"] = item["issue"]
+                    record.data["number"] = item["issue"]
             if "conferencePaper" == item.get("itemType", ""):
-                RECORD.data["ENTRYTYPE"] = "inproceedings"
+                record.data["ENTRYTYPE"] = "inproceedings"
                 if "proceedingsTitle" in item:
-                    RECORD.data["booktitle"] = item["proceedingsTitle"]
+                    record.data["booktitle"] = item["proceedingsTitle"]
             if "creators" in item:
                 author_str = ""
                 for creator in item["creators"]:
@@ -102,40 +112,42 @@ class URLConnector:
                         + creator.get("firstName", "")
                     )
                 author_str = author_str[5:]  # drop the first " and "
-                RECORD.data["author"] = author_str
+                record.data["author"] = author_str
             if "title" in item:
-                RECORD.data["title"] = item["title"]
+                record.data["title"] = item["title"]
             if "doi" in item:
-                RECORD.data["doi"] = item["doi"]
+                record.data["doi"] = item["doi"]
             if "date" in item:
                 year = re.search(r"\d{4}", item["date"])
                 if year:
-                    RECORD.data["year"] = year.group(0)
+                    record.data["year"] = year.group(0)
             if "pages" in item:
-                RECORD.data["pages"] = item["pages"]
+                record.data["pages"] = item["pages"]
             if "url" in item:
                 if "https://doi.org/" in item["url"]:
-                    RECORD.data["doi"] = item["url"].replace("https://doi.org/", "")
+                    record.data["doi"] = item["url"].replace("https://doi.org/", "")
                     dummy_record = colrev.record.PrepRecord(
-                        data={"doi": RECORD.data["doi"]}
+                        data={"doi": record.data["doi"]}
                     )
                     DOIConnector.get_link_from_doi(
-                        RECORD=dummy_record, review_manager=preparation.review_manager
+                        record=dummy_record,
+                        review_manager=prep_operation.review_manager,
                     )
                     if "https://doi.org/" not in dummy_record.data["url"]:
-                        RECORD.data["url"] = dummy_record.data["url"]
+                        record.data["url"] = dummy_record.data["url"]
                 else:
-                    RECORD.data["url"] = item["url"]
+                    record.data["url"] = item["url"]
 
             if "tags" in item:
                 if len(item["tags"]) > 0:
                     keywords = ", ".join([k["tag"] for k in item["tags"]])
-                    RECORD.data["keywords"] = keywords
-        except (json.decoder.JSONDecodeError, UnicodeEncodeError):
-            pass
-        except requests.exceptions.RequestException:
-            pass
-        except KeyError:
+                    record.data["keywords"] = keywords
+        except (
+            json.decoder.JSONDecodeError,
+            UnicodeEncodeError,
+            requests.exceptions.RequestException,
+            KeyError,
+        ):
             pass
 
 
@@ -144,12 +156,12 @@ class DOIConnector:
     def retrieve_doi_metadata(
         cls,
         *,
-        review_manager,
-        RECORD,
-        TIMEOUT: int = 10,
-    ):
-        if "doi" not in RECORD.data:
-            return RECORD
+        review_manager: colrev.review_manager.ReviewManager,
+        record: colrev.record.PrepRecord,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        if "doi" not in record.data:
+            return record
 
         try:
 
@@ -160,18 +172,18 @@ class DOIConnector:
             # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
 
             try:
-                url = "http://dx.doi.org/" + RECORD.data["doi"]
+                url = "http://dx.doi.org/" + record.data["doi"]
                 review_manager.logger.debug(url)
                 headers = {"accept": "application/vnd.citationstyles.csl+json"}
-                ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
+                ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
                 if ret.status_code != 200:
                     review_manager.report_logger.info(
-                        f' {RECORD.data["ID"]}'
+                        f' {record.data["ID"]}'
                         + "metadata for "
-                        + f'doi  {RECORD.data["doi"]} not (yet) available'
+                        + f'doi  {record.data["doi"]} not (yet) available'
                     )
-                    return RECORD
+                    return record
 
                 retrieved_json = json.loads(ret.text)
                 retrieved_record_dict = CrossrefConnector.crossref_json_to_record(
@@ -179,30 +191,28 @@ class DOIConnector:
                 )
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
                 retrieved_record.add_provenance_all(source=url)
-                RECORD.merge(merging_record=retrieved_record, default_source=url)
-                RECORD.set_masterdata_complete()
-                if "colrev_status" in RECORD.data:
-                    RECORD.set_status(
+                record.merge(merging_record=retrieved_record, default_source=url)
+                record.set_masterdata_complete()
+                if "colrev_status" in record.data:
+                    record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
                     )
-                if "retracted" in RECORD.data.get("warning", ""):
-                    RECORD.prescreen_exclude(reason="retracted")
-                    RECORD.remove_field(key="warning")
+                if "retracted" in record.data.get("warning", ""):
+                    record.prescreen_exclude(reason="retracted")
+                    record.remove_field(key="warning")
 
-            except TypeError as exc:
-                print(exc)
-            except json.decoder.JSONDecodeError as exc:
+            except (json.decoder.JSONDecodeError, TypeError) as exc:
                 print(exc)
             except requests.exceptions.RequestException:
-                return RECORD
+                return record
             except OperationalError as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "sqlite, required for requests CachedSession "
                     "(possibly caused by concurrent operations)"
                 ) from exc
 
-            if "title" in RECORD.data:
-                RECORD.format_if_mostly_upper(key="title")
+            if "title" in record.data:
+                record.format_if_mostly_upper(key="title")
 
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -210,12 +220,18 @@ class DOIConnector:
                 "(possibly caused by concurrent operations)"
             ) from exc
 
-        return RECORD
+        return record
 
     @classmethod
-    def get_link_from_doi(cls, *, RECORD, TIMEOUT: int = 10, review_manager) -> None:
+    def get_link_from_doi(
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        record: colrev.record.Record,
+        timeout: int = 10,
+    ) -> None:
 
-        doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
+        doi_url = f"https://www.doi.org/{record.data['doi']}"
 
         # TODO : retry for 50X
         # from requests.adapters import HTTPAdapter
@@ -228,7 +244,7 @@ class DOIConnector:
         # ret = s.get(url, headers=headers)
         # print(ret)
 
-        def meta_redirect(content: str):
+        def meta_redirect(*, content: str) -> str:
             if "<!DOCTYPE HTML PUBLIC" not in content:
                 raise TypeError
             soup = BeautifulSoup(content, "lxml")
@@ -240,7 +256,7 @@ class DOIConnector:
                     url = unquote(url, encoding="utf-8", errors="replace")
                     url = url[: url.find("?")]
                     return str(url)
-            return None
+            return ""
 
         try:
             url = doi_url
@@ -256,7 +272,7 @@ class DOIConnector:
                 "GET",
                 doi_url,
                 headers=requests_headers,
-                timeout=TIMEOUT,
+                timeout=timeout,
             )
             if 503 == ret.status_code:
                 return
@@ -268,15 +284,15 @@ class DOIConnector:
                 url = ret.url
             else:
                 # follow the chain of redirects
-                while meta_redirect(ret.content):
-                    url = meta_redirect(ret.content)
+                while meta_redirect(content=ret.content):
+                    url = meta_redirect(content=ret.content)
                     ret = session.request(
                         "GET",
                         url,
                         headers=requests_headers,
-                        timeout=TIMEOUT,
+                        timeout=timeout,
                     )
-            RECORD.update_field(key="url", value=str(url), source=doi_url)
+            record.update_field(key="url", value=str(url), source=doi_url)
         except (requests.exceptions.RequestException, TypeError):
             pass
         except OperationalError as exc:
@@ -290,7 +306,7 @@ class CrossrefConnector:
 
     issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
 
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager):
 
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Etiquette
@@ -304,7 +320,7 @@ class CrossrefConnector:
         )
 
     @classmethod
-    def check_status(cls, *, preparation) -> None:
+    def check_status(cls, *, prep_operation: colrev.prep.Prep) -> None:
 
         try:
             test_rec = {
@@ -318,21 +334,21 @@ class CrossrefConnector:
                 "ENTRYTYPE": "article",
             }
             returned_record = cls.crossref_query(
-                review_manager=preparation.review_manager,
+                review_manager=prep_operation.review_manager,
                 record_input=colrev.record.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
-                TIMEOUT=preparation.TIMEOUT,
+                timeout=prep_operation.timeout,
             )[0]
 
             if 0 != len(returned_record.data):
                 assert returned_record.data["title"] == test_rec["title"]
                 assert returned_record.data["author"] == test_rec["author"]
             else:
-                if not preparation.force_mode:
+                if not prep_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         except (requests.exceptions.RequestException, IndexError) as exc:
             print(exc)
-            if not preparation.force_mode:
+            if not prep_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "CROSSREF"
                 ) from exc
@@ -351,7 +367,7 @@ class CrossrefConnector:
         for item in crossref_query_return:
             yield self.crossref_json_to_record(item=item)
 
-    def get_journal_query_return(self, *, journal_issn):
+    def get_journal_query_return(self, *, journal_issn: str):
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Journals
 
@@ -504,10 +520,10 @@ class CrossrefConnector:
     def crossref_query(
         cls,
         *,
-        review_manager,
-        record_input,
+        review_manager: colrev.review_manager.ReviewManager,
+        record_input: colrev.record.Record,
         jour_vol_iss_list: bool = False,
-        TIMEOUT: int = 10,
+        timeout: int = 10,
     ) -> list:
         # https://github.com/CrossRef/rest-api-doc
         api_url = "https://api.crossref.org/works?"
@@ -559,7 +575,7 @@ class CrossrefConnector:
             session = review_manager.get_cached_session()
 
             review_manager.logger.debug(url)
-            ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
+            ret = session.request("GET", url, headers=headers, timeout=timeout)
             ret.raise_for_status()
             if ret.status_code != 200:
                 review_manager.logger.debug(
@@ -630,71 +646,78 @@ class CrossrefConnector:
         return record_list
 
     @classmethod
-    def get_masterdata_from_crossref(cls, *, preparation, RECORD, TIMEOUT: int = 10):
+    def get_masterdata_from_crossref(
+        cls,
+        *,
+        prep_operation: colrev.prep.Prep,
+        record: colrev.record.Record,
+        timeout: int = 10,
+    ):
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-        if len(RECORD.data.get("title", "")) > 35:
+        if len(record.data.get("title", "")) > 35:
             try:
 
                 retrieved_records = CrossrefConnector.crossref_query(
-                    review_manager=preparation.review_manager,
-                    record_input=RECORD,
+                    review_manager=prep_operation.review_manager,
+                    record_input=record,
                     jour_vol_iss_list=False,
-                    TIMEOUT=TIMEOUT,
+                    timeout=timeout,
                 )
                 retrieved_record = retrieved_records.pop()
 
                 retries = 0
                 while (
-                    not retrieved_record and retries < preparation.MAX_RETRIES_ON_ERROR
+                    not retrieved_record
+                    and retries < prep_operation.max_retries_on_error
                 ):
                     retries += 1
 
                     retrieved_records = CrossrefConnector.crossref_query(
-                        review_manager=preparation.review_manager,
-                        record_input=RECORD,
+                        review_manager=prep_operation.review_manager,
+                        record_input=record,
                         jour_vol_iss_list=False,
-                        TIMEOUT=TIMEOUT,
+                        timeout=timeout,
                     )
                     retrieved_record = retrieved_records.pop()
 
                 if 0 == len(retrieved_record.data):
-                    return RECORD
+                    return record
 
                 similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=RECORD, retrieved_record_original=retrieved_record
+                    record_original=record, retrieved_record_original=retrieved_record
                 )
-                if similarity > preparation.retrieval_similarity:
-                    preparation.review_manager.logger.debug("Found matching record")
-                    preparation.review_manager.logger.debug(
+                if similarity > prep_operation.retrieval_similarity:
+                    prep_operation.review_manager.logger.debug("Found matching record")
+                    prep_operation.review_manager.logger.debug(
                         f"crossref similarity: {similarity} "
-                        f"(>{preparation.retrieval_similarity})"
+                        f"(>{prep_operation.retrieval_similarity})"
                     )
                     source = (
                         f"https://api.crossref.org/works/{retrieved_record.data['doi']}"
                     )
                     retrieved_record.add_provenance_all(source=source)
-                    RECORD.merge(merging_record=retrieved_record, default_source=source)
+                    record.merge(merging_record=retrieved_record, default_source=source)
 
-                    if "retracted" in RECORD.data.get("warning", ""):
-                        RECORD.prescreen_exclude(reason="retracted")
-                        RECORD.remove_field(key="warning")
+                    if "retracted" in record.data.get("warning", ""):
+                        record.prescreen_exclude(reason="retracted")
+                        record.remove_field(key="warning")
                     else:
                         DOIConnector.get_link_from_doi(
-                            RECORD=RECORD,
-                            review_manager=preparation.review_manager,
+                            review_manager=prep_operation.review_manager,
+                            record=record,
                         )
-                        RECORD.set_masterdata_complete()
-                        RECORD.set_status(
+                        record.set_masterdata_complete()
+                        record.set_status(
                             target_state=colrev.record.RecordState.md_prepared
                         )
 
                 else:
-                    preparation.review_manager.logger.debug(
+                    prep_operation.review_manager.logger.debug(
                         f"crossref similarity: {similarity} "
-                        f"(<{preparation.retrieval_similarity})"
+                        f"(<{prep_operation.retrieval_similarity})"
                     )
 
             except requests.exceptions.RequestException:
@@ -703,12 +726,12 @@ class CrossrefConnector:
                 pass
             except KeyboardInterrupt:
                 sys.exit()
-        return RECORD
+        return record
 
 
 class DBLPConnector:
     @classmethod
-    def check_status(cls, *, preparation) -> None:
+    def check_status(cls, *, prep_operation: colrev.prep.Prep) -> None:
 
         try:
             test_rec = {
@@ -728,7 +751,7 @@ class DBLPConnector:
             query = "" + str(test_rec.get("title", "")).replace("-", "_")
 
             dblp_record = DBLPConnector.retrieve_dblp_records(
-                review_manager=preparation.review_manager,
+                review_manager=prep_operation.review_manager,
                 query=query,
             )[0]
 
@@ -736,20 +759,20 @@ class DBLPConnector:
                 assert dblp_record.data["title"] == test_rec["title"]
                 assert dblp_record.data["author"] == test_rec["author"]
             else:
-                if not preparation.force_mode:
+                if not prep_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException as exc:
-            if not preparation.force_mode:
+            if not prep_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
 
     @classmethod
     def retrieve_dblp_records(
         cls,
         *,
-        review_manager,
+        review_manager: colrev.review_manager.ReviewManager,
         query: str = None,
         url: str = None,
-        TIMEOUT: int = 10,
+        timeout: int = 10,
     ) -> list:
         def dblp_json_to_dict(item: dict) -> dict:
             # To test in browser:
@@ -765,7 +788,7 @@ class DBLPConnector:
                 url = api_url + venue_string.replace(" ", "+") + "&format=json"
                 headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
                 try:
-                    ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
+                    ret = session.request("GET", url, headers=headers, timeout=timeout)
                     ret.raise_for_status()
                     data = json.loads(ret.text)
                     if "hit" not in data["result"]["hits"]:
@@ -863,7 +886,7 @@ class DBLPConnector:
             headers = {"user-agent": f"{__name__}  (mailto:{review_manager.email})"}
             review_manager.logger.debug(url)
             ret = session.request(
-                "GET", url, headers=headers, timeout=TIMEOUT  # type: ignore
+                "GET", url, headers=headers, timeout=timeout  # type: ignore
             )
             ret.raise_for_status()
             if ret.status_code == 500:

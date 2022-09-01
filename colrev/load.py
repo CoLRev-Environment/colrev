@@ -1,9 +1,12 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import itertools
 import re
 import string
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.built_in.load as built_in_load
 import colrev.cli_colors as colors
@@ -13,12 +16,15 @@ import colrev.record
 import colrev.search_sources
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Loader(colrev.process.Process):
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "bibtex": {
             "endpoint": built_in_load.BibPybtexLoader,
         },
@@ -40,21 +46,21 @@ class Loader(colrev.process.Process):
     def __init__(
         self,
         *,
-        review_manager,
-        notify_state_transition_process=True,
-    ):
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation=True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.load,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
         self.verbose = True
 
         adapter_manager = review_manager.get_adapter_manager()
 
-        self.load_scripts: typing.Dict[str, typing.Any] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.load_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=[
                 s.conversion_script
                 for s in review_manager.settings.sources
@@ -71,7 +77,7 @@ class Loader(colrev.process.Process):
             for item in sublist
         ]
 
-    def get_new_search_files(self) -> typing.List[Path]:
+    def get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
 
         search_dir = self.review_manager.paths["SEARCHDIR"]
@@ -114,7 +120,7 @@ class Loader(colrev.process.Process):
             # (which will be created later in the process)
 
             sfp_name = sfp
-            if sfp_name not in [str(SOURCE.filename) for SOURCE in sources]:
+            if sfp_name not in [str(source.filename) for source in sources]:
 
                 print(f"Please provide details for {sfp_name}")
 
@@ -221,26 +227,28 @@ class Loader(colrev.process.Process):
                 )
                 print("\n")
 
-    def check_bib_file(self, source, record_dict) -> None:
-        if not any("author" in r for ID, r in record_dict.items()):
+    def check_bib_file(
+        self, *, source: colrev.settings.SearchSource, records: dict
+    ) -> None:
+        if not any("author" in r for ID, r in records.items()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with author field): {source.filename.name}"
             )
 
-        if not any("title" in r for ID, r in record_dict.items()):
+        if not any("title" in r for ID, r in records.items()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with title field): {source.filename.name}"
             )
 
-    def resolve_non_unique_ids(self, *, source) -> None:
-        def get_unique_id(*, ID: str, ID_list: typing.List[str]) -> str:
+    def resolve_non_unique_ids(self, *, source: colrev.settings.SearchSource) -> None:
+        def get_unique_id(*, non_unique_id: str, id_list: list[str]) -> str:
 
             order = 0
             letters = list(string.ascii_lowercase)
-            temp_id = ID
+            temp_id = non_unique_id
             next_unique_id = temp_id
             appends: list = []
-            while next_unique_id in ID_list:
+            while next_unique_id in id_list:
                 if len(appends) == 0:
                     order += 1
                     appends = list(itertools.product(letters, repeat=order))
@@ -270,10 +278,10 @@ class Loader(colrev.process.Process):
                 for new_file_line in new_file_lines:
                     file.write(new_file_line)
 
-        if not source.corresponding_bib_file.is_file():
+        if not source.get_corresponding_bib_file().is_file():
             return
 
-        with open(source.corresponding_bib_file, encoding="utf8") as bibtex_file:
+        with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             cr_dict = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
@@ -282,16 +290,16 @@ class Loader(colrev.process.Process):
         current_ids = list(cr_dict.keys())
         for record in cr_dict.values():
             if len([x for x in current_ids if x == record["ID"]]) > 1:
-                new_id = get_unique_id(ID=record["ID"], ID_list=current_ids)
+                new_id = get_unique_id(non_unique_id=record["ID"], id_list=current_ids)
                 ids_to_update.append([record["ID"], new_id])
                 current_ids.append(new_id)
 
         if len(ids_to_update) > 0:
             self.review_manager.dataset.add_changes(
-                path=str(source.corresponding_bib_file)
+                path=source.get_corresponding_bib_file()
             )
             self.review_manager.create_commit(
-                msg=f"Save original search file: {source.corresponding_bib_file.name}",
+                msg=f"Save original search file: {source.get_corresponding_bib_file().name}",
                 script_call="colrev load",
             )
 
@@ -303,19 +311,21 @@ class Loader(colrev.process.Process):
                     f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
                 )
                 inplace_change_second(
-                    filename=source.corresponding_bib_file,
+                    filename=source.get_corresponding_bib_file(),
                     old_string=f"{old_id},",
                     new_string=f"{new_id},",
                 )
             self.review_manager.dataset.add_changes(
-                path=str(source.corresponding_bib_file)
+                path=source.get_corresponding_bib_file()
             )
             self.review_manager.create_commit(
-                f"Resolve non-unique IDs in {source.corresponding_bib_file.name}"
+                msg=f"Resolve non-unique IDs in {source.get_corresponding_bib_file().name}"
             )
 
-    def load_source_records(self, *, source, keep_ids) -> None:
-        def getbib(*, file: Path) -> typing.List[dict]:
+    def load_source_records(
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+    ) -> None:
+        def getbib(*, file: Path) -> list[dict]:
             with open(file, encoding="utf8") as bibtex_file:
                 contents = bibtex_file.read()
                 bib_r = re.compile(r"@.*{.*,", re.M)
@@ -330,7 +340,7 @@ class Loader(colrev.process.Process):
                 search_records_dict = self.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
-            return search_records_dict.values()
+            return list(search_records_dict.values())
 
         def import_record(*, record_dict: dict) -> dict:
             self.review_manager.logger.debug(
@@ -392,18 +402,20 @@ class Loader(colrev.process.Process):
 
             return record.get_data()
 
-        if source.corresponding_bib_file.is_file():
-            search_records = getbib(file=source.corresponding_bib_file)
+        source.create_load_stats()
+
+        if source.get_corresponding_bib_file().is_file():
+            search_records = getbib(file=source.get_corresponding_bib_file())
             self.review_manager.logger.debug(
-                f"Loaded {source.corresponding_bib_file.name} "
+                f"Loaded {source.get_corresponding_bib_file().name} "
                 f"with {len(search_records)} records"
             )
         else:
             search_records = []
 
         if len(search_records) == 0:
-            source.to_import = 0
-            source.source_records_list = []
+            # source.to_import = 0
+            # source.source_records_list = list()
             self.review_manager.logger.info(
                 f"{colors.GREEN}No records to load{colors.END}"
             )
@@ -412,13 +424,13 @@ class Loader(colrev.process.Process):
             return
 
         nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
-            file_path=source.corresponding_bib_file
+            file_path=source.get_corresponding_bib_file()
         )
         if len(search_records) < nr_in_bib:
             self.review_manager.logger.error(
                 "broken bib file (not imported all records)"
             )
-            with open(source.corresponding_bib_file, encoding="utf8") as file:
+            with open(source.get_corresponding_bib_file(), encoding="utf8") as file:
                 line = file.readline()
                 while line:
                     if "@" in line[:3]:
@@ -432,7 +444,7 @@ class Loader(colrev.process.Process):
         record_list = []
         for record in search_records:
             record.update(
-                colrev_origin=f"{source.corresponding_bib_file.name}/{record['ID']}"
+                colrev_origin=f"{source.get_corresponding_bib_file().name}/{record['ID']}"
             )
 
             # Drop empty fields
@@ -498,15 +510,17 @@ class Loader(colrev.process.Process):
             self.review_manager.logger.info("Set IDs")
             records = self.review_manager.dataset.set_ids(
                 records=records,
-                selected_IDs=[r["ID"] for r in source.source_records_list],
+                selected_ids=[r["ID"] for r in source.source_records_list],
             )
 
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(path=str(source.corresponding_bib_file))
-        self.review_manager.dataset.add_changes(path=str(source.filename))
+        self.review_manager.dataset.add_changes(
+            path=source.get_corresponding_bib_file()
+        )
+        self.review_manager.dataset.add_changes(path=source.filename)
         self.review_manager.dataset.add_record_changes()
 
-    def validate_load(self, *, source) -> None:
+    def validate_load(self, *, source: colrev.settings.SearchSource) -> None:
 
         imported_origins = (
             self.review_manager.dataset.get_currently_imported_origin_list()
@@ -535,10 +549,10 @@ class Loader(colrev.process.Process):
                     f"PROBLEM: {source.to_import - imported} records too much"
                 )
 
-    def save_records(self, *, records, corresponding_bib_file) -> None:
+    def save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
         """Convenience function for the load script implementations"""
 
-        def fix_keys(*, records: typing.Dict) -> typing.Dict:
+        def fix_keys(*, records: dict) -> dict:
             for record in records.values():
                 record = {
                     re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
@@ -546,7 +560,7 @@ class Loader(colrev.process.Process):
                 }
             return records
 
-        def set_incremental_ids(*, records: typing.Dict) -> typing.Dict:
+        def set_incremental_ids(*, records: dict) -> dict:
             # if IDs to set for some records
             if 0 != len([r for r in records if "ID" not in r]):
                 i = 1
@@ -561,7 +575,7 @@ class Loader(colrev.process.Process):
                         i += 1
             return records
 
-        def drop_empty_fields(*, records: typing.Dict) -> typing.Dict:
+        def drop_empty_fields(*, records: dict) -> dict:
 
             records_list = list(records.values())
             records_list = [
@@ -590,7 +604,7 @@ class Loader(colrev.process.Process):
 
     def apply_source_heuristics(
         self, *, filepath: Path
-    ) -> typing.List[colrev.settings.SearchSource]:
+    ) -> list[colrev.settings.SearchSource]:
         """Apply heuristics to identify source"""
 
         def get_conversion_script(*, filepath: Path) -> dict:
@@ -697,7 +711,6 @@ class Loader(colrev.process.Process):
                             f"Error: endpoint not available: {source.conversion_script}"
                         )
                     continue
-                source.corresponding_bib_file = source.filename.with_suffix(".bib")
                 sources.append(source)
             return sources
 

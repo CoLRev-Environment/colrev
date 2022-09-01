@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import io
 import itertools
 import json
@@ -11,12 +13,14 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import pandas as pd
 import pybtex.errors
 from dictdiffer import diff
 from git.exc import GitCommandError
+from git.exc import InvalidGitRepositoryError
 from pybtex.database.input import bibtex
 from tqdm import tqdm
 
@@ -25,13 +29,20 @@ import colrev.process
 import colrev.record
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Dataset:
-    def __init__(self, *, review_manager) -> None:
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         self.review_manager = review_manager
         self.records_file = review_manager.paths["RECORDS_FILE"]
-        self.__git_repo = git.Repo(self.review_manager.path)
+        try:
+            self.__git_repo = git.Repo(self.review_manager.path)
+        except InvalidGitRepositoryError as exc:
+            msg = "Not a CoLRev/git repository. Run\n    colrev init"
+            raise colrev_exceptions.RepoSetupError(msg) from exc
 
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
@@ -91,9 +102,9 @@ class Dataset:
     def retrieve_records_from_history(
         self,
         *,
-        original_records: typing.List[typing.Dict],
+        original_records: list[dict],
         condition_state: colrev.record.RecordState,
-    ) -> typing.List:
+    ) -> list:
 
         prior_records = []
         records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
@@ -272,8 +283,8 @@ class Dataset:
 
     def load_origin_records(self) -> dict:
 
-        origin_records: typing.Dict[str, typing.Any] = {}
-        sources = [x.filename for x in self.review_manager.sources]
+        origin_records: dict[str, typing.Any] = {}
+        sources = [x.filename for x in self.review_manager.settings.sources]
         for source in sources:
             source_file = self.review_manager.paths["SEARCHDIR_RELATIVE"] / Path(source)
             if source_file.is_file():
@@ -320,7 +331,7 @@ class Dataset:
             yield records_dict
 
     @classmethod
-    def parse_bibtex_str(cls, *, recs_dict_in) -> str:
+    def parse_bibtex_str(cls, *, recs_dict_in: dict) -> str:
 
         # Note: we need a deepcopy because the parsing modifies dicts
         recs_dict = deepcopy(recs_dict_in)
@@ -387,7 +398,7 @@ class Dataset:
         return bibtex_str
 
     @classmethod
-    def save_records_dict_to_file(cls, *, records, save_path: Path):
+    def save_records_dict_to_file(cls, *, records: dict, save_path: Path) -> None:
         """Save the records dict to specifified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
@@ -411,7 +422,7 @@ class Dataset:
         #      for r in records
         # ]
 
-    def save_records_dict(self, *, records) -> None:
+    def save_records_dict(self, *, records: dict) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         self.save_records_dict_to_file(records=records, save_path=self.records_file)
@@ -440,9 +451,7 @@ class Dataset:
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
-    def set_ids(
-        self, *, records: typing.Dict = None, selected_IDs: list = None
-    ) -> typing.Dict:
+    def set_ids(self, *, records: dict = None, selected_ids: list = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         # pylint: disable=redefined-outer-name
@@ -451,7 +460,7 @@ class Dataset:
 
         def generate_id_blacklist(
             *,
-            record: dict,
+            record_dict: dict,
             id_blacklist: list = None,
             record_in_bib_db: bool = False,
             raise_error: bool = True,
@@ -462,16 +471,16 @@ class Dataset:
             # screen or data will not be replaced
             # (this would break the chain of evidence)
             if raise_error:
-                if self.propagated_id(ID=record["ID"]):
-                    raise colrev_exceptions.PropagatedIDChange([record["ID"]])
+                if self.propagated_id(record_id=record_dict["ID"]):
+                    raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
             try:
-                retrieved_record = local_index.retrieve(record=record)
+                retrieved_record = local_index.retrieve(record_dict=record_dict)
                 temp_id = retrieved_record["ID"]
             except colrev_exceptions.RecordNotInIndexException:
 
-                if "" != record.get("author", record.get("editor", "")):
-                    authors_string = record.get(
-                        "author", record.get("editor", "Anonymous")
+                if "" != record_dict.get("author", record_dict.get("editor", "")):
+                    authors_string = record_dict.get(
+                        "author", record_dict.get("editor", "Anonymous")
                     )
                     authors = colrev.record.PrepRecord.format_author_field(
                         input_string=authors_string
@@ -489,9 +498,7 @@ class Dataset:
                 id_pattern = self.review_manager.settings.project.id_pattern
 
                 if colrev.settings.IDPattern.first_author_year == id_pattern:
-                    temp_id = (
-                        f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
-                    )
+                    temp_id = f'{author.replace(" ", "")}{str(record_dict.get("year", "NoYear"))}'
 
                 if colrev.settings.IDPattern.three_authors_year == id_pattern:
                     temp_id = ""
@@ -504,7 +511,7 @@ class Dataset:
                         )
                     if len(authors) > 3:
                         temp_id = temp_id + "EtAl"
-                    temp_id = temp_id + str(record.get("year", "NoYear"))
+                    temp_id = temp_id + str(record_dict.get("year", "NoYear"))
 
                 if temp_id.isupper():
                     temp_id = temp_id.capitalize()
@@ -520,8 +527,8 @@ class Dataset:
                     other_ids = id_blacklist
                     # Note: only remove it once. It needs to change when there are
                     # other records with the same ID
-                    if record["ID"] in other_ids:
-                        other_ids.remove(record["ID"])
+                    if record_dict["ID"] in other_ids:
+                        other_ids.remove(record_dict["ID"])
                 else:
                     # ID can remain the same, but it has to change
                     # if it is already in bib_db
@@ -554,8 +561,8 @@ class Dataset:
             if record.masterdata_is_curated():
                 continue
             self.review_manager.logger.debug(f"Set ID for {record_id}")
-            if selected_IDs is not None:
-                if record_id not in selected_IDs:
+            if selected_ids is not None:
+                if record_id not in selected_ids:
                     continue
             elif str(record_dict["colrev_status"]) not in [
                 str(colrev.record.RecordState.md_imported),
@@ -565,7 +572,7 @@ class Dataset:
 
             old_id = record_id
             new_id = generate_id_blacklist(
-                record=record_dict,
+                record_dict=record_dict,
                 id_blacklist=id_list,
                 record_in_bib_db=True,
                 raise_error=False,
@@ -592,7 +599,7 @@ class Dataset:
 
         return records
 
-    def propagated_id(self, *, ID: str) -> bool:
+    def propagated_id(self, *, record_id: str) -> bool:
         """Check whether an ID has been propagated"""
 
         propagated = False
@@ -600,7 +607,7 @@ class Dataset:
         if self.review_manager.paths["DATA"].is_file():
             # Note: this may be redundant, but just to be sure:
             data = pd.read_csv(self.review_manager.paths["DATA"], dtype=str)
-            if ID in data["ID"].tolist():
+            if record_id in data["ID"].tolist():
                 propagated = True
 
         # TODO : also check data_pages?
@@ -711,21 +718,21 @@ class Dataset:
                 records.append(record)
         yield from records
 
-    def get_crossref_record(self, *, record) -> dict:
-        # Note : the ID of the crossrefed record may have changed.
+    def get_crossref_record(self, *, record_dict: dict) -> dict:
+        # Note : the ID of the crossrefed record_dict may have changed.
         # we need to trace based on the colrev_origin
-        crossref_origin = record["colrev_origin"]
+        crossref_origin = record_dict["colrev_origin"]
         crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
-        crossref_origin = crossref_origin + "/" + record["crossref"]
+        crossref_origin = crossref_origin + "/" + record_dict["crossref"]
         for record_string in self.__read_next_record_str():
             if crossref_origin in record_string:
                 records_dict = self.load_records_dict(load_str=record_string)
-                record = list(records_dict.values())[0]
-                if record["colrev_origin"] == crossref_origin:
-                    return record
+                record_dict = list(records_dict.values())[0]
+                if record_dict["colrev_origin"] == crossref_origin:
+                    return record_dict
         return {}
 
-    def replace_field(self, *, IDs: list, key: str, val_str: str) -> None:
+    def replace_field(self, *, ids: list, key: str, val_str: str) -> None:
 
         val = val_str.encode("utf-8")
         current_id_str = "NA"
@@ -738,7 +745,7 @@ class Dataset:
                     current_id_str = current_id.decode("utf-8")
 
                 replacement = None
-                if current_id_str in IDs:
+                if current_id_str in ids:
                     if line.lstrip()[: len(key)].decode("utf-8") == key:
                         replacement = line[: line.find(b"{") + 1] + val + b"},\n"
 
@@ -759,8 +766,8 @@ class Dataset:
                         file.truncate()  # if the replacement is shorter...
                         file.seek(seekpos)
                         line = file.readline()
-                    IDs.remove(current_id_str)
-                    if 0 == len(IDs):
+                    ids.remove(current_id_str)
+                    if 0 == len(ids):
                         return
                 seekpos = file.tell()
                 line = file.readline()
@@ -897,9 +904,9 @@ class Dataset:
         ]
         return changed
 
-    def retrieve_data(self, *, prior: dict) -> dict:
+    def retrieve_status_data(self, *, prior: dict) -> dict:
 
-        data: dict = {
+        status_data: dict = {
             "pdf_not_exists": [],
             "status_fields": [],
             "status_transitions": [],
@@ -943,33 +950,33 @@ class Dataset:
                     logging.error(f"Skipping record without ID: {record_string}")
                     continue
 
-                data["IDs"].append(record_id)
+                status_data["IDs"].append(record_id)
 
                 for org in origin.split(";"):
-                    data["origin_list"].append([record_id, org])
+                    status_data["origin_list"].append([record_id, org])
 
                 if (
                     str(status)
                     in colrev.record.RecordState.get_post_md_processed_states()
                 ):
                     for origin_part in origin.split(";"):
-                        data["persisted_IDs"].append([origin_part, record_id])
+                        status_data["persisted_IDs"].append([origin_part, record_id])
 
                 if file_path != "NA":
                     if not all(Path(f).is_file() for f in file_path.split(";")):
-                        data["pdf_not_exists"].append(record_id)
+                        status_data["pdf_not_exists"].append(record_id)
 
                 if origin != "NA":
                     for org in origin.split(";"):
-                        data["record_links_in_bib"].append(org)
+                        status_data["record_links_in_bib"].append(org)
                 else:
-                    data["entries_without_origin"].append(record_id)
+                    status_data["entries_without_origin"].append(record_id)
 
-                data["status_fields"].append(status)
+                status_data["status_fields"].append(status)
 
                 if "not_set" != excl_crit:
                     ec_case = [record_id, status, excl_crit]
-                    data["screening_criteria_list"].append(ec_case)
+                    status_data["screening_criteria_list"].append(ec_case)
 
                 # TODO : the origins of a record could be in multiple states
                 if "colrev_status" in prior:
@@ -992,7 +999,7 @@ class Dataset:
                         and str(x["dest"]) == status
                     ]
                     if len(proc_transition_list) == 0 and prior_status[0] != status:
-                        data["start_states"].append(prior_status[0])
+                        status_data["start_states"].append(prior_status[0])
                         if prior_status[0] not in [
                             str(x) for x in colrev.record.RecordState
                         ]:
@@ -1004,7 +1011,7 @@ class Dataset:
                                 record_id, "colrev_status", status
                             )
 
-                        data["invalid_state_transitions"].append(
+                        status_data["invalid_state_transitions"].append(
                             f"{record_id}: {prior_status[0]} to {status}"
                         )
                     if 0 == len(proc_transition_list):
@@ -1013,9 +1020,9 @@ class Dataset:
                         proc_transition = proc_transition_list.pop()
                         status_transition[record_id] = proc_transition
 
-                data["status_transitions"].append(status_transition)
+                status_data["status_transitions"].append(status_transition)
 
-        return data
+        return status_data
 
     def retrieve_prior(self) -> dict:
 
@@ -1051,25 +1058,6 @@ class Dataset:
 
         return prior
 
-    # def read_next_record(file_object) -> typing.Iterator[str]:
-    #     data = ""
-    #     first_record_processed = False
-    #     while True:
-    #         line = file_object.readline()
-    #         if not line:
-    #             break
-    #         if line[:1] == "%" or line == "\n":
-    #             continue
-    #         if line[:1] != "@":
-    #             data += line
-    #         else:
-    #             if first_record_processed:
-    #                 yield data
-    #             else:
-    #                 first_record_processed = True
-    #             data = line
-    #     yield data
-
     def retrieve_ids_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         record_ids = []
@@ -1083,7 +1071,7 @@ class Dataset:
         return record_ids
 
     def retrieve_by_colrev_id(
-        self, *, indexed_record_dict: dict, records: typing.List[typing.Dict]
+        self, *, indexed_record_dict: dict, records: list[dict]
     ) -> dict:
 
         indexed_record = colrev.record.Record(data=indexed_record_dict)
@@ -1208,10 +1196,12 @@ class Dataset:
 
     # CHECKS --------------------------------------------------------------
 
-    def check_main_records_duplicates(self, *, data: dict) -> None:
+    def check_main_records_duplicates(self, *, status_data: dict) -> None:
 
-        if not len(data["IDs"]) == len(set(data["IDs"])):
-            duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
+        if not len(status_data["IDs"]) == len(set(status_data["IDs"])):
+            duplicates = [
+                ID for ID in status_data["IDs"] if status_data["IDs"].count(ID) > 1
+            ]
             if len(duplicates) > 20:
                 raise colrev_exceptions.DuplicateIDsError(
                     "Duplicates in RECORDS_FILE: "
@@ -1221,12 +1211,12 @@ class Dataset:
                 f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
             )
 
-    def check_main_records_origin(self, *, prior: dict, data: dict) -> None:
+    def check_main_records_origin(self, *, prior: dict, status_data: dict) -> None:
 
         # Check whether each record has an origin
-        if not len(data["entries_without_origin"]) == 0:
+        if not len(status_data["entries_without_origin"]) == 0:
             raise colrev_exceptions.OriginError(
-                f"Entries without origin: {', '.join(data['entries_without_origin'])}"
+                f"Entries without origin: {', '.join(status_data['entries_without_origin'])}"
             )
 
         # Check for broken origins
@@ -1236,18 +1226,18 @@ class Dataset:
             search_ids = self.retrieve_ids_from_bib(file_path=bib_file)
             for search_id in search_ids:
                 all_record_links.append(bib_file.name + "/" + search_id)
-        delta = set(data["record_links_in_bib"]) - set(all_record_links)
+        delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
         if len(delta) > 0:
             raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = list(itertools.chain(*data["origin_list"]))
+        origins = list(itertools.chain(*status_data["origin_list"]))
         non_unique_origins = []
         for org in origins:
             if origins.count(org) > 1:
                 non_unique_origins.append(org)
         if non_unique_origins:
-            for _, org in data["origin_list"]:
+            for _, org in status_data["origin_list"]:
                 if org in non_unique_origins:
                     raise colrev_exceptions.OriginError(
                         f'Non-unique origin: origin="{org}"'
@@ -1276,25 +1266,25 @@ class Dataset:
         #                 check_propagated_ids(prior_id, new_id)
         #                 STATUS = FAIL
 
-    def check_fields(self, *, data: dict) -> None:
+    def check_fields(self, *, status_data: dict) -> None:
         # Check status fields
         status_schema = [str(x) for x in colrev.record.RecordState]
-        stat_diff = set(data["status_fields"]).difference(status_schema)
+        stat_diff = set(status_data["status_fields"]).difference(status_schema)
         if stat_diff:
             raise colrev_exceptions.FieldValueError(
                 f"status field(s) {stat_diff} not in {status_schema}"
             )
 
-    def check_status_transitions(self, *, data: dict) -> None:
-        if len(set(data["start_states"])) > 1:
+    def check_status_transitions(self, *, status_data: dict) -> None:
+        if len(set(status_data["start_states"])) > 1:
             raise colrev_exceptions.StatusTransitionError(
                 "multiple transitions from different "
-                f'start states ({set(data["start_states"])})'
+                f'start states ({set(status_data["start_states"])})'
             )
-        if len(set(data["invalid_state_transitions"])) > 0:
+        if len(set(status_data["invalid_state_transitions"])) > 0:
             raise colrev_exceptions.StatusTransitionError(
                 "invalid state transitions: \n    "
-                + "\n    ".join(data["invalid_state_transitions"])
+                + "\n    ".join(status_data["invalid_state_transitions"])
             )
 
     def __get_screening_criteria(self, *, ec_string: str) -> list:
@@ -1316,7 +1306,7 @@ class Dataset:
         # TODO : remove the following:
         # from colrev.prep import Preparation
         # self.PREPARATION = Preparation(
-        #     review_manager=self.review_manager, notify_state_transition_process=False
+        #     review_manager=self.review_manager, notify_state_transition_operation=False
         # )
 
         # pylint: disable=duplicate-code
@@ -1407,7 +1397,7 @@ class Dataset:
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = local_index.retrieve(
-                                record=prior_cr
+                                record_dict=prior_cr
                             )
 
                             # Note : this is a simple heuristic:
@@ -1547,7 +1537,7 @@ class Dataset:
         # for testing:
         # raise KeyError
 
-    def check_main_records_screen(self, *, data: dict) -> None:
+    def check_main_records_screen(self, *, status_data: dict) -> None:
 
         # Check screen
         # Note: consistency of inclusion_2=yes -> inclusion_1=yes
@@ -1556,8 +1546,8 @@ class Dataset:
 
         field_errors = []
 
-        if data["screening_criteria_list"]:
-            screening_criteria = data["screening_criteria_list"][0][2]
+        if status_data["screening_criteria_list"]:
+            screening_criteria = status_data["screening_criteria_list"][0][2]
             if screening_criteria != "NA":
                 criteria = self.__get_screening_criteria(ec_string=screening_criteria)
                 settings_criteria = list(
@@ -1574,7 +1564,9 @@ class Dataset:
                 criteria = ["NA"]
                 pattern = "^NA$"
                 pattern_inclusion = "^NA$"
-            for [record_id, status, excl_crit] in data["screening_criteria_list"]:
+            for [record_id, status, excl_crit] in status_data[
+                "screening_criteria_list"
+            ]:
                 # print([record_id, status, excl_crit])
                 if not re.match(pattern, excl_crit):
                     # Note: this should also catch cases of missing
@@ -1709,14 +1701,14 @@ class Dataset:
                     )
         return notifications
 
-    def check_persisted_id_changes(self, *, prior: dict, data: dict) -> None:
+    def check_persisted_id_changes(self, *, prior: dict, status_data: dict) -> None:
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
-            if prior_origin not in [x[0] for x in data["persisted_IDs"]]:
+            if prior_origin not in [x[0] for x in status_data["persisted_IDs"]]:
                 # Note: this does not catch origins removed before md_processed
                 raise colrev_exceptions.OriginError(f"origin removed: {prior_origin}")
-            for new_origin, new_id in data["persisted_IDs"]:
+            for new_origin, new_id in status_data["persisted_IDs"]:
                 if new_origin == prior_origin:
                     if new_id != prior_id:
                         notifications = self.check_propagated_ids(
@@ -1771,7 +1763,7 @@ class Dataset:
         # Extension : allow for optional path (check changes for that file)
         return self.__git_repo.is_dirty()
 
-    def add_changes(self, *, path: str) -> None:
+    def add_changes(self, *, path: Path) -> None:
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
@@ -1891,7 +1883,7 @@ class Dataset:
             return True
         return False
 
-    def pull_if_repo_clean(self):
+    def pull_if_repo_clean(self) -> None:
         if not self.__git_repo.is_dirty():
             origin = self.__git_repo.remotes.origin
             origin.pull()

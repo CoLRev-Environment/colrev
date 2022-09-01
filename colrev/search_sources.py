@@ -1,12 +1,10 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
-import pprint
 import typing
 
 import colrev.built_in.search_sources as built_in_search_sources
 import colrev.process
-
-pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
 class SearchSources:
@@ -30,7 +28,7 @@ class SearchSources:
         },
     }
 
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         required_search_scripts = [
             r for s in review_manager.settings.sources for r in s.source_prep_scripts
         ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
@@ -41,7 +39,7 @@ class SearchSources:
         self.search_source_scripts: dict[
             str, typing.Any
         ] = adapter_manager.load_scripts(
-            PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
+            process=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 
 

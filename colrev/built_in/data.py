@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import configparser
 import csv
 import datetime
@@ -12,6 +14,7 @@ import typing
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import requests
@@ -21,6 +24,10 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
+
+if TYPE_CHECKING:
+    import colrev.data.Data
+    import colrev.review_manager.ReviewManager
 
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
@@ -35,12 +42,12 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
-    def __init__(self, *, data, settings):
+    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
 
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
@@ -74,7 +81,9 @@ class ManuscriptEndpoint:
         csl = Path(csl_link).name
         return csl
 
-    def check_new_record_source_tag(self, review_manager) -> None:
+    def check_new_record_source_tag(
+        self, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
         paper = review_manager.paths["PAPER"]
         with open(paper, encoding="utf-8") as file:
             for line in file:
@@ -86,7 +95,8 @@ class ManuscriptEndpoint:
 
     def update_manuscript(
         self,
-        review_manager,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
     ) -> typing.Dict:
@@ -118,13 +128,13 @@ class ManuscriptEndpoint:
         paper_relative = review_manager.paths["PAPER_RELATIVE"]
 
         def add_missing_records_to_manuscript(
-            *, review_manager, paper: Path, missing_records: list
+            *, review_manager, paper_path: Path, missing_records: list
         ):
             # pylint: disable=consider-using-with
             temp = tempfile.NamedTemporaryFile()
-            paper.rename(temp.name)
+            paper_path.rename(temp.name)
             with open(temp.name, encoding="utf-8") as reader, open(
-                paper, "w", encoding="utf-8"
+                paper_path, "w", encoding="utf-8"
             ) as writer:
                 appended, completed = False, False
                 line = reader.readline()
@@ -142,13 +152,13 @@ class ManuscriptEndpoint:
                             review_manager.report_logger.info(
                                 # f" {missing_record}".ljust(self.__PAD, " ")
                                 f" {missing_record}"
-                                + f" added to {paper.name}"
+                                + f" added to {paper_path.name}"
                             )
 
                             review_manager.logger.info(
                                 # f" {missing_record}".ljust(self.__PAD, " ")
                                 f" {missing_record}"
-                                + f" added to {paper.name}"
+                                + f" added to {paper_path.name}"
                             )
 
                         # skip empty lines between to connect lists
@@ -173,7 +183,7 @@ class ManuscriptEndpoint:
                 if not appended:
                     msg = (
                         f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
-                        + f"{paper.name}. Adding records at the end of "
+                        + f"{paper_path.name}. Adding records at the end of "
                         + "the document."
                     )
                     review_manager.report_logger.warning(msg)
@@ -254,7 +264,7 @@ class ManuscriptEndpoint:
         else:
             add_missing_records_to_manuscript(
                 review_manager=review_manager,
-                paper=paper,
+                paper_path=paper,
                 missing_records=[
                     "\n- @" + missing_record + "\n"
                     for missing_record in missing_records
@@ -272,17 +282,27 @@ class ManuscriptEndpoint:
 
         return records
 
-    def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
+    ):
         # Update manuscript
         records = self.update_manuscript(
-            data.review_manager, records, synthesized_record_status_matrix
+            review_manager=data_operation.review_manager,
+            records=records,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
     def update_record_status_matrix(
-        self, data, synthesized_record_status_matrix, endpoint_identifier
+        self,
+        data_operation: colrev.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
     ):
         def get_to_synthesize_in_manuscript(
-            paper: Path, records_for_synthesis: list
+            *, paper: Path, records_for_synthesis: list
         ) -> list:
             in_manuscript_to_synthesize = []
             if paper.is_file():
@@ -305,11 +325,12 @@ class ManuscriptEndpoint:
             return in_manuscript_to_synthesize
 
         def get_synthesized_ids_paper(
-            paper: Path, synthesized_record_status_matrix
+            paper: Path, synthesized_record_status_matrix: dict
         ) -> list:
 
             in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(
-                paper, list(synthesized_record_status_matrix.keys())
+                paper=paper,
+                records_for_synthesis=list(synthesized_record_status_matrix.keys()),
             )
             # Assuming that all records have been added to the paper before
             synthesized_ids = [
@@ -322,7 +343,7 @@ class ManuscriptEndpoint:
 
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = get_synthesized_ids_paper(
-            data.review_manager.paths["PAPER"],
+            data_operation.review_manager.paths["PAPER"],
             synthesized_record_status_matrix,
         )
         for syn_id in synthesized_in_manuscript:
@@ -334,12 +355,12 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class StructuredDataEndpoint:
-    def __init__(self, *, data, settings):
+    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         structured_endpoint_details = {
             "endpoint": "STRUCTURED",
             "structured_data_endpoint_version": "0.1",
@@ -353,36 +374,42 @@ class StructuredDataEndpoint:
         }
         return structured_endpoint_details
 
-    def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
+    ) -> None:
         def update_structured_data(
-            review_manager,
+            *,
+            review_manager: colrev.review_manager.ReviewManager,
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
 
-            data = review_manager.paths["DATA"]
+            data_path = review_manager.paths["DATA"]
 
-            if not data.is_file():
+            if not data_path.is_file():
 
                 coding_dimensions_str = input(
                     "\n\nEnter columns for data extraction (comma-separted)"
                 )
                 coding_dimensions = coding_dimensions_str.replace(" ", "_").split(",")
 
-                data = []
+                data_list = []
                 for included_id in list(synthesized_record_status_matrix.keys()):
                     item = [[included_id], ["TODO"] * len(coding_dimensions)]
-                    data.append(list(itertools.chain(*item)))
+                    data_list.append(list(itertools.chain(*item)))
 
-                data_df = pd.DataFrame(data, columns=["ID"] + coding_dimensions)
+                data_df = pd.DataFrame(data_list, columns=["ID"] + coding_dimensions)
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(data, index=False, quoting=csv.QUOTE_ALL)
+                data_df.to_csv(data_list, index=False, quoting=csv.QUOTE_ALL)
 
             else:
 
                 nr_records_added = 0
 
-                data_df = pd.read_csv(data, dtype=str)
+                data_df = pd.read_csv(data_path, dtype=str)
 
                 for record_id in list(synthesized_record_status_matrix.keys()):
                     # skip when already available
@@ -400,29 +427,37 @@ class StructuredDataEndpoint:
 
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(data, index=False, quoting=csv.QUOTE_ALL)
+                data_df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
 
                 review_manager.report_logger.info(
-                    f"{nr_records_added} records added ({data})"
+                    f"{nr_records_added} records added ({data_path})"
                 )
-                review_manager.logger.info(f"{nr_records_added} records added ({data})")
+                review_manager.logger.info(
+                    f"{nr_records_added} records added ({data_path})"
+                )
 
             return records
 
         records = update_structured_data(
-            data.review_manager, synthesized_record_status_matrix
+            review_manager=data_operation.review_manager,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        data.review_manager.dataset.add_changes(
-            path=data.review_manager.paths["DATA_RELATIVE"]
+        data_operation.review_manager.dataset.add_changes(
+            path=data_operation.review_manager.paths["DATA_RELATIVE"]
         )
 
     def update_record_status_matrix(
-        self, data, synthesized_record_status_matrix, endpoint_identifier
-    ):
-        def get_data_extracted(data: Path, records_for_data_extraction: list) -> list:
+        self,
+        data_operation: colrev.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
+    ) -> None:
+        def get_data_extracted(
+            data_path: Path, records_for_data_extraction: list
+        ) -> list:
             data_extracted = []
-            data_df = pd.read_csv(data)
+            data_df = pd.read_csv(data_path)
 
             for record in records_for_data_extraction:
                 drec = data_df.loc[data_df["ID"] == record]
@@ -436,14 +471,14 @@ class StructuredDataEndpoint:
             return data_extracted
 
         def get_structured_data_extracted(
-            synthesized_record_status_matrix: typing.Dict, data: Path
+            *, synthesized_record_status_matrix: typing.Dict, data_path: Path
         ) -> list:
 
-            if not data.is_file():
+            if not data_path.is_file():
                 return []
 
             data_extracted = get_data_extracted(
-                data, list(synthesized_record_status_matrix.keys())
+                data_path, list(synthesized_record_status_matrix.keys())
             )
             data_extracted = [
                 x
@@ -452,9 +487,10 @@ class StructuredDataEndpoint:
             ]
             return data_extracted
 
-        data_path = data.review_manager.paths["DATA"]
+        data_path = data_operation.review_manager.paths["DATA"]
         structured_data_extracted = get_structured_data_extracted(
-            synthesized_record_status_matrix, data_path
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
+            data_path=data_path,
         )
 
         for syn_id in structured_data_extracted:
@@ -466,12 +502,12 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class EndnoteEndpoint:
-    def __init__(self, *, data, settings):
+    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",
             "endnote_data_endpoint_version": "0.1",
@@ -481,11 +517,16 @@ class EndnoteEndpoint:
         }
         return endnote_endpoint_details
 
-    def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
-        def zotero_conversion(data):
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
+    ) -> None:
+        def zotero_conversion(*, content: str) -> bytes:
 
             zotero_translation_service = (
-                data.review_manager.get_zotero_translation_service()
+                data_operation.review_manager.get_zotero_translation_service()
             )
             zotero_translation_service.start_zotero_translators()
 
@@ -493,7 +534,7 @@ class EndnoteEndpoint:
             ret = requests.post(
                 "http://127.0.0.1:1969/import",
                 headers=headers,
-                files={"file": str.encode(data)},
+                files={"file": str.encode(content)},
             )
             headers = {"Content-type": "application/json"}
             if "No suitable translators found" == ret.content.decode("utf-8"):
@@ -520,7 +561,7 @@ class EndnoteEndpoint:
         endpoint_path.mkdir(exist_ok=True, parents=True)
 
         if not any(Path(endpoint_path).iterdir()):
-            data.review_manager.logger.info("Export all")
+            data_operation.review_manager.logger.info("Export all")
             export_filepath = endpoint_path / Path("export_part1.enl")
 
             selected_records = {
@@ -533,15 +574,15 @@ class EndnoteEndpoint:
                 ]
             }
 
-            data = data.review_manager.dataset.parse_bibtex_str(
+            content = data_operation.review_manager.dataset.parse_bibtex_str(
                 recs_dict_in=selected_records
             )
 
-            enl_data = zotero_conversion(data)
+            enl_data = zotero_conversion(content=content)
 
             with open(export_filepath, "w", encoding="utf-8") as export_file:
                 export_file.write(enl_data.decode("utf-8"))
-            data.review_manager.dataset.add_changes(path=str(export_filepath))
+            data_operation.review_manager.dataset.add_changes(path=export_filepath)
 
         else:
 
@@ -556,7 +597,7 @@ class EndnoteEndpoint:
                             record_id = line[3:].lstrip().rstrip()
                             exported_ids.append(record_id)
 
-            data.review_manager.logger.info(
+            data_operation.review_manager.logger.info(
                 "IDs that have already been exported (in the other export files):"
                 f" {exported_ids}"
             )
@@ -573,11 +614,11 @@ class EndnoteEndpoint:
 
             if len(selected_records) > 0:
 
-                data = data.review_manager.dataset.parse_bibtex_str(
+                content = data_operation.review_manager.dataset.parse_bibtex_str(
                     recs_dict_in=selected_records
                 )
 
-                enl_data = zotero_conversion(data)
+                enl_data = zotero_conversion(content=content)
 
                 next_file_number = str(max(file_numbers) + 1)
                 export_filepath = endpoint_path / Path(
@@ -586,14 +627,19 @@ class EndnoteEndpoint:
                 print(export_filepath)
                 with open(export_filepath, "w", encoding="utf-8") as file:
                     file.write(enl_data.decode("utf-8"))
-                data.review_manager.dataset.add_changes(path=str(export_filepath))
+                data_operation.review_manager.dataset.add_changes(path=export_filepath)
 
             else:
-                data.review_manager.logger.info("No additional records to export")
+                data_operation.review_manager.logger.info(
+                    "No additional records to export"
+                )
 
     def update_record_status_matrix(
-        self, data, synthesized_record_status_matrix, endpoint_identifier
-    ):
+        self,
+        data_operation: colrev.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
+    ) -> None:
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -601,19 +647,24 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class PRISMAEndpoint:
-    def __init__(self, *, data, settings):
+    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         prisma_endpoint_details = {
             "endpoint": "PRISMA",
             "prisma_data_endpoint_version": "0.1",
         }
         return prisma_endpoint_details
 
-    def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
+    ) -> None:
 
         prisma_resource_path = Path("template/") / Path("PRISMA.csv")
         prisma_path = Path("data/PRISMA.csv")
@@ -621,11 +672,11 @@ class PRISMAEndpoint:
 
         if prisma_path.is_file():
             os.remove(prisma_path)
-        data.review_manager.retrieve_package_file(
+        data_operation.review_manager.retrieve_package_file(
             template_file=prisma_resource_path, target=prisma_path
         )
 
-        stat = data.review_manager.get_status_freq()
+        stat = data_operation.review_manager.get_status_freq()
         # print(stat)
 
         prisma_data = pd.read_csv(prisma_path)
@@ -674,8 +725,11 @@ class PRISMAEndpoint:
             print("Warning: review not (yet) complete")
 
     def update_record_status_matrix(
-        self, data, synthesized_record_status_matrix, endpoint_identifier
-    ):
+        self,
+        data_operation: colrev.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
+    ) -> None:
 
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
@@ -694,10 +748,10 @@ class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    def __init__(self, *, data, settings):
+    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
         self.settings = from_dict(data_class=ZettlrSettings, data=settings)
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         zettlr_endpoint_details = {
             "endpoint": "ZETTLR",
             "zettlr_endpoint_version": "0.1",
@@ -705,15 +759,20 @@ class ZettlrEndpoint:
         }
         return zettlr_endpoint_details
 
-    def update_data(self, data, records: dict, synthesized_record_status_matrix: dict):
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
+    ) -> None:
 
-        data.review_manager.logger.info("Export to zettlr endpoint")
+        data_operation.review_manager.logger.info("Export to zettlr endpoint")
 
-        endpoint_path = data.review_manager.path / Path("data/zettlr")
+        endpoint_path = data_operation.review_manager.path / Path("data/zettlr")
 
         # TODO : check if a main-zettlr file exists.
 
-        def get_zettlr_missing(endpoint_path, included):
+        def get_zettlr_missing(*, endpoint_path, included) -> list:
             in_zettelkasten = []
 
             for md_file in endpoint_path.glob("*.md"):
@@ -728,13 +787,16 @@ class ZettlrEndpoint:
             return [x for x in included if x not in in_zettelkasten]
 
         def add_missing_records_to_manuscript(
-            *, review_manager, PAPER: Path, missing_records: list
-        ):
+            *,
+            review_manager: colrev.review_manager.ReviewManager,
+            paper_path: Path,
+            missing_records: list,
+        ) -> None:
             # pylint: disable=consider-using-with
             temp = tempfile.NamedTemporaryFile()
-            PAPER.rename(temp.name)
+            paper_path.rename(temp.name)
             with open(temp.name, encoding="utf-8") as reader, open(
-                PAPER, "w", encoding="utf-8"
+                paper_path, "w", encoding="utf-8"
             ) as writer:
                 appended, completed = False, False
                 line = reader.readline()
@@ -752,13 +814,13 @@ class ZettlrEndpoint:
                             review_manager.report_logger.info(
                                 # f" {missing_record}".ljust(self.__PAD, " ")
                                 f" {missing_record}"
-                                + f" added to {PAPER.name}"
+                                + f" added to {paper_path.name}"
                             )
 
                             review_manager.logger.info(
                                 # f" {missing_record}".ljust(self.__PAD, " ")
                                 f" {missing_record}"
-                                + f" added to {PAPER.name}"
+                                + f" added to {paper_path.name}"
                             )
 
                         # skip empty lines between to connect lists
@@ -783,7 +845,7 @@ class ZettlrEndpoint:
                 if not appended:
                     msg = (
                         f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
-                        + f"{PAPER.name}. Adding records at the end of "
+                        + f"{paper_path.name}. Adding records at the end of "
                         + "the document."
                     )
                     review_manager.report_logger.warning(msg)
@@ -823,31 +885,33 @@ class ZettlrEndpoint:
             zettlr_config["general"]["main"] = str(fname)
             with open(zettlr_config_path, "w", encoding="utf-8") as configfile:
                 zettlr_config.write(configfile)
-            data.review_manager.dataset.add_changes(path=str(zettlr_config_path))
+            data_operation.review_manager.dataset.add_changes(path=zettlr_config_path)
 
-            data.review_manager.retrieve_package_file(
+            data_operation.review_manager.retrieve_package_file(
                 template_file=zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
-            readme_file = data.review_manager.paths["README"]
+            readme_file = data_operation.review_manager.paths["README"]
             if readme_file.is_file():
                 with open(readme_file, encoding="utf-8") as file:
                     title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
 
-            data.review_manager.dataset.inplace_change(
+            data_operation.review_manager.dataset.inplace_change(
                 filename=zettlr_path, old_string="{{project_title}}", new_string=title
             )
             # author = authorship_heuristic(review_manager)
-            data.review_manager.create_commit(
+            data_operation.review_manager.create_commit(
                 msg="Add zettlr endpoint", script_call="colrev data"
             )
 
-        records_dict = data.review_manager.dataset.load_records_dict()
+        records_dict = data_operation.review_manager.dataset.load_records_dict()
 
-        included = data.get_record_ids_for_synthesis(records_dict)
+        included = data_operation.get_record_ids_for_synthesis(records_dict)
 
-        missing_records = get_zettlr_missing(endpoint_path, included)
+        missing_records = get_zettlr_missing(
+            endpoint_path=endpoint_path, included=included
+        )
 
         if len(missing_records) == 0:
             print("All records included. Nothing to export.")
@@ -863,14 +927,14 @@ class ZettlrEndpoint:
                 )
 
             add_missing_records_to_manuscript(
-                review_manager=data.review_manager,
-                PAPER=zettlr_path,
+                review_manager=data_operation.review_manager,
+                paper_path=zettlr_path,
                 missing_records=[
                     "\n- [[" + i + "]] @" + r + "\n" for i, r in missing_record_fields
                 ],
             )
 
-            data.review_manager.dataset.add_changes(path=str(zettlr_path))
+            data_operation.review_manager.dataset.add_changes(path=zettlr_path)
 
             zettlr_resource_path = Path("template/zettlr/") / Path("zettlr_bib_item.md")
 
@@ -879,10 +943,10 @@ class ZettlrEndpoint:
                 print(paper_id + record_field)
                 zettlr_path = endpoint_path / Path(paper_id)
 
-                data.review_manager.retrieve_package_file(
+                data_operation.review_manager.retrieve_package_file(
                     template_file=zettlr_resource_path, target=zettlr_path
                 )
-                data.review_manager.dataset.inplace_change(
+                data_operation.review_manager.dataset.inplace_change(
                     filename=zettlr_path,
                     old_string="{{project_name}}",
                     new_string=record_field,
@@ -890,17 +954,20 @@ class ZettlrEndpoint:
                 with zettlr_path.open("a") as file:
                     file.write(f"\n\n@{record_field}\n")
 
-                data.review_manager.dataset.add_changes(path=str(zettlr_path))
+                data_operation.review_manager.dataset.add_changes(path=zettlr_path)
 
-            data.review_manager.create_commit(
+            data_operation.review_manager.create_commit(
                 msg="Setup zettlr", script_call="colrev data"
             )
 
             print("TODO: recommend zettlr/snippest, adding tags")
 
     def update_record_status_matrix(
-        self, data, synthesized_record_status_matrix, endpoint_identifier
-    ):
+        self,
+        data_operation: colrev.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
+    ) -> None:
         # TODO : not yet implemented!
         # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.
 

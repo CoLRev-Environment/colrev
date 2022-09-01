@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import pkgutil
 import re
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.built_in.search as built_in_search
 import colrev.dataset
@@ -10,10 +13,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Search(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "search_crossref": {
             "endpoint": built_in_search.CrossrefSearchEndpoint,
         },
@@ -37,30 +43,27 @@ class Search(colrev.process.Process):
     def __init__(
         self,
         *,
-        review_manager,
-        notify_state_transition_process=True,
-    ):
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation=True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.search,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.sources = review_manager.settings.sources
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.search_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.search_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=[
                 s.search_script for s in self.sources if "endpoint" in s.search_script
             ],
         )
 
-    def save_feed_file(self, records: dict, feed_file: Path) -> None:
-
+    def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
             str(r["ID"]).replace(" ", ""): {
@@ -169,7 +172,7 @@ class Search(colrev.process.Process):
 
         adapter_manager = self.review_manager.get_adapter_manager()
         self.search_scripts = adapter_manager.load_scripts(
-            PROCESS=self,
+            process=self,
             scripts=scripts + required_search_scripts,
         )
 
@@ -195,7 +198,7 @@ class Search(colrev.process.Process):
                 script = self.search_scripts[feed_config["search_script"]["endpoint"]]
                 script.validate_params(query=query)  # type: ignore
 
-    def get_feed_config(self, *, source_name) -> dict:
+    def get_feed_config(self, *, source_name: str) -> dict:
 
         conversion_script = {"endpoint": "bibtex"}
 
@@ -272,10 +275,10 @@ class Search(colrev.process.Process):
             duplicate_source = []
             try:
                 duplicate_source = [
-                    x
-                    for x in self.sources
-                    if source_name == x["search_parameters"][0]["endpoint"]
-                    and selection == x["search_parameters"][0]["params"]
+                    source
+                    for source in self.sources
+                    if source_name == source.source_name
+                    and selection == source.search_parameters
                 ]
             except TypeError:
                 pass
@@ -343,23 +346,23 @@ class Search(colrev.process.Process):
 
         self.main(selection_str="all")
 
-    def remove_forthcoming(self, *, source):
+    def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
         self.review_manager.logger.info("Remove forthcoming")
 
-        with open(source.feed_file, encoding="utf8") as bibtex_file:
+        with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
 
-            record_list = records.values()
+            record_list = list(records.values())
             record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
             records = {r["ID"]: r for r in record_list}
 
             self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.feed_file
+                records=records, save_path=source.get_corresponding_bib_file()
             )
 
-    def main(self, *, selection_str: str) -> None:
+    def main(self, *, selection_str: str = None) -> None:
 
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
@@ -388,7 +391,7 @@ class Search(colrev.process.Process):
                     raise colrev_exceptions.NoSearchFeedRegistered()
 
             for source in automated_sources_selected:
-                source.feed_file = self.review_manager.path / Path(source.filename)
+                source.filename = self.review_manager.path / Path(source.filename)
 
             return automated_sources_selected
 
@@ -412,7 +415,7 @@ class Search(colrev.process.Process):
                 if not self.review_manager.settings.search.retrieve_forthcoming:
                     self.remove_forthcoming(source=source)
 
-                self.review_manager.dataset.add_changes(path=str(source.feed_file))
+                self.review_manager.dataset.add_changes(path=source.feed_file)
                 self.review_manager.create_commit(
                     msg="Run search", script_call="colrev search"
                 )
@@ -424,7 +427,7 @@ class Search(colrev.process.Process):
             with open("custom_search_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_search_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_search_script.py"))
 
         new_source = colrev.settings.SearchSource(
             filename=Path("custom_search.bib"),

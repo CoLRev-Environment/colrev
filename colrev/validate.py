@@ -1,8 +1,10 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import itertools
-import typing
 from itertools import chain
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 
@@ -10,8 +12,12 @@ import colrev.process
 import colrev.record
 
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
+
 class Validate(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(
             review_manager=review_manager,
@@ -29,7 +35,7 @@ class Validate(colrev.process.Process):
             for record in individual_bib_rd.values():
                 record["colrev_origin"] = bib_file.stem + "/" + record["ID"]
 
-        return individual_bib_rd.values()
+        return list(individual_bib_rd.values())
 
     def get_search_records(self) -> list:
 
@@ -44,7 +50,7 @@ class Validate(colrev.process.Process):
 
         return records
 
-    def __load_prior_records_dict(self, *, target_commit):
+    def __load_prior_records_dict(self, *, target_commit: str) -> dict:
 
         repo = git.Repo()
 
@@ -72,7 +78,7 @@ class Validate(colrev.process.Process):
         return prior_records_dict
 
     def validate_preparation_changes(
-        self, *, records: typing.List[dict], target_commit
+        self, *, records: list[dict], target_commit
     ) -> list:
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
@@ -93,8 +99,8 @@ class Validate(colrev.process.Process):
                 ]
                 for prior_record in prior_records:
                     similarity = colrev.record.Record.get_record_similarity(
-                        RECORD_A=colrev.record.Record(data=record),
-                        RECORD_B=colrev.record.Record(data=prior_record),
+                        record_a=colrev.record.Record(data=record),
+                        record_b=colrev.record.Record(data=prior_record),
                     )
                     # change_diff.append([record["ID"], cur_record_link, similarity])
                     change_diff.append([prior_record, record, similarity])
@@ -107,7 +113,7 @@ class Validate(colrev.process.Process):
         return change_diff
 
     def validate_merging_changes(
-        self, *, records: typing.List[dict], target_commit
+        self, *, records: list[dict], target_commit: str
     ) -> list:
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
@@ -135,8 +141,8 @@ class Validate(colrev.process.Process):
                     ]
 
                     similarity = colrev.record.Record.get_record_similarity(
-                        RECORD_A=colrev.record.Record(data=record_1[0]),
-                        RECORD_B=colrev.record.Record(data=record_2[0]),
+                        record_a=colrev.record.Record(data=record_1[0]),
+                        record_b=colrev.record.Record(data=record_2[0]),
                     )
                     change_diff.append([record_1[0], record_2[0], similarity])
 
@@ -153,14 +159,14 @@ class Validate(colrev.process.Process):
 
         return change_diff
 
-    def load_records(self, *, target_commit: str = None) -> typing.List[dict]:
+    def load_records(self, *, target_commit: str = None) -> list[dict]:
 
         if target_commit is None:
             self.review_manager.logger.info("Loading data...")
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
                 record_dict.update(changed_in_target_commit="True")
-            return records.values()
+            return list(records.values())
 
         self.review_manager.logger.info("Loading data from history...")
         git_repo = git.Repo()
@@ -197,7 +203,7 @@ class Validate(colrev.process.Process):
             if record != prior_record:
                 record.update(changed_in_target_commit="True")
 
-        return records_dict.values()
+        return list(records_dict.values())
 
     def validate_properties(self, *, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)
@@ -252,9 +258,7 @@ class Validate(colrev.process.Process):
 
         git_repo.git.checkout(cur_branch, force=True)
 
-        return
-
-    def __set_scope_based_on_target_commit(self, *, target_commit):
+    def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
 
         target_commit = self.review_manager.dataset.get_last_commit_sha()
 
@@ -278,7 +282,7 @@ class Validate(colrev.process.Process):
         return scope
 
     def main(
-        self, *, scope: str, properties: bool = False, target_commit: str = None
+        self, *, scope: str, properties: bool = False, target_commit: str = ""
     ) -> list:
 
         if properties:
@@ -288,7 +292,7 @@ class Validate(colrev.process.Process):
         # extension: filter for changes of contributor (git author)
         records = self.load_records(target_commit=target_commit)
 
-        if target_commit is None and "unspecified" == scope:
+        if target_commit == "" and "unspecified" == scope:
             scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)
 
         if scope in ["prepare", "all"]:

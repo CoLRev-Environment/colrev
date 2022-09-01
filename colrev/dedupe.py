@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import re
 import typing
 from collections import Counter
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import pandas as pd
@@ -13,10 +16,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Dedupe(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "simple_dedupe": {
             "endpoint": built_in_dedupe.SimpleDedupeEndpoint,
         },
@@ -38,17 +44,22 @@ class Dedupe(colrev.process.Process):
     ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"
     ACTIVE_LEARNING_NON_MEMORY_DEDUPE = "active_learning_non_memory_dedupe"
 
+    training_file: Path
+    settings_file: Path
+    non_dupe_file_xlsx: Path
+    dupe_file: Path
+
     def __init__(
         self,
         *,
-        review_manager,
-        notify_state_transition_process=True,
-    ):
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation=True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.dedupe,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.training_file = self.review_manager.path / Path(
@@ -166,10 +177,9 @@ class Dedupe(colrev.process.Process):
         # return records_df
         # Copy to notebook:
         # from colrev.review_manager import ReviewManager
-        # from colrev import dedupe
         # from colrev.process import Process, ProcessType
         # review_manager = ReviewManager()
-        # df = dedupe.read_data(review_manager)
+        # df = self.read_data(review_manager)
         # EDITS
         # df.to_csv('export.csv', index=False)
 
@@ -216,7 +226,7 @@ class Dedupe(colrev.process.Process):
 
         return records
 
-    def read_data(self):
+    def read_data(self) -> dict:
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -256,7 +266,8 @@ class Dedupe(colrev.process.Process):
 
         return records
 
-    def select_primary_merge_record(self, rec_id_1, rec_id_2) -> list:
+    def select_primary_merge_record(self, rec_id_1: dict, rec_id_2: dict) -> list:
+        # Note : named parameters not useful
 
         # Heuristic
 
@@ -299,7 +310,7 @@ class Dedupe(colrev.process.Process):
                 dupe_record = rec_id_2
         return [main_record, dupe_record]
 
-    def apply_merges(self, *, results: list, remaining_non_dupe: bool = False):
+    def apply_merges(self, *, results: list, remaining_non_dupe: bool = False) -> None:
         """Apply automated deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -341,7 +352,7 @@ class Dedupe(colrev.process.Process):
                 f"Prevented same-source merge: ({merge_info})"
             )
 
-        def cross_level_merge(main_record, dupe_record) -> bool:
+        def cross_level_merge(main_record: dict, dupe_record: dict) -> bool:
             cross_level_merge_attempt = False
             if main_record["ENTRYTYPE"] in ["proceedings"] or dupe_record[
                 "ENTRYTYPE"
@@ -442,7 +453,7 @@ class Dedupe(colrev.process.Process):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
-    def apply_manual_deduplication_decisions(self, *, results: list):
+    def apply_manual_deduplication_decisions(self, *, results: list) -> None:
         """Apply manual deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -521,7 +532,7 @@ class Dedupe(colrev.process.Process):
         in all sources (for curated repositories)"""
 
         source_filenames = [x.filename for x in self.review_manager.settings.sources]
-        print("sources: " + ",".join(source_filenames))
+        print("sources: " + ",".join([str(x) for x in source_filenames]))
 
         records = self.review_manager.dataset.load_records_dict()
         records = {
@@ -579,7 +590,7 @@ class Dedupe(colrev.process.Process):
                 # Note : there could be more than two IDs in the list
                 filecontents = next(revlist)
 
-                prior_records_dict = self.review_manager.dataset.load_records(
+                prior_records_dict = self.review_manager.dataset.load_records_dict(
                     load_str=filecontents.decode("utf-8")
                 )
 
@@ -605,7 +616,7 @@ class Dedupe(colrev.process.Process):
                                     "colrev_status"
                                 ] = colrev.record.RecordState.md_processed
                                 r_dict = {record_dict["ID"]: record_dict}
-                                records.append(r_dict)
+                                records[r_dict["ID"]] = r_dict
                                 self.review_manager.logger.info(
                                     f'Restored {record_dict["ID"]}'
                                 )
@@ -696,19 +707,19 @@ class Dedupe(colrev.process.Process):
         }
         return info
 
-    def main(self):
+    def main(self) -> None:
 
         for dedupe_script in self.review_manager.settings.dedupe.scripts:
 
             adapter_manager = self.review_manager.get_adapter_manager()
             endpoint_script = adapter_manager.load_scripts(
-                PROCESS=self,
+                process=self,
                 scripts=[dedupe_script],
             )
 
             endpoint = endpoint_script[dedupe_script["endpoint"]]
 
-            endpoint.run_dedupe(self)
+            endpoint.run_dedupe(self)  # type: ignore
             print()
 
 

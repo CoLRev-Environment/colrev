@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import zope.interface
 from dacite import from_dict
 
@@ -6,16 +10,23 @@ import colrev.pdf_get
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.pdf_get_man.PDFGetMan
 
-@zope.interface.implementer(colrev.process.PDFRetrievalManualEndpoint)
-class CoLRevCLIPDFRetrievalManual:
-    def __init__(self, *, pdf_get_man, settings):
+
+@zope.interface.implementer(colrev.process.PDFGetManEndpoint)
+class CoLRevCLIPDFGetMan:
+    def __init__(
+        self, *, pdf_get_man_operation: colrev.pdf_get_man.PDFGetMan, settings
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_man_pdf(self, pdf_get_man, records):
-        def get_pdf_from_google(record) -> dict:
+    def get_man_pdf(
+        self, pdf_get_man_operation: colrev.pdf_get_man.PDFGetMan, records: dict
+    ) -> dict:
+        def get_pdf_from_google(record: colrev.record.Record) -> colrev.record.Record:
             # pylint: disable=import-outside-toplevel
             import urllib.parse
 
@@ -28,9 +39,13 @@ class CoLRevCLIPDFRetrievalManual:
             print(url)
             return record
 
-        def pdf_get_man_record_cli(*, pdf_get_man, record) -> None:
+        def pdf_get_man_record_cli(
+            *,
+            pdf_get_man_operation: colrev.pdf_get_man.PDFGetMan,
+            record: colrev.record.Record,
+        ) -> None:
 
-            pdf_get_man.review_manager.logger.debug(
+            pdf_get_man_operation.review_manager.logger.debug(
                 f"called pdf_get_man_cli for {record}"
             )
 
@@ -49,12 +64,12 @@ class CoLRevCLIPDFRetrievalManual:
             }
 
             filepath = (
-                pdf_get_man.review_manager.paths["PDF_DIRECTORY"]
+                pdf_get_man_operation.review_manager.paths["PDF_DIRECTORY"]
                 / f"{record.data['ID']}.pdf"
             )
 
             for script_name, retrieval_script in retrieval_scripts.items():
-                pdf_get_man.review_manager.logger.debug(
+                pdf_get_man_operation.review_manager.logger.debug(
                     f'{script_name}({record.data["ID"]}) called'
                 )
                 record = retrieval_script(record)
@@ -64,11 +79,13 @@ class CoLRevCLIPDFRetrievalManual:
                         print(f'File does not exist: {record.data["ID"]}.pdf')
                     else:
                         filepath = (
-                            pdf_get_man.review_manager.paths["PDF_DIRECTORY_RELATIVE"]
+                            pdf_get_man_operation.review_manager.paths[
+                                "PDF_DIRECTORY_RELATIVE"
+                            ]
                             / f"{record.data['ID']}.pdf"
                         )
                         record.pdf_get_man(
-                            review_manager=pdf_get_man.review_manager,
+                            review_manager=pdf_get_man_operation.review_manager,
                             filepath=filepath,
                         )
                         break
@@ -76,23 +93,24 @@ class CoLRevCLIPDFRetrievalManual:
             if not filepath.is_file():
                 if "n" == input("Is the PDF available (y/n)?"):
                     record.pdf_get_man(
-                        review_manager=pdf_get_man.review_manager, filepath=None
+                        review_manager=pdf_get_man_operation.review_manager,
+                        filepath=None,
                     )
 
         saved_args = locals()
-        pdf_get_man.review_manager.logger.info("Retrieve PDFs manually")
-        pdf_get = colrev.pdf_get.PDFRetrieval(review_manager=pdf_get_man.review_manager)
-        pdf_directory = pdf_get_man.review_manager.paths["pdf_directory"]
+        pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")
+        pdf_get_operation = pdf_get_man_operation.review_manager.get_pdf_get_operation()
+        pdf_directory = pdf_get_man_operation.review_manager.paths["pdf_directory"]
 
-        records = pdf_get_man.review_manager.dataset.load_records_dict()
-        records = pdf_get.check_existing_unlinked_pdfs(records=records)
+        records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
+        records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
 
         for record in records.values():
             record = colrev.record.Record(data=record)
-            record = pdf_get.link_pdf(record).get_data()
+            record = pdf_get_operation.link_pdf(record=record).get_data()
 
-        pdf_get_man.export_retrieval_table(records=records)
-        pdf_get_man_data = pdf_get_man.get_data()
+        pdf_get_man_operation.export_retrieval_table(records=records)
+        pdf_get_man_data = pdf_get_man_operation.get_data()
 
         print(
             "\nInstructions\n\n      "
@@ -108,17 +126,19 @@ class CoLRevCLIPDFRetrievalManual:
 
             print(stat)
 
-            pdf_get_man_record_cli(pdf_get_man=pdf_get_man, record=record)
+            pdf_get_man_record_cli(
+                pdf_get_man_operation=pdf_get_man_operation, record=record
+            )
 
-        if pdf_get_man.review_manager.dataset.has_changes():
+        if pdf_get_man_operation.review_manager.dataset.has_changes():
             if "y" == input("Create commit (y/n)?"):
-                pdf_get_man.review_manager.create_commit(
+                pdf_get_man_operation.review_manager.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
                     saved_args=saved_args,
                 )
         else:
-            pdf_get_man.review_manager.logger.info(
+            pdf_get_man_operation.review_manager.logger.info(
                 "Retrieve PDFs manually and copy the files to "
                 f"the {pdf_directory}. Afterwards, use "
                 "colrev pdf-get-man"

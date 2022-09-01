@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 
@@ -9,9 +12,12 @@ import colrev.process
 import colrev.record
 import colrev.review_manager
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Push(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
@@ -108,7 +114,7 @@ class Push(colrev.process.Process):
                     "by sharing your corrections ❤\n"
                 )
 
-    def __share_correction(self, *, source_url, change_list) -> None:
+    def __share_correction(self, *, source_url: str, change_list: list) -> None:
 
         prepared_change_list = []
         for change in change_list:
@@ -144,7 +150,7 @@ class Push(colrev.process.Process):
                 if Path(change_item["file"]).is_file():
                     Path(change_item["file"]).unlink()
 
-    def __apply_correction(self, *, source_url, change_list) -> None:
+    def __apply_correction(self, *, source_url: str, change_list: list) -> None:
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
@@ -196,7 +202,8 @@ class Push(colrev.process.Process):
             try:
                 record_dict = (
                     check_process.review_manager.dataset.retrieve_by_colrev_id(
-                        original_curated_record, records.values()
+                        indexed_record_dict=original_curated_record,
+                        records=list(records.values()),
                     )
                 )
                 found = True
@@ -311,7 +318,6 @@ class Push(colrev.process.Process):
             print(pull_request_msg)
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
         # TODO : handle cases where update branch already exists
-        return
 
 
 if __name__ == "__main__":

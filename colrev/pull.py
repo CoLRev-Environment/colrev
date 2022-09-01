@@ -1,22 +1,26 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import multiprocessing as mp
 from multiprocessing import Value
+from typing import TYPE_CHECKING
 
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
 import colrev.built_in.prep as built_in_prep
 import colrev.cli_colors as colors
-import colrev.prep
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.R
 
 CHANGE_COUNTER = None
 
 
 class Pull(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
@@ -64,12 +68,12 @@ class Pull(colrev.process.Process):
 
     def pull_records_from_crossref(self) -> None:
 
-        preparation = colrev.prep.Preparation(
-            review_manager=self.review_manager, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
 
         crossref_prep = built_in_prep.CrossrefMetadataPrep(
-            preparation=preparation, settings={"name": "local_index_prep"}
+            prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 
         self.review_manager.logger.info("Pull records from Crossref")
@@ -84,7 +88,7 @@ class Pull(colrev.process.Process):
             # TODO : use masterdata_is_curated() for identifying_fields_keys only?
             if "doi" in record.data and not record.masterdata_is_curated():
                 crossref_record = crossref_prep.prepare(
-                    preparation, record.copy_prep_rec()
+                    prep_operation, record.copy_prep_rec()
                 )
 
                 if "retracted" in crossref_record.data.get("prescreen_exclusion", ""):
@@ -101,11 +105,11 @@ class Pull(colrev.process.Process):
                         f"{colors.GREEN}Update published forthcoming paper: "
                         f"{record.data['ID']}{colors.END}"
                     )
-                    record = crossref_prep.prepare(preparation, record)
+                    record = crossref_prep.prepare(prep_operation, record)
 
                     # TODO : we may create a full list here
                     colrev_id = record.create_colrev_id(
-                        alsoKnownAsRecord=record.get_data()
+                        also_known_as_record=record.get_data()
                     )
                     record.data["colrev_id"] = colrev_id
 
@@ -157,12 +161,12 @@ class Pull(colrev.process.Process):
 
         self.review_manager.logger.info("Pull records from LocalIndex")
 
-        preparation = colrev.prep.Preparation(
-            review_manager=self.review_manager, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
 
         local_index_prep = built_in_prep.LocalIndexPrep(
-            preparation=preparation, settings={"name": "local_index_prep"}
+            prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 
         # Note : do not use named argument (used in multiprocessing)
@@ -173,7 +177,7 @@ class Pull(colrev.process.Process):
             prev_dblp_key = record_dict.get("dblp_key", "")
 
             record = colrev.record.PrepRecord(data=record_dict)
-            retrieved_record = local_index_prep.prepare(preparation, record)
+            retrieved_record = local_index_prep.prepare(prep_operation, record)
             source_info = "LOCAL_INDEX"
             if "CURATED:" in retrieved_record.data.get(
                 "colrev_masterdata_provenance", ""
@@ -199,8 +203,8 @@ class Pull(colrev.process.Process):
                 record_dict["dblp_key"] = prev_dblp_key
             return record_dict
 
-        preparation = colrev.prep.Preparation(
-            review_manager=self.review_manager, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
         records = self.review_manager.dataset.load_records_dict()
 

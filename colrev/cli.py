@@ -8,8 +8,6 @@ import click
 import click_completion.core
 import pandas as pd
 import requests
-from dacite.exceptions import MissingValueError
-from git.exc import InvalidGitRepositoryError
 from tqdm import tqdm
 
 import colrev.cli_colors as colors
@@ -107,45 +105,30 @@ def main(ctx):
     "--example",
     is_flag=True,
     default=False,
-    help="Create example repository",
+    help="Add search results example",
 )
 @click.pass_context
-def init(ctx, name, type, url, example) -> bool:
+def init(ctx, name, type, url, example):
     """Initialize repository"""
 
     try:
-        # We check this again when calling init.initialize_repo()
-        # but at this point, we want to avoid that users enter a lot of data and
-        # see an error at the end
+        colrev.review_manager.ReviewManager.check_init_precondition()
 
-        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
-
-        # pylint: disable=duplicate-code
-        if "venv" in cur_content:
-            cur_content.remove("venv")
-            # Note: we can use paths directly when initiating the project
-        if "report.log" in cur_content:
-            cur_content.remove("report.log")
-
-        if 0 != len(cur_content):
-            print("Empty directory required.")
-            return False
-
-        # Set reasonable defaults
-        share_stat_req = "PROCESSED"
+        # TODO : activate settings.json (based on settings_editor)
 
         colrev.review_manager.ReviewManager.get_init_operation(
             project_name=name,
-            share_stat_req=share_stat_req,
+            share_stat_req="PROCESSED",
             review_type=type,
             url=url,
             example=example,
         )
 
-    except colrev_exceptions.ParameterError as exc:
-        print(exc)
-
-    return True
+    except (
+        colrev_exceptions.ParameterError,
+        colrev_exceptions.NonEmptyDirectoryError,
+    ) as exc:
+        logging.error(exc)
 
 
 def print_review_instructions(review_instructions: dict) -> None:
@@ -265,10 +248,9 @@ def print_project_status(status_operation) -> None:
 
     stat = status_operation.review_manager.get_status_freq()
     try:
-        # if ret_check["status"] + ret_f["status"] == 0:
         status_operation.review_manager.print_review_status(status_info=stat)
         print_progress(stat)
-    except Exception as exc:
+    except colrev_exceptions.RepoSetupError as exc:
         print(f"Status failed ({exc})")
 
     print("")
@@ -281,11 +263,7 @@ def print_project_status(status_operation) -> None:
     print("Checks\n")
 
     try:
-        ret_check = status_operation.review_manager.check_repo(
-            data_operation=status_operation.review_manager.get_data_operation(
-                notify_state_transition_process=False,
-            )
-        )
+        ret_check = status_operation.review_manager.check_repo()
     except colrev_exceptions.RepoSetupError as exc:
         ret_check = {"status": 1, "msg": exc}
 
@@ -302,7 +280,7 @@ def print_project_status(status_operation) -> None:
     try:
         ret_f = status_operation.review_manager.format_records_file()
     except KeyError as exc:
-        print(exc)
+        logging.error(exc)
         ret_f = {"status": 1, "msg": "KeyError"}
     if 0 == ret_f["status"]:
         print(
@@ -338,28 +316,24 @@ def status(ctx, analytics) -> None:
     try:
         review_manager = colrev.review_manager.ReviewManager()
         status_operation = review_manager.get_status_operation()
+
         if analytics:
-
             analytic_results = status_operation.get_analytics()
-
             for cid, data_item in reversed(analytic_results.items()):
                 print(f"{cid} - {data_item}")
             return
 
         print_project_status(status_operation)
 
-    except InvalidGitRepositoryError:
-        print("Not a CoLRev/git repository. Run")
-        print("    colrev init")
-        return
-    except colrev_exceptions.CoLRevUpgradeError as exc:
-        print(exc)
-        return
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
     except KeyboardInterrupt:
         print("Stopped...")
+    except (
+        colrev_exceptions.CoLRevUpgradeError,
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.RepoSetupError,
+    ) as exc:
+        logging.error(exc)
+        return
 
 
 @main.command(help_priority=3)
@@ -398,26 +372,28 @@ def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force_mode)
-
         search_operation = review_manager.get_search_operation()
+
         if add:
             search_operation.add_source(query=add)
-        elif view:
+            return
+        if view:
             search_operation.view_sources()
-        elif setup_custom_script:
+            return
+        if setup_custom_script:
             search_operation.setup_custom_script()
             print("Activated custom_search_script.py.")
             print("Please update the source in settings.json and commit.")
-        else:
-            search_operation.main(selection_str=selected)
+            return
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-    except colrev_exceptions.NoSearchFeedRegistered as exc:
-        print(exc)
-    except colrev_exceptions.ServiceNotAvailableException as exc:
-        print(exc)
+        search_operation.main(selection_str=selected)
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.NoSearchFeedRegistered,
+        colrev_exceptions.ServiceNotAvailableException,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=4)
@@ -443,33 +419,27 @@ def load(ctx, keep_ids, combine_commits) -> None:
         review_manager = colrev.review_manager.ReviewManager()
         # already start LocalIndex (for set_ids)
         review_manager.get_local_index(startup_without_waiting=True)
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-
-    try:
         load_operation = review_manager.get_load_operation()
+
         load_operation.check_update_sources()
+
         if combine_commits:
             logging.info(
                 "Combine mode: all search sources will be loaded in one commit"
             )
+
         # Note : reinitialize to load new scripts:
         load_operation = review_manager.get_load_operation()
-
         load_operation.main(keep_ids=keep_ids, combine_commits=combine_commits)
-    except colrev_exceptions.SearchSettingsError as exc:
-        logging.error(f"SearchSettingsError: {exc}")
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.SearchSettingsError,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=5)
-@click.option(
-    "--similarity",
-    default=0.9,
-    type=float,
-    help="Retrieval similarity threshold",
-)
 @click.option(
     "-k",
     "--keep_ids",
@@ -514,7 +484,6 @@ def load(ctx, keep_ids, combine_commits) -> None:
 @click.pass_context
 def prep(
     ctx,
-    similarity,
     keep_ids,
     reset_records,
     reset_ids,
@@ -533,54 +502,60 @@ def prep(
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, debug_mode=debug
         )
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+        prep_operation = review_manager.get_prep_operation()
 
-    prep_operation = review_manager.get_prep_operation(similarity=similarity)
-    if reset_records != "NA":
-        try:
-            reset_records = str(reset_records)
-        except ValueError:
-            pass
-        reset_records = reset_records.split(",")
-        prep_operation.reset_records(reset_ids=reset_records)
-    elif reset_ids:
-        prep_operation.reset_ids()
-    elif debug or debug_file:
-        prep_operation.main(keep_ids=keep_ids, debug_ids=debug, debug_file=debug_file)
-    elif setup_custom_script:
-        prep_operation.setup_custom_script()
-        print("Activated custom_prep_script.py.")
-        print("Please check and adapt its position in the settings.json and commit.")
-    else:
-        try:
-            prep_operation.main(keep_ids=keep_ids)
-            print()
-            print("Please check the changes (especially those with low_confidence)")
-            print("To reset record(s) based on their ID, run")
-            print("   colrev prep --reset_records ID1,ID2,...")
-            print()
-        except colrev_exceptions.ServiceNotAvailableException as exc:
-            print(exc)
-            print("You can use the force mode to override")
-            print("  colrev prep -f")
-        except colrev_exceptions.MissingDependencyError as exc:
-            print(exc)
-        except OperationalError as exc:
-            logging.error(
-                f"SQLite Error: {exc}. "
-                "Another colrev process is accessing a shared resource. "
-                "Please try again later."
+        if reset_records != "NA":
+            try:
+                reset_records = str(reset_records)
+            except ValueError:
+                pass
+            reset_records = reset_records.split(",")
+            prep_operation.reset_records(reset_ids=reset_records)
+            return
+        if reset_ids:
+            prep_operation.reset_ids()
+            return
+        if debug or debug_file:
+            prep_operation.main(
+                keep_ids=keep_ids, debug_ids=debug, debug_file=debug_file
             )
+            return
+        if setup_custom_script:
+            prep_operation.setup_custom_script()
+            print("Activated custom_prep_script.py.")
+            print(
+                "Please check and adapt its position in the settings.json and commit."
+            )
+            return
+
+        prep_operation.main(keep_ids=keep_ids)
+
+        print()
+        print("Please check the changes (especially those with low_confidence)")
+        print("To reset record(s) based on their ID, run")
+        print("   colrev prep --reset_records ID1,ID2,...")
+        print()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.MissingDependencyError,
+    ) as exc:
+        logging.error(exc)
+        return
+    except colrev_exceptions.ServiceNotAvailableException as exc:
+        logging.error(exc)
+        print("You can use the force mode to override")
+        print("  colrev prep -f")
+    except OperationalError as exc:
+        logging.error(
+            f"SQLite Error: {exc}. "
+            "Another colrev process is accessing a shared resource. "
+            "Please try again later."
+        )
 
 
-def view_dedupe_details(review_manager) -> None:
+def view_dedupe_details(dedupe_operation) -> None:
 
-    dedupe_operation = review_manager.get_dedupe_operation(
-        notify_state_transition_process=False
-    )
     info = dedupe_operation.get_info()
 
     if len(info["same_source_merges"]) > 0:
@@ -600,18 +575,6 @@ def view_dedupe_details(review_manager) -> None:
 )
 @click.option("-v", "--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
-    "-m",
-    "--merge_threshold",
-    type=float,
-    help="Confidence threshold for automated merging (dedupe.io confidence)",
-)
-@click.option(
-    "-p",
-    "--partition_threshold",
-    type=float,
-    help="Partition threshold for duplicate clustering (dedupe.io partition)",
-)
-@click.option(
     "--source_comparison",
     is_flag=True,
     default=False,
@@ -623,86 +586,46 @@ def dedupe(
     ctx,
     fix_errors,
     view,
-    merge_threshold,
-    partition_threshold,
     source_comparison,
     force,
 ) -> None:
-    """Deduplicate records
-
-    Duplicate identification and merging proceeds as follows:
-
-        1. Training of an active learning (AL) deduplication model
-          (based on dedupe.io and safeguards)
-
-        2. Automated deduplication based on AL model
-
-        3. Summaries (duplicates_to_validate.xlsx and non_duplicates_to_validate.xlsx)
-          are exported for efficient validation and correction
-          (colrev dedupe --fix_errors)
-
-    When the sample size does not allow you to train an AL model (too small),
-    deduplication will switch to a simple approach based on a fixed similarity measure
-
-    When the sample size is too big, the blocking and indexing
-    is stored in a PostgreSQL database (to avoid excessive RAM use)
-
-    Duplicates can only occur within the set of new records
-    (colrev status *md_prepared*) and between the set of new records and
-    the set of records that have already been deduplicated
-    (colrev_status *md_processed* or beyond).
-    Records that are not prepared (colrev_status *md_imported*,
-    *md_needs_manual_preparation*) are not considered for deduplication.
-    The state model (colrev_status) ensures that users do not have to check
-    potential duplicates within the deduplicated set repeatedly.
-
-    Once records are marked as *processed* (or beyond),
-
-    All steps rely on the LocalIndex to implement false positive safeguards against
-
-        - Accidentally merging records that are non-duplicates
-
-        - Accidentally merging records from the same source
-    """
+    """Deduplicate records"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+        state_transition_process = not view
+        dedupe_operation = review_manager.get_dedupe_operation(
+            notify_state_transition_operation=state_transition_process
+        )
 
-    try:
         if fix_errors:
-            dedupe_operation = review_manager.get_dedupe_operation()
             dedupe_operation.fix_errors()
             print(
                 "You can manually remove the duplicates_to_validate.xlsx, "
                 "non_duplicates_to_validate.xlsx, and dupes.txt files."
             )
+            return
 
-        elif view:
-            view_dedupe_details(review_manager)
+        if view:
+            view_dedupe_details(dedupe_operation)
+            return
 
-        elif source_comparison:
-            dedupe_operation = review_manager.get_dedupe_operation()
+        if source_comparison:
             dedupe_operation.source_comparison()
+            return
 
-        else:
-            logging.basicConfig()
-            logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
-            saved_args = locals()
-            if "fix_errors" in saved_args:
-                del saved_args["fix_errors"]
+        # TODO : move to active learning init:
+        logging.basicConfig()
+        logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
-            dedupe_operation = review_manager.get_dedupe_operation()
-            dedupe_operation.main()
+        dedupe_operation.main()
 
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
-
-    except colrev_exceptions.DedupeError as exc:
-        logging.error(f"DedupeError: {exc}")
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+        colrev_exceptions.DedupeError,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=7)
@@ -718,17 +641,16 @@ def prep_man(ctx, stats) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+        prep_man_operation = review_manager.get_prep_man_operation()
 
-    prep_man_operation = review_manager.get_prep_man_operation()
+        if stats:
+            prep_man_operation.prep_man_stats()
+            return
 
-    if stats:
-        prep_man_operation.prep_man_stats()
-    else:
         prep_man_operation.main()
+
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=9)
@@ -781,36 +703,37 @@ def prescreen(
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-
-    try:
         prescreen_operation = review_manager.get_prescreen_operation()
 
         if export_format:
             prescreen_operation.export_table(export_table_format=export_format)
-        elif import_table:
+            return
+        if import_table:
             prescreen_operation.import_table(import_table_path=import_table)
-        elif include_all:
+            return
+        if include_all:
             prescreen_operation.include_all_in_prescreen()
-        elif create_split:
+            return
+        if create_split:
             splits = prescreen_operation.create_prescreen_split(
                 create_split=create_split
             )
             for created_split in splits:
                 print(created_split + "\n")
-        elif setup_custom_script:
+            return
+        if setup_custom_script:
             prescreen_operation.setup_custom_script()
             print("Activated custom_prescreen_script.py.")
-        else:
-            prescreen_operation.main(split_str=split)
+            return
 
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
-    except colrev_exceptions.CleanRepoRequiredError as exc:
-        logging.error(f"CleanRepoRequiredError: {exc}")
+        prescreen_operation.main(split_str=split)
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+        colrev_exceptions.CleanRepoRequiredError,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=10)
@@ -866,30 +789,34 @@ def screen(
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-
-    try:
         screen_operation = review_manager.get_screen_operation()
+
         if include_all:
             screen_operation.include_all_in_screen()
-        elif add_criterion:
+            return
+        if add_criterion:
             screen_operation.add_criterion(criterion_to_add=add_criterion)
-        elif delete_criterion:
+            return
+        if delete_criterion:
             screen_operation.delete_criterion(criterion_to_delete=delete_criterion)
-        elif create_split:
+            return
+        if create_split:
             splits = screen_operation.create_screen_split(create_split=create_split)
             for created_split in splits:
                 print(created_split + "\n")
-        elif setup_custom_script:
+            return
+        if setup_custom_script:
             screen_operation.setup_custom_script()
             print("Activated custom_screen_script.py.")
-        else:
-            screen_operation.main(split_str=split)
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+            return
+
+        screen_operation.main(split_str=split)
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=11)
@@ -926,35 +853,33 @@ def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> Non
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
 
-    try:
+        state_transition_operation = not relink_files and not setup_custom_script
+        pdf_get_operation = review_manager.get_pdf_get_operation(
+            notify_state_transition_operation=state_transition_operation
+        )
+
         if relink_files:
-            pdf_get_operation = review_manager.get_pdf_get_operation(
-                notify_state_transition_process=False
-            )
             pdf_get_operation.relink_files()
-        elif copy_to_repo:
-            pdf_get_operation = review_manager.get_pdf_get_operation()
+            return
+        if copy_to_repo:
             pdf_get_operation.copy_pdfs_to_repo()
-        elif rename:
-            pdf_get_operation = review_manager.get_pdf_get_operation()
+            return
+        if rename:
             pdf_get_operation.rename_pdfs()
-        elif setup_custom_script:
-            pdf_get_operation = review_manager.get_pdf_get_operation(
-                notify_state_transition_process=False
-            )
+            return
+        if setup_custom_script:
             pdf_get_operation.setup_custom_script()
             print("Activated custom_pdf_get_script.py.")
-        else:
-            pdf_get_operation = review_manager.get_pdf_get_operation()
-            pdf_get_operation.main()
+            return
 
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+        pdf_get_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=12)
@@ -983,18 +908,7 @@ def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> Non
 )
 @click.pass_context
 def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) -> None:
-    """Prepare PDFs
-
-    This involves:
-
-        - Checking for machine readability and applying OCR if necessary
-
-        - Removing coverpages and appended pages
-
-        - Validating the PDF against the record metadata
-
-        - Checking for completeness (number of pages according to record metadata)
-    """
+    """Prepare PDFs"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
@@ -1004,18 +918,19 @@ def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) 
 
         if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
-        elif setup_custom_script:
+            return
+        if setup_custom_script:
             pdf_prep_operation.setup_custom_script()
             print("Activated custom_pdf_prep_script.py.")
-        else:
-            pdf_prep_operation.main()
+            return
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+        pdf_prep_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=13)
@@ -1035,7 +950,6 @@ def pdf_get_man(ctx, export) -> None:
         pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
         if export:
-
             records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
             pdf_get_man_records = [
                 r
@@ -1067,15 +981,15 @@ def pdf_get_man(ctx, export) -> None:
             pdf_get_man_operation.review_manager.logger.info(
                 "Created pdf_get_man_records.csv"
             )
+            return
 
-        else:
-            pdf_get_man_operation.main()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+        pdf_get_man_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 def delete_first_pages_cli(pdf_get_man_operation, record_id) -> None:
@@ -1128,27 +1042,28 @@ def pdf_prep_man(ctx, delete_first_page, stats, extract, apply) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-
         pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
-        if delete_first_page:
 
+        if delete_first_page:
             delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
             return
-
         if stats:
             pdf_prep_man_operation.pdf_prep_man_stats()
-        elif extract:
+            return
+        if extract:
             pdf_prep_man_operation.extract_needs_pdf_prep_man()
-        elif apply:
+            return
+        if apply:
             pdf_prep_man_operation.apply_pdf_prep_man()
-        else:
-            pdf_prep_man_operation.main()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+            return
+
+        pdf_prep_man_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=15)
@@ -1192,26 +1107,28 @@ def data(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-
         data_operation = review_manager.get_data_operation()
+
         if profile:
             data_operation.profile()
-        elif reading_heuristics:
+            return
+        if reading_heuristics:
             heuristic_results = data_operation.reading_heuristics()
             review_manager.p_printer.pprint(heuristic_results)
             return
-        elif setup_custom_script:
+        if setup_custom_script:
             data_operation.setup_custom_script()
             print("Activated custom_data_script.py.")
             print("Please update the data_format in settings.json and commit.")
-        elif add_endpoint:
+            return
+        if add_endpoint:
 
             if add_endpoint in data_operation.built_in_scripts:
                 endpoint_class = data_operation.built_in_scripts[add_endpoint][
                     "endpoint"
                 ]
                 endpoint = endpoint_class(
-                    DATA=data_operation, SETTINGS={"name": add_endpoint}
+                    data_operation=data_operation, settings={"name": add_endpoint}
                 )
 
                 default_endpoint_conf = endpoint.get_default_setup()
@@ -1251,7 +1168,7 @@ def data(
                     # TODO : check whether template_name is_file
                     # and csl_link.name is_file()
 
-                data_operation.add_data_endpoint(default_endpoint_conf)
+                data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
                 data_operation.review_manager.create_commit(
                     msg="Add data endpoint",
                     script_call="colrev data",
@@ -1260,7 +1177,6 @@ def data(
                 # Note : reload updated settings
                 review_manager = colrev.review_manager.ReviewManager(force_mode=force)
                 data_operation = colrev.data.Data(review_manager=review_manager)
-
             else:
                 print("Data format not available")
 
@@ -1270,31 +1186,31 @@ def data(
                     review_manager.create_commit(
                         msg="Data and synthesis", manual_author=True
                     )
-        else:
-            ret = data_operation.main()
-            if ret["ask_to_commit"]:
-                if "y" == input("Create commit (y/n)?"):
-                    review_manager.create_commit(
-                        msg="Data and synthesis", manual_author=True
-                    )
-            if ret["no_endpoints_registered"]:
-                print(
-                    "No data format not specified. "
-                    "To register a data endpoint, "
-                    "use one (or several) of the following \n"
-                    "    colrev data --add_endpoint MANUSCRIPT\n"
-                    "    colrev data --add_endpoint STRUCTURED\n"
-                    "    colrev data --add_endpoint PRISMA\n"
-                    "    colrev data --add_endpoint ZETTLR\n"
-                    "    colrev data --add_endpoint ENDNOTE"
-                )
+            return
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
-    except colrev_exceptions.ProcessOrderViolation as exc:
-        logging.error(f"ProcessOrderViolation: {exc}")
+        ret = data_operation.main()
+        if ret["ask_to_commit"]:
+            if "y" == input("Create commit (y/n)?"):
+                review_manager.create_commit(
+                    msg="Data and synthesis", manual_author=True
+                )
+        if ret["no_endpoints_registered"]:
+            print(
+                "No data format not specified. "
+                "To register a data endpoint, "
+                "use one (or several) of the following \n"
+                "    colrev data --add_endpoint MANUSCRIPT\n"
+                "    colrev data --add_endpoint STRUCTURED\n"
+                "    colrev data --add_endpoint PRISMA\n"
+                "    colrev data --add_endpoint ZETTLR\n"
+                "    colrev data --add_endpoint ENDNOTE"
+            )
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
 
 
 def validate_commit(ctx, param, value):
@@ -1349,55 +1265,57 @@ def validate(ctx, scope, properties, commit) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+        validate_operation = review_manager.get_validate_operation()
 
-    validate_operation = review_manager.get_validate_operation()
-    validation_details = validate_operation.main(
-        scope=scope, properties=properties, target_commit=commit
-    )
-
-    if 0 == len(validation_details):
-        print("No substantial changes.")
-        return
-
-    # pylint: disable=duplicate-code
-    keys = [
-        "author",
-        "title",
-        "journal",
-        "booktitle",
-        "year",
-        "volume",
-        "number",
-        "pages",
-    ]
-
-    for record_a, record_b, difference in validation_details:
-        # Escape sequence to clear terminal output for each new comparison
-        os.system("cls" if os.name == "nt" else "clear")
-        if record_a["ID"] == record_b["ID"]:
-            print(f"similarity: {str(round(difference, 4))} record {record_a['ID']}")
-        else:
-            print(
-                f"similarity: {str(round(difference, 4))} "
-                f"record {record_a['ID']} - {record_b['ID']}"
-            )
-
-        colrev.record.Record.print_diff_pair(
-            record_pair=[record_a, record_b], keys=keys
+        validation_details = validate_operation.main(
+            scope=scope, properties=properties, target_commit=commit
         )
 
-        user_selection = input("Validate [y,n,d,q]?")
+        if 0 == len(validation_details):
+            print("No substantial changes.")
+            return
 
-        if "q" == user_selection:
-            break
-        if "y" == user_selection:
-            continue
+        # pylint: disable=duplicate-code
+        keys = [
+            "author",
+            "title",
+            "journal",
+            "booktitle",
+            "year",
+            "volume",
+            "number",
+            "pages",
+        ]
 
-        # TODO: correct? if not, replace current record with old one
+        for record_a, record_b, difference in validation_details:
+            # Escape sequence to clear terminal output for each new comparison
+            os.system("cls" if os.name == "nt" else "clear")
+            if record_a["ID"] == record_b["ID"]:
+                print(
+                    f"similarity: {str(round(difference, 4))} record {record_a['ID']}"
+                )
+            else:
+                print(
+                    f"similarity: {str(round(difference, 4))} "
+                    f"record {record_a['ID']} - {record_b['ID']}"
+                )
+
+            colrev.record.Record.print_diff_pair(
+                record_pair=[record_a, record_b], keys=keys
+            )
+
+            user_selection = input("Validate [y,n,d,q]?")
+
+            if "q" == user_selection:
+                break
+            if "y" == user_selection:
+                continue
+
+            # TODO: correct? if not, replace current record with old one
+
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
+        return
 
 
 @main.command(help_priority=17)
@@ -1413,10 +1331,10 @@ def trace(ctx, id) -> None:  # pylint: disable=invalid-name
     try:
         review_manager = colrev.review_manager.ReviewManager()
         trace_operation = review_manager.get_trace_operation()
-        trace_operation.main(ID=id)
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        trace_operation.main(record_id=id)
+
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
         return
 
 
@@ -1427,13 +1345,12 @@ def paper(ctx) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-
         paper_operation = review_manager.get_paper_operation()
+
         paper_operation.main()
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
         return
     except colrev_exceptions.NoPaperEndpointRegistered as exc:
         print(f"NoPaperEndpointRegistered: {exc}")
@@ -1464,7 +1381,6 @@ def distribute(ctx, path) -> None:
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-
         distribute_operation = review_manager.get_distribute_operation()
 
         local_registry_path = Path.home().joinpath(".colrev/registry.yaml")
@@ -1493,16 +1409,14 @@ def distribute(ctx, path) -> None:
 
         distribute_operation.main(path_str=path, target=target)
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
         return
 
 
 def print_environment_status(review_manager) -> None:
 
     environment_manager = review_manager.get_environment_manager()
-
     environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
@@ -1618,18 +1532,21 @@ def env(
     """CoLRev environment commands"""
 
     # pylint: disable=import-outside-toplevel
+    # pylint: disable=too-many-return-statements
     import webbrowser
     import docker
 
     review_manager = colrev.review_manager.ReviewManager()
+
     if install:
         env_resources = review_manager.get_resources()
         if env_resources.install_curated_resource(curated_resource=install):
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
             print("colrev env --index")
+        return
 
-    elif pull:
+    if pull:
         environment_manager = review_manager.get_environment_manager()
         for curated_resource in environment_manager.load_local_registry():
             curated_resource_path = curated_resource["source_url"]
@@ -1640,15 +1557,13 @@ def env(
             )
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
+        return
 
-    elif status:
+    if status:
         print_environment_status(review_manager)
+        return
 
-    elif start:
-        review_manager.get_local_index()
-        print("Started.")
-
-    elif stop:
+    if stop:
         client = docker.from_env()
         environment_manager = review_manager.get_environment_manager()
 
@@ -1657,27 +1572,14 @@ def env(
             if any(x in str(container.image) for x in images_to_stop):
                 container.stop()
                 print(f"Stopped container {container.name} ({container.image})")
+        return
 
-    elif search:
-        local_index = review_manager.get_local_index()
-        local_index.start_opensearch_docker_dashboards()
-        print("Started.")
-        webbrowser.open("http://localhost:5601/app/home#/", new=2)
-
-    elif index:
-        local_index = review_manager.get_local_index()
-        local_index.index()
-
-    elif analyze:
-        local_index = review_manager.get_local_index()
-        local_index.analyze()
-
-    elif register:
+    if register:
         environment_manager = review_manager.get_environment_manager()
-
         environment_manager.register_repo(path_to_register=Path.cwd())
+        return
 
-    elif unregister is not None:
+    if unregister is not None:
         environment_manager = review_manager.get_environment_manager()
 
         local_registry = environment_manager.load_local_registry()
@@ -1689,6 +1591,25 @@ def env(
             ]
             environment_manager.save_local_registry(updated_registry=local_registry)
             logging.info(f"Removed from local registry: {unregister}")
+        return
+
+    local_index = review_manager.get_local_index()
+    if search:
+        local_index.start_opensearch_docker_dashboards()
+        print("Started.")
+        webbrowser.open("http://localhost:5601/app/home#/", new=2)
+        return
+
+    if index:
+        local_index.index()
+        return
+
+    if start:
+        print("Started.")
+        return
+
+    if analyze:
+        local_index.analyze()
 
 
 @main.command(help_priority=21)
@@ -1737,8 +1658,9 @@ def settings(ctx, upgrade, update_hooks, modify):
 
     if upgrade:
         review_manager.upgrade_colrev()
+        return
 
-    elif update_hooks:
+    if update_hooks:
 
         print("Update pre-commit hooks")
 
@@ -1762,8 +1684,9 @@ def settings(ctx, upgrade, update_hooks, modify):
             msg="Update pre-commit hooks", script_call="colrev settings --update"
         )
         print("Successfully updated pre-commit hooks")
+        return
 
-    elif modify:
+    if modify:
 
         # TBD: maybe use glom.delete?
         # There is no simply append...
@@ -1788,10 +1711,10 @@ def settings(ctx, upgrade, update_hooks, modify):
         review_manager.create_commit(
             msg="Change settings", manual_author=True, saved_args=None
         )
+        return
 
-    else:
-        print(f"Settings:\n{review_manager.settings}")
-        print("\n")
+    print(f"Settings:\n{review_manager.settings}")
+    print("\n")
 
 
 @main.command(help_priority=22)
@@ -1851,14 +1774,12 @@ def pull(ctx, records_only, project_only):
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-
         pull_operation = review_manager.get_pull_operation()
+
         pull_operation.main(records_only=records_only, project_only=project_only)
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=24)
@@ -1894,14 +1815,12 @@ def push(ctx, records_only, project_only):
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
-
         push_operation = review_manager.get_push_operation()
+
         push_operation.main(records_only=records_only, project_only=project_only)
 
-    except MissingValueError as exc:
-        print(f"Error in settings.json: {exc}")
-        print("To solve this, use\n  colrev settings --upgrade")
-        return
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
 
 
 @main.command(help_priority=25)
@@ -1909,10 +1828,9 @@ def push(ctx, records_only, project_only):
 def service(ctx):
     """Service for real-time reviews"""
 
-    review_manager = colrev.review_manager.ReviewManager()
-
     try:
 
+        review_manager = colrev.review_manager.ReviewManager()
         review_manager.get_service_operation()
 
     except KeyboardInterrupt:
@@ -1942,8 +1860,8 @@ def show(ctx, keyword, callback=validate_show, required=True):
     import colrev.process
 
     review_manager = colrev.review_manager.ReviewManager()
-    if "sample" == keyword:
 
+    if "sample" == keyword:
         colrev.process.CheckProcess(review_manager=review_manager)
         records = review_manager.dataset.load_records_dict()
         sample = [
@@ -1961,21 +1879,22 @@ def show(ctx, keyword, callback=validate_show, required=True):
         for sample_r in sample:
             colrev.record.Record(data=sample_r).print_citation_format()
         # TODO : print sample size, distributions over years/journals
+        return
 
-    elif "settings" == keyword:
+    if "settings" == keyword:
         print(f"Settings:\n{review_manager.settings}")
+        return
 
-    elif "prisma" == keyword:
-
+    if "prisma" == keyword:
         stat = review_manager.get_status_freq()
         print(stat)
-
         print(
             "Records identified through database searching: "
             f"{stat['colrev_status']['overall']['md_retrieved']}"
         )
+        return
 
-    elif "venv" == keyword:
+    if "venv" == keyword:
         # pylint: disable=import-outside-toplevel
         import platform
 
@@ -2020,8 +1939,9 @@ def show(ctx, keyword, callback=validate_show, required=True):
                 "Platform not detected... "
                 "cannot provide infos in how to activate virtualenv"
             )
-    else:
-        print("Keyword unknown")
+        return
+
+    print("Keyword unknown")
 
 
 @main.command(help_priority=27)

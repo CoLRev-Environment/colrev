@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import logging
-import typing
 from dataclasses import dataclass
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import zope.interface
@@ -12,6 +14,9 @@ from transitions import Machine
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class ProcessType(Enum):
@@ -39,22 +44,25 @@ class ProcessType(Enum):
 
 
 class Process:
+
+    force_mode: bool
+
     def __init__(
         self,
         *,
-        review_manager,
+        review_manager: colrev.review_manager.ReviewManager,
         process_type: ProcessType,
-        notify_state_transition_process=True,
+        notify_state_transition_operation=True,
         debug=False,
-    ):
+    ) -> None:
 
         self.review_manager = review_manager
         self.force_mode = self.review_manager.force_mode
 
         self.type = process_type
 
-        self.notify_state_transition_process = notify_state_transition_process
-        if notify_state_transition_process:
+        self.notify_state_transition_operation = notify_state_transition_operation
+        if notify_state_transition_operation:
             self.review_manager.notify(process=self)
         else:
             self.review_manager.notify(process=self, state_transition=False)
@@ -87,7 +95,7 @@ class Process:
             process_model.check_process_precondition(process=self)
 
         def require_clean_repo_general(
-            git_repo: git.Repo = None, ignore_pattern: list = None
+            *, git_repo: git.Repo = None, ignore_pattern: list = None
         ) -> bool:
 
             if git_repo is None:
@@ -161,7 +169,7 @@ class Process:
 
         elif ProcessType.prep == self.type:
 
-            if self.notify_state_transition_process:
+            if self.notify_state_transition_operation:
                 require_clean_repo_general()
                 check_process_model_precondition()
 
@@ -226,18 +234,18 @@ class Process:
 
 
 class FormatProcess(Process):
-    def __init__(self, *, review_manager, notify: bool = True):
+    def __init__(self, *, review_manager, notify: bool = True) -> None:
         super().__init__(review_manager=review_manager, process_type=ProcessType.format)
         if notify:
             self.review_manager.notify(process=self)
 
 
 class CheckProcess(Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=ProcessType.check,
-            notify_state_transition_process=False,
+            notify_state_transition_operation=False,
         )
 
 
@@ -359,10 +367,10 @@ class ProcessModel:
 
     def __init__(
         self, *, state: str = None, process: ProcessType = None, review_manager=None
-    ):
+    ) -> None:
 
         if process is not None:
-            start_states: typing.List[str] = [
+            start_states: list[str] = [
                 str(x["source"])
                 for x in self.transitions
                 if str(process) == x["trigger"]
@@ -391,7 +399,7 @@ class ProcessModel:
         )
 
     def get_preceding_states(self, *, state) -> set:
-        preceding_states: typing.Set[colrev.record.RecordState] = set()
+        preceding_states: set[colrev.record.RecordState] = set()
         added = True
         while added:
             preceding_states_size = len(preceding_states)
@@ -432,7 +440,7 @@ class SearchEndpoint(zope.interface.Interface):
     source_identifier = zope.interface.Attribute("""Source identifier""")
     mode = zope.interface.Attribute("""Mode""")
 
-    def run_search(search, params: dict, feed_file: Path) -> None:
+    def run_search(search_operation, params: dict, feed_file: Path) -> None:
         pass
 
     def validate_params(query: str) -> None:
@@ -454,11 +462,11 @@ class LoadEndpoint(zope.interface.Interface):
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
-    def load(loader, source):
+    def load(load_operation, source):
         pass
 
 
-class PreparationEndpoint(zope.interface.Interface):
+class PrepEndpoint(zope.interface.Interface):
 
     source_correction_hint = zope.interface.Attribute(
         """Hint on how to correct metadata at source"""
@@ -469,63 +477,62 @@ class PreparationEndpoint(zope.interface.Interface):
         (even if the colrev_status does not transition to md_prepared)"""
     )
 
-    def prepare(preparation, prep_record):
+    def prepare(prep_operation, prep_record):
         pass
 
 
-class PreparationManualEndpoint(zope.interface.Interface):
-    def prepare_manual(prep_man, records):
+class PrepManEndpoint(zope.interface.Interface):
+    def prepare_manual(prep_man_operation, records):
         pass
 
 
 class DedupeEndpoint(zope.interface.Interface):
-    def run_dedupe(dedupe):
+    def run_dedupe(dedupe_operation):
         pass
 
 
 class PrescreenEndpoint(zope.interface.Interface):
-    def run_prescreen(prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
         pass
 
 
-class PDFRetrievalEndpoint(zope.interface.Interface):
-    def get_pdf(pdf_retrieval, record):
+class PDFGetEndpoint(zope.interface.Interface):
+    def get_pdf(pdf_get_operation, record):
         return record
 
 
-class PDFRetrievalManualEndpoint(zope.interface.Interface):
-    def get_man_pdf(pdf_retrieval_man, records):
+class PDFGetManEndpoint(zope.interface.Interface):
+    def get_man_pdf(pdf_get_man_operation, records):
         return records
 
 
-class PDFPreparationEndpoint(zope.interface.Interface):
-    def prep_pdf(pdf_preparation, record, pad) -> dict:
+class PDFPrepEndpoint(zope.interface.Interface):
+    def prep_pdf(pdf_prep_operation, record, pad) -> dict:
         return record.data
 
 
-class PDFPreparationManualEndpoint(zope.interface.Interface):
-    def prep_man_pdf(pdf_prep_man, records):
+class PDFPrepManEndpoint(zope.interface.Interface):
+    def prep_man_pdf(pdf_prep_man_operation, records):
         return records
 
 
 class ScreenEndpoint(zope.interface.Interface):
-    def run_screen(screen, records: dict, split: list) -> dict:
+    def run_screen(screen_operation, records: dict, split: list) -> dict:
         pass
 
 
 class DataEndpoint(zope.interface.Interface):
-
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
         return {}
 
     def update_data(
-        data, records: dict, synthesized_record_status_matrix: dict
+        data_operation, records: dict, synthesized_record_status_matrix: dict
     ) -> None:
         pass
 
     def update_record_status_matrix(
-        data, synthesized_record_status_matrix, endpoint_identifier
+        data_operation, synthesized_record_status_matrix, endpoint_identifier
     ) -> None:
         pass
 

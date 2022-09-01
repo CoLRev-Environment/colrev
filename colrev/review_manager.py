@@ -27,6 +27,7 @@ import pandas as pd
 import requests_cache
 import yaml
 from dacite import from_dict
+from dacite.exceptions import MissingValueError
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
@@ -162,7 +163,7 @@ class ReviewManager:
                 data=loaded_settings,
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
-        except ValueError as exc:
+        except (ValueError, MissingValueError) as exc:
             raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
 
         return settings
@@ -181,7 +182,7 @@ class ReviewManager:
         exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(exported_dict, outfile, indent=4)
-        self.dataset.add_changes(path="settings.json")
+        self.dataset.add_changes(path=Path("settings.json"))
 
     def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
@@ -218,14 +219,14 @@ class ReviewManager:
             "SETTINGS_RELATIVE": Path(settings),
         }
 
-    def get_remote_url(self):
+    def get_remote_url(self) -> str:
         git_repo = self.dataset.get_repo()
         for remote in git_repo.remotes:
             if remote.url:
                 remote_url = remote.url.rstrip(".git")
                 return remote_url
 
-        return None
+        return ""
 
     def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
         # for logger debugging:
@@ -321,7 +322,7 @@ class ReviewManager:
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
 
-        def print_release_notes(selected_version: str):
+        def print_release_notes(selected_version: str) -> None:
 
             filedata = pkgutil.get_data(__name__, "../CHANGELOG.md")
             active = False
@@ -962,7 +963,7 @@ class ReviewManager:
 
         return True
 
-    def check_repo(self, *, data_operation) -> dict:
+    def check_repo(self) -> dict:
         """Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks
         """
@@ -1008,35 +1009,35 @@ class ReviewManager:
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
-            data = self.dataset.retrieve_data(prior=prior)
+            status_data = self.dataset.retrieve_status_data(prior=prior)
             self.logger.debug("data")
-            self.logger.debug(self.p_printer.pformat(data))
+            self.logger.debug(self.p_printer.pformat(status_data))
 
             main_refs_checks = [
                 {
                     "script": self.dataset.check_persisted_id_changes,
-                    "params": {"prior": prior, "data": data},
+                    "params": {"prior": prior, "status_data": status_data},
                 },
                 {"script": self.dataset.check_sources, "params": []},
                 {
                     "script": self.dataset.check_main_records_duplicates,
-                    "params": {"data": data},
+                    "params": {"status_data": status_data},
                 },
                 {
                     "script": self.dataset.check_main_records_origin,
-                    "params": {"prior": prior, "data": data},
+                    "params": {"prior": prior, "status_data": status_data},
                 },
                 {
                     "script": self.dataset.check_fields,
-                    "params": {"data": data},
+                    "params": {"status_data": status_data},
                 },
                 {
                     "script": self.dataset.check_status_transitions,
-                    "params": {"data": data},
+                    "params": {"status_data": status_data},
                 },
                 {
                     "script": self.dataset.check_main_records_screen,
-                    "params": {"data": data},
+                    "params": {"status_data": status_data},
                 },
             ]
 
@@ -1059,7 +1060,9 @@ class ReviewManager:
             if not paper.is_file():
                 self.logger.debug("Checks for PAPER not activated\n")
             else:
-
+                data_operation = self.get_data_operation(
+                    notify_state_transition_operation=False
+                )
                 manuscript_checks = [
                     # TODO : check the whole script
                     # {
@@ -1068,7 +1071,7 @@ class ReviewManager:
                     # },
                     {
                         "script": data_operation.main,
-                        "params": [True],
+                        "params": [],
                     },
                     {
                         "script": self.update_status_yaml,
@@ -1383,7 +1386,7 @@ class ReviewManager:
         file_handler.setFormatter(formatter)
         self.report_logger.addHandler(file_handler)
 
-    def reorder_log(self, *, IDs: list, criterion=None) -> None:
+    def reorder_log(self, *, ids: list, criterion=None) -> None:
         """Reorder the report.log according to an ID list (after multiprocessing)"""
 
         # https://docs.python.org/3/howto/logging-cookbook.html
@@ -1438,7 +1441,7 @@ class ReviewManager:
             items.append(item.replace("\n\n", "\n").replace("\n\n", "\n"))
 
         if criterion is None:
-            for record_id in IDs:
+            for record_id in ids:
                 for item in items:
                     if f"({record_id})" in item:
                         formatted_item = item
@@ -1775,7 +1778,7 @@ class ReviewManager:
         self.logger.debug(f"stat: {self.p_printer.pformat(stat)}")
         return stat
 
-    def get_collaboration_instructions(self, *, stat) -> dict:
+    def get_collaboration_instructions(self, *, stat: dict) -> dict:
 
         share_stat_req = self.settings.project.share_stat_req
         found_a_conflict = False
@@ -2163,6 +2166,14 @@ class ReviewManager:
         return colrev.environment.Resources(**kwargs)
 
     @classmethod
+    def check_init_precondition(cls):
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=redefined-outer-name
+        import colrev.init
+
+        return colrev.init.Initializer.check_init_precondition()
+
+    @classmethod
     def get_init_operation(cls, **kwargs) -> colrev.init.Initializer:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
@@ -2200,12 +2211,12 @@ class ReviewManager:
 
         return colrev.load.Loader(review_manager=self, **kwargs)
 
-    def get_prep_operation(self, **kwargs) -> colrev.prep.Preparation:
+    def get_prep_operation(self, **kwargs) -> colrev.prep.Prep:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.prep
 
-        return colrev.prep.Preparation(review_manager=self, **kwargs)
+        return colrev.prep.Prep(review_manager=self, **kwargs)
 
     def get_prep_man_operation(self, **kwargs) -> colrev.prep_man.PrepMan:
         # pylint: disable=import-outside-toplevel
@@ -2228,26 +2239,26 @@ class ReviewManager:
 
         return colrev.prescreen.Prescreen(review_manager=self, **kwargs)
 
-    def get_pdf_get_operation(self, **kwargs) -> colrev.pdf_get.PDFRetrieval:
+    def get_pdf_get_operation(self, **kwargs) -> colrev.pdf_get.PDFGet:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.pdf_get
 
-        return colrev.pdf_get.PDFRetrieval(review_manager=self, **kwargs)
+        return colrev.pdf_get.PDFGet(review_manager=self, **kwargs)
 
-    def get_pdf_get_man_operation(self, **kwargs) -> colrev.pdf_get_man.PDFRetrievalMan:
+    def get_pdf_get_man_operation(self, **kwargs) -> colrev.pdf_get_man.PDFGetMan:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.pdf_get_man
 
-        return colrev.pdf_get_man.PDFRetrievalMan(review_manager=self, **kwargs)
+        return colrev.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
 
-    def get_pdf_prep_operation(self, **kwargs) -> colrev.pdf_prep.PDFPreparation:
+    def get_pdf_prep_operation(self, **kwargs) -> colrev.pdf_prep.PDFPrep:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.pdf_prep
 
-        return colrev.pdf_prep.PDFPreparation(review_manager=self, **kwargs)
+        return colrev.pdf_prep.PDFPrep(review_manager=self, **kwargs)
 
     def get_pdf_prep_man_operation(self, **kwargs) -> colrev.pdf_prep_man.PDFPrepMan:
         # pylint: disable=import-outside-toplevel

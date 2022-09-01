@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import csv
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -11,18 +14,25 @@ import colrev.process
 import colrev.record
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.screen.Screen
+
 
 @zope.interface.implementer(colrev.process.ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
-    def __init__(self, *, screen, settings):
+    def __init__(
+        self, *, screen_operation: colrev.screen.Screen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @classmethod
-    def get_screening_criteria(cls, *, screen, records):
+    def get_screening_criteria(
+        cls, *, screen_operation: colrev.screen.Screen, records: dict
+    ) -> dict:
 
-        screening_criteria = screen.review_manager.settings.screen.criteria
+        screening_criteria = screen_operation.review_manager.settings.screen.criteria
         if len(screening_criteria) == 0 and 0 == len(
             [
                 r
@@ -53,31 +63,35 @@ class CoLRevCLIScreenEndpoint:
                     explanation=explanation, criterion_type=criterion_type, comment=""
                 )
 
-            screen.set_screening_criteria(screening_criteria=screening_criteria)
+            screen_operation.set_screening_criteria(
+                screening_criteria=screening_criteria
+            )
 
         return screening_criteria
 
-    def screen_cli(self, screen, split) -> dict:
+    def screen_cli(self, screen_operation: colrev.screen.Screen, split: list) -> dict:
 
-        screen_data = screen.get_data()
+        screen_data = screen_operation.get_data()
         stat_len = screen_data["nr_tasks"]
 
         i, quit_pressed = 0, False
 
-        screen.review_manager.logger.info("Start screen")
+        screen_operation.review_manager.logger.info("Start screen")
 
         if 0 == stat_len:
-            screen.review_manager.logger.info("No records to prescreen")
+            screen_operation.review_manager.logger.info("No records to prescreen")
 
-        records = screen.review_manager.dataset.load_records_dict()
+        records = screen_operation.review_manager.dataset.load_records_dict()
 
-        screening_criteria = self.get_screening_criteria(screen=screen, records=records)
+        screening_criteria = self.get_screening_criteria(
+            screen_operation=screen_operation, records=records
+        )
 
         print("\n\nIn the screen, the following criteria are applied:\n")
         for (
             criterion_name,
             criterion_settings,
-        ) in screen.review_manager.settings.screen.criteria.items():
+        ) in screen_operation.review_manager.settings.screen.criteria.items():
             color = colors.GREEN
             if (
                 colrev.settings.ScreenCriterionType.exclusion_criterion
@@ -107,7 +121,7 @@ class CoLRevCLIScreenEndpoint:
             abstract_from_tei = False
             if "abstract" not in screen_record.data:
                 abstract_from_tei = True
-                tei = screen.review_manager.get_tei(
+                tei = screen_operation.review_manager.get_tei(
                     pdf_path=Path(screen_record.data["file"]),
                     tei_path=screen_record.get_tei_filename(),
                 )
@@ -155,7 +169,7 @@ class CoLRevCLIScreenEndpoint:
                 if skip_pressed:
                     continue
                 if quit_pressed:
-                    screen.review_manager.logger.info("Stop screen")
+                    screen_operation.review_manager.logger.info("Stop screen")
                     break
 
                 c_field = ""
@@ -166,7 +180,7 @@ class CoLRevCLIScreenEndpoint:
                 screen_inclusion = all(decision == "in" for _, decision in decisions)
 
                 screen_record.screen(
-                    review_manager=screen.review_manager,
+                    review_manager=screen_operation.review_manager,
                     screen_inclusion=screen_inclusion,
                     screening_criteria=c_field,
                     PAD=screen_data["PAD"],
@@ -186,45 +200,45 @@ class CoLRevCLIScreenEndpoint:
                         decision = ret
 
                 if quit_pressed:
-                    screen.review_manager.logger.info("Stop screen")
+                    screen_operation.review_manager.logger.info("Stop screen")
                     break
 
                 if decision == "y":
                     screen_record.screen(
-                        review_manager=screen.review_manager,
+                        review_manager=screen_operation.review_manager,
                         screen_inclusion=True,
                         screening_criteria="NA",
                     )
                 if decision == "n":
                     screen_record.screen(
-                        review_manager=screen.review_manager,
+                        review_manager=screen_operation.review_manager,
                         screen_inclusion=False,
                         screening_criteria="NA",
                         PAD=screen_data["PAD"],
                     )
 
             if quit_pressed:
-                screen.review_manager.logger.info("Stop screen")
+                screen_operation.review_manager.logger.info("Stop screen")
                 break
 
         if stat_len == 0:
-            screen.review_manager.logger.info("No records to screen")
+            screen_operation.review_manager.logger.info("No records to screen")
             return records
 
-        screen.review_manager.dataset.add_record_changes()
+        screen_operation.review_manager.dataset.add_record_changes()
 
         if i < stat_len:  # if records remain for screening
             if "y" != input("Create commit (y/n)?"):
                 return records
 
-        screen.review_manager.create_commit(
+        screen_operation.review_manager.create_commit(
             msg="Screening (manual)", manual_author=True, saved_args=None
         )
         return records
 
-    def run_screen(self, screen, records: dict, split: list) -> dict:
+    def run_screen(self, screen_operation, records: dict, split: list) -> dict:
 
-        records = self.screen_cli(screen, split)
+        records = self.screen_cli(screen_operation, split)
 
         return records
 
@@ -233,12 +247,20 @@ class CoLRevCLIScreenEndpoint:
 class SpreadsheetScreenEndpoint:
     spreadsheet_path = Path("screen/screen.csv")
 
-    def __init__(self, *, screen, settings):
+    def __init__(
+        self, *, screen_operation: colrev.screen.Screen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def export_table(self, screen, records, split, export_table_format="csv") -> None:
+    def export_table(
+        self,
+        screen_operation: colrev.screen.Screen,
+        records: dict,
+        split: list,
+        export_table_format: str = "csv",
+    ) -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
@@ -247,10 +269,10 @@ class SpreadsheetScreenEndpoint:
             print("File already exists. Please rename it.")
             return
 
-        screen.review_manager.logger.info("Loading records for export")
+        screen_operation.review_manager.logger.info("Loading records for export")
 
         screening_criteria = CoLRevCLIScreenEndpoint.get_screening_criteria(
-            screen=screen, records=records
+            screen_operation=screen_operation, records=records
         )
 
         tbl = []
@@ -314,7 +336,9 @@ class SpreadsheetScreenEndpoint:
         if "csv" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv(self.spreadsheet_path, index=False, quoting=csv.QUOTE_ALL)
-            screen.review_manager.logger.info(f"Created {self.spreadsheet_path}")
+            screen_operation.review_manager.logger.info(
+                f"Created {self.spreadsheet_path}"
+            )
 
         if "xlsx" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
@@ -323,20 +347,25 @@ class SpreadsheetScreenEndpoint:
                 index=False,
                 sheet_name="screen",
             )
-            screen.review_manager.logger.info(
+            screen_operation.review_manager.logger.info(
                 f"Created {self.spreadsheet_path.with_suffix('.xlsx')}"
             )
 
         return
 
-    def import_table(self, screen, records, import_table_path=None) -> None:
+    def import_table(
+        self,
+        screen_operation: colrev.screen.Screen,
+        records: dict,
+        import_table_path: Path = None,
+    ) -> None:
 
         # pylint: disable=duplicate-code
         if import_table_path is None:
             import_table_path = self.spreadsheet_path
 
         if not Path(import_table_path).is_file():
-            screen.review_manager.logger.error(
+            screen_operation.review_manager.logger.error(
                 f"Did not find {import_table_path} - exiting."
             )
             return
@@ -345,7 +374,7 @@ class SpreadsheetScreenEndpoint:
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        screening_criteria = screen.review_manager.settings.screen.criteria
+        screening_criteria = screen_operation.review_manager.settings.screen.criteria
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:
@@ -377,21 +406,22 @@ class SpreadsheetScreenEndpoint:
                 else:
                     record["colrev_status"] = colrev.record.RecordState.rev_included
 
-        screen.review_manager.dataset.save_records_dict(records=records)
-        screen.review_manager.dataset.add_record_changes()
-        return
+        screen_operation.review_manager.dataset.save_records_dict(records=records)
+        screen_operation.review_manager.dataset.add_record_changes()
 
-    def run_screen(self, screen, records: dict, split: list) -> dict:
+    def run_screen(
+        self, screen_operation: colrev.screen.Screen, records: dict, split: list
+    ) -> dict:
 
         if "y" == input("create screen spreadsheet [y,n]?"):
-            self.export_table(screen, records, split)
+            self.export_table(screen_operation, records, split)
 
         if "y" == input("import screen spreadsheet [y,n]?"):
-            self.import_table(screen, records)
+            self.import_table(screen_operation, records)
 
-        if screen.review_manager.dataset.has_changes():
+        if screen_operation.review_manager.dataset.has_changes():
             if "y" == input("create commit [y,n]?"):
-                screen.review_manager.create_commit(
+                screen_operation.review_manager.create_commit(
                     msg="Screen", manual_author=True, script_call="colrev screen"
                 )
         return records

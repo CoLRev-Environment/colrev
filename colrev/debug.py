@@ -42,8 +42,8 @@ def debug_load() -> None:
     #             line = f.readline()
 
     # To test ID retrieval from local_index
-    records = [
-        {
+    records = {
+        "0001": {
             "ENTRYTYPE": "article",
             "ID": "0001",
             "doi": "10.1057/EJIS.2014.41",
@@ -56,10 +56,11 @@ def debug_load() -> None:
             "pages": "624--644",
             "volume": "24",
         }
-    ]
+    }
 
     records = load_operation.review_manager.dataset.set_ids(
-        records, selected_IDs=[x["ID"] for x in records]
+        records=records,
+        selected_ids=list(records.keys()),  # [x["ID"] for x in records.keys()]
     )
     print(records)
 
@@ -169,8 +170,8 @@ def debug_local_index(param):
     # pylint: disable=no-member
     local_index = review_manager.get_local_index()
 
-    # To Test retrieval of record:
-    record = {
+    # To Test retrieval of record_dict:
+    record_dict = {
         "ENTRYTYPE": "article",
         "author": "Addis, T. R.",
         "journal": "Journal of Information Technology",
@@ -180,31 +181,31 @@ def debug_local_index(param):
         "volume": "1",
         "year": "1986",
     }
-    record = {
+    record_dict = {
         "ID": "HovorkaRoweMarkusEtAl2019",
         "ENTRYTYPE": "article",
         "doi": "10.17705/1JAIS.00570",
     }
-    record = local_index.retrieve(record=record)
+    record = local_index.retrieve(record_dict=record_dict)
     pp.pprint(record)
 
     # To Test retrieval of global ID
-    # record = {
+    # record_dict = {
     #     'doi' : '10.17705/1JAIS.00598',
     # }
-    # record = LOCAL_INDEX.retrieve(record)
+    # record_dict = local_index.retrieve(record_dict)
     # pp.pprint(record)
 
-    # record = {
+    # record_dict = {
     #     "ENTRYTYPE": "article",
     #     "colrev_pdf_id": "cpid1:ffeadde..",
     # }
 
-    # res = LOCAL_INDEX.retrieve(record)
+    # res = local_index.retrieve(record_dict)
     # print(res)
 
     # To test the duplicate convenience function:
-    # record1 = {
+    # record_dict1 = {
     #     "ENTRYTYPE": "article",
     #     "author" : "Addis, T. R.",
     #     "journal" : "Journal of Information Technology",
@@ -214,7 +215,7 @@ def debug_local_index(param):
     #     "volume" : "1",
     #     "year" : "1986"
     # }
-    # record2 = {
+    # record_dict2 = {
     #     "ENTRYTYPE": "article",
     #     "author" : "Majchrzak, Ann and Malhotra, Arvind",
     #     "journal" : "Information Systems Research",
@@ -225,7 +226,7 @@ def debug_local_index(param):
     #     "volume" : "27",
     #     "year" : "2016"
     # }
-    # record3 = {
+    # record_dict3 = {
     #     "ENTRYTYPE": "article",
     #     "author" : "Addis, T. R.",
     #     "journal" : "Journal of Technology",
@@ -235,7 +236,7 @@ def debug_local_index(param):
     #     "volume" : "1",
     #     "year" : "1986"
     # }
-    # record3 = {
+    # record_dict3 = {
     #     "ENTRYTYPE": "article",
     #     "author" : "colquitt, j and zapata-phelan, c p",
     #     "journal" : "academy of management journal",
@@ -246,7 +247,7 @@ def debug_local_index(param):
     #     "volume" : "50",
     #     "year" : "2007"
     # }
-    # record4 = {
+    # record_dict4 = {
     #     "ENTRYTYPE": "article",
     #     "author" : "colquitt, j and zapata-phelan, c p",
     #     "journal" : "academy of management journal",
@@ -257,15 +258,15 @@ def debug_local_index(param):
     #     "volume" : "50",
     #     "year" : "2007"
     # }
-    # print(LOCAL_INDEX.is_duplicate(record1, record2))
-    # print(LOCAL_INDEX.is_duplicate(record1, record3))
-    # print(LOCAL_INDEX.is_duplicate(record3, record4))
+    # print(local_index.is_duplicate(record_dict1, record_dict2))
+    # print(local_index.is_duplicate(record_dict1, record_dict3))
+    # print(local_index.is_duplicate(record_dict3, record_dict4))
 
     # To test the duplicate representation function:
-    # record3 = LOCAL_INDEX.retrieve(record3)
-    # pp.pprint(record3)
-    # record4 = LOCAL_INDEX.retrieve(record4)
-    # pp.pprint(record4)
+    # record_dict3 = local_index.retrieve(record_dict3)
+    # pp.pprint(record_dict3)
+    # record_dict4 = local_index.retrieve(record_dict4)
+    # pp.pprint(record_dict4)
 
 
 def corrections():

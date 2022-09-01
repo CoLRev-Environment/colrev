@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import os
 import pkgutil
 import shutil
 import typing
 from glob import glob
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from p_tqdm import p_map
 
@@ -13,14 +16,17 @@ import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
-class PDFRetrieval(colrev.process.Process):
+
+class PDFGet(colrev.process.Process):
 
     to_retrieve: int
     retrieved: int
     not_retrieved: int
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "unpaywall": {
             "endpoint": built_in_pdf_get.UnpaywallEndpoint,
         },
@@ -35,14 +41,14 @@ class PDFRetrieval(colrev.process.Process):
     def __init__(
         self,
         *,
-        review_manager,
-        notify_state_transition_process: bool = True,
-    ):
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_get,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.cpus = 4
@@ -52,10 +58,10 @@ class PDFRetrieval(colrev.process.Process):
         self.pdf_directory.mkdir(exist_ok=True)
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_retrieval_scripts: typing.Dict[
+        self.pdf_retrieval_scripts: dict[
             str, typing.Any
         ] = adapter_manager.load_scripts(
-            PROCESS=self,
+            process=self,
             scripts=review_manager.settings.pdf_get.scripts,
         )
 
@@ -78,7 +84,7 @@ class PDFRetrieval(colrev.process.Process):
                         f'No need to copy PDF - already exits ({record["ID"]})'
                     )
 
-    def link_pdf(self, record):
+    def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
 
         pdf_filepath = self.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
             f"{record.data['ID']}.pdf"
@@ -102,13 +108,12 @@ class PDFRetrieval(colrev.process.Process):
 
         record = colrev.record.Record(data=record_dict)
 
-        record = self.link_pdf(record)
+        record = self.link_pdf(record=record)
 
         for pdf_get_script in self.review_manager.settings.pdf_get.scripts:
 
             endpoint = self.pdf_retrieval_scripts[pdf_get_script["endpoint"]]
             self.review_manager.report_logger.info(
-                # f'{retrieval_script["script"].__name__}({record["ID"]}) called'
                 f'{endpoint.settings.name}({record_dict["ID"]}) called'
             )
 
@@ -116,7 +121,6 @@ class PDFRetrieval(colrev.process.Process):
 
             if "file" in record.data:
                 self.review_manager.report_logger.info(
-                    # f'{retrieval_script["script"].__name__}'
                     f"{endpoint.settings.name}"
                     f'({record_dict["ID"]}): retrieved {record_dict["file"]}'
                 )
@@ -230,8 +234,8 @@ class PDFRetrieval(colrev.process.Process):
     def check_existing_unlinked_pdfs(
         self,
         *,
-        records: typing.Dict,
-    ) -> typing.Dict:
+        records: dict,
+    ) -> dict:
 
         linked_pdfs = [
             str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
@@ -262,8 +266,8 @@ class PDFRetrieval(colrev.process.Process):
                 max_sim_record = None
                 for record in records.values():
                     sim = colrev.record.Record.get_record_similarity(
-                        RECORD_A=colrev.record.Record(data=pdf_record),
-                        RECORD_B=colrev.record.Record(data=record.copy()),
+                        record_a=colrev.record.Record(data=pdf_record),
+                        record_b=colrev.record.Record(data=record.copy()),
                     )
                     if sim > max_similarity:
                         max_similarity = sim
@@ -351,7 +355,7 @@ class PDFRetrieval(colrev.process.Process):
             self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
 
         if pdfs_search_file.is_file():
-            self.review_manager.dataset.add_changes(path=str(pdfs_search_file))
+            self.review_manager.dataset.add_changes(path=pdfs_search_file)
         self.review_manager.dataset.add_record_changes()
 
     def __get_data(self) -> dict:
@@ -391,7 +395,7 @@ class PDFRetrieval(colrev.process.Process):
 
         return pdf_get_data
 
-    def _print_stats(self, *, retrieved_record_list) -> None:
+    def _print_stats(self, *, retrieved_record_list: list) -> None:
 
         self.retrieved = len([r for r in retrieved_record_list if "file" in r])
 
@@ -426,7 +430,7 @@ class PDFRetrieval(colrev.process.Process):
         self.review_manager.logger.info(retrieved_string)
         self.review_manager.logger.info(not_retrieved_string)
 
-    def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
+    def __set_status_if_file_linked(self, *, records: dict) -> dict:
 
         for record in records.values():
             if record["colrev_status"] in [
@@ -455,7 +459,7 @@ class PDFRetrieval(colrev.process.Process):
             with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_pdf_get_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_pdf_get_script.py"))
 
         self.review_manager.settings.pdf_get.scripts.append(
             {"endpoint": "custom_pdf_get_script"}
@@ -489,7 +493,7 @@ class PDFRetrieval(colrev.process.Process):
             # Multiprocessing mixes logs of different records.
             # For better readability:
             self.review_manager.reorder_log(
-                IDs=[x["ID"] for x in retrieved_record_list]
+                ids=[x["ID"] for x in retrieved_record_list]
             )
 
             # Note: rename should be after copy.

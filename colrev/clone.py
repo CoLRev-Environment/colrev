@@ -12,7 +12,7 @@ import colrev.review_manager
 class Clone:
     """Clone CoLRev project from git remote repository"""
 
-    def __init__(self, git_url):
+    def __init__(self, *, git_url: str) -> None:
         self.git_url = git_url
         """The git remote URL"""
 
@@ -38,8 +38,7 @@ class Clone:
             path_to_register=self.local_path
         )
         local_index = colrev.environment.LocalIndex()
-        local_index.index_colrev_project(repo_source_path=str(self.local_path))
-        return
+        local_index.index_colrev_project(repo_source_path=self.local_path)
 
 
 if __name__ == "__main__":

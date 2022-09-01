@@ -1,17 +1,24 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import math
 import pkgutil
 import typing
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.process
 import colrev.record
 import colrev.settings
 from colrev.built_in import screen as built_in_screen
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Screen(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_screen": {
             "endpoint": built_in_screen.CoLRevCLIScreenEndpoint,
         },
@@ -19,20 +26,23 @@ class Screen(colrev.process.Process):
         # "conditional_screen": {"endpoint": built_in_screen.ConditionalScreenEndpoint},
     }
 
-    def __init__(self, *, review_manager, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.screen,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.screen_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.screen_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.screen.scripts,
         )
 
@@ -76,7 +86,9 @@ class Screen(colrev.process.Process):
 
         return list(self.review_manager.settings.screen.criteria.keys())
 
-    def set_screening_criteria(self, *, screening_criteria) -> None:
+    def set_screening_criteria(
+        self, *, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
+    ) -> None:
         self.review_manager.settings.screen.criteria = screening_criteria
         self.review_manager.save_settings()
 
@@ -101,13 +113,17 @@ class Screen(colrev.process.Process):
         )
         return screen_data
 
-    def add_criterion(self, *, criterion_to_add) -> None:
+    def add_criterion(self, *, criterion_to_add: str) -> None:
         """Add a screening criterion to the records and settings"""
 
         assert criterion_to_add.count(",") == 2
-        criterion_name, criterion_type, criterion_explanation = criterion_to_add.split(
-            ","
-        )
+        (
+            criterion_name,
+            criterion_type_str,
+            criterion_explanation,
+        ) = criterion_to_add.split(",")
+        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
+
         records = self.review_manager.dataset.load_records_dict()
 
         if criterion_name not in self.review_manager.settings.screen.criteria:
@@ -149,7 +165,7 @@ class Screen(colrev.process.Process):
             script_call="colrev screen",
         )
 
-    def delete_criterion(self, *, criterion_to_delete) -> None:
+    def delete_criterion(self, *, criterion_to_delete: str) -> None:
         """Delete a screening criterion from the records and settings"""
         records = self.review_manager.dataset.load_records_dict()
 
@@ -214,7 +230,7 @@ class Screen(colrev.process.Process):
             f"Creating screen splits for {create_split} researchers " f"({nrecs} each)"
         )
 
-        added: typing.List[str] = []
+        added: list[str] = []
         while len(added) < nrecs:
             added.append(next(data["items"])["ID"])
         screen_splits.append("colrev screen --split " + ",".join(added))
@@ -228,14 +244,14 @@ class Screen(colrev.process.Process):
             with open("custom_screen_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_screen_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_screen_script.py"))
 
         self.review_manager.settings.screen.scripts.append(
             {"endpoint": "custom_screen_script"}
         )
         self.review_manager.save_settings()
 
-    def main(self, *, split_str: str):
+    def main(self, *, split_str: str) -> None:
 
         # pylint: disable=duplicate-code
         split = []

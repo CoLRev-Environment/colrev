@@ -1,16 +1,18 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import difflib
 import io
 import pprint
 import re
 import textwrap
-import typing
 import unicodedata
 from copy import deepcopy
 from difflib import SequenceMatcher
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import ansiwrap
 import dictdiffer
@@ -31,6 +33,10 @@ from thefuzz import fuzz
 
 import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
+
+
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class Record:
@@ -66,7 +72,7 @@ class Record:
 
     # book, inbook: author <- editor
 
-    record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
+    record_field_inconsistencies: dict[str, list[str]] = {
         "article": ["booktitle"],
         "inproceedings": ["issue", "number", "journal"],
         "incollection": [],
@@ -105,7 +111,7 @@ class Record:
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-    def __init__(self, *, data: dict):
+    def __init__(self, *, data: dict) -> None:
         self.data = data
         """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
@@ -133,20 +139,19 @@ class Record:
 
         return ret_str
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.__dict__ == other.__dict__
 
-    def copy(self):
+    def copy(self) -> Record:
         return Record(data=deepcopy(self.data))
 
-    def copy_prep_rec(self):
+    def copy_prep_rec(self) -> PrepRecord:
         return PrepRecord(data=deepcopy(self.data))
 
-    def update_by_record(self, *, UPDATE):
-        self.data = UPDATE.copy_prep_rec().get_data()
+    def update_by_record(self, *, update_record: Record) -> None:
+        self.data = update_record.copy_prep_rec().get_data()
 
-    def get_diff(self, *, other_record) -> list:
-
+    def get_diff(self, *, other_record: Record) -> list:
         diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
         return diff
 
@@ -243,8 +248,7 @@ class Record:
     def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
 
-    def set_status(self, *, target_state) -> None:
-
+    def set_status(self, *, target_state: RecordState) -> None:
         if RecordState.md_prepared == target_state:
             if self.masterdata_is_complete():
                 try:
@@ -260,7 +264,6 @@ class Record:
                     pass
             else:
                 target_state = RecordState.md_needs_manual_preparation
-
         self.data["colrev_status"] = target_state
 
     def get_origins(self) -> list:
@@ -275,7 +278,7 @@ class Record:
 
         return origins
 
-    def shares_origins(self, *, other_record) -> bool:
+    def shares_origins(self, *, other_record: Record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
 
     def get_value(self, *, key: str, default=None):
@@ -297,17 +300,14 @@ class Record:
                 colrev_id = [cid.lstrip() for cid in self.data["colrev_id"].split(";")]
             elif isinstance(self.data["colrev_id"], list):
                 colrev_id = self.data["colrev_id"]
-
         return [c for c in colrev_id if len(c) > 20]
 
-    def has_overlapping_colrev_id(self, *, RECORD) -> bool:
-
+    def has_overlapping_colrev_id(self, *, record: Record) -> bool:
         own_colrev_ids = self.get_colrev_id()
-        other_colrev_ids = RECORD.get_colrev_id()
+        other_colrev_ids = record.get_colrev_id()
         if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
             if any(cid in own_colrev_ids for cid in other_colrev_ids):
                 return True
-
         return False
 
     def update_field(
@@ -328,7 +328,6 @@ class Record:
             self.add_masterdata_provenance(key=key, source=source, note=note)
         else:
             self.add_data_provenance(key=key, source=source, note=note)
-        return
 
     def rename_field(self, *, key: str, new_key: str) -> None:
         value = self.data[key]
@@ -343,10 +342,8 @@ class Record:
 
         self.remove_field(key=key)
 
-    def change_entrytype(self, *, new_entrytype):
-
+    def change_entrytype(self, *, new_entrytype: str) -> None:
         self.data["ENTRYTYPE"] = new_entrytype
-
         # TODO : reapply field requirements
 
     def remove_field(
@@ -376,14 +373,14 @@ class Record:
                     if key in self.data.get("colrev_data_provenance", ""):
                         del self.data["colrev_data_provenance"][key]
 
-    def add_colrev_ids(self, *, records: typing.List[dict]) -> None:
+    def add_colrev_ids(self, *, records: list[dict]) -> None:
         if "colrev_id" in self.data:
             if isinstance(self.data["colrev_id"], str):
                 print(f'Problem: colrev_id is str not list: {self.data["colrev_id"]}')
                 self.data["colrev_id"] = self.data["colrev_id"].split(";")
         for record in records:
             try:
-                colrev_id = self.create_colrev_id(alsoKnownAsRecord=record)
+                colrev_id = self.create_colrev_id(also_known_as_record=record)
                 if "colrev_id" not in self.data:
                     self.data["colrev_id"] = [colrev_id]
                 elif colrev_id not in self.data["colrev_id"]:
@@ -526,7 +523,7 @@ class Record:
             return True
         return False
 
-    def merge(self, *, merging_record, default_source: str) -> None:
+    def merge(self, *, merging_record: Record, default_source: str) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
 
@@ -612,7 +609,9 @@ class Record:
                 else:
                     self.update_field(key=key, value=str(val), source=source, note=note)
 
-    def fuse_best_field(self, *, merging_record, key, val, source, note) -> None:
+    def fuse_best_field(
+        self, *, merging_record: Record, key: str, val, source: str, note: str
+    ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
@@ -673,23 +672,12 @@ class Record:
                     for x in self.preferred_sources
                 ):
                     return merging_record.data["author"]
-
-            # self.review_manager.logger.debug(
-            #     f"best_author({default}, \n"
-            #     f"                                      {candidate}) = \n"
-            #     f"                                      {best_author}"
-            # )
             return record.data["author"]
 
         def select_best_pages(*, default: str, candidate: str) -> str:
             best_pages = default
             if "--" in candidate and "--" not in default:
                 best_pages = candidate
-
-            # self.review_manager.logger.debug(
-            #     f"best_pages({default}, {candidate}) = {best_pages}"
-            # )
-
             return best_pages
 
         def select_best_title(*, default: str, candidate: str) -> str:
@@ -703,13 +691,6 @@ class Record:
                 # catches cases when default is all upper or title case
                 if default_upper > candidate_upper:
                     best_title = candidate
-
-            # self.review_manager.logger.debug(
-            #     f"best_title({default},\n"
-            #     f"                                      {candidate}) = \n"
-            #     f"                                      {best_title}"
-            # )
-
             return best_title
 
         def select_best_journal(*, default: str, candidate: str) -> str:
@@ -726,13 +707,6 @@ class Record:
             # catches cases when default is all upper or title case
             if default_upper > candidate_upper:
                 best_journal = candidate
-
-            # self.review_manager.logger.debug(
-            #     f"best_journal({default}, \n"
-            #     f"                                      {candidate}) = \n"
-            #     f"                                      {best_journal}"
-            # )
-
             return best_journal
 
         if "author" == key:
@@ -818,59 +792,59 @@ class Record:
             # self.update_field(key=key, value=str(val), source=source, note=note)
 
     @classmethod
-    def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
-        record_a = RECORD_A.copy().get_data()
-        record_b = RECORD_B.copy().get_data()
+    def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
+        record_a_dict = record_a.copy().get_data()
+        record_b_dict = record_b.copy().get_data()
 
-        if "title" not in record_a:
-            record_a["title"] = ""
-        if "author" not in record_a:
-            record_a["author"] = ""
-        if "year" not in record_a:
-            record_a["year"] = ""
-        if "journal" not in record_a:
-            record_a["journal"] = ""
-        if "volume" not in record_a:
-            record_a["volume"] = ""
-        if "number" not in record_a:
-            record_a["number"] = ""
-        if "pages" not in record_a:
-            record_a["pages"] = ""
-        if "booktitle" not in record_a:
-            record_a["booktitle"] = ""
-        if "title" not in record_b:
-            record_b["title"] = ""
-        if "author" not in record_b:
-            record_b["author"] = ""
-        if "year" not in record_b:
-            record_b["year"] = ""
-        if "journal" not in record_b:
-            record_b["journal"] = ""
-        if "volume" not in record_b:
-            record_b["volume"] = ""
-        if "number" not in record_b:
-            record_b["number"] = ""
-        if "pages" not in record_b:
-            record_b["pages"] = ""
-        if "booktitle" not in record_b:
-            record_b["booktitle"] = ""
+        if "title" not in record_a_dict:
+            record_a_dict["title"] = ""
+        if "author" not in record_a_dict:
+            record_a_dict["author"] = ""
+        if "year" not in record_a_dict:
+            record_a_dict["year"] = ""
+        if "journal" not in record_a_dict:
+            record_a_dict["journal"] = ""
+        if "volume" not in record_a_dict:
+            record_a_dict["volume"] = ""
+        if "number" not in record_a_dict:
+            record_a_dict["number"] = ""
+        if "pages" not in record_a_dict:
+            record_a_dict["pages"] = ""
+        if "booktitle" not in record_a_dict:
+            record_a_dict["booktitle"] = ""
+        if "title" not in record_b_dict:
+            record_b_dict["title"] = ""
+        if "author" not in record_b_dict:
+            record_b_dict["author"] = ""
+        if "year" not in record_b_dict:
+            record_b_dict["year"] = ""
+        if "journal" not in record_b_dict:
+            record_b_dict["journal"] = ""
+        if "volume" not in record_b_dict:
+            record_b_dict["volume"] = ""
+        if "number" not in record_b_dict:
+            record_b_dict["number"] = ""
+        if "pages" not in record_b_dict:
+            record_b_dict["pages"] = ""
+        if "booktitle" not in record_b_dict:
+            record_b_dict["booktitle"] = ""
 
-        if "container_title" not in record_a:
-            record_a["container_title"] = (
-                record_a.get("journal", "")
-                + record_a.get("booktitle", "")
-                + record_a.get("series", "")
+        if "container_title" not in record_a_dict:
+            record_a_dict["container_title"] = (
+                record_a_dict.get("journal", "")
+                + record_a_dict.get("booktitle", "")
+                + record_a_dict.get("series", "")
             )
 
-        if "container_title" not in record_b:
-            record_b["container_title"] = (
-                record_b.get("journal", "")
-                + record_b.get("booktitle", "")
-                + record_b.get("series", "")
+        if "container_title" not in record_b_dict:
+            record_b_dict["container_title"] = (
+                record_b_dict.get("journal", "")
+                + record_b_dict.get("booktitle", "")
+                + record_b_dict.get("series", "")
             )
 
-        df_a = pd.DataFrame.from_dict([record_a])
-        df_b = pd.DataFrame.from_dict([record_b])
+        df_a = pd.DataFrame.from_dict([record_a_dict])
+        df_b = pd.DataFrame.from_dict([record_b_dict])
 
         return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
 
@@ -993,7 +967,9 @@ class Record:
             details = ""
         return {"score": similarity_score, "details": details}
 
-    def get_field_provenance(self, *, key, default_source="ORIGINAL") -> list:
+    def get_field_provenance(
+        self, *, key: str, default_source: str = "ORIGINAL"
+    ) -> list:
         default_note = ""
         note = default_note
         source = default_source
@@ -1016,8 +992,7 @@ class Record:
 
         return [source, note]
 
-    def add_masterdata_provenance_note(self, *, key, note):
-
+    def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         if key in self.data["colrev_masterdata_provenance"]:
@@ -1033,7 +1008,7 @@ class Record:
                 "note": note,
             }
 
-    def add_data_provenance_note(self, *, key, note):
+    def add_data_provenance_note(self, *, key: str, note: str) -> None:
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
         if key in self.data["colrev_data_provenance"]:
@@ -1049,7 +1024,9 @@ class Record:
                 "note": note,
             }
 
-    def add_masterdata_provenance(self, *, key, source, note: str = ""):
+    def add_masterdata_provenance(
+        self, *, key: str, source: str, note: str = ""
+    ) -> None:
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         md_p_dict = self.data["colrev_masterdata_provenance"]
@@ -1063,7 +1040,7 @@ class Record:
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
-    def add_provenance_all(self, *, source):
+    def add_provenance_all(self, *, source: str) -> None:
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         if "colrev_data_provenance" not in self.data:
@@ -1085,7 +1062,7 @@ class Record:
             else:
                 d_p_dict[key] = {"source": source, "note": ""}
 
-    def add_data_provenance(self, *, key, source, note: str = ""):
+    def add_data_provenance(self, *, key: str, source: str, note: str = "") -> None:
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
         md_p_dict = self.data["colrev_data_provenance"]
@@ -1098,7 +1075,7 @@ class Record:
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
-    def complete_provenance(self, *, source_info) -> bool:
+    def complete_provenance(self, *, source_info: str) -> bool:
         """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
@@ -1237,15 +1214,15 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, *, alsoKnownAsRecord: dict = None, assume_complete=False
+        self, *, also_known_as_record: dict = None, assume_complete=False
     ) -> str:
         """Returns the colrev_id of the Record.
-        If a alsoKnownAsRecord is provided, it returns the colrev_id of the
-        alsoKnownAsRecord (using the Record as the reference to decide whether
+        If a also_known_as_record is provided, it returns the colrev_id of the
+        also_known_as_record (using the Record as the reference to decide whether
         required fields are missing)"""
 
-        if alsoKnownAsRecord is None:
-            alsoKnownAsRecord = {}
+        if also_known_as_record is None:
+            also_known_as_record = {}
 
         def format_author_field(input_string: str) -> str:
             input_string = input_string.replace("\n", " ").replace("'", "")
@@ -1274,28 +1251,28 @@ class Record:
 
             return " ".join(author_list)
 
-        def get_container_title(*, record: dict) -> str:
+        def get_container_title(*, record_dict: dict) -> str:
             # Note: custom get_container_title for the colrev_id
 
             # school as the container title for theses
-            if record["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
-                container_title = record["school"]
+            if record_dict["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
+                container_title = record_dict["school"]
             # for technical reports
-            elif "techreport" == record["ENTRYTYPE"]:
-                container_title = record["institution"]
-            elif "inproceedings" == record["ENTRYTYPE"]:
-                container_title = record["booktitle"]
-            elif "article" == record["ENTRYTYPE"]:
-                container_title = record["journal"]
+            elif "techreport" == record_dict["ENTRYTYPE"]:
+                container_title = record_dict["institution"]
+            elif "inproceedings" == record_dict["ENTRYTYPE"]:
+                container_title = record_dict["booktitle"]
+            elif "article" == record_dict["ENTRYTYPE"]:
+                container_title = record_dict["journal"]
             else:
                 raise KeyError
             # TODO : TBD how to deal with the other ENTRYTYPES
-            # if "series" in record:
-            #     container_title += record["series"]
-            # if "url" in record and not any(
-            #     x in record for x in ["journal", "series", "booktitle"]
+            # if "series" in record_dict:
+            #     container_title += record_dict["series"]
+            # if "url" in record_dict and not any(
+            #     x in record_dict for x in ["journal", "series", "booktitle"]
             # ):
-            #     container_title += record["url"]
+            #     container_title += record_dict["url"]
 
             return container_title
 
@@ -1321,14 +1298,14 @@ class Record:
                 RecordState.md_imported,
                 RecordState.md_needs_manual_preparation,
             ]:
-                if len(alsoKnownAsRecord) != 0:
+                if len(also_known_as_record) != 0:
                     raise colrev_exceptions.NotEnoughDataToIdentifyException(
                         "cannot determine field requirements "
                         "(e.g., volume/number for journal articles)"
                     )
 
-        if len(alsoKnownAsRecord) == 0:
-            record = self.data
+        if len(also_known_as_record) == 0:
+            record_dict = self.data
         else:
             # pylint: disable=duplicate-code
             # TODO : need a better design for selecting required fields
@@ -1350,13 +1327,13 @@ class Record:
             ]
 
             missing_field_keys = [
-                f for f in required_fields_keys if f not in alsoKnownAsRecord
+                f for f in required_fields_keys if f not in also_known_as_record
             ]
             if len(missing_field_keys) > 0:
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
                     ",".join(missing_field_keys)
                 )
-            record = alsoKnownAsRecord
+            record_dict = also_known_as_record
 
         try:
 
@@ -1366,49 +1343,50 @@ class Record:
             # when updating the identifier function function
             # (this may look like an anomaly and be hard to identify)
             srep = "colrev_id1:"
-            if "article" == record["ENTRYTYPE"].lower():
+            if "article" == record_dict["ENTRYTYPE"].lower():
                 srep = robust_append(input_string=srep, to_append="a")
-            elif "inproceedings" == record["ENTRYTYPE"].lower():
+            elif "inproceedings" == record_dict["ENTRYTYPE"].lower():
                 srep = robust_append(input_string=srep, to_append="p")
             else:
                 srep = robust_append(
-                    input_string=srep, to_append=record["ENTRYTYPE"].lower()
+                    input_string=srep, to_append=record_dict["ENTRYTYPE"].lower()
                 )
             srep = robust_append(
-                input_string=srep, to_append=get_container_title(record=record)
+                input_string=srep,
+                to_append=get_container_title(record_dict=record_dict),
             )
-            if "article" == record["ENTRYTYPE"]:
+            if "article" == record_dict["ENTRYTYPE"]:
                 # Note: volume/number may not be required.
                 # TODO : how do we make sure that colrev_ids are not generated when
                 # volume/number are required?
                 srep = robust_append(
-                    input_string=srep, to_append=record.get("volume", "-")
+                    input_string=srep, to_append=record_dict.get("volume", "-")
                 )
                 srep = robust_append(
-                    input_string=srep, to_append=record.get("number", "-")
+                    input_string=srep, to_append=record_dict.get("number", "-")
                 )
-            srep = robust_append(input_string=srep, to_append=record["year"])
-            author = format_author_field(record["author"])
+            srep = robust_append(input_string=srep, to_append=record_dict["year"])
+            author = format_author_field(record_dict["author"])
             if "" == author.replace("-", ""):
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
                     "author field format error"
                 )
             srep = robust_append(input_string=srep, to_append=author)
-            srep = robust_append(input_string=srep, to_append=record["title"])
+            srep = robust_append(input_string=srep, to_append=record_dict["title"])
 
             # Note : pages not needed.
-            # pages = record.get("pages", "")
+            # pages = record_dict.get("pages", "")
             # srep = robust_append(srep, pages)
         except KeyError as exc:
             if "ENTRYTYPE" in str(exc):
-                print(f"Missing ENTRYTYPE in {record['ID']}")
+                print(f"Missing ENTRYTYPE in {record_dict['ID']}")
             raise colrev_exceptions.NotEnoughDataToIdentifyException(str(exc))
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 
         return srep
 
-    def prescreen_exclude(self, *, reason, print_warning: bool = False) -> None:
+    def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
         self.data["colrev_status"] = RecordState.rev_prescreen_excluded
 
         if (
@@ -1432,7 +1410,7 @@ class Record:
         for key in to_drop:
             self.remove_field(key=key)
 
-    def extract_text_by_page(self, *, pages: list = None, project_path) -> str:
+    def extract_text_by_page(self, *, pages: list = None, project_path: Path) -> str:
 
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
@@ -1460,7 +1438,7 @@ class Record:
                 pass
         return "".join(text_list)
 
-    def get_pages_in_pdf(self, *, project_path: Path):
+    def set_pages_in_pdf(self, *, project_path: Path) -> None:
 
         pdf_path = project_path / Path(self.data["file"])
         with open(pdf_path, "rb") as file:
@@ -1469,27 +1447,18 @@ class Record:
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
         self.data["pages_in_file"] = pages_in_file
 
-    def get_text_from_pdf(self, *, project_path: Path):
+    def set_text_from_pdf(self, *, project_path: Path) -> None:
 
         self.data["text_from_pdf"] = ""
         try:
-            self.get_pages_in_pdf(project_path=project_path)
+            self.set_pages_in_pdf(project_path=project_path)
             text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
             self.data["text_from_pdf"] = text
 
         except PDFSyntaxError:
-            # msg = (
-            #     f'{record["file"]}'.ljust(PAD, " ")
-            #     + "PDF reader error: check whether is a pdf"
-            # )
-            # self.review_manager.report_logger.error(msg)
-            # self.review_manager.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         except PDFTextExtractionNotAllowed:
-            # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
-            # self.review_manager.report_logger.error(msg)
-            # self.review_manager.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
@@ -1515,16 +1484,18 @@ class Record:
                 writer_cp.write(outfile)
 
     @classmethod
-    def get_colrev_pdf_id(cls, *, review_manager, pdf_path: Path) -> str:
-
+    def get_colrev_pdf_id(
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        pdf_path: Path,
+    ) -> str:
         pdf_hash_service = review_manager.get_pdf_hash_service()
-
         cpid1 = "cpid1:" + pdf_hash_service.get_pdf_hash(
             pdf_path=pdf_path,
             page_nr=1,
             hash_size=32,
         )
-
         return cpid1
 
     def import_provenance(self, *, source_identifier: str) -> None:
@@ -1613,7 +1584,13 @@ class Record:
                         key=defect_field, note="quality_defect"
                     )
 
-    def pdf_get_man(self, *, review_manager, filepath: Path, PAD: int = 40) -> None:
+    def pdf_get_man(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        filepath: Path = None,
+        PAD: int = 40,
+    ) -> None:
 
         if filepath is not None:
             self.set_status(target_state=RecordState.pdf_imported)
@@ -1652,7 +1629,9 @@ class Record:
         review_manager.dataset.update_record_by_id(new_record=self.get_data())
         review_manager.dataset.add_record_changes()
 
-    def pdf_man_prep(self, *, review_manager) -> None:
+    def pdf_man_prep(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
 
         self.set_status(target_state=RecordState.pdf_prepared)
         self.reset_pdf_provenance_notes()
@@ -1666,7 +1645,7 @@ class Record:
 
         review_manager.dataset.update_record_by_id(new_record=self.get_data())
         review_manager.dataset.add_changes(
-            path=str(review_manager.paths["RECORDS_FILE_RELATIVE"])
+            path=review_manager.paths["RECORDS_FILE_RELATIVE"]
         )
 
     def get_toc_key(self) -> str:
@@ -1705,8 +1684,8 @@ class Record:
         return tei_filename
 
     @classmethod
-    def print_diff_pair(cls, *, record_pair, keys):
-        def print_diff(change: typing.Tuple) -> str:
+    def print_diff_pair(cls, *, record_pair: list, keys: list) -> None:
+        def print_diff(change: tuple) -> str:
             diff = difflib.Differ()
             letters = list(diff.compare(change[1], change[0]))
             for i, letter in enumerate(letters):
@@ -1744,6 +1723,13 @@ class Record:
                 print(f"{key} : {line}")
                 prev_val = rec.get(key, "")
             print()
+
+    def cleanup_pdf_processing_fields(self) -> None:
+
+        if "text_from_pdf" in self.data:
+            del self.data["text_from_pdf"]
+        if "pages_in_file" in self.data:
+            del self.data["pages_in_file"]
 
 
 class PrepRecord(Record):
@@ -1902,7 +1888,7 @@ class PrepRecord(Record):
                 return 0
 
         similarity = Record.get_record_similarity(
-            RECORD_A=record, RECORD_B=retrieved_record
+            record_a=record, record_b=retrieved_record
         )
 
         return similarity
@@ -1952,7 +1938,7 @@ class PrepRecord(Record):
         # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
         return False
 
-    def abbreviate_container(self, *, min_len: int):
+    def abbreviate_container(self, *, min_len: int) -> None:
         if "journal" in self.data:
             self.data["journal"] = " ".join(
                 [x[:min_len] for x in self.data["journal"].split(" ")]
@@ -2028,7 +2014,9 @@ class PrepRecord(Record):
             RecordState.md_imported,
         ]
 
-    def update_metadata_status(self, *, review_manager):
+    def update_metadata_status(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
 
         self.check_potential_retracts()
 
@@ -2062,7 +2050,10 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
     def update_masterdata_provenance(
-        self, *, unprepared_record, review_manager
+        self,
+        *,
+        unprepared_record: Record,
+        review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
 
         if not self.masterdata_is_curated():
@@ -2138,7 +2129,7 @@ class PrepRecord(Record):
                 self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
         change = 1 - Record.get_record_similarity(
-            RECORD_A=self, RECORD_B=unprepared_record
+            record_a=self, record_b=unprepared_record
         )
         if change > 0.1:
             review_manager.report_logger.info(
@@ -2178,7 +2169,11 @@ class PrescreenRecord(Record):
         return ret_str
 
     def prescreen(
-        self, *, review_manager, prescreen_inclusion: bool, PAD: int = 40
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        prescreen_inclusion: bool,
+        PAD: int = 40,
     ) -> None:
 
         if prescreen_inclusion:
@@ -2186,7 +2181,7 @@ class PrescreenRecord(Record):
                 f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
             review_manager.dataset.replace_field(
-                IDs=[self.data["ID"]],
+                ids=[self.data["ID"]],
                 key="colrev_status",
                 val_str=str(RecordState.rev_prescreen_included),
             )
@@ -2195,7 +2190,7 @@ class PrescreenRecord(Record):
                 f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
             review_manager.dataset.replace_field(
-                IDs=[self.data["ID"]],
+                ids=[self.data["ID"]],
                 key="colrev_status",
                 val_str=str(RecordState.rev_prescreen_excluded),
             )
@@ -2210,7 +2205,7 @@ class ScreenRecord(PrescreenRecord):
     def screen(
         self,
         *,
-        review_manager,
+        review_manager: colrev.review_manager.ReviewManager,
         screen_inclusion: bool,
         screening_criteria: str,
         PAD: int = 40,
@@ -2274,11 +2269,11 @@ class RecordState(Enum):
     """Record synthesized"""
     # Note : TBD: rev_coded
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
     @classmethod
-    def get_post_md_processed_states(cls):
+    def get_post_md_processed_states(cls) -> list:
         return [
             str(RecordState.md_processed),
             str(RecordState.rev_prescreen_included),

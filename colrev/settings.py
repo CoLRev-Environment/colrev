@@ -34,7 +34,7 @@ class ReviewType(Enum):
     scientometric = "scientometric"
     peer_review = "peer_review"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
         )
@@ -72,7 +72,7 @@ class ProjectConfiguration:
     curated_masterdata: bool
     curated_fields: typing.List[str]
 
-    def __str__(self):
+    def __str__(self) -> str:
         # TODO : add more
         return f"Review ({self.review_type})"
 
@@ -88,7 +88,7 @@ class SearchType(Enum):
     PDFS = "PDFS"
     OTHER = "OTHER"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
 
@@ -104,7 +104,20 @@ class SearchSource:
     source_prep_scripts: list
     comment: typing.Optional[str]
 
-    def __str__(self):
+    def get_corresponding_bib_file(self) -> Path:
+        return self.filename.with_suffix(".bib")
+
+    def create_load_stats(self) -> None:
+        # pylint: disable=attribute-defined-outside-init
+        # Note : define outside init because the following
+        # attributes are temporary. They should not be
+        # saved to settings.json.
+        self.to_import = 0
+        self.imported_origins: typing.List[str] = []
+        self.len_before = 0
+        self.source_records_list: typing.List[typing.Dict] = []
+
+    def __str__(self) -> str:
         source_prep_scripts_string = ",".join(
             s["endpoint"] for s in self.source_prep_scripts
         )
@@ -133,7 +146,7 @@ class SearchSource:
 class SearchConfiguration:
     retrieve_forthcoming: bool
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f" - retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
@@ -142,7 +155,7 @@ class SearchConfiguration:
 
 @dataclass
 class LoadConfiguration:
-    def __str__(self):
+    def __str__(self) -> str:
         return " - TODO"
 
 
@@ -159,7 +172,7 @@ class PrepRound:
     similarity: float
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         short_list = [script["endpoint"] for script in self.scripts][:3]
         if len(self.scripts) > 3:
             short_list.append("...")
@@ -173,7 +186,7 @@ class PrepConfiguration:
 
     man_prep_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             " - prep_rounds: \n   - "
             + "\n   - ".join([str(prep_round) for prep_round in self.prep_rounds])
@@ -189,7 +202,7 @@ class DedupeConfiguration:
     same_source_merges: str  # TODO : "prevent" or "apply"
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f" - same_source_merges: {self.same_source_merges}\n"
             + " - "
@@ -205,7 +218,7 @@ class PrescreenConfiguration:
     explanation: str
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Scripts: " + ",".join([s["endpoint"] for s in self.scripts])
 
 
@@ -223,7 +236,7 @@ class PDFGetConfiguration:
 
     man_pdf_get_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
             + " - "
@@ -240,7 +253,7 @@ class PDFPrepConfiguration:
 
     man_pdf_prep_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + ",".join([s["endpoint"] for s in self.scripts])
 
 
@@ -252,7 +265,7 @@ class ScreenCriterionType(Enum):
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -262,7 +275,7 @@ class ScreenCriterion:
     comment: typing.Optional[str]
     criterion_type: ScreenCriterionType
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.criterion_type} {self.explanation} ({self.explanation})"
 
 
@@ -272,7 +285,7 @@ class ScreenConfiguration:
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + "\n - ".join([str(c) for c in self.criteria])
 
 
@@ -283,7 +296,7 @@ class ScreenConfiguration:
 class DataConfiguration:
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + "\n- ".join([s["endpoint"] for s in self.scripts])
 
 
@@ -302,7 +315,7 @@ class Configuration:
     screen: ScreenConfiguration
     data: DataConfiguration
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             str(self.project)
             + "\nSearch\n"

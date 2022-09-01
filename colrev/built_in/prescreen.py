@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import csv
 import os
 import pkgutil
@@ -13,6 +15,9 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
+
+if typing.TYPE_CHECKING:
+    import colrev.prescreen.Prescreen
 
 
 @dataclass
@@ -48,7 +53,9 @@ class ScopePrescreenEndpoint:
         "acknowledgment of reviewers",
     ]
 
-    def __init__(self, *, prescreen, settings):
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
         if "TimeScopeFrom" in settings:
             assert settings["TimeScopeFrom"] > 1900
         if "TimeScopeFrom" in settings:
@@ -63,7 +70,12 @@ class ScopePrescreenEndpoint:
             data_class=ScopePrescreenEndpointSettings, data=settings
         )
 
-    def run_prescreen(self, prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(
+        self,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
         def load_predatory_journals_beal() -> dict:
 
             predatory_journals = {}
@@ -159,14 +171,14 @@ class ScopePrescreenEndpoint:
                 record["colrev_status"]
                 == colrev.record.RecordState.rev_prescreen_excluded
             ):
-                prescreen.review_manager.report_logger.info(
+                prescreen_operation.review_manager.report_logger.info(
                     f' {record["ID"]}'.ljust(pad, " ")
                     + "Prescreen excluded (automatically)"
                 )
 
-        prescreen.review_manager.dataset.save_records_dict(records=records)
-        prescreen.review_manager.dataset.add_record_changes()
-        prescreen.review_manager.create_commit(
+        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
+        prescreen_operation.review_manager.dataset.add_record_changes()
+        prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (scope)",
             manual_author=False,
             script_call="colrev prescreen",
@@ -177,17 +189,24 @@ class ScopePrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
-    def __init__(self, *, prescreen, settings):
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_prescreen(self, prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(
+        self,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
 
         if not split:
             split = []
 
-        prescreen_data = prescreen.get_data()
+        prescreen_data = prescreen_operation.get_data()
         if len(split) > 0:
             stat_len = len(split)
         else:
@@ -195,20 +214,20 @@ class CoLRevCLIPrescreenEndpoint:
 
         i, quit_pressed = 0, False
 
-        if "" == prescreen.review_manager.settings.prescreen.explanation:
-            prescreen.review_manager.settings.prescreen.explanation = input(
+        if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
+            prescreen_operation.review_manager.settings.prescreen.explanation = input(
                 "Provide a short explanation of the prescreen "
                 "(which papers should be included?):"
             )
-            prescreen.review_manager.save_settings()
+            prescreen_operation.review_manager.save_settings()
 
         print("\n\nIn the prescreen, the following process is followed:\n")
-        print("   " + prescreen.review_manager.settings.prescreen.explanation)
+        print("   " + prescreen_operation.review_manager.settings.prescreen.explanation)
 
-        prescreen.review_manager.logger.info("Start prescreen")
+        prescreen_operation.review_manager.logger.info("Start prescreen")
 
         if 0 == stat_len:
-            prescreen.review_manager.logger.info("No records to prescreen")
+            prescreen_operation.review_manager.logger.info("No records to prescreen")
 
         for record in prescreen_data["items"]:
             if len(split) > 0:
@@ -235,25 +254,25 @@ class CoLRevCLIPrescreenEndpoint:
                     inclusion_decision_str = ret.replace("y", "yes").replace("n", "no")
 
             if quit_pressed:
-                prescreen.review_manager.logger.info("Stop prescreen")
+                prescreen_operation.review_manager.logger.info("Stop prescreen")
                 break
 
             inclusion_decision = "yes" == inclusion_decision_str
             prescreen_record.prescreen(
-                review_manager=prescreen.review_manager,
+                review_manager=prescreen_operation.review_manager,
                 prescreen_inclusion=inclusion_decision,
                 PAD=prescreen_data["PAD"],
             )
 
-        records = prescreen.review_manager.dataset.load_records_dict()
-        prescreen.review_manager.dataset.save_records_dict(records=records)
-        prescreen.review_manager.dataset.add_record_changes()
+        records = prescreen_operation.review_manager.dataset.load_records_dict()
+        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
+        prescreen_operation.review_manager.dataset.add_record_changes()
 
         if i < stat_len:  # if records remain for pre-screening
             if "y" != input("Create commit (y/n)?"):
                 return records
 
-        prescreen.review_manager.create_commit(
+        prescreen_operation.review_manager.create_commit(
             msg="Pre-screening (manual)", manual_author=True, saved_args=None
         )
         return records
@@ -265,7 +284,9 @@ class ASReviewPrescreenEndpoint:
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
 
-    def __init__(self, *, prescreen, settings):
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -282,7 +303,9 @@ class ASReviewPrescreenEndpoint:
                 "Please install it\n  pip install asreview"
             ) from exc
 
-    def export_for_asreview(self, prescreen, records, split) -> None:
+    def export_for_asreview(
+        self, prescreen: colrev.prescreen.Prescreen, records, split
+    ) -> None:
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 
@@ -314,7 +337,9 @@ class ASReviewPrescreenEndpoint:
         to_screen_df = pd.DataFrame.from_dict(records)
         to_screen_df.to_csv(self.export_filepath, quoting=csv.QUOTE_NONNUMERIC)
 
-    def import_from_asreview(self, prescreen, records):
+    def import_from_asreview(
+        self, prescreen_operation: colrev.prescreen.Prescreen, records: dict
+    ) -> None:
         def get_last_modified(input_paths) -> Path:
 
             latest_file = max(input_paths, key=os.path.getmtime)
@@ -401,12 +426,12 @@ class ASReviewPrescreenEndpoint:
                 )
                 if "1" == str(row["included"]):
                     prescreen_record.prescreen(
-                        review_manager=prescreen.review_manager,
+                        review_manager=prescreen_operation.review_manager,
                         prescreen_inclusion=True,
                     )
                 elif "0" == str(row["included"]):
                     prescreen_record.prescreen(
-                        review_manager=prescreen.review_manager,
+                        review_manager=prescreen_operation.review_manager,
                         prescreen_inclusion=False,
                     )
                 else:
@@ -415,23 +440,26 @@ class ASReviewPrescreenEndpoint:
         # TODO: add version
         saved_args = {"software": "asreview"}
 
-        prescreen.review_manager.create_commit(
+        prescreen_operation.review_manager.create_commit(
             msg="Pre-screening (manual, with asreview)",
             manual_author=True,
             script_call="colrev prescreen",
             saved_args=saved_args,
         )
 
-        return
-
-    def run_prescreen(self, prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(
+        self,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
 
         # there may be an optional setting to change the endpoint_path
 
         endpoint_path_empty = not any(Path(self.endpoint_path).iterdir())
 
         # Note : we always update/overwrite the to_screen csv
-        self.export_for_asreview(prescreen, records, split)
+        self.export_for_asreview(prescreen_operation, records, split)
 
         if endpoint_path_empty:
             start_screen_selected = True
@@ -465,11 +493,11 @@ class ASReviewPrescreenEndpoint:
                 print("\n\n\nCompleted prescreen. ")
 
         if "y" == input("Import prescreen from asreview [y,n]?"):
-            self.import_from_asreview(prescreen, records)
+            self.import_from_asreview(prescreen_operation, records)
 
-            if prescreen.review_manager.dataset.has_changes():
+            if prescreen_operation.review_manager.dataset.has_changes():
                 if "y" == input("create commit [y,n]?"):
-                    prescreen.review_manager.create_commit(
+                    prescreen_operation.review_manager.create_commit(
                         msg="Pre-screen (spreadsheets)",
                         manual_author=True,
                         script_call="colrev prescreen",
@@ -480,12 +508,19 @@ class ASReviewPrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
-    def __init__(self, *, prescreen, settings):
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_prescreen(self, prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(
+        self,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
         # TODO : conditions as a settings/parameter
         saved_args = locals()
         saved_args["include_all"] = ""
@@ -493,7 +528,7 @@ class ConditionalPrescreenEndpoint:
         for record in records.values():
             if record["colrev_status"] != colrev.record.RecordState.md_processed:
                 continue
-            prescreen.review_manager.report_logger.info(
+            prescreen_operation.review_manager.report_logger.info(
                 f' {record["ID"]}'.ljust(pad, " ")
                 + "Included in prescreen (automatically)"
             )
@@ -501,9 +536,9 @@ class ConditionalPrescreenEndpoint:
                 colrev_status=colrev.record.RecordState.rev_prescreen_included
             )
 
-        prescreen.review_manager.dataset.save_records_dict(records=records)
-        prescreen.review_manager.dataset.add_record_changes()
-        prescreen.review_manager.create_commit(
+        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
+        prescreen_operation.review_manager.dataset.add_record_changes()
+        prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
             script_call="colrev prescreen",
@@ -514,19 +549,26 @@ class ConditionalPrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
-    def __init__(self, *, prescreen, settings):
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     def export_table(
-        self, prescreen, records, split, export_table_format="csv"
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+        export_table_format="csv",
     ) -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
 
-        prescreen.review_manager.logger.info("Loading records for export")
+        prescreen_operation.review_manager.logger.info("Loading records for export")
 
         tbl = []
         for record in records.values():
@@ -580,19 +622,23 @@ class SpreadsheetPrescreenEndpoint:
         if "csv" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv("prescreen.csv", index=False, quoting=csv.QUOTE_ALL)
-            prescreen.review_manager.logger.info("Created prescreen.csv")
+            prescreen_operation.review_manager.logger.info("Created prescreen.csv")
 
         if "xlsx" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel("prescreen.xlsx", index=False, sheet_name="screen")
-            prescreen.review_manager.logger.info("Created prescreen.xlsx")
+            prescreen_operation.review_manager.logger.info("Created prescreen.xlsx")
 
     def import_table(
-        self, prescreen, records, import_table_path="prescreen.csv"
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        import_table_path: str = "prescreen.csv",
     ) -> None:
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
-            prescreen.review_manager.logger.error(
+            prescreen_operation.review_manager.logger.error(
                 f"Did not find {import_table_path} - exiting."
             )
             return
@@ -600,7 +646,7 @@ class SpreadsheetPrescreenEndpoint:
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        prescreen.review_manager.logger.warning("import_table not completed")
+        prescreen_operation.review_manager.logger.warning("import_table not completed")
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:
@@ -614,21 +660,28 @@ class SpreadsheetPrescreenEndpoint:
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_included
 
-        prescreen.review_manager.dataset.save_records_dict(records=records)
-        prescreen.review_manager.dataset.add_record_changes()
+        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
+        prescreen_operation.review_manager.dataset.add_record_changes()
         return
 
-    def run_prescreen(self, prescreen, records: dict, split: list) -> dict:
+    def run_prescreen(
+        self,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
 
         if "y" == input("create prescreen spreadsheet [y,n]?"):
-            self.export_table(prescreen, records, split)
+            self.export_table(
+                prescreen_operation=prescreen_operation, records=records, split=split
+            )
 
         if "y" == input("import prescreen spreadsheet [y,n]?"):
-            self.import_table(prescreen, records)
+            self.import_table(prescreen_operation=prescreen_operation, records=records)
 
-        if prescreen.review_manager.dataset.has_changes():
+        if prescreen_operation.review_manager.dataset.has_changes():
             if "y" == input("create commit [y,n]?"):
-                prescreen.review_manager.create_commit(
+                prescreen_operation.review_manager.create_commit(
                     msg="Pre-screen (spreadsheets)",
                     manual_author=True,
                     script_call="colrev prescreen",

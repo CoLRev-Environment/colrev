@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from PyPDF2 import PdfFileReader
@@ -10,30 +13,36 @@ import colrev.built_in.pdf_prep_man as built_in_pdf_prep_man
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class PDFPrepMan(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_pdf_prep_man": {
             "endpoint": built_in_pdf_prep_man.CoLRevCLIPDFManPrep,
         }
     }
 
-    def __init__(self, *, review_manager, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_prep_man,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_prep_man_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.pdf_prep_man_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
         )
 
@@ -192,10 +201,8 @@ class PDFPrepMan(colrev.process.Process):
             self.review_manager.logger.info("Load prep-records.bib")
 
             with open("prep-records.bib", encoding="utf8") as target_db:
-                records_changed_dict = (
-                    self.review_manager.REVIEW_DATASEt.load_records_dict(
-                        load_str=target_db.read()
-                    )
+                records_changed_dict = self.review_manager.dataset.load_records_dict(
+                    load_str=target_db.read()
                 )
                 records_changed = records_changed_dict.values()
 

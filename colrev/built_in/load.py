@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import docker
 import pandas as pd
@@ -11,25 +14,30 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 
+if TYPE_CHECKING:
+    import colrev.load.Load
+
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class BibPybtexLoader:
 
     supported_extensions = ["bib"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
         if source.filename.is_file():
             with open(source.filename, encoding="utf8") as bibtex_file:
-                records = loader.review_manager.dataset.load_records_dict(
+                records = load_operation.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
-            loader.check_bib_file(source, records)
+            load_operation.check_bib_file(source=source, records=records)
 
 
 class SpreadsheetLoadUtility:
@@ -113,12 +121,14 @@ class SpreadsheetLoadUtility:
 class CSVLoader:
     supported_extensions = ["csv"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         try:
             data = pd.read_csv(source.filename)
@@ -133,10 +143,10 @@ class CSVLoader:
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        loader.check_bib_file(source, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        loader.save_records(
-            records=records, corresponding_bib_file=source.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -145,19 +155,21 @@ class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         try:
             data = pd.read_excel(
                 source.filename, dtype=str
             )  # dtype=str to avoid type casting
         except pd.errors.ParserError:
-            loader.review_manager.logger.error(
+            load_operation.review_manager.logger.error(
                 f"Error: Not an xlsx file: {source.filename.name}"
             )
             return
@@ -167,10 +179,10 @@ class ExcelLoader:
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        loader.check_bib_file(source, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        loader.save_records(
-            records=records, corresponding_bib_file=source.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -179,18 +191,20 @@ class ZoteroTranslationLoader:
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
 
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
         self.zotero_translation_service = (
-            load.review_manager.get_zotero_translation_service()
+            load_operation.review_manager.get_zotero_translation_service()
         )
         self.zotero_translation_service.start_zotero_translators()
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         # pylint: disable=consider-using-with
 
@@ -212,7 +226,7 @@ class ZoteroTranslationLoader:
                 headers=headers,
                 json=zotero_format,
             )
-            records = loader.review_manager.dataset.load_records_dict(
+            records = load_operation.review_manager.dataset.load_records_dict(
                 load_str=ret.content.decode("utf-8")
             )
 
@@ -221,10 +235,10 @@ class ZoteroTranslationLoader:
                 f"Zotero import translators failed ({exc})"
             )
 
-        loader.check_bib_file(source, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        loader.save_records(
-            records=records, corresponding_bib_file=source.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -233,14 +247,16 @@ class MarkdownLoader:
 
     supported_extensions = ["md"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
-        grobid_service = loader.review_manager.get_grobid_service()
+        grobid_service = load_operation.review_manager.get_grobid_service()
 
         grobid_service.check_grobid_availability()
         with open(source.filename, encoding="utf8") as file:
@@ -263,12 +279,12 @@ class MarkdownLoader:
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        records = loader.review_manager.dataset.load_records_dict(load_str=data)
+        records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        loader.check_bib_file(source, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        loader.save_records(
-            records=records, corresponding_bib_file=source.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -277,12 +293,14 @@ class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
-    def __init__(self, *, load, settings):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, loader, source):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
         def bibutils_convert(script: str, data: str) -> str:
 
             if "xml2bib" == script:
@@ -336,10 +354,11 @@ class BibutilsLoader:
 
         data = bibutils_convert("xml2bib", data)
 
-        records = loader.review_manager.dataset.load_records_dict(load_str=data)
+        records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        loader.check_bib_file(source, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        loader.save_records(
-            records=records, corresponding_bib_file=source.corresponding_bib_file
+        load_operation.save_records(
+            load_operationrecords=records,
+            corresponding_bib_file=source.get_corresponding_bib_file(),
         )

@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import docker
 
@@ -8,9 +11,12 @@ import colrev.built_in.data as built_in_data
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Paper(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
@@ -73,8 +79,6 @@ class Paper(colrev.process.Process):
             )
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")
-
-        return
 
 
 if __name__ == "__main__":

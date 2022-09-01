@@ -1,5 +1,8 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import typing
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -7,10 +10,13 @@ import colrev.built_in.prep_man as built_in_prep_man
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class PrepMan(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_man_prep": {
             "endpoint": built_in_prep_man.CoLRevCLIManPrep,
         },
@@ -22,20 +28,23 @@ class PrepMan(colrev.process.Process):
         },
     }
 
-    def __init__(self, *, review_manager, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.prep_man,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.prep_man_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.prep_man_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.prep.man_prep_scripts,
         )
 
@@ -162,7 +171,7 @@ class PrepMan(colrev.process.Process):
         )
         return md_prep_man_data
 
-    def set_data(self, *, record_dict, pad: int = 40) -> None:
+    def set_data(self, *, record_dict: dict) -> None:
 
         record = colrev.record.PrepRecord(data=record_dict)
         record.set_masterdata_complete()

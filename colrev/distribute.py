@@ -1,17 +1,23 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.process
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Distribute(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
-            notify_state_transition_process=False,
+            notify_state_transition_operation=False,
         )
 
     def main(self, *, path_str: str, target: Path) -> None:
@@ -54,7 +60,7 @@ class Distribute(colrev.process.Process):
                                 load_str=target_bib.read()
                             )
                         )
-                        import_records = import_records_dict.values()
+                        import_records = list(import_records_dict.values())
                 else:
                     import_records = []
 
@@ -75,7 +81,9 @@ class Distribute(colrev.process.Process):
 
                 if 0 != len(import_records):
                     record_id = int(
-                        self.review_manager.dataset.get_next_id(target_bib_file)
+                        self.review_manager.dataset.get_next_id(
+                            bib_file=target_bib_file
+                        )
                     )
 
                 record["ID"] = f"{record_id}".rjust(10, "0")
@@ -84,10 +92,10 @@ class Distribute(colrev.process.Process):
 
                 import_records_dict = {r["ID"]: r for r in import_records}
                 self.review_manager.dataset.save_records_dict_to_file(
-                    import_records_dict, save_path=target_bib_file
+                    records=import_records_dict, save_path=target_bib_file
                 )
 
-                self.review_manager.dataset.add_changes(path=str(target_bib_file))
+                self.review_manager.dataset.add_changes(path=target_bib_file)
 
 
 if __name__ == "__main__":

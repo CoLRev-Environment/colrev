@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import logging
 import os
 import time
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -16,10 +19,12 @@ from tqdm import tqdm
 import colrev.built_in.pdf_prep
 import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
-import colrev.pdf_prep
 import colrev.process
 import colrev.record
 
+
+if TYPE_CHECKING:
+    import dedupe as dedupe_io
 
 # pylint: disable=too-many-arguments
 
@@ -96,7 +101,7 @@ class SimpleDedupeSettings:
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
 
-    def __init__(self, *, dedupe, settings):
+    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
 
         # Set default values (if necessary)
         if "merging_non_dup_threshold" not in settings:
@@ -112,7 +117,7 @@ class SimpleDedupeEndpoint:
         assert self.settings.merging_dup_threshold <= 1.0
 
     def __calculate_similarities_record(
-        self, *, dedupe, records_df: pd.DataFrame
+        self, *, dedupe_operation: colrev.dedupe.Dedupe, records_df: pd.DataFrame
     ) -> list:
 
         # Note: per definition, similarities are needed relative to the last row.
@@ -124,10 +129,10 @@ class SimpleDedupeEndpoint:
             sim_details = colrev.record.Record.get_similarity_detailed(
                 df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
             )
-            dedupe.review_manager.report_logger.debug(
+            dedupe_operation.review_manager.report_logger.debug(
                 f"Similarity score: {sim_details['score']}"
             )
-            dedupe.review_manager.report_logger.debug(sim_details["details"])
+            dedupe_operation.review_manager.report_logger.debug(sim_details["details"])
 
             records_df.iloc[base_record_i, sim_col] = sim_details["score"]
             records_df.iloc[base_record_i, details_col] = sim_details["details"]
@@ -138,9 +143,13 @@ class SimpleDedupeEndpoint:
         details_col = records_df.columns.get_loc("details")
         return records_df.iloc[:, [ck_col, sim_col, details_col]]
 
-    def append_merges(self, *, dedupe, batch_item: dict) -> dict:
+    def append_merges(
+        self, *, dedupe_operation: colrev.dedupe.Dedupe, batch_item: dict
+    ) -> dict:
 
-        dedupe.review_manager.logger.debug(f'append_merges {batch_item["record"]}')
+        dedupe_operation.review_manager.logger.debug(
+            f'append_merges {batch_item["record"]}'
+        )
 
         records_df = batch_item["queue"]
 
@@ -157,7 +166,7 @@ class SimpleDedupeEndpoint:
 
         # df to get_similarities for each other record
         records_df = self.__calculate_similarities_record(
-            dedupe=dedupe, records_df=records_df
+            dedupe_operation=dedupe_operation, records_df=records_df
         )
         # drop the first row (similarities are calculated relative to the last row)
         records_df = records_df.iloc[:-1, :]
@@ -173,7 +182,9 @@ class SimpleDedupeEndpoint:
         if max_similarity <= self.settings.merging_non_dup_threshold:
             # Note: if no other record has a similarity exceeding the threshold,
             # it is considered a non-duplicate (in relation to all other records)
-            dedupe.review_manager.logger.debug(f"max_similarity ({max_similarity})")
+            dedupe_operation.review_manager.logger.debug(
+                f"max_similarity ({max_similarity})"
+            )
             ret = {
                 "ID1": batch_item["record"],
                 "ID2": "NA",
@@ -188,18 +199,18 @@ class SimpleDedupeEndpoint:
         ):
 
             other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
-            dedupe.review_manager.logger.debug(
+            dedupe_operation.review_manager.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             )
             details = records_df.loc[records_df["similarity"].idxmax()]["details"]
-            dedupe.review_manager.logger.debug(details)
+            dedupe_operation.review_manager.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (
                 f'{batch_item["record"]} - {other_id}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
             )
-            dedupe.review_manager.report_logger.info(msg)
-            dedupe.review_manager.logger.info(msg)
+            dedupe_operation.review_manager.report_logger.info(msg)
+            dedupe_operation.review_manager.logger.info(msg)
             ret = {
                 "ID1": batch_item["record"],
                 "ID2": other_id,
@@ -212,17 +223,17 @@ class SimpleDedupeEndpoint:
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
             other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
-            dedupe.review_manager.logger.debug(
+            dedupe_operation.review_manager.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             )
             details = records_df.loc[records_df["similarity"].idxmax()]["details"]
-            dedupe.review_manager.logger.debug(details)
+            dedupe_operation.review_manager.logger.debug(details)
             msg = (
                 f'Dropped duplicate: {batch_item["record"]} (duplicate of {other_id})'
                 + f" (similarity: {max_similarity})\nDetails: {details}"
             )
-            dedupe.review_manager.report_logger.info(msg)
-            dedupe.review_manager.logger.info(msg)
+            dedupe_operation.review_manager.report_logger.info(msg)
+            dedupe_operation.review_manager.logger.info(msg)
             ret = {
                 "ID1": batch_item["record"],
                 "ID2": other_id,
@@ -232,7 +243,7 @@ class SimpleDedupeEndpoint:
         return ret
 
     # TODO : add similarity function as a parameter?
-    def run_dedupe(self, dedupe):
+    def run_dedupe(self, dedupe_operation: colrev.dedupe.Dedupe) -> None:
         """Pairwise identification of duplicates based on static similarity measure
 
         This procedure should only be used in small samples on which active learning
@@ -243,9 +254,9 @@ class SimpleDedupeEndpoint:
 
         saved_args = locals()
 
-        dedupe.review_manager.logger.info("Simple duplicate identification")
+        dedupe_operation.review_manager.logger.info("Simple duplicate identification")
 
-        dedupe.review_manager.logger.info(
+        dedupe_operation.review_manager.logger.info(
             "Pairwise identification of duplicates based on static similarity measure"
         )
 
@@ -253,7 +264,9 @@ class SimpleDedupeEndpoint:
         # records as "no-duplicate" by definition
         # (e.g., for non-duplicated sources marked in the sources)
 
-        record_state_list = dedupe.review_manager.dataset.get_record_state_list()
+        record_state_list = (
+            dedupe_operation.review_manager.dataset.get_record_state_list()
+        )
         ids_to_dedupe = [
             x["ID"]
             for x in record_state_list
@@ -270,15 +283,15 @@ class SimpleDedupeEndpoint:
             ]
         ]
         if len(ids_to_dedupe) > 20:
-            if not dedupe.review_manager.force_mode:
-                dedupe.review_manager.logger.warning(
+            if not dedupe_operation.review_manager.force_mode:
+                dedupe_operation.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
                     "Active learning algorithms may perform better:\n"
                     f"{colors.ORANGE}   colrev settings -m 'dedupe.scripts="
                     '[{"endpoint": "active_learning_training"},'
                     f'{{"endpoint": "active_learning_automated"}}]\'{colors.END}'
                 )
-                dedupe.review_manager.logger.info(
+                dedupe_operation.review_manager.logger.info(
                     "To use simple duplicate identification, use\n"
                     f"{colors.ORANGE}    colrev dedupe --force{colors.END}"
                 )
@@ -290,15 +303,15 @@ class SimpleDedupeEndpoint:
             "queue": processed_ids + ids_to_dedupe,
             "items_start": len(processed_ids),
         }
-        dedupe.review_manager.logger.debug(
-            dedupe.review_manager.p_printer.pformat(dedupe_data)
+        dedupe_operation.review_manager.logger.debug(
+            dedupe_operation.review_manager.p_printer.pformat(dedupe_data)
         )
 
         # the queue (order) matters for the incremental merging (make sure that each
         # additional record is compared to/merged with all prior records in
         # the queue)
 
-        records = dedupe.review_manager.dataset.load_records_dict()
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
         # there should be no semicolons in colrev_origin!
@@ -309,7 +322,7 @@ class SimpleDedupeEndpoint:
         ]
 
         records_df_queue = pd.DataFrame.from_dict(records_queue)
-        records = dedupe.prep_records(records_df=records_df_queue)
+        records = dedupe_operation.prep_records(records_df=records_df_queue)
         # dedupe.review_manager.p_printer.pprint(records.values())
         records_df = pd.DataFrame(records.values())
 
@@ -326,35 +339,32 @@ class SimpleDedupeEndpoint:
         dedupe_batch_results = []
         for item in batch_data:
             dedupe_batch_results.append(
-                self.append_merges(dedupe=dedupe, batch_item=item)
+                self.append_merges(dedupe_operation=dedupe_operation, batch_item=item)
             )
 
         # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
 
-        dedupe.apply_merges(results=dedupe_batch_results)
+        dedupe_operation.apply_merges(results=dedupe_batch_results)
 
-        dedupe.review_manager.logger.info("Completed application of merges")
+        dedupe_operation.review_manager.logger.info("Completed application of merges")
 
-        dedupe.potential_duplicates = [
+        potential_duplicates = [
             r for r in dedupe_batch_results if "potential_duplicate" == r["decision"]
         ]
 
-        records = dedupe.review_manager.dataset.load_records_dict()
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
 
         records_df_queue = pd.DataFrame.from_dict(records.values())
-        records = dedupe.prep_records(records_df=records_df_queue)
+        records = dedupe_operation.prep_records(records_df=records_df_queue)
         # dedupe.review_manager.p_printer.pprint(records.values())
         records_df = pd.DataFrame(records.values())
 
-        dedupe.dedupe_records = records_df
-
-        dedupe.review_manager.create_commit(
+        dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
             script_call="colrev dedupe",
             saved_args=saved_args,
         )
 
-        records_df = dedupe.dedupe_records
         keys = list(records_df.columns)
         for key_to_drop in [
             "ID",
@@ -367,7 +377,7 @@ class SimpleDedupeEndpoint:
                 keys.remove(key_to_drop)
 
         n_match, n_distinct = 0, 0
-        for potential_duplicate in dedupe.potential_duplicates:
+        for potential_duplicate in potential_duplicates:
             rec1 = records_df.loc[records_df["ID"] == potential_duplicate["ID1"], :]
             rec2 = records_df.loc[records_df["ID"] == potential_duplicate["ID2"], :]
 
@@ -377,7 +387,7 @@ class SimpleDedupeEndpoint:
                 record_pair, keys, True, "TODO", n_match, n_distinct, None
             )
 
-            # set dedupe.potential_duplicates
+            # set potential_duplicates
             if "y" == user_input:
                 potential_duplicate["decision"] = "duplicate"
                 n_match += 1
@@ -386,11 +396,11 @@ class SimpleDedupeEndpoint:
                 n_distinct += 1
 
         # apply:
-        dedupe.apply_merges(results=dedupe.potential_duplicates)
+        dedupe_operation.apply_merges(results=potential_duplicates)
 
         # add and commit
-        dedupe.review_manager.dataset.add_record_changes()
-        dedupe.review_manager.create_commit(
+        dedupe_operation.review_manager.dataset.add_record_changes()
+        dedupe_operation.review_manager.create_commit(
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
             script_call="colrev dedupe",
@@ -406,41 +416,17 @@ class SimpleDedupeEndpoint:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
-    def __init__(self, *, dedupe, settings):
+
+    deduper: dedupe_io.Deduper
+
+    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def apply_active_learning(self, *, dedupe, results, saved_args):
-
-        dedupe.apply_manual_deduplication_decisions(results=results)
-
-        # Using the examples we just labeled, train the deduper and learn
-        # blocking predicates
-        dedupe.deduper.train(recall=0.9, index_predicates=True)
-        # print(deduper.data_model._field_comparators)
-        # print(deduper.predicates)
-
-        # When finished, save our training to disk
-        with open(dedupe.training_file, "w", encoding="utf-8") as train_file:
-            dedupe.deduper.write_training(train_file)
-        dedupe.review_manager.dataset.add_changes(path=dedupe.training_file)
-
-        # Save our weights and predicates to disk.  If the settings file
-        # exists, we will skip all the training and learning next time we run
-        # this file.
-        with open(dedupe.settings_file, "wb") as sett_file:
-            dedupe.deduper.write_settings(sett_file)
-
-        dedupe.review_manager.create_commit(
-            msg="Labeling of duplicates (active learning)",
-            manual_author=True,
-            script_call="colrev dedupe",
-            saved_args=saved_args,
-        )
-        # deduper.cleanup_training()
-
-    def setup_active_learning_dedupe(self, *, dedupe, retrain: bool, in_memory: bool):
+    def setup_active_learning_dedupe(
+        self, *, dedupe_operation: colrev.dedupe.Dedupe, retrain: bool, in_memory: bool
+    ) -> None:
         """Prepare data for active learning setup"""
         # pylint: disable=import-outside-toplevel
         import dedupe as dedupe_io
@@ -454,14 +440,14 @@ class ActiveLearningDedupeTrainingEndpoint:
         if retrain:
             # Note : removing the training_file would be to start from scratch...
             # self.training_file.unlink(missing_ok=True)
-            dedupe.settings_file.unlink(missing_ok=True)
+            dedupe_operation.settings_file.unlink(missing_ok=True)
 
-        dedupe.review_manager.logger.info("Importing data ...")
+        dedupe_operation.review_manager.logger.info("Importing data ...")
 
         # Possible extension: in the read_data, we may want to append the colrev_status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
-        data_d = dedupe.read_data()
+        data_d = dedupe_operation.read_data()
 
         # to address memory issues, we select a sample from data_d
         # and feed it to prepare_training:
@@ -472,7 +458,7 @@ class ActiveLearningDedupeTrainingEndpoint:
             # the not-in-memory mode is used for duplicate clustering
             # otherwise, non-sampled duplicates will not be identified
             max_training_sample_size = min(3000, len(list(data_d.keys())))
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
             )
@@ -480,8 +466,8 @@ class ActiveLearningDedupeTrainingEndpoint:
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
-        dedupe.review_manager.logger.debug(
-            dedupe.review_manager.p_printer.pformat(data_d)
+        dedupe_operation.review_manager.logger.debug(
+            dedupe_operation.review_manager.p_printer.pformat(data_d)
         )
 
         # def title_corpus():
@@ -555,7 +541,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         # https://docs.dedupe.io/en/latest/Variable-definition.html
 
         # Create a new deduper object and pass our data model to it.
-        deduper = dedupe_io.Dedupe(fields)
+        self.deduper = dedupe_io.Dedupe(fields)
 
         # If we have training data saved from a previous run of dedupe,
         # look for it and load it in.
@@ -569,32 +555,65 @@ class ActiveLearningDedupeTrainingEndpoint:
                 f'[{{"endpoint":"simple_dedupe"}}]\'{colors.END}'
             )
 
-        if dedupe.training_file.is_file():
-            dedupe.review_manager.logger.info(
+        if dedupe_operation.training_file.is_file():
+            dedupe_operation.review_manager.logger.info(
                 "Reading pre-labeled training data from "
-                f"{dedupe.training_file.name} "
+                f"{dedupe_operation.training_file.name} "
                 "and preparing data"
             )
-            with open(dedupe.training_file, "rb") as file:
-                deduper.prepare_training(data_d, file)
+            with open(dedupe_operation.training_file, "rb") as file:
+                self.deduper.prepare_training(data_d, file)
         else:
-            deduper.prepare_training(data_d)
+            self.deduper.prepare_training(data_d)
 
         # TODO  input('del data_d - check memory')
         del data_d
 
-        dedupe.review_manager.logger.info("Reading and preparation completed.")
+        dedupe_operation.review_manager.logger.info(
+            "Reading and preparation completed."
+        )
 
-        dedupe.deduper = deduper
+    def apply_active_learning(
+        self, *, dedupe_operation: colrev.dedupe.Dedupe, results: list, saved_args: dict
+    ) -> None:
+
+        dedupe_operation.apply_manual_deduplication_decisions(results=results)
+
+        # Using the examples we just labeled, train the deduper and learn
+        # blocking predicates
+        self.deduper.train(recall=0.9, index_predicates=True)
+        # print(self.deduper.data_model._field_comparators)
+        # print(self.deduper.predicates)
+
+        # When finished, save our training to disk
+        with open(dedupe_operation.training_file, "w", encoding="utf-8") as train_file:
+            self.deduper.write_training(train_file)
+        dedupe_operation.review_manager.dataset.add_changes(
+            path=dedupe_operation.training_file
+        )
+
+        # Save our weights and predicates to disk.  If the settings file
+        # exists, we will skip all the training and learning next time we run
+        # this file.
+        with open(dedupe_operation.settings_file, "wb") as sett_file:
+            self.deduper.write_settings(sett_file)
+
+        dedupe_operation.review_manager.create_commit(
+            msg="Labeling of duplicates (active learning)",
+            manual_author=True,
+            script_call="colrev dedupe",
+            saved_args=saved_args,
+        )
+        # self.cleanup_training()
 
     def adapted_console_label(
         self,
         *,
-        dedupe,
+        dedupe_operation: colrev.dedupe.Dedupe,
         manual: bool,
         saved_args: dict,
         max_associations_to_check: int = 1000,
-    ):
+    ) -> None:
         """
         Train a matcher instance (Dedupe, RecordLink, or Gazetteer) from the cli.
         Example
@@ -613,27 +632,25 @@ class ActiveLearningDedupeTrainingEndpoint:
         # from dedupe._typing import TrainingExample
         from dedupe.core import unique
 
-        dedupe.review_manager.logger.info(
+        dedupe_operation.review_manager.logger.info(
             "Note: duplicate associations available in the LocalIndex "
             "are applied automatically."
         )
-        dedupe.review_manager.logger.info("Press Enter to start.")
+        dedupe_operation.review_manager.logger.info("Press Enter to start.")
         input()
 
-        local_index = dedupe.review_manager.get_local_index()
+        local_index = dedupe_operation.review_manager.get_local_index()
         finished = False
         use_previous = False
         keys = unique(
-            field.field for field in dedupe.deduper.data_model.primary_variables
+            field.field for field in self.deduper.data_model.primary_variables
         )
 
         buffer_len = 1  # Max number of previous operations
-        examples_buffer: typing.List[
-            typing.Tuple[
-                TrainingExample, typing.Literal["match", "distinct", "uncertain"]
-            ]
+        examples_buffer: list[
+            tuple[TrainingExample, typing.Literal["match", "distinct", "uncertain"]]
         ] = []
-        uncertain_pairs: typing.List[TrainingExample] = []
+        uncertain_pairs: list[TrainingExample] = []
 
         manual_dedupe_decision_list = []
 
@@ -645,16 +662,16 @@ class ActiveLearningDedupeTrainingEndpoint:
             else:
                 try:
                     if not uncertain_pairs:
-                        uncertain_pairs = dedupe.deduper.uncertain_pairs()
+                        uncertain_pairs = self.deduper.uncertain_pairs()
 
                     record_pair = uncertain_pairs.pop()
                 except IndexError:
                     break
 
-            n_match = len(dedupe.deduper.training_pairs["match"]) + sum(
+            n_match = len(self.deduper.training_pairs["match"]) + sum(
                 label == "match" for _, label in examples_buffer
             )
-            n_distinct = len(dedupe.deduper.training_pairs["distinct"]) + sum(
+            n_distinct = len(self.deduper.training_pairs["distinct"]) + sum(
                 label == "distinct" for _, label in examples_buffer
             )
             if (n_match + n_distinct) > max_associations_to_check:
@@ -699,7 +716,7 @@ class ActiveLearningDedupeTrainingEndpoint:
                     f"Marked as duplicate: {record_pair[0]['ID']} - "
                     + f"{record_pair[1]['ID']}"
                 )
-                dedupe.review_manager.report_logger.info(msg)
+                dedupe_operation.review_manager.report_logger.info(msg)
 
             elif user_input == "n":
                 if not manual:
@@ -721,7 +738,7 @@ class ActiveLearningDedupeTrainingEndpoint:
                     f"Marked as non-duplicate: {record_pair[0]['ID']}"
                     + f" - {record_pair[1]['ID']}"
                 )
-                dedupe.review_manager.report_logger.info(msg)
+                dedupe_operation.review_manager.report_logger.info(msg)
 
             elif user_input == "u":
                 examples_buffer.insert(0, (record_pair, "uncertain"))
@@ -738,13 +755,13 @@ class ActiveLearningDedupeTrainingEndpoint:
                 if label in {"distinct", "match"}:
                     examples: TrainingData = {"distinct": [], "match": []}
                     examples[label].append(record_pair)
-                    dedupe.deduper.mark_pairs(examples)
+                    self.deduper.mark_pairs(examples)
 
         for record_pair, label in examples_buffer:
             if label in ["distinct", "match"]:
                 examples = {"distinct": [], "match": []}
                 examples[label].append(record_pair)
-                dedupe.deduper.mark_pairs(examples)
+                self.deduper.mark_pairs(examples)
 
         # Note : for debugging:
         # import csv
@@ -756,10 +773,12 @@ class ActiveLearningDedupeTrainingEndpoint:
 
         # Apply and commit
         self.apply_active_learning(
-            dedupe=dedupe, results=manual_dedupe_decision_list, saved_args=saved_args
+            dedupe_operation=dedupe_operation,
+            results=manual_dedupe_decision_list,
+            saved_args=saved_args,
         )
 
-    def run_dedupe(self, dedupe):
+    def run_dedupe(self, dedupe_operation: colrev.dedupe.Dedupe) -> None:
 
         # def run_active_learning_dedupe(
         #     *,
@@ -776,19 +795,21 @@ class ActiveLearningDedupeTrainingEndpoint:
         in_memory = True
 
         self.setup_active_learning_dedupe(
-            dedupe=dedupe, retrain=False, in_memory=in_memory
+            dedupe_operation=dedupe_operation, retrain=False, in_memory=in_memory
         )
 
-        # if dedupe.skip_training and dedupe.settings_file.is_file():
-        #     dedupe.review_manager.report_logger\
-        #       .info(f"Reading model from {dedupe.settings_file.name}")
-        #     with open(dedupe.settings_file, "rb") as f:
-        #         deduper = dedupe.StaticDedupe(f)
+        # if dedupe_operation.skip_training and dedupe_operation.settings_file.is_file():
+        #     dedupe_operation.review_manager.report_logger\
+        #       .info(f"Reading model from {dedupe_operation.settings_file.name}")
+        #     with open(dedupe_operation.settings_file, "rb") as f:
+        #         deduper = dedupe_operation.StaticDedupe(f)
         # else:
 
         # Active learning
         dedupe_io.console_label = self.adapted_console_label
-        dedupe_io.console_label(dedupe=dedupe, manual=True, saved_args=saved_args)
+        dedupe_io.console_label(
+            dedupe_operation=dedupe_operation, manual=True, saved_args=saved_args
+        )
 
         # Cluster remaining tuples
         # self.cluster_tuples(
@@ -806,7 +827,7 @@ class ActiveLearningSettings:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
-    def __init__(self, *, dedupe, settings):
+    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
 
         # Set default values (if necessary)
         if "merge_threshold" not in settings:
@@ -821,7 +842,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
         assert self.settings.partition_threshold >= 0.0
         assert self.settings.partition_threshold <= 1.0
 
-    def run_dedupe(self, dedupe):
+    def run_dedupe(self, dedupe_operation: colrev.dedupe.Dedupe) -> None:
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
         # pylint: disable=import-outside-toplevel
@@ -834,7 +855,9 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
         # Setting in-memory mode depending on system ram
 
-        record_state_list = dedupe.review_manager.dataset.get_record_state_list()
+        record_state_list = (
+            dedupe_operation.review_manager.dataset.get_record_state_list()
+        )
         sample_size = len(record_state_list)
 
         ram = psutil.virtual_memory().total
@@ -845,13 +868,13 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
         saved_args: dict = {}
 
-        with open(dedupe.settings_file, "rb") as sett_file:
+        with open(dedupe_operation.settings_file, "rb") as sett_file:
             deduper = dedupe_io.StaticDedupe(sett_file, num_cores=4)
 
-        dedupe.review_manager.logger.info("Clustering duplicates...")
+        dedupe_operation.review_manager.logger.info("Clustering duplicates...")
 
-        data_d = dedupe.read_data()
-        dedupe.review_manager.logger.info(
+        data_d = dedupe_operation.read_data()
+        dedupe_operation.review_manager.logger.info(
             f"Number of records (before): {len(data_d.items())}"
         )
 
@@ -862,7 +885,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
         saved_args.update(partition_threshold=str(self.settings.partition_threshold))
 
         if in_memory:
-            dedupe.review_manager.report_logger.info(
+            dedupe_operation.review_manager.report_logger.info(
                 f"set partition_threshold: {self.settings.partition_threshold}"
             )
 
@@ -873,16 +896,16 @@ class ActiveLearningDedupeAutomatedEndpoint:
             # from dedupe.core import BlockingError
             # except BlockingError:
 
-            #     dedupe.review_manager.logger.info(
+            #     dedupe_operation.review_manager.logger.info(
             #         "No duplicates found (please check carefully)"
             #     )
-            #     dedupe.apply_merges(results=[], remaining_non_dupe=True)
-            #     dedupe.review_manager.create_commit(
+            #     dedupe_operation.apply_merges(results=[], remaining_non_dupe=True)
+            #     dedupe_operation.review_manager.create_commit(
             #         msg="Merge duplicate records (no duplicates detected)",
             #         script_call="colrev dedupe",
             #         saved_args=saved_args,
             #     )
-            #     dedupe.review_manager.logger.info(
+            #     dedupe_operation.review_manager.logger.info(
             #         "If there are errors, it could be necessary to remove the "
             #         ".records_dedupe_training.json to train a fresh dedupe model."
             #     )
@@ -959,7 +982,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             con.close()
             dedupe_db.unlink(missing_ok=True)
 
-        dedupe.review_manager.report_logger.info(
+        dedupe_operation.review_manager.report_logger.info(
             f"Number of duplicate sets {len(clustered_dupes)}"
         )
         # Results
@@ -986,10 +1009,10 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
         auto_dedupe = []
         id_list = []
-        dedupe.review_manager.report_logger.info(
+        dedupe_operation.review_manager.report_logger.info(
             f"set merge_threshold: {self.settings.merge_threshold}"
         )
-        dedupe.review_manager.logger.info(
+        dedupe_operation.review_manager.logger.info(
             f"set merge_threshold: {self.settings.merge_threshold}"
         )
         for dedupe_decision in dedupe_decision_list:
@@ -1009,11 +1032,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
                     for dupe_rec in dedupe_decision["records"]:
 
-                        orig_propagated = dedupe.review_manager.dataset.propagated_ID(
-                            ID=orig_rec
+                        orig_propagated = (
+                            dedupe_operation.review_manager.dataset.propagated_id(
+                                record_id=orig_rec
+                            )
                         )
-                        dupe_propagated = dedupe.review_manager.dataset.propagated_ID(
-                            ID=dupe_rec
+                        dupe_propagated = (
+                            dedupe_operation.review_manager.dataset.propagated_id(
+                                record_id=dupe_rec
+                            )
                         )
 
                         if not orig_propagated and not dupe_propagated:
@@ -1032,7 +1059,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
                             if orig_propagated and dupe_propagated:
                                 # both_IDs_propagated
-                                dedupe.review_manager.logger.error(
+                                dedupe_operation.review_manager.logger.error(
                                     f"Both IDs propagated: {orig_rec}, {dupe_rec}"
                                 )
                                 continue
@@ -1057,10 +1084,10 @@ class ActiveLearningDedupeAutomatedEndpoint:
                                     }
                                 )
 
-        dedupe.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
+        dedupe_operation.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
 
-        dedupe.review_manager.reorder_log(
-            IDs=id_list, criterion="descending_thresholds"
+        dedupe_operation.review_manager.reorder_log(
+            ids=id_list, criterion="descending_thresholds"
         )
 
         # Export excels for validation
@@ -1202,7 +1229,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             # to adjust column widths in ExcelWriter:
             # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
             duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
-            duplicates_df.to_excel(dedupe.dupe_file, index=False)
+            duplicates_df.to_excel(dedupe_operation.dupe_file, index=False)
 
             if len(collected_non_duplicates) > 0:
                 non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
@@ -1238,15 +1265,17 @@ class ActiveLearningDedupeAutomatedEndpoint:
                 non_duplicates_df = non_duplicates_df.style.apply(
                     highlight_cells, axis=None
                 )
-                non_duplicates_df.to_excel(dedupe.non_dupe_file_xlsx, index=False)
+                non_duplicates_df.to_excel(
+                    dedupe_operation.non_dupe_file_xlsx, index=False
+                )
 
-        dedupe.review_manager.create_commit(
+        dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records (based on active-learning clusters)",
             script_call="colrev dedupe",
             saved_args=saved_args,
         )
 
-        dedupe.review_manager.logger.info(
+        dedupe_operation.review_manager.logger.info(
             "Successfully completed the deduplication. Please check the "
             "duplicates_to_validate.xlsx and non_duplicates_to_validate.xlsx for "
             'potential errors.\nTo fix them, mark them in the "error" column and '
@@ -1254,19 +1283,21 @@ class ActiveLearningDedupeAutomatedEndpoint:
         )
 
         if Path("same_source_merges.txt").is_file():
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 "Detected and prevented same-source merges. Please check potential"
                 "duplicates in same_source_merges.txt"
             )
 
-        info = dedupe.get_info()
+        info = dedupe_operation.get_info()
         if len(info["same_source_merges"]) > 0:
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 f"\n{colors.ORANGE}Same source merges to check:{colors.END}"
                 "\n- ".join(info["same_source_merges"]) + "\n"
             )
         else:
-            dedupe.review_manager.logger.info("\nNo same-origin merges detected.")
+            dedupe_operation.review_manager.logger.info(
+                "\nNo same-origin merges detected."
+            )
 
 
 @dataclass
@@ -1281,14 +1312,14 @@ class CurationDedupeEndpoint:
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
-    def __init__(self, *, dedupe, settings):
+    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
         # TODO : the settings could be used
         # to select the specific files/grouping properties?!
         # -> see selected_source.
         # TODO : validate whether selected_source is in SOURCES.filenames
         self.settings = from_dict(data_class=CurationDedupeSettings, data=settings)
 
-    def run_dedupe(self, dedupe):
+    def run_dedupe(self, dedupe_operation: colrev.dedupe.Dedupe) -> None:
         def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
 
             author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
@@ -1349,7 +1380,7 @@ class CurationDedupeEndpoint:
 
             return similarity_array, tuples_to_process
 
-        def get_toc_items(*, records_list) -> list:
+        def get_toc_items(*, records_list: list) -> list:
             toc_items = []
             for record in records_list:
                 # if record["colrev_status"] in [
@@ -1378,7 +1409,7 @@ class CurationDedupeEndpoint:
             toc_items = list(map(dict, temp))  # type: ignore
             return toc_items
 
-        records = dedupe.review_manager.dataset.load_records_dict()
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
 
         for record in records.values():
             if "container_title" not in record:
@@ -1408,24 +1439,27 @@ class CurationDedupeEndpoint:
         # (which moves to md_processed first)
         first_source = (
             self.settings.selected_source
-            == dedupe.review_manager.settings.dedupe.scripts[0]["selected_source"]
+            == dedupe_operation.review_manager.settings.dedupe.scripts[0][
+                "selected_source"
+            ]
         )
 
         # warn if not all SOURCE.filenames are included in a dedupe script
         if first_source:
             available_sources = [
-                str(s.filename) for s in dedupe.review_manager.settings.sources
+                str(s.filename)
+                for s in dedupe_operation.review_manager.settings.sources
             ]
             dedupe_sources = [
                 s["selected_source"]
-                for s in dedupe.review_manager.settings.dedupe.scripts
+                for s in dedupe_operation.review_manager.settings.dedupe.scripts
                 if "curation_full_outlet_dedupe" == s["endpoint"]
             ]
             sources_missing_in_dedupe = [
                 x for x in available_sources if x not in dedupe_sources
             ]
             if len(sources_missing_in_dedupe) > 0:
-                dedupe.review_manager.logger.warning(
+                dedupe_operation.review_manager.logger.warning(
                     f"{colors.ORANGE}Sources missing in "
                     "dedupe.scripts.curation_full_outlet_dedupe: "
                     f"{','.join(sources_missing_in_dedupe)}{colors.END}"
@@ -1433,17 +1467,18 @@ class CurationDedupeEndpoint:
                 if "y" == input("Add sources [y,n]?"):
                     for source_missing_in_dedupe in sources_missing_in_dedupe:
                         penultimate_position = (
-                            len(dedupe.review_manager.settings.dedupe.scripts) - 1
+                            len(dedupe_operation.review_manager.settings.dedupe.scripts)
+                            - 1
                         )
                         dedupe_script_to_add = {
                             "endpoint": "curation_full_outlet_dedupe",
                             "selected_source": source_missing_in_dedupe,
                         }
-                        dedupe.review_manager.settings.dedupe.scripts.insert(
+                        dedupe_operation.review_manager.settings.dedupe.scripts.insert(
                             penultimate_position, dedupe_script_to_add
                         )
-                        dedupe.review_manager.save_settings()
-                        dedupe.review_manager.logger.info(
+                        dedupe_operation.review_manager.save_settings()
+                        dedupe_operation.review_manager.logger.info(
                             f"{colors.GREEN}Added {source_missing_in_dedupe} "
                             f"to dedupe.scripts{colors.END}"
                         )
@@ -1463,7 +1498,7 @@ class CurationDedupeEndpoint:
 
         if first_source:
 
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 f"Starting with records from {self.settings.selected_source}"
                 " (setting to md_processed as the initial records)"
             )
@@ -1522,14 +1557,14 @@ class CurationDedupeEndpoint:
 
             for record in records.values():
                 record.pop("container_title")
-            dedupe.review_manager.dataset.save_records_dict(records=records)
-            dedupe.review_manager.dataset.add_record_changes()
+            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+            dedupe_operation.review_manager.dataset.add_record_changes()
 
-            if dedupe.review_manager.dataset.has_changes():
-                dedupe.review_manager.logger.info(
+            if dedupe_operation.review_manager.dataset.has_changes():
+                dedupe_operation.review_manager.logger.info(
                     f"{colors.GREEN}Commit changes{colors.END}"
                 )
-                dedupe.review_manager.create_commit(
+                dedupe_operation.review_manager.create_commit(
                     msg=(
                         "Merge duplicate records (set unique records from "
                         f"{self.settings.selected_source} "
@@ -1539,16 +1574,16 @@ class CurationDedupeEndpoint:
                     saved_args={},
                 )
             else:
-                dedupe.review_manager.logger.info(
+                dedupe_operation.review_manager.logger.info(
                     f"{colors.GREEN}No duplicates found{colors.END}"
                 )
 
             return
 
-        decision_list: typing.List[typing.Dict] = []
+        decision_list: list[dict] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
-        dedupe.review_manager.logger.info(
+        dedupe_operation.review_manager.logger.info(
             "Identify duplicates between "
             f"curated_records and {self.settings.selected_source} (within toc_items)"
         )
@@ -1556,7 +1591,7 @@ class CurationDedupeEndpoint:
         pdf_source = False
         relevant_source = [
             s
-            for s in dedupe.review_manager.settings.sources
+            for s in dedupe_operation.review_manager.settings.sources
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
@@ -1565,7 +1600,7 @@ class CurationDedupeEndpoint:
             )
 
         if not pdf_source:
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 "Processing as a non-pdf source (matching exact colrev_ids)"
             )
 
@@ -1598,7 +1633,7 @@ class CurationDedupeEndpoint:
                             overlapping_colrev_ids = colrev.record.Record(
                                 data=new_same_toc_record
                             ).has_overlapping_colrev_id(
-                                RECORD=colrev.record.Record(data=rec2)
+                                record=colrev.record.Record(data=rec2)
                             )
                             if overlapping_colrev_ids:
                                 decision_list.append(
@@ -1612,14 +1647,14 @@ class CurationDedupeEndpoint:
                                 input(decision_list)
 
         else:
-            dedupe.review_manager.logger.info("Processing as a pdf source")
+            dedupe_operation.review_manager.logger.info("Processing as a pdf source")
 
-            pdf_preparation = colrev.pdf_prep.PDFPreparation(
-                review_manager=dedupe.review_manager
+            pdf_prep_operation = (
+                dedupe_operation.review_manager.get_pdf_prep_operation()
             )
             pdf_metadata_validation = (
                 colrev.built_in.pdf_prep.PDFMetadataValidationEndpoint(
-                    pdf_prep=pdf_preparation,
+                    pdf_prep_operation=pdf_prep_operation,
                     settings={"name": "dedupe_pdf_md_validation"},
                 )
             )
@@ -1692,14 +1727,14 @@ class CurationDedupeEndpoint:
                     record = colrev.record.Record(data=updated_record)
                     validation_info = (
                         pdf_metadata_validation.validates_based_on_metadata(
-                            review_manager=dedupe.review_manager,
+                            review_manager=dedupe_operation.review_manager,
                             record=record,
                         )
                     )
 
                     overlapping_colrev_ids = colrev.record.Record(
                         data=rec1
-                    ).has_overlapping_colrev_id(RECORD=colrev.record.Record(data=rec2))
+                    ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
                     if validation_info["validates"] or overlapping_colrev_ids:
 
                         # Note : make sure that we merge into the CURATED record
@@ -1729,39 +1764,37 @@ class CurationDedupeEndpoint:
         # Note : dedupe.apply_merges reloads the records and
         # thereby discards previous changes
         if len(decision_list) > 0:
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 f"{colors.GREEN}Duplicates identified{colors.END}"
             )
             print(decision_list)
-            dedupe.apply_merges(results=decision_list)
+            dedupe_operation.apply_merges(results=decision_list)
 
-            dedupe.review_manager.dataset.add_record_changes()
+            dedupe_operation.review_manager.dataset.add_record_changes()
 
-            dedupe.review_manager.create_commit(
+            dedupe_operation.review_manager.create_commit(
                 msg="Merge duplicate records",
                 script_call="colrev dedupe",
                 saved_args={},
             )
         else:
-            dedupe.review_manager.logger.info(
+            dedupe_operation.review_manager.logger.info(
                 f"{colors.GREEN}No merge-candidates identified between sets{colors.END}"
             )
-
-        return
 
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class CurationMissingDedupeEndpoint:
-    def __init__(self, *, dedupe, settings):
+    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_dedupe(self, dedupe):
+    def run_dedupe(self, dedupe_operation: colrev.dedupe.Dedupe) -> None:
 
         # export sets of non-merged records
         # (and merged records a different xlsx for easy sort/merge)
-        records = dedupe.review_manager.dataset.load_records_dict()
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
 
         # Note : this script is necessary because the active learning is insufficient:
         # the automated ML-deduplication still has a certain error rate
@@ -1824,7 +1857,7 @@ class CurationMissingDedupeEndpoint:
                 same_toc_rec[
                     "similarity"
                 ] = colrev.record.PrepRecord.get_record_similarity(
-                    RECORD_A=colrev.record.Record(data=same_toc_rec), RECORD_B=record
+                    record_a=colrev.record.Record(data=same_toc_rec), record_b=record
                 )
 
             same_toc_recs = sorted(
@@ -1880,10 +1913,10 @@ class CurationMissingDedupeEndpoint:
         if len(decision_list) > 0:
             print("Duplicates identified:")
             print(decision_list)
-            dedupe.apply_merges(results=decision_list)
+            dedupe_operation.apply_merges(results=decision_list)
 
         if len(records_to_prepare) > 0:
-            records = dedupe.review_manager.dataset.load_records_dict()
+            records = dedupe_operation.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in records_to_prepare:
                     record = colrev.record.Record(data=record_dict)
@@ -1891,20 +1924,20 @@ class CurationMissingDedupeEndpoint:
                         target_state=colrev.record.RecordState.md_needs_manual_preparation
                     )
 
-            dedupe.review_manager.dataset.save_records_dict(records=records)
+            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
 
         if len(decision_list) > 0 or len(records_to_prepare) > 0:
 
-            dedupe.review_manager.dataset.add_record_changes()
+            dedupe_operation.review_manager.dataset.add_record_changes()
 
-            dedupe.review_manager.create_commit(
+            dedupe_operation.review_manager.create_commit(
                 msg="Merge duplicate records",
                 script_call="colrev dedupe",
                 saved_args={},
             )
 
         if len(add_records_to_md_processed_list) > 0:
-            records = dedupe.review_manager.dataset.load_records_dict()
+            records = dedupe_operation.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in add_records_to_md_processed_list:
                     if record_dict["colrev_status"] in [
@@ -1917,14 +1950,14 @@ class CurationMissingDedupeEndpoint:
                             target_state=colrev.record.RecordState.md_processed
                         )
 
-            dedupe.review_manager.dataset.save_records_dict(records=records)
-            dedupe.review_manager.dataset.add_record_changes()
+            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+            dedupe_operation.review_manager.dataset.add_record_changes()
 
             input("Edit records (if any) and press Enter")
 
-            dedupe.review_manager.dataset.add_record_changes()
+            dedupe_operation.review_manager.dataset.add_record_changes()
 
-            dedupe.review_manager.create_commit(
+            dedupe_operation.review_manager.create_commit(
                 msg="Add non-duplicate records",
                 script_call="colrev dedupe",
                 saved_args={},
@@ -1933,12 +1966,12 @@ class CurationMissingDedupeEndpoint:
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(SOURCE.filename).replace("search/", "")
-            for SOURCE in dedupe.review_manager.settings.sources
+            str(source.filename).replace("search/", "")
+            for source in dedupe_operation.review_manager.settings.sources
         ]
 
         # Note : reload to generate correct statistics
-        records = dedupe.review_manager.dataset.load_records_dict()
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
         for source_origin in source_origins:
 
             selected_records = [
@@ -1954,14 +1987,14 @@ class CurationMissingDedupeEndpoint:
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
-                dedupe.review_manager.logger.info(
+                dedupe_operation.review_manager.logger.info(
                     f"{colors.GREEN}Source {source_origin} fully merged{colors.END}"
                 )
             else:
-                dedupe.review_manager.logger.info(
+                dedupe_operation.review_manager.logger.info(
                     f"{colors.ORANGE}Source {source_origin} not fully merged{colors.END}"
                 )
-                dedupe.review_manager.logger.info(
+                dedupe_operation.review_manager.logger.info(
                     f"Exporting details to dedupe/{source_origin}.xlsx"
                 )
 

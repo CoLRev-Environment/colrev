@@ -64,6 +64,10 @@ class InvalidSettingsError(CoLRevException):
     """
 
     def __init__(self, *, msg):
+        msg = (
+            f"Error in settings.json: {msg}\n"
+            + "To solve this, use\n  colrev settings --upgrade"
+        )
         self.message = msg
         super().__init__(self.message)
 

@@ -16,9 +16,9 @@ class Sync:
 
     cited_papers: list
 
-    def __init__(self):
-        self.records_to_import = []
-        self.non_unique_for_import = []
+    def __init__(self) -> None:
+        self.records_to_import: typing.List[typing.Dict] = []
+        self.non_unique_for_import: typing.List[typing.Dict] = []
 
     def get_cited_papers(self) -> None:
 
@@ -83,7 +83,7 @@ class Sync:
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
                 record_to_import = local_index.prep_record_for_return(
-                    record=record_to_import, include_file=False
+                    record_dict=record_to_import, include_file=False
                 )
 
                 self.records_to_import.append(record_to_import)
@@ -116,7 +116,7 @@ class Sync:
     def get_non_unique(self) -> list:
         return self.non_unique_for_import
 
-    def add_to_records_to_import(self, record: dict) -> None:
+    def add_to_records_to_import(self, *, record: dict) -> None:
         if record["ID"] not in [r["ID"] for r in self.records_to_import]:
             self.records_to_import.append(record)
 

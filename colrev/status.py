@@ -1,10 +1,12 @@
 #! /usr/bin/env python3
+from __future__ import annotations
+
 import csv
 import io
-import typing
 from collections import Counter
 from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import yaml
@@ -13,8 +15,12 @@ import colrev.process
 import colrev.record
 
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
+
 class Status(colrev.process.Process):
-    def __init__(self, *, review_manager):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
@@ -83,7 +89,7 @@ class Status(colrev.process.Process):
                     if "booktitle" == line.lstrip()[:9]:
                         booktitle = line[line.find("{") + 1 : line.rfind("}")]
                         outlets.append(booktitle)
-            outlet_counter: typing.List[typing.Tuple[str, int]] = [
+            outlet_counter: list[tuple[str, int]] = [
                 (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
             ]
             selected = []
@@ -139,7 +145,8 @@ class Status(colrev.process.Process):
 
         return environment_instructions
 
-    def append_registered_repo_instructions(self, registered_path):
+    # Note : no named arguments for multiprocessing
+    def append_registered_repo_instructions(self, registered_path: Path) -> dict:
 
         instruction = {}
 
@@ -167,11 +174,11 @@ class Status(colrev.process.Process):
             commits_ahead = git_repo.iter_commits(ahead_operation)
             nr_commits_ahead = sum(1 for c in commits_ahead)
 
-            def pull_condition():
+            def pull_condition() -> bool:
                 # behind_remote and not remote_ahead
                 return nr_commits_behind > 0 and not nr_commits_ahead > 0
 
-            def pull_rebase_condition():
+            def pull_rebase_condition() -> bool:
                 # behind_remote and remote_ahead
                 return nr_commits_behind > 0 and nr_commits_ahead > 0
 
@@ -201,11 +208,10 @@ class Status(colrev.process.Process):
             pass
         return instruction
 
-    def get_review_instructions(self, *, stat) -> list:
+    def get_review_instructions(self, *, stat: dict) -> list:
 
         review_instructions = []
 
-        # git_repo = review_manager.get_repo()
         git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
         records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
 

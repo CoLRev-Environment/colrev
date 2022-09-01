@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
@@ -6,6 +8,7 @@ import queue
 import threading
 import time
 from collections import deque
+from typing import TYPE_CHECKING
 
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
@@ -13,14 +16,19 @@ from watchdog.observers import Observer
 import colrev.cli_colors as colors
 import colrev.status
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Event(LoggingEventHandler):
-    def __init__(self, *, service):
+    service: Service
+
+    def __init__(self, *, service: Service):
         super().__init__()
         self.service = service
-        self.logger = logging.getLogger()
+        self.logger: logging.Logger = logging.getLogger()
 
-    def on_modified(self, event):
+    def on_modified(self, event) -> None:
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):
@@ -35,13 +43,14 @@ class Event(LoggingEventHandler):
         ):
             pass
         else:
-            self.service.logger.info("Detected change in file: " + event.src_path)
+            self.logger.info(f"Detected change in file: {event.src_path}")
 
         self.service.last_file_change_date = datetime.datetime.now()
         self.service.last_file_changed = event.src_path
 
         stat = self.service.review_manager.get_status_freq()
-        instructions = self.service.STATUS.get_review_instructions(stat)
+        status_operation = self.service.review_manager.get_status_operation()
+        instructions = status_operation.get_review_instructions(stat=stat)
 
         for instruction in instructions:
             if "cmd" in instruction:
@@ -51,11 +60,15 @@ class Event(LoggingEventHandler):
                     # in it if data in the search directory changes.
                     if "colrev load" == cmd and "search/" not in event.src_path:
                         return
-                    self.service.q.put({"name": cmd, "cmd": cmd, "priority": "yes"})
+                    self.service.service_queue.put(
+                        {"name": cmd, "cmd": cmd, "priority": "yes"}
+                    )
 
 
 class Service:
-    def __init__(self, *, review_manager):
+    review_manager: colrev.review_manager.ReviewManager
+
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         assert "realtime" == review_manager.settings.project.review_type
 
@@ -63,10 +76,10 @@ class Service:
 
         self.review_manager = review_manager
 
-        self.previous_command = "none"
-        self.last_file_changed = ""
-        self.last_file_change_date = datetime.datetime.now()
-        self.last_command_run_time = datetime.datetime.now()
+        self.previous_command: str = "none"
+        self.last_file_changed: str = ""
+        self.last_file_change_date: datetime.datetime = datetime.datetime.now()
+        self.last_command_run_time: datetime.datetime = datetime.datetime.now()
 
         self.logger = self.__setup_service_logger(level=logging.INFO)
 
@@ -74,7 +87,7 @@ class Service:
         self.start_services()
 
         # setup queue
-        self.service_queue = queue.Queue()
+        self.service_queue: queue.Queue = queue.Queue()
         # Turn-on the worker thread.
         threading.Thread(target=self.worker, daemon=True).start()
 
@@ -110,7 +123,7 @@ class Service:
         # Block until all tasks are done.
         self.service_queue.join()
 
-    def start_services(self):
+    def start_services(self) -> None:
         async def _start_grobid():
             grobid_service = self.review_manager.get_grobid_serivce()
 
@@ -146,7 +159,7 @@ class Service:
 
         return service_logger
 
-    def worker(self):
+    def worker(self) -> None:
         try:
             while True:
 
@@ -210,9 +223,7 @@ class Service:
                 elif "colrev prep" == item["cmd"]:
 
                     self.logger.info(f"Running {item['name']}")
-                    preparation_operation = (
-                        self.review_manager.get_preparation_operation()
-                    )
+                    preparation_operation = self.review_manager.get_prep_operation()
                     preparation_operation.main()
                 elif "colrev dedupe" == item["cmd"]:
 

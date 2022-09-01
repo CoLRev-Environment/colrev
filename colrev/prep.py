@@ -1,10 +1,14 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import logging
 import multiprocessing as mp
 import pkgutil
 import time
 import typing
 from copy import deepcopy
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import timeout_decorator
@@ -17,20 +21,26 @@ import colrev.process
 import colrev.record
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 
-class Preparation(colrev.process.Process):
+class Prep(colrev.process.Process):
 
-    TIMEOUT = 10
-    MAX_RETRIES_ON_ERROR = 3
+    timeout = 10
+    max_retries_on_error = 3
+
+    retrieval_similarity: float
 
     first_round: bool
     last_round: bool
 
-    prep_scripts: typing.Dict[str, typing.Any]
+    pad: int
+
+    prep_scripts: dict[str, typing.Any]
 
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -89,7 +99,7 @@ class Preparation(colrev.process.Process):
         "cited_by_file",
     ]
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "load_fixes": {
             "endpoint": built_in_prep.LoadFixesPrep,
         },
@@ -168,21 +178,18 @@ class Preparation(colrev.process.Process):
     def __init__(
         self,
         *,
-        review_manager,
+        review_manager: colrev.review_manager.ReviewManager,
         force=False,
-        similarity: float = 0.9,
-        notify_state_transition_process: bool = True,
+        notify_state_transition_operation: bool = True,
         debug: str = "NA",
-    ):
+    ) -> None:
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.prep,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
             debug=(debug != "NA"),
         )
-        self.notify_state_transition_process = notify_state_transition_process
-
-        self.retrieval_similarity = similarity
+        self.notify_state_transition_operation = notify_state_transition_operation
 
         self.fields_to_keep += self.review_manager.settings.prep.fields_to_keep
 
@@ -195,16 +202,22 @@ class Preparation(colrev.process.Process):
         # and iterate over it?
 
         self.review_manager.logger.info("Check availability of connectors...")
-        db_connectors.CrossrefConnector.check_status(preparation=self)
+        db_connectors.CrossrefConnector.check_status(prep_operation=self)
         self.review_manager.logger.info("CrossrefConnector available")
-        db_connectors.DBLPConnector.check_status(preparation=self)
+        db_connectors.DBLPConnector.check_status(prep_operation=self)
         self.review_manager.logger.info("DBLPConnector available")
-        db_connectors.OpenLibraryConnector.check_status(preparation=self)
+        db_connectors.OpenLibraryConnector.check_status(prep_operation=self)
         self.review_manager.logger.info("OpenLibraryConnector available")
 
         print()
 
-    def __print_diffs_for_debug(self, prior, preparation_record, prep_script):
+    def __print_diffs_for_debug(
+        self,
+        *,
+        prior: colrev.record.PrepRecord,
+        preparation_record: colrev.record.PrepRecord,
+        prep_script: colrev.process.PrepEndpoint,
+    ) -> None:
         diffs = prior.get_diff(other_record=preparation_record)
         if diffs:
             change_report = (
@@ -234,7 +247,7 @@ class Preparation(colrev.process.Process):
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
 
-        record = item["record"]
+        record: colrev.record.PrepRecord = item["record"]
 
         if not record.status_to_prepare():
             return record.get_data()
@@ -255,7 +268,7 @@ class Preparation(colrev.process.Process):
 
                 if self.review_manager.debug_mode:
                     self.review_manager.logger.info(
-                        f"{prep_script.SETTINGS.name}(...) called"
+                        f"{prep_script.settings.name}(...) called"
                     )
 
                 prior = preparation_record.copy_prep_rec()
@@ -269,26 +282,26 @@ class Preparation(colrev.process.Process):
                 )
 
                 if prep_script.always_apply_changes:
-                    record.update_by_record(UPDATE=preparation_record)
+                    record.update_by_record(update_record=preparation_record)
 
                 if preparation_record.preparation_save_condition():
-                    record.update_by_record(UPDATE=preparation_record)
+                    record.update_by_record(update_record=preparation_record)
                     record.update_masterdata_provenance(
                         unprepared_record=unprepared_record,
                         review_manager=self.review_manager,
                     )
 
                 if preparation_record.preparation_break_condition():
-                    record.update_by_record(UPDATE=preparation_record)
+                    record.update_by_record(update_record=preparation_record)
                     break
             except timeout_decorator.timeout_decorator.TimeoutError:
                 self.review_manager.logger.error(
-                    f"{colors.RED}{prep_script.SETTINGS.name}(...) timed out{colors.END}"
+                    f"{colors.RED}{prep_script.settings.name}(...) timed out{colors.END}"
                 )
 
         if self.last_round:
             if record.status_to_prepare():
-                record.update_by_record(UPDATE=preparation_record)
+                record.update_by_record(update_record=preparation_record)
                 # Note: update_masterdata_provenance sets to md_needs_manual_preparation
                 record.update_masterdata_provenance(
                     unprepared_record=unprepared_record,
@@ -297,7 +310,7 @@ class Preparation(colrev.process.Process):
 
         return record.get_data()
 
-    def reset(self, *, record_list: typing.List[dict]):
+    def reset(self, *, record_list: list[dict]) -> None:
 
         record_list = [
             rec
@@ -345,7 +358,7 @@ class Preparation(colrev.process.Process):
                 continue
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
 
-            prior_records_dict = self.review_manager.dataset.load_records(
+            prior_records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")
             )
             for prior_record in prior_records_dict.values():
@@ -425,7 +438,7 @@ class Preparation(colrev.process.Process):
             for commit in git_repo.iter_commits(paths=str(records_file_relative))
         )
         filecontents = next(revlist)  # noqa
-        prior_records_dict = self.review_manager.dataset.load_records(
+        prior_records_dict = self.review_manager.dataset.load_records_dict(
             load_str=filecontents.decode("utf-8")
         )
         for record in records.values():
@@ -448,7 +461,7 @@ class Preparation(colrev.process.Process):
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path="custom_prep_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_prep_script.py"))
 
         prep_round = self.review_manager.settings.prep.prep_rounds[-1]
         prep_round.scripts.append({"endpoint": "custom_prep_script"})
@@ -523,7 +536,7 @@ class Preparation(colrev.process.Process):
             )
             return prep_data
 
-        def get_preparation_data(*, prep_round: colrev.settings.PrepRound):
+        def get_preparation_data(*, prep_round: colrev.settings.PrepRound) -> list:
             if self.review_manager.debug_mode:
                 prepare_data = load_prep_data_for_debug(
                     debug_ids=debug_ids, debug_file=debug_file
@@ -560,9 +573,7 @@ class Preparation(colrev.process.Process):
                 )
             return prep_data
 
-        def load_prep_data_for_debug(
-            *, debug_ids: str, debug_file: str = "NA"
-        ) -> typing.Dict:
+        def load_prep_data_for_debug(*, debug_ids: str, debug_file: str = "NA") -> dict:
 
             self.review_manager.logger.info("Data passed to the scripts")
             if debug_file is None:
@@ -615,7 +626,7 @@ class Preparation(colrev.process.Process):
                 }
             return prep_data
 
-        def setup_prep_round(*, i, prep_round):
+        def setup_prep_round(*, i, prep_round) -> None:
 
             if i == 0:
                 self.first_round = True
@@ -647,7 +658,7 @@ class Preparation(colrev.process.Process):
 
             adapter_manager = self.review_manager.get_adapter_manager()
             self.prep_scripts = adapter_manager.load_scripts(
-                PROCESS=self,
+                process=self,
                 scripts=required_prep_scripts,
             )
 
@@ -754,7 +765,7 @@ class Preparation(colrev.process.Process):
                 # Multiprocessing mixes logs of different records.
                 # For better readability:
                 prepared_records_ids = [x["ID"] for x in prepared_records]
-                self.review_manager.reorder_log(IDs=prepared_records_ids)
+                self.review_manager.reorder_log(ids=prepared_records_ids)
 
                 self.review_manager.create_commit(
                     msg=f"Prepare records ({prep_round.name})",
@@ -769,8 +780,6 @@ class Preparation(colrev.process.Process):
             self.review_manager.create_commit(
                 msg="Set IDs", script_call="colrev prep", saved_args=saved_args
             )
-
-        return
 
 
 if __name__ == "__main__":

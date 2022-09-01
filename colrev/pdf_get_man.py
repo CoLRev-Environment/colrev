@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import csv
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -9,34 +12,40 @@ import colrev.built_in.pdf_get_man as built_in_pdf_get_man
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
-class PDFRetrievalMan(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+class PDFGetMan(colrev.process.Process):
+
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_pdf_get_man": {
-            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFRetrievalManual,
+            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFGetMan,
         }
     }
 
-    def __init__(self, *, review_manager, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_get_man,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_get_man_scripts: typing.Dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
-            PROCESS=self,
+        self.pdf_get_man_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=review_manager.settings.pdf_get.man_pdf_get_scripts,
         )
 
-    def get_pdf_get_man(self, *, records: typing.Dict) -> list:
+    def get_pdf_get_man(self, *, records: dict) -> list:
         missing_records = []
         for record in records.values():
             if (
@@ -46,7 +55,7 @@ class PDFRetrievalMan(colrev.process.Process):
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, *, records: typing.Dict) -> None:
+    def export_retrieval_table(self, *, records: dict) -> None:
         missing_records = self.get_pdf_get_man(records=records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 

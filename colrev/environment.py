@@ -44,14 +44,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
-# from lxml.etree import SerialisationError
-
 
 class AdapterManager:
     @classmethod
     def load_scripts(
-        cls, *, PROCESS, scripts, script_type: str = ""
+        cls, *, process, scripts, script_type: str = ""
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
+        # pylint: disable=import-outside-toplevel
 
         # avoid changes in the config
         scripts = deepcopy(scripts)
@@ -61,9 +60,9 @@ class AdapterManager:
             scripts_dict[script_name] = {}
 
             # 1. Load built-in scripts
-            if script_name in PROCESS.built_in_scripts:
+            if script_name in process.built_in_scripts:
                 scripts_dict[script_name]["settings"] = script
-                scripts_dict[script_name]["endpoint"] = PROCESS.built_in_scripts[
+                scripts_dict[script_name]["endpoint"] = process.built_in_scripts[
                     script_name
                 ]["endpoint"]
 
@@ -99,8 +98,7 @@ class AdapterManager:
             ]["endpoint"]
             del scripts_dict[script_name]["settings"]["endpoint"]
 
-        if colrev.process.ProcessType.search == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        if colrev.process.ProcessType.search == process.type:
             from colrev.process import SearchEndpoint
 
             for k, val in scripts_dict.items():
@@ -112,12 +110,11 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    search=PROCESS, settings=script["settings"]
+                    search_operation=process, settings=script["settings"]
                 )
                 verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.load == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        elif colrev.process.ProcessType.load == process.type:
             from colrev.process import LoadEndpoint
 
             for k, val in scripts_dict.items():
@@ -127,30 +124,26 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    load=PROCESS, settings=script["settings"]
+                    load_operation=process, settings=script["settings"]
                 )
                 verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.prep == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PreparationEndpoint
+        elif colrev.process.ProcessType.prep == process.type:
+            from colrev.process import PrepEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPrepare
+                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomPrep
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    preparation=PROCESS, settings=script["settings"]
+                    prep_operation=process, settings=script["settings"]
                 )
-                verifyObject(PreparationEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PrepEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.prep_man == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PreparationManualEndpoint
+        elif colrev.process.ProcessType.prep_man == process.type:
+            from colrev.process import PrepManEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
@@ -161,12 +154,11 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    prep_man=PROCESS, settings=script["settings"]
+                    prep_man_operation=process, settings=script["settings"]
                 )
-                verifyObject(PreparationManualEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PrepManEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.dedupe == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        elif colrev.process.ProcessType.dedupe == process.type:
             from colrev.process import DedupeEndpoint
 
             for k, val in scripts_dict.items():
@@ -178,12 +170,11 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    dedupe=PROCESS, settings=script["settings"]
+                    dedupe_operation=process, settings=script["settings"]
                 )
                 verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.prescreen == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        elif colrev.process.ProcessType.prescreen == process.type:
             from colrev.process import PrescreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -195,80 +186,75 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    prescreen=PROCESS, settings=script["settings"]
+                    prescreen_operation=process, settings=script["settings"]
                 )
                 verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.pdf_get == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PDFRetrievalEndpoint
+        elif colrev.process.ProcessType.pdf_get == process.type:
+            from colrev.process import PDFGetEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
                     scripts_dict[k]["endpoint"] = scripts_dict[k][
                         "endpoint"
-                    ].CustomPDFRetrieval
+                    ].CustomPDFGet
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_get=PROCESS, settings=script["settings"]
+                    pdf_get_operation=process, settings=script["settings"]
                 )
-                verifyObject(PDFRetrievalEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PDFGetEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.pdf_get_man == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PDFRetrievalManualEndpoint
+        elif colrev.process.ProcessType.pdf_get_man == process.type:
+            from colrev.process import PDFGetManEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
                     scripts_dict[k]["endpoint"] = scripts_dict[k][
                         "endpoint"
-                    ].CustomPDFManualRetrieval
+                    ].CustomPDFGetMan
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_get_man=PROCESS, settings=script["settings"]
+                    pdf_get_man_operation=process, settings=script["settings"]
                 )
-                verifyObject(PDFRetrievalManualEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PDFGetManEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.pdf_prep == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PDFPreparationEndpoint
+        elif colrev.process.ProcessType.pdf_prep == process.type:
+            from colrev.process import PDFPrepEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
                     scripts_dict[k]["endpoint"] = scripts_dict[k][
                         "endpoint"
-                    ].CustomPDFPrepratation
+                    ].CustomPDFPrep
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_prep=PROCESS, settings=script["settings"]
+                    pdf_prep_operation=process, settings=script["settings"]
                 )
-                verifyObject(PDFPreparationEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PDFPrepEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.pdf_prep_man == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
-            from colrev.process import PDFPreparationManualEndpoint
+        elif colrev.process.ProcessType.pdf_prep_man == process.type:
+            from colrev.process import PDFPrepManEndpoint
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
                     scripts_dict[k]["endpoint"] = scripts_dict[k][
                         "endpoint"
-                    ].CustomPDFManualPrepratation
+                    ].CustomPDFPrepMan
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_prep_man=PROCESS, settings=script["settings"]
+                    pdf_prep_man_operation=process, settings=script["settings"]
                 )
-                verifyObject(PDFPreparationManualEndpoint, scripts_dict[endpoint_name])
+                verifyObject(PDFPrepManEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.screen == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        elif colrev.process.ProcessType.screen == process.type:
             from colrev.process import ScreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -280,12 +266,11 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    screen=PROCESS, settings=script["settings"]
+                    screen_operation=process, settings=script["settings"]
                 )
                 verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.data == PROCESS.type:
-            # pylint: disable=import-outside-toplevel
+        elif colrev.process.ProcessType.data == process.type:
             from colrev.process import DataEndpoint
 
             for k, val in scripts_dict.items():
@@ -295,13 +280,12 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    data=PROCESS, settings=script["settings"]
+                    data_operation=process, settings=script["settings"]
                 )
                 verifyObject(DataEndpoint, scripts_dict[endpoint_name])
 
-        elif colrev.process.ProcessType.check == PROCESS.type:
+        elif colrev.process.ProcessType.check == process.type:
             if "SearchSource" == script_type:
-                # pylint: disable=import-outside-toplevel
                 from colrev.process import SearchSourceEndpoint
 
                 for k, val in scripts_dict.items():
@@ -318,11 +302,11 @@ class AdapterManager:
                     verifyObject(SearchSourceEndpoint, scripts_dict[endpoint_name])
             else:
                 print(
-                    f"ERROR: process type not implemented: {PROCESS.type}/{script_type}"
+                    f"ERROR: process type not implemented: {process.type}/{script_type}"
                 )
 
         else:
-            print(f"ERROR: process type not implemented: {PROCESS.type}")
+            print(f"ERROR: process type not implemented: {process.type}")
 
         return scripts_dict
 
@@ -349,7 +333,7 @@ class EnvironmentManager:
         "pdf_hash": "pdf_hash:latest",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.local_registry = self.load_local_registry()
 
     @classmethod
@@ -482,7 +466,6 @@ class EnvironmentManager:
         local_index = LocalIndex()
 
         environment_details = {}
-
         size = 0
         last_modified = "NOT_INITIATED"
         status = ""
@@ -618,7 +601,7 @@ class LocalIndex:
 
     # Note: we need the local_curated_metadata field for is_duplicate()
 
-    def __init__(self, *, startup_without_waiting: bool = False):
+    def __init__(self, *, startup_without_waiting: bool = False) -> None:
 
         self.open_search = OpenSearch("http://localhost:9200")
 
@@ -749,9 +732,9 @@ class LocalIndex:
         # If not available after 120s: raise error
         self.open_search.info()
 
-    def __get_record_hash(self, *, record: dict) -> str:
+    def __get_record_hash(self, *, record_dict: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = colrev.record.Record(data=record).create_colrev_id()
+        string_to_hash = colrev.record.Record(data=record_dict).create_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, *, paper_hash: str) -> str:
@@ -824,7 +807,7 @@ class LocalIndex:
             saved_record_dict = saved_record_response["_source"]
 
             saved_record = colrev.record.Record(
-                data=self.parse_record(record=saved_record_dict)
+                data=self.parse_record(record_dict=saved_record_dict)
             )
 
             record = colrev.record.Record(data=record_dict)
@@ -889,55 +872,59 @@ class LocalIndex:
         except NotFoundError:
             pass
 
-    def __get_toc_key(self, *, record: dict) -> str:
+    def __get_toc_key(self, *, record_dict: dict) -> str:
         toc_key = "NA"
-        if "article" == record["ENTRYTYPE"]:
-            toc_key = f"{record.get('journal', '').lower()}"
-            if "volume" in record:
-                toc_key = toc_key + f"|{record['volume']}"
-            if "number" in record:
-                toc_key = toc_key + f"|{record['number']}"
+        if "article" == record_dict["ENTRYTYPE"]:
+            toc_key = f"{record_dict.get('journal', '').lower()}"
+            if "volume" in record_dict:
+                toc_key = toc_key + f"|{record_dict['volume']}"
+            if "number" in record_dict:
+                toc_key = toc_key + f"|{record_dict['number']}"
             else:
                 toc_key = toc_key + "|"
-        elif "inproceedings" == record["ENTRYTYPE"]:
+        elif "inproceedings" == record_dict["ENTRYTYPE"]:
             toc_key = (
-                f"{record.get('booktitle', '').lower()}" + f"|{record.get('year', '')}"
+                f"{record_dict.get('booktitle', '').lower()}"
+                + f"|{record_dict.get('year', '')}"
             )
 
         return toc_key
 
-    def get_fields_to_remove(self, *, record: dict) -> list:
+    def get_fields_to_remove(self, *, record_dict: dict) -> list:
         """Compares the record to available toc items and
         returns fields to remove (if any)"""
 
-        internal_record = deepcopy(record)
+        internal_record_dict = deepcopy(record_dict)
         fields_to_remove = []
-        if "volume" in internal_record.keys() and "number" in internal_record.keys():
+        if (
+            "volume" in internal_record_dict.keys()
+            and "number" in internal_record_dict.keys()
+        ):
 
-            toc_key_full = self.__get_toc_key(record=internal_record)
+            toc_key_full = self.__get_toc_key(record_dict=internal_record_dict)
 
-            wo_nr = deepcopy(internal_record)
+            wo_nr = deepcopy(internal_record_dict)
             del wo_nr["number"]
-            toc_key_wo_nr = self.__get_toc_key(record=wo_nr)
+            toc_key_wo_nr = self.__get_toc_key(record_dict=wo_nr)
             if not self.open_search.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_nr):
                 fields_to_remove.append("number")
                 return fields_to_remove
 
-            wo_vol = deepcopy(internal_record)
+            wo_vol = deepcopy(internal_record_dict)
             del wo_vol["volume"]
-            toc_key_wo_vol = self.__get_toc_key(record=wo_vol)
+            toc_key_wo_vol = self.__get_toc_key(record_dict=wo_vol)
             if not self.open_search.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_vol):
                 fields_to_remove.append("volume")
                 return fields_to_remove
 
-            wo_vol_nr = deepcopy(internal_record)
+            wo_vol_nr = deepcopy(internal_record_dict)
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
-            toc_key_wo_vol_nr = self.__get_toc_key(record=wo_vol_nr)
+            toc_key_wo_vol_nr = self.__get_toc_key(record_dict=wo_vol_nr)
             if not self.open_search.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_vol_nr):
@@ -947,20 +934,22 @@ class LocalIndex:
 
         return fields_to_remove
 
-    def __toc_index(self, *, record) -> None:
-        if not colrev.record.Record(data=record).masterdata_is_curated():
+    def __toc_index(self, *, record_dict: dict) -> None:
+        if not colrev.record.Record(data=record_dict).masterdata_is_curated():
             return
 
-        if record.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
+        if record_dict.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
             # Note : records are md_prepared, i.e., complete
 
-            toc_key = self.__get_toc_key(record=record)
+            toc_key = self.__get_toc_key(record_dict=record_dict)
             if "NA" == toc_key:
                 return
 
             # print(toc_key)
             try:
-                record_colrev_id = colrev.record.Record(data=record).create_colrev_id()
+                record_colrev_id = colrev.record.Record(
+                    data=record_dict
+                ).create_colrev_id()
 
                 if not self.open_search.exists(index=self.TOC_INDEX, id=toc_key):
                     toc_item = {
@@ -1062,7 +1051,7 @@ class LocalIndex:
             raise colrev_exceptions.RecordNotInIndexException
         return retrieved_record
 
-    def parse_record(self, *, record: dict) -> dict:
+    def parse_record(self, *, record_dict: dict) -> dict:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.dataset
@@ -1072,14 +1061,14 @@ class LocalIndex:
         parser = bibtex.Parser()
         load_str = (
             "@"
-            + record["ENTRYTYPE"]
+            + record_dict["ENTRYTYPE"]
             + "{"
-            + record["ID"]
+            + record_dict["ID"]
             + "\n"
             + ",\n".join(
                 [
                     f"{k} = {{{v}}}"
-                    for k, v in record.items()
+                    for k, v in record_dict.items()
                     if k not in ["ID", "ENTRYTYPE"]
                 ]
             )
@@ -1094,52 +1083,52 @@ class LocalIndex:
         return record
 
     def prep_record_for_return(
-        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
+        self, *, record_dict: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
 
-        record = self.parse_record(record=record)
+        record_dict = self.parse_record(record_dict=record_dict)
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
-        if "file" in record:
-            if not Path(record["file"]).is_file():
-                del record["file"]
+        if "file" in record_dict:
+            if not Path(record_dict["file"]).is_file():
+                del record_dict["file"]
 
-        if "fulltext" in record:
-            del record["fulltext"]
-        if "tei_file" in record:
-            del record["tei_file"]
-        if "grobid-version" in record:
-            del record["grobid-version"]
+        if "fulltext" in record_dict:
+            del record_dict["fulltext"]
+        if "tei_file" in record_dict:
+            del record_dict["tei_file"]
+        if "grobid-version" in record_dict:
+            del record_dict["grobid-version"]
         if include_colrev_ids:
-            if "colrev_id" in record:
+            if "colrev_id" in record_dict:
                 pass
         else:
-            if "colrev_id" in record:
-                del record["colrev_id"]
+            if "colrev_id" in record_dict:
+                del record_dict["colrev_id"]
 
-        if "excl_criteria" in record:
-            del record["excl_criteria"]
-        if "exclusion_criteria" in record:
-            del record["exclusion_criteria"]
+        if "excl_criteria" in record_dict:
+            del record_dict["excl_criteria"]
+        if "exclusion_criteria" in record_dict:
+            del record_dict["exclusion_criteria"]
 
-        if "local_curated_metadata" in record:
-            del record["local_curated_metadata"]
+        if "local_curated_metadata" in record_dict:
+            del record_dict["local_curated_metadata"]
 
-        if "metadata_source_repository_paths" in record:
-            del record["metadata_source_repository_paths"]
+        if "metadata_source_repository_paths" in record_dict:
+            del record_dict["metadata_source_repository_paths"]
 
         if not include_file:
-            if "file" in record:
-                del record["file"]
-            if "colref_pdf_id" in record:
-                del record["colref_pdf_id"]
+            if "file" in record_dict:
+                del record_dict["file"]
+            if "colref_pdf_id" in record_dict:
+                del record_dict["colref_pdf_id"]
 
-        record["colrev_status"] = colrev.record.RecordState.md_prepared
+        record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
 
-        return record
+        return record_dict
 
-    def duplicate_outlets(self) -> bool:
+    def outlets_duplicated(self) -> bool:
 
         print("Validate curated metadata")
 
@@ -1158,17 +1147,17 @@ class LocalIndex:
 
         return False
 
-    def index_record(self, *, record: dict) -> None:
+    def index_record(self, *, record_dict: dict) -> None:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        copy_for_toc_index = deepcopy(record)
+        copy_for_toc_index = deepcopy(record_dict)
 
-        if "colrev_status" not in record:
+        if "colrev_status" not in record_dict:
             return
 
         # Note : it is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
-        if record["colrev_status"] in [
+        if record_dict["colrev_status"] in [
             colrev.record.RecordState.md_retrieved,
             colrev.record.RecordState.md_imported,
             colrev.record.RecordState.md_prepared,
@@ -1178,54 +1167,56 @@ class LocalIndex:
 
         # TODO : remove provenance on project-specific fields
 
-        if "screening_criteria" in record:
-            del record["screening_criteria"]
+        if "screening_criteria" in record_dict:
+            del record_dict["screening_criteria"]
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
-        if record["colrev_status"] not in [
+        if record_dict["colrev_status"] not in [
             colrev.record.RecordState.pdf_prepared,
             colrev.record.RecordState.rev_excluded,
             colrev.record.RecordState.rev_included,
             colrev.record.RecordState.rev_synthesized,
         ]:
-            if "colrev_pdf_id" in record:
-                del record["colrev_pdf_id"]
+            if "colrev_pdf_id" in record_dict:
+                del record_dict["colrev_pdf_id"]
 
         # Note : this is the first run, no need to split/list
-        if "colrev/curated_metadata" in record["metadata_source_repository_paths"]:
+        if "colrev/curated_metadata" in record_dict["metadata_source_repository_paths"]:
             # Note : local_curated_metadata is important to identify non-duplicates
             # between curated_metadata_repositories
-            record["local_curated_metadata"] = "yes"
+            record_dict["local_curated_metadata"] = "yes"
 
         # To fix pdf_hash fields that should have been renamed
-        if "pdf_hash" in record:
-            record["colref_pdf_id"] = "cpid1:" + record["pdf_hash"]
-            del record["pdf_hash"]
+        if "pdf_hash" in record_dict:
+            record_dict["colref_pdf_id"] = "cpid1:" + record_dict["pdf_hash"]
+            del record_dict["pdf_hash"]
 
-        if "colrev_origin" in record:
-            del record["colrev_origin"]
+        if "colrev_origin" in record_dict:
+            del record_dict["colrev_origin"]
 
         # Note : file paths should be absolute when added to the LocalIndex
-        if "file" in record:
-            pdf_path = Path(record["file"])
+        if "file" in record_dict:
+            pdf_path = Path(record_dict["file"])
             if pdf_path.is_file():
-                record["file"] = str(pdf_path)
+                record_dict["file"] = str(pdf_path)
             else:
-                del record["file"]
+                del record_dict["file"]
 
-        if record.get("year", "NA").isdigit():
-            record["year"] = int(record["year"])
-        elif "year" in record:
-            del record["year"]
+        if record_dict.get("year", "NA").isdigit():
+            record_dict["year"] = int(record_dict["year"])
+        elif "year" in record_dict:
+            del record_dict["year"]
 
         try:
 
-            cid_to_index = colrev.record.Record(data=record).create_colrev_id()
-            paper_hash = self.__get_record_hash(record=record)
+            cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
+            paper_hash = self.__get_record_hash(record_dict=record_dict)
 
             try:
                 # check if the record is already indexed (based on d)
-                retrieved_record = self.retrieve(record=record, include_colrev_ids=True)
+                retrieved_record = self.retrieve(
+                    record_dict=record_dict, include_colrev_ids=True
+                )
                 retrieved_record_cid = colrev.record.Record(
                     data=retrieved_record
                 ).get_colrev_id()
@@ -1235,8 +1226,8 @@ class LocalIndex:
                     # Note: we need the colrev_id of the retrieved_record
                     # (may be different from record)
                     self.__amend_record(
-                        paper_hash=self.__get_record_hash(record=retrieved_record),
-                        record_dict=record,
+                        paper_hash=self.__get_record_hash(record_dict=retrieved_record),
+                        record_dict=record_dict,
                     )
                     return
             except (
@@ -1248,7 +1239,7 @@ class LocalIndex:
 
             while True:
                 if not self.open_search.exists(index=self.RECORD_INDEX, id=hash):
-                    self.__store_record(paper_hash=paper_hash, record_dict=record)
+                    self.__store_record(paper_hash=paper_hash, record_dict=record_dict)
                     break
                 saved_record_response = self.open_search.get(
                     index=self.RECORD_INDEX,
@@ -1262,7 +1253,7 @@ class LocalIndex:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
                     # should take precedence - reset the index to update)
-                    self.__amend_record(paper_hash=paper_hash, record_dict=record)
+                    self.__amend_record(paper_hash=paper_hash, record_dict=record_dict)
                     break
                 # to handle the collision:
                 print(f"Collision: {paper_hash}")
@@ -1284,10 +1275,9 @@ class LocalIndex:
             "colrev/curated_metadata"
             in copy_for_toc_index["metadata_source_repository_paths"]
         ):
-            self.__toc_index(record=copy_for_toc_index)
-        return
+            self.__toc_index(record_dict=copy_for_toc_index)
 
-    def index_colrev_project(self, *, repo_source_path):
+    def index_colrev_project(self, *, repo_source_path: Path) -> None:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.review_manager
@@ -1336,8 +1326,8 @@ class LocalIndex:
                 if "file" in record:
                     record.update(file=repo_source_path / Path(record["file"]))
 
-            for record in tqdm(records.values()):
-                self.index_record(record=record)
+            for record_dict in tqdm(records.values()):
+                self.index_record(record_dict=record_dict)
 
         except InvalidGitRepositoryError:
             print(f"InvalidGitRepositoryError: {repo_source_path}")
@@ -1345,7 +1335,6 @@ class LocalIndex:
             print(f"KeyError: {exc}")
         except MissingValueError as exc:
             print(f"MissingValueError (settings.json): {exc} ({repo_source_path})")
-        return
 
     def index(self) -> None:
         # import shutil
@@ -1361,7 +1350,7 @@ class LocalIndex:
 
         print("Start LocalIndex")
 
-        if self.duplicate_outlets():
+        if self.outlets_duplicated():
             return
 
         print(f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}")
@@ -1391,12 +1380,10 @@ class LocalIndex:
         #     annotate(self)
         # Note : es.update can use functions applied to each record (for the update)
 
-        return
-
-    def get_year_from_toc(self, *, record: dict) -> str:
+    def get_year_from_toc(self, *, record_dict: dict) -> str:
         year = "NA"
 
-        toc_key = self.__get_toc_key(record=record)
+        toc_key = self.__get_toc_key(record_dict=record_dict)
         toc_items = []
         try:
             if self.open_search.exists(index=self.TOC_INDEX, id=toc_key):
@@ -1417,8 +1404,8 @@ class LocalIndex:
                     id=str(paper_hash),
                 )
                 if "_source" in res:
-                    record = res["_source"]  # type: ignore
-                    year = record.get("year", "NA")
+                    record_dict = res["_source"]  # type: ignore
+                    year = record_dict.get("year", "NA")
 
             except (
                 colrev_exceptions.NotEnoughDataToIdentifyException,
@@ -1430,9 +1417,9 @@ class LocalIndex:
         return year
 
     def retrieve_from_toc(
-        self, *, record: dict, similarity_threshold: float, include_file=False
+        self, *, record_dict: dict, similarity_threshold: float, include_file=False
     ) -> dict:
-        toc_key = self.__get_toc_key(record=record)
+        toc_key = self.__get_toc_key(record_dict=record_dict)
 
         # 1. get TOC
         toc_items = []
@@ -1443,12 +1430,14 @@ class LocalIndex:
             except (TransportError, SerializationError):
                 toc_items = []
 
-        # 2. get most similar record
+        # 2. get most similar record_dict
         elif len(toc_items) > 0:
             try:
                 # TODO : we need to search tocs even if records are not complete:
                 # and a NotEnoughDataToIdentifyException is thrown
-                record_colrev_id = colrev.record.Record(data=record).create_colrev_id()
+                record_colrev_id = colrev.record.Record(
+                    data=record_dict
+                ).create_colrev_id()
                 sim_list = []
                 for toc_records_colrev_id in toc_items:
                     # Note : using a simpler similarity measure
@@ -1467,16 +1456,18 @@ class LocalIndex:
                         index=self.RECORD_INDEX,
                         id=str(paper_hash),
                     )
-                    record = res["_source"]  # type: ignore
+                    record_dict = res["_source"]  # type: ignore
                     return self.prep_record_for_return(
-                        record=record, include_file=include_file
+                        record_dict=record_dict, include_file=include_file
                     )
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
 
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def get_from_index_exact_match(self, *, index_name, key, value) -> dict:
+    def get_from_index_exact_match(
+        self, *, index_name: str, key: str, value: str
+    ) -> dict:
 
         res = {}
         try:
@@ -1490,19 +1481,21 @@ class LocalIndex:
         return res
 
     def retrieve(
-        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
+        self, *, record_dict: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
         """
-        Convenience function to retrieve the indexed record metadata
-        based on another record
+        Convenience function to retrieve the indexed record_dict metadata
+        based on another record_dict
         """
 
-        retrieved_record: typing.Dict = {}
+        retrieved_record_dict: typing.Dict = {}
 
         # 1. Try the record index
 
         try:
-            retrieved_record = self.__retrieve_from_record_index(record_dict=record)
+            retrieved_record_dict = self.__retrieve_from_record_index(
+                record_dict=record_dict
+            )
         except (
             NotFoundError,
             colrev_exceptions.RecordNotInIndexException,
@@ -1512,20 +1505,20 @@ class LocalIndex:
         ):
             pass
 
-        if retrieved_record:
+        if retrieved_record_dict:
             return self.prep_record_for_return(
-                record=retrieved_record,
+                record_dict=retrieved_record_dict,
                 include_file=include_file,
                 include_colrev_ids=include_colrev_ids,
             )
 
         # 2. Try using global-ids
-        if not retrieved_record:
-            for key, value in record.items():
+        if not retrieved_record_dict:
+            for key, value in record_dict.items():
                 if key not in self.global_keys or "ID" == key:
                     continue
                 try:
-                    retrieved_record = self.get_from_index_exact_match(
+                    retrieved_record_dict = self.get_from_index_exact_match(
                         index_name=self.RECORD_INDEX, key=key, value=value
                     )
                     break
@@ -1539,13 +1532,13 @@ class LocalIndex:
                 ):
                     pass
 
-        if not retrieved_record:
+        if not retrieved_record_dict:
             raise colrev_exceptions.RecordNotInIndexException(
-                record.get("ID", "no-key")
+                record_dict.get("ID", "no-key")
             )
 
         return self.prep_record_for_return(
-            record=retrieved_record,
+            record_dict=retrieved_record_dict,
             include_file=include_file,
             include_colrev_ids=include_colrev_ids,
         )
@@ -1626,7 +1619,7 @@ class LocalIndex:
 
             # Curated metadata repositories do not curate outlets redundantly,
             # i.e., there are no duplicates between curated repositories.
-            # see duplicate_outlets(...)
+            # see outlets_duplicated(...)
 
             different_curated_repositories = (
                 "CURATED:" in r1_index.get("colrev_masterdata_provenance", "")
@@ -1841,7 +1834,9 @@ class ScreenshotService:
             return True
         return False
 
-    def add_screenshot(self, *, record, pdf_filepath):
+    def add_screenshot(
+        self, *, record: colrev.record.Record, pdf_filepath: Path
+    ) -> colrev.record.Record:
         if "url" not in record.data:
             return record
 
@@ -1936,7 +1931,6 @@ class GrobidService:
             close_fds=True,
         )
         self.check_grobid_availability()
-        return
 
 
 class TEIParser:
@@ -2603,8 +2597,8 @@ class TEIParser:
                 ]:
                     continue
                 rec_sim = colrev.record.Record.get_record_similarity(
-                    RECORD_A=colrev.record.Record(data=record),
-                    RECORD_B=colrev.record.Record(data=local_record),
+                    record_a=colrev.record.Record(data=record),
+                    record_b=colrev.record.Record(data=local_record),
                 )
                 if rec_sim > max_sim:
                     max_sim_record = local_record
