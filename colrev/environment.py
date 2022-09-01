@@ -2642,13 +2642,12 @@ class PDFHashService:
         assert isinstance(page_nr, int)
         assert isinstance(hash_size, int)
 
-        if pdf_path.is_symlink():
-            pdf_path = pdf_path.resolve()
+        pdf_path = pdf_path.resolve()
         pdf_dir = pdf_path.parents[0]
 
         command = (
             f'docker run --rm -v "{pdf_dir}:/home/docker" '
-            f"pdf_hash python app.py {pdf_path.name} {page_nr} {hash_size}"
+            f'pdf_hash python app.py "{pdf_path.name}" {page_nr} {hash_size}'
         )
         ret = subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
 
