@@ -7,12 +7,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
-import requests
-from lxml import etree
-from urllib3.exceptions import ProtocolError
 
 import colrev.built_in.data as built_in_data
-import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
@@ -76,88 +72,6 @@ class Data(colrev.process.Process):
                 colrev.record.RecordState.rev_synthesized,
             ]
         ]
-
-    def update_tei(self, *, records: dict, included: list[dict]) -> dict:
-
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
-
-        def create_tei(record: dict) -> None:
-            if "file" not in record:
-                return
-            if "tei_file" not in record:
-                self.review_manager.logger.info(f"Get tei for {record['ID']}")
-                pdf_path = self.review_manager.path / record["file"]
-                if not Path(pdf_path).is_file():
-                    print(f"file not available: {record['file']}")
-                    return
-
-                tei_path = Path("tei") / Path(record["ID"] + ".tei.xml")
-                tei_path.parents[0].mkdir(exist_ok=True)
-                if tei_path.is_file():
-                    record["tei_file"] = str(tei_path)
-                    return
-
-                try:
-                    self.review_manager.get_tei(pdf_path=pdf_path, tei_path=tei_path)
-
-                    if tei_path.is_file():
-                        record["tei_file"] = str(tei_path)
-
-                except (
-                    etree.XMLSyntaxError,
-                    ProtocolError,
-                    requests.exceptions.ConnectionError,
-                    colrev_exceptions.TEITimeoutException,
-                    colrev_exceptions.TEIException,
-                ):
-                    if "tei_file" in record:
-                        del record["tei_file"]
-            return
-
-        for record in records.values():
-            create_tei(record)
-        # p_map(create_tei, records, num_cpus=6)
-
-        self.review_manager.dataset.save_records_dict(records=records)
-        if self.review_manager.dataset.has_changes():
-            self.review_manager.dataset.add_record_changes()
-            self.review_manager.create_commit(
-                msg="Create TEIs", script_call="colrev data"
-            )
-
-        # Enhance TEIs (link local IDs)
-        for record in records.values():
-            self.review_manager.logger.info(f"Enhance TEI for {record['ID']}")
-            if "tei_file" in record:
-
-                tei_path = Path(record["tei_file"])
-                try:
-                    tei = self.review_manager.get_tei(tei_path=tei_path)
-                    tei.mark_references(records=records.values())
-                except etree.XMLSyntaxError:
-                    continue
-
-                # ns = {
-                #     "tei": "{http://www.tei-c.org/ns/1.0}",
-                #     "w3": "{http://www.w3.org/XML/1998/namespace}",
-                # }
-                # theories = ['actornetwork theory', 'structuration theory']
-                # for paragraph in root.iter(ns['tei'] + 'p'):
-                #     # print(paragraph.text.lower())
-                #     for theory in theories:
-                #         # if theory in ''.join(paragraph.itertext()):
-                #         if theory in paragraph.text:
-                #             paragraph.text = \
-                #               paragraph.text.replace(theory,
-                #                           f'<theory>{theory}</theory>')
-
-                # if tei_path.is_file():
-                #     git_repo.index.add([str(tei_path)])
-
-        self.review_manager.create_commit(msg="Enhance TEIs", script_call="colrev data")
-
-        return records
 
     def reading_heuristics(self) -> list:
 
@@ -390,11 +304,6 @@ class Data(colrev.process.Process):
 
                 if self.verbose:
                     print(f"updated {endpoint.settings.name}")
-
-                # if "TEI" == data_script.endpoint:
-                #     records = self.update_tei(records=records, included=included)
-                #     self.review_manager.dataset.save_records_dict(records=records)
-                #     self.review_manager.dataset.add_record_changes()
 
             for (
                 record_id,

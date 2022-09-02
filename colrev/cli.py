@@ -1945,17 +1945,6 @@ def show(ctx, keyword, callback=validate_show, required=True):
     print("Keyword unknown")
 
 
-@main.command(help_priority=27)
-@click.pass_context
-def debug(ctx):
-    # pylint: disable=import-outside-toplevel
-    import colrev.debug
-
-    operation = ""
-    param = ""
-    colrev.debug.main(operation, param)
-
-
 @main.command(hidden=True)
 @click.option(
     "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"

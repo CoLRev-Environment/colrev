@@ -179,7 +179,6 @@ class Prep(colrev.process.Process):
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        force=False,
         notify_state_transition_operation: bool = True,
         debug: str = "NA",
     ) -> None:
