@@ -435,7 +435,7 @@ class ProcessModel:
                 )
 
 
-class SearchEndpoint(zope.interface.Interface):
+class SearchEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     source_identifier = zope.interface.Attribute("""Source identifier""")
     mode = zope.interface.Attribute("""Mode""")
@@ -448,7 +448,9 @@ class SearchEndpoint(zope.interface.Interface):
         pass
 
 
-class SearchSourceEndpoint(zope.interface.Interface):
+class SearchSourceEndpoint(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
 
     source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
 
@@ -460,7 +462,7 @@ class SearchSourceEndpoint(zope.interface.Interface):
         pass
 
 
-class LoadEndpoint(zope.interface.Interface):
+class LoadEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
@@ -469,7 +471,7 @@ class LoadEndpoint(zope.interface.Interface):
         pass
 
 
-class PrepEndpoint(zope.interface.Interface):
+class PrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     source_correction_hint = zope.interface.Attribute(
         """Hint on how to correct metadata at source"""
@@ -485,56 +487,56 @@ class PrepEndpoint(zope.interface.Interface):
         pass
 
 
-class PrepManEndpoint(zope.interface.Interface):
+class PrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def prepare_manual(prep_man_operation, records):
         pass
 
 
-class DedupeEndpoint(zope.interface.Interface):
+class DedupeEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def run_dedupe(dedupe_operation):
         pass
 
 
-class PrescreenEndpoint(zope.interface.Interface):
+class PrescreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
         pass
 
 
-class PDFGetEndpoint(zope.interface.Interface):
+class PDFGetEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def get_pdf(pdf_get_operation, record):
         return record
 
 
-class PDFGetManEndpoint(zope.interface.Interface):
+class PDFGetManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def get_man_pdf(pdf_get_man_operation, records):
         return records
 
 
-class PDFPrepEndpoint(zope.interface.Interface):
+class PDFPrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(pdf_prep_operation, record, pad) -> dict:
         return record.data
 
 
-class PDFPrepManEndpoint(zope.interface.Interface):
+class PDFPrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def prep_man_pdf(pdf_prep_man_operation, records):
         return records
 
 
-class ScreenEndpoint(zope.interface.Interface):
+class ScreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     def run_screen(screen_operation, records: dict, split: list) -> dict:
         pass
 
 
-class DataEndpoint(zope.interface.Interface):
+class DataEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
     # pylint: disable=no-self-argument
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
