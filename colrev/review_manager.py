@@ -78,13 +78,7 @@ class ReviewManager:
             self.paths = self.__get_file_paths(repository_dir_str=self.path)
 
             self.settings = self.load_settings()
-        except Exception as exc:
-            if force_mode:
-                print(exc)
-            else:
-                raise exc
 
-        try:
             if self.debug_mode:
                 self.report_logger = self.__setup_report_logger(level=logging.DEBUG)
                 """Logger for the commit report"""
@@ -93,13 +87,7 @@ class ReviewManager:
             else:
                 self.report_logger = self.__setup_report_logger(level=logging.INFO)
                 self.logger = self.__setup_logger(level=logging.INFO)
-        except Exception as exc:
-            if force_mode:
-                print(exc)
-            else:
-                raise exc
 
-        try:
             global_git_vars = (
                 colrev.environment.EnvironmentManager.get_name_mail_from_git()
             )
@@ -114,7 +102,7 @@ class ReviewManager:
             self.dataset = colrev.dataset.Dataset(review_manager=self)
             """The review dataset object"""
 
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
                 print(exc)
             else:

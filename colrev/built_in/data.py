@@ -234,7 +234,7 @@ class ManuscriptEndpoint:
                 review_manager.retrieve_package_file(
                     template_file=paper_resource_path, target=paper
                 )
-            except Exception:
+            except FileNotFoundError:
                 paper_resource_path = Path("template/") / paper_relative
                 review_manager.retrieve_package_file(
                     template_file=paper_resource_path, target=paper
@@ -413,7 +413,7 @@ class StructuredDataEndpoint:
                 data_df = pd.DataFrame(data_list, columns=["ID"] + coding_dimensions)
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(data_list, index=False, quoting=csv.QUOTE_ALL)
+                data_df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
 
             else:
 

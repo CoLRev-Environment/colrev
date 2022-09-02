@@ -1007,9 +1007,6 @@ class LocalIndex:
                     paper_hash = self.__increment_hash(paper_hash=paper_hash)
                 except (NotFoundError, TransportError, SerializationError):
                     break
-                except Exception:
-                    # print(e)
-                    pass
 
         # search colrev_id field
         for cid_to_retrieve in cids_to_retrieve:
@@ -1030,9 +1027,6 @@ class LocalIndex:
                 SerializationError,
             ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException from exc
-            except Exception:
-                # print(e)
-                pass
 
         raise colrev_exceptions.RecordNotInIndexException
 

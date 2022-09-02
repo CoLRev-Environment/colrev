@@ -783,8 +783,7 @@ class Record:
                     source = merging_record.data["colrev_data_provenance"][key][
                         "source"
                     ]
-            except Exception:
-                # print(e)
+            except KeyError:
                 pass
             self.update_field(
                 key=key, value=str(merging_record.data[key]), source=source, note=note

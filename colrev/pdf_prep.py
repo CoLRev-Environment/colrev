@@ -142,11 +142,12 @@ class PDFPrep(colrev.process.Process):
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
 
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 print(exc)
                 record.data[
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
+                record.add_data_provenance_note(key="file", note=str(exc))
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 == record.data["colrev_status"]
