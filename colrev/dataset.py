@@ -307,7 +307,7 @@ class Dataset:
 
         return origin_records
 
-    def load_from_git_history(self):
+    def load_from_git_history(self) -> typing.Iterator[dict]:
         git_repo = self.review_manager.dataset.get_repo()
         revlist = (
             (
@@ -682,7 +682,7 @@ class Dataset:
         return record_header_items
 
     def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
-        def yield_from_file(file):
+        def yield_from_file(file) -> typing.Iterator[str]:
             data = ""
             first_entry_processed = False
             while True:

@@ -1295,8 +1295,8 @@ class LocalIndex:
                 curated_field
             ) in check_process.review_manager.settings.project.curated_fields:
 
-                for record in records.values():
-                    colrev.record.Record(data=record).add_data_provenance(
+                for record_dict in records.values():
+                    colrev.record.Record(data=record_dict).add_data_provenance(
                         key=curated_field, source=f"CURATED:{curation_url}"
                     )
 
@@ -2562,24 +2562,24 @@ class TEIParser:
     def mark_references(self, *, records):
 
         tei_records = self.get_bibliography()
-        for record in tei_records:
-            if "title" not in record:
+        for record_dict in tei_records:
+            if "title" not in record_dict:
                 continue
 
             max_sim = 0.9
             max_sim_record = {}
-            for local_record in records:
-                if local_record["status"] not in [
+            for local_record_dict in records:
+                if local_record_dict["status"] not in [
                     colrev.record.RecordState.rev_included,
                     colrev.record.RecordState.rev_synthesized,
                 ]:
                     continue
                 rec_sim = colrev.record.Record.get_record_similarity(
-                    record_a=colrev.record.Record(data=record),
-                    record_b=colrev.record.Record(data=local_record),
+                    record_a=colrev.record.Record(data=record_dict),
+                    record_b=colrev.record.Record(data=local_record_dict),
                 )
                 if rec_sim > max_sim:
-                    max_sim_record = local_record
+                    max_sim_record = local_record_dict
                     max_sim = rec_sim
             if len(max_sim_record) == 0:
                 continue
@@ -2588,12 +2588,12 @@ class TEIParser:
             bibliography = self.root.find(".//" + self.ns["tei"] + "listBibl")
             # mark reference in bibliography
             for ref in bibliography:
-                if ref.get(self.ns["w3"] + "id") == record["tei_id"]:
+                if ref.get(self.ns["w3"] + "id") == record_dict["tei_id"]:
                     ref.set("ID", max_sim_record["ID"])
             # mark reference in in-text citations
             for reference in self.root.iter(self.ns["tei"] + "ref"):
                 if "target" in reference.keys():
-                    if reference.get("target") == f"#{record['tei_id']}":
+                    if reference.get("target") == f"#{record_dict['tei_id']}":
                         reference.set("ID", max_sim_record["ID"])
 
             # if settings file available: dedupe_io match agains records

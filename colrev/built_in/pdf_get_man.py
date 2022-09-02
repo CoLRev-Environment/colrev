@@ -106,9 +106,9 @@ class CoLRevCLIPDFGetMan:
         records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
         records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
 
-        for record in records.values():
-            record = colrev.record.Record(data=record)
-            record = pdf_get_operation.link_pdf(record=record).get_data()
+        for record_dict in records.values():
+            record = colrev.record.Record(data=record_dict)
+            pdf_get_operation.link_pdf(record=record).get_data()
 
         pdf_get_man_operation.export_retrieval_table(records=records)
         pdf_get_man_data = pdf_get_man_operation.get_data()
@@ -122,8 +122,7 @@ class CoLRevCLIPDFGetMan:
         for i, item in enumerate(pdf_get_man_data["items"]):
             stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
 
-            record = records[item["ID"]]
-            record = colrev.record.Record(data=record)
+            record = colrev.record.Record(data=records[item["ID"]])
 
             print(stat)
 

@@ -147,8 +147,8 @@ class Sync:
 
         if len(added) > 0:
             print("Loaded:")
-            for record in added:
-                colrev.record.Record(data=record).print_citation_format()
+            for record_dict in added:
+                colrev.record.Record(data=record_dict).print_citation_format()
 
             print(f"Loaded {len(added)} papers")
 

@@ -111,16 +111,16 @@ class CoLRevCLIScreenEndpoint:
 
         criteria_available = len(screening_criteria.keys())
 
-        for record in screen_data["items"]:
+        for record_dict in screen_data["items"]:
             if len(split) > 0:
-                if record["ID"] not in split:
+                if record_dict["ID"] not in split:
                     continue
 
             print("\n\n")
             i += 1
             skip_pressed = False
 
-            screen_record = colrev.record.ScreenRecord(data=record)
+            screen_record = colrev.record.ScreenRecord(data=record_dict)
             abstract_from_tei = False
             if "abstract" not in screen_record.data:
                 abstract_from_tei = True

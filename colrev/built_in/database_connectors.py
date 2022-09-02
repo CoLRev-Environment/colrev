@@ -5,6 +5,7 @@ import html
 import json
 import re
 import sys
+import typing
 import urllib
 from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
@@ -353,7 +354,7 @@ class CrossrefConnector:
                     "CROSSREF"
                 ) from exc
 
-    def get_bibliographic_query_return(self, **kwargs):
+    def get_bibliographic_query_return(self, **kwargs) -> typing.Iterator[dict]:
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Works
 
@@ -367,7 +368,7 @@ class CrossrefConnector:
         for item in crossref_query_return:
             yield self.crossref_json_to_record(item=item)
 
-    def get_journal_query_return(self, *, journal_issn: str):
+    def get_journal_query_return(self, *, journal_issn: str) -> typing.Iterator[dict]:
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Journals
 

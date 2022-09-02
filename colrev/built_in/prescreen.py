@@ -96,16 +96,16 @@ class ScopePrescreenEndpoint:
 
         saved_args = locals()
         pad = 50
-        for record in records.values():
-            if record["colrev_status"] != colrev.record.RecordState.md_processed:
+        for record_dict in records.values():
+            if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
                 continue
 
             # Note : LanguageScope is covered in prep
             # because dedupe cannot handle merges between languages
 
             if self.settings.ENTRYTYPEScope:
-                if record["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
-                    colrev.record.Record(data=record).prescreen_exclude(
+                if record_dict["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
+                    colrev.record.Record(data=record_dict).prescreen_exclude(
                         reason="not in ENTRYTYPEScope"
                     )
 
@@ -113,35 +113,35 @@ class ScopePrescreenEndpoint:
                 if "values" in self.settings.OutletExclusionScope:
                     for resource in self.settings.OutletExclusionScope["values"]:
                         for key, value in resource.items():
-                            if key in record and record.get(key, "") == value:
-                                colrev.record.Record(data=record).prescreen_exclude(
-                                    reason="in OutletExclusionScope"
-                                )
+                            if key in record_dict and record_dict.get(key, "") == value:
+                                colrev.record.Record(
+                                    data=record_dict
+                                ).prescreen_exclude(reason="in OutletExclusionScope")
                 if "list" in self.settings.OutletExclusionScope:
                     for resource in self.settings.OutletExclusionScope["list"]:
                         for key, value in resource.items():
                             if "resource" == key and "predatory_journals_beal" == value:
-                                if "journal" in record:
+                                if "journal" in record_dict:
                                     if (
-                                        record["journal"].lower()
+                                        record_dict["journal"].lower()
                                         in predatory_journals_beal
                                     ):
                                         colrev.record.Record(
-                                            data=record
+                                            data=record_dict
                                         ).prescreen_exclude(
                                             reason="predatory_journals_beal"
                                         )
 
             if self.settings.TimeScopeFrom:
-                if int(record.get("year", 0)) < self.settings.TimeScopeFrom:
-                    colrev.record.Record(data=record).prescreen_exclude(
+                if int(record_dict.get("year", 0)) < self.settings.TimeScopeFrom:
+                    colrev.record.Record(data=record_dict).prescreen_exclude(
                         reason="not in TimeScopeFrom "
                         f"(>{self.settings.TimeScopeFrom})"
                     )
 
             if self.settings.TimeScopeTo:
-                if int(record.get("year", 5000)) > self.settings.TimeScopeTo:
-                    colrev.record.Record(data=record).prescreen_exclude(
+                if int(record_dict.get("year", 5000)) > self.settings.TimeScopeTo:
+                    colrev.record.Record(data=record_dict).prescreen_exclude(
                         reason="not in TimeScopeTo " f"(<{self.settings.TimeScopeTo})"
                     )
 
@@ -150,32 +150,32 @@ class ScopePrescreenEndpoint:
                 if "values" in self.settings.OutletInclusionScope:
                     for outlet in self.settings.OutletInclusionScope["values"]:
                         for key, value in outlet.items():
-                            if key in record and record.get(key, "") == value:
+                            if key in record_dict and record_dict.get(key, "") == value:
                                 in_outlet_scope = True
                 if not in_outlet_scope:
-                    colrev.record.Record(data=record).prescreen_exclude(
+                    colrev.record.Record(data=record_dict).prescreen_exclude(
                         reason="not in OutletInclusionScope"
                     )
 
             # TODO : discuss whether we should move this to the prep scripts
             if self.settings.ExcludeComplementaryMaterials:
                 if self.settings.ExcludeComplementaryMaterials:
-                    if "title" in record:
+                    if "title" in record_dict:
                         # TODO : extend/test the following
                         if (
-                            record["title"].lower()
+                            record_dict["title"].lower()
                             in self.title_complementary_materials_keywords
                         ):
-                            colrev.record.Record(data=record).prescreen_exclude(
+                            colrev.record.Record(data=record_dict).prescreen_exclude(
                                 reason="complementary material"
                             )
 
             if (
-                record["colrev_status"]
+                record_dict["colrev_status"]
                 == colrev.record.RecordState.rev_prescreen_excluded
             ):
                 prescreen_operation.review_manager.report_logger.info(
-                    f' {record["ID"]}'.ljust(pad, " ")
+                    f' {record_dict["ID"]}'.ljust(pad, " ")
                     + "Prescreen excluded (automatically)"
                 )
 
@@ -235,12 +235,12 @@ class CoLRevCLIPrescreenEndpoint:
         if 0 == stat_len:
             prescreen_operation.review_manager.logger.info("No records to prescreen")
 
-        for record in prescreen_data["items"]:
+        for record_dict in prescreen_data["items"]:
             if len(split) > 0:
-                if record["ID"] not in split:
+                if record_dict["ID"] not in split:
                     continue
 
-            prescreen_record = colrev.record.PrescreenRecord(data=record)
+            prescreen_record = colrev.record.PrescreenRecord(data=record_dict)
 
             print("\n\n")
             print(prescreen_record)

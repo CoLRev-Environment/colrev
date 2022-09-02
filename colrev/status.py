@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 import git
 import yaml
+from git.exc import NoSuchPathError
 
 import colrev.process
 import colrev.record
@@ -204,7 +205,7 @@ class Status(colrev.process.Process):
                         "cmd": f"cd '{registered_path}' && git pull --rebase",
                     }
 
-        except (AttributeError, git.exc.NoSuchPathError):
+        except (AttributeError, NoSuchPathError):
             pass
         return instruction
 

@@ -87,25 +87,25 @@ class Validate(colrev.process.Process):
 
         self.review_manager.logger.debug("Calculating preparation differences...")
         change_diff = []
-        for record in records:
+        for record_dict in records:
             # input(record)
-            if "changed_in_target_commit" not in record:
+            if "changed_in_target_commit" not in record_dict:
                 continue
-            del record["changed_in_target_commit"]
-            del record["colrev_status"]
-            for cur_record_link in record["colrev_origin"].split(";"):
+            del record_dict["changed_in_target_commit"]
+            del record_dict["colrev_status"]
+            for cur_record_link in record_dict["colrev_origin"].split(";"):
                 prior_records = [
                     x
                     for x in prior_records_dict.values()
                     if cur_record_link in x["colrev_origin"].split(",")
                 ]
-                for prior_record in prior_records:
+                for prior_record_dict in prior_records:
                     similarity = colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(data=record),
-                        record_b=colrev.record.Record(data=prior_record),
+                        record_a=colrev.record.Record(data=record_dict),
+                        record_b=colrev.record.Record(data=prior_record_dict),
                     )
                     # change_diff.append([record["ID"], cur_record_link, similarity])
-                    change_diff.append([prior_record, record, similarity])
+                    change_diff.append([prior_record_dict, record_dict, similarity])
 
         change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
 

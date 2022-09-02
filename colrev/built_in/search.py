@@ -88,7 +88,7 @@ class CrossrefSearchEndpoint:
             review_manager=search_operation.review_manager
         )
 
-        def get_crossref_query_return(params):
+        def get_crossref_query_return(params) -> typing.Iterator[dict]:
             if "selection_clause" in params:
                 crossref_query = {"bibliographic": params["selection_clause"]}
                 # TODO : add the container_title:
@@ -108,27 +108,29 @@ class CrossrefSearchEndpoint:
                     )
 
         try:
-            for record in get_crossref_query_return(params):
-                if record["doi"].upper() not in available_ids:
+            for record_dict in get_crossref_query_return(params):
+                if record_dict["doi"].upper() not in available_ids:
 
                     # Note : discard "empty" records
-                    if "" == record.get("author", "") and "" == record.get("title", ""):
+                    if "" == record_dict.get("author", "") and "" == record_dict.get(
+                        "title", ""
+                    ):
                         continue
 
                     search_operation.review_manager.logger.info(
-                        " retrieved " + record["doi"]
+                        " retrieved " + record_dict["doi"]
                     )
-                    record["ID"] = str(max_id).rjust(6, "0")
+                    record_dict["ID"] = str(max_id).rjust(6, "0")
 
-                    prep_record = colrev.record.PrepRecord(data=record)
+                    prep_record = colrev.record.PrepRecord(data=record_dict)
                     DOIConnector.get_link_from_doi(
                         record=prep_record,
                         review_manager=search_operation.review_manager,
                     )
-                    record = prep_record.get_data()
+                    record_dict = prep_record.get_data()
 
-                    available_ids.append(record["doi"])
-                    records[record["ID"]] = record
+                    available_ids.append(record_dict["doi"])
+                    records[record_dict["ID"]] = record_dict
                     max_id += 1
         except requests.exceptions.JSONDecodeError as exc:
             if "504 Gateway Time-out" in str(exc):
