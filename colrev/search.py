@@ -369,7 +369,7 @@ class Search(colrev.process.Process):
 
         # TODO : when the search_file has been filled only query the last years
 
-        def load_automated_search_sources() -> list:
+        def load_automated_search_sources() -> list[colrev.settings.SearchSource]:
 
             automated_sources = [
                 x for x in self.sources if "endpoint" in x.search_script
@@ -408,14 +408,14 @@ class Search(colrev.process.Process):
             search_script.run_search(
                 search=self,
                 params=params,
-                feed_file=source.feed_file,
+                feed_file=source.filename,
             )
 
-            if source.feed_file.is_file():
+            if source.filename.is_file():
                 if not self.review_manager.settings.search.retrieve_forthcoming:
                     self.remove_forthcoming(source=source)
 
-                self.review_manager.dataset.add_changes(path=source.feed_file)
+                self.review_manager.dataset.add_changes(path=source.filename)
                 self.review_manager.create_commit(
                     msg="Run search", script_call="colrev search"
                 )
