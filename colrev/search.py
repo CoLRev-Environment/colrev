@@ -406,7 +406,7 @@ class Search(colrev.process.Process):
 
             search_script = self.search_scripts[source.search_script["endpoint"]]
             search_script.run_search(
-                search=self,
+                search_operation=self,
                 params=params,
                 feed_file=source.filename,
             )
