@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -63,6 +64,12 @@ class CoLRevCLIManPrep:
         return records
 
 
+@dataclass
+class ExportManPrepSettings:
+    name: str
+    pdf_handling_mode: str
+
+
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class ExportManPrep:
     def __init__(
@@ -71,9 +78,13 @@ class ExportManPrep:
         prep_man_operation: colrev.prep_man.PrepMan,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+
+        if "pdf_handling_mode" not in settings:
+            settings["pdf_handling_mode"] = "copy_first_page"
+
+        assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
+
+        self.settings = from_dict(data_class=ExportManPrepSettings, data=settings)
 
     def prepare_manual(
         self, prep_man_operation: colrev.prep_man.PrepMan, records: dict
@@ -92,15 +103,20 @@ class ExportManPrep:
 
             for record in records.values():
                 if "file" in record:
-                    pdf_reader = PdfFileReader(record["file"], strict=False)
-                    if pdf_reader.getNumPages() >= 1:
+                    target_path = prep_man_path / Path(record["file"])
+                    target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
-                        writer = PdfFileWriter()
-                        writer.addPage(pdf_reader.getPage(0))
-                        target_path = prep_man_path / Path(record["file"])
-                        target_path.parents[0].mkdir(exist_ok=True, parents=True)
-                        with open(target_path, "wb") as outfile:
-                            writer.write(outfile)
+                    if "symlink" == self.settings.pdf_handling_mode:
+                        target_path.symlink_to(Path(record["file"]).resolve())
+
+                    if "copy_first_page" == self.settings.pdf_handling_mode:
+                        pdf_reader = PdfFileReader(record["file"], strict=False)
+                        if pdf_reader.getNumPages() >= 1:
+
+                            writer = PdfFileWriter()
+                            writer.addPage(pdf_reader.getPage(0))
+                            with open(target_path, "wb") as outfile:
+                                writer.write(outfile)
 
         if not export_path.is_file():
             prep_man_operation.review_manager.logger.info(
