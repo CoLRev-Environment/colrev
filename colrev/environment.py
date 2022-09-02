@@ -1920,7 +1920,7 @@ class GrobidService:
 
         grobid_image = EnvironmentManager.docker_images["lfoppiano/grobid"]
 
-        logging.info(f"Running docker container created from {grobid_image}")
+        logging.info("Running docker container created from %s", grobid_image)
 
         logging.info("Starting grobid service...")
         start_cmd = (

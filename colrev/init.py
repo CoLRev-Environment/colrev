@@ -134,10 +134,10 @@ class Initializer:
 
         self.review_manager.report_logger.info("Initialize review repository")
         self.review_manager.report_logger.info(
-            f'{"Set project title:".ljust(30, " ")}{self.project_name}'
+            "%s%s", "Set project title:".ljust(30, " "), self.project_name
         )
         self.review_manager.report_logger.info(
-            f'{"Set share_stat_req:".ljust(30, " ")}{self.share_stat_req}'
+            "%s%s", "Set share_stat_req:".ljust(30, " "), self.share_stat_req
         )
         del saved_args["local_index_repo"]
         self.review_manager.create_commit(
@@ -432,8 +432,9 @@ class Initializer:
 
             self.review_manager.logger.info("Completed setup.")
             self.review_manager.logger.info(
-                f"{colors.ORANGE}Open the settings.json and "
-                f"edit all fields marked with 'TODO'.{colors.END}"
+                "%sOpen the settings.json and edit all fields marked with 'TODO'%s.",
+                colors.ORANGE,
+                colors.END,
             )
 
     def __setup_git(self) -> None:
@@ -453,16 +454,17 @@ class Initializer:
         ]
         for script_to_call in scripts_to_call:
             try:
-                self.logger.info(f'{" ".join(script_to_call)}...')
+                self.logger.info("%s...", " ".join(script_to_call))
                 check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "" == " ".join(script_to_call):
                     self.logger.info(
-                        f"{' '.join(script_to_call)} did not succeed "
-                        "(Internet connection could not be available)"
+                        "%s did not succeed "
+                        "(Internet connection could not be available)",
+                        " ".join(script_to_call),
                     )
                 else:
-                    self.logger.info(f"Failed: {' '.join(script_to_call)}")
+                    self.logger.info("Failed: %s", " ".join(script_to_call))
 
         git_repo.index.add(
             [

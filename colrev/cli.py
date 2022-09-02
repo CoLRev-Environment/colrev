@@ -550,9 +550,10 @@ def prep(
         print("  colrev prep -f")
     except OperationalError as exc:
         logging.error(
-            f"SQLite Error: {exc}. "
+            "SQLite Error: %s. "
             "Another colrev process is accessing a shared resource. "
-            "Please try again later."
+            "Please try again later.",
+            exc,
         )
 
 
@@ -1586,13 +1587,13 @@ def env(
 
         local_registry = environment_manager.load_local_registry()
         if str(unregister) not in [x["source_url"] for x in local_registry]:
-            logging.error(f"Not in local registry (cannot remove): {unregister}")
+            logging.error("Not in local registry (cannot remove): %s", unregister)
         else:
             local_registry = [
                 x for x in local_registry if x["source_url"] != str(unregister)
             ]
             environment_manager.save_local_registry(updated_registry=local_registry)
-            logging.info(f"Removed from local registry: {unregister}")
+            logging.info("Removed from local registry: %s", unregister)
         return
 
     local_index = review_manager.get_local_index()
@@ -1699,7 +1700,7 @@ def settings(ctx, upgrade, update_hooks, modify):
 
         path, value_string = modify.split("=")
         value = ast.literal_eval(value_string)
-        review_manager.logger.info(f"Change settings.{path} to {value}")
+        review_manager.logger.info("Change settings.%s to %s", path, value)
 
         with open("settings.json", encoding="utf-8") as file:
             project_settings = json.load(file)

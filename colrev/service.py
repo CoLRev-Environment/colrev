@@ -43,7 +43,7 @@ class Event(LoggingEventHandler):
         ):
             pass
         else:
-            self.logger.info(f"Detected change in file: {event.src_path}")
+            self.logger.info("Detected change in file: %s", event.src_path)
 
         self.service.last_file_change_date = datetime.datetime.now()
         self.service.last_file_changed = event.src_path
@@ -192,7 +192,8 @@ class Service:
 
                 print()
                 self.logger.info(
-                    f'Queue: {", ".join(q_item["cmd"] for q_item in self.service_queue.queue)}'
+                    "Queue: %s",
+                    ", ".join(q_item["cmd"] for q_item in self.service_queue.queue),
                 )
 
                 item = self.service_queue.get()
@@ -210,7 +211,7 @@ class Service:
 
                     if len(list(self.review_manager.paths["SEARCHDIR"].glob("*"))) > 0:
 
-                        self.logger.info(f"Running {item['name']}")
+                        self.logger.info("Running %s", item["name"])
 
                         load_operation = self.review_manager.get_load_operation()
                         print()
@@ -222,12 +223,12 @@ class Service:
 
                 elif "colrev prep" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     preparation_operation = self.review_manager.get_prep_operation()
                     preparation_operation.main()
                 elif "colrev dedupe" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
 
                     # Note : settings should be
                     # simple_dedupe
@@ -238,13 +239,13 @@ class Service:
 
                 elif "colrev prescreen" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     prescreen_operation = self.review_manager.get_prescreen_operation()
                     prescreen_operation.include_all_in_prescreen()
 
                 elif "colrev pdf-get" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     pdf_get_operation = self.review_manager.get_pdf_get_operation()
                     pdf_get_operation.main()
 
@@ -253,7 +254,7 @@ class Service:
                     # TODO : this may be solved more elegantly,
                     # but we need colrev to link existing pdfs (file field)
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     pdf_get_operation = self.review_manager.get_pdf_get_operation()
                     pdf_get_operation.main()
 
@@ -264,13 +265,13 @@ class Service:
 
                 elif "colrev screen" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     screen_operation = self.review_manager.get_screen_operation()
                     screen_operation.include_all_in_screen()
 
                 elif "colrev data" == item["cmd"]:
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
                     data_operation = self.review_manager.get_data_operation()
                     data_operation.main()
                     input("Waiting for synthesis (press enter to continue)")
@@ -293,7 +294,9 @@ class Service:
 
                     continue
 
-                self.logger.info(f"{colors.GREEN}Completed {item['name']}{colors.END}")
+                self.logger.info(
+                    "%sCompleted %s%s", colors.GREEN, item["name"], colors.END
+                )
 
                 if 0 == self.service_queue.qsize():
                     time.sleep(1)

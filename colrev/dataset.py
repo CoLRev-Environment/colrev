@@ -947,7 +947,7 @@ class Dataset:
                 if "Comment" == record_id:
                     continue
                 if "NA" == record_id:
-                    logging.error(f"Skipping record without ID: {record_string}")
+                    logging.error("Skipping record without ID: %s", record_string)
                     continue
 
                 status_data["IDs"].append(record_id)
@@ -1054,7 +1054,7 @@ class Dataset:
                         prior["persisted_IDs"].append([orig, record_id])
 
             else:
-                logging.error(f"record without ID: {record_string}")
+                logging.error("record without ID: %s", record_string)
 
         return prior
 
@@ -1584,7 +1584,7 @@ class Dataset:
                         field_errors.append(f"excl_crit field not NA: {excl_crit}")
 
                     if "=out" not in excl_crit:
-                        logging.error(f"criteria: {criteria}")
+                        logging.error("criteria: %s", criteria)
                         field_errors.append(
                             "Excluded record with no screening_criterion violated: "
                             f"{record_id}, {status}, {excl_crit}"
@@ -1664,9 +1664,9 @@ class Dataset:
                         notifications.append(msg)
 
                 if not any(name.endswith(x) for x in text_formats):
-                    logging.debug(f"Skipping {name}")
+                    logging.debug("Skipping %s", name)
                     continue
-                logging.debug(f"Checking {name}")
+                logging.debug("Checking %s", name)
                 if name.endswith(".bib"):
                     retrieved_ids = self.retrieve_ids_from_bib(
                         file_path=Path(os.path.join(root, name))

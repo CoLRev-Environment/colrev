@@ -123,7 +123,7 @@ class ReviewManager:
         if self.debug_mode:
             print("\n\n")
             self.logger.debug("Created review manager instance")
-            self.logger.debug(f"Settings:\n{self.settings}")
+            self.logger.debug("Settings:\n%s", self.settings)
 
     def load_settings(self) -> colrev.settings.Configuration:
 
@@ -769,17 +769,19 @@ class ReviewManager:
             last_version = "0.3.0"
 
         while current_version in [x["from"] for x in migration_scripts]:
-            self.logger.info(f"Current CoLRev version: {last_version}")
+            self.logger.info("Current CoLRev version: %s", last_version)
 
             migrator = [x for x in migration_scripts if x["from"] == last_version].pop()
 
             migration_script = migrator["script"]
 
-            self.logger.info(f"Migrating from {migrator['from']} to {migrator['to']}")
+            self.logger.info(
+                "Migrating from %s to %s", migrator["from"], migrator["to"]
+            )
 
             updated = migration_script(self)
             if updated:
-                self.logger.info(f"Updated to: {last_version}")
+                self.logger.info("Updated to: %s", last_version)
             else:
                 self.logger.info("Nothing to do.")
                 self.logger.info(
@@ -1092,17 +1094,17 @@ class ReviewManager:
         for check_script in check_scripts:
             try:
                 if [] == check_script["params"]:
-                    self.logger.debug(f'{check_script["script"].__name__}() called')
+                    self.logger.debug("%s() called", check_script["script"].__name__)
                     check_script["script"]()
                 else:
                     self.logger.debug(
-                        f'{check_script["script"].__name__}(params) called'
+                        "%s(params) called", check_script["script"].__name__
                     )
                     if isinstance(check_script["params"], list):
                         check_script["script"](*check_script["params"])
                     else:
                         check_script["script"](**check_script["params"])
-                self.logger.debug(f'{check_script["script"].__name__}: passed\n')
+                self.logger.debug("%s: passed\n", check_script["script"].__name__)
             except (
                 colrev_exceptions.MissingDependencyError,
                 colrev_exceptions.GitConflictError,
@@ -1660,7 +1662,7 @@ class ReviewManager:
         nr_incomplete = 0
         while True:
             self.logger.debug(
-                f"current_state: {current_state} with {st_o[str(current_state)]}"
+                "current_state: %s with %s", current_state, st_o[str(current_state)]
             )
             if colrev.record.RecordState.md_prepared == current_state:
                 st_o[str(current_state)] += md_duplicates_removed
@@ -1684,9 +1686,10 @@ class ReviewManager:
                 ]
                 for predecessor in predecessors:
                     self.logger.debug(
-                        f' add {st_o[str(predecessor["dest"])]} '
-                        f'from {str(predecessor["dest"])} '
-                        f'(predecessor transition: {predecessor["trigger"]})'
+                        " add %s from %s (predecessor transition: %s)",
+                        st_o[str(predecessor["dest"])],
+                        str(predecessor["dest"]),
+                        predecessor["trigger"],
                     )
                     st_o[str(current_state)] = (
                         st_o[str(current_state)] + st_o[str(predecessor["dest"])]
@@ -1775,7 +1778,7 @@ class ReviewManager:
             - stat["colrev_status"]["currently"]["rev_synthesized"]
         )
         stat["completed_atomic_steps"] = completed_atomic_steps
-        self.logger.debug(f"stat: {self.p_printer.pformat(stat)}")
+        self.logger.debug("stat: %s", self.p_printer.pformat(stat))
         return stat
 
     def get_collaboration_instructions(self, *, stat: dict) -> dict:
