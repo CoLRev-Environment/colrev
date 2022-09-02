@@ -59,8 +59,7 @@ class CoLRevCLIPDFManPrep:
             )
 
             filepath = (
-                pdf_prep_man.review_manager.paths["PDF_DIRECTORY"]
-                / f"{record_dict['ID']}.pdf"
+                pdf_prep_man.review_manager.pdf_directory / f"{record_dict['ID']}.pdf"
             )
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
             if pdf_path.is_file() or filepath.is_file():

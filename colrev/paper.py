@@ -35,7 +35,8 @@ class Paper(colrev.process.Process):
 
         paper_endpoint_settings = paper_endpoint_settings_l[0]
 
-        if not self.review_manager.paths["PAPER"].is_file():
+        # TODO : get path from ManuscriptEndpoint
+        if not (self.review_manager.path / Path("paper.md")).is_file():
             self.review_manager.logger.error("File paper.md does not exist.")
             self.review_manager.logger.info("Complete processing and use colrev data")
             return
@@ -53,8 +54,8 @@ class Paper(colrev.process.Process):
         assert Path(word_template).is_file()
         assert Path(csl_file).is_file()
 
-        uid = os.stat(self.review_manager.paths["RECORDS_FILE"]).st_uid
-        gid = os.stat(self.review_manager.paths["RECORDS_FILE"]).st_gid
+        uid = os.stat(self.review_manager.dataset.records_file).st_uid
+        gid = os.stat(self.review_manager.dataset.records_file).st_gid
 
         script = (
             "paper.md --citeproc --bibliography records.bib "

@@ -80,15 +80,16 @@ class Loader(colrev.process.Process):
     def get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
 
-        search_dir = self.review_manager.paths["SEARCHDIR"]
-
-        if not search_dir.is_dir():
+        if not self.review_manager.search_dir.is_dir():
             return []
 
         # Only supported filetypes
         files = [
             f.relative_to(self.review_manager.path)
-            for f_ in [search_dir.glob(f"**/*.{e}") for e in self.supported_extensions]
+            for f_ in [
+                self.review_manager.search_dir.glob(f"**/*.{e}")
+                for e in self.supported_extensions
+            ]
             for f in f_
         ]
 

@@ -78,7 +78,7 @@ class Status(colrev.process.Process):
 
         if stat["colrev_status"]["currently"]["md_imported"] > 10:
             with open(
-                self.review_manager.paths["RECORDS_FILE"], encoding="utf8"
+                self.review_manager.dataset.records_file, encoding="utf8"
             ) as file:
                 outlets = []
                 for line in file.readlines():
@@ -136,7 +136,7 @@ class Status(colrev.process.Process):
 
         environment_instructions += list(filter(None, add_instructions))
 
-        if len(list(self.review_manager.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
+        if len(list(self.review_manager.corrections_path.glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
                 "cmd": "colrev push -r",
@@ -212,8 +212,7 @@ class Status(colrev.process.Process):
 
         review_instructions = []
 
-        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
+        git_repo = git.Repo(str(self.review_manager.path))
 
         missing_files = self.review_manager.dataset.get_missing_files()
 
@@ -245,7 +244,7 @@ class Status(colrev.process.Process):
         # from colrev.process import ProcessModel
         # current_states_set = set([x['source'] for x in ProcessModel.transitions])
 
-        main_recs_changed = str(records_file_relative) in [
+        main_recs_changed = str(self.review_manager.dataset.RECORDS_FILE_RELATIVE) in [
             item.a_path for item in git_repo.index.diff(None)
         ] + [x.a_path for x in git_repo.head.commit.diff()]
 
@@ -253,9 +252,14 @@ class Status(colrev.process.Process):
             revlist = (
                 (
                     commit.hexsha,
-                    (commit.tree / str(records_file_relative)).data_stream.read(),
+                    (
+                        commit.tree
+                        / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                    ).data_stream.read(),
                 )
-                for commit in git_repo.iter_commits(paths=str(records_file_relative))
+                for commit in git_repo.iter_commits(
+                    paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                )
             )
             filecontents = list(revlist)[0][1]
         except IndexError:
@@ -411,7 +415,7 @@ class Status(colrev.process.Process):
                 ]:
                     review_instructions.append(instruction)
 
-        if not self.review_manager.paths["RECORDS_FILE"].is_file():
+        if not self.review_manager.dataset.records_file.is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
@@ -426,7 +430,7 @@ class Status(colrev.process.Process):
             and stat["colrev_status"]["currently"]["md_retrieved"] > 0
         ):
 
-            search_dir = str(self.review_manager.paths["SEARCHDIR_RELATIVE"]) + "/"
+            search_dir = str(self.review_manager.SEARCHDIR_RELATIVE) + "/"
             untracked_files = self.review_manager.dataset.get_untracked_files()
             if not any(
                 search_dir in untracked_file for untracked_file in untracked_files
@@ -474,7 +478,7 @@ class Status(colrev.process.Process):
 
         analytics_dict = {}
 
-        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.review_manager.path))
 
         revlist = list(
             (

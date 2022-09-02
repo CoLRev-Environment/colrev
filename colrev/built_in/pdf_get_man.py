@@ -67,7 +67,7 @@ class CoLRevCLIPDFGetMan:
             }
 
             filepath = (
-                pdf_get_man_operation.review_manager.paths["PDF_DIRECTORY"]
+                pdf_get_man_operation.review_manager.pdf_directory
                 / f"{record.data['ID']}.pdf"
             )
 
@@ -82,9 +82,7 @@ class CoLRevCLIPDFGetMan:
                         print(f'File does not exist: {record.data["ID"]}.pdf')
                     else:
                         filepath = (
-                            pdf_get_man_operation.review_manager.paths[
-                                "PDF_DIRECTORY_RELATIVE"
-                            ]
+                            pdf_get_man_operation.review_manager.PDF_DIRECTORY_RELATIVE
                             / f"{record.data['ID']}.pdf"
                         )
                         record.pdf_get_man(
@@ -103,7 +101,7 @@ class CoLRevCLIPDFGetMan:
         saved_args = locals()
         pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")
         pdf_get_operation = pdf_get_man_operation.review_manager.get_pdf_get_operation()
-        pdf_directory = pdf_get_man_operation.review_manager.paths["pdf_directory"]
+        pdf_directory = pdf_get_man_operation.review_manager.pdf_directory
 
         records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
         records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)

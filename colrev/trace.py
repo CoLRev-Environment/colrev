@@ -29,9 +29,6 @@ class Trace(colrev.process.Process):
 
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
 
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
-        data = self.review_manager.paths["DATA"]
-
         revlist = self.review_manager.dataset.get_repo().iter_commits()
 
         _pp = pprint.PrettyPrinter(indent=4)
@@ -50,9 +47,9 @@ class Trace(colrev.process.Process):
                 + f" {commit_message_first_line} (by {commit.author.name})"
             )
 
-            if str(records_file_relative) in commit.tree:
+            if str(self.review_manager.dataset.RECORDS_FILE_RELATIVE) in commit.tree:
                 filecontents = (
-                    commit.tree / str(records_file_relative)
+                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
                 ).data_stream.read()
 
                 records_dict = self.review_manager.dataset.load_records_dict(
@@ -72,8 +69,8 @@ class Trace(colrev.process.Process):
                             print(self.__lpad_multiline(s=_pp.pformat(diff), lpad=5))
                     prev_record = record
 
-            if data in commit.tree:
-                filecontents = (commit.tree / data).data_stream.read()
+            if "data.csv" in commit.tree:
+                filecontents = (commit.tree / "data.csv").data_stream.read()
                 for line in str(filecontents).split("\\n"):
                     if record_id in line:
                         if line != prev_data:

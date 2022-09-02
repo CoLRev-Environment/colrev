@@ -181,8 +181,8 @@ class Service:
                         }.values()
                     )
                 )
-                if not self.review_manager.paths["SEARCHDIR"].is_dir():
-                    self.review_manager.paths["SEARCHDIR"].mkdir()
+                if not self.review_manager.search_dir.is_dir():
+                    self.review_manager.search_dir.mkdir()
                     self.logger.info("Created search dir")
 
                 if 0 == self.service_queue.qsize():
@@ -209,7 +209,7 @@ class Service:
 
                 elif "colrev load" == item["cmd"]:
 
-                    if len(list(self.review_manager.paths["SEARCHDIR"].glob("*"))) > 0:
+                    if len(list(self.review_manager.search_dir.glob("*"))) > 0:
 
                         self.logger.info("Running %s", item["name"])
 

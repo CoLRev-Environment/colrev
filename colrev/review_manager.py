@@ -52,6 +52,16 @@ class ReviewManager:
     """ReviewManager was notified for the upcoming process and
     will provide access to the Dataset"""
 
+    SETTINGS_RELATIVE = Path("settings.json")
+    REPORT_RELATIVE = Path("report.log")
+    CORRECTIONS_PATH_RELATIVE = Path(".corrections")
+    PDF_DIRECTORY_RELATIVE = Path("pdfs")
+    SEARCHDIR_RELATIVE = Path("search")
+    README_RELATIVE = Path("readme.md")
+    STATUS_RELATIVE = Path("status.yaml")
+
+    dataset: colrev.dataset.Dataset
+
     def __init__(
         self,
         *,
@@ -69,13 +79,20 @@ class ReviewManager:
         else:
             self.path = Path.cwd()
 
+        self.settings_path = self.path / self.SETTINGS_RELATIVE
+        self.report_path = self.path / self.REPORT_RELATIVE
+        self.corrections_path = self.path / self.CORRECTIONS_PATH_RELATIVE
+        self.pdf_directory = self.path / self.PDF_DIRECTORY_RELATIVE
+        self.search_dir = self.path / self.SEARCHDIR_RELATIVE
+        self.readme = self.path / self.README_RELATIVE
+        self.status = self.path / self.STATUS_RELATIVE
+
         if debug_mode:
             self.debug_mode = True
         else:
             self.debug_mode = False
 
         try:
-            self.paths = self.__get_file_paths(repository_dir_str=self.path)
 
             self.settings = self.load_settings()
 
@@ -131,14 +148,14 @@ class ReviewManager:
         #     return base_obj
         # print(selective_merge(default_settings, project_settings))
 
-        if not self.paths["SETTINGS"].is_file():
+        if not self.settings_path.is_file():
             filedata = pkgutil.get_data(__name__, "template/settings.json")
             if filedata:
                 settings = json.loads(filedata.decode("utf-8"))
-                with open(self.paths["SETTINGS"], "w", encoding="utf8") as file:
+                with open(self.settings_path, "w", encoding="utf8") as file:
                     json.dump(settings, file, indent=4)
 
-        with open(self.paths["SETTINGS"], encoding="utf-8") as file:
+        with open(self.settings_path, encoding="utf-8") as file:
             loaded_settings = json.load(file)
 
         converters = {Path: Path, Enum: Enum}
@@ -171,41 +188,6 @@ class ReviewManager:
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(exported_dict, outfile, indent=4)
         self.dataset.add_changes(path=Path("settings.json"))
-
-    def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
-        repository_dir = repository_dir_str
-        main_refs = "records.bib"
-        data = "data.csv"
-        pdf_dir = "pdfs"
-        paper = "paper.md"
-        readme = "readme.md"
-        report = "report.log"
-        search_dir = "search"
-        status = "status.yaml"
-        corrections = ".corrections"
-        settings = "settings.json"
-        return {
-            "REPO_DIR": repository_dir,
-            "RECORDS_FILE_RELATIVE": Path(main_refs),
-            "RECORDS_FILE": repository_dir.joinpath(main_refs),
-            "DATA_RELATIVE": Path(data),
-            "DATA": repository_dir.joinpath(data),
-            "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
-            "PDF_DIRECTORY": repository_dir.joinpath(pdf_dir),
-            "PAPER_RELATIVE": Path(paper),
-            "PAPER": repository_dir.joinpath(paper),
-            "README_RELATIVE": Path(readme),
-            "README": repository_dir.joinpath(readme),
-            "REPORT_RELATIVE": Path(report),
-            "REPORT": repository_dir.joinpath(report),
-            "SEARCHDIR_RELATIVE": Path(search_dir),
-            "SEARCHDIR": repository_dir.joinpath(search_dir),
-            "STATUS_RELATIVE": Path(status),
-            "STATUS": repository_dir.joinpath(status),
-            "CORRECTIONS_PATH": repository_dir.joinpath(corrections),
-            "SETTINGS": repository_dir.joinpath(settings),
-            "SETTINGS_RELATIVE": Path(settings),
-        }
 
     def get_remote_url(self) -> str:
         git_repo = self.dataset.get_repo()
@@ -324,30 +306,6 @@ class ReviewManager:
                         active = False
                     if active:
                         print(line)
-
-        def migrate_0_3_0(self) -> bool:
-            records = self.dataset.load_records_dict()
-            if len(records.values()) > 0:
-                for record in records.values():
-                    if "LOCAL_INDEX" == record.get("metadata_source", ""):
-                        record["metadata_source"] = "CURATED"
-                    if "pdf_hash" in record:
-                        record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
-                        del record["pdf_hash"]
-
-                self.dataset.save_records_dict(records=records)
-                self.dataset.add_record_changes()
-
-            self.dataset.inplace_change(
-                filename=self.paths["SOURCES"],
-                old_string="search_type: LOCAL_PAPER_INDEX",
-                new_string="PDFS",
-            )
-            self.dataset.add_changes(path=str(self.paths["SOURCES_RELATIVE"]))
-
-            if self.dataset.has_changes():
-                return True
-            return False
 
         def migrate_0_4_0(self) -> bool:
 
@@ -747,7 +705,6 @@ class ReviewManager:
         # {'from': '0.4.0', "to": '0.5.0', 'script': migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': migrate_0_5_0}
         migration_scripts: list[dict[str, typing.Any]] = [
-            {"from": "0.3.0", "to": "0.4.0", "script": migrate_0_3_0},
             {"from": "0.4.0", "to": "0.5.0", "script": migrate_0_4_0},
             {"from": "0.5.0", "to": upcoming_version, "script": migrate_0_5_0},
         ]
@@ -800,7 +757,7 @@ class ReviewManager:
     def check_repository_setup(self) -> None:
 
         # 1. git repository?
-        if not self.__is_git_repo(path=self.paths["REPO_DIR"]):
+        if not self.__is_git_repo(path=self.path):
             raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
 
         # 2. colrev project?
@@ -846,7 +803,7 @@ class ReviewManager:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
-        git_repo = git.Repo(str(self.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.path))
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
@@ -980,10 +937,10 @@ class ReviewManager:
             {"script": self.__check_software, "params": []},
         ]
 
-        self.paths["SEARCHDIR"].mkdir(exist_ok=True)
+        self.search_dir.mkdir(exist_ok=True)
 
         failure_items = []
-        if not self.paths["RECORDS_FILE"].is_file():
+        if not self.dataset.records_file.is_file():
             self.logger.debug("Checks for RECORDS_FILE not activated")
         else:
 
@@ -991,7 +948,7 @@ class ReviewManager:
             # reading the RECORDS_FILE multiple times (for each check)
 
             if self.dataset.file_in_history(
-                filepath=self.paths["RECORDS_FILE_RELATIVE"]
+                filepath=self.dataset.RECORDS_FILE_RELATIVE
             ):
                 prior = self.dataset.retrieve_prior()
                 self.logger.debug("prior")
@@ -1015,7 +972,7 @@ class ReviewManager:
                 },
                 {
                     "script": self.dataset.check_main_records_origin,
-                    "params": {"prior": prior, "status_data": status_data},
+                    "params": {"status_data": status_data},
                 },
                 {
                     "script": self.dataset.check_fields,
@@ -1046,30 +1003,24 @@ class ReviewManager:
 
             self.logger.debug("Checks for RECORDS_FILE activated")
 
-            paper = self.paths["PAPER"]
-            if not paper.is_file():
-                self.logger.debug("Checks for PAPER not activated\n")
-            else:
-                data_operation = self.get_data_operation(
-                    notify_state_transition_operation=False
-                )
-                manuscript_checks = [
-                    # TODO : check the whole script
-                    # {
-                    #     "script": ManuscriptEndpoint.check_new_record_source_tag,
-                    #     "params": [self],
-                    # },
-                    {
-                        "script": data_operation.main,
-                        "params": [],
-                    },
-                    {
-                        "script": self.update_status_yaml,
-                        "params": [],
-                    },
-                ]
-                check_scripts += manuscript_checks
-                self.logger.debug("Checks for PAPER activated\n")
+            data_operation = self.get_data_operation(
+                notify_state_transition_operation=False
+            )
+            data_checks = [
+                # TODO : check the whole script
+                # {
+                #     "script": ManuscriptEndpoint.check_new_record_source_tag,
+                #     "params": [self],
+                # },
+                {
+                    "script": data_operation.main,
+                    "params": [],
+                },
+                {
+                    "script": self.update_status_yaml,
+                    "params": [],
+                },
+            ]
 
             # TODO: checks for structured data
             # See functions in comments
@@ -1078,6 +1029,9 @@ class ReviewManager:
             #     check_duplicates_data(data)
             # check_screen_data(screen, data)
             # DATA = review_manager.paths['DATA']
+
+            check_scripts += data_checks
+            self.logger.debug("Checks for data activated\n")
 
         for check_script in check_scripts:
             try:
@@ -1161,7 +1115,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        if not self.paths["RECORDS_FILE"].is_file():
+        if not self.dataset.records_file.is_file():
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
@@ -1253,7 +1207,7 @@ class ReviewManager:
         report = report + status_page
 
         tree_hash = self.dataset.get_tree_hash()
-        if self.paths["RECORDS_FILE"].is_file():
+        if self.dataset.records_file.is_file():
             tree_info = f"Properties for tree {tree_hash}\n"  # type: ignore
             report = report + "\n\n" + tree_info
             report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
@@ -1346,14 +1300,14 @@ class ReviewManager:
     def update_status_yaml(self) -> None:
 
         status_freq = self.get_status_freq()
-        with open(self.paths["STATUS"], "w", encoding="utf8") as file:
+        with open(self.status, "w", encoding="utf8") as file:
             yaml.dump(status_freq, file, allow_unicode=True)
 
-        self.dataset.add_changes(path=self.paths["STATUS_RELATIVE"])
+        self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
     def get_status(self) -> dict:
         status_dict = {}
-        with open(self.paths["STATUS"], encoding="utf8") as stream:
+        with open(self.status, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
@@ -1497,13 +1451,13 @@ class ReviewManager:
         if self.dataset.has_changes():
             self.logger.info("Preparing commit: checks and updates")
             self.update_status_yaml()
-            self.dataset.add_changes(path=self.paths["STATUS_RELATIVE"])
+            self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
             # TODO : hooks seem to fail most of the time
             hook_skipping = True
 
             processing_report = ""
-            if self.paths["REPORT"].is_file():
+            if self.report_path.is_file():
 
                 # Reformat
                 prefixes = [
@@ -1514,11 +1468,11 @@ class ReviewManager:
                 ]
 
                 with tempfile.NamedTemporaryFile(mode="r+b", delete=False) as temp:
-                    with open(self.paths["REPORT"], "r+b") as file:
+                    with open(self.report_path, "r+b") as file:
                         shutil.copyfileobj(file, temp)
-                # self.paths["REPORT"].rename(temp.name)
+                # self.report_path.rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
-                    self.paths["REPORT"], "w", encoding="utf8"
+                    self.report_path, "w", encoding="utf8"
                 ) as writer:
                     line = reader.readline()
                     while line:
@@ -1723,7 +1677,7 @@ class ReviewManager:
             "md_duplicates_removed"
         ] = md_duplicates_removed
         stat["colrev_status"]["overall"]["md_retrieved"] = get_nr_search(
-            self.paths["SEARCHDIR"]
+            self.search_dir
         )
         stat["colrev_status"]["currently"]["md_retrieved"] = (
             stat["colrev_status"]["overall"]["md_retrieved"] - record_links
@@ -1774,7 +1728,7 @@ class ReviewManager:
         share_stat_req = self.settings.project.share_stat_req
         found_a_conflict = False
 
-        git_repo = git.Repo(str(self.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.path))
         unmerged_blobs = git_repo.index.unmerged_blobs()
         for _, list_of_blobs in unmerged_blobs.items():
             for (stage, _) in list_of_blobs:

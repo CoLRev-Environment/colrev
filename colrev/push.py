@@ -43,7 +43,7 @@ class Push(colrev.process.Process):
 
         # group by target-repo to bundle changes in a commit
         change_sets = {}  # type: ignore
-        for correction in self.review_manager.paths["CORRECTIONS_PATH"].glob("*.json"):
+        for correction in self.review_manager.corrections_path.glob("*.json"):
             with open(correction, encoding="utf8") as json_file:
                 output = json.load(json_file)
             output["file"] = correction

@@ -39,7 +39,7 @@ class Validate(colrev.process.Process):
 
     def get_search_records(self) -> list:
 
-        search_dir = self.review_manager.paths["SEARCHDIR"]
+        search_dir = self.review_manager.search_dir
 
         records = []
         # records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
@@ -54,14 +54,16 @@ class Validate(colrev.process.Process):
 
         repo = git.Repo()
 
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
-
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (
+                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                ).data_stream.read(),
             )
-            for commit in repo.iter_commits(paths=str(records_file_relative))
+            for commit in repo.iter_commits(
+                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+            )
         )
 
         found_target_commit = False
@@ -171,7 +173,7 @@ class Validate(colrev.process.Process):
         self.review_manager.logger.info("Loading data from history...")
         git_repo = git.Repo()
 
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
+        records_file_relative = self.review_manager.dataset.RECORDS_FILE_RELATIVE
 
         revlist = (
             (

@@ -16,7 +16,7 @@ extension-pkg-whitelist=lxml.etree
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=C0116,R0914,W0511,R0902,C0115,C0114,R0912,R0915,R1702,R0903,C0302,R0904
+disable=W0511,R0914,R0902,R0912,R0915,R1702,R0903,C0302,R0904,C0116,C0115,C0114
 
 # W0511 TODO
 

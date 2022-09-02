@@ -34,10 +34,16 @@ if TYPE_CHECKING:
 
 
 class Dataset:
+
+    RECORDS_FILE_RELATIVE = Path("records.bib")
+    records_file: Path
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         self.review_manager = review_manager
-        self.records_file = review_manager.paths["RECORDS_FILE"]
+
+        self.records_file = review_manager.path / self.RECORDS_FILE_RELATIVE
+
         try:
             self.__git_repo = git.Repo(self.review_manager.path)
         except InvalidGitRepositoryError as exc:
@@ -107,15 +113,14 @@ class Dataset:
     ) -> list:
 
         prior_records = []
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
         git_repo = self.__git_repo
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(records_file_relative))
+            for commit in git_repo.iter_commits(paths=str(self.RECORDS_FILE_RELATIVE))
         )
 
         retrieved = []
@@ -286,7 +291,7 @@ class Dataset:
         origin_records: dict[str, typing.Any] = {}
         sources = [x.filename for x in self.review_manager.settings.sources]
         for source in sources:
-            source_file = self.review_manager.paths["SEARCHDIR_RELATIVE"] / Path(source)
+            source_file = self.review_manager.SEARCHDIR_RELATIVE / Path(source)
             if source_file.is_file():
                 with open(source_file, encoding="utf8") as target_db:
 
@@ -303,15 +308,14 @@ class Dataset:
         return origin_records
 
     def load_from_git_history(self):
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
         git_repo = self.review_manager.dataset.get_repo()
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(records_file_relative))
+            for commit in git_repo.iter_commits(paths=str(self.RECORDS_FILE_RELATIVE))
         )
 
         for _, _, filecontents in list(revlist):
@@ -436,7 +440,7 @@ class Dataset:
             # logging.info("Removing/reprocessing all records")
             os.remove(self.records_file)
             self.__git_repo.index.remove(
-                [str(self.review_manager.paths["RECORDS_FILE_RELATIVE"])],
+                [str(self.RECORDS_FILE_RELATIVE)],
                 working_tree=True,
             )
         else:
@@ -604,9 +608,9 @@ class Dataset:
 
         propagated = False
 
-        if self.review_manager.paths["DATA"].is_file():
+        if Path("data.csv").is_file():
             # Note: this may be redundant, but just to be sure:
-            data = pd.read_csv(self.review_manager.paths["DATA"], dtype=str)
+            data = pd.read_csv(Path("data.csv"), dtype=str)
             if record_id in data["ID"].tolist():
                 propagated = True
 
@@ -899,7 +903,7 @@ class Dataset:
             # record = RECORD.get_data()
 
         self.save_records_dict(records=records)
-        changed = self.review_manager.paths["RECORDS_FILE_RELATIVE"] in [
+        changed = self.RECORDS_FILE_RELATIVE in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]
         return changed
@@ -1026,13 +1030,14 @@ class Dataset:
 
     def retrieve_prior(self) -> dict:
 
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(paths=str(records_file_relative))
+            for commit in self.__git_repo.iter_commits(
+                paths=str(self.RECORDS_FILE_RELATIVE)
+            )
         )
         prior: dict = {"colrev_status": [], "persisted_IDs": []}
         filecontents = list(revlist)[0][1]
@@ -1153,7 +1158,7 @@ class Dataset:
             str(colrev.record.RecordState.rev_synthesized),
         ]
         missing_files = []
-        if self.review_manager.paths["RECORDS_FILE"].is_file():
+        if self.records_file.is_file():
             for record_header_item in self.__read_record_header_items():
                 if (
                     record_header_item["colrev_status"] in file_required_status
@@ -1163,11 +1168,8 @@ class Dataset:
         return missing_files
 
     def import_file(self, *, record: dict) -> dict:
-        self.review_manager.paths["PDF_DIRECTORY_RELATIVE"].mkdir(exist_ok=True)
-        new_fp = (
-            self.review_manager.paths["PDF_DIRECTORY_RELATIVE"]
-            / Path(record["ID"] + ".pdf").name
-        )
+        self.review_manager.pdf_directory.mkdir(exist_ok=True)
+        new_fp = self.review_manager.pdf_directory / Path(record["ID"] + ".pdf").name
         original_fp = Path(record["file"])
 
         if "symlink" == self.review_manager.settings.pdf_get.pdf_path_type:
@@ -1220,9 +1222,8 @@ class Dataset:
             )
 
         # Check for broken origins
-        search_dir = self.review_manager.paths["SEARCHDIR"]
         all_record_links = []
-        for bib_file in search_dir.glob("*.bib"):
+        for bib_file in self.review_manager.search_dir.glob("*.bib"):
             search_ids = self.retrieve_ids_from_bib(file_path=bib_file)
             for search_id in search_ids:
                 all_record_links.append(bib_file.name + "/" + search_id)
@@ -1326,13 +1327,14 @@ class Dataset:
         ]
 
         self.review_manager.logger.debug("Retrieve prior bib")
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(paths=str(records_file_relative))
+            for commit in self.__git_repo.iter_commits(
+                paths=str(self.RECORDS_FILE_RELATIVE)
+            )
         )
         prior: dict = {"curated_records": []}
 
@@ -1525,7 +1527,7 @@ class Dataset:
                         "original_curated_record": original_curated_record,
                         "changes": change_items,
                     }
-                    filepath = self.review_manager.paths["CORRECTIONS_PATH"] / Path(
+                    filepath = self.review_manager.corrections_path / Path(
                         f"{curated_record['ID']}.json"
                     )
                     filepath.parent.mkdir(exist_ok=True)
@@ -1800,9 +1802,7 @@ class Dataset:
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
-        self.__git_repo.index.add(
-            [str(self.review_manager.paths["RECORDS_FILE_RELATIVE"])]
-        )
+        self.__git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
 
@@ -1810,7 +1810,7 @@ class Dataset:
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
-        self.__git_repo.index.add([str(self.review_manager.paths["SETTINGS_RELATIVE"])])
+        self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
 
     def reset_log_if_no_changes(self) -> None:
         if not self.__git_repo.is_dirty():

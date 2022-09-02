@@ -566,7 +566,7 @@ class Dedupe(colrev.process.Process):
         self.review_manager.logger.info("Dedupe: fix errors")
         saved_args = locals()
 
-        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.review_manager.path))
         if self.dupe_file.is_file():
             dupes = pd.read_excel(self.dupe_file)
             dupes.fillna("", inplace=True)
@@ -577,13 +577,15 @@ class Dedupe(colrev.process.Process):
             if len(ids_to_unmerge) > 0:
                 records = self.review_manager.dataset.load_records_dict()
 
-                records_file_relative = self.review_manager.paths[
-                    "RECORDS_FILE_RELATIVE"
-                ]
                 revlist = (
-                    ((commit.tree / str(records_file_relative)).data_stream.read())
+                    (
+                        (
+                            commit.tree
+                            / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                        ).data_stream.read()
+                    )
                     for commit in git_repo.iter_commits(
-                        paths=str(records_file_relative)
+                        paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
                     )
                 )
 

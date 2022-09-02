@@ -339,15 +339,18 @@ class Prep(colrev.process.Process):
 
         record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
-        git_repo = git.Repo(str(self.review_manager.paths["REPO_DIR"]))
+        git_repo = git.Repo(str(self.review_manager.path))
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
+                (
+                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                ).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(records_file_relative))
+            for commit in git_repo.iter_commits(
+                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+            )
         )
 
         for commit_id, cmsg, filecontents in list(revlist):
@@ -431,7 +434,7 @@ class Prep(colrev.process.Process):
         records = self.review_manager.dataset.load_records_dict()
 
         git_repo = self.review_manager.dataset.get_repo()
-        records_file_relative = self.review_manager.paths["RECORDS_FILE_RELATIVE"]
+        records_file_relative = self.review_manager.dataset.RECORDS_FILE_RELATIVE
         revlist = (
             ((commit.tree / str(records_file_relative)).data_stream.read())
             for commit in git_repo.iter_commits(paths=str(records_file_relative))

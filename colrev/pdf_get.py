@@ -54,8 +54,7 @@ class PDFGet(colrev.process.Process):
         self.cpus = 4
         self.verbose = False
 
-        self.pdf_directory = self.review_manager.paths["PDF_DIRECTORY"]
-        self.pdf_directory.mkdir(exist_ok=True)
+        self.review_manager.pdf_directory.mkdir(exist_ok=True)
 
         adapter_manager = self.review_manager.get_adapter_manager()
         self.pdf_retrieval_scripts: dict[
@@ -86,7 +85,7 @@ class PDFGet(colrev.process.Process):
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
 
-        pdf_filepath = self.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+        pdf_filepath = self.review_manager.PDF_DIRECTORY_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
         )
         if pdf_filepath.is_file() and str(pdf_filepath) != record.data.get(
@@ -242,7 +241,7 @@ class PDFGet(colrev.process.Process):
         ]
 
         pdf_files = glob(
-            str(self.review_manager.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
+            str(self.review_manager.pdf_directory) + "/**.pdf", recursive=True
         )
         unlinked_pdfs = [Path(x) for x in pdf_files if x not in linked_pdfs]
 
@@ -315,7 +314,7 @@ class PDFGet(colrev.process.Process):
             file = Path(record["file"])
             new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
             # Possible option: move to top (pdfs) directory:
-            # new_filename = self.review_manager.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            # new_filename = self.review_manager.PDF_DIRECTORY_RELATIVE / Path(
             #     f"{record['ID']}.pdf"
             # )
             if str(file) == str(new_filename):
@@ -323,13 +322,13 @@ class PDFGet(colrev.process.Process):
 
             # This should replace the file fields
             self.review_manager.dataset.inplace_change(
-                filename=self.review_manager.paths["RECORDS_FILE_RELATIVE"],
+                filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
                 old_string="{" + str(file) + "}",
                 new_string="{" + str(new_filename) + "}",
             )
             # This should replace the provenance dict fields
             self.review_manager.dataset.inplace_change(
-                filename=self.review_manager.paths["RECORDS_FILE_RELATIVE"],
+                filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
                 old_string=":" + str(file) + ";",
                 new_string=":" + str(new_filename) + ";",
             )

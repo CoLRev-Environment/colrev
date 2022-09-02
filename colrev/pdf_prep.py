@@ -69,8 +69,6 @@ class PDFPrep(colrev.process.Process):
         self.reprocess = reprocess
         self.verbose = False
 
-        self.pdf_directory = self.review_manager.paths["PDF_DIRECTORY"]
-
         self.cpus = 8
 
         adapter_manager = self.review_manager.get_adapter_manager()
@@ -216,7 +214,7 @@ class PDFPrep(colrev.process.Process):
             if not self.review_manager.debug_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    for fpath in self.pdf_directory.glob("*.pdf"):
+                    for fpath in self.review_manager.pdf_directory.glob("*.pdf"):
                         if record.data["ID"] in str(fpath) and fpath != target_fname:
                             os.remove(fpath)
 

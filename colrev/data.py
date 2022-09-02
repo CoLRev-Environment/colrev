@@ -91,12 +91,12 @@ class Data(colrev.process.Process):
                 }
             )
 
-        tei_path = self.review_manager.paths["REPO_DIR"] / Path("tei")
+        tei_path = self.review_manager.path / Path("tei")
         required_records_ids = self.get_record_ids_for_synthesis(records)
         missing = [
             x
             for x in list(tei_path.glob("*.tei.xml"))
-            if not any(i in x for i in required_records_ids)
+            if not any(i in str(x) for i in required_records_ids)
         ]
         if len(missing) > 0:
             print(f"Records with missing tei file: {missing}")

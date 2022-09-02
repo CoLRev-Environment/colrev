@@ -79,7 +79,7 @@ class PDFPrepMan(colrev.process.Process):
         # pylint: disable=duplicate-code
 
         self.review_manager.logger.info(
-            f"Load {self.review_manager.paths['RECORDS_FILE_RELATIVE']}"
+            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
         )
         records = self.review_manager.dataset.load_records_dict()
 
@@ -140,8 +140,8 @@ class PDFPrepMan(colrev.process.Process):
 
     def extract_needs_pdf_prep_man(self) -> None:
 
-        prep_bib_path = self.review_manager.paths["REPO_DIR"] / Path("prep-records.bib")
-        prep_csv_path = self.review_manager.paths["REPO_DIR"] / Path("prep-records.csv")
+        prep_bib_path = self.review_manager.path / Path("prep-records.bib")
+        prep_csv_path = self.review_manager.path / Path("prep-records.csv")
 
         if prep_csv_path.is_file():
             print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
@@ -152,7 +152,7 @@ class PDFPrepMan(colrev.process.Process):
             return
 
         self.review_manager.logger.info(
-            f"Load {self.review_manager.paths['RECORDS_FILE_RELATIVE']}"
+            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
         )
         records = self.review_manager.dataset.load_records_dict()
 

@@ -42,15 +42,18 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
+    PAPER_RELATIVE = Path("paper.md")
+
     def __init__(
         self,
         *,
-        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.data.Data,
         settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
+        self.paper = data_operation.review_manager.path / self.PAPER_RELATIVE
 
     def get_default_setup(self) -> dict:
 
@@ -87,15 +90,16 @@ class ManuscriptEndpoint:
         return csl
 
     def check_new_record_source_tag(
-        self, review_manager: colrev.review_manager.ReviewManager
+        self,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> None:
-        paper = review_manager.paths["PAPER"]
-        with open(paper, encoding="utf-8") as file:
+
+        with open(self.paper, encoding="utf-8") as file:
             for line in file:
                 if self.NEW_RECORD_SOURCE_TAG in line:
                     return
         raise ManuscriptRecordSourceTagError(
-            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {paper}"
+            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.paper}"
         )
 
     def update_manuscript(
@@ -128,9 +132,6 @@ class ManuscriptEndpoint:
                         available.append(record)
 
             return list(set(record_id_list) - set(available))
-
-        paper = review_manager.paths["PAPER"]
-        paper_relative = review_manager.paths["PAPER_RELATIVE"]
 
         def add_missing_records_to_manuscript(
             *, review_manager, paper_path: Path, missing_records: list
@@ -209,14 +210,14 @@ class ManuscriptEndpoint:
                             f" {missing_record} added"
                         )
 
-        if not paper.is_file():
+        if not self.paper.is_file():
             # missing_records = synthesized_record_status_matrix.keys()
 
             review_manager.report_logger.info("Creating manuscript")
             review_manager.logger.info("Creating manuscript")
 
             title = "Manuscript template"
-            readme_file = review_manager.paths["README"]
+            readme_file = review_manager.readme
             if readme_file.is_file():
                 with open(readme_file, encoding="utf-8") as file:
                     title = file.readline()
@@ -228,48 +229,50 @@ class ManuscriptEndpoint:
 
             r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
             paper_resource_path = (
-                Path(f"template/review_type/{r_type_path}/") / paper_relative
+                Path(f"template/review_type/{r_type_path}/") / self.PAPER_RELATIVE
             )
             try:
                 review_manager.retrieve_package_file(
-                    template_file=paper_resource_path, target=paper
+                    template_file=paper_resource_path, target=self.paper
                 )
             except FileNotFoundError:
-                paper_resource_path = Path("template/") / paper_relative
+                paper_resource_path = Path("template/") / self.PAPER_RELATIVE
                 review_manager.retrieve_package_file(
-                    template_file=paper_resource_path, target=paper
+                    template_file=paper_resource_path, target=self.paper
                 )
 
             review_manager.dataset.inplace_change(
-                filename=paper,
+                filename=self.paper,
                 old_string="{{review_type}}",
                 new_string=str(review_type),
             )
             review_manager.dataset.inplace_change(
-                filename=paper, old_string="{{project_title}}", new_string=title
+                filename=self.paper, old_string="{{project_title}}", new_string=title
             )
             review_manager.dataset.inplace_change(
-                filename=paper, old_string="{{author}}", new_string=author
+                filename=self.paper, old_string="{{author}}", new_string=author
             )
             review_manager.logger.info(
-                f"Please update title and authors in {paper.name}"
+                f"Please update title and authors in {self.paper.name}"
             )
 
         review_manager.report_logger.info("Updating manuscript")
         review_manager.logger.info("Updating manuscript")
         missing_records = get_data_page_missing(
-            paper, list(synthesized_record_status_matrix.keys())
+            self.paper, list(synthesized_record_status_matrix.keys())
         )
         missing_records = sorted(missing_records)
         review_manager.logger.debug(f"missing_records: {missing_records}")
 
         if 0 == len(missing_records):
-            review_manager.report_logger.info(f"All records included in {paper.name}")
-            review_manager.logger.info(f"All records included in {paper.name}")
+            review_manager.report_logger.info(
+                f"All records included in {self.paper.name}"
+            )
+            review_manager.logger.info(f"All records included in {self.paper.name}")
         else:
             add_missing_records_to_manuscript(
                 review_manager=review_manager,
-                paper_path=paper,
+                paper_path=self.paper,
                 missing_records=[
                     "\n- @" + missing_record + "\n"
                     for missing_record in missing_records
@@ -277,13 +280,13 @@ class ManuscriptEndpoint:
             )
             nr_records_added = len(missing_records)
             review_manager.report_logger.info(
-                f"{nr_records_added} records added to {paper.name}"
+                f"{nr_records_added} records added to {self.paper.name}"
             )
             review_manager.logger.info(
-                f"{nr_records_added} records added to {paper.name}"
+                f"{nr_records_added} records added to {self.paper.name}"
             )
 
-        review_manager.dataset.add_changes(path=review_manager.paths["PAPER_RELATIVE"])
+        review_manager.dataset.add_changes(path=self.PAPER_RELATIVE)
 
         return records
 
@@ -302,7 +305,7 @@ class ManuscriptEndpoint:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ):
@@ -348,7 +351,7 @@ class ManuscriptEndpoint:
 
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = get_synthesized_ids_paper(
-            data_operation.review_manager.paths["PAPER"],
+            self.paper,
             synthesized_record_status_matrix,
         )
         for syn_id in synthesized_in_manuscript:
@@ -360,15 +363,20 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class StructuredDataEndpoint:
+
+    DATA_PATH_RELATIVE = Path("data.csv")
+
     def __init__(
         self,
         *,
-        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.data.Data,
         settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
+        # TODO : integrate filename in custom settings
+        self.data_path = data_operation.review_manager.path / self.DATA_PATH_RELATIVE
 
     def get_default_setup(self) -> dict:
         structured_endpoint_details = {
@@ -396,9 +404,7 @@ class StructuredDataEndpoint:
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
 
-            data_path = review_manager.paths["DATA"]
-
-            if not data_path.is_file():
+            if not self.DATA_PATH_RELATIVE.is_file():
 
                 coding_dimensions_str = input(
                     "\n\nEnter columns for data extraction (comma-separted)"
@@ -413,13 +419,15 @@ class StructuredDataEndpoint:
                 data_df = pd.DataFrame(data_list, columns=["ID"] + coding_dimensions)
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
+                data_df.to_csv(
+                    self.DATA_PATH_RELATIVE, index=False, quoting=csv.QUOTE_ALL
+                )
 
             else:
 
                 nr_records_added = 0
 
-                data_df = pd.read_csv(data_path, dtype=str)
+                data_df = pd.read_csv(self.DATA_PATH_RELATIVE, dtype=str)
 
                 for record_id in list(synthesized_record_status_matrix.keys()):
                     # skip when already available
@@ -437,13 +445,15 @@ class StructuredDataEndpoint:
 
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
+                data_df.to_csv(
+                    self.DATA_PATH_RELATIVE, index=False, quoting=csv.QUOTE_ALL
+                )
 
                 review_manager.report_logger.info(
-                    f"{nr_records_added} records added ({data_path})"
+                    f"{nr_records_added} records added ({self.DATA_PATH_RELATIVE})"
                 )
                 review_manager.logger.info(
-                    f"{nr_records_added} records added ({data_path})"
+                    f"{nr_records_added} records added ({self.DATA_PATH_RELATIVE})"
                 )
 
             return records
@@ -453,13 +463,11 @@ class StructuredDataEndpoint:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        data_operation.review_manager.dataset.add_changes(
-            path=data_operation.review_manager.paths["DATA_RELATIVE"]
-        )
+        data_operation.review_manager.dataset.add_changes(path=self.DATA_PATH_RELATIVE)
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -497,10 +505,9 @@ class StructuredDataEndpoint:
             ]
             return data_extracted
 
-        data_path = data_operation.review_manager.paths["DATA"]
         structured_data_extracted = get_structured_data_extracted(
             synthesized_record_status_matrix=synthesized_record_status_matrix,
-            data_path=data_path,
+            data_path=self.data_path,
         )
 
         for syn_id in structured_data_extracted:
@@ -916,9 +923,11 @@ class ZettlrEndpoint:
                 template_file=zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
-            readme_file = data_operation.review_manager.paths["README"]
-            if readme_file.is_file():
-                with open(readme_file, encoding="utf-8") as file:
+
+            if data_operation.review_manager.readme.is_file():
+                with open(
+                    data_operation.review_manager.readme, encoding="utf-8"
+                ) as file:
                     title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
 

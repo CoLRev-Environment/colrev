@@ -352,7 +352,7 @@ class BackwardSearchEndpoint:
             print("scope not yet implemented")
             return
 
-        if not search_operation.review_manager.paths["RECORDS_FILE"].is_file():
+        if not search_operation.review_manager.dataset.records_file.is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
@@ -811,7 +811,7 @@ class PDFSearchEndpoint:
                 )
 
             records = {}
-            if search_operation.review_manager.paths["RECORDS_FILE"].is_file():
+            if search_operation.review_manager.dataset.records_file.is_file():
                 records = search_operation.review_manager.dataset.load_records_dict()
 
             to_remove: list[str] = []
@@ -834,7 +834,7 @@ class PDFSearchEndpoint:
                     records=search_rd, save_path=feed_file
                 )
 
-            if search_operation.review_manager.paths["RECORDS_FILE"].is_file():
+            if search_operation.review_manager.dataset.records_file.is_file():
                 # Note : origins may contain multiple links
                 # but that should not be a major issue in indexing repositories
 
@@ -907,7 +907,7 @@ class PDFSearchEndpoint:
         remove_records_if_pdf_no_longer_exists()
 
         indexed_pdf_paths = get_pdf_links(bib_file=feed_file)
-        #  + get_pdf_links(review_manager.paths["RECORDS_FILE"])
+        #  + get_pdf_links(review_manager.dataset.records_file)
 
         indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
         search_operation.review_manager.logger.debug(

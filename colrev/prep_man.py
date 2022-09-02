@@ -52,7 +52,7 @@ class PrepMan(colrev.process.Process):
         # pylint: disable=duplicate-code
 
         self.review_manager.logger.info(
-            f"Load {self.review_manager.paths['RECORDS_FILE_RELATIVE']}"
+            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
         )
         records = self.review_manager.dataset.load_records_dict()
 

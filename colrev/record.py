@@ -1644,7 +1644,7 @@ class Record:
 
         review_manager.dataset.update_record_by_id(new_record=self.get_data())
         review_manager.dataset.add_changes(
-            path=review_manager.paths["RECORDS_FILE_RELATIVE"]
+            path=review_manager.dataset.RECORDS_FILE_RELATIVE
         )
 
     def get_toc_key(self) -> str:

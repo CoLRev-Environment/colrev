@@ -67,7 +67,7 @@ class PDFCheckOCREndpoint:
         if pdf_path.is_file():
             orig_path = pdf_path.parents[0]
         else:
-            orig_path = review_manager.paths["PDF_DIRECTORY"]
+            orig_path = review_manager.pdf_directory
 
         # TODO : use variable self.cpus
         options = f"--jobs {4}"

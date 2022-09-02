@@ -1272,7 +1272,7 @@ class LocalIndex:
                 path_str=str(repo_source_path)
             )
             check_process = colrev.process.CheckProcess(review_manager=review_manager)
-            if not check_process.review_manager.paths["RECORDS_FILE"].is_file():
+            if not check_process.review_manager.dataset.records_file.is_file():
                 return
             records = check_process.review_manager.dataset.load_records_dict()
 

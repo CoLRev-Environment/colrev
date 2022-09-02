@@ -106,14 +106,12 @@ class Process:
             if len(git_repo.index.diff("HEAD")) == 0:
                 unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
                 if (
-                    self.review_manager.paths["RECORDS_FILE_RELATIVE"]
+                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
                     in unstaged_changes
                 ):
                     git_repo.index.add(
-                        [self.review_manager.paths["RECORDS_FILE_RELATIVE"]]
+                        [self.review_manager.dataset.RECORDS_FILE_RELATIVE]
                     )
-                if self.review_manager.paths["PAPER_RELATIVE"] in unstaged_changes:
-                    git_repo.index.add([self.review_manager.paths["PAPER_RELATIVE"]])
 
             # Principle: working tree always has to be clean
             # because processing functions may change content
@@ -128,8 +126,7 @@ class Process:
                     ] + [
                         x.a_path
                         for x in git_repo.head.commit.diff()
-                        if x.a_path
-                        not in [str(self.review_manager.paths["STATUS_RELATIVE"])]
+                        if x.a_path not in [str(self.review_manager.STATUS_RELATIVE)]
                     ]
                     if len(changed_files) > 0:
                         raise colrev_exceptions.CleanRepoRequiredError(
@@ -145,13 +142,8 @@ class Process:
                         for x in git_repo.head.commit.diff()
                         if not any(str(ip) in x.a_path for ip in ignore_pattern)
                     ]
-                    if (
-                        str(self.review_manager.paths["STATUS_RELATIVE"])
-                        in changed_files
-                    ):
-                        changed_files.remove(
-                            str(self.review_manager.paths["STATUS_RELATIVE"])
-                        )
+                    if str(self.review_manager.STATUS_RELATIVE) in changed_files:
+                        changed_files.remove(str(self.review_manager.STATUS_RELATIVE))
                     if changed_files:
                         raise colrev_exceptions.CleanRepoRequiredError(
                             changed_files, ",".join([str(x) for x in ignore_pattern])
@@ -161,8 +153,8 @@ class Process:
         if ProcessType.load == self.type:
             require_clean_repo_general(
                 ignore_pattern=[
-                    self.review_manager.paths["SEARCHDIR_RELATIVE"],
-                    self.review_manager.paths["SETTINGS_RELATIVE"],
+                    self.review_manager.SEARCHDIR_RELATIVE,
+                    self.review_manager.SETTINGS_RELATIVE,
                 ]
             )
             check_process_model_precondition()
@@ -175,7 +167,7 @@ class Process:
 
         elif ProcessType.prep_man == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.review_manager.paths["RECORDS_FILE_RELATIVE"]]
+                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
             check_process_model_precondition()
 
@@ -185,19 +177,19 @@ class Process:
 
         elif ProcessType.prescreen == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.review_manager.paths["RECORDS_FILE_RELATIVE"]]
+                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
             check_process_model_precondition()
 
         elif ProcessType.pdf_get == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.review_manager.paths["PDF_DIRECTORY_RELATIVE"]]
+                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
             check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.review_manager.paths["PDF_DIRECTORY_RELATIVE"]]
+                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
             check_process_model_precondition()
 
@@ -207,7 +199,7 @@ class Process:
 
         elif ProcessType.pdf_prep_man == self.type:
             # require_clean_repo_general(
-            #     ignore_pattern=[self.review_manager.paths["PDF_DIRECTORY_RELATIVE"]]
+            #     ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             # )
             # check_process_model_precondition()
             pass
@@ -217,12 +209,11 @@ class Process:
             check_process_model_precondition()
 
         elif ProcessType.data == self.type:
-            require_clean_repo_general(
-                ignore_pattern=[
-                    self.review_manager.paths["PAPER_RELATIVE"],
-                    self.review_manager.paths["DATA_RELATIVE"],
-                ]
-            )
+            # require_clean_repo_general(
+            #     ignore_pattern=[
+            #         # data.csv, paper.md etc.?,
+            #     ]
+            # )
             check_process_model_precondition()
 
         elif ProcessType.format == self.type:

@@ -72,9 +72,9 @@ class UnpaywallEndpoint:
 
         return best_loc["url_for_pdf"]
 
-    def __is_pdf(self, *, path_to_file: str) -> bool:
+    def __is_pdf(self, *, path_to_file: Path) -> bool:
         try:
-            extract_text(path_to_file)
+            extract_text(str(path_to_file))
             return True
         except PDFException:
             return False
@@ -86,9 +86,9 @@ class UnpaywallEndpoint:
         if "doi" not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.review_manager.paths[
-            "PDF_DIRECTORY_RELATIVE"
-        ] / Path(f"{record.data['ID']}.pdf")
+        pdf_filepath = pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE / Path(
+            f"{record.data['ID']}.pdf"
+        )
         url = self.__unpaywall(
             review_manager=pdf_get_operation.review_manager, doi=record.data["doi"]
         )
@@ -179,9 +179,10 @@ class WebsiteScreenshotEndpoint:
         if "online" == record.data["ENTRYTYPE"]:
             screenshot_service.start_screenshot_service()
 
-            pdf_filepath = pdf_get_operation.review_manager.paths[
-                "PDF_DIRECTORY_RELATIVE"
-            ] / Path(f"{record.data['ID']}.pdf")
+            pdf_filepath = (
+                pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE
+                / Path(f"{record.data['ID']}.pdf")
+            )
             record = screenshot_service.add_screenshot(
                 record=record, pdf_filepath=pdf_filepath
             )
