@@ -34,6 +34,11 @@ class ReviewType(Enum):
     scientometric = "scientometric"
     peer_review = "peer_review"
 
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=E1101
+        return cls._member_names_
+
     def __str__(self) -> str:
         return (
             f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"

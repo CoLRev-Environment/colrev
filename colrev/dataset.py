@@ -1729,13 +1729,6 @@ class Dataset:
                 self.review_manager.logger.debug(
                     f"Search details without file: {source.filename}"
                 )
-                # raise SearchSettingsError('File not found: "
-                #                       f"{source["filename"]}')
-            # pylint: disable=protected-access
-            if str(source.search_type) not in colrev.settings.SearchType._member_names_:
-                raise colrev_exceptions.SearchSettingsError(
-                    f"{source.search_type} not in {colrev.settings.SearchType._member_names_}"
-                )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"
             # if "completion_date" in source:

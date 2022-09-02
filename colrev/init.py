@@ -49,11 +49,11 @@ class Initializer:
                 options=self.share_stat_req_options,
             )
 
-        if review_type not in colrev.settings.ReviewType._member_names_:
+        if review_type not in colrev.settings.ReviewType.get_options():
             raise colrev_exceptions.ParameterError(
                 parameter="init.review_type",
                 value=f"'{review_type}'",
-                options=colrev.settings.ReviewType._member_names_,
+                options=colrev.settings.ReviewType.get_options(),
             )
 
         self.instructions: list[str] = []

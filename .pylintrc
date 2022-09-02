@@ -36,8 +36,3 @@ disable=C0116,R0914,W0511,R0902,C0115,C0114,R0912,R0915,R1702,R0903,R1733,W1203,
 # C0116 missing function/method docstring
 # C0115 missing class docstring
 # C0114 missing module docstring
-
-
-[TYPECHECK]
-# Note : false positives for dataclass
-ignored-classes=ReviewType,SearchType
