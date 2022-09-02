@@ -51,6 +51,9 @@ class AdapterManager:
         cls, *, process, scripts, script_type: str = ""
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         # pylint: disable=import-outside-toplevel
+        # pylint: disable=unnecessary-dict-index-lookup
+        # Note : when iterating over script_dict.items(),
+        # changes to the values (or del k) would not persist
 
         # avoid changes in the config
         scripts = deepcopy(scripts)
@@ -103,9 +106,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomSearch
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomSearch
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -119,7 +120,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomLoad
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomLoad
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -133,7 +134,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomPrep
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrep
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -147,9 +148,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPrepMan
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrepMan
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -163,9 +162,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomDedupe
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomDedupe
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -179,9 +176,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPrescreen
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrescreen
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -195,9 +190,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPDFGet
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFGet
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -211,9 +204,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPDFGetMan
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFGetMan
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -227,9 +218,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPDFPrep
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFPrep
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -243,9 +232,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomPDFPrepMan
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFPrepMan
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -259,9 +246,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k][
-                        "endpoint"
-                    ].CustomScreen
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomScreen
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -275,7 +260,7 @@ class AdapterManager:
 
             for k, val in scripts_dict.items():
                 if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomData
+                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomData
                     del scripts_dict[k]["custom_flag"]
 
             for endpoint_name, script in scripts_dict.items():
@@ -290,9 +275,7 @@ class AdapterManager:
 
                 for k, val in scripts_dict.items():
                     if "custom_flag" in val:
-                        scripts_dict[k]["endpoint"] = scripts_dict[k][
-                            "endpoint"
-                        ].CustomSearchSource
+                        scripts_dict[k]["endpoint"] = val["endpoint"].CustomSearchSource
                         del scripts_dict[k]["custom_flag"]
 
                 for endpoint_name, script in scripts_dict.items():
