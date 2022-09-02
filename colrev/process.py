@@ -440,6 +440,7 @@ class SearchEndpoint(zope.interface.Interface):
     source_identifier = zope.interface.Attribute("""Source identifier""")
     mode = zope.interface.Attribute("""Mode""")
 
+    # pylint: disable=no-self-argument
     def run_search(search_operation, params: dict, feed_file: Path) -> None:
         pass
 
@@ -451,6 +452,7 @@ class SearchSourceEndpoint(zope.interface.Interface):
 
     source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
 
+    # pylint: disable=no-self-argument
     def heuristic(filename, data):
         pass
 
@@ -462,6 +464,7 @@ class LoadEndpoint(zope.interface.Interface):
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
+    # pylint: disable=no-self-argument
     def load(load_operation, source):
         pass
 
@@ -477,52 +480,62 @@ class PrepEndpoint(zope.interface.Interface):
         (even if the colrev_status does not transition to md_prepared)"""
     )
 
+    # pylint: disable=no-self-argument
     def prepare(prep_operation, prep_record):
         pass
 
 
 class PrepManEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def prepare_manual(prep_man_operation, records):
         pass
 
 
 class DedupeEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def run_dedupe(dedupe_operation):
         pass
 
 
 class PrescreenEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
         pass
 
 
 class PDFGetEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def get_pdf(pdf_get_operation, record):
         return record
 
 
 class PDFGetManEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def get_man_pdf(pdf_get_man_operation, records):
         return records
 
 
 class PDFPrepEndpoint(zope.interface.Interface):
     # pylint: disable=unused-argument
+    # pylint: disable=no-self-argument
     def prep_pdf(pdf_prep_operation, record, pad) -> dict:
         return record.data
 
 
 class PDFPrepManEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def prep_man_pdf(pdf_prep_man_operation, records):
         return records
 
 
 class ScreenEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     def run_screen(screen_operation, records: dict, split: list) -> dict:
         pass
 
 
 class DataEndpoint(zope.interface.Interface):
+    # pylint: disable=no-self-argument
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
         return {}
