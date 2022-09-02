@@ -2337,6 +2337,9 @@ class ReviewManager:
 
         return colrev.pull.Pull(review_manager=self, **kwargs)
 
+    def get_review_manager(self, **kwargs) -> ReviewManager:
+        return type(self)(**kwargs)
+
 
 if __name__ == "__main__":
     pass

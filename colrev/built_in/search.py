@@ -24,9 +24,9 @@ import colrev.built_in.database_connectors
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-import colrev.review_manager
 
 if TYPE_CHECKING:
+    import colrev.review_manager
     import colrev.search.Search
 
 
@@ -462,7 +462,7 @@ class ColrevProjectSearchEndpoint:
 
             imported_ids = [x["ID"] for x in records]
 
-        project_review_manager = colrev.review_manager.ReviewManager(
+        project_review_manager = search_operation.review_manager.get_review_manager(
             path_str=params["scope"]["url"]
         )
         project_review_manager.get_load_operation(

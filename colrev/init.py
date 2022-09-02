@@ -16,7 +16,7 @@ import git
 import colrev.cli_colors as colors
 import colrev.dataset
 import colrev.exceptions as colrev_exceptions
-import colrev.review_manager
+import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
 
 

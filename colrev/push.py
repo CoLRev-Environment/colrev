@@ -10,7 +10,7 @@ import git
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-import colrev.review_manager
+
 
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
@@ -154,7 +154,9 @@ class Push(colrev.process.Process):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_review_manager = colrev.review_manager.ReviewManager(path_str=source_url)
+        check_review_manager = self.review_manager.get_review_manager(
+            path_str=source_url
+        )
         check_process = colrev.process.CheckProcess(review_manager=check_review_manager)
         git_repo = check_process.review_manager.dataset.get_repo()
 

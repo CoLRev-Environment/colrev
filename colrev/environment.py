@@ -461,6 +461,7 @@ class EnvironmentManager:
     def get_environment_details(self) -> dict:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
+        # pylint: disable=cyclic-import
         import colrev.review_manager
 
         local_index = LocalIndex()
@@ -1280,6 +1281,7 @@ class LocalIndex:
     def index_colrev_project(self, *, repo_source_path: Path) -> None:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
+        # pylint: disable=cyclic-import
         import colrev.review_manager
 
         try:
