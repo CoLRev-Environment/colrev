@@ -204,7 +204,7 @@ class Status(colrev.process.Process):
                         "cmd": f"cd '{registered_path}' && git pull --rebase",
                     }
 
-        except AttributeError:
+        except (AttributeError, git.exc.NoSuchPathError):
             pass
         return instruction
 

@@ -94,8 +94,6 @@ class ReviewManager:
 
         try:
 
-            self.settings = self.load_settings()
-
             if self.debug_mode:
                 self.report_logger = self.__setup_report_logger(level=logging.DEBUG)
                 """Logger for the commit report"""
@@ -117,6 +115,7 @@ class ReviewManager:
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.dataset = colrev.dataset.Dataset(review_manager=self)
+            self.settings = self.load_settings()
             """The review dataset object"""
 
         except Exception as exc:  # pylint: disable=broad-except
@@ -711,7 +710,7 @@ class ReviewManager:
 
         # Start with the first step if the version is older:
         if last_version not in [x["from"] for x in migration_scripts]:
-            last_version = "0.3.0"
+            last_version = "0.4.0"
 
         while current_version in [x["from"] for x in migration_scripts]:
             self.logger.info("Current CoLRev version: %s", last_version)
