@@ -25,7 +25,6 @@ import pandas as pd
 import requests
 import requests_cache
 import yaml
-from dacite.exceptions import MissingValueError
 from docker.errors import APIError
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
@@ -297,6 +296,7 @@ class AdapterManager:
 class EnvironmentManager:
 
     colrev_path = Path.home().joinpath("colrev")
+    cache_path = colrev_path / Path("prep_requests_cache")
     registry = "registry.yaml"
 
     paths = {"REGISTRY": colrev_path.joinpath(registry)}
@@ -1308,20 +1308,17 @@ class LocalIndex:
             for record_dict in tqdm(records.values()):
                 self.index_record(record_dict=record_dict)
 
-        except InvalidGitRepositoryError:
-            print(f"InvalidGitRepositoryError: {repo_source_path}")
-        except KeyError as exc:
-            print(f"KeyError: {exc}")
-        except MissingValueError as exc:
-            print(f"MissingValueError (settings.json): {exc} ({repo_source_path})")
+        except (colrev_exceptions.InvalidSettingsError) as exc:
+            print(exc)
 
     def index(self) -> None:
         # import shutil
 
         # Note : this task takes long and does not need to run often
-        cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
         session = requests_cache.CachedSession(
-            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+            str(EnvironmentManager.cache_path),
+            backend="sqlite",
+            expire_after=timedelta(days=30),
         )
         # pylint: disable=unnecessary-lambda
         # Note : lambda is necessary to prevent immediate function call

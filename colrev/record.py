@@ -235,7 +235,7 @@ class Record:
                         data_copy[key] = list_to_str(val=data_copy[key])
 
             if "language" in self.data:
-                if len(self.data["language"]) > 2:
+                if len(self.data["language"]) != 3:
                     print(
                         f"Warning: language ({self.data['language']}) of "
                         f"{self.data['ID']} not in ISO 639-3 format"

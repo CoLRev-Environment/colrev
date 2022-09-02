@@ -2084,11 +2084,10 @@ class ReviewManager:
     @classmethod
     def get_cached_session(cls) -> requests_cache.CachedSession:
 
-        cache_path = colrev.environment.EnvironmentManager.colrev_path / Path(
-            "prep_requests_cache"
-        )
         return requests_cache.CachedSession(
-            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+            str(colrev.environment.EnvironmentManager.cache_path),
+            backend="sqlite",
+            expire_after=timedelta(days=30),
         )
 
     @classmethod
