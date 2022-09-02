@@ -392,6 +392,7 @@ def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.NoSearchFeedRegistered,
         colrev_exceptions.ServiceNotAvailableException,
+        colrev_exceptions.ParameterError,
     ) as exc:
         logging.error(exc)
 

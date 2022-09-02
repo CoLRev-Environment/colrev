@@ -384,11 +384,12 @@ class Search(colrev.process.Process):
                         if str(f.filename) in selection_str.split(",")
                     ]
                 if len(automated_sources_selected) == 0:
-                    available_options = ", ".join(
-                        [str(f.filename) for f in automated_sources]
+                    available_options = [str(f.filename) for f in automated_sources]
+                    raise colrev_exceptions.ParameterError(
+                        parameter="selection_str",
+                        value=selection_str,
+                        options=available_options,
                     )
-                    print(f"Error: {selection_str} not in {available_options}")
-                    raise colrev_exceptions.NoSearchFeedRegistered()
 
             for source in automated_sources_selected:
                 source.filename = self.review_manager.path / Path(source.filename)
