@@ -1644,9 +1644,11 @@ class LocalIndex:
 
         return "unknown"
 
-    def analyze(self, *, threshold: float = 0.95) -> None:
+    def analyze(self) -> None:
 
         # TODO : update analyze() functionality based on es index
+        # add to method signature:
+        # (... , *, threshold: float = 0.95, ...)
 
         # changes = []
         # for d_file in self.dind_path.rglob("*.txt"):

@@ -101,7 +101,12 @@ class SimpleDedupeSettings:
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
 
-    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.dedupe.Dedupe,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
 
         # Set default values (if necessary)
         if "merging_non_dup_threshold" not in settings:
@@ -419,7 +424,12 @@ class ActiveLearningDedupeTrainingEndpoint:
 
     deduper: dedupe_io.Deduper
 
-    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.dedupe.Dedupe,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -827,7 +837,12 @@ class ActiveLearningSettings:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
-    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.dedupe.Dedupe,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
 
         # Set default values (if necessary)
         if "merge_threshold" not in settings:
@@ -1312,7 +1327,12 @@ class CurationDedupeEndpoint:
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
-    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.dedupe.Dedupe,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         # TODO : the settings could be used
         # to select the specific files/grouping properties?!
         # -> see selected_source.
@@ -1785,7 +1805,12 @@ class CurationDedupeEndpoint:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class CurationMissingDedupeEndpoint:
-    def __init__(self, *, dedupe_operation: colrev.dedupe.Dedupe, settings: dict):
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.dedupe.Dedupe,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )

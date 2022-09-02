@@ -1501,8 +1501,8 @@ class ReviewManager:
     ) -> bool:
         """Create a commit (including a commit report)"""
 
-        # if "realtime" == self.settings.project.review_type and not realtime_override:
-        #     return False
+        if "realtime" == self.settings.project.review_type and not realtime_override:
+            return False
 
         if self.dataset.has_changes():
             self.logger.info("Preparing commit: checks and updates")

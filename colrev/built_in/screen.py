@@ -21,7 +21,10 @@ if TYPE_CHECKING:
 @zope.interface.implementer(colrev.process.ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
     def __init__(
-        self, *, screen_operation: colrev.screen.Screen, settings: dict
+        self,
+        *,
+        screen_operation: colrev.screen.Screen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -248,7 +251,10 @@ class SpreadsheetScreenEndpoint:
     spreadsheet_path = Path("screen/screen.csv")
 
     def __init__(
-        self, *, screen_operation: colrev.screen.Screen, settings: dict
+        self,
+        *,
+        screen_operation: colrev.screen.Screen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings

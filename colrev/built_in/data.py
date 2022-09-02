@@ -42,7 +42,12 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
-    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -355,7 +360,12 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class StructuredDataEndpoint:
-    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -502,7 +512,12 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class EndnoteEndpoint:
-    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -521,7 +536,7 @@ class EndnoteEndpoint:
         self,
         data_operation: colrev.data.Data,
         records: dict,
-        synthesized_record_status_matrix: dict,
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
         def zotero_conversion(*, content: str) -> bytes:
 
@@ -636,7 +651,7 @@ class EndnoteEndpoint:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -647,7 +662,12 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class PRISMAEndpoint:
-    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -662,8 +682,8 @@ class PRISMAEndpoint:
     def update_data(
         self,
         data_operation: colrev.data.Data,
-        records: dict,
-        synthesized_record_status_matrix: dict,
+        records: dict,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
 
         prisma_resource_path = Path("template/") / Path("PRISMA.csv")
@@ -726,7 +746,7 @@ class PRISMAEndpoint:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -748,7 +768,12 @@ class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    def __init__(self, *, data_operation: colrev.data.Data, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(data_class=ZettlrSettings, data=settings)
 
     def get_default_setup(self) -> dict:
@@ -762,8 +787,8 @@ class ZettlrEndpoint:
     def update_data(
         self,
         data_operation: colrev.data.Data,
-        records: dict,
-        synthesized_record_status_matrix: dict,
+        records: dict,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
 
         data_operation.review_manager.logger.info("Export to zettlr endpoint")
@@ -964,7 +989,7 @@ class ZettlrEndpoint:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:

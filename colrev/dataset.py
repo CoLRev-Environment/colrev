@@ -1211,7 +1211,7 @@ class Dataset:
                 f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
             )
 
-    def check_main_records_origin(self, *, prior: dict, status_data: dict) -> None:
+    def check_main_records_origin(self, *, status_data: dict) -> None:
 
         # Check whether each record has an origin
         if not len(status_data["entries_without_origin"]) == 0:
@@ -1244,6 +1244,7 @@ class Dataset:
                     )
 
         # TODO : Check for removed origins
+        # add to method signature: (..., prior: dict, ...)
         # Raise an exception if origins were removed
         # prior_origins = [x[0] for x in prior['status']]
         # current_origins = [x[1] for x in data['origin_list']]

@@ -36,7 +36,12 @@ class LoadFixesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -91,14 +96,21 @@ class ExcludeNonLatinAlphabetsPrep:
     always_apply_changes = True
     alphabet_detector = AlphabetDetector()
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         def mostly_latin_alphabet(str_to_check) -> bool:
             assert len(str_to_check) != 0
@@ -235,14 +247,21 @@ class ExcludeCollectionsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         if "proceedings" == record.data["ENTRYTYPE"].lower():
             record.prescreen_exclude(reason="collection/proceedings")
@@ -255,7 +274,12 @@ class RemoveError500URLsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -302,7 +326,12 @@ class RemoveBrokenIDPrep:
     always_apply_changes = True
 
     # check_status: relies on crossref / openlibrary connectors!
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -341,7 +370,12 @@ class GlobalIDConsistencyPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -423,14 +457,21 @@ class CuratedPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         if record.masterdata_is_curated():
             if colrev.record.RecordState.md_imported == record.data["colrev_status"]:
@@ -445,7 +486,12 @@ class FormatPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -594,7 +640,12 @@ class BibTexCrossrefResolutionPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -624,7 +675,12 @@ class SemanticScholarPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -769,7 +825,12 @@ class DOIFromURLsPrep:
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -853,7 +914,12 @@ class DOIMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -886,7 +952,12 @@ class CrossrefMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -910,7 +981,12 @@ class DBLPMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -989,7 +1065,12 @@ class OpenLibraryMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -1124,7 +1205,12 @@ class CiteAsPrep:
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -1219,7 +1305,12 @@ class CrossrefYearVolIssPrep:
     )
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -1388,14 +1479,21 @@ class RemoveNicknamesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         if "author" in record.data:
             # Replace nicknames in parentheses
@@ -1411,14 +1509,21 @@ class FormatMinorPrep:
     always_apply_changes = False
     HTML_CLEANER = re.compile("<.*?>")
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
 
         for field in list(record.data.keys()):
@@ -1448,7 +1553,12 @@ class DropFieldsPrep:
     always_apply_changes = False
     local_index: colrev.environment.LocalIndex
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -1494,14 +1604,21 @@ class RemoveRedundantFieldPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
 
         if "article" == record.data["ENTRYTYPE"]:
@@ -1533,7 +1650,12 @@ class CorrectRecordTypePrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -1613,7 +1735,12 @@ class UpdateMetadataStatusPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )

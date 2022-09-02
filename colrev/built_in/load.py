@@ -23,7 +23,12 @@ class BibPybtexLoader:
 
     supported_extensions = ["bib"]
 
-    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -121,7 +126,12 @@ class SpreadsheetLoadUtility:
 class CSVLoader:
     supported_extensions = ["csv"]
 
-    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -155,7 +165,12 @@ class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
 
-    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -247,7 +262,12 @@ class MarkdownLoader:
 
     supported_extensions = ["md"]
 
-    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -293,7 +313,12 @@ class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
-    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )

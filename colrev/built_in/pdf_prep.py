@@ -25,7 +25,10 @@ if TYPE_CHECKING:
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCheckOCREndpoint:
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -55,7 +58,7 @@ class PDFCheckOCREndpoint:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record_dict: dict,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> None:
 
         pdf_path = review_manager.path / Path(record_dict["file"])
@@ -135,7 +138,10 @@ class PDFCheckOCREndpoint:
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCoverPageEndpoint:
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -146,7 +152,7 @@ class PDFCoverPageEndpoint:
         self,
         pdf_prep_operation: colrev.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> dict:
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
@@ -307,7 +313,10 @@ class PDFCoverPageEndpoint:
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFLastPageEndpoint:
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -318,7 +327,7 @@ class PDFLastPageEndpoint:
         self,
         pdf_prep_operation: colrev.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> dict:
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
@@ -416,7 +425,10 @@ class PDFLastPageEndpoint:
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFMetadataValidationEndpoint:
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -507,7 +519,7 @@ class PDFMetadataValidationEndpoint:
         self,
         pdf_prep_operation: colrev.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad=40,
+        pad=40,  # pylint: disable=unused-argument
     ) -> dict:
 
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
@@ -565,7 +577,10 @@ class PDFCompletenessValidationEndpoint:
     )
 
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -733,7 +748,7 @@ class TEIEndpoint:
         self,
         pdf_prep_operation: colrev.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> dict:
 
         pdf_prep_operation.review_manager.logger.info(

@@ -37,7 +37,10 @@ class CrossrefSearchEndpoint:
     mode = "all"
 
     def __init__(
-        self, *, search_operation: colrev.search.Search, settings: dict
+        self,
+        *,
+        search_operation: colrev.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -159,7 +162,10 @@ class DBLPSearchEndpoint:
     mode = "all"
 
     def __init__(
-        self, *, search_operation: colrev.search.Search, settings: dict
+        self,
+        *,
+        search_operation: colrev.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -428,7 +434,7 @@ class BackwardSearchEndpoint:
         else:
             print("No new records added.")
 
-    def validate_params(self, query: str) -> None:
+    def validate_params(self, query: str) -> None:  # pylint: disable=unused-argument
         print("not yet imlemented")
 
 
@@ -440,7 +446,10 @@ class ColrevProjectSearchEndpoint:
     mode = "individual"
 
     def __init__(
-        self, *, search_operation: colrev.search.Search, settings: dict
+        self,
+        *,
+        search_operation: colrev.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -535,7 +544,10 @@ class IndexSearchEndpoint:
     mode = "individual"
 
     def __init__(
-        self, *, search_operation: colrev.search.Search, settings: dict
+        self,
+        *,
+        search_operation: colrev.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -706,7 +718,7 @@ class IndexSearchEndpoint:
         else:
             print("No records found")
 
-    def validate_params(self, query: str) -> None:
+    def validate_params(self, query: str) -> None:  # pylint: disable=unused-argument
         print("not yet imlemented")
 
 
@@ -719,7 +731,10 @@ class PDFSearchEndpoint:
     pdf_preparation_operation = None
 
     def __init__(
-        self, *, search_operation: colrev.search.Search, settings: dict
+        self,
+        *,
+        search_operation: colrev.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings

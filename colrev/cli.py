@@ -18,6 +18,7 @@ import colrev.review_manager
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
+# pylint: disable=unused-argument
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -1854,7 +1855,7 @@ def validate_show(ctx, param, value):
 @main.command(help_priority=26)
 @click.argument("keyword")
 @click.pass_context
-def show(ctx, keyword, callback=validate_show, required=True):
+def show(ctx, keyword, callback=validate_show):
     """Show aspects (sample, ...)"""
 
     # pylint: disable=import-outside-toplevel

@@ -23,7 +23,12 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class UnpaywallEndpoint:
-    def __init__(self, *, pdf_get_operation: colrev.pdf_get.PDFGet, settings):
+    def __init__(
+        self,
+        *,
+        pdf_get_operation: colrev.pdf_get.PDFGet,  # pylint: disable=unused-argument
+        settings,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -122,7 +127,12 @@ class UnpaywallEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class LocalIndexEndpoint:
-    def __init__(self, *, pdf_get_operation: colrev.pdf_get.PDFGet, settings):
+    def __init__(
+        self,
+        *,
+        pdf_get_operation: colrev.pdf_get.PDFGet,  # pylint: disable=unused-argument
+        settings,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
@@ -150,7 +160,12 @@ class LocalIndexEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class WebsiteScreenshotEndpoint:
-    def __init__(self, *, pdf_get_operation: colrev.pdf_get.PDFGet, settings):
+    def __init__(
+        self,
+        *,
+        pdf_get_operation: colrev.pdf_get.PDFGet,  # pylint: disable=unused-argument
+        settings,
+    ):
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )

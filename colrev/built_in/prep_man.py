@@ -19,7 +19,10 @@ if TYPE_CHECKING:
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class CoLRevCLIManPrep:
     def __init__(
-        self, *, prep_man_operation: colrev.prep_man.PrepMan, settings: dict
+        self,
+        *,
+        prep_man_operation: colrev.prep_man.PrepMan,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -63,7 +66,10 @@ class CoLRevCLIManPrep:
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class ExportManPrep:
     def __init__(
-        self, *, prep_man_operation: colrev.prep_man.PrepMan, settings: dict
+        self,
+        *,
+        prep_man_operation: colrev.prep_man.PrepMan,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -190,7 +196,9 @@ class CurationJupyterNotebookManPrep:
             )
 
     def prepare_manual(
-        self, prep_man_operation: colrev.prep_man.PrepMan, records: dict
+        self,
+        prep_man_operation: colrev.prep_man.PrepMan,  # pylint: disable=unused-argument
+        records: dict,
     ) -> dict:
 
         input(

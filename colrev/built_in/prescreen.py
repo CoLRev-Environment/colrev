@@ -54,7 +54,10 @@ class ScopePrescreenEndpoint:
     ]
 
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         if "TimeScopeFrom" in settings:
             assert settings["TimeScopeFrom"] > 1900
@@ -74,7 +77,7 @@ class ScopePrescreenEndpoint:
         self,
         prescreen_operation: colrev.prescreen.Prescreen,
         records: dict,
-        split: list,
+        split: list,  # pylint: disable=unused-argument
     ) -> dict:
         def load_predatory_journals_beal() -> dict:
 
@@ -190,7 +193,10 @@ class ScopePrescreenEndpoint:
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -285,7 +291,10 @@ class ASReviewPrescreenEndpoint:
     export_filepath = endpoint_path / Path("records_to_screen.csv")
 
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -304,7 +313,10 @@ class ASReviewPrescreenEndpoint:
             ) from exc
 
     def export_for_asreview(
-        self, prescreen: colrev.prescreen.Prescreen, records, split
+        self,
+        prescreen: colrev.prescreen.Prescreen,
+        records,
+        split,  # pylint: disable=unused-argument
     ) -> None:
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
@@ -509,7 +521,10 @@ class ASReviewPrescreenEndpoint:
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -519,7 +534,7 @@ class ConditionalPrescreenEndpoint:
         self,
         prescreen_operation: colrev.prescreen.Prescreen,
         records: dict,
-        split: list,
+        split: list,  # pylint: disable=unused-argument
     ) -> dict:
         # TODO : conditions as a settings/parameter
         saved_args = locals()
@@ -550,7 +565,10 @@ class ConditionalPrescreenEndpoint:
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self,
+        *,
+        prescreen_operation: colrev.prescreen.Prescreen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings

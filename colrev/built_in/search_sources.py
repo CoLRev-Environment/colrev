@@ -236,7 +236,9 @@ class GoogleScholarSearchSource:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
@@ -259,7 +261,9 @@ class WebOfScienceSearchSource:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
 
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
@@ -289,7 +293,9 @@ class ScopusSearchSource:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
@@ -349,7 +355,9 @@ class ACMDigitalLibrary:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -374,7 +382,9 @@ class PubMed:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -426,7 +436,9 @@ class WileyOnlineLibrary:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -451,7 +463,9 @@ class DBLP:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
@@ -474,7 +488,9 @@ class TransportResearchInternationalDocumentation:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
@@ -524,7 +540,9 @@ class BackwardSearchSearchSource:
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0

@@ -55,13 +55,18 @@ class Prescreen(colrev.process.Process):
             scripts=review_manager.settings.prescreen.scripts,
         )
 
-    def export_table(self, *, export_table_format: str) -> None:
+    def export_table(self, *, export_table_format: str = "csv") -> None:
 
         endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
             prescreen_operation=self, settings={"name": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
-        endpoint.export_table(prescreen_operation=self, records=records, split=[])
+        endpoint.export_table(
+            prescreen_operation=self,
+            records=records,
+            split=[],
+            export_table_format=export_table_format,
+        )
 
     def import_table(self, *, import_table_path: str) -> None:
 

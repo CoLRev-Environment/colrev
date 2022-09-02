@@ -507,6 +507,7 @@ class PDFGetManEndpoint(zope.interface.Interface):
 
 
 class PDFPrepEndpoint(zope.interface.Interface):
+    # pylint: disable=unused-argument
     def prep_pdf(pdf_prep_operation, record, pad) -> dict:
         return record.data
 
