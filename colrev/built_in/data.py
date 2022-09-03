@@ -945,7 +945,7 @@ class GithubPagesEndpoint:
 
         if DATA.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             DATA.REVIEW_MANAGER.logger.error(
-                "Cannot update github pages becuase there are uncommited changes."
+                "Cannot update github pages because there are uncommited changes."
             )
 
         records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -969,9 +969,9 @@ class GithubPagesEndpoint:
                 with open(readme_file, encoding="utf-8") as f:
                     title = f.readline()
                     title = title.replace("# ", "").replace("\n", "")
-                    title = "\"" + title + "\""
-            git_repo.git.rm('-rf', '.')
-            git_repo.git.checkout('HEAD', '--', '.gitignore')
+                    title = '"' + title + '"'
+            git_repo.git.rm("-rf", ".")
+            git_repo.git.checkout("HEAD", "--", ".gitignore")
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/index.html"),
                 target=Path("index.html"),
@@ -1018,11 +1018,12 @@ class GithubPagesEndpoint:
                 if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
                     git_repo.git.push("origin", gh_pages_branch_name, "--no-verify")
                 else:
-                    git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name, "--no-verify")
+                    git_repo.git.push(
+                        "--set-upstream", "origin", gh_pages_branch_name, "--no-verify"
+                    )
 
                 username, project = (
-                    git_repo.remotes.origin
-                    .url.replace("https://github.com/", "")
+                    git_repo.remotes.origin.url.replace("https://github.com/", "")
                     .replace(".git", "")
                     .split("/")
                 )
