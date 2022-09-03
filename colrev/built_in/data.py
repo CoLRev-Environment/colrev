@@ -921,8 +921,15 @@ class GithubPagesEndpoint:
         )
 
     def get_default_setup(self):
-        structured_endpoint_details = {"endpoint": "GITHUB_PAGES"}
-        return structured_endpoint_details
+        github_pages_endpoint_details = {
+            "endpoint": "GITHUB_PAGES",
+            "github_pages_endpoint_version": "0.1",
+            "config": {
+                "auto_push": True,
+            },
+        }
+
+        return github_pages_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         # pylint: disable=redefined-outer-name
@@ -1005,27 +1012,25 @@ class GithubPagesEndpoint:
             msg="Update sample", script_call="colrev data"
         )
 
-        # TODO: implement a setting to enable automatic push to remote
-        # DATA.REVIEW_MANAGER.logger.info("Push to github pages")
-        # try:
-        #     remote_refs = git_repo.remote().refs
-        # except ValueError:
-        #     remote_refs = []
+        if self.SETTINGS["config"]["auto_push"]:
+            DATA.REVIEW_MANAGER.logger.info("Push to github pages")
+            if "origin" in git_repo.remotes:
+                if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
+                    git_repo.git.push("origin", gh_pages_branch_name, "--no-verify")
+                else:
+                    git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name, "--no-verify")
 
-        # if "origin/gh-pages" in [r.name for r in remote_refs]:
-        #     git_repo.git.push("origin", gh_pages_branch_name)
-        # else:
-        #     git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name)
-
-        # username, project = (
-        #     git_repo.remote()
-        #     .url.replace("https://github.com/", "")
-        #     .replace(".git", "")
-        #     .split("/")
-        # )
-        # DATA.REVIEW_MANAGER.logger.info(
-        #     f"Data available at: http://{username}.github.io/{project}/"
-        # )
+                username, project = (
+                    git_repo.remotes.origin
+                    .url.replace("https://github.com/", "")
+                    .replace(".git", "")
+                    .split("/")
+                )
+                DATA.REVIEW_MANAGER.logger.info(
+                    f"Data available at: http://{username}.github.io/{project}/"
+                )
+            else:
+                DATA.REVIEW_MANAGER.logger.info("No remotes specified")
 
         git_repo.git.checkout(active_branch)
 
