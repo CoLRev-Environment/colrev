@@ -956,6 +956,13 @@ class GithubPagesEndpoint:
             DATA.REVIEW_MANAGER.logger.info("Setup github pages")
             git_repo.create_head(gh_pages_branch_name)
             git_repo.git.checkout(gh_pages_branch_name)
+            title = "Manuscript template"
+            readme_file = DATA.REVIEW_MANAGER.paths["README"]
+            if readme_file.is_file():
+                with open(readme_file, encoding="utf-8") as f:
+                    title = f.readline()
+                    title = title.replace("# ", "").replace("\n", "")
+                    title = "\"" + title + "\""
             git_repo.git.rm('-rf', '.')
             git_repo.git.checkout('HEAD', '--', '.gitignore')
             __retrieve_package_file(
@@ -966,6 +973,9 @@ class GithubPagesEndpoint:
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
+            )
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                filename="_config.yml", old_string="{{project_title}}", new_string=title
             )
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="_config.yml")
             __retrieve_package_file(
