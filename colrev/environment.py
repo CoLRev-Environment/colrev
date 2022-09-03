@@ -775,9 +775,8 @@ class LocalIndex:
         toc_item = {}
         try:
             toc_item_response = self.open_search.get(index=self.TOC_INDEX, id=toc_key)
-            if "_source" in toc_item_response:
-                toc_item = toc_item_response["_source"]
-        except SerializationError:
+            toc_item = toc_item_response["_source"]
+        except (SerializationError, KeyError):
             pass
         return toc_item
 
@@ -853,7 +852,7 @@ class LocalIndex:
                 body={"doc": saved_record.get_data(stringify=True)},
                 timeout=self.request_timeout,
             )
-        except NotFoundError:
+        except (NotFoundError, KeyError):
             pass
 
     def __get_toc_key(self, *, record_dict: dict) -> str:
@@ -964,6 +963,7 @@ class LocalIndex:
                 colrev_exceptions.NotEnoughDataToIdentifyException,
                 TransportError,
                 SerializationError,
+                KeyError,
             ):
                 pass
 
@@ -988,7 +988,7 @@ class LocalIndex:
                         return retrieved_record
                     # Collision
                     paper_hash = self.__increment_hash(paper_hash=paper_hash)
-                except (NotFoundError, TransportError, SerializationError):
+                except (NotFoundError, TransportError, SerializationError, KeyError):
                     break
 
         # search colrev_id field
@@ -1010,6 +1010,8 @@ class LocalIndex:
                 SerializationError,
             ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException from exc
+            except KeyError:
+                pass
 
         raise colrev_exceptions.RecordNotInIndexException
 
@@ -1244,6 +1246,7 @@ class LocalIndex:
             colrev_exceptions.NotEnoughDataToIdentifyException,
             TransportError,
             SerializationError,
+            KeyError,
         ):
             return
 
@@ -1379,14 +1382,14 @@ class LocalIndex:
                     index=self.RECORD_INDEX,
                     id=str(paper_hash),
                 )
-                if "_source" in res:
-                    record_dict = res["_source"]  # type: ignore
-                    year = record_dict.get("year", "NA")
+                record_dict = res["_source"]  # type: ignore
+                year = record_dict.get("year", "NA")
 
             except (
                 colrev_exceptions.NotEnoughDataToIdentifyException,
                 TransportError,
                 SerializationError,
+                KeyError,
             ):
                 pass
 
@@ -1436,7 +1439,7 @@ class LocalIndex:
                     return self.prep_record_for_return(
                         record_dict=record_dict, include_file=include_file
                     )
-            except colrev_exceptions.NotEnoughDataToIdentifyException:
+            except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
                 pass
 
         raise colrev_exceptions.RecordNotInIndexException()
@@ -1452,7 +1455,13 @@ class LocalIndex:
                 body={"query": {"match_phrase": {key: value}}},
             )
             res = resp["hits"]["hits"][0]["_source"]
-        except (JSONDecodeError, NotFoundError, TransportError, SerializationError):
+        except (
+            JSONDecodeError,
+            NotFoundError,
+            TransportError,
+            SerializationError,
+            KeyError,
+        ):
             pass
         return res
 

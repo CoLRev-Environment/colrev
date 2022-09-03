@@ -489,12 +489,6 @@ class PDFGet(colrev.process.Process):
                 record_list=retrieved_record_list
             )
 
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            self.review_manager.reorder_log(
-                ids=[x["ID"] for x in retrieved_record_list]
-            )
-
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
             if self.review_manager.settings.pdf_get.rename_pdfs:

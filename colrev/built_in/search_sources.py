@@ -398,8 +398,6 @@ class PubMed:
         return result
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
-        if "language" in record.data:
-            record.data["language"] = record.data["language"].replace("eng", "en")
 
         if "first_author" in record.data:
             record.remove_field(key="first_author")

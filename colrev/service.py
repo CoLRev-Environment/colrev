@@ -48,9 +48,8 @@ class Event(LoggingEventHandler):
         self.service.last_file_change_date = datetime.datetime.now()
         self.service.last_file_changed = event.src_path
 
-        stat = self.service.review_manager.get_status_freq()
-        status_operation = self.service.review_manager.get_status_operation()
-        instructions = status_operation.get_review_instructions(stat=stat)
+        advisor = self.service.review_manager.get_advisor()
+        instructions = advisor.get_review_instructions()
 
         for instruction in instructions:
             if "cmd" in instruction:
@@ -100,9 +99,8 @@ class Service:
         # TODO : setup search feed (querying all 5-10 minutes?)
 
         # get initial review instructions and add to queue
-        self.status = colrev.status.Status(review_manager=self.review_manager)
-        stat = self.review_manager.get_status_freq()
-        instructions = self.status.get_review_instructions(stat=stat)
+        advisor = self.review_manager.get_advisor()
+        instructions = advisor.get_review_instructions()
         for instruction in instructions:
             if "cmd" in instruction:
                 cmd = instruction["cmd"]

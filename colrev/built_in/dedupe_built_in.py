@@ -1101,10 +1101,6 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
         dedupe_operation.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
 
-        dedupe_operation.review_manager.reorder_log(
-            ids=id_list, criterion="descending_thresholds"
-        )
-
         # Export excels for validation
         def highlight_cells(input_df):
             dataframe = input_df.copy()

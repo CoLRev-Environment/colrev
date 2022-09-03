@@ -60,15 +60,20 @@ class Dataset:
         return record_state_list
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:
-        ret_dict = {}
+        current_origin_states_dict = {}
         if self.records_file.is_file():
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
             ):
                 for origin in record_header_item["colrev_origin"].split(";"):
-                    ret_dict[origin] = record_header_item["colrev_status"]
+                    current_origin_states_dict[origin] = record_header_item[
+                        "colrev_status"
+                    ]
 
-        return ret_dict
+        self.review_manager.logger.debug(
+            f"current_origin_states_dict: {current_origin_states_dict}"
+        )
+        return current_origin_states_dict
 
     def get_record_header_list(self) -> list:
         """Get the record_header_list"""
@@ -1615,34 +1620,6 @@ class Dataset:
                 "\n    " + "\n    ".join(field_errors)
             )
 
-    # def check_screen_data(screen, data):
-    #     # Check consistency: data -> inclusion_2
-    #     data_IDs = data['ID'].tolist()
-    #     screen_IDs = \
-    #         screen['ID'][screen['inclusion_2'] == 'yes'].tolist()
-    #     violations = [ID for ID in set(
-    #         data_IDs) if ID not in set(screen_IDs)]
-    #     if len(violations) != 0:
-    #         raise some error ('IDs in DATA not coded as inclusion_2=yes: ' +
-    #               f'{violations}')
-    #     return
-
-    # def check_duplicates_data(data):
-    #     # Check whether there are duplicate IDs in data.csv
-    #     if not data['ID'].is_unique:
-    #         raise some error (data[data.duplicated(['ID'])].ID.tolist())
-    #     return
-
-    # def check_id_integrity_data(data, IDs):
-    #     # Check consistency: all IDs in data.csv in records.bib
-    #     missing_IDs = [ID for
-    #                    ID in data['ID'].tolist()
-    #                    if ID not in IDs]
-    #     if not len(missing_IDs) == 0:
-    #         raise some error ('IDs in data.csv not in RECORDS_FILE: ' +
-    #               str(set(missing_IDs)))
-    #     return
-
     def check_propagated_ids(self, *, prior_id: str, new_id: str) -> list:
 
         ignore_patterns = [
@@ -1770,6 +1747,42 @@ class Dataset:
     def get_untracked_files(self) -> list:
         return self.__git_repo.untracked_files
 
+    def records_changed(self) -> bool:
+        main_recs_changed = str(self.review_manager.dataset.RECORDS_FILE_RELATIVE) in [
+            item.a_path for item in self.__git_repo.index.diff(None)
+        ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
+
+        try:
+            self.get_last_records_filecontents()
+        except IndexError:
+            main_recs_changed = False
+        return main_recs_changed
+
+    def get_last_records_filecontents(self) -> bytes:
+        revlist = (
+            (
+                commit.hexsha,
+                (
+                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                ).data_stream.read(),
+            )
+            for commit in self.__git_repo.iter_commits(
+                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+            )
+        )
+        filecontents = list(revlist)[0][1]
+        return filecontents
+
+    def get_committed_origin_states_dict(self) -> dict:
+        filecontents = self.review_manager.dataset.get_last_records_filecontents()
+
+        committed_origin_states_dict = (
+            self.review_manager.dataset.get_origin_state_dict(
+                file_object=io.StringIO(filecontents.decode("utf-8"))
+            )
+        )
+        return committed_origin_states_dict
+
     def remove_file_from_git(self, *, path: str) -> None:
 
         self.__git_repo.index.remove(
@@ -1811,6 +1824,11 @@ class Dataset:
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
+
+    def has_untracked_search_records(self) -> bool:
+        search_dir = str(self.review_manager.SEARCHDIR_RELATIVE) + "/"
+        untracked_files = self.review_manager.dataset.get_untracked_files()
+        return any(search_dir in untracked_file for untracked_file in untracked_files)
 
     def reset_log_if_no_changes(self) -> None:
         if not self.__git_repo.is_dirty():

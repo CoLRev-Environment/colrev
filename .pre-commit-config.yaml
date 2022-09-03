@@ -3,6 +3,7 @@ repos:
     rev: v4.3.0
     hooks:
     -   id: trailing-whitespace
+        exclude: colrev/template/status.txt|commit_report_details.txt|commit_report_header.txt
     -   id: end-of-file-fixer
     -   id: check-docstring-first
     -   id: check-json

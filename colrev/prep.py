@@ -764,11 +764,6 @@ class Prep(colrev.process.Process):
 
                 log_details(prepared_records=prepared_records)
 
-                # Multiprocessing mixes logs of different records.
-                # For better readability:
-                prepared_records_ids = [x["ID"] for x in prepared_records]
-                self.review_manager.reorder_log(ids=prepared_records_ids)
-
                 self.review_manager.create_commit(
                     msg=f"Prepare records ({prep_round.name})",
                     script_call="colrev prep",

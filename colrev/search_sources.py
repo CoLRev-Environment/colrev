@@ -6,6 +6,8 @@ import typing
 import colrev.built_in.search_sources as built_in_search_sources
 import colrev.process
 
+# pylint: disable=too-few-public-methods
+
 
 class SearchSources:
 

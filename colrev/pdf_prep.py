@@ -375,10 +375,6 @@ class PDFPrep(colrev.process.Process):
                 record_list=pdf_prep_record_list
             )
 
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            self.review_manager.reorder_log(ids=[x["ID"] for x in pdf_prep_record_list])
-
         self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...

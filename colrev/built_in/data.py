@@ -91,7 +91,6 @@ class ManuscriptEndpoint:
 
     def check_new_record_source_tag(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> None:
 
         with open(self.paper, encoding="utf-8") as file:
@@ -264,6 +263,8 @@ class ManuscriptEndpoint:
         missing_records = sorted(missing_records)
         review_manager.logger.debug(f"missing_records: {missing_records}")
 
+        self.check_new_record_source_tag()
+
         if 0 == len(missing_records):
             review_manager.report_logger.info(
                 f"All records included in {self.paper.name}"
@@ -392,6 +393,33 @@ class StructuredDataEndpoint:
         }
         return structured_endpoint_details
 
+    def validate_structured_data(self) -> None:
+
+        # TODO : implement the following:
+        # # Check whether there are duplicate IDs in data.csv
+        # if not data['ID'].is_unique:
+        #     raise some error (data[data.duplicated(['ID'])].ID.tolist())
+
+        # # Check consistency: all IDs in data.csv in records.bib
+        # missing_IDs = [ID for
+        #                 ID in data['ID'].tolist()
+        #                 if ID not in IDs]
+        # if not len(missing_IDs) == 0:
+        #     raise some error ('IDs in data.csv not in RECORDS_FILE: ' +
+        #             str(set(missing_IDs)))
+
+        # # Check consistency: data -> inclusion_2
+        # data_IDs = data['ID'].tolist()
+        # screen_IDs = \
+        #     screen['ID'][screen['inclusion_2'] == 'yes'].tolist()
+        # violations = [ID for ID in set(
+        #     data_IDs) if ID not in set(screen_IDs)]
+        # if len(violations) != 0:
+        #     raise some error ('IDs in DATA not coded as inclusion_2=yes: ' +
+        #           f'{violations}')
+
+        return
+
     def update_data(
         self,
         data_operation: colrev.data.Data,
@@ -458,6 +486,7 @@ class StructuredDataEndpoint:
 
             return records
 
+        self.validate_structured_data()
         records = update_structured_data(
             review_manager=data_operation.review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
@@ -703,41 +732,30 @@ class PRISMAEndpoint:
             template_file=prisma_resource_path, target=prisma_path
         )
 
-        stat = data_operation.review_manager.get_status_freq()
-        # print(stat)
+        status_stats = data_operation.review_manager.get_status_stats()
 
         prisma_data = pd.read_csv(prisma_path)
         prisma_data["ind"] = prisma_data["data"]
         prisma_data.set_index("ind", inplace=True)
-        prisma_data.loc["database_results", "n"] = stat["colrev_status"]["overall"][
-            "md_retrieved"
-        ]
-        prisma_data.loc["duplicates", "n"] = stat["colrev_status"]["currently"][
-            "md_duplicates_removed"
-        ]
-        prisma_data.loc["records_screened", "n"] = stat["colrev_status"]["overall"][
-            "rev_prescreen"
-        ]
-        prisma_data.loc["records_excluded", "n"] = stat["colrev_status"]["overall"][
-            "rev_excluded"
-        ]
-        prisma_data.loc["dbr_assessed", "n"] = stat["colrev_status"]["overall"][
-            "rev_screen"
-        ]
-        prisma_data.loc["new_studies", "n"] = stat["colrev_status"]["overall"][
-            "rev_included"
-        ]
+        prisma_data.loc["database_results", "n"] = status_stats.overall.md_retrieved
+        prisma_data.loc[
+            "duplicates", "n"
+        ] = status_stats.currently.md_duplicates_removed
+        prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
+        prisma_data.loc["records_excluded", "n"] = status_stats.overall.rev_excluded
+        prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
+        prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
         # TODO : TBD: if settings.pdf_get.pdf_required_for_screen_and_synthesis = False
         # should the following be included?
-        prisma_data.loc["dbr_notretrieved_reports", "n"] = stat["colrev_status"][
-            "overall"
-        ]["pdf_not_available"]
-        prisma_data.loc["dbr_sought_reports", "n"] = stat["colrev_status"]["overall"][
-            "rev_prescreen_included"
-        ]
+        prisma_data.loc[
+            "dbr_notretrieved_reports", "n"
+        ] = status_stats.overall.pdf_not_available
+        prisma_data.loc[
+            "dbr_sought_reports", "n"
+        ] = status_stats.overall.rev_prescreen_included
 
         exclusion_stats = []
-        for criterion, value in stat["colrev_status"]["currently"]["exclusion"].items():
+        for criterion, value in status_stats.currently.exclusion.items():
             exclusion_stats.append(f"Reason {criterion}, {value}")
         prisma_data.loc["dbr_excluded", "n"] = "; ".join(exclusion_stats)
 
@@ -748,7 +766,7 @@ class PRISMAEndpoint:
             "at https://estech.shinyapps.io/prisma_flowdiagram/"
         )
 
-        if not stat["completeness_condition"]:
+        if not status_stats.completeness_condition:
             print("Warning: review not (yet) complete")
 
     def update_record_status_matrix(

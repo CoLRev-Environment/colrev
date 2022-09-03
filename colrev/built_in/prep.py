@@ -161,7 +161,7 @@ class ExcludeLanguagesPrep:
         # Language formats: ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
-        languages_to_include = ["en"]
+        languages_to_include = ["eng"]
         if "scope_prescreen" in [
             s["endpoint"]
             for s in prep_operation.review_manager.settings.prescreen.scripts
@@ -172,14 +172,14 @@ class ExcludeLanguagesPrep:
                 if "scope_prescreen" == s["endpoint"]
             ]:
                 languages_to_include.extend(
-                    scope_prescreen.get("LanguageScope", ["en"])
+                    scope_prescreen.get("LanguageScope", ["eng"])
                 )
         self.languages_to_include = list(set(languages_to_include))
 
         self.lang_code_mapping = {}
         for country in pycountry.languages:
             try:
-                self.lang_code_mapping[country.name.lower()] = country.alpha_2
+                self.lang_code_mapping[country.name.lower()] = country.alpha_3
             except AttributeError:
                 pass
 
@@ -206,7 +206,7 @@ class ExcludeLanguagesPrep:
         if len(record.data.get("title", "")) < 30:
             # If language not in record, add language
             # (always - needed in dedupe.)
-            record.data["language"] = "en"
+            record.data["language"] = "eng"
             return record
 
         confidence_values = self.language_detector.compute_language_confidence_values(
@@ -229,9 +229,9 @@ class ExcludeLanguagesPrep:
             if not set_most_likely_language:
                 record.data["language"] = predicted_language
                 set_most_likely_language = True
-            if "en" == predicted_language:
+            if "eng" == predicted_language:
                 if conf > 0.95:
-                    record.data["language"] = predicted_language
+                    record.data["language"] = "eng"
                     return record
 
         record.prescreen_exclude(
@@ -594,8 +594,8 @@ class FormatPrep:
             record.update_field(
                 key="language",
                 value=record.data["language"]
-                .replace("English", "en")
-                .replace("ENG", "en"),
+                .replace("English", "eng")
+                .replace("ENG", "eng"),
                 source="FormatPrep",
                 keep_source_if_equal=True,
             )

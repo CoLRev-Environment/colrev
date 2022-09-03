@@ -219,7 +219,7 @@
         "scripts": [
             {
                 "endpoint": "scope_prescreen",
-                "LanguageScope": ["en"]
+                "LanguageScope": ["eng"]
             },
             {
                 "endpoint": "colrev_cli_prescreen"

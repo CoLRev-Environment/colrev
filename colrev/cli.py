@@ -218,20 +218,17 @@ def print_environment_instructions(environment_instructions: dict) -> None:
         print()
 
 
-def print_progress(stat: dict) -> None:
+def print_progress(*, total_atomic_steps, completed_steps) -> None:
     # Prints the percentage of atomic processing tasks that have been completed
     # possible extension: estimate the number of manual tasks (making assumptions on
     # frequencies of man-prep, ...)?
 
-    total_atomic_steps = stat["atomic_steps"]
-    completed_steps = stat["completed_atomic_steps"]
-
     if total_atomic_steps != 0:
-        current = int((completed_steps / total_atomic_steps) * 100)
+        current_percentage = int((completed_steps / total_atomic_steps) * 100)
     else:
-        current = -1
+        current_percentage = -1
 
-    sleep_interval = 1.1 / max(current, 100)
+    sleep_interval = 1.1 / max(current_percentage, 100)
     print()
 
     for i in tqdm(
@@ -241,29 +238,36 @@ def print_progress(stat: dict) -> None:
         ncols=40,
     ):
         sleep(sleep_interval)
-        if current in [i, -1]:
+        if current_percentage in [i, -1]:
             break
 
 
 def print_project_status(status_operation) -> None:
 
-    stat = status_operation.review_manager.get_status_freq()
     try:
-        status_operation.review_manager.print_review_status(status_info=stat)
-        print_progress(stat)
+        status_stats = status_operation.review_manager.get_status_stats()
+        status_report = status_operation.get_review_status_report()
+        print(status_report)
+
+        if not status_stats.completeness_condition:
+            print_progress(
+                total_atomic_steps=status_stats.atomic_steps,
+                completed_steps=status_stats.completed_atomic_steps,
+            )
+        print("")
+
+        advisor = status_operation.review_manager.get_advisor()
+        instructions = advisor.get_instructions(status_stats=status_stats)
+        print_review_instructions(instructions["review_instructions"])
+        print_collaboration_instructions(instructions["collaboration_instructions"])
+        print_environment_instructions(instructions["environment_instructions"])
+
     except colrev_exceptions.RepoSetupError as exc:
         print(f"Status failed ({exc})")
 
-    print("")
-
-    instructions = status_operation.get_instructions(stat=stat)
-    print_review_instructions(instructions["review_instructions"])
-    print_collaboration_instructions(instructions["collaboration_instructions"])
-    print_environment_instructions(instructions["environment_instructions"])
-
     print("Checks\n")
-
     try:
+
         ret_check = status_operation.review_manager.check_repo()
     except colrev_exceptions.RepoSetupError as exc:
         ret_check = {"status": 1, "msg": exc}
@@ -1889,12 +1893,10 @@ def show(ctx, keyword, callback=validate_show):
         return
 
     if "prisma" == keyword:
-        stat = review_manager.get_status_freq()
-        print(stat)
-        print(
-            "Records identified through database searching: "
-            f"{stat['colrev_status']['overall']['md_retrieved']}"
-        )
+        status_operation = review_manager.get_status_operation()
+        stats_report = status_operation.get_review_status_report()
+        print(stats_report)
+
         return
 
     if "venv" == keyword:
