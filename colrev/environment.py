@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import binascii
 import collections
 import hashlib
@@ -18,6 +20,7 @@ from datetime import timedelta
 from json import JSONDecodeError
 from pathlib import Path
 from threading import Timer
+from typing import TYPE_CHECKING
 
 import docker
 import git
@@ -42,6 +45,9 @@ from zope.interface.verify import verifyObject
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
+
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class AdapterManager:
@@ -441,6 +447,17 @@ class EnvironmentManager:
         except OSError as exc:
             raise colrev_exceptions.MissingDependencyError("docker") from exc
 
+    def _get_status(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> dict:
+        status_dict = {}
+        with open(review_manager.status, encoding="utf8") as stream:
+            try:
+                status_dict = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+        return status_dict
+
     def get_environment_details(self) -> dict:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
@@ -491,7 +508,7 @@ class EnvironmentManager:
                 check_process = colrev.process.CheckProcess(
                     review_manager=cp_review_manager
                 )
-                repo_stat = check_process.review_manager.get_status()
+                repo_stat = self._get_status(review_manager=cp_review_manager)
                 repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(

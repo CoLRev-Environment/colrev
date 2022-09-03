@@ -54,7 +54,7 @@ class Commit:
             )
         self.script_name = script_name
 
-        self.saved_args = "\n"
+        self.saved_args = ""
         if saved_args is not None:
             saved_args_str = ""
             for key, value in saved_args.items():

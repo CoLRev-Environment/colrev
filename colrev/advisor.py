@@ -536,3 +536,20 @@ class Advisor:
             f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
         )
         return instructions
+
+    def get_sharing_instructions(self) -> dict:
+
+        collaboration_instructions = self.get_collaboration_instructions()
+
+        status_code = not all(
+            x["level"] in ["SUCCESS", "WARNING"]
+            for x in collaboration_instructions["items"]
+        )
+
+        msgs = "\n ".join(
+            [
+                x["level"] + x["title"] + x.get("msg", "")
+                for x in collaboration_instructions["items"]
+            ]
+        )
+        return {"msg": msgs, "status": status_code}

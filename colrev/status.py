@@ -281,26 +281,32 @@ class StatusStats:
             self.currently.non_completed += getattr(self.currently, str(current_state))
 
     def get_active_metadata_operation_info(self) -> str:
-        info = ""
+        infos = []
         if self.currently.md_imported > 0:
-            info += f"{self.currently.md_imported} to prepare"
+            infos.append(f"{self.currently.md_imported} to prepare")
         if self.currently.md_needs_manual_preparation > 0:
-            info += f"{self.currently.md_needs_manual_preparation} to prepare manually"
+            infos.append(
+                f"{self.currently.md_needs_manual_preparation} to prepare manually"
+            )
         if self.currently.md_prepared > 0:
-            info += f"{self.currently.md_prepared} to deduplicate"
-        return info
+            infos.append(f"{self.currently.md_prepared} to deduplicate")
+        return ", ".join(infos)
 
     def get_active_pdf_operation_info(self) -> str:
-        info = ""
+        infos = []
         if self.currently.rev_prescreen_included > 0:
-            info += f"{self.currently.rev_prescreen_included} to retrieve"
+            infos.append(f"{self.currently.rev_prescreen_included} to retrieve")
         if self.currently.pdf_needs_manual_retrieval > 0:
-            info += f"{self.currently.pdf_needs_manual_retrieval} to retrieve manually"
+            infos.append(
+                f"{self.currently.pdf_needs_manual_retrieval} to retrieve manually"
+            )
         if self.currently.pdf_imported > 0:
-            info += f"{self.currently.pdf_imported} to prepare"
+            infos.append(f"{self.currently.pdf_imported} to prepare")
         if self.currently.pdf_needs_manual_preparation > 0:
-            info += f"{self.currently.pdf_needs_manual_preparation} to prepare manually"
-        return info
+            infos.append(
+                f"{self.currently.pdf_needs_manual_preparation} to prepare manually"
+            )
+        return ", ".join(infos)
 
     def get_transitioned_records(
         self, current_origin_states_dict: dict

@@ -1800,6 +1800,9 @@ class Dataset:
             skip_hooks=hook_skipping,
         )
 
+    def records_file_in_history(self) -> bool:
+        return self.file_in_history(filepath=self.RECORDS_FILE_RELATIVE)
+
     def file_in_history(self, *, filepath: Path) -> bool:
         return str(filepath) in [x.path for x in self.__git_repo.head.commit.tree]
 
