@@ -1,22 +1,33 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import logging
 import os
 import pkgutil
 import subprocess
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import timeout_decorator
 from p_tqdm import p_map
 
 import colrev.built_in.pdf_prep as built_in_pdf_prep
+import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
-class PDF_Preparation(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+class PDFPrep(colrev.process.Process):
+
+    to_prepare: int
+    pdf_prepared: int
+    not_prepared: int
+
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "pdf_check_ocr": {
             "endpoint": built_in_pdf_prep.PDFCheckOCREndpoint,
         },
@@ -40,16 +51,16 @@ class PDF_Preparation(colrev.process.Process):
     def __init__(
         self,
         *,
-        REVIEW_MANAGER,
+        review_manager: colrev.review_manager.ReviewManager,
         reprocess: bool = False,
-        notify_state_transition_process: bool = True,
+        notify_state_transition_operation: bool = True,
         debug: bool = False,
-    ):
+    ) -> None:
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_prep,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
             debug=debug,
         )
 
@@ -58,70 +69,58 @@ class PDF_Preparation(colrev.process.Process):
         self.reprocess = reprocess
         self.verbose = False
 
-        self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-        self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
-        self.CPUS = 8
+        self.cpus = 8
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.pdf_prep_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
+            scripts=review_manager.settings.pdf_prep.scripts,
         )
-        self.pdf_prep_scripts: typing.Dict[
-            str, typing.Any
-        ] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.pdf_prep.scripts,
-        )
-
-    def __cleanup_pdf_processing_fields(self, *, record: dict) -> dict:
-
-        if "text_from_pdf" in record:
-            del record["text_from_pdf"]
-        if "pages_in_file" in record:
-            del record["pages_in_file"]
-
-        return record
 
     # Note : no named arguments (multiprocessing)
     def prepare_pdf(self, item: dict) -> dict:
-        record = item["record"]
+        record_dict = item["record"]
 
         if (
-            colrev.record.RecordState.pdf_imported != record["colrev_status"]
-            or "file" not in record
+            colrev.record.RecordState.pdf_imported != record_dict["colrev_status"]
+            or "file" not in record_dict
         ):
-            return record
+            return record_dict
 
-        PAD = len(record["ID"]) + 35
+        pad = len(record_dict["ID"]) + 35
 
-        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        pdf_path = self.review_manager.path / Path(record_dict["file"])
         if not Path(pdf_path).is_file():
-            msg = f'{record["ID"]}'.ljust(PAD, " ") + "Linked file/pdf does not exist"
-            self.REVIEW_MANAGER.report_logger.error(msg)
-            self.REVIEW_MANAGER.logger.error(msg)
-            return record
+            msg = (
+                f'{record_dict["ID"]}'.ljust(pad, " ")
+                + "Linked file/pdf does not exist"
+            )
+            self.review_manager.report_logger.error(msg)
+            self.review_manager.logger.error(msg)
+            return record_dict
 
         # RECORD.data.update(colrev_status=RecordState.pdf_prepared)
-        RECORD = colrev.record.Record(data=record)
-        RECORD.get_text_from_pdf(project_path=self.REVIEW_MANAGER.path)
-        original_filename = record["file"]
+        record = colrev.record.Record(data=record_dict)
+        record.set_text_from_pdf(project_path=self.review_manager.path)
+        original_filename = record_dict["file"]
 
-        self.REVIEW_MANAGER.report_logger.info(f'prepare({RECORD.data["ID"]})')
+        self.review_manager.report_logger.info(f'prepare({record.data["ID"]})')
         # Note: if there are problems
         # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
-        for PDF_PREP_SCRIPT in self.REVIEW_MANAGER.settings.pdf_prep.scripts:
+        for pdf_prep_script in self.review_manager.settings.pdf_prep.scripts:
 
             try:
-                ENDPOINT = self.pdf_prep_scripts[PDF_PREP_SCRIPT["endpoint"]]
-                self.REVIEW_MANAGER.logger.debug(
-                    f"{ENDPOINT.SETTINGS.name}(...) called"
+                endpoint = self.pdf_prep_scripts[pdf_prep_script["endpoint"]]
+                self.review_manager.logger.debug(
+                    f"{endpoint.settings.name}(...) called"
                 )
 
-                self.REVIEW_MANAGER.report_logger.info(
-                    f'{ENDPOINT.SETTINGS.name}({RECORD.data["ID"]}) called'
+                self.review_manager.report_logger.info(
+                    f'{endpoint.settings.name}({record.data["ID"]}) called'
                 )
 
-                RECORD.data = ENDPOINT.prep_pdf(self, RECORD, PAD)
+                record.data = endpoint.prep_pdf(self, record, pad)
                 # Note : the record should not be changed
                 # if the prep_script throws an exception
                 # prepped_record = prep_script["script"](*prep_script["params"])
@@ -133,28 +132,29 @@ class PDF_Preparation(colrev.process.Process):
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
             ) as err:
-                self.REVIEW_MANAGER.logger.error(
-                    f'Error for {RECORD.data["ID"]} '
-                    f"(in {ENDPOINT.SETTINGS.name} : {err})"
+                self.review_manager.logger.error(
+                    f'Error for {record.data["ID"]} '
+                    f"(in {endpoint.settings.name} : {err})"
                 )
-                RECORD.data[
+                record.data[
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
 
-            except Exception as e:
-                print(e)
-                RECORD.data[
+            except Exception as exc:  # pylint: disable=broad-except
+                print(exc)
+                record.data[
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
+                record.add_data_provenance_note(key="file", note=str(exc))
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation
-                == RECORD.data["colrev_status"]
+                == record.data["colrev_status"]
             )
             msg = (
-                f'{ENDPOINT.SETTINGS.name}({RECORD.data["ID"]}):'.ljust(PAD, " ") + " "
+                f'{endpoint.settings.name}({record.data["ID"]}):'.ljust(pad, " ") + " "
             )
             msg += "fail" if failed else "pass"
-            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.review_manager.report_logger.info(msg)
             if failed:
                 break
 
@@ -163,28 +163,32 @@ class PDF_Preparation(colrev.process.Process):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
-        if colrev.record.RecordState.pdf_imported == RECORD.data["colrev_status"]:
-            RECORD.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
-            pdf_path = self.REVIEW_MANAGER.path / Path(RECORD.data["file"])
-            RECORD.data.update(colrev_pdf_id=RECORD.get_colrev_pdf_id(path=pdf_path))
+        if colrev.record.RecordState.pdf_imported == record.data["colrev_status"]:
+            record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
+            pdf_path = self.review_manager.path / Path(record.data["file"])
+            record.data.update(
+                colrev_pdf_id=record.get_colrev_pdf_id(
+                    review_manager=self.review_manager, pdf_path=pdf_path
+                )
+            )
 
             # colrev_status == pdf_imported : means successful
             # create *_backup.pdf if record["file"] was changed
-            if original_filename != RECORD.data["file"]:
+            if original_filename != record.data["file"]:
 
-                current_file = self.REVIEW_MANAGER.path / Path(RECORD.data["file"])
-                original_file = self.REVIEW_MANAGER.path / Path(original_filename)
+                current_file = self.review_manager.path / Path(record.data["file"])
+                original_file = self.review_manager.path / Path(original_filename)
                 if current_file.is_file() and original_file.is_file():
-                    backup_filename = self.REVIEW_MANAGER.path / Path(
+                    backup_filename = self.review_manager.path / Path(
                         original_filename.replace(".pdf", "_backup.pdf")
                     )
                     original_file.rename(backup_filename)
                     current_file.rename(original_filename)
-                    RECORD.data["file"] = str(
-                        original_file.relative_to(self.REVIEW_MANAGER.path)
+                    record.data["file"] = str(
+                        original_file.relative_to(self.review_manager.path)
                     )
-                    bfp = backup_filename.relative_to(self.REVIEW_MANAGER.path)
-                    self.REVIEW_MANAGER.report_logger.info(
+                    bfp = backup_filename.relative_to(self.review_manager.path)
+                    self.review_manager.report_logger.info(
                         f"created backup after successful pdf-prep: {bfp}"
                     )
 
@@ -196,34 +200,35 @@ class PDF_Preparation(colrev.process.Process):
         rm_temp_if_successful = False
         if rm_temp_if_successful:
             # Remove temporary PDFs when processing has succeeded
-            target_fname = self.REVIEW_MANAGER.path / Path(f'{RECORD.data["ID"]}.pdf')
-            linked_file = self.REVIEW_MANAGER.path / Path(RECORD.data["file"])
+            target_fname = self.review_manager.path / Path(f'{record.data["ID"]}.pdf')
+            linked_file = self.review_manager.path / Path(record.data["file"])
 
             if target_fname.name != linked_file.name:
                 if target_fname.is_file():
                     os.remove(target_fname)
                 linked_file.rename(target_fname)
-                RECORD.data["file"] = str(
-                    target_fname.relative_to(self.REVIEW_MANAGER.path)
+                record.data["file"] = str(
+                    target_fname.relative_to(self.review_manager.path)
                 )
 
-            if not self.REVIEW_MANAGER.DEBUG_MODE:
+            if not self.review_manager.debug_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    for fpath in self.PDF_DIRECTORY.glob("*.pdf"):
-                        if RECORD.data["ID"] in str(fpath) and fpath != target_fname:
+                    for fpath in self.review_manager.pdf_directory.glob("*.pdf"):
+                        if record.data["ID"] in str(fpath) and fpath != target_fname:
                             os.remove(fpath)
 
+            # TODO : REVIEW_MANAGER not part of item!?
             git_repo = item["REVIEW_MANAGER"].get_repo()
-            git_repo.index.add([RECORD.data["file"]])
+            git_repo.index.add([record.data["file"]])
 
-        RECORD.data = self.__cleanup_pdf_processing_fields(record=RECORD.data)
+        record.cleanup_pdf_processing_fields()
 
-        return RECORD.get_data()
+        return record.get_data()
 
     def __get_data(self) -> dict:
 
-        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [
                 x
@@ -232,7 +237,7 @@ class PDF_Preparation(colrev.process.Process):
             ]
         )
 
-        items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
+        items = self.review_manager.dataset.read_next_record(
             conditions=[{"colrev_status": colrev.record.RecordState.pdf_imported}],
         )
         self.to_prepare = nr_tasks
@@ -241,48 +246,49 @@ class PDF_Preparation(colrev.process.Process):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(prep_data)
+        )
         return prep_data
 
-    def __set_to_reprocess(self):
+    def __set_to_reprocess(self) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        for record in records.values():
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
             if (
                 colrev.record.RecordState.pdf_needs_manual_preparation
-                != record["colrev_stauts"]
+                != record_dict["colrev_stauts"]
             ):
                 continue
 
-            RECORD = colrev.record.Record(data=record)
-            RECORD.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
-            RECORD.reset_pdf_provenance_notes()
-            record = RECORD.get_data()
+            record = colrev.record.Record(data=record_dict)
+            record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
+            record.reset_pdf_provenance_notes()
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_colrev_pdf_ids(self, *, record: dict) -> dict:
-        if "file" in record:
-            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
-            record.update(
-                colrev_pdf_id=colrev.record.Record(data=record).get_colrev_pdf_id(
-                    path=pdf_path
+    def __update_colrev_pdf_ids(self, *, record_dict: dict) -> dict:
+        if "file" in record_dict:
+            pdf_path = self.review_manager.path / Path(record_dict["file"])
+            record_dict.update(
+                colrev_pdf_id=colrev.record.Record(data=record_dict).get_colrev_pdf_id(
+                    review_manager=self.review_manager, pdf_path=pdf_path
                 )
             )
-        return record
+        return record_dict
 
     def update_colrev_pdf_ids(self) -> None:
-        self.REVIEW_MANAGER.logger.info("Update colrev_pdf_ids")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        self.review_manager.logger.info("Update colrev_pdf_ids")
+        records = self.review_manager.dataset.load_records_dict()
         records_list = p_map(self.__update_colrev_pdf_ids, records.values())
         records = {r["ID"]: r for r in records_list}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
         )
 
-    def _print_stats(self, *, pdf_prep_record_list) -> None:
+    def _print_stats(self, *, pdf_prep_record_list: list) -> None:
 
         self.pdf_prepared = len(
             [
@@ -299,29 +305,29 @@ class PDF_Preparation(colrev.process.Process):
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
             prepared_string += " PDFs"
         elif self.pdf_prepared == 1:
-            prepared_string += "\033[92m"
+            prepared_string += f"{colors.GREEN}"
             prepared_string += f"{self.pdf_prepared}".rjust(10, " ")
-            prepared_string += "\033[0m PDF"
+            prepared_string += f"{colors.END} PDF"
         else:
-            prepared_string += "\033[92m"
+            prepared_string += f"{colors.GREEN}"
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
-            prepared_string += "\033[0m PDFs"
+            prepared_string += f"{colors.END} PDFs"
 
         not_prepared_string = "Not prepared:"
         if self.not_prepared == 0:
             not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
             not_prepared_string += " PDFs"
         elif self.not_prepared == 1:
-            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{colors.ORANGE}"
             not_prepared_string += f"{self.not_prepared}".rjust(10, " ")
-            not_prepared_string += "\033[0m PDF"
+            not_prepared_string += f"{colors.END} PDF"
         else:
-            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{colors.ORANGE}"
             not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
-            not_prepared_string += "\033[0m PDFs"
+            not_prepared_string += f"{colors.END} PDFs"
 
-        self.REVIEW_MANAGER.logger.info(prepared_string)
-        self.REVIEW_MANAGER.logger.info(not_prepared_string)
+        self.review_manager.logger.info(prepared_string)
+        self.review_manager.logger.info(not_prepared_string)
 
     def setup_custom_script(self) -> None:
 
@@ -330,13 +336,13 @@ class PDF_Preparation(colrev.process.Process):
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_prep_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_pdf_prep_script.py"))
 
-        self.REVIEW_MANAGER.settings.pdf_prep.scripts.append(
+        self.review_manager.settings.pdf_prep.scripts.append(
             {"endpoint": "custom_pdf_prep_script"}
         )
 
-        self.REVIEW_MANAGER.save_settings()
+        self.review_manager.save_settings()
 
     def main(
         self,
@@ -349,40 +355,34 @@ class PDF_Preparation(colrev.process.Process):
         # temporary fix: remove all lines containing PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
-        self.REVIEW_MANAGER.logger.info("Prepare PDFs")
+        self.review_manager.logger.info("Prepare PDFs")
 
         if reprocess:
             self.__set_to_reprocess()
 
         pdf_prep_data = self.__get_data()
 
-        if self.REVIEW_MANAGER.DEBUG_MODE:
+        if self.review_manager.debug_mode:
             for item in pdf_prep_data["items"]:
                 record = item["record"]
                 print(record["ID"])
                 record = self.prepare_pdf(item)
-                self.REVIEW_MANAGER.pp.pprint(record)
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                    record_list=[record]
-                )
+                self.review_manager.p_printer.pprint(record)
+                self.review_manager.dataset.save_record_list_by_id(record_list=[record])
         else:
             pdf_prep_record_list = p_map(self.prepare_pdf, pdf_prep_data["items"])
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+            self.review_manager.dataset.save_record_list_by_id(
                 record_list=pdf_prep_record_list
             )
-
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_record_list])
 
         self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        records = self.review_manager.dataset.load_records_dict()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.create_commit(
             msg="Prepare PDFs", script_call="colrev pdf-prep", saved_args=saved_args
         )
 

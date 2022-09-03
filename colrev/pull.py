@@ -1,24 +1,28 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import multiprocessing as mp
 from multiprocessing import Value
+from typing import TYPE_CHECKING
 
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
 import colrev.built_in.prep as built_in_prep
 import colrev.cli_colors as colors
-import colrev.prep
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.R
 
-change_counter = None
+CHANGE_COUNTER = None
 
 
 class Pull(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
         )
 
@@ -36,115 +40,118 @@ class Pull(colrev.process.Process):
 
     def pull_project(self) -> None:
         try:
-            git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+            git_repo = self.review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"Pull project changes from {git_repo.remotes.origin}"
             )
             res = origin.pull()
         except AttributeError:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.RED}No remote detected for pull{colors.END}"
             )
             return
 
         if 4 == res[0].flags:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.GREEN}Project up-to-date{colors.END}"
             )
         elif 64 == res[0].flags:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.GREEN}Updated CoLRev repository{colors.END}"
             )
         else:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.RED}Returned flag {res[0].flags}{colors.END}"
             )
         print()
 
     def pull_records_from_crossref(self) -> None:
 
-        PREPARATION = colrev.prep.Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
 
-        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep(
-            PREPARATION=PREPARATION, SETTINGS={"name": "local_index_prep"}
+        crossref_prep = built_in_prep.CrossrefMetadataPrep(
+            prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 
-        self.REVIEW_MANAGER.logger.info("Pull records from Crossref")
+        self.review_manager.logger.info("Pull records from Crossref")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
-        # pylint: disable=redefined-outer-name
-        change_counter = Value("i", 0)
-        for record in tqdm(records.values()):
-            RECORD = colrev.record.PrepRecord(data=record)
-            PREVIOUS_RECORD = RECORD.copy_prep_rec()
+        # pylint: disable=redefined-outer-name,invalid-name
+        CHANGE_COUNTER = Value("i", 0)
+        for record_dict in tqdm(records.values()):
+            record = colrev.record.PrepRecord(data=record_dict)
+            previous_record = record.copy_prep_rec()
             # TODO : use masterdata_is_curated() for identifying_fields_keys only?
-            if "doi" in RECORD.data and not RECORD.masterdata_is_curated():
-                CROSSREF_RECORD = CROSSREF_PREP.prepare(
-                    PREPARATION, RECORD.copy_prep_rec()
+            if "doi" in record.data and not record.masterdata_is_curated():
+                crossref_record = crossref_prep.prepare(
+                    prep_operation, record.copy_prep_rec()
                 )
 
-                if "retracted" in CROSSREF_RECORD.data.get("prescreen_exclusion", ""):
+                if "retracted" in crossref_record.data.get("prescreen_exclusion", ""):
 
-                    self.REVIEW_MANAGER.logger.info(
+                    self.review_manager.logger.info(
                         f"{colors.GREEN}Found paper retract: "
-                        f"{RECORD.data['ID']}{colors.END}"
+                        f"{record.data['ID']}{colors.END}"
                     )
-                    RECORD.prescreen_exclude(reason="retracted", print_warning=True)
-                    RECORD.remove_field(key="warning")
+                    record.prescreen_exclude(reason="retracted", print_warning=True)
+                    record.remove_field(key="warning")
 
-                elif "forthcoming" == RECORD.data["year"]:
-                    self.REVIEW_MANAGER.logger.info(
+                elif "forthcoming" == record.data["year"]:
+                    self.review_manager.logger.info(
                         f"{colors.GREEN}Update published forthcoming paper: "
-                        f"{RECORD.data['ID']}{colors.END}"
+                        f"{record.data['ID']}{colors.END}"
                     )
-                    RECORD = CROSSREF_PREP.prepare(PREPARATION, RECORD)
+                    record = crossref_prep.prepare(prep_operation, record)
 
                     # TODO : we may create a full list here
-                    colrev_id = RECORD.create_colrev_id(
-                        alsoKnownAsRecord=RECORD.get_data()
+                    colrev_id = record.create_colrev_id(
+                        also_known_as_record=record.get_data()
                     )
-                    RECORD.data["colrev_id"] = colrev_id
+                    record.data["colrev_id"] = colrev_id
 
                 else:
-                    for k, v in CROSSREF_RECORD.data.items():
+                    for key, value in crossref_record.data.items():
                         if (
-                            k
+                            key
                             not in colrev.record.Record.identifying_field_keys
                             + colrev.record.Record.provenance_keys
                             + ["ID", "ENTRYTYPE", "screening_criteria"]
                         ):
                             try:
-                                source = CROSSREF_RECORD.data["colrev_data_provenance"][
-                                    k
+                                source = crossref_record.data["colrev_data_provenance"][
+                                    key
                                 ]["source"]
                             except KeyError:
                                 source = (
                                     "https://api.crossref.org/works/"
-                                    + f"{RECORD.data['doi']}"
+                                    + f"{record.data['doi']}"
                                 )
-                            RECORD.update_field(
-                                key=k, value=v, source=source, keep_source_if_equal=True
+                            record.update_field(
+                                key=key,
+                                value=value,
+                                source=source,
+                                keep_source_if_equal=True,
                             )
-                if PREVIOUS_RECORD != RECORD:
-                    with change_counter.get_lock():
-                        change_counter.value += 1
+                if previous_record != record:
+                    with CHANGE_COUNTER.get_lock():
+                        CHANGE_COUNTER.value += 1
 
-        if change_counter.value > 0:
-            self.REVIEW_MANAGER.logger.info(
-                f"{colors.GREEN}Updated {change_counter.value} "
+        if CHANGE_COUNTER.value > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {CHANGE_COUNTER.value} "
                 f"records based on Crossref{colors.END}"
             )
         else:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.GREEN}Records up-to-date with Crossref{colors.END}"
             )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg="Update records", script_call="colrev pull"
         )
 
@@ -152,61 +159,61 @@ class Pull(colrev.process.Process):
 
     def pull_records_from_index(self) -> None:
 
-        self.REVIEW_MANAGER.logger.info("Pull records from LocalIndex")
+        self.review_manager.logger.info("Pull records from LocalIndex")
 
-        PREPARATION = colrev.prep.Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
 
-        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep(
-            PREPARATION=PREPARATION, SETTINGS={"name": "local_index_prep"}
+        local_index_prep = built_in_prep.LocalIndexPrep(
+            prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 
         # Note : do not use named argument (used in multiprocessing)
-        def pull_record(record):
-            previous_status = record["colrev_status"]
+        def pull_record(record_dict):
+            previous_status = record_dict["colrev_status"]
             # TODO : remove the following
-            previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
-            prev_dblp_key = record.get("dblp_key", "")
+            previouscolrev_pdf_id = record_dict.get("colrev_pdf_id", "")
+            prev_dblp_key = record_dict.get("dblp_key", "")
 
-            RECORD = colrev.record.PrepRecord(data=record)
-            RETRIEVED_RECORD = LOCAL_INDEX_PREP.prepare(PREPARATION, RECORD)
+            record = colrev.record.PrepRecord(data=record_dict)
+            retrieved_record = local_index_prep.prepare(prep_operation, record)
             source_info = "LOCAL_INDEX"
-            if "CURATED:" in RETRIEVED_RECORD.data.get(
+            if "CURATED:" in retrieved_record.data.get(
                 "colrev_masterdata_provenance", ""
             ):
-                source_info = RETRIEVED_RECORD.data[
+                source_info = retrieved_record.data[
                     "colrev_masterdata_provenance"
                 ].replace("CURATED:", "")
-            PREVIOUS_RECORD = RECORD.copy_prep_rec()
-            RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=source_info)
+            previous_record = record.copy_prep_rec()
+            record.merge(merging_record=retrieved_record, default_source=source_info)
 
-            if PREVIOUS_RECORD != RECORD:
+            if previous_record != record:
                 # pylint: disable=global-variable-not-assigned
-                global change_counter
-                with change_counter.get_lock():
-                    change_counter.value += 1
+                global CHANGE_COUNTER
+                with CHANGE_COUNTER.get_lock():
+                    CHANGE_COUNTER.value += 1
 
-            record = RECORD.get_data()
-            record["colrev_status"] = previous_status
+            record_dict = record.get_data()
+            record_dict["colrev_status"] = previous_status
 
             if "" != previouscolrev_pdf_id:
-                record["colrev_pdf_id"] = previouscolrev_pdf_id
+                record_dict["colrev_pdf_id"] = previouscolrev_pdf_id
             if "" != prev_dblp_key:
-                record["dblp_key"] = prev_dblp_key
-            return record
+                record_dict["dblp_key"] = prev_dblp_key
+            return record_dict
 
-        PREPARATION = colrev.prep.Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        prep_operation = self.review_manager.get_prep_operation(
+            notify_state_transition_operation=False
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
-        self.REVIEW_MANAGER.logger.info("Update records based on LocalIndex")
+        self.review_manager.logger.info("Update records based on LocalIndex")
 
         # pylint: disable=global-statement
-        global change_counter
+        global CHANGE_COUNTER
 
-        change_counter = Value("i", 0)
+        CHANGE_COUNTER = Value("i", 0)
 
         pool = ProcessPool(nodes=mp.cpu_count() - 1)
         records_list = pool.map(pull_record, records.values())
@@ -214,20 +221,20 @@ class Pull(colrev.process.Process):
         pool.join()
         pool.clear()
 
-        if change_counter.value > 0:
-            self.REVIEW_MANAGER.logger.info(
-                f"{colors.GREEN}Updated {change_counter.value} "
+        if CHANGE_COUNTER.value > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {CHANGE_COUNTER.value} "
                 f"records based on LocalIndex{colors.END}"
             )
         else:
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 f"{colors.GREEN}Records up-to-date with LocalIndex{colors.END}"
             )
 
         records = {r["ID"]: r for r in records_list}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg="Update records", script_call="colrev pull"
         )
 

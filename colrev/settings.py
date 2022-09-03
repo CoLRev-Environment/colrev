@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import inspect
 import typing
 from dataclasses import dataclass
 from enum import Enum
+from enum import EnumMeta
 from pathlib import Path
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -12,14 +14,13 @@ from pathlib import Path
 # Project
 
 
-class IDPpattern(Enum):
-    """Pattern for generating IDs"""
-
-    first_author_year = "FIRST_AUTHOR_YEAR"
-    three_authors_year = "THREE_AUTHORS_YEAR"
+class IDPattern(Enum):
+    # pylint: disable=invalid-name
+    first_author_year = "first_author_year"
+    three_authors_year = "three_authors_year"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -27,6 +28,7 @@ class IDPpattern(Enum):
 class ReviewType(Enum):
     """The type of review"""
 
+    # pylint: disable=invalid-name
     curated_masterdata = "curated_masterdata"
     realtime = "realtime"
     literature_review = "literature_review"
@@ -42,10 +44,11 @@ class ReviewType(Enum):
     peer_review = "peer_review"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=E1101
         return cls._member_names_
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
         )
@@ -71,13 +74,14 @@ class Protocol:
 class ShareStatReq(Enum):
     """Record status requirements for sharing"""
 
+    # pylint: disable=invalid-name
     none = "none"
     processed = "processed"
     screened = "screened"
     completed = "completed"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -94,7 +98,7 @@ class ProjectConfiguration:
     protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
     review_type: ReviewType
-    id_pattern: IDPpattern
+    id_pattern: IDPattern
     share_stat_req: ShareStatReq
     delay_automated_processing: bool
     curation_url: typing.Optional[str]
@@ -102,7 +106,7 @@ class ProjectConfiguration:
     curated_fields: typing.List[str]
     colrev_version: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         # TODO : add more
         return f"Review ({self.review_type})"
 
@@ -121,7 +125,8 @@ class SearchType(Enum):
     OTHER = "OTHER"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
         return cls._member_names_
 
     def __str__(self):
@@ -140,7 +145,20 @@ class SearchSource:
     source_prep_scripts: list
     comment: typing.Optional[str]
 
-    def __str__(self):
+    def get_corresponding_bib_file(self) -> Path:
+        return self.filename.with_suffix(".bib")
+
+    def create_load_stats(self) -> None:
+        # pylint: disable=attribute-defined-outside-init
+        # Note : define outside init because the following
+        # attributes are temporary. They should not be
+        # saved to settings.json.
+        self.to_import = 0
+        self.imported_origins: typing.List[str] = []
+        self.len_before = 0
+        self.source_records_list: typing.List[typing.Dict] = []
+
+    def __str__(self) -> str:
         source_prep_scripts_string = ",".join(
             s["endpoint"] for s in self.source_prep_scripts
         )
@@ -169,7 +187,7 @@ class SearchSource:
 class SearchConfiguration:
     retrieve_forthcoming: bool
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f" - retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
@@ -178,7 +196,7 @@ class SearchConfiguration:
 
 @dataclass
 class LoadConfiguration:
-    def __str__(self):
+    def __str__(self) -> str:
         return " - TODO"
 
 
@@ -195,7 +213,7 @@ class PrepRound:
     similarity: float
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         short_list = [script["endpoint"] for script in self.scripts][:3]
         if len(self.scripts) > 3:
             short_list.append("...")
@@ -209,7 +227,7 @@ class PrepConfiguration:
 
     man_prep_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             " - prep_rounds: \n   - "
             + "\n   - ".join([str(prep_round) for prep_round in self.prep_rounds])
@@ -223,12 +241,13 @@ class PrepConfiguration:
 class SameSourceMergePolicy(Enum):
     """Policy for applying merges within the same search source"""
 
+    # pylint: disable=invalid-name
     prevent = "prevent"
     apply = "apply"
     warn = "warn"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -238,7 +257,7 @@ class DedupeConfiguration:
     same_source_merges: SameSourceMergePolicy
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f" - same_source_merges: {self.same_source_merges}\n"
             + " - "
@@ -254,7 +273,7 @@ class PrescreenConfiguration:
     explanation: str
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Scripts: " + ",".join([s["endpoint"] for s in self.scripts])
 
 
@@ -272,7 +291,7 @@ class PDFGetConfiguration:
 
     man_pdf_get_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
             + " - "
@@ -289,7 +308,7 @@ class PDFPrepConfiguration:
 
     man_pdf_prep_scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + ",".join([s["endpoint"] for s in self.scripts])
 
 
@@ -299,15 +318,16 @@ class PDFPrepConfiguration:
 class ScreenCriterionType(Enum):
     """Type of screening criterion"""
 
+    # pylint: disable=invalid-name
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
 
     @classmethod
-    def getOptions(cls):
+    def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -317,7 +337,7 @@ class ScreenCriterion:
     comment: typing.Optional[str]
     criterion_type: ScreenCriterionType
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.criterion_type} {self.explanation} ({self.explanation})"
 
 
@@ -327,7 +347,7 @@ class ScreenConfiguration:
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + "\n - ".join([str(c) for c in self.criteria])
 
 
@@ -338,7 +358,7 @@ class ScreenConfiguration:
 class DataConfiguration:
     scripts: list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " - " + "\n- ".join([s["endpoint"] for s in self.scripts])
 
 
@@ -357,7 +377,7 @@ class Configuration:
     screen: ScreenConfiguration
     data: DataConfiguration
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             str(self.project)
             + "\nSearch\n"
@@ -383,10 +403,8 @@ class Configuration:
         )
 
     @classmethod
-    def getOptions(cls):
-        import inspect
-
-        def getConfigurationOptions(conf_input):
+    def get_options(cls) -> typing.Dict[str, typing.List[str]]:
+        def get_configuration_options(conf_input):
             conf_options_dict = {}
             # conf_cls = conf_input.type
             conf_cls = conf_input
@@ -414,28 +432,30 @@ class Configuration:
                             conf_options_dict[key] = value.type
                             continue
 
-                        getOptions = getattr(value.type, "getOptions", None)
-                        if callable(getOptions):
-                            conf_options_dict[key] = value.type.getOptions()
+                        get_options = getattr(value.type, "get_options", None)
+                        if callable(get_options):
+                            conf_options_dict[key] = value.type.get_options()
                             continue
 
                         if typing.get_origin(value.type) in [list, typing.Union]:
                             conf_options_dict[key] = []
                             for element in typing.get_args(value.type):
                                 conf_options_dict[key].append(
-                                    getConfigurationOptions(element)
+                                    get_configuration_options(element)
                                 )
                             continue
 
                         if typing.get_origin(value.type) in [dict]:
                             conf_options_dict[key] = {}
                             dict_key, dict_value = typing.get_args(value.type)
-                            conf_options_dict[key][dict_key] = getConfigurationOptions(
-                                dict_value
-                            )
+                            conf_options_dict[key][
+                                dict_key
+                            ] = get_configuration_options(dict_value)
 
                         elif inspect.isclass(value.type):
-                            conf_options_dict[key] = getConfigurationOptions(value.type)
+                            conf_options_dict[key] = get_configuration_options(
+                                value.type
+                            )
                         else:
                             print(f"Error: {conf_cls}")
 
@@ -446,14 +466,11 @@ class Configuration:
 
         options_dict = {}
         for key, value in cls.__dict__["__dataclass_fields__"].items():
-            options_dict[key] = getConfigurationOptions(value.type)
+            options_dict[key] = get_configuration_options(value.type)
         return options_dict
 
     @classmethod
-    def getTooltips(cls):
-
-        import inspect
-        from enum import EnumMeta
+    def get_tooltips(cls):
 
         # https://peps.python.org/pep-0224/
         # the pep was rejected. we follow the suggestion of adding
@@ -461,7 +478,7 @@ class Configuration:
 
         # Note : currently, only fields have tooltips (not objects)
 
-        def getConfigurationTooltips(conf_input):
+        def get_configuration_tooltips(conf_input):
             conf_tooltips_dict = {}
 
             if hasattr(conf_input.type, "__dict__"):
@@ -483,14 +500,14 @@ class Configuration:
                             continue
 
                         if inspect.isclass(value.type):
-                            conf_tooltips_dict[key] = getConfigurationTooltips(value)
+                            conf_tooltips_dict[key] = get_configuration_tooltips(value)
 
             return conf_tooltips_dict
 
         tooltips = {}
 
         for key, value in cls.__dict__["__dataclass_fields__"].items():
-            tooltips[key] = getConfigurationTooltips(value)
+            tooltips[key] = get_configuration_tooltips(value)
 
         return tooltips
 

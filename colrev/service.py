@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
@@ -6,6 +8,7 @@ import queue
 import threading
 import time
 from collections import deque
+from typing import TYPE_CHECKING
 
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
@@ -13,35 +16,40 @@ from watchdog.observers import Observer
 import colrev.cli_colors as colors
 import colrev.status
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Event(LoggingEventHandler):
-    def __init__(self, *, SERVICE):
-        super().__init__()
-        self.SERVICE = SERVICE
-        self.logger = logging.getLogger()
+    service: Service
 
-    def on_modified(self, event):
+    def __init__(self, *, service: Service):
+        super().__init__()
+        self.service = service
+        self.logger: logging.Logger = logging.getLogger()
+
+    def on_modified(self, event) -> None:
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):
             return
 
         time_since_last_change = (
-            datetime.datetime.now() - self.SERVICE.last_file_change_date
+            datetime.datetime.now() - self.service.last_file_change_date
         ).total_seconds()
         if (
-            event.src_path == self.SERVICE.last_file_changed
+            event.src_path == self.service.last_file_changed
             and time_since_last_change < 1
         ):
             pass
         else:
-            self.SERVICE.logger.info("Detected change in file: " + event.src_path)
+            self.logger.info("Detected change in file: %s", event.src_path)
 
-        self.SERVICE.last_file_change_date = datetime.datetime.now()
-        self.SERVICE.last_file_changed = event.src_path
+        self.service.last_file_change_date = datetime.datetime.now()
+        self.service.last_file_changed = event.src_path
 
-        stat = self.SERVICE.REVIEW_MANAGER.get_status_freq()
-        instructions = self.SERVICE.STATUS.get_review_instructions(stat)
+        advisor = self.service.review_manager.get_advisor()
+        instructions = advisor.get_review_instructions()
 
         for instruction in instructions:
             if "cmd" in instruction:
@@ -51,22 +59,26 @@ class Event(LoggingEventHandler):
                     # in it if data in the search directory changes.
                     if "colrev load" == cmd and "search/" not in event.src_path:
                         return
-                    self.SERVICE.q.put({"name": cmd, "cmd": cmd, "priority": "yes"})
+                    self.service.service_queue.put(
+                        {"name": cmd, "cmd": cmd, "priority": "yes"}
+                    )
 
 
 class Service:
-    def __init__(self, *, REVIEW_MANAGER):
+    review_manager: colrev.review_manager.ReviewManager
 
-        assert "realtime" == REVIEW_MANAGER.settings.project.review_type
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+
+        assert "realtime" == review_manager.settings.project.review_type
 
         print("Starting realtime CoLRev service...")
 
-        self.REVIEW_MANAGER = REVIEW_MANAGER
+        self.review_manager = review_manager
 
-        self.previous_command = "none"
-        self.last_file_changed = ""
-        self.last_file_change_date = datetime.datetime.now()
-        self.last_command_run_time = datetime.datetime.now()
+        self.previous_command: str = "none"
+        self.last_file_changed: str = ""
+        self.last_file_change_date: datetime.datetime = datetime.datetime.now()
+        self.last_command_run_time: datetime.datetime = datetime.datetime.now()
 
         self.logger = self.__setup_service_logger(level=logging.INFO)
 
@@ -74,28 +86,29 @@ class Service:
         self.start_services()
 
         # setup queue
-        self.q = queue.Queue()
+        self.service_queue: queue.Queue = queue.Queue()
         # Turn-on the worker thread.
         threading.Thread(target=self.worker, daemon=True).start()
 
         self.logger.info("Service alive")
 
-        self.q.put({"name": "colrev search", "cmd": "colrev search", "priority": "yes"})
+        self.service_queue.put(
+            {"name": "colrev search", "cmd": "colrev search", "priority": "yes"}
+        )
 
         # TODO : setup search feed (querying all 5-10 minutes?)
 
         # get initial review instructions and add to queue
-        self.STATUS = colrev.status.Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
-        stat = self.REVIEW_MANAGER.get_status_freq()
-        instructions = self.STATUS.get_review_instructions(stat=stat)
+        advisor = self.review_manager.get_advisor()
+        instructions = advisor.get_review_instructions()
         for instruction in instructions:
             if "cmd" in instruction:
                 cmd = instruction["cmd"]
-                self.q.put({"name": cmd, "cmd": cmd})
+                self.service_queue.put({"name": cmd, "cmd": cmd})
 
-        event_handler = Event(SERVICE=self)
+        event_handler = Event(service=self)
         observer = Observer()
-        observer.schedule(event_handler, self.REVIEW_MANAGER.path, recursive=True)
+        observer.schedule(event_handler, self.review_manager.path, recursive=True)
         observer.start()
         try:
             while observer.is_alive():
@@ -106,22 +119,16 @@ class Service:
             observer.join()
 
         # Block until all tasks are done.
-        self.q.join()
+        self.service_queue.join()
 
-    def start_services(self):
+    def start_services(self) -> None:
         async def _start_grobid():
-            GrobidService = self.REVIEW_MANAGER.get_environment_service(
-                service_identifier="GrobidService"
-            )
+            grobid_service = self.review_manager.get_grobid_serivce()
 
-            GROBID_SERVICE = GrobidService()
-            GROBID_SERVICE.start()
+            grobid_service.start()
 
         async def _start_index():
-            LocalIndex = self.REVIEW_MANAGER.get_environment_service(
-                service_identifier="LocalIndex"
-            )
-            LocalIndex()
+            _ = self.review_manager.get_local_index()
 
         asyncio.ensure_future(_start_grobid())
         asyncio.ensure_future(_start_index())
@@ -150,16 +157,16 @@ class Service:
 
         return service_logger
 
-    def worker(self):
+    def worker(self) -> None:
         try:
             while True:
 
                 # Ensure that tasks are unique and priority items
-                self.q.queue = deque(
+                self.service_queue.queue = deque(
                     list(
                         {
                             v["cmd"]: v
-                            for v in self.q.queue
+                            for v in self.service_queue.queue
                             if "priority" in v
                             and not any(
                                 x in v.get("msg", "")
@@ -172,117 +179,99 @@ class Service:
                         }.values()
                     )
                 )
-                if not self.REVIEW_MANAGER.paths["SEARCHDIR"].is_dir():
-                    self.REVIEW_MANAGER.paths["SEARCHDIR"].mkdir()
+                if not self.review_manager.search_dir.is_dir():
+                    self.review_manager.search_dir.mkdir()
                     self.logger.info("Created search dir")
 
-                if 0 == self.q.qsize():
+                if 0 == self.service_queue.qsize():
                     time.sleep(1)
                     # self.previous_command = "none"
                     continue
 
                 print()
                 self.logger.info(
-                    f'Queue: {", ".join(q_item["cmd"] for q_item in self.q.queue)}'
+                    "Queue: %s",
+                    ", ".join(q_item["cmd"] for q_item in self.service_queue.queue),
                 )
 
-                item = self.q.get()
+                item = self.service_queue.get()
                 item["cmd"] = item["cmd"].replace("_", "-")
 
                 self.previous_command = item["cmd"]
 
                 print()
                 if "colrev search" == item["cmd"]:
-                    from colrev.search import Search
 
-                    SEARCH = Search(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    SEARCH.main(selection_str=None)
+                    search_operation = self.review_manager.get_search_operation()
+                    search_operation.main(selection_str=None)
 
                 elif "colrev load" == item["cmd"]:
-                    from colrev.load import Loader
 
-                    if len(list(self.REVIEW_MANAGER.paths["SEARCHDIR"].glob("*"))) > 0:
+                    if len(list(self.review_manager.search_dir.glob("*"))) > 0:
 
-                        self.logger.info(f"Running {item['name']}")
+                        self.logger.info("Running %s", item["name"])
 
-                        LOADER = Loader(REVIEW_MANAGER=self.REVIEW_MANAGER)
+                        load_operation = self.review_manager.get_load_operation()
                         print()
-                        LOADER.check_update_sources()
-                        LOADER.main(keep_ids=False, combine_commits=False)
+                        load_operation.check_update_sources()
+                        load_operation.main(keep_ids=False, combine_commits=False)
                     else:
-                        self.q.task_done()
+                        self.service_queue.task_done()
                         continue
 
                 elif "colrev prep" == item["cmd"]:
-                    from colrev.prep import Preparation
 
-                    self.logger.info(f"Running {item['name']}")
-                    PREPARATION = Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    PREPARATION.main()
+                    self.logger.info("Running %s", item["name"])
+                    preparation_operation = self.review_manager.get_prep_operation()
+                    preparation_operation.main()
                 elif "colrev dedupe" == item["cmd"]:
-                    from colrev.dedupe import Dedupe
 
-                    self.logger.info(f"Running {item['name']}")
+                    self.logger.info("Running %s", item["name"])
 
                     # Note : settings should be
                     # simple_dedupe
                     # merge_threshold=0.5,
                     # partition_threshold=0.8,
-                    DEDUPE = Dedupe(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    DEDUPE.main()
+                    dedupe_operation = self.review_manager.get_dedupe_operation()
+                    dedupe_operation.main()
 
                 elif "colrev prescreen" == item["cmd"]:
-                    from colrev.prescreen import Prescreen
 
-                    self.logger.info(f"Running {item['name']}")
-                    PRESCREEN = Prescreen(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    PRESCREEN.include_all_in_prescreen()
+                    self.logger.info("Running %s", item["name"])
+                    prescreen_operation = self.review_manager.get_prescreen_operation()
+                    prescreen_operation.include_all_in_prescreen()
 
                 elif "colrev pdf-get" == item["cmd"]:
-                    from colrev.pdf_get import PDF_Retrieval
 
-                    self.logger.info(f"Running {item['name']}")
-                    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    PDF_RETRIEVAL.main()
+                    self.logger.info("Running %s", item["name"])
+                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
+                    pdf_get_operation.main()
 
                 elif "colrev pdf-prep" == item["cmd"]:
-                    from colrev.pdf_prep import PDF_Preparation
 
                     # TODO : this may be solved more elegantly,
                     # but we need colrev to link existing pdfs (file field)
-                    from colrev.pdf_get import PDF_Retrieval
 
-                    self.logger.info(f"Running {item['name']}")
-                    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    PDF_RETRIEVAL.main()
+                    self.logger.info("Running %s", item["name"])
+                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
+                    pdf_get_operation.main()
 
-                    PDF_PREPARATION = PDF_Preparation(
-                        REVIEW_MANAGER=self.REVIEW_MANAGER, reprocess=False
+                    pdf_preparation_operation = (
+                        self.review_manager.get_pdf_prep_operation()
                     )
-                    PDF_PREPARATION.main()
-
-                elif "colrev pdf-prep" == item["cmd"]:
-                    from colrev.pdf_prep import PDF_Preparation
-
-                    self.logger.info(f"Running {item['name']}")
-                    PDF_PREPARATION = PDF_Preparation(
-                        REVIEW_MANAGER=self.REVIEW_MANAGER, reprocess=False
-                    )
-                    PDF_PREPARATION.main()
+                    pdf_preparation_operation.main()
 
                 elif "colrev screen" == item["cmd"]:
-                    from colrev.screen import Screen
 
-                    self.logger.info(f"Running {item['name']}")
-                    SCREEN = Screen(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    SCREEN.include_all_in_screen()
+                    self.logger.info("Running %s", item["name"])
+                    screen_operation = self.review_manager.get_screen_operation()
+                    screen_operation.include_all_in_screen()
 
                 elif "colrev data" == item["cmd"]:
-                    from colrev.data import Data
 
-                    self.logger.info(f"Running {item['name']}")
-                    DATA = Data(self.REVIEW_MANAGER)
-                    DATA.main()
+                    self.logger.info("Running %s", item["name"])
+                    data_operation = self.review_manager.get_data_operation()
+                    data_operation.main()
                     input("Waiting for synthesis (press enter to continue)")
 
                 elif item["cmd"] in [
@@ -294,21 +283,23 @@ class Service:
                         f"As a next step, please complete {item['name']}"
                         " manually (or press Enter to skip)"
                     )
-                    self.q.task_done()
+                    self.service_queue.task_done()
                     continue
                 else:
                     if item["name"] not in ["git add records.bib"]:
                         input(f'Complete task: {item["name"]}')
-                    self.q.task_done()
+                    self.service_queue.task_done()
 
                     continue
 
-                self.logger.info(f"{colors.GREEN}Completed {item['name']}{colors.END}")
+                self.logger.info(
+                    "%sCompleted %s%s", colors.GREEN, item["name"], colors.END
+                )
 
-                if 0 == self.q.qsize():
+                if 0 == self.service_queue.qsize():
                     time.sleep(1)
                     continue
-                self.q.task_done()
+                self.service_queue.task_done()
         except KeyboardInterrupt:
             print("Shutting down service")
 

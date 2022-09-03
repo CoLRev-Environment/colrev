@@ -1,19 +1,25 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import pkgutil
 import re
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.built_in.search as built_in_search
+import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.process
-import colrev.review_dataset
 import colrev.settings
+
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class Search(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "search_crossref": {
             "endpoint": built_in_search.CrossrefSearchEndpoint,
         },
@@ -37,30 +43,27 @@ class Search(colrev.process.Process):
     def __init__(
         self,
         *,
-        REVIEW_MANAGER,
-        notify_state_transition_process=True,
-    ):
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation=True,
+    ) -> None:
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.search,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
-        self.SOURCES = REVIEW_MANAGER.settings.sources
+        self.sources = review_manager.settings.sources
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
-            PROCESS=self,
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.search_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
             scripts=[
-                s.search_script for s in self.SOURCES if "endpoint" in s.search_script
+                s.search_script for s in self.sources if "endpoint" in s.search_script
             ],
         )
 
-    def save_feed_file(self, records: dict, feed_file: Path) -> None:
-
+    def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
             str(r["ID"]).replace(" ", ""): {
@@ -72,7 +75,7 @@ class Search(colrev.process.Process):
             }
             for r in records.values()
         }
-        colrev.review_dataset.ReviewDataset.save_records_dict_to_file(
+        colrev.dataset.Dataset.save_records_dict_to_file(
             records=records, save_path=feed_file
         )
 
@@ -164,14 +167,12 @@ class Search(colrev.process.Process):
             scripts.append(feed_config["search_script"])
 
         required_search_scripts = [
-            s.search_script for s in self.REVIEW_MANAGER.settings.sources
+            s.search_script for s in self.review_manager.settings.sources
         ]
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.search_scripts = AdapterManager.load_scripts(
-            PROCESS=self,
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.search_scripts = adapter_manager.load_scripts(
+            process=self,
             scripts=scripts + required_search_scripts,
         )
 
@@ -194,10 +195,10 @@ class Search(colrev.process.Process):
             feed_config = self.get_feed_config(source_name=source_name)
             for source in sources:
                 # TODO : parse params (which may also raise errors)
-                SCRIPT = self.search_scripts[feed_config["search_script"]["endpoint"]]
-                SCRIPT.validate_params(query=query)  # type: ignore
+                script = self.search_scripts[feed_config["search_script"]["endpoint"]]
+                script.validate_params(query=query)  # type: ignore
 
-    def get_feed_config(self, *, source_name) -> dict:
+    def get_feed_config(self, *, source_name: str) -> dict:
 
         conversion_script = {"endpoint": "bibtex"}
 
@@ -274,10 +275,10 @@ class Search(colrev.process.Process):
             duplicate_source = []
             try:
                 duplicate_source = [
-                    x
-                    for x in self.SOURCES
-                    if source_name == x["search_parameters"][0]["endpoint"]
-                    and selection == x["search_parameters"][0]["params"]
+                    source
+                    for source in self.sources
+                    if source_name == source.source_name
+                    and selection == source.search_parameters
                 ]
             except TypeError:
                 pass
@@ -295,11 +296,11 @@ class Search(colrev.process.Process):
                 filename = f"{source_name}.bib"
                 i = 0
                 # TODO : filename may not yet exist (e.g., in other search feeds)
-                while filename in [x.filename for x in self.SOURCES]:
+                while filename in [x.filename for x in self.sources]:
                     i += 1
                     filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
 
-            feed_file_path = self.REVIEW_MANAGER.path / Path(filename)
+            feed_file_path = self.review_manager.path / Path(filename)
             assert not feed_file_path.is_file()
 
             # The following must be in line with settings.py/SearchSource
@@ -333,11 +334,11 @@ class Search(colrev.process.Process):
                 source_prep_scripts=source_prep_scripts,
                 comment="",
             )
-            self.REVIEW_MANAGER.pp.pprint(add_source)
-            self.REVIEW_MANAGER.settings.sources.append(add_source)
-            self.REVIEW_MANAGER.save_settings()
+            self.review_manager.p_printer.pprint(add_source)
+            self.review_manager.settings.sources.append(add_source)
+            self.review_manager.save_settings()
 
-            self.REVIEW_MANAGER.create_commit(
+            self.review_manager.create_commit(
                 msg=f"Add search source {filename}",
                 script_call="colrev search",
                 saved_args=saved_args,
@@ -345,79 +346,78 @@ class Search(colrev.process.Process):
 
         self.main(selection_str="all")
 
-    def remove_forthcoming(self, *, SOURCE):
-        self.REVIEW_MANAGER.logger.info("Remove forthcoming")
+    def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+        self.review_manager.logger.info("Remove forthcoming")
 
-        with open(SOURCE.feed_file, encoding="utf8") as bibtex_file:
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+        with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
+            records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
 
-            record_list = records.values()
+            record_list = list(records.values())
             record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
             records = {r["ID"]: r for r in record_list}
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                records=records, save_path=SOURCE.feed_file
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=records, save_path=source.get_corresponding_bib_file()
             )
 
-    def main(self, *, selection_str: str) -> None:
+    def main(self, *, selection_str: str = None) -> None:
 
         # Reload the settings because the search sources may have been updated
-        self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
+        self.review_manager.settings = self.review_manager.load_settings()
 
         # TODO : when the search_file has been filled only query the last years
 
-        def load_automated_search_sources() -> list:
+        def load_automated_search_sources() -> list[colrev.settings.SearchSource]:
 
-            AUTOMATED_SOURCES = [
-                x for x in self.SOURCES if "endpoint" in x.search_script
+            automated_sources = [
+                x for x in self.sources if "endpoint" in x.search_script
             ]
 
-            AUTOMATED_SOURCES_SELECTED = AUTOMATED_SOURCES
+            automated_sources_selected = automated_sources
             if selection_str is not None:
                 if "all" != selection_str:
-                    AUTOMATED_SOURCES_SELECTED = [
+                    automated_sources_selected = [
                         f
-                        for f in AUTOMATED_SOURCES
+                        for f in automated_sources
                         if str(f.filename) in selection_str.split(",")
                     ]
-                if len(AUTOMATED_SOURCES_SELECTED) == 0:
-                    available_options = ", ".join(
-                        [str(f.filename) for f in AUTOMATED_SOURCES]
+                if len(automated_sources_selected) == 0:
+                    available_options = [str(f.filename) for f in automated_sources]
+                    raise colrev_exceptions.ParameterError(
+                        parameter="selection_str",
+                        value=selection_str,
+                        options=available_options,
                     )
-                    print(f"Error: {selection_str} not in {available_options}")
-                    raise colrev_exceptions.NoSearchFeedRegistered()
 
-            for SOURCE in AUTOMATED_SOURCES_SELECTED:
-                SOURCE.feed_file = self.REVIEW_MANAGER.path / Path(SOURCE.filename)
+            for source in automated_sources_selected:
+                source.filename = self.review_manager.path / Path(source.filename)
 
-            return AUTOMATED_SOURCES_SELECTED
+            return automated_sources_selected
 
-        for SOURCE in load_automated_search_sources():
+        for source in load_automated_search_sources():
 
-            params = self.parse_parameters(search_params=SOURCE.search_parameters)
+            params = self.parse_parameters(search_params=source.search_parameters)
 
             print()
-            self.REVIEW_MANAGER.logger.info(
-                f"Retrieve from {SOURCE.source_name}: {params}"
+            self.review_manager.logger.info(
+                f"Retrieve from {source.source_name}: {params}"
             )
 
-            SEARCH_SCRIPT = self.search_scripts[SOURCE.search_script["endpoint"]]
-            SEARCH_SCRIPT.run_search(
-                SEARCH=self,
+            search_script = self.search_scripts[source.search_script["endpoint"]]
+            search_script.run_search(
+                search_operation=self,
                 params=params,
-                feed_file=SOURCE.feed_file,
+                feed_file=source.filename,
             )
 
-            if SOURCE.feed_file.is_file():
-                if not self.REVIEW_MANAGER.settings.search.retrieve_forthcoming:
-                    self.remove_forthcoming(SOURCE=SOURCE)
+            if source.filename.is_file():
+                if not self.review_manager.settings.search.retrieve_forthcoming:
+                    self.remove_forthcoming(source=source)
 
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                    path=str(SOURCE.feed_file)
-                )
-                self.REVIEW_MANAGER.create_commit(
+                self.review_manager.dataset.add_changes(path=source.filename)
+                self.review_manager.create_commit(
                     msg="Run search", script_call="colrev search"
                 )
 
@@ -428,9 +428,9 @@ class Search(colrev.process.Process):
             with open("custom_search_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_search_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_search_script.py"))
 
-        NEW_SOURCE = colrev.settings.SearchSource(
+        new_source = colrev.settings.SearchSource(
             filename=Path("custom_search.bib"),
             search_type=colrev.settings.SearchType.DB,
             source_name="custom_search_script",
@@ -442,13 +442,13 @@ class Search(colrev.process.Process):
             comment="",
         )
 
-        self.REVIEW_MANAGER.settings.sources.append(NEW_SOURCE)
-        self.REVIEW_MANAGER.save_settings()
+        self.review_manager.settings.sources.append(new_source)
+        self.review_manager.save_settings()
 
     def view_sources(self) -> None:
 
-        for SOURCE in self.SOURCES:
-            self.REVIEW_MANAGER.pp.pprint(SOURCE)
+        for source in self.sources:
+            self.review_manager.p_printer.pprint(source)
 
         print("\nOptions:")
         options = ", ".join(list(self.search_scripts.keys()))

@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import json
 import logging
+import os
 import pkgutil
 import typing
 from importlib.metadata import version
@@ -9,22 +12,19 @@ from subprocess import CalledProcessError
 from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
-from typing import TYPE_CHECKING
 
 import git
 
+import colrev.cli_colors as colors
+import colrev.dataset
 import colrev.exceptions as colrev_exceptions
-import colrev.review_dataset
-import colrev.review_manager
+import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
-
-if TYPE_CHECKING:
-    import colrev.environment
 
 
 class Initializer:
 
-    SHARE_STAT_REQ_options = ["none", "processed", "screened", "completed"]
+    share_stat_req_options = ["none", "processed", "screened", "completed"]
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class Initializer:
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
-        self.REVIEW_MANAGER = colrev.review_manager.ReviewManager(force_mode=True)
+        self.review_manager = colrev.review_manager.ReviewManager(force_mode=True)
 
         self.__require_empty_directory()
         self.logger.info("Setup files")
@@ -53,20 +53,35 @@ class Initializer:
         if example:
             self.__create_example_repo()
 
-        self.REVIEW_MANAGER = colrev.review_manager.ReviewManager()
+        self.review_manager = colrev.review_manager.ReviewManager()
+
         self.__create_commit(saved_args=saved_args)
         if not example:
-            self.REVIEW_MANAGER.logger.info("Register repo")
+            self.review_manager.logger.info("Register repo")
             self.__register_repo()
         if local_index_repo:
             self.__create_local_index()
 
-        self.REVIEW_MANAGER.logger.info("Post-commit edits")
+        self.review_manager.logger.info("Post-commit edits")
         self.__post_commit_edits()
 
         print("\n")
         for instruction in self.instructions:
-            self.REVIEW_MANAGER.logger.info(instruction)
+            self.review_manager.logger.info(instruction)
+
+    @classmethod
+    def check_init_precondition(cls) -> None:
+        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
+
+        # pylint: disable=duplicate-code
+        if "venv" in cur_content:
+            cur_content.remove("venv")
+            # Note: we can use paths directly when initiating the project
+        if "report.log" in cur_content:
+            cur_content.remove("report.log")
+
+        if 0 != len(cur_content):
+            raise colrev_exceptions.NonEmptyDirectoryError()
 
     def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
@@ -93,16 +108,14 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
-        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="EnvironmentManager"
-        )
-        EnvironmentManager.register_repo(path_to_register=Path.cwd())
+        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager.register_repo(path_to_register=Path.cwd())
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
-        self.REVIEW_MANAGER.report_logger.info("Initialize review repository")
+        self.review_manager.report_logger.info("Initialize review repository")
         del saved_args["local_index_repo"]
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.create_commit(
             msg="Initial commit",
             manual_author=True,
             script_call="colrev init",
@@ -110,63 +123,66 @@ class Initializer:
         )
 
     @classmethod
-    def setup_initial_configuration(cls, *, path) -> None:
+    def setup_initial_configuration(cls, *, path: Path) -> None:
         # Note: parse instead of copy to avoid format changes
         filedata = pkgutil.get_data(__name__, "template/settings.json")
         if filedata:
             settings = json.loads(filedata.decode("utf-8"))
-            with open("settings.json", "w", encoding="utf8") as file:
+            with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
     def __setup_files(self) -> None:
 
         Path("search").mkdir()
         Path("pdfs").mkdir()
+        colrev_path = Path.home() / Path("colrev")
+        colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
             [Path("template/readme.md"), Path("readme.md")],
             [Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")],
             [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
             [Path("template/.gitattributes"), Path(".gitattributes")],
+            [Path("template/gitignore"), Path(".gitignore")],
             [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
                 Path("template/docker-compose.yml"),
-                Path.home() / Path("colrev/docker-compose.yml"),
+                colrev_path / Path("docker-compose.yml"),
             ],
         ]
-        for rp, p in files_to_retrieve:
+        for retrieval_path, target_path in files_to_retrieve:
             colrev.review_manager.ReviewManager.retrieve_package_file(
-                template_file=rp, target=p
+                template_file=retrieval_path, target=target_path
             )
 
-        with open("settings.json", encoding="utf-8") as f:
-            settings = json.load(f)
+        with open("settings.json", encoding="utf-8") as file:
+            settings = json.load(file)
 
         settings["project"]["authors"] = [
             {
-                "name": self.REVIEW_MANAGER.COMMITTER,
+                "name": self.review_manager.committer,
                 "initials": "".join(
-                    part[0] for part in self.REVIEW_MANAGER.COMMITTER.split(" ")
+                    part[0] for part in self.review_manager.committer.split(" ")
                 ),
-                "email": self.REVIEW_MANAGER.EMAIL,
+                "email": self.review_manager.email,
             }
         ]
 
-        if settings["project"]["share_stat_req"] not in self.SHARE_STAT_REQ_options:
+        if settings["project"]["share_stat_req"] not in self.share_stat_req_options:
             raise colrev_exceptions.ParameterError(
                 parameter="settings.project.share_stat_req",
                 value=settings["project"]["share_stat_req"],
-                options=self.SHARE_STAT_REQ_options,
+                options=self.share_stat_req_options,
             )
 
         if (
             settings["project"]["review_type"]
-            not in colrev.settings.ReviewType.getOptions()
+            not in colrev.settings.ReviewType.get_options()
         ):
             raise colrev_exceptions.ParameterError(
                 parameter="settings.project.review_type",
                 value=f"'{settings['project']['review_type']}'",
-                options=colrev.settings.ReviewType.getOptions(),
+                options=colrev.settings.ReviewType.get_options(),
             )
 
         self.review_type = settings["project"]["review_type"]
@@ -248,7 +264,7 @@ class Initializer:
 
             settings["data"]["scripts"].append(
                 {
-                    "endpoint": "PEER_REVIEW",
+                    "endpoint": "peer_review",
                 }
             )
             settings["sources"].append(
@@ -316,13 +332,13 @@ class Initializer:
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
-            if settings["project"]["curation_url"]:
-                colrev.review_dataset.ReviewDataset.inplace_change(
+            if self.review_manager.settings.project.curation_url:
+                colrev.dataset.Dataset.inplace_change(
                     filename=Path("readme.md"),
                     old_string="{{url}}",
-                    new_string=settings["project"]["curation_url"],
+                    new_string=self.review_manager.settings.project.curation_url,
                 )
-            CROSSREF_SOURCE = {
+            crossref_source = {
                 "filename": "search/CROSSREF.bib",
                 "search_type": "DB",
                 "source_name": "CROSSREF",
@@ -333,7 +349,7 @@ class Initializer:
                 "source_prep_scripts": [],
                 "comment": "",
             }
-            settings["sources"].insert(0, CROSSREF_SOURCE)
+            settings["sources"].insert(0, crossref_source)
             settings["search"]["retrieve_forthcoming"] = False
 
             # TODO : exclude complementary materials in prep scripts
@@ -379,7 +395,7 @@ class Initializer:
             json.dump(settings, outfile, indent=4)
 
         if "review" in self.project_name.lower():
-            colrev.review_dataset.ReviewDataset.inplace_change(
+            colrev.dataset.Dataset.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" "),
@@ -388,7 +404,7 @@ class Initializer:
             r_type_suffix = self.review_type.replace("_", " ").replace(
                 "meta analysis", "meta-analysis"
             )
-            colrev.review_dataset.ReviewDataset.inplace_change(
+            colrev.dataset.Dataset.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
@@ -399,54 +415,36 @@ class Initializer:
             logging.error("Global git variables (user name and email) not available.")
             return
 
-        # Note: need to write the .gitignore because file would otherwise be
-        # ignored in the template directory.
-        with open(".gitignore", "w", encoding="utf8") as f:
-            f.write(
-                "*.bib.sav\n"
-                + "missing_pdf_files.csv\n"
-                + "manual_cleansing_statistics.csv\n"
-                + "data.csv\n"
-                + "venv\n"
-                + ".records_learned_settings\n"
-                + ".corrections\n"
-                + ".ipynb_checkpoints/\n"
-                + "pdfs\n"
-                + "requests_cache.sqlite\n"
-                + "__pycache__\n"
-                + ".tei"
-            )
-
     def __post_commit_edits(self) -> None:
-        import colrev.cli_colors as colors
 
         if "curated_masterdata" == self.review_type:
-            self.REVIEW_MANAGER.settings.project.curation_url = "TODO"
-            self.REVIEW_MANAGER.settings.project.curated_fields = ["url", "doi", "TODO"]
+            self.review_manager.settings.project.curation_url = "TODO"
+            self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
 
-            PDF_SOURCE = [
+            pdf_source = [
                 s
-                for s in self.REVIEW_MANAGER.settings.sources
+                for s in self.review_manager.settings.sources
                 if "search/pdfs.bib" == str(s.filename)
             ][0]
-            PDF_SOURCE.search_parameters = (
+            pdf_source.search_parameters = (
                 "SCOPE path='pdfs' WITH journal='TODO' "
                 + "AND sub_dir_pattern='TODO:volume_number|year'"
             )
 
-            CROSSREF_SOURCE = [
+            crossref_source = [
                 s
-                for s in self.REVIEW_MANAGER.settings.sources
+                for s in self.review_manager.settings.sources
                 if "search/CROSSREF.bib" == str(s.filename)
             ][0]
-            CROSSREF_SOURCE.search_parameters = "SCOPE journal_issn='TODO'"
+            crossref_source.search_parameters = "SCOPE journal_issn='TODO'"
 
-            self.REVIEW_MANAGER.save_settings()
+            self.review_manager.save_settings()
 
-            self.REVIEW_MANAGER.logger.info("Completed setup.")
-            self.REVIEW_MANAGER.logger.info(
-                f"{colors.ORANGE}Open the settings.json and "
-                f"edit all fields marked with 'TODO'.{colors.END}"
+            self.review_manager.logger.info("Completed setup.")
+            self.review_manager.logger.info(
+                "%sOpen the settings.json and edit all fields marked with 'TODO'%s.",
+                colors.ORANGE,
+                colors.END,
             )
 
     def __setup_git(self) -> None:
@@ -466,16 +464,17 @@ class Initializer:
         ]
         for script_to_call in scripts_to_call:
             try:
-                self.logger.info(f'{" ".join(script_to_call)}...')
+                self.logger.info("%s...", " ".join(script_to_call))
                 check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "" == " ".join(script_to_call):
                     self.logger.info(
-                        f"{' '.join(script_to_call)} did not succeed "
-                        "(Internet connection could not be available)"
+                        "%s did not succeed "
+                        "(Internet connection could not be available)",
+                        " ".join(script_to_call),
                     )
                 else:
-                    self.logger.info(f"Failed: {' '.join(script_to_call)}")
+                    self.logger.info("Failed: %s", " ".join(script_to_call))
 
         git_repo.index.add(
             [
@@ -489,7 +488,7 @@ class Initializer:
             ]
         )
 
-    def __require_empty_directory(self):
+    def __require_empty_directory(self) -> None:
 
         cur_content = [str(x.name) for x in Path.cwd().glob("**/*")]
 
@@ -519,16 +518,12 @@ class Initializer:
         git_repo.index.add(["search/30_example_records.bib"])
 
     def __create_local_index(self) -> None:
-        import os
 
-        self.REVIEW_MANAGER.report_logger.handlers = []
+        self.review_manager.report_logger.handlers = []
 
-        # pylint: disable=no-member
-        LocalIndex: colrev.environment.LocalIndex = (
-            self.REVIEW_MANAGER.get_environment_service(service_identifier="LocalIndex")
-        )
+        local_index = self.review_manager.get_local_index()
+        local_index_path = local_index.local_environment_path / Path("local_index")
 
-        local_index_path = LocalIndex.local_environment_path / Path("local_index")
         curdir = Path.cwd()
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)

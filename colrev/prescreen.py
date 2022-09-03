@@ -1,16 +1,23 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import math
 import pkgutil
 import typing
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.built_in.prescreen as built_in_prescreen
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Prescreen(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "scope_prescreen": {
             "endpoint": built_in_prescreen.ScopePrescreenEndpoint,
         },
@@ -28,52 +35,62 @@ class Prescreen(colrev.process.Process):
         },
     }
 
-    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.prescreen,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.prescreen_scripts: typing.Dict[
-            str, typing.Any
-        ] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.prescreen.scripts,
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.prescreen_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
+            scripts=review_manager.settings.prescreen.scripts,
         )
 
-    def export_table(self, *, export_table_format: str) -> None:
+    def export_table(self, *, export_table_format: str = "csv") -> None:
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
-            PRESCREEN=self, SETTINGS={"name": "export_table"}
+        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            prescreen_operation=self, settings={"name": "export_table"}
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        ENDPOINT.export_table(self, records, [])
+        records = self.review_manager.dataset.load_records_dict()
+        endpoint.export_table(
+            prescreen_operation=self,
+            records=records,
+            split=[],
+            export_table_format=export_table_format,
+        )
 
     def import_table(self, *, import_table_path: str) -> None:
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
-            PRESCREEN=self, SETTINGS={"name": "import_table"}
+        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            prescreen_operation=self, settings={"name": "import_table"}
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        ENDPOINT.import_table(self, records, import_table_path)
+        records = self.review_manager.dataset.load_records_dict()
+        endpoint.import_table(
+            prescreen_operation=self,
+            records=records,
+            import_table_path=import_table_path,
+        )
 
     def include_all_in_prescreen(self) -> None:
 
-        ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(
-            PRESCREEN=self, SETTINGS={"name": "include_all"}
+        endpoint = built_in_prescreen.ConditionalPrescreenEndpoint(
+            prescreen_operation=self, settings={"name": "include_all"}
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        ENDPOINT.run_prescreen(self, records, [])
+        records = self.review_manager.dataset.load_records_dict()
+        endpoint.run_prescreen(self, records, [])
 
     def get_data(self) -> dict:
 
-        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [
                 x
@@ -81,12 +98,14 @@ class Prescreen(colrev.process.Process):
                 if str(colrev.record.RecordState.md_processed) == x["colrev_status"]
             ]
         )
-        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
-        items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
+        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
+        items = self.review_manager.dataset.read_next_record(
             conditions=[{"colrev_status": colrev.record.RecordState.md_processed}]
         )
-        prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
+        prescreen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(prescreen_data)
+        )
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:
@@ -96,12 +115,12 @@ class Prescreen(colrev.process.Process):
         data = self.get_data()
         nrecs = math.floor(data["nr_tasks"] / create_split)
 
-        self.REVIEW_MANAGER.report_logger.info(
+        self.review_manager.report_logger.info(
             f"Creating prescreen splits for {create_split} researchers "
             f"({nrecs} each)"
         )
 
-        added: typing.List[str] = []
+        added: list[str] = []
         while len(added) < nrecs:
             added.append(next(data["items"])["ID"])
         prescreen_splits.append("colrev prescreen --split " + ",".join(added))
@@ -115,16 +134,14 @@ class Prescreen(colrev.process.Process):
             with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path="custom_prescreen_script.py"
-        )
+        self.review_manager.dataset.add_changes(path=Path("custom_prescreen_script.py"))
 
-        self.REVIEW_MANAGER.settings.prescreen.scripts.append(
+        self.review_manager.settings.prescreen.scripts.append(
             {"endpoint": "custom_prescreen_script"}
         )
-        self.REVIEW_MANAGER.save_settings()
+        self.review_manager.save_settings()
 
-    def main(self, *, split_str: str):
+    def main(self, *, split_str: str) -> None:
 
         # pylint: disable=duplicate-code
         split = []
@@ -132,13 +149,13 @@ class Prescreen(colrev.process.Process):
             split = split_str.split(",")
             split.remove("")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
-        for PRESCREEN_SCRIPT in self.REVIEW_MANAGER.settings.prescreen.scripts:
+        for prescreen_script in self.review_manager.settings.prescreen.scripts:
 
-            self.REVIEW_MANAGER.logger.info(f"Run {PRESCREEN_SCRIPT['endpoint']}")
-            ENDPOINT = self.prescreen_scripts[PRESCREEN_SCRIPT["endpoint"]]
-            records = ENDPOINT.run_prescreen(self, records, split)
+            self.review_manager.logger.info(f"Run {prescreen_script['endpoint']}")
+            endpoint = self.prescreen_scripts[prescreen_script["endpoint"]]
+            records = endpoint.run_prescreen(self, records, split)
 
 
 if __name__ == "__main__":

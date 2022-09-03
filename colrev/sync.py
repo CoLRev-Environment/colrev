@@ -7,15 +7,18 @@ from pathlib import Path
 import pybtex.errors
 from pybtex.database.input import bibtex
 
+import colrev.dataset
 import colrev.environment
 import colrev.record
-import colrev.review_dataset
 
 
 class Sync:
-    def __init__(self):
-        self.records_to_import = []
-        self.non_unique_for_import = []
+
+    cited_papers: list
+
+    def __init__(self) -> None:
+        self.records_to_import: typing.List[typing.Dict] = []
+        self.non_unique_for_import: typing.List[typing.Dict] = []
 
     def get_cited_papers(self) -> None:
 
@@ -25,8 +28,8 @@ class Sync:
             paper_md = Path("review.md")
         rst_files = list(Path.cwd().rglob("*.rst"))
 
-        IDs_in_bib = self.get_IDs_in_paper()
-        print(f"References in bib: {len(IDs_in_bib)}")
+        ids_in_bib = self.get_ids_in_paper()
+        print(f"References in bib: {len(ids_in_bib)}")
 
         if paper_md.is_file():
             print("Loading cited references from paper.md")
@@ -54,18 +57,18 @@ class Sync:
             return
 
         for citation_key in citation_keys:
-            if citation_key in IDs_in_bib:
+            if citation_key in ids_in_bib:
                 continue
 
             if Path(f"{citation_key}.pdf").is_file():
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            self.LOCAL_INDEX = colrev.environment.LocalIndex()
+            local_index = colrev.environment.LocalIndex()
 
             query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
-            res = self.LOCAL_INDEX.os.search(
-                index=self.LOCAL_INDEX.RECORD_INDEX, body=query
+            res = local_index.open_search.search(
+                index=local_index.RECORD_INDEX, body=query
             )
 
             nr_hits = len(res["hits"]["hits"])  # type: ignore
@@ -79,8 +82,8 @@ class Sync:
                 record_to_import = {
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
-                record_to_import = self.LOCAL_INDEX.prep_record_for_return(
-                    record=record_to_import, include_file=False
+                record_to_import = local_index.prep_record_for_return(
+                    record_dict=record_to_import, include_file=False
                 )
 
                 self.records_to_import.append(record_to_import)
@@ -93,7 +96,7 @@ class Sync:
 
         return
 
-    def get_IDs_in_paper(self) -> typing.List:
+    def get_ids_in_paper(self) -> typing.List:
 
         pybtex.errors.set_strict_mode(False)
 
@@ -104,7 +107,7 @@ class Sync:
 
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
-            records = colrev.review_dataset.ReviewDataset.parse_records_dict(
+            records = colrev.dataset.Dataset.parse_records_dict(
                 records_dict=bib_data.entries
             )
 
@@ -113,7 +116,7 @@ class Sync:
     def get_non_unique(self) -> list:
         return self.non_unique_for_import
 
-    def add_to_records_to_import(self, record: dict) -> None:
+    def add_to_records_to_import(self, *, record: dict) -> None:
         if record["ID"] not in [r["ID"] for r in self.records_to_import]:
             self.records_to_import.append(record)
 
@@ -129,7 +132,7 @@ class Sync:
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
             records = list(
-                colrev.review_dataset.ReviewDataset.parse_records_dict(
+                colrev.dataset.Dataset.parse_records_dict(
                     records_dict=bib_data.entries
                 ).values()
             )
@@ -144,8 +147,8 @@ class Sync:
 
         if len(added) > 0:
             print("Loaded:")
-            for record in added:
-                colrev.record.Record(data=record).print_citation_format()
+            for record_dict in added:
+                colrev.record.Record(data=record_dict).print_citation_format()
 
             print(f"Loaded {len(added)} papers")
 
@@ -175,7 +178,7 @@ class Sync:
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        colrev.review_dataset.ReviewDataset.save_records_dict_to_file(
+        colrev.dataset.Dataset.save_records_dict_to_file(
             records=records_dict, save_path=references_file
         )
 

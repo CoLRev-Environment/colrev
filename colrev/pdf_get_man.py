@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import csv
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -9,36 +12,40 @@ import colrev.built_in.pdf_get_man as built_in_pdf_get_man
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
-class PDFRetrievalMan(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+class PDFGetMan(colrev.process.Process):
+
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_pdf_get_man": {
-            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFRetrievalManual,
+            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFGetMan,
         }
     }
 
-    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
 
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.pdf_get_man,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.pdf_get_man_scripts: typing.Dict[
-            str, typing.Any
-        ] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts,
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.pdf_get_man_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
+            scripts=review_manager.settings.pdf_get.man_pdf_get_scripts,
         )
 
-    def get_pdf_get_man(self, *, records: typing.Dict) -> list:
+    def get_pdf_get_man(self, *, records: dict) -> list:
         missing_records = []
         for record in records.values():
             if (
@@ -48,7 +55,7 @@ class PDFRetrievalMan(colrev.process.Process):
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, *, records: typing.Dict) -> None:
+    def export_retrieval_table(self, *, records: dict) -> None:
         missing_records = self.get_pdf_get_man(records=records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
@@ -72,15 +79,15 @@ class PDFRetrievalMan(colrev.process.Process):
                 missing_pdf_files_csv, index=False, quoting=csv.QUOTE_ALL
             )
 
-            self.REVIEW_MANAGER.logger.info(
+            self.review_manager.logger.info(
                 "Created missing_pdf_files.csv with paper details"
             )
 
     def get_data(self) -> dict:
 
-        self.REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(exist_ok=True)
+        self.review_manager.pdf_directory.mkdir(exist_ok=True)
 
-        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [
                 x
@@ -89,32 +96,32 @@ class PDFRetrievalMan(colrev.process.Process):
                 == x["colrev_status"]
             ]
         )
-        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
-        items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
+        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
+        items = self.review_manager.dataset.read_next_record(
             conditions=[
                 {"colrev_status": colrev.record.RecordState.pdf_needs_manual_retrieval}
             ]
         )
-        pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.REVIEW_MANAGER.logger.debug(
-            self.REVIEW_MANAGER.pp.pformat(pdf_get_man_data)
+        pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(pdf_get_man_data)
         )
         return pdf_get_man_data
 
     def pdfs_retrieved_manually(self) -> bool:
-        return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
+        return self.review_manager.dataset.has_changes()
 
     def main(self) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for (
-            PDF_GET_MAN_SCRIPT
-        ) in self.REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts:
+            man_pdf_get_script
+        ) in self.review_manager.settings.pdf_get.man_pdf_get_scripts:
 
-            ENDPOINT = self.pdf_get_man_scripts[PDF_GET_MAN_SCRIPT["endpoint"]]
+            endpoint = self.pdf_get_man_scripts[man_pdf_get_script["endpoint"]]
 
-            records = ENDPOINT.get_man_pdf(self, records)
+            records = endpoint.get_man_pdf(self, records)
 
 
 if __name__ == "__main__":

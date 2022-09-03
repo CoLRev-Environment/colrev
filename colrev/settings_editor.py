@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import json
-from pathlib import Path
+import webbrowser
+from threading import Timer
+from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import jsonify
@@ -12,18 +16,20 @@ import colrev.load
 import colrev.process
 import colrev.settings
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Settings(colrev.process.Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    # pylint: disable=invalid-name
+
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.explore,
         )
 
     def _open_browser(self) -> None:
-
-        import webbrowser
-        from threading import Timer
 
         url = "http://127.0.0.1:5000"
 
@@ -32,17 +38,15 @@ class Settings(colrev.process.Process):
 
     def open_settings_editor(self):
 
-        SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
-
         app = Flask(__name__, static_url_path="", static_folder="frontend/build")
         CORS(app)
 
-        app.config["path"] = str(self.REVIEW_MANAGER.path / Path("settings.json"))
+        app.config["path"] = str(self.review_manager.settings_path)
 
         # print("Settings File Path: ", app.config["path"])
 
         @app.route("/", defaults={"path": ""})
-        def serve(path):
+        def serve(path):  # pylint: disable=unused-argument
             return send_from_directory(app.static_folder, "index.html")
 
         @app.route("/<path:filename>")
@@ -52,7 +56,7 @@ class Settings(colrev.process.Process):
         @app.route("/api/getSettings")
         def getSettings():
 
-            with open(SETTINGS_FILE_PATH, encoding="utf-8") as file:
+            with open(self.review_manager.settings_path, encoding="utf-8") as file:
                 json__content = file.read()
 
             response = app.response_class(
@@ -64,7 +68,9 @@ class Settings(colrev.process.Process):
         @app.route("/api/saveSettings", methods=["POST"])
         def saveSettings():
 
-            with open(SETTINGS_FILE_PATH, "w", encoding="utf-8") as outfile:
+            with open(
+                self.review_manager.settings_path, "w", encoding="utf-8"
+            ) as outfile:
                 json_string = json.dumps(request.json, indent=4)
                 outfile.write(json_string)
 
@@ -83,7 +89,7 @@ class Settings(colrev.process.Process):
             #     },
             # }
 
-            return jsonify(colrev.settings.Configuration.getOptions())
+            return jsonify(colrev.settings.Configuration.get_options())
 
         @app.route("/api/getTootip")
         def getTootip():
@@ -94,7 +100,7 @@ class Settings(colrev.process.Process):
             #     "project": {"review_type": "This is the type of review"},
             # }
 
-            return jsonify(colrev.settings.Configuration.getTooltips())
+            return jsonify(colrev.settings.Configuration.get_tooltips())
 
         @app.route("/api/getRequired")
         def getRequired():
