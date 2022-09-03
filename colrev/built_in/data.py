@@ -1029,42 +1029,46 @@ class ZettlrEndpoint:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
 
+@dataclass
+class GHPagesSettings:
+    name: str
+    github_pages_endpoint_version: str
+    auto_push: bool
+
+
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class GithubPagesEndpoint:
-    def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
-        )
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
+        self.settings = from_dict(data_class=GHPagesSettings, data=settings)
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         github_pages_endpoint_details = {
             "endpoint": "GITHUB_PAGES",
             "github_pages_endpoint_version": "0.1",
-            "config": {
-                "auto_push": True,
-            },
+            "auto_push": True,
         }
 
         return github_pages_endpoint_details
 
-    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-        # pylint: disable=redefined-outer-name
+    def update_data(
+        self,
+        data_operation: colrev.data.Data,
+        records: dict,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+    ) -> None:
 
-        import colrev.review_dataset
-
-        def __retrieve_package_file(*, template_file: Path, target: Path) -> None:
-
-            filedata = pkgutil.get_data(__name__, str(template_file))
-            if filedata:
-                with open(target, "w", encoding="utf8") as file:
-                    file.write(filedata.decode("utf-8"))
-
-        if DATA.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            DATA.REVIEW_MANAGER.logger.error(
+        if data_operation.review_manager.dataset.has_changes():
+            data_operation.review_manager.logger.error(
                 "Cannot update github pages because there are uncommited changes."
             )
+            return
 
-        records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = data_operation.review_manager.dataset.load_records_dict()
 
         git_repo = git.Repo()
         repo_heads_names = [h.name for h in git_repo.heads]
@@ -1076,39 +1080,47 @@ class GithubPagesEndpoint:
             git_repo.git.checkout(gh_pages_branch_name)
         else:
             # if branch does not exist: create and add index.html
-            DATA.REVIEW_MANAGER.logger.info("Setup github pages")
+            data_operation.review_manager.logger.info("Setup github pages")
             git_repo.create_head(gh_pages_branch_name)
             git_repo.git.checkout(gh_pages_branch_name)
             title = "Manuscript template"
-            readme_file = DATA.REVIEW_MANAGER.paths["README"]
+            readme_file = data_operation.review_manager.readme
             if readme_file.is_file():
-                with open(readme_file, encoding="utf-8") as f:
-                    title = f.readline()
+                with open(readme_file, encoding="utf-8") as file:
+                    title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
                     title = '"' + title + '"'
             git_repo.git.rm("-rf", ".")
             git_repo.git.checkout("HEAD", "--", ".gitignore")
-            __retrieve_package_file(
+
+            gitignore_file = Path(".gitignore")
+            gitignore_file.write_text("status.yaml")
+            data_operation.review_manager.dataset.add_changes(path=gitignore_file)
+
+            data_operation.review_manager.retrieve_package_file(
                 template_file=Path("../template/github_pages/index.html"),
                 target=Path("index.html"),
             )
-            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="index.html")
-            __retrieve_package_file(
+            data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
+            data_operation.review_manager.retrieve_package_file(
                 template_file=Path("../template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
             )
-            DATA.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
-                filename="_config.yml", old_string="{{project_title}}", new_string=title
+            data_operation.review_manager.dataset.inplace_change(
+                filename=Path("_config.yml"),
+                old_string="{{project_title}}",
+                new_string=title,
             )
-            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="_config.yml")
-            __retrieve_package_file(
+            data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
+            data_operation.review_manager.retrieve_package_file(
                 template_file=Path("../template/github_pages/about.md"),
                 target=Path("about.md"),
             )
-            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="about.md")
+            data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
 
-        DATA.REVIEW_MANAGER.logger.info("Update data on github pages")
+        data_operation.review_manager.logger.info("Update data on github pages")
 
+        # pylint: disable=duplicate-code
         included_records = {
             r["ID"]: r
             for r in records.values()
@@ -1119,17 +1131,17 @@ class GithubPagesEndpoint:
             ]
         }
         data_file = Path("data.bib")
-        colrev.review_dataset.ReviewDataset.save_records_dict_to_file(
+        data_operation.review_manager.dataset.save_records_dict_to_file(
             records=included_records, save_path=data_file
         )
-        DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(data_file))
+        data_operation.review_manager.dataset.add_changes(path=data_file)
 
-        DATA.REVIEW_MANAGER.create_commit(
+        data_operation.review_manager.create_commit(
             msg="Update sample", script_call="colrev data"
         )
 
-        if self.SETTINGS["config"]["auto_push"]:
-            DATA.REVIEW_MANAGER.logger.info("Push to github pages")
+        if self.settings.auto_push:
+            data_operation.review_manager.logger.info("Push to github pages")
             if "origin" in git_repo.remotes:
                 if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
                     git_repo.git.push("origin", gh_pages_branch_name, "--no-verify")
@@ -1143,20 +1155,23 @@ class GithubPagesEndpoint:
                     .replace(".git", "")
                     .split("/")
                 )
-                DATA.REVIEW_MANAGER.logger.info(
+                data_operation.review_manager.logger.info(
                     f"Data available at: http://{username}.github.io/{project}/"
                 )
             else:
-                DATA.REVIEW_MANAGER.logger.info("No remotes specified")
+                data_operation.review_manager.logger.info("No remotes specified")
 
         git_repo.git.checkout(active_branch)
 
     def update_record_status_matrix(
-        self, DATA, synthesized_record_status_matrix, endpoint_identifier
-    ):
-
-        for syn_ID in synthesized_record_status_matrix:
-            synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
+        self,
+        data_operation: colrev.data.Data,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
+    ) -> None:
+        # Note : automatically set all to True / synthesized
+        for syn_id in synthesized_record_status_matrix:
+            synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
 
 class ManuscriptRecordSourceTagError(Exception):
