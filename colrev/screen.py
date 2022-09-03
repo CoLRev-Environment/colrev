@@ -1,17 +1,24 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import math
 import pkgutil
 import typing
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.process
 import colrev.record
 import colrev.settings
 from colrev.built_in import screen as built_in_screen
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class Screen(colrev.process.Process):
 
-    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+    built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "colrev_cli_screen": {
             "endpoint": built_in_screen.CoLRevCLIScreenEndpoint,
         },
@@ -19,21 +26,24 @@ class Screen(colrev.process.Process):
         # "conditional_screen": {"endpoint": built_in_screen.ConditionalScreenEndpoint},
     }
 
-    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        notify_state_transition_operation: bool = True,
+    ) -> None:
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=colrev.process.ProcessType.screen,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
-        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="AdapterManager"
-        )
-        self.screen_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.screen.scripts,
+        adapter_manager = self.review_manager.get_adapter_manager()
+        self.screen_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+            process=self,
+            scripts=review_manager.settings.screen.scripts,
         )
 
     def include_all_in_screen(
@@ -41,18 +51,18 @@ class Screen(colrev.process.Process):
     ) -> None:
         """Include all records in the screen"""
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         screening_criteria = self.get_screening_criteria()
 
         saved_args = locals()
         saved_args["include_all"] = ""
-        PAD = 50
-        for record_ID, record in records.items():
+        pad = 50
+        for record_id, record in records.items():
             if record["colrev_status"] != colrev.record.RecordState.pdf_prepared:
                 continue
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
+            self.review_manager.report_logger.info(
+                f" {record_id}".ljust(pad, " ") + "Included in screen (automatically)"
             )
             if len(screening_criteria) == 0:
                 record.update(screening_criteria="NA")
@@ -62,9 +72,9 @@ class Screen(colrev.process.Process):
                 )
             record.update(colrev_status=colrev.record.RecordState.rev_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
             script_call="colrev screen",
@@ -74,16 +84,18 @@ class Screen(colrev.process.Process):
     def get_screening_criteria(self) -> list:
         """Get the list of screening criteria from settings"""
 
-        return list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
+        return list(self.review_manager.settings.screen.criteria.keys())
 
-    def set_screening_criteria(self, *, screening_criteria) -> None:
-        self.REVIEW_MANAGER.settings.screen.criteria = screening_criteria
-        self.REVIEW_MANAGER.save_settings()
+    def set_screening_criteria(
+        self, *, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
+    ) -> None:
+        self.review_manager.settings.screen.criteria = screening_criteria
+        self.review_manager.save_settings()
 
     def get_data(self) -> dict:
         """Get the data (records to screen)"""
 
-        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [
                 x
@@ -91,34 +103,40 @@ class Screen(colrev.process.Process):
                 if str(colrev.record.RecordState.pdf_prepared) == x["colrev_status"]
             ]
         )
-        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
-        items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
+        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+        items = self.review_manager.dataset.read_next_record(
             conditions=[{"colrev_status": colrev.record.RecordState.pdf_prepared}]
         )
-        screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
+        screen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
+        self.review_manager.logger.debug(
+            self.review_manager.p_printer.pformat(screen_data)
+        )
         return screen_data
 
-    def add_criterion(self, *, criterion_to_add) -> None:
+    def add_criterion(self, *, criterion_to_add: str) -> None:
         """Add a screening criterion to the records and settings"""
 
         assert criterion_to_add.count(",") == 2
-        criterion_name, criterion_type, criterion_explanation = criterion_to_add.split(
-            ","
-        )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        (
+            criterion_name,
+            criterion_type_str,
+            criterion_explanation,
+        ) = criterion_to_add.split(",")
+        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
 
-        if criterion_name not in self.REVIEW_MANAGER.settings.screen.criteria:
+        records = self.review_manager.dataset.load_records_dict()
 
-            ADD_CRITERION = colrev.settings.ScreenCriterion(
+        if criterion_name not in self.review_manager.settings.screen.criteria:
+
+            add_criterion = colrev.settings.ScreenCriterion(
                 explanation=criterion_explanation,
                 criterion_type=criterion_type,
                 comment="",
             )
-            self.REVIEW_MANAGER.settings.screen.criteria[criterion_name] = ADD_CRITERION
+            self.review_manager.settings.screen.criteria[criterion_name] = add_criterion
 
-            self.REVIEW_MANAGER.save_settings()
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
+            self.review_manager.save_settings()
+            self.review_manager.dataset.add_setting_changes()
         else:
             print(f"Error: criterion {criterion_name} already in settings")
             return
@@ -140,21 +158,21 @@ class Screen(colrev.process.Process):
 
         # TODO : screening: if screening_criteria field is already available
         # only go through the criteria with "TODO"
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg=f"Add screening criterion: {criterion_name}",
             script_call="colrev screen",
         )
 
-    def delete_criterion(self, *, criterion_to_delete) -> None:
+    def delete_criterion(self, *, criterion_to_delete: str) -> None:
         """Delete a screening criterion from the records and settings"""
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
-        if criterion_to_delete in self.REVIEW_MANAGER.settings.screen.criteria:
-            del self.REVIEW_MANAGER.settings.screen.criteria[criterion_to_delete]
-            self.REVIEW_MANAGER.save_settings()
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
+        if criterion_to_delete in self.review_manager.settings.screen.criteria:
+            del self.review_manager.settings.screen.criteria[criterion_to_delete]
+            self.review_manager.save_settings()
+            self.review_manager.dataset.add_setting_changes()
         else:
             print(f"Error: criterion {criterion_to_delete} not in settings")
             return
@@ -194,9 +212,9 @@ class Screen(colrev.process.Process):
                 ):
                     record["colrev_status"] = colrev.record.RecordState.rev_included
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
             msg=f"Removed screening criterion: {criterion_to_delete}",
             script_call="colrev screen",
         )
@@ -208,11 +226,11 @@ class Screen(colrev.process.Process):
         data = self.get_data()
         nrecs = math.floor(data["nr_tasks"] / create_split)
 
-        self.REVIEW_MANAGER.report_logger.info(
+        self.review_manager.report_logger.info(
             f"Creating screen splits for {create_split} researchers " f"({nrecs} each)"
         )
 
-        added: typing.List[str] = []
+        added: list[str] = []
         while len(added) < nrecs:
             added.append(next(data["items"])["ID"])
         screen_splits.append("colrev screen --split " + ",".join(added))
@@ -226,14 +244,14 @@ class Screen(colrev.process.Process):
             with open("custom_screen_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_screen_script.py")
+        self.review_manager.dataset.add_changes(path=Path("custom_screen_script.py"))
 
-        self.REVIEW_MANAGER.settings.screen.scripts.append(
+        self.review_manager.settings.screen.scripts.append(
             {"endpoint": "custom_screen_script"}
         )
-        self.REVIEW_MANAGER.save_settings()
+        self.review_manager.save_settings()
 
-    def main(self, *, split_str: str):
+    def main(self, *, split_str: str) -> None:
 
         # pylint: disable=duplicate-code
         split = []
@@ -241,12 +259,12 @@ class Screen(colrev.process.Process):
             split = split_str.split(",")
             split.remove("")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
-        for SCREEN_SCRIPT in self.REVIEW_MANAGER.settings.screen.scripts:
+        for screen_script in self.review_manager.settings.screen.scripts:
 
-            ENDPOINT = self.screen_scripts[SCREEN_SCRIPT["endpoint"]]
-            records = ENDPOINT.run_screen(self, records, split)
+            endpoint = self.screen_scripts[screen_script["endpoint"]]
+            records = endpoint.run_screen(self, records, split)
 
 
 if __name__ == "__main__":

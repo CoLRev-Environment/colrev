@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from dataclasses import asdict
+from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
@@ -46,40 +47,40 @@ import colrev.record
 
 
 def apply_field_mapping(
-    *, RECORD: colrev.record.PrepRecord, mapping: dict
+    *, record: colrev.record.PrepRecord, mapping: dict
 ) -> colrev.record.PrepRecord:
     """Convenience function for the prep scripts"""
 
     mapping = {k.lower(): v.lower() for k, v in mapping.items()}
-    prior_keys = list(RECORD.data.keys())
+    prior_keys = list(record.data.keys())
     # Note : warning: do not create a new dict.
     for key in prior_keys:
         if key.lower() in mapping:
-            RECORD.rename_field(key=key, new_key=mapping[key.lower()])
+            record.rename_field(key=key, new_key=mapping[key.lower()])
 
-    return RECORD
+    return record
 
 
 def drop_fields(
-    *, RECORD: colrev.record.PrepRecord, drop=list
+    *, record: colrev.record.PrepRecord, drop=list
 ) -> colrev.record.PrepRecord:
     """Convenience function for the prep scripts"""
 
     for key_to_drop in drop:
-        RECORD.remove_field(key=key_to_drop)
-    return RECORD
+        record.remove_field(key=key_to_drop)
+    return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class AISeLibrarySearchSource:
     source_identifier = "https://aisel.aisnet.org/"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         if nr_ais_links > 0:
@@ -102,17 +103,17 @@ class AISeLibrarySearchSource:
 
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         ais_mapping: dict = {}
-        RECORD = apply_field_mapping(RECORD=RECORD, mapping=ais_mapping)
+        record = apply_field_mapping(record=record, mapping=ais_mapping)
 
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
-            RECORD.data.get("volume", "UNKNOWN") != "UNKNOWN"
-            or RECORD.data.get("number", "UNKNOWN") != "UNKNOWN"
+            record.data.get("volume", "UNKNOWN") != "UNKNOWN"
+            or record.data.get("number", "UNKNOWN") != "UNKNOWN"
         ) and not any(
-            x in RECORD.data.get("journal", "")
+            x in record.data.get("journal", "")
             for x in [
                 "HICSS",
                 "ICIS",
@@ -122,129 +123,131 @@ class AISeLibrarySearchSource:
                 "All Sprouts Content",
             ]
         ):
-            RECORD.data["ENTRYTYPE"] = "article"
-            if "journal" not in RECORD.data and "booktitle" in RECORD.data:
-                RECORD.rename_field(key="booktitle", new_key="journal")
+            record.data["ENTRYTYPE"] = "article"
+            if "journal" not in record.data and "booktitle" in record.data:
+                record.rename_field(key="booktitle", new_key="journal")
             if (
-                "journal" not in RECORD.data
-                and "title" in RECORD.data
-                and "chapter" in RECORD.data
+                "journal" not in record.data
+                and "title" in record.data
+                and "chapter" in record.data
             ):
-                RECORD.rename_field(key="title", new_key="journal")
-                RECORD.rename_field(key="chapter", new_key="title")
-                RECORD.remove_field(key="publisher")
+                record.rename_field(key="title", new_key="journal")
+                record.rename_field(key="chapter", new_key="title")
+                record.remove_field(key="publisher")
 
         else:
-            RECORD.data["ENTRYTYPE"] = "inproceedings"
-            RECORD.remove_field(key="publisher")
-            if RECORD.data.get("volume", "") == "UNKNOWN":
-                RECORD.remove_field(key="volume")
-            if RECORD.data.get("number", "") == "UNKNOWN":
-                RECORD.remove_field(key="number")
+            record.data["ENTRYTYPE"] = "inproceedings"
+            record.remove_field(key="publisher")
+            if record.data.get("volume", "") == "UNKNOWN":
+                record.remove_field(key="volume")
+            if record.data.get("number", "") == "UNKNOWN":
+                record.remove_field(key="number")
 
             if (
-                "booktitle" not in RECORD.data
-                and "title" in RECORD.data
-                and "chapter" in RECORD.data
+                "booktitle" not in record.data
+                and "title" in record.data
+                and "chapter" in record.data
             ):
 
-                RECORD.rename_field(key="title", new_key="booktitle")
-                RECORD.rename_field(key="chapter", new_key="title")
+                record.rename_field(key="title", new_key="booktitle")
+                record.rename_field(key="chapter", new_key="title")
 
-            if "journal" in RECORD.data and "booktitle" not in RECORD.data:
-                RECORD.rename_field(key="journal", new_key="booktitle")
+            if "journal" in record.data and "booktitle" not in record.data:
+                record.rename_field(key="journal", new_key="booktitle")
 
-            if RECORD.data.get("booktitle", "") in [
+            if record.data.get("booktitle", "") in [
                 "Research-in-Progress Papers",
                 "Research Papers",
             ]:
-                if "https://aisel.aisnet.org/ecis" in RECORD.data.get("url", ""):
-                    RECORD.update_field(
+                if "https://aisel.aisnet.org/ecis" in record.data.get("url", ""):
+                    record.update_field(
                         key="booktitle", value="ECIS", source="prep_ais_source"
                     )
 
-        if RECORD.data.get("journal", "") == "Management Information Systems Quarterly":
-            RECORD.update_field(
+        if record.data.get("journal", "") == "Management Information Systems Quarterly":
+            record.update_field(
                 key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
 
-        if "inproceedings" == RECORD.data["ENTRYTYPE"]:
-            if "ICIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+        if "inproceedings" == record.data["ENTRYTYPE"]:
+            if "ICIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="International Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "PACIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "PACIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="Pacific-Asia Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "ECIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "ECIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="European Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "AMCIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "AMCIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="Americas Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "HICSS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "HICSS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="Hawaii International Conference on System Sciences",
                     source="prep_ais_source",
                 )
-            if "MCIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "MCIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="Mediterranean Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "ACIS" in RECORD.data["booktitle"]:
-                RECORD.update_field(
+            if "ACIS" in record.data["booktitle"]:
+                record.update_field(
                     key="booktitle",
                     value="Australasian Conference on Information Systems",
                     source="prep_ais_source",
                 )
 
-        if "abstract" in RECORD.data:
-            if "N/A" == RECORD.data["abstract"]:
-                RECORD.remove_field(key="abstract")
-        if "author" in RECORD.data:
-            RECORD.update_field(
+        if "abstract" in record.data:
+            if "N/A" == record.data["abstract"]:
+                record.remove_field(key="abstract")
+        if "author" in record.data:
+            record.update_field(
                 key="author",
-                value=RECORD.data["author"].replace("\n", " "),
+                value=record.data["author"].replace("\n", " "),
                 source="prep_ais_source",
                 keep_source_if_equal=True,
             )
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class GoogleScholarSearchSource:
     source_identifier = "https://scholar.google.com/"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
             return result
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -253,12 +256,14 @@ class WebOfScienceSearchSource:
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
 
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
@@ -274,68 +279,70 @@ class WebOfScienceSearchSource:
 
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class ScopusSearchSource:
     source_identifier = "{{url}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
             return result
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        if "document_type" in RECORD.data:
-            if RECORD.data["document_type"] == "Conference Paper":
-                RECORD.data["ENTRYTYPE"] = "inproceedings"
-                if "journal" in RECORD.data:
-                    RECORD.rename_field(key="journal", new_key="booktitle")
-            elif RECORD.data["document_type"] == "Conference Review":
-                RECORD.data["ENTRYTYPE"] = "proceedings"
-                if "journal" in RECORD.data:
-                    RECORD.rename_field(key="journal", new_key="booktitle")
+        if "document_type" in record.data:
+            if record.data["document_type"] == "Conference Paper":
+                record.data["ENTRYTYPE"] = "inproceedings"
+                if "journal" in record.data:
+                    record.rename_field(key="journal", new_key="booktitle")
+            elif record.data["document_type"] == "Conference Review":
+                record.data["ENTRYTYPE"] = "proceedings"
+                if "journal" in record.data:
+                    record.rename_field(key="journal", new_key="booktitle")
 
-            elif RECORD.data["document_type"] == "Article":
-                RECORD.data["ENTRYTYPE"] = "article"
+            elif record.data["document_type"] == "Article":
+                record.data["ENTRYTYPE"] = "article"
 
-            RECORD.remove_field(key="document_type")
+            record.remove_field(key="document_type")
 
-        if "Start_Page" in RECORD.data and "End_Page" in RECORD.data:
-            if RECORD.data["Start_Page"] != "nan" and RECORD.data["End_Page"] != "nan":
-                RECORD.data["pages"] = (
-                    RECORD.data["Start_Page"] + "--" + RECORD.data["End_Page"]
+        if "Start_Page" in record.data and "End_Page" in record.data:
+            if record.data["Start_Page"] != "nan" and record.data["End_Page"] != "nan":
+                record.data["pages"] = (
+                    record.data["Start_Page"] + "--" + record.data["End_Page"]
                 )
-                RECORD.data["pages"] = RECORD.data["pages"].replace(".0", "")
-                RECORD.remove_field(key="Start_Page")
-                RECORD.remove_field(key="End_Page")
+                record.data["pages"] = record.data["pages"].replace(".0", "")
+                record.remove_field(key="Start_Page")
+                record.remove_field(key="End_Page")
 
-        if "note" in RECORD.data:
-            if "cited By " in RECORD.data["note"]:
-                RECORD.rename_field(key="note", new_key="cited_by")
-                RECORD.data["cited_by"] = RECORD.data["cited_by"].replace(
+        if "note" in record.data:
+            if "cited By " in record.data["note"]:
+                record.rename_field(key="note", new_key="cited_by")
+                record.data["cited_by"] = record.data["cited_by"].replace(
                     "cited By ", ""
                 )
 
-        if "author" in RECORD.data:
-            RECORD.data["author"] = RECORD.data["author"].replace("; ", " and ")
+        if "author" in record.data:
+            record.data["author"] = record.data["author"].replace("; ", " and ")
 
         drop = ["source"]
         for field_to_drop in drop:
-            RECORD.remove_field(key=field_to_drop)
+            record.remove_field(key=field_to_drop)
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -343,12 +350,14 @@ class ACMDigitalLibrary:
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -358,9 +367,9 @@ class ACMDigitalLibrary:
         # We may also check whether the ID=doi=url
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -368,12 +377,14 @@ class PubMed:
 
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -386,33 +397,31 @@ class PubMed:
 
         return result
 
-    def prepare(self, RECORD):
-        if "language" in RECORD.data:
-            RECORD.data["language"] = RECORD.data["language"].replace("eng", "en")
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        if "first_author" in RECORD.data:
-            RECORD.remove_field(key="first_author")
-        if "journal/book" in RECORD.data:
-            RECORD.rename_field(key="journal/book", new_key="journal")
-        if "UNKNOWN" == RECORD.data.get("author") and "authors" in RECORD.data:
-            RECORD.remove_field(key="author")
-            RECORD.rename_field(key="authors", new_key="author")
+        if "first_author" in record.data:
+            record.remove_field(key="first_author")
+        if "journal/book" in record.data:
+            record.rename_field(key="journal/book", new_key="journal")
+        if "UNKNOWN" == record.data.get("author") and "authors" in record.data:
+            record.remove_field(key="author")
+            record.rename_field(key="authors", new_key="author")
 
-        if "UNKNOWN" == RECORD.data.get("year"):
-            RECORD.remove_field(key="year")
-            if "publication_year" in RECORD.data:
-                RECORD.rename_field(key="publication_year", new_key="year")
+        if "UNKNOWN" == record.data.get("year"):
+            record.remove_field(key="year")
+            if "publication_year" in record.data:
+                record.rename_field(key="publication_year", new_key="year")
 
-        if "author" in RECORD.data:
-            RECORD.data["author"] = colrev.record.PrepRecord.format_author_field(
-                input_string=RECORD.data["author"]
+        if "author" in record.data:
+            record.data["author"] = colrev.record.PrepRecord.format_author_field(
+                input_string=record.data["author"]
             )
 
         # TBD: how to distinguish other types?
-        RECORD.change_ENTRYTYPE(NEW_ENTRYTYPE="article")
-        RECORD.import_provenance(source_identifier=self.source_identifier)
+        record.change_entrytype(new_entrytype="article")
+        record.import_provenance(source_identifier=self.source_identifier)
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -420,12 +429,14 @@ class WileyOnlineLibrary:
 
     source_identifier = "{{url}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
         # Simple heuristic:
@@ -435,9 +446,9 @@ class WileyOnlineLibrary:
 
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -445,12 +456,14 @@ class DBLP:
 
     source_identifier = "{{biburl}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
@@ -458,9 +471,9 @@ class DBLP:
             return result
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
@@ -468,12 +481,14 @@ class TransportResearchInternationalDocumentation:
 
     source_identifier = "{{biburl}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
@@ -481,25 +496,27 @@ class TransportResearchInternationalDocumentation:
             return result
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         # TODO (if any)
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class PDFSearchSource:
     source_identifier = "{{file}}"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Note : quick fix (passing the PDFSearchSource settings)
-        BSWH = BackwardSearchSearchSource(SETTINGS=asdict(self.SETTINGS))
-        if filename.suffix == ".pdf" and not BSWH.heuristic(
+        backward_search_source = BackwardSearchSearchSource(
+            settings=asdict(self.settings)
+        )
+        if filename.suffix == ".pdf" and not backward_search_source.heuristic(
             filename=filename, data=data
         ):
             result["confidence"] = 1.0
@@ -507,27 +524,29 @@ class PDFSearchSource:
 
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        return RECORD
+        return record
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class BackwardSearchSearchSource:
     source_identifier = "{{cited_by_file}} (references)"
 
-    def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(self, *, settings: dict) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def heuristic(self, filename, data):
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0
             return result
         return result
 
-    def prepare(self, RECORD):
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
-        return RECORD
+        return record

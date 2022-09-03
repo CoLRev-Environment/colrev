@@ -1,5 +1,8 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import random
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
@@ -7,15 +10,25 @@ from dacite import from_dict
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.prescreen.Prescreen
+
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class CustomPrescreen:
-    def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+    ) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def run_prescreen(slef, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(
+        slef,
+        prescreen_operation: colrev.prescreen.Prescreen,
+        records: dict,
+        split: list,
+    ) -> dict:
 
         for record in records.values():
             if random.random() < 0.5:
@@ -27,19 +40,19 @@ class CustomPrescreen:
                     colrev_status=colrev.record.RecordState.rev_prescreen_excluded
                 )
 
-        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        PRESCREEN.REVIEW_MANAGER.create_commit(
+        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
+        prescreen_operation.review_manager.dataset.add_record_changes()
+        prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (random)",
             manual_author=False,
             script_call="colrev prescreen",
         )
 
         # Alternatively (does not change the records argument   )
-        # presscreen_data = PRESCREEN.get_data()
+        # presscreen_data = prescreen_operation.get_data()
         # for record in prescreen_data["items"]:
-        #   PRESCREEN_RECORD = PrescreenRecord(data=record)
-        #   PRESCREEN_RECORD.prescreen(REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+        #   prescreen_record = PrescreenRecord(data=record)
+        #   prescreen_record.prescreen(review_manager=prescreen_operation.review_manager,
         #                               prescreen_inclusion=True/False)
 
         return records

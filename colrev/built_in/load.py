@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import docker
 import pandas as pd
@@ -11,61 +14,75 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 
+if TYPE_CHECKING:
+    import colrev.load.Load
+
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class BibPybtexLoader:
 
     supported_extensions = ["bib"]
 
-    def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, LOADER, SOURCE):
-        if SOURCE.filename.is_file():
-            with open(SOURCE.filename, encoding="utf8") as bibtex_file:
-                records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
+        if source.filename.is_file():
+            with open(source.filename, encoding="utf8") as bibtex_file:
+                records = load_operation.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
-            LOADER.check_bib_file(SOURCE, records)
+            load_operation.check_bib_file(source=source, records=records)
 
 
 class SpreadsheetLoadUtility:
     @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
-        ID = 1
-        for x in records:
+        next_id = 1
+        for record_dict in records:
 
-            if "ENTRYTYPE" not in x:
-                if "" != x.get("journal", ""):
-                    x["ENTRYTYPE"] = "article"
-                if "" != x.get("booktitle", ""):
-                    x["ENTRYTYPE"] = "inproceedings"
+            if "ENTRYTYPE" not in record_dict:
+                if "" != record_dict.get("journal", ""):
+                    record_dict["ENTRYTYPE"] = "article"
+                if "" != record_dict.get("booktitle", ""):
+                    record_dict["ENTRYTYPE"] = "inproceedings"
                 else:
-                    x["ENTRYTYPE"] = "misc"
+                    record_dict["ENTRYTYPE"] = "misc"
 
-            if "ID" not in x:
-                if "citation_key" in x:
-                    x["ID"] = x["citation_key"]
+            if "ID" not in record_dict:
+                if "citation_key" in record_dict:
+                    record_dict["ID"] = record_dict["citation_key"]
                 else:
-                    x["ID"] = ID
-                    ID += 1
+                    record_dict["ID"] = next_id
+                    next_id += 1
 
-            for k, v in x.items():
-                x[k] = str(v)
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
 
-            if "authors" in x and "author" not in x:
-                x["author"] = x["authors"]
-                del x["authors"]
-            if "publication_year" in x and "year" not in x:
-                x["year"] = x["publication_year"]
-                del x["publication_year"]
+            if "authors" in record_dict and "author" not in record_dict:
+                record_dict["author"] = record_dict["authors"]
+                del record_dict["authors"]
+            if "publication_year" in record_dict and "year" not in record_dict:
+                record_dict["year"] = record_dict["publication_year"]
+                del record_dict["publication_year"]
             # Note: this is a simple heuristic:
-            if "journal/book" in x and "journal" not in x and "doi" in x:
-                x["journal"] = x["journal/book"]
-                del x["journal/book"]
+            if (
+                "journal/book" in record_dict
+                and "journal" not in record_dict
+                and "doi" in record_dict
+            ):
+                record_dict["journal"] = record_dict["journal/book"]
+                del record_dict["journal/book"]
 
         if all("ID" in r for r in records):
             records_dict = {r["ID"]: r for r in records}
@@ -74,33 +91,33 @@ class SpreadsheetLoadUtility:
             for i, record in enumerate(records):
                 records_dict[str(i)] = record
 
-        for x in records_dict.values():
-            if "no year" == x.get("year", "NA"):
-                del x["year"]
-            if "no journal" == x.get("journal", "NA"):
-                del x["journal"]
-            if "no volume" == x.get("volume", "NA"):
-                del x["volume"]
-            if "no pages" == x.get("pages", "NA"):
-                del x["pages"]
-            if "no issue" == x.get("issue", "NA"):
-                del x["issue"]
-            if "no number" == x.get("number", "NA"):
-                del x["number"]
-            if "no doi" == x.get("doi", "NA"):
-                del x["doi"]
-            if "no type" == x.get("type", "NA"):
-                del x["type"]
-            if "author_count" in x:
-                del x["author_count"]
-            if "no Number-of-Cited-References" == x.get(
+        for r_dict in records_dict.values():
+            if "no year" == r_dict.get("year", "NA"):
+                del r_dict["year"]
+            if "no journal" == r_dict.get("journal", "NA"):
+                del r_dict["journal"]
+            if "no volume" == r_dict.get("volume", "NA"):
+                del r_dict["volume"]
+            if "no pages" == r_dict.get("pages", "NA"):
+                del r_dict["pages"]
+            if "no issue" == r_dict.get("issue", "NA"):
+                del r_dict["issue"]
+            if "no number" == r_dict.get("number", "NA"):
+                del r_dict["number"]
+            if "no doi" == r_dict.get("doi", "NA"):
+                del r_dict["doi"]
+            if "no type" == r_dict.get("type", "NA"):
+                del r_dict["type"]
+            if "author_count" in r_dict:
+                del r_dict["author_count"]
+            if "no Number-of-Cited-References" == r_dict.get(
                 "number_of_cited_references", "NA"
             ):
-                del x["number_of_cited_references"]
-            if "no file" in x.get("file_name", "NA"):
-                del x["file_name"]
-            if "times_cited" == x.get("times_cited", "NA"):
-                del x["times_cited"]
+                del r_dict["number_of_cited_references"]
+            if "no file" in r_dict.get("file_name", "NA"):
+                del r_dict["file_name"]
+            if "times_cited" == r_dict.get("times_cited", "NA"):
+                del r_dict["times_cited"]
 
         return records_dict
 
@@ -109,19 +126,26 @@ class SpreadsheetLoadUtility:
 class CSVLoader:
     supported_extensions = ["csv"]
 
-    def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, LOADER, SOURCE):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         try:
-            data = pd.read_csv(SOURCE.filename)
-        except pd.errors.ParserError as e:
+            data = pd.read_csv(source.filename)
+        except pd.errors.ParserError as exc:
             raise colrev_exceptions.ImportException(
-                f"Error: Not a csv file? {SOURCE.filename.name}"
-            ) from e
+                f"Error: Not a csv file? {source.filename.name}"
+            ) from exc
 
         data.columns = data.columns.str.replace(" ", "_")
         data.columns = data.columns.str.replace("-", "_")
@@ -129,10 +153,10 @@ class CSVLoader:
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        LOADER.check_bib_file(SOURCE, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        LOADER.save_records(
-            records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -141,20 +165,27 @@ class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
 
-    def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, LOADER, SOURCE):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         try:
             data = pd.read_excel(
-                SOURCE.filename, dtype=str
+                source.filename, dtype=str
             )  # dtype=str to avoid type casting
         except pd.errors.ParserError:
-            LOADER.REVIEW_MANAGER.logger.error(
-                f"Error: Not an xlsx file: {SOURCE.filename.name}"
+            load_operation.review_manager.logger.error(
+                f"Error: Not an xlsx file: {source.filename.name}"
             )
             return
         data.columns = data.columns.str.replace(" ", "_")
@@ -163,10 +194,10 @@ class ExcelLoader:
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        LOADER.check_bib_file(SOURCE, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        LOADER.save_records(
-            records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -175,51 +206,54 @@ class ZoteroTranslationLoader:
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
-    def __init__(self, *, LOAD, SETTINGS):
+    def __init__(self, *, load_operation: colrev.load.Load, settings: dict):
 
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-        ZoteroTranslationService = LOAD.REVIEW_MANAGER.get_environment_service(
-            service_identifier="ZoteroTranslationService"
+        self.zotero_translation_service = (
+            load_operation.review_manager.get_zotero_translation_service()
         )
-        self.ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
-        self.ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
+        self.zotero_translation_service.start_zotero_translators()
 
-    def load(self, LOADER, SOURCE):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
         # pylint: disable=consider-using-with
 
-        files = {"file": open(SOURCE.filename, "rb")}
+        files = {"file": open(source.filename, "rb")}
         headers = {"Content-type": "text/plain"}
-        r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
+        ret = requests.post(
+            "http://127.0.0.1:1969/import", headers=headers, files=files
+        )
         headers = {"Content-type": "application/json"}
-        if "No suitable translators found" == r.content.decode("utf-8"):
+        if "No suitable translators found" == ret.content.decode("utf-8"):
             raise colrev_exceptions.ImportException(
                 "Zotero translators: No suitable import translators found"
             )
 
         try:
-            zotero_format = json.loads(r.content)
-            et = requests.post(
+            zotero_format = json.loads(ret.content)
+            ret = requests.post(
                 "http://127.0.0.1:1969/export?format=bibtex",
                 headers=headers,
                 json=zotero_format,
             )
-            records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                load_str=et.content.decode("utf-8")
+            records = load_operation.review_manager.dataset.load_records_dict(
+                load_str=ret.content.decode("utf-8")
             )
 
-        except Exception as e:
+        except Exception as exc:
             raise colrev_exceptions.ImportException(
-                f"Zotero import translators failed ({e})"
+                f"Zotero import translators failed ({exc})"
             )
 
-        LOADER.check_bib_file(SOURCE, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        LOADER.save_records(
-            records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -228,24 +262,28 @@ class MarkdownLoader:
 
     supported_extensions = ["md"]
 
-    def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, LOADER, SOURCE):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
 
-        GrobidService = LOADER.REVIEW_MANAGER.get_environment_service(
-            service_identifier="GrobidService"
-        )
+        grobid_service = load_operation.review_manager.get_grobid_service()
 
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.check_grobid_availability()
-        with open(SOURCE.filename, encoding="utf8") as f:
-            if SOURCE.filename.suffix == ".md":
-                references = [line.rstrip() for line in f if "#" not in line[:2]]
+        grobid_service.check_grobid_availability()
+        with open(source.filename, encoding="utf8") as file:
+            if source.filename.suffix == ".md":
+                references = [line.rstrip() for line in file if "#" not in line[:2]]
             else:
-                references = [line.rstrip() for line in f]
+                references = [line.rstrip() for line in file]
 
         data = ""
         ind = 0
@@ -253,20 +291,20 @@ class MarkdownLoader:
             options = {}
             options["consolidateCitations"] = "1"
             options["citations"] = ref
-            r = requests.post(
-                GROBID_SERVICE.GROBID_URL + "/api/processCitation",
+            ret = requests.post(
+                grobid_service.GROBID_URL + "/api/processCitation",
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
             ind += 1
-            data = data + "\n" + r.text.replace("{-1,", "{" + str(ind) + ",")
+            data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(load_str=data)
+        records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        LOADER.check_bib_file(SOURCE, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        LOADER.save_records(
-            records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
+        load_operation.save_records(
+            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
         )
 
 
@@ -275,12 +313,19 @@ class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
-    def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.load.Load,  # pylint: disable=unused-argument
+        settings: dict,
+    ):
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def load(self, LOADER, SOURCE):
+    def load(
+        self, load_operation: colrev.load.Load, source: colrev.settings.SearchSource
+    ):
         def bibutils_convert(script: str, data: str) -> str:
 
             if "xml2bib" == script:
@@ -291,10 +336,10 @@ class BibutilsLoader:
             client = docker.APIClient()
             try:
                 container = client.create_container("bibutils", script, stdin_open=True)
-            except docker.errors.ImageNotFound as e:
+            except docker.errors.ImageNotFound as exc:
                 raise colrev_exceptions.ImportException(
                     "Docker images for bibutils not found"
-                ) from e
+                ) from exc
 
             sock = client.attach_socket(
                 container, params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
@@ -312,10 +357,10 @@ class BibutilsLoader:
 
             return stdout
 
-        with open(SOURCE.filename, encoding="utf-8") as reader:
+        with open(source.filename, encoding="utf-8") as reader:
             data = reader.read()
 
-        filetype = Path(SOURCE.filename).suffix.replace(".", "")
+        filetype = Path(source.filename).suffix.replace(".", "")
 
         if filetype in ["enl", "end"]:
             data = bibutils_convert("end2xml", data)
@@ -334,10 +379,11 @@ class BibutilsLoader:
 
         data = bibutils_convert("xml2bib", data)
 
-        records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(load_str=data)
+        records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        LOADER.check_bib_file(SOURCE, records)
+        load_operation.check_bib_file(source=source, records=records)
 
-        LOADER.save_records(
-            records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
+        load_operation.save_records(
+            load_operationrecords=records,
+            corresponding_bib_file=source.get_corresponding_bib_file(),
         )

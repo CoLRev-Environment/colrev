@@ -1,5 +1,8 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import random
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
@@ -7,20 +10,31 @@ from dacite import from_dict
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.pdf_prep.PDFPRep
+    import colrev.record.Record
 
-@zope.interface.implementer(colrev.process.PDFPreparationEndpoint)
-class CustomPDFPrepratation:
-    def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+
+@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
+class CustomPDFPrep:
+    def __init__(
+        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+    ) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
+    def prep_pdf(
+        self,
+        pdf_prep_operation: colrev.pdf_prep.PDFPrep,
+        record: colrev.record.Record,
+        pad: int,
+    ) -> colrev.record.Record:
 
         if random.random() < 0.8:
-            RECORD.add_data_provenance_note(key="file", note="custom_issue_detected")
-            RECORD.data.update(
+            record.add_data_provenance_note(key="file", note="custom_issue_detected")
+            record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
 
-        return RECORD.data
+        return record

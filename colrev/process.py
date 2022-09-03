@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-import typing
+from __future__ import annotations
+
+import logging
 from dataclasses import dataclass
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import zope.interface
@@ -12,8 +15,13 @@ from transitions import Machine
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class ProcessType(Enum):
+    # pylint: disable=invalid-name
+
     search = auto()
     load = auto()
     prep = auto()
@@ -36,94 +44,96 @@ class ProcessType(Enum):
 
 
 class Process:
+
+    force_mode: bool
+
     def __init__(
         self,
         *,
-        REVIEW_MANAGER,
+        review_manager: colrev.review_manager.ReviewManager,
         process_type: ProcessType,
-        notify_state_transition_process=True,
+        notify_state_transition_operation=True,
         debug=False,
-    ):
+    ) -> None:
 
-        self.REVIEW_MANAGER = REVIEW_MANAGER
-        self.force_mode = self.REVIEW_MANAGER.force_mode
+        self.review_manager = review_manager
+        self.force_mode = self.review_manager.force_mode
 
         self.type = process_type
 
-        self.notify_state_transition_process = notify_state_transition_process
-        if notify_state_transition_process:
-            self.REVIEW_MANAGER.notify(process=self)
+        self.notify_state_transition_operation = notify_state_transition_operation
+        if notify_state_transition_operation:
+            self.review_manager.notify(process=self)
         else:
-            self.REVIEW_MANAGER.notify(process=self, state_transition=False)
+            self.review_manager.notify(process=self, state_transition=False)
 
         if debug:
-            self.REVIEW_MANAGER.DEBUG_MODE = True
+            self.review_manager.debug_mode = True
         else:
-            self.REVIEW_MANAGER.DEBUG_MODE = False
-        self.CPUS = 4
+            self.review_manager.debug_mode = False
+        self.cpus = 4
 
         # Note: the following call seems to block the flow (if debug is enabled)
-        # self.REVIEW_MANAGER.logger.debug(f"Created {self.type} process")
+        # self.review_manager.logger.debug(f"Created {self.type} process")
 
-        # Note: we call REVIEW_MANAGER.notify() in the subclasses
-        # to make sure that the REVIEW_MANAGER calls the right check_preconditions()
+        # Note: we call review_manager.notify() in the subclasses
+        # to make sure that the review_manager calls the right check_preconditions()
 
     def check_precondition(self) -> None:
         """Check the process precondition"""
 
         if (
             self.force_mode
-            or "realtime" == self.REVIEW_MANAGER.settings.project.review_type
+            or "realtime" == self.review_manager.settings.project.review_type
         ):
             return
 
         def check_process_model_precondition() -> None:
-            PROCESS_MODEL = ProcessModel(
-                process=self.type, REVIEW_MANAGER=self.REVIEW_MANAGER
+            process_model = ProcessModel(
+                process=self.type, review_manager=self.review_manager
             )
-            PROCESS_MODEL.check_process_precondition(process=self)
+            process_model.check_process_precondition(process=self)
 
         def require_clean_repo_general(
-            git_repo: git.Repo = None, ignore_pattern: list = None
+            *, git_repo: git.Repo = None, ignore_pattern: list = None
         ) -> bool:
 
             if git_repo is None:
-                git_repo = git.Repo(self.REVIEW_MANAGER.path)
+                git_repo = git.Repo(self.review_manager.path)
 
             # Note : not considering untracked files.
 
             if len(git_repo.index.diff("HEAD")) == 0:
                 unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
                 if (
-                    self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
+                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
                     in unstaged_changes
                 ):
                     git_repo.index.add(
-                        [self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
+                        [self.review_manager.dataset.RECORDS_FILE_RELATIVE]
                     )
-                if self.REVIEW_MANAGER.paths["PAPER_RELATIVE"] in unstaged_changes:
-                    git_repo.index.add([self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]])
 
             # Principle: working tree always has to be clean
             # because processing functions may change content
             if git_repo.is_dirty(index=False):
-                changedFiles = [item.a_path for item in git_repo.index.diff(None)]
-                raise colrev_exceptions.UnstagedGitChangesError(changedFiles)
+                changed_files = [item.a_path for item in git_repo.index.diff(None)]
+                raise colrev_exceptions.UnstagedGitChangesError(changed_files)
 
             if git_repo.is_dirty():
                 if ignore_pattern is None:
-                    changedFiles = [
+                    changed_files = [
                         item.a_path for item in git_repo.index.diff(None)
                     ] + [
                         x.a_path
                         for x in git_repo.head.commit.diff()
-                        if x.a_path
-                        not in [str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])]
+                        if x.a_path not in [str(self.review_manager.STATUS_RELATIVE)]
                     ]
-                    if len(changedFiles) > 0:
-                        raise colrev_exceptions.CleanRepoRequiredError(changedFiles, "")
+                    if len(changed_files) > 0:
+                        raise colrev_exceptions.CleanRepoRequiredError(
+                            changed_files, ""
+                        )
                 else:
-                    changedFiles = [
+                    changed_files = [
                         item.a_path
                         for item in git_repo.index.diff(None)
                         if not any(str(ip) in item.a_path for ip in ignore_pattern)
@@ -132,37 +142,32 @@ class Process:
                         for x in git_repo.head.commit.diff()
                         if not any(str(ip) in x.a_path for ip in ignore_pattern)
                     ]
-                    if (
-                        str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
-                        in changedFiles
-                    ):
-                        changedFiles.remove(
-                            str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
-                        )
-                    if changedFiles:
+                    if str(self.review_manager.STATUS_RELATIVE) in changed_files:
+                        changed_files.remove(str(self.review_manager.STATUS_RELATIVE))
+                    if changed_files:
                         raise colrev_exceptions.CleanRepoRequiredError(
-                            changedFiles, ",".join([str(x) for x in ignore_pattern])
+                            changed_files, ",".join([str(x) for x in ignore_pattern])
                         )
             return True
 
         if ProcessType.load == self.type:
             require_clean_repo_general(
                 ignore_pattern=[
-                    self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
-                    self.REVIEW_MANAGER.paths["SETTINGS_RELATIVE"],
+                    self.review_manager.SEARCHDIR_RELATIVE,
+                    self.review_manager.SETTINGS_RELATIVE,
                 ]
             )
             check_process_model_precondition()
 
         elif ProcessType.prep == self.type:
 
-            if self.notify_state_transition_process:
+            if self.notify_state_transition_operation:
                 require_clean_repo_general()
                 check_process_model_precondition()
 
         elif ProcessType.prep_man == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
+                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
             check_process_model_precondition()
 
@@ -172,19 +177,19 @@ class Process:
 
         elif ProcessType.prescreen == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
+                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
             check_process_model_precondition()
 
         elif ProcessType.pdf_get == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
             check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
             check_process_model_precondition()
 
@@ -194,7 +199,7 @@ class Process:
 
         elif ProcessType.pdf_prep_man == self.type:
             # require_clean_repo_general(
-            #     ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+            #     ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             # )
             # check_process_model_precondition()
             pass
@@ -204,12 +209,11 @@ class Process:
             check_process_model_precondition()
 
         elif ProcessType.data == self.type:
-            require_clean_repo_general(
-                ignore_pattern=[
-                    self.REVIEW_MANAGER.paths["PAPER_RELATIVE"],
-                    self.REVIEW_MANAGER.paths["DATA_RELATIVE"],
-                ]
-            )
+            # require_clean_repo_general(
+            #     ignore_pattern=[
+            #         # data.csv, paper.md etc.?,
+            #     ]
+            # )
             check_process_model_precondition()
 
         elif ProcessType.format == self.type:
@@ -221,18 +225,18 @@ class Process:
 
 
 class FormatProcess(Process):
-    def __init__(self, *, REVIEW_MANAGER, notify: bool = True):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.format)
+    def __init__(self, *, review_manager, notify: bool = True) -> None:
+        super().__init__(review_manager=review_manager, process_type=ProcessType.format)
         if notify:
-            self.REVIEW_MANAGER.notify(process=self)
+            self.review_manager.notify(process=self)
 
 
 class CheckProcess(Process):
-    def __init__(self, *, REVIEW_MANAGER):
+    def __init__(self, *, review_manager) -> None:
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
+            review_manager=review_manager,
             process_type=ProcessType.check,
-            notify_state_transition_process=False,
+            notify_state_transition_operation=False,
         )
 
 
@@ -353,13 +357,11 @@ class ProcessModel:
     ]
 
     def __init__(
-        self, *, state: str = None, process: ProcessType = None, REVIEW_MANAGER=None
-    ):
-
-        import logging
+        self, *, state: str = None, process: ProcessType = None, review_manager=None
+    ) -> None:
 
         if process is not None:
-            start_states: typing.List[str] = [
+            start_states: list[str] = [
                 str(x["source"])
                 for x in self.transitions
                 if str(process) == x["trigger"]
@@ -370,8 +372,8 @@ class ProcessModel:
         else:
             print("ERROR: no process or state provided")
 
-        if REVIEW_MANAGER is not None:
-            self.REVIEW_MANAGER = REVIEW_MANAGER
+        if review_manager is not None:
+            self.review_manager = review_manager
 
         logging.getLogger("transitions").setLevel(logging.WARNING)
 
@@ -388,7 +390,7 @@ class ProcessModel:
         )
 
     def get_preceding_states(self, *, state) -> set:
-        preceding_states: typing.Set[colrev.record.RecordState] = set()
+        preceding_states: set[colrev.record.RecordState] = set()
         added = True
         while added:
             preceding_states_size = len(preceding_states)
@@ -404,14 +406,14 @@ class ProcessModel:
 
     def check_process_precondition(self, *, process: Process) -> None:
 
-        if "True" == self.REVIEW_MANAGER.settings.project.delay_automated_processing:
-            cur_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set()
-            self.REVIEW_MANAGER.logger.debug(f"cur_state_list: {cur_state_list}")
-            self.REVIEW_MANAGER.logger.debug(f"precondition: {self.state}")
+        if "True" == self.review_manager.settings.project.delay_automated_processing:
+            cur_state_list = self.review_manager.dataset.get_states_set()
+            self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
+            self.review_manager.logger.debug(f"precondition: {self.state}")
             required_absent = {
                 str(x) for x in self.get_preceding_states(state=self.state)
             }
-            self.REVIEW_MANAGER.logger.debug(f"required_absent: {required_absent}")
+            self.review_manager.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (
                 len(cur_state_list) == 0
@@ -424,38 +426,43 @@ class ProcessModel:
                 )
 
 
-class SearchEndpoint(zope.interface.Interface):
+class SearchEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     source_identifier = zope.interface.Attribute("""Source identifier""")
     mode = zope.interface.Attribute("""Mode""")
 
-    def run_search(SEARCH, params: dict, feed_file: Path) -> None:
+    # pylint: disable=no-self-argument
+    def run_search(search_operation, params: dict, feed_file: Path) -> None:
         pass
 
     def validate_params(query: str) -> None:
         pass
 
 
-class SearchSourceEndpoint(zope.interface.Interface):
+class SearchSourceEndpoint(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
 
     source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
 
+    # pylint: disable=no-self-argument
     def heuristic(filename, data):
         pass
 
-    def prepare(RECORD):
+    def prepare(record):
         pass
 
 
-class LoadEndpoint(zope.interface.Interface):
+class LoadEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
-    def load(LOADER, SOURCE):
+    # pylint: disable=no-self-argument
+    def load(load_operation, source):
         pass
 
 
-class PreparationEndpoint(zope.interface.Interface):
+class PrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
     source_correction_hint = zope.interface.Attribute(
         """Hint on how to correct metadata at source"""
@@ -466,63 +473,73 @@ class PreparationEndpoint(zope.interface.Interface):
         (even if the colrev_status does not transition to md_prepared)"""
     )
 
-    def prepare(PREPARATION, PREP_RECORD):
+    # pylint: disable=no-self-argument
+    def prepare(prep_operation, prep_record):
         pass
 
 
-class PreparationManualEndpoint(zope.interface.Interface):
-    def prepare_manual(PREP_MAN, records):
+class PrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def prepare_manual(prep_man_operation, records):
         pass
 
 
-class DedupeEndpoint(zope.interface.Interface):
-    def run_dedupe(DEDUPE):
+class DedupeEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def run_dedupe(dedupe_operation):
         pass
 
 
-class PrescreenEndpoint(zope.interface.Interface):
-    def run_prescreen(PRESCREEN, records: dict, split: list) -> dict:
+class PrescreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
         pass
 
 
-class PDFRetrievalEndpoint(zope.interface.Interface):
-    def get_pdf(PDF_RETRIEVAL, RECORD):
-        return RECORD
+class PDFGetEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def get_pdf(pdf_get_operation, record):
+        return record
 
 
-class PDFRetrievalManualEndpoint(zope.interface.Interface):
-    def get_man_pdf(PDF_RETRIEVAL_MAN, records):
+class PDFGetManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def get_man_pdf(pdf_get_man_operation, records):
         return records
 
 
-class PDFPreparationEndpoint(zope.interface.Interface):
-    def prep_pdf(PDF_PREPARATION, RECORD, PAD) -> dict:
-        return RECORD.data
+class PDFPrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=unused-argument
+    # pylint: disable=no-self-argument
+    def prep_pdf(pdf_prep_operation, record, pad) -> dict:
+        return record.data
 
 
-class PDFPreparationManualEndpoint(zope.interface.Interface):
-    def prep_man_pdf(PDF_PREP_MAN, records):
+class PDFPrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def prep_man_pdf(pdf_prep_man_operation, records):
         return records
 
 
-class ScreenEndpoint(zope.interface.Interface):
-    def run_screen(SCREEN, records: dict, split: list) -> dict:
+class ScreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
+    def run_screen(screen_operation, records: dict, split: list) -> dict:
         pass
 
 
-class DataEndpoint(zope.interface.Interface):
-
+class DataEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    # pylint: disable=no-self-argument
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
         return {}
 
     def update_data(
-        DATA, records: dict, synthesized_record_status_matrix: dict
+        data_operation, records: dict, synthesized_record_status_matrix: dict
     ) -> None:
         pass
 
     def update_record_status_matrix(
-        DATA, synthesized_record_status_matrix, endpoint_identifier
+        data_operation, synthesized_record_status_matrix, endpoint_identifier
     ) -> None:
         pass
 

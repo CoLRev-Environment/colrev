@@ -1,7 +1,7 @@
 {
     "project": {
         "review_type": "literature_review",
-        "id_pattern": "THREE_AUTHORS_YEAR",
+        "id_pattern": "three_authors_year",
         "share_stat_req": "processed",
         "delay_automated_processing": true,
         "curation_url": null,
@@ -219,7 +219,7 @@
         "scripts": [
             {
                 "endpoint": "scope_prescreen",
-                "LanguageScope": ["en"]
+                "LanguageScope": ["eng"]
             },
             {
                 "endpoint": "colrev_cli_prescreen"

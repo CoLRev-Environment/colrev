@@ -1,20 +1,32 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import zope.interface
 from dacite import from_dict
 
 import colrev.process
 
+if TYPE_CHECKING:
+    import colrev.pdf_get.PDFGet
+    import colrev.record.Record
 
-@zope.interface.implementer(colrev.process.PDFRetrievalEndpoint)
-class CustomPDFRetrieval:
-    def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(
-            data_class=colrev.process.DefaultSettings, data=SETTINGS
+
+@zope.interface.implementer(colrev.process.PDFGetEndpoint)
+class CustomPDFGet:
+    def __init__(
+        self, *, pdf_get_operation: colrev.pdf_get.PDFGet, settings: dict
+    ) -> None:
+        self.settings = from_dict(
+            data_class=colrev.process.DefaultSettings, data=settings
         )
 
-    def get_pdf(self, PDF_RETRIEVAL, RECORD):
+    def get_pdf(
+        self, pdf_get_operation: colrev.pdf_get.PDFGet, record: colrev.record.Record
+    ) -> colrev.record.Record:
 
-        RECORD.data["file"] = "filepath"
-        PDF_RETRIEVAL.REVIEW_MANAGER.REVIEW_DATASET.import_file(record=RECORD.data)
+        record.data["file"] = "filepath"
+        pdf_get_operation.review_manager.dataset.import_file(record=record.data)
 
-        return RECORD
+        return record

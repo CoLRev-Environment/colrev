@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import colrev.cli_colors as colors
 
 
 class CoLRevException(Exception):
@@ -27,7 +28,7 @@ class CoLRevUpgradeError(CoLRevException):
     def __init__(self, old, new):
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
-            "colrev settings --upgrade"
+            f"{colors.ORANGE}colrev settings --upgrade{colors.END}"
         )
         super().__init__(self.message)
 
@@ -55,6 +56,21 @@ class ParameterError(CoLRevException):
         self.message = (
             f"Invalid parameter {parameter}: {value}.\n Options:\n  - {options_string}"
         )
+        super().__init__(self.message)
+
+
+class InvalidSettingsError(CoLRevException):
+    """
+    Invalid value in settings.json.
+    """
+
+    def __init__(self, *, msg):
+        msg = (
+            f"Error in settings.json: {msg}\n"
+            "To solve this, use\n  "
+            f"{colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
+        self.message = msg
         super().__init__(self.message)
 
 
@@ -300,11 +316,11 @@ class ServiceNotAvailableException(CoLRevException):
         super().__init__(f"Service not available: {self.message}")
 
 
-class TEI_TimeoutException(CoLRevException):
+class TEITimeoutException(CoLRevException):
     pass
 
 
-class TEI_Exception(CoLRevException):
+class TEIException(CoLRevException):
     pass
 
 
