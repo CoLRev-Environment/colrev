@@ -1090,20 +1090,20 @@ class GithubPagesEndpoint:
                     title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
                     title = '"' + title + '"'
-            git_repo.git.rm("-rf", ".")
             git_repo.git.checkout("HEAD", "--", ".gitignore")
+            git_repo.git.rm("-rf", Path("."))
 
             gitignore_file = Path(".gitignore")
             gitignore_file.write_text("status.yaml")
             data_operation.review_manager.dataset.add_changes(path=gitignore_file)
 
             data_operation.review_manager.retrieve_package_file(
-                template_file=Path("../template/github_pages/index.html"),
+                template_file=Path("template/github_pages/index.html"),
                 target=Path("index.html"),
             )
             data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
             data_operation.review_manager.retrieve_package_file(
-                template_file=Path("../template/github_pages/_config.yml"),
+                template_file=Path("template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
             )
             data_operation.review_manager.dataset.inplace_change(
@@ -1113,7 +1113,7 @@ class GithubPagesEndpoint:
             )
             data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
             data_operation.review_manager.retrieve_package_file(
-                template_file=Path("../template/github_pages/about.md"),
+                template_file=Path("template/github_pages/about.md"),
                 target=Path("about.md"),
             )
             data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
