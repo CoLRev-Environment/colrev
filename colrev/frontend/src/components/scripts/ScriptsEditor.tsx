@@ -1,11 +1,8 @@
+import { useState } from "react";
 import Script from "../../models/script";
-import ScriptWithLanguageScope from "../../models/scriptWithLanguageScope";
-import ScripWithTresholds from "../../models/scriptWithTresholds";
-import Expander from "../common/Expander";
-import ExpanderItem from "../common/ExpanderItem";
-import ScriptItem from "./ScriptItems/ScriptItem";
-import ScriptItemWithLanguageScope from "./ScriptItems/ScriptItemWithLanguageScope";
-import ScriptItemWithTresholds from "./ScriptItems/ScriptItemWithTresholds";
+import DeleteIcon from "../common/icons/DeleteIcon";
+import EditIcon from "../common/icons/EditIcon";
+import EditScript from "./EditScript";
 
 const ScriptsEditor: React.FC<{
   id: string;
@@ -13,10 +10,16 @@ const ScriptsEditor: React.FC<{
   scriptsChanged: any;
   isSingleScript?: boolean;
 }> = ({ id, scripts, scriptsChanged, isSingleScript = false }) => {
-  const scriptChangedHandler = () => {
-    const newScripts = [...scripts];
-    scriptsChanged(newScripts);
-  };
+  // TODO pass from outside where used
+  const scriptType: string = "prep_script";
+
+  const [isShowEditScript, setIsShowEditScript] = useState(false);
+  const [editScript, setEditScript] = useState<Script | null>(null);
+
+  // const scriptChangedHandler = () => {
+  //   const newScripts = [...scripts];
+  //   scriptsChanged(newScripts);
+  // };
 
   const deleteScriptHandler = (script: Script) => {
     const newScripts = scripts.filter((s) => s !== script);
@@ -24,99 +27,74 @@ const ScriptsEditor: React.FC<{
   };
 
   const addScriptHandler = () => {
-    const newScript = new Script();
-    newScript.endpoint = "new";
-    const newScripts = [...scripts, newScript];
-    scriptsChanged(newScripts);
+    setEditScript(null);
+    setIsShowEditScript(true);
+
+    // const newScript = new Script();
+    // newScript.endpoint = "new";
+    // const newScripts = [...scripts, newScript];
+    // scriptsChanged(newScripts);
   };
 
-  const addScriptWithTresholdsHandler = () => {
-    const newScript = new ScripWithTresholds();
-    newScript.endpoint = "new";
-    const newScripts = [...scripts, newScript];
-    scriptsChanged(newScripts);
-  };
+  const editScriptHandler = (script: Script) => {
+    // TODO remove this - this is just to init selected script
+    script.endpoint = "search_pdfs_dir";
 
-  const addScriptWithLanguageScopeHandler = () => {
-    const newScript = new ScriptWithLanguageScope();
-    newScript.endpoint = "new";
-    const newScripts = [...scripts, newScript];
-    scriptsChanged(newScripts);
-  };
+    setEditScript(script);
+    setIsShowEditScript(true);
 
-  const renderScriptItem = (script: Script, scriptChangedHandler: any) => {
-    if (script instanceof ScripWithTresholds) {
-      return (
-        <ScriptItemWithTresholds
-          script={script}
-          scriptChanged={scriptChangedHandler}
-        />
-      );
-    }
-
-    if (script instanceof ScriptWithLanguageScope) {
-      return (
-        <ScriptItemWithLanguageScope
-          script={script}
-          scriptChanged={scriptChangedHandler}
-        />
-      );
-    }
-
-    return <ScriptItem script={script} scriptChanged={scriptChangedHandler} />;
+    // const newScript = new Script();
+    // newScript.endpoint = "new";
+    // const newScripts = [...scripts, newScript];
+    // scriptsChanged(newScripts);
   };
 
   return (
     <div>
-      <Expander id={`${id}Expander`}>
+      <ul className="list-group">
         {scripts.map((script, index) => (
-          <ExpanderItem
+          <li
+            className="list-group-item d-flex justify-content-between align-items-center"
             key={index.toString()}
-            name={script.endpoint}
-            id={`${id}${index + 1}`}
-            parentContainerId={`${id}Expander`}
-            show={false}
-            hasDelete={!isSingleScript}
-            onDelete={() => deleteScriptHandler(script)}
           >
-            {renderScriptItem(script, scriptChangedHandler)}
-          </ExpanderItem>
+            <span>{script.endpoint}</span>
+            <div>
+              <div
+                className="btn btn-primary btn-sm"
+                style={{ marginRight: 5 }}
+                onClick={() => editScriptHandler(script)}
+              >
+                <EditIcon />
+              </div>
+              {!isSingleScript && (
+                <div
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deleteScriptHandler(script)}
+                >
+                  <DeleteIcon />
+                </div>
+              )}
+            </div>
+          </li>
         ))}
-      </Expander>
+      </ul>
       {!isSingleScript && (
         <div className="mb-3 mt-1">
           <button
-            className="btn btn-primary dropdown-toggle"
+            className="btn btn-primary"
             type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+            onClick={addScriptHandler}
           >
-            Add
+            Add Script
           </button>
-          <ul className="dropdown-menu">
-            <li>
-              <button className="dropdown-item" onClick={addScriptHandler}>
-                Simple Script
-              </button>
-            </li>
-            <li>
-              <button
-                className="dropdown-item"
-                onClick={addScriptWithTresholdsHandler}
-              >
-                Script with Tresholds
-              </button>
-            </li>
-            <li>
-              <button
-                className="dropdown-item"
-                onClick={addScriptWithLanguageScopeHandler}
-              >
-                Script with Language Scope
-              </button>
-            </li>
-          </ul>
         </div>
+      )}
+      {isShowEditScript && (
+        <EditScript
+          scriptType={scriptType}
+          editScript={editScript}
+          onClose={() => setIsShowEditScript(false)}
+        />
       )}
     </div>
   );

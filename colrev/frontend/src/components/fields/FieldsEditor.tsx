@@ -1,3 +1,5 @@
+import DeleteIcon from "../common/icons/DeleteIcon";
+
 const FiedlsEditor: React.FC<{
   title: string;
   fields: string[];
@@ -41,7 +43,7 @@ const FiedlsEditor: React.FC<{
               type="button"
               onClick={() => deleteFieldHandler(index)}
             >
-              X
+              <DeleteIcon />
             </button>
           </li>
         ))}

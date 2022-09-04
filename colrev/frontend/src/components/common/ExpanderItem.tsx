@@ -1,3 +1,5 @@
+import DeleteIcon from "./icons/DeleteIcon";
+
 const ExpanderItem: React.FC<{
   name: string;
   id: string;
@@ -32,10 +34,10 @@ const ExpanderItem: React.FC<{
           {hasDelete && (
             <div
               className="btn btn-danger btn-sm"
-              style={{ position: "absolute", right: "3rem", zIndex: "1000" }}
+              style={{ position: "absolute", right: "3rem", zIndex: "10" }}
               onClick={onDelete}
             >
-              X
+              <DeleteIcon />
             </div>
           )}
         </div>

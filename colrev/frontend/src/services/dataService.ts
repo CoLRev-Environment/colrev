@@ -7,8 +7,6 @@ import Script from "../models/script";
 import Prep from "../models/prep";
 import PrepRound from "../models/prepRound";
 import Dedupe from "../models/dedupe";
-import ScripWithTresholds from "../models/scriptWithTresholds";
-import ScriptWithLanguageScope from "../models/scriptWithLanguageScope";
 import Prescreen from "../models/prescreen";
 import Data from "../models/data";
 import PdfGet from "../models/pdfGet";
@@ -186,22 +184,9 @@ const scriptsFromSettings = (settingsScripts: any) => {
   const scripts: Script[] = [];
 
   for (const settingsScript of settingsScripts) {
-    if ("merge_threshold" in settingsScript) {
-      const script = new ScripWithTresholds();
-      script.endpoint = settingsScript.endpoint;
-      script.mergeTreshold = settingsScript.merge_threshold;
-      script.partitionTreshold = settingsScript.partition_threshold;
-      scripts.push(script);
-    } else if ("LanguageScope" in settingsScript) {
-      const script = new ScriptWithLanguageScope();
-      script.endpoint = settingsScript.endpoint;
-      script.languageScope = settingsScript.LanguageScope;
-      scripts.push(script);
-    } else {
-      const script = new Script();
-      script.endpoint = settingsScript.endpoint;
-      scripts.push(script);
-    }
+    const script = new Script();
+    script.endpoint = settingsScript.endpoint;
+    scripts.push(script);
   }
 
   return scripts;
@@ -211,25 +196,10 @@ const scriptsToSettings = (scripts: Script[]) => {
   const settingsScripts: any[] = [];
 
   for (const script of scripts) {
-    if (script instanceof ScripWithTresholds) {
-      const settingsScript = {
-        endpoint: script.endpoint,
-        merge_threshold: script.mergeTreshold,
-        partition_threshold: script.partitionTreshold,
-      };
-      settingsScripts.push(settingsScript);
-    } else if (script instanceof ScriptWithLanguageScope) {
-      const settingsScript = {
-        endpoint: script.endpoint,
-        LanguageScope: script.languageScope,
-      };
-      settingsScripts.push(settingsScript);
-    } else {
-      const settingsScript = {
-        endpoint: script.endpoint,
-      };
-      settingsScripts.push(settingsScript);
-    }
+    const settingsScript = {
+      endpoint: script.endpoint,
+    };
+    settingsScripts.push(settingsScript);
   }
 
   return settingsScripts;

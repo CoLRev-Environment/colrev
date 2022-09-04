@@ -169,7 +169,7 @@ function App() {
                 name="Sources"
                 id="sources"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <SourcesEditor
                   sources={sources}
