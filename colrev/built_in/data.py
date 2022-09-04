@@ -1090,11 +1090,12 @@ class GithubPagesEndpoint:
                     title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
                     title = '"' + title + '"'
-            git_repo.git.checkout("HEAD", "--", ".gitignore")
             git_repo.git.rm("-rf", Path("."))
 
             gitignore_file = Path(".gitignore")
-            gitignore_file.write_text("status.yaml")
+            git_repo.git.checkout("HEAD", "--", gitignore_file)
+            with gitignore_file.open("a", encoding="utf-8") as file:
+                file.write("status.yaml\n")
             data_operation.review_manager.dataset.add_changes(path=gitignore_file)
 
             data_operation.review_manager.retrieve_package_file(
