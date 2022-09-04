@@ -550,3 +550,7 @@ class BackwardSearchSearchSource:
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
 
         return record
+
+
+if __name__ == "__main__":
+    pass

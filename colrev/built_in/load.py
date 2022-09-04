@@ -387,3 +387,7 @@ class BibutilsLoader:
             load_operationrecords=records,
             corresponding_bib_file=source.get_corresponding_bib_file(),
         )
+
+
+if __name__ == "__main__":
+    pass

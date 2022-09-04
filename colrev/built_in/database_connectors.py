@@ -916,3 +916,7 @@ class DBLPConnector:
             ) from exc
 
         return retrieved_records
+
+
+if __name__ == "__main__":
+    pass

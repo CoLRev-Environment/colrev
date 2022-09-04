@@ -25,10 +25,19 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.data.Data
     import colrev.review_manager.ReviewManager
+
+
+@dataclass
+class ManuscriptEndpointSettings:
+    name: str
+    version: str
+    word_template: str
+    csl_style: str
 
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
@@ -51,35 +60,41 @@ class ManuscriptEndpoint:
         data_operation: colrev.data.Data,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+
+        # Set default values (if necessary)
+        if "version" not in settings:
+            settings["version"] = "0.1"
+
+        if "word_template" not in settings:
+            settings["word_template"] = self.retrieve_default_word_template()
+        if "csl_style" not in settings:
+            settings["csl_style"] = (self.retrieve_default_csl(),)
+
+        self.settings = from_dict(data_class=ManuscriptEndpointSettings, data=settings)
         self.paper = data_operation.review_manager.path / self.PAPER_RELATIVE
 
     def get_default_setup(self) -> dict:
 
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
-            "paper_endpoint_version": "0.1",
-            "word_template": ManuscriptEndpoint.retrieve_default_word_template(),
-            "csl_style": ManuscriptEndpoint.retrieve_default_csl(),
+            "version": "0.1",
+            "word_template": self.retrieve_default_word_template(),
+            "csl_style": self.retrieve_default_csl(),
         }
 
         return manuscript_endpoint_details
 
-    @classmethod
-    def retrieve_default_word_template(cls) -> str:
+    def retrieve_default_word_template(self) -> str:
         template_name = "APA-7.docx"
 
-        filedata = pkgutil.get_data(__name__, str(Path("template/APA-7.docx")))
+        filedata = pkgutil.get_data(__name__, str(Path("../template/APA-7.docx")))
         if filedata:
             with open(Path(template_name), "wb") as file:
                 file.write(filedata)
 
         return template_name
 
-    @classmethod
-    def retrieve_default_csl(cls) -> str:
+    def retrieve_default_csl(self) -> str:
         csl_link = (
             "https://raw.githubusercontent.com/"
             + "citation-style-language/styles/master/apa.csl"
@@ -232,12 +247,12 @@ class ManuscriptEndpoint:
                 Path(f"template/review_type/{r_type_path}/") / self.PAPER_RELATIVE
             )
             try:
-                review_manager.retrieve_package_file(
+                colrev.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
             except FileNotFoundError:
                 paper_resource_path = Path("template/") / self.PAPER_RELATIVE
-                review_manager.retrieve_package_file(
+                colrev.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
 
@@ -292,6 +307,65 @@ class ManuscriptEndpoint:
 
         return records
 
+    def build_manuscript(self, *, data_operation: colrev.data.Data) -> None:
+        # pylint: disable=import-outside-toplevel
+        import docker
+
+        data_operation.review_manager.logger.info("Build manuscript")
+
+        if not self.paper.is_file():
+            data_operation.review_manager.logger.error(
+                "File %s does not exist.", self.paper
+            )
+            data_operation.review_manager.logger.info(
+                "Complete processing and use colrev data"
+            )
+            return
+
+        environment_manager = data_operation.review_manager.get_environment_manager()
+        environment_manager.build_docker_images()
+
+        csl_file = self.settings.csl_style
+        word_template = self.settings.word_template
+
+        if not Path(word_template).is_file():
+            self.retrieve_default_word_template()
+        if not Path(csl_file).is_file():
+            self.retrieve_default_csl()
+        assert Path(word_template).is_file()
+        assert Path(csl_file).is_file()
+
+        uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
+        gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
+
+        script = (
+            "paper.md --citeproc --bibliography records.bib "
+            + f"--csl {csl_file} "
+            + f"--reference-doc {word_template} "
+            + "--output paper.docx"
+        )
+
+        client = docker.from_env()
+        try:
+            environment_manager = (
+                data_operation.review_manager.get_environment_manager()
+            )
+
+            pandoc_img = environment_manager.docker_images["pandoc/ubuntu-latex"]
+            msg = "Running docker container created from " f"image {pandoc_img}"
+            data_operation.review_manager.report_logger.info(msg)
+            data_operation.review_manager.logger.info(msg)
+            client.containers.run(
+                image=pandoc_img,
+                command=script,
+                user=f"{uid}:{gid}",
+                volumes=[os.getcwd() + ":/data"],
+            )
+        except docker.errors.ImageNotFound:
+            data_operation.review_manager.logger.error("Docker image not found")
+
+        return
+
     def update_data(
         self,
         data_operation: colrev.data.Data,
@@ -304,6 +378,8 @@ class ManuscriptEndpoint:
             records=records,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
+        # Build manuscript
+        self.build_manuscript(data_operation=data_operation)
 
     def update_record_status_matrix(
         self,
@@ -729,7 +805,7 @@ class PRISMAEndpoint:
 
         if prisma_path.is_file():
             os.remove(prisma_path)
-        data_operation.review_manager.retrieve_package_file(
+        colrev.utils.retrieve_package_file(
             template_file=prisma_resource_path, target=prisma_path
         )
 
@@ -938,7 +1014,7 @@ class ZettlrEndpoint:
                 zettlr_config.write(configfile)
             data_operation.review_manager.dataset.add_changes(path=zettlr_config_path)
 
-            data_operation.review_manager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
@@ -996,7 +1072,7 @@ class ZettlrEndpoint:
                 print(paper_id + record_field)
                 zettlr_path = endpoint_path / Path(paper_id)
 
-                data_operation.review_manager.retrieve_package_file(
+                colrev.utils.retrieve_package_file(
                     template_file=zettlr_resource_path, target=zettlr_path
                 )
                 data_operation.review_manager.dataset.inplace_change(
@@ -1187,3 +1263,7 @@ class ManuscriptRecordSourceTagError(Exception):
     def __init__(self, msg):
         self.message = f" {msg}"
         super().__init__(self.message)
+
+
+if __name__ == "__main__":
+    pass

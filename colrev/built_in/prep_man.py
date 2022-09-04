@@ -12,6 +12,7 @@ from PyPDF2 import PdfFileWriter
 
 import colrev.process
 import colrev.record
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.prep_man.PrepMan
@@ -206,7 +207,7 @@ class CurationJupyterNotebookManPrep:
                 f"Activated jupyter notebook to"
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )
-            prep_man_operation.review_manager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=Path("../template/prep_man_curation.ipynb"),
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )
@@ -223,3 +224,7 @@ class CurationJupyterNotebookManPrep:
             "Press Enter to continue."
         )
         return records
+
+
+if __name__ == "__main__":
+    pass

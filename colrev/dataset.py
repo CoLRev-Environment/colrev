@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import io
 import itertools
-import json
 import logging
 import os
 import re
@@ -18,7 +17,6 @@ from typing import TYPE_CHECKING
 import git
 import pandas as pd
 import pybtex.errors
-from dictdiffer import diff
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from pybtex.database.input import bibtex
@@ -28,6 +26,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
@@ -37,6 +36,7 @@ class Dataset:
 
     RECORDS_FILE_RELATIVE = Path("records.bib")
     records_file: Path
+    __git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
@@ -155,6 +155,7 @@ class Dataset:
 
     @classmethod
     def load_field_dict(cls, *, value: str, field: str) -> dict:
+        # pylint: disable=too-many-branches
         return_dict = {}
         if "colrev_masterdata_provenance" == field:
             if "CURATED" == value[:7]:
@@ -173,8 +174,6 @@ class Dataset:
                 }
 
             elif "" != value:
-                # TODO : discuss: "; " as an indicator for the next list
-                # item is not ideal (could easily be part of a field value....)
                 for item in (value + " ").split("; "):
                     if "" == item:
                         continue
@@ -269,8 +268,6 @@ class Dataset:
 
     def load_records_dict(self, *, load_str: str = None) -> dict:
         """Get the records (requires review_manager.notify(...))"""
-
-        # TODO : optional dict-key as a parameter
 
         pybtex.errors.set_strict_mode(False)
 
@@ -526,7 +523,7 @@ class Dataset:
                     temp_id = temp_id.capitalize()
                 # Replace special characters
                 # (because IDs may be used as file names)
-                temp_id = colrev.record.Record.remove_accents(input_str=temp_id)
+                temp_id = colrev.utils.remove_accents(input_str=temp_id)
                 temp_id = re.sub(r"\(.*\)", "", temp_id)
                 temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
 
@@ -599,11 +596,6 @@ class Dataset:
                     id_list.remove(old_id)
 
         self.save_records_dict(records=records)
-        # Note : temporary fix
-        # (to prevent failing format checks caused by special characters)
-
-        # records = self.load_records_dict()
-        # self.save_records_dict(records=records)
         self.add_record_changes()
 
         return records
@@ -1249,30 +1241,6 @@ class Dataset:
                         f'Non-unique origin: origin="{org}"'
                     )
 
-        # TODO : Check for removed origins
-        # add to method signature: (..., prior: dict, ...)
-        # Raise an exception if origins were removed
-        # prior_origins = [x[0] for x in prior['status']]
-        # current_origins = [x[1] for x in data['origin_list']]
-        # print(len(prior_origins))
-        # print(len(current_origins))
-        # print(set(prior_origins).difference(set(current_origins)))
-        # print(set(current_origins).difference(set(prior_origins)))
-        # print(pp.pformat(prior))
-        # # print(pp.pformat(data))
-        # input('stop')
-        # for prior_origin, prior_id in prior["persisted_IDs"]:
-        #     # TBD: notify if the origin no longer exists?
-        #     for new_origin, new_id in data["persisted_IDs"]:
-        #         if new_origin == prior_origin:
-        #             if new_id != prior_id:
-        #                 logging.error(
-        #                     "ID of processed record changed from"
-        #                     f" {prior_id} to {new_id}"
-        #                 )
-        #                 check_propagated_ids(prior_id, new_id)
-        #                 STATUS = FAIL
-
     def check_fields(self, *, status_data: dict) -> None:
         # Check status fields
         status_schema = [str(x) for x in colrev.record.RecordState]
@@ -1299,251 +1267,6 @@ class Dataset:
         if [""] == excl_criteria:
             excl_criteria = []
         return excl_criteria
-
-    def check_corrections_of_curated_records(self) -> None:
-        # pylint: disable=redefined-outer-name
-
-        if not self.records_file.is_file():
-            return
-
-        self.review_manager.logger.debug("Start corrections")
-
-        local_index = self.review_manager.get_local_index()
-
-        # TODO : remove the following:
-        # from colrev.prep import Preparation
-        # self.PREPARATION = Preparation(
-        #     review_manager=self.review_manager, notify_state_transition_operation=False
-        # )
-
-        # pylint: disable=duplicate-code
-        essential_md_keys = [
-            "title",
-            "author",
-            "journal",
-            "year",
-            "booktitle",
-            "number",
-            "volume",
-            "issue",
-            "author",
-            "doi",
-            "colrev_origin",  # Note : for merges
-        ]
-
-        self.review_manager.logger.debug("Retrieve prior bib")
-        revlist = (
-            (
-                commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
-            )
-            for commit in self.__git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE)
-            )
-        )
-        prior: dict = {"curated_records": []}
-
-        try:
-            filecontents = list(revlist)[0][1]
-        except IndexError:
-            return
-
-        self.review_manager.logger.debug("Load prior bib")
-        prior_db_str = io.StringIO(filecontents.decode("utf-8"))
-        for record_string in self.__read_next_record_str(file_object=prior_db_str):
-
-            # TBD: whether/how to detect dblp. Previously:
-            # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
-            if "{CURATED:" in record_string:
-                records_dict = self.load_records_dict(load_str=record_string)
-                record_dict = list(records_dict.values())[0]
-                prior["curated_records"].append(record_dict)
-
-        self.review_manager.logger.debug("Load current bib")
-        curated_records = []
-        with open(self.records_file, encoding="utf8") as file:
-            for record_string in self.__read_next_record_str(file_object=file):
-
-                # TBD: whether/how to detect dblp. Previously:
-                # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
-                if "{CURATED:" in record_string:
-                    records_dict = self.load_records_dict(load_str=record_string)
-                    record_dict = list(records_dict.values())[0]
-                    curated_records.append(record_dict)
-
-        resources = self.review_manager.get_resources()
-        for curated_record in curated_records:
-
-            # TODO : use origin-indexed dict (discarding changes during merges)
-
-            # identify curated records for which essential metadata is changed
-            prior_crl = [
-                x
-                for x in prior["curated_records"]
-                if any(
-                    y in curated_record["colrev_origin"].split(";")
-                    for y in x["colrev_origin"].split(";")
-                )
-            ]
-
-            if len(prior_crl) == 0:
-                self.review_manager.logger.debug("No prior records found")
-                continue
-
-            for prior_cr in prior_crl:
-
-                if not all(
-                    prior_cr.get(k, "NA") == curated_record.get(k, "NA")
-                    for k in essential_md_keys
-                ):
-                    # after the previous condition, we know that the curated record
-                    # has been corrected
-                    corrected_curated_record = curated_record.copy()
-                    if colrev.record.Record(
-                        data=corrected_curated_record
-                    ).masterdata_is_curated():
-                        # retrieve record from index to identify origin repositories
-                        try:
-                            original_curated_record = local_index.retrieve(
-                                record_dict=prior_cr
-                            )
-
-                            # Note : this is a simple heuristic:
-                            curation_path = resources.curations_path / Path(
-                                original_curated_record["colrev_masterdata_provenance"][
-                                    "source"
-                                ].split("/")[-1]
-                            )
-                            if not curation_path.is_dir():
-                                prov_inf = original_curated_record[
-                                    "colrev_masterdata_provenance"
-                                ]["source"]
-                                print(
-                                    "Source path of indexed record not available "
-                                    f'({original_curated_record["ID"]} - '
-                                    f"{prov_inf})"
-                                )
-                                continue
-                        except (colrev_exceptions.RecordNotInIndexException, KeyError):
-                            original_curated_record = prior_cr.copy()
-
-                        original_curated_record["colrev_id"] = colrev.record.Record(
-                            data=original_curated_record
-                        ).create_colrev_id()
-
-                    else:
-                        continue  # probably?
-
-                    # Cast to string for persistence
-                    original_curated_record = {
-                        k: str(v) for k, v in original_curated_record.items()
-                    }
-                    corrected_curated_record = {
-                        k: str(v) for k, v in corrected_curated_record.items()
-                    }
-
-                    # Note : removing the fields is a temporary fix
-                    # because the subsetting of change_items does not seem to
-                    # work properly
-                    if "pages" in original_curated_record:
-                        del original_curated_record["pages"]
-                    if "pages" in corrected_curated_record:
-                        del corrected_curated_record["pages"]
-                    # if "dblp_key" in corrected_curated_record:
-                    #     del corrected_curated_record["dblp_key"]
-                    if "colrev_status" in corrected_curated_record:
-                        del corrected_curated_record["colrev_status"]
-
-                    if "colrev_status" in original_curated_record:
-                        del original_curated_record["colrev_status"]
-
-                    # TODO : export only essential changes?
-                    changes = diff(original_curated_record, corrected_curated_record)
-                    change_items = list(changes)
-
-                    keys_to_ignore = [
-                        "screening_criteria",
-                        "colrev_status",
-                        "source_url",
-                        "metadata_source_repository_paths",
-                        "ID",
-                        "grobid-version",
-                        "colrev_pdf_id",
-                        "file",
-                        "colrev_origin",
-                        "colrev_data_provenance",
-                        "sem_scholar_id",
-                    ]
-
-                    selected_change_items = []
-                    for change_item in change_items:
-                        change_type, key, val = change_item
-                        if "add" == change_type:
-                            for add_item in val:
-                                add_item_key, add_item_val = add_item
-                                if add_item_key not in keys_to_ignore:
-                                    selected_change_items.append(
-                                        ("add", "", [(add_item_key, add_item_val)])
-                                    )
-                        elif "change" == change_type:
-                            if key not in keys_to_ignore:
-                                selected_change_items.append(change_item)
-
-                    change_items = selected_change_items
-
-                    if len(change_items) == 0:
-                        continue
-
-                    if len(
-                        corrected_curated_record.get("colrev_origin", "").split(";")
-                    ) > len(
-                        original_curated_record.get("colrev_origin", "").split(";")
-                    ):
-                        if (
-                            "dblp_key" in corrected_curated_record
-                            and "dblp_key" in original_curated_record
-                        ):
-                            if (
-                                corrected_curated_record["dblp_key"]
-                                != original_curated_record["dblp_key"]
-                            ):
-                                change_items = {  # type: ignore
-                                    "merge": [
-                                        corrected_curated_record["dblp_key"],
-                                        original_curated_record["dblp_key"],
-                                    ]
-                                }
-                        # else:
-                        #     change_items = {
-                        #         "merge": [
-                        #             corrected_curated_record["ID"],
-                        #             original_curated_record["ID"],
-                        #         ]
-                        #     }
-
-                    # TODO : cover non-masterdata corrections
-                    if "colrev_masterdata_provenance" not in original_curated_record:
-                        continue
-
-                    dict_to_save = {
-                        "source_url": original_curated_record[
-                            "colrev_masterdata_provenance"
-                        ],
-                        "original_curated_record": original_curated_record,
-                        "changes": change_items,
-                    }
-                    filepath = self.review_manager.corrections_path / Path(
-                        f"{curated_record['ID']}.json"
-                    )
-                    filepath.parent.mkdir(exist_ok=True)
-
-                    with open(filepath, "w", encoding="utf8") as corrections_file:
-                        json.dump(dict_to_save, corrections_file, indent=4)
-
-                    # TODO : combine merge-record corrections
-
-        # for testing:
-        # raise KeyError
 
     def check_main_records_screen(self, *, status_data: dict) -> None:
 
@@ -1799,6 +1522,9 @@ class Dataset:
             committer=committer,
             skip_hooks=hook_skipping,
         )
+
+    def records_file_in_history(self) -> bool:
+        return self.file_in_history(filepath=self.RECORDS_FILE_RELATIVE)
 
     def file_in_history(self, *, filepath: Path) -> bool:
         return str(filepath) in [x.path for x in self.__git_repo.head.commit.tree]

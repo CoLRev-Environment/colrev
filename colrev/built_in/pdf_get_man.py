@@ -145,3 +145,7 @@ class CoLRevCLIPDFGetMan:
             )
 
         return records
+
+
+if __name__ == "__main__":
+    pass

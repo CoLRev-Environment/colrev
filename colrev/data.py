@@ -64,8 +64,7 @@ class Data(colrev.process.Process):
             scripts=review_manager.settings.data.scripts,
         )
 
-    @classmethod
-    def get_record_ids_for_synthesis(cls, records: dict) -> list:
+    def get_record_ids_for_synthesis(self, records: dict) -> list:
         return [
             ID
             for ID, record in records.items()

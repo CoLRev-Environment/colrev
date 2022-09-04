@@ -15,7 +15,7 @@ from jinja2 import FunctionLoader
 import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
-
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
@@ -79,7 +79,7 @@ class Status(colrev.process.Process):
         status_stats = self.review_manager.get_status_stats()
 
         environment = Environment(
-            loader=FunctionLoader(self.review_manager.load_jinja_template)
+            loader=FunctionLoader(colrev.utils.load_jinja_template)
         )
         template = environment.get_template("template/status.txt")
         content = template.render(status_stats=status_stats, colors=colors)
@@ -281,26 +281,32 @@ class StatusStats:
             self.currently.non_completed += getattr(self.currently, str(current_state))
 
     def get_active_metadata_operation_info(self) -> str:
-        info = ""
+        infos = []
         if self.currently.md_imported > 0:
-            info += f"{self.currently.md_imported} to prepare"
+            infos.append(f"{self.currently.md_imported} to prepare")
         if self.currently.md_needs_manual_preparation > 0:
-            info += f"{self.currently.md_needs_manual_preparation} to prepare manually"
+            infos.append(
+                f"{self.currently.md_needs_manual_preparation} to prepare manually"
+            )
         if self.currently.md_prepared > 0:
-            info += f"{self.currently.md_prepared} to deduplicate"
-        return info
+            infos.append(f"{self.currently.md_prepared} to deduplicate")
+        return ", ".join(infos)
 
     def get_active_pdf_operation_info(self) -> str:
-        info = ""
+        infos = []
         if self.currently.rev_prescreen_included > 0:
-            info += f"{self.currently.rev_prescreen_included} to retrieve"
+            infos.append(f"{self.currently.rev_prescreen_included} to retrieve")
         if self.currently.pdf_needs_manual_retrieval > 0:
-            info += f"{self.currently.pdf_needs_manual_retrieval} to retrieve manually"
+            infos.append(
+                f"{self.currently.pdf_needs_manual_retrieval} to retrieve manually"
+            )
         if self.currently.pdf_imported > 0:
-            info += f"{self.currently.pdf_imported} to prepare"
+            infos.append(f"{self.currently.pdf_imported} to prepare")
         if self.currently.pdf_needs_manual_preparation > 0:
-            info += f"{self.currently.pdf_needs_manual_preparation} to prepare manually"
-        return info
+            infos.append(
+                f"{self.currently.pdf_needs_manual_preparation} to prepare manually"
+            )
+        return ", ".join(infos)
 
     def get_transitioned_records(
         self, current_origin_states_dict: dict

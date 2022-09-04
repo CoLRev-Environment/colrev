@@ -18,6 +18,7 @@ import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
+import colrev.utils
 
 
 class Initializer:
@@ -174,7 +175,7 @@ class Initializer:
             ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
-            colrev.review_manager.ReviewManager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
 
@@ -318,7 +319,7 @@ class Initializer:
 
         elif "curated_masterdata" == self.review_type:
             # replace readme
-            colrev.review_manager.ReviewManager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
@@ -400,7 +401,8 @@ class Initializer:
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
             )
 
-        global_git_vars = colrev.environment.EnvironmentManager.get_name_mail_from_git()
+        environment_manager = colrev.environment.EnvironmentManager()
+        global_git_vars = environment_manager.get_name_mail_from_git()
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
             return
@@ -442,7 +444,8 @@ class Initializer:
         git_repo = git.Repo.init()
 
         # To check if git actors are set
-        colrev.environment.EnvironmentManager.get_name_mail_from_git()
+        environment_manager = colrev.environment.EnvironmentManager()
+        environment_manager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [
@@ -497,7 +500,7 @@ class Initializer:
         not cover advanced features or special cases."""
 
         self.logger.info("Include 30_example_records.bib")
-        colrev.review_manager.ReviewManager.retrieve_package_file(
+        colrev.utils.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
             target=Path("search/30_example_records.bib"),
         )

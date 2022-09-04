@@ -1752,3 +1752,7 @@ class UpdateMetadataStatusPrep:
 
         record.update_metadata_status(review_manager=prep_operation.review_manager)
         return record
+
+
+if __name__ == "__main__":
+    pass

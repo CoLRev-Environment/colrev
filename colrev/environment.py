@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import annotations
+
 import binascii
 import collections
 import hashlib
@@ -18,6 +20,7 @@ from datetime import timedelta
 from json import JSONDecodeError
 from pathlib import Path
 from threading import Timer
+from typing import TYPE_CHECKING
 
 import docker
 import git
@@ -43,8 +46,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
+
 
 class AdapterManager:
+    # pylint: disable=too-few-public-methods
+
     @classmethod
     def load_scripts(
         cls, *, process, scripts, script_type: str = ""
@@ -297,9 +305,8 @@ class EnvironmentManager:
 
     colrev_path = Path.home().joinpath("colrev")
     cache_path = colrev_path / Path("prep_requests_cache")
-    registry = "registry.yaml"
-
-    paths = {"REGISTRY": colrev_path.joinpath(registry)}
+    REGISTRY_RELATIVE = Path("registry.yaml")
+    registry = colrev_path.joinpath(REGISTRY_RELATIVE)
 
     os_db = "opensearchproject/opensearch-dashboards:1.3.0"
 
@@ -319,10 +326,9 @@ class EnvironmentManager:
     def __init__(self) -> None:
         self.local_registry = self.load_local_registry()
 
-    @classmethod
-    def load_local_registry(cls) -> list:
+    def load_local_registry(self) -> list:
 
-        local_registry_path = EnvironmentManager.paths["REGISTRY"]
+        local_registry_path = self.registry
         local_registry = []
         if local_registry_path.is_file():
             with open(local_registry_path, encoding="utf8") as file:
@@ -331,10 +337,7 @@ class EnvironmentManager:
 
         return local_registry
 
-    @classmethod
-    def save_local_registry(cls, *, updated_registry: list) -> None:
-
-        local_registry_path = cls.paths["REGISTRY"]
+    def save_local_registry(self, *, updated_registry: list) -> None:
 
         updated_registry_df = pd.DataFrame(updated_registry)
         ordered_cols = [
@@ -345,8 +348,8 @@ class EnvironmentManager:
             ordered_cols.append(entry)
         updated_registry_df = updated_registry_df.reindex(columns=ordered_cols)
 
-        local_registry_path.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(local_registry_path, "w", encoding="utf8") as file:
+        self.registry.parents[0].mkdir(parents=True, exist_ok=True)
+        with open(self.registry, "w", encoding="utf8") as file:
             yaml.dump(
                 json.loads(
                     updated_registry_df.to_json(orient="records", default_handler=str)
@@ -356,10 +359,9 @@ class EnvironmentManager:
                 sort_keys=False,
             )
 
-    @classmethod
-    def register_repo(cls, *, path_to_register: Path) -> None:
+    def register_repo(self, *, path_to_register: Path) -> None:
 
-        local_registry = cls.load_local_registry()
+        local_registry = self.load_local_registry()
         registered_paths = [x["repo_source_path"] for x in local_registry]
 
         if registered_paths != []:
@@ -367,7 +369,7 @@ class EnvironmentManager:
                 print(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
-            print(f"Creating {cls.paths['REGISTRY']}")
+            print(f"Creating {self.registry}")
 
         new_record = {
             "repo_name": path_to_register.stem,
@@ -378,11 +380,10 @@ class EnvironmentManager:
             if remote.url:
                 new_record["repo_source_url"] = remote.url
         local_registry.append(new_record)
-        cls.save_local_registry(updated_registry=local_registry)
+        self.save_local_registry(updated_registry=local_registry)
         print(f"Registered path ({path_to_register})")
 
-    @classmethod
-    def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:
+    def get_name_mail_from_git(self) -> typing.Tuple[str, str]:
 
         ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = ("NA", "NA")
@@ -394,15 +395,14 @@ class EnvironmentManager:
             )
         return global_conf_details
 
-    @classmethod
-    def build_docker_images(cls) -> None:
+    def build_docker_images(self) -> None:
 
         client = docker.from_env()
 
         repo_tags = [image.tags for image in client.images.list()]
         repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
 
-        for img_name, img_version in cls.docker_images.items():
+        for img_name, img_version in self.docker_images.items():
             if img_name not in repo_tags:
 
                 if "bibutils" == img_name:
@@ -421,8 +421,7 @@ class EnvironmentManager:
                     print(f"Pulling {img_name} Docker image...")
                     client.images.pull(img_version)
 
-    @classmethod
-    def check_git_installed(cls) -> None:
+    def check_git_installed(self) -> None:
         # pylint: disable=consider-using-with
 
         try:
@@ -431,8 +430,7 @@ class EnvironmentManager:
         except OSError as exc:
             raise colrev_exceptions.MissingDependencyError("git") from exc
 
-    @classmethod
-    def check_docker_installed(cls) -> None:
+    def check_docker_installed(self) -> None:
         # pylint: disable=consider-using-with
 
         try:
@@ -440,6 +438,17 @@ class EnvironmentManager:
                 subprocess.Popen("docker", stdout=null, stderr=null)
         except OSError as exc:
             raise colrev_exceptions.MissingDependencyError("docker") from exc
+
+    def _get_status(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> dict:
+        status_dict = {}
+        with open(review_manager.status, encoding="utf8") as stream:
+            try:
+                status_dict = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+        return status_dict
 
     def get_environment_details(self) -> dict:
         # pylint: disable=import-outside-toplevel
@@ -491,7 +500,7 @@ class EnvironmentManager:
                 check_process = colrev.process.CheckProcess(
                     review_manager=cp_review_manager
                 )
-                repo_stat = check_process.review_manager.get_status()
+                repo_stat = self._get_status(review_manager=cp_review_manager)
                 repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(
@@ -520,12 +529,11 @@ class EnvironmentManager:
         }
         return environment_details
 
-    @classmethod
-    def get_curated_outlets(cls) -> list:
+    def get_curated_outlets(self) -> list:
         curated_outlets: typing.List[str] = []
         for repo_source_path in [
             x["repo_source_path"]
-            for x in EnvironmentManager.load_local_registry()
+            for x in self.load_local_registry()
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
@@ -599,6 +607,8 @@ class LocalIndex:
             )
         if not startup_without_waiting:
             self.check_opensearch_docker_available()
+
+        self.environment_manager = EnvironmentManager()
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
@@ -1112,7 +1122,7 @@ class LocalIndex:
 
         print("Validate curated metadata")
 
-        curated_outlets = EnvironmentManager.get_curated_outlets()
+        curated_outlets = self.environment_manager.get_curated_outlets()
 
         if len(curated_outlets) != len(set(curated_outlets)):
             duplicated = [
@@ -1345,7 +1355,8 @@ class LocalIndex:
         self.open_search.indices.create(index=self.TOC_INDEX)
 
         repo_source_paths = [
-            x["repo_source_path"] for x in EnvironmentManager.load_local_registry()
+            x["repo_source_path"]
+            for x in self.environment_manager.load_local_registry()
         ]
         for repo_source_path in repo_source_paths:
             self.index_colrev_project(repo_source_path=repo_source_path)
@@ -1676,6 +1687,7 @@ class LocalIndex:
 
 class Resources:
 
+    # pylint: disable=too-few-public-methods
     curations_path = Path.home().joinpath("colrev/curated_metadata")
     annotators_path = Path.home().joinpath("colrev/annotators")
 
@@ -1697,8 +1709,9 @@ class Resources:
         print(f"Download curated resource from {curated_resource}")
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
+        environment_manager = EnvironmentManager()
         if (repo_dir / Path("records.bib")).is_file():
-            EnvironmentManager.register_repo(path_to_register=repo_dir)
+            environment_manager.register_repo(path_to_register=repo_dir)
         elif (repo_dir / Path("annotate.py")).is_file():
             shutil.move(str(repo_dir), str(annotator_dir))
         elif (repo_dir / Path("readme.md")).is_file():
@@ -1775,7 +1788,8 @@ class ScreenshotService:
         if self.screenshot_service_available():
             return
 
-        EnvironmentManager.build_docker_images()
+        environment_manager = EnvironmentManager()
+        environment_manager.build_docker_images()
 
         chrome_browserless_image = EnvironmentManager.docker_images[
             "browserless/chrome"
@@ -2615,6 +2629,7 @@ class TEIParser:
 
 
 class PDFHashService:
+    # pylint: disable=too-few-public-methods
     def __init__(self):
         pass
 
