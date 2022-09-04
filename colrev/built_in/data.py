@@ -1180,12 +1180,12 @@ class GithubPagesEndpoint:
                 file.write("status.yaml\n")
             data_operation.review_manager.dataset.add_changes(path=gitignore_file)
 
-            data_operation.review_manager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/index.html"),
                 target=Path("index.html"),
             )
             data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
-            data_operation.review_manager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
             )
@@ -1195,7 +1195,7 @@ class GithubPagesEndpoint:
                 new_string=title,
             )
             data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
-            data_operation.review_manager.retrieve_package_file(
+            colrev.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/about.md"),
                 target=Path("about.md"),
             )
