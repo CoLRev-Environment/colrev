@@ -18,7 +18,6 @@ colrev.environment.LocalIndex
 
       ~LocalIndex.analyze
       ~LocalIndex.check_opensearch_docker_available
-      ~LocalIndex.duplicate_outlets
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_from_index_exact_match
       ~LocalIndex.get_year_from_toc
@@ -26,6 +25,7 @@ colrev.environment.LocalIndex
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_record
       ~LocalIndex.is_duplicate
+      ~LocalIndex.outlets_duplicated
       ~LocalIndex.parse_record
       ~LocalIndex.prep_record_for_return
       ~LocalIndex.retrieve

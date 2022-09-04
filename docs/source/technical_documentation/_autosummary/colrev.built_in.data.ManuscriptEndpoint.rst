@@ -16,6 +16,7 @@ colrev.built\_in.data.ManuscriptEndpoint
    .. autosummary::
       :nosignatures:
 
+      ~ManuscriptEndpoint.build_manuscript
       ~ManuscriptEndpoint.check_new_record_source_tag
       ~ManuscriptEndpoint.get_default_setup
       ~ManuscriptEndpoint.retrieve_default_csl
@@ -33,3 +34,4 @@ colrev.built\_in.data.ManuscriptEndpoint
    .. autosummary::
 
       ~ManuscriptEndpoint.NEW_RECORD_SOURCE_TAG
+      ~ManuscriptEndpoint.PAPER_RELATIVE

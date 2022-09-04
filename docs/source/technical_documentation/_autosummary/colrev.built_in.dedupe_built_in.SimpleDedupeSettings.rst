@@ -26,5 +26,5 @@ colrev.built\_in.dedupe\_built\_in.SimpleDedupeSettings
    .. autosummary::
 
       ~SimpleDedupeSettings.name
-      ~SimpleDedupeSettings.MERGING_NON_DUP_THRESHOLD
-      ~SimpleDedupeSettings.MERGING_DUP_THRESHOLD
+      ~SimpleDedupeSettings.merging_non_dup_threshold
+      ~SimpleDedupeSettings.merging_dup_threshold

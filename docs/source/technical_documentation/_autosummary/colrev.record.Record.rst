@@ -22,7 +22,8 @@ colrev.record.Record
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
-      ~Record.change_ENTRYTYPE
+      ~Record.change_entrytype
+      ~Record.cleanup_pdf_processing_fields
       ~Record.complete_provenance
       ~Record.copy
       ~Record.copy_prep_rec
@@ -40,13 +41,11 @@ colrev.record.Record
       ~Record.get_incomplete_fields
       ~Record.get_inconsistencies
       ~Record.get_origins
-      ~Record.get_pages_in_pdf
       ~Record.get_quality_defects
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed
       ~Record.get_tei_filename
-      ~Record.get_text_from_pdf
       ~Record.get_toc_key
       ~Record.get_value
       ~Record.has_incomplete_fields
@@ -63,7 +62,6 @@ colrev.record.Record
       ~Record.prescreen_exclude
       ~Record.print_citation_format
       ~Record.print_diff_pair
-      ~Record.remove_accents
       ~Record.remove_field
       ~Record.remove_quality_defect_notes
       ~Record.rename_field
@@ -71,7 +69,9 @@ colrev.record.Record
       ~Record.set_fields_complete
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
+      ~Record.set_pages_in_pdf
       ~Record.set_status
+      ~Record.set_text_from_pdf
       ~Record.shares_origins
       ~Record.update_by_record
       ~Record.update_field

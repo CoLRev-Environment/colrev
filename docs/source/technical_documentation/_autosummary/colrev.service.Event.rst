@@ -23,3 +23,13 @@ colrev.service.Event
       ~Event.on_deleted
       ~Event.on_modified
       ~Event.on_moved
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Event.service

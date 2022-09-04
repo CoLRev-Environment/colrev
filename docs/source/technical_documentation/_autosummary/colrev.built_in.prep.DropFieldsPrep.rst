@@ -28,3 +28,4 @@ colrev.built\_in.prep.DropFieldsPrep
 
       ~DropFieldsPrep.always_apply_changes
       ~DropFieldsPrep.source_correction_hint
+      ~DropFieldsPrep.local_index

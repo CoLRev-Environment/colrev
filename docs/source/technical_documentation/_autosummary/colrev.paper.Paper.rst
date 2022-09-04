@@ -18,3 +18,13 @@ colrev.paper.Paper
 
       ~Paper.check_precondition
       ~Paper.main
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Paper.force_mode

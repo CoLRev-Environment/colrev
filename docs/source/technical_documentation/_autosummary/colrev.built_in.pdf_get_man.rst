@@ -20,4 +20,4 @@ colrev.built\_in.pdf\_get\_man
       :template: custom-class-template.rst
       :nosignatures:
 
-      CoLRevCLIPDFRetrievalManual
+      CoLRevCLIPDFGetMan

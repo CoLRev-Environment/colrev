@@ -31,3 +31,4 @@ colrev.prep\_man.PrepMan
    .. autosummary::
 
       ~PrepMan.built_in_scripts
+      ~PrepMan.force_mode

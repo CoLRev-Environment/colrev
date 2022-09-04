@@ -28,4 +28,5 @@ colrev.built\_in.search.PDFSearchEndpoint
    .. autosummary::
 
       ~PDFSearchEndpoint.mode
+      ~PDFSearchEndpoint.pdf_preparation_operation
       ~PDFSearchEndpoint.source_identifier

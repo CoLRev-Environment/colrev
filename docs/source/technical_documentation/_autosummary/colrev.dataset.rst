@@ -1,7 +1,7 @@
-colrev.review\_dataset
-======================
+colrev.dataset
+==============
 
-.. automodule:: colrev.review_dataset
+.. automodule:: colrev.dataset
 
 
 
@@ -20,4 +20,4 @@ colrev.review\_dataset
       :template: custom-class-template.rst
       :nosignatures:
 
-      ReviewDataset
+      Dataset

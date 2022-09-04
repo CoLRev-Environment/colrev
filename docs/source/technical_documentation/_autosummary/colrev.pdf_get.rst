@@ -20,4 +20,4 @@ colrev.pdf\_get
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDF_Retrieval
+      PDFGet

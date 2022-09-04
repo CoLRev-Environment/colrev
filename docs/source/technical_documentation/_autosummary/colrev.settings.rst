@@ -23,7 +23,7 @@ colrev.settings
       Configuration
       DataConfiguration
       DedupeConfiguration
-      IDPpattern
+      IDPattern
       LoadConfiguration
       PDFGetConfiguration
       PDFPrepConfiguration

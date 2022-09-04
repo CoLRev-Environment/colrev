@@ -20,4 +20,4 @@ colrev.prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      Preparation
+      Prep

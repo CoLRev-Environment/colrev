@@ -22,7 +22,8 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.add_masterdata_provenance
       ~PrescreenRecord.add_masterdata_provenance_note
       ~PrescreenRecord.add_provenance_all
-      ~PrescreenRecord.change_ENTRYTYPE
+      ~PrescreenRecord.change_entrytype
+      ~PrescreenRecord.cleanup_pdf_processing_fields
       ~PrescreenRecord.complete_provenance
       ~PrescreenRecord.copy
       ~PrescreenRecord.copy_prep_rec
@@ -40,13 +41,11 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.get_incomplete_fields
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
-      ~PrescreenRecord.get_pages_in_pdf
       ~PrescreenRecord.get_quality_defects
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
       ~PrescreenRecord.get_tei_filename
-      ~PrescreenRecord.get_text_from_pdf
       ~PrescreenRecord.get_toc_key
       ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
@@ -64,7 +63,6 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.prescreen_exclude
       ~PrescreenRecord.print_citation_format
       ~PrescreenRecord.print_diff_pair
-      ~PrescreenRecord.remove_accents
       ~PrescreenRecord.remove_field
       ~PrescreenRecord.remove_quality_defect_notes
       ~PrescreenRecord.rename_field
@@ -72,7 +70,9 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.set_fields_complete
       ~PrescreenRecord.set_masterdata_complete
       ~PrescreenRecord.set_masterdata_consistent
+      ~PrescreenRecord.set_pages_in_pdf
       ~PrescreenRecord.set_status
+      ~PrescreenRecord.set_text_from_pdf
       ~PrescreenRecord.shares_origins
       ~PrescreenRecord.update_by_record
       ~PrescreenRecord.update_field

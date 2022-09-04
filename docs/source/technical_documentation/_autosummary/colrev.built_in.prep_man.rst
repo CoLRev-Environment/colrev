@@ -23,3 +23,4 @@ colrev.built\_in.prep\_man
       CoLRevCLIManPrep
       CurationJupyterNotebookManPrep
       ExportManPrep
+      ExportManPrepSettings

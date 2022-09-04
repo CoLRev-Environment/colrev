@@ -21,3 +21,13 @@ colrev.pull.Pull
       ~Pull.pull_project
       ~Pull.pull_records_from_crossref
       ~Pull.pull_records_from_index
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Pull.force_mode

@@ -23,7 +23,7 @@ colrev.dedupe.Dedupe
       ~Dedupe.get_info
       ~Dedupe.main
       ~Dedupe.prep_records
-      ~Dedupe.readData
+      ~Dedupe.read_data
       ~Dedupe.select_primary_merge_record
       ~Dedupe.source_comparison
 
@@ -39,3 +39,8 @@ colrev.dedupe.Dedupe
       ~Dedupe.ACTIVE_LEARNING_NON_MEMORY_DEDUPE
       ~Dedupe.SIMPLE_SIMILARITY_BASED_DEDUPE
       ~Dedupe.built_in_scripts
+      ~Dedupe.training_file
+      ~Dedupe.settings_file
+      ~Dedupe.non_dupe_file_xlsx
+      ~Dedupe.dupe_file
+      ~Dedupe.force_mode

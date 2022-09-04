@@ -34,8 +34,9 @@ colrev.environment.EnvironmentManager
 
    .. autosummary::
 
+      ~EnvironmentManager.REGISTRY_RELATIVE
+      ~EnvironmentManager.cache_path
       ~EnvironmentManager.colrev_path
       ~EnvironmentManager.docker_images
       ~EnvironmentManager.os_db
-      ~EnvironmentManager.paths
       ~EnvironmentManager.registry

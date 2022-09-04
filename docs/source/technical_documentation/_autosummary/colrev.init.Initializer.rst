@@ -16,6 +16,7 @@ colrev.init.Initializer
    .. autosummary::
       :nosignatures:
 
+      ~Initializer.check_init_precondition
 
 
 
@@ -25,4 +26,4 @@ colrev.init.Initializer
 
    .. autosummary::
 
-      ~Initializer.SHARE_STAT_REQ_options
+      ~Initializer.share_stat_req_options

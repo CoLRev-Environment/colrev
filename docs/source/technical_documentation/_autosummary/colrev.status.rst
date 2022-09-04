@@ -21,3 +21,4 @@ colrev.status
       :nosignatures:
 
       Status
+      StatusStats

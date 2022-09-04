@@ -23,7 +23,6 @@ colrev.data.Data
       ~Data.profile
       ~Data.reading_heuristics
       ~Data.setup_custom_script
-      ~Data.update_tei
 
 
 
@@ -34,3 +33,5 @@ colrev.data.Data
    .. autosummary::
 
       ~Data.built_in_scripts
+      ~Data.verbose
+      ~Data.force_mode

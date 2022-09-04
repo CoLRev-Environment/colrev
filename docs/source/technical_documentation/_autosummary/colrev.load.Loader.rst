@@ -23,7 +23,7 @@ colrev.load.Loader
       ~Loader.get_new_search_files
       ~Loader.load_source_records
       ~Loader.main
-      ~Loader.resolve_non_unique_IDs
+      ~Loader.resolve_non_unique_ids
       ~Loader.save_records
       ~Loader.validate_load
 
@@ -36,3 +36,4 @@ colrev.load.Loader
    .. autosummary::
 
       ~Loader.built_in_scripts
+      ~Loader.force_mode

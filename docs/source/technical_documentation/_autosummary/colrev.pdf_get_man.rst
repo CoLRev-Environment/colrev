@@ -20,4 +20,4 @@ colrev.pdf\_get\_man
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFRetrievalMan
+      PDFGetMan

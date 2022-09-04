@@ -18,3 +18,13 @@ colrev.distribute.Distribute
 
       ~Distribute.check_precondition
       ~Distribute.main
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Distribute.force_mode

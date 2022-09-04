@@ -1,9 +1,9 @@
-colrev.settings.IDPpattern
-==========================
+colrev.settings.IDPattern
+=========================
 
 .. currentmodule:: colrev.settings
 
-.. autoclass:: IDPpattern
+.. autoclass:: IDPattern
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,5 +19,5 @@ colrev.settings.IDPpattern
 
    .. autosummary::
 
-      ~IDPpattern.first_author_year
-      ~IDPpattern.three_authors_year
+      ~IDPattern.first_author_year
+      ~IDPattern.three_authors_year

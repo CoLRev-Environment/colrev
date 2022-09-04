@@ -20,4 +20,4 @@ colrev.pdf\_prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDF_Preparation
+      PDFPrep

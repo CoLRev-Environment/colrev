@@ -1,9 +1,9 @@
-colrev.built\_in.pdf\_get\_man.CoLRevCLIPDFRetrievalManual
-==========================================================
+colrev.built\_in.pdf\_get\_man.CoLRevCLIPDFGetMan
+=================================================
 
 .. currentmodule:: colrev.built_in.pdf_get_man
 
-.. autoclass:: CoLRevCLIPDFRetrievalManual
+.. autoclass:: CoLRevCLIPDFGetMan
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +16,4 @@ colrev.built\_in.pdf\_get\_man.CoLRevCLIPDFRetrievalManual
    .. autosummary::
       :nosignatures:
 
-      ~CoLRevCLIPDFRetrievalManual.get_man_pdf
+      ~CoLRevCLIPDFGetMan.get_man_pdf

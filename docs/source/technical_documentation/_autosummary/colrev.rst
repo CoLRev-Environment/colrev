@@ -26,12 +26,15 @@
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.advisor
    colrev.built_in
    colrev.cli
    colrev.cli_colors
    colrev.clone
+   colrev.commit
+   colrev.corrections
    colrev.data
-   colrev.debug
+   colrev.dataset
    colrev.dedupe
    colrev.distribute
    colrev.environment
@@ -50,7 +53,6 @@
    colrev.pull
    colrev.push
    colrev.record
-   colrev.review_dataset
    colrev.review_manager
    colrev.screen
    colrev.search
@@ -60,4 +62,6 @@
    colrev.status
    colrev.sync
    colrev.trace
+   colrev.upgrade
+   colrev.utils
    colrev.validate

@@ -36,3 +36,4 @@ colrev.screen.Screen
    .. autosummary::
 
       ~Screen.built_in_scripts
+      ~Screen.force_mode

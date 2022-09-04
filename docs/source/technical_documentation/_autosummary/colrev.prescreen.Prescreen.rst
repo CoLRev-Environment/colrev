@@ -34,3 +34,4 @@ colrev.prescreen.Prescreen
    .. autosummary::
 
       ~Prescreen.built_in_scripts
+      ~Prescreen.force_mode

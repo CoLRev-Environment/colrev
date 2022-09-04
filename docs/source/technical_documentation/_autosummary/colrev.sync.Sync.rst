@@ -18,6 +18,16 @@ colrev.sync.Sync
 
       ~Sync.add_to_bib
       ~Sync.add_to_records_to_import
-      ~Sync.get_IDs_in_paper
       ~Sync.get_cited_papers
+      ~Sync.get_ids_in_paper
       ~Sync.get_non_unique
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Sync.cited_papers

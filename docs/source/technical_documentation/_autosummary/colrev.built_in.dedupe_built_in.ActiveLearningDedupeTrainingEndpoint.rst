@@ -20,3 +20,13 @@ colrev.built\_in.dedupe\_built\_in.ActiveLearningDedupeTrainingEndpoint
       ~ActiveLearningDedupeTrainingEndpoint.apply_active_learning
       ~ActiveLearningDedupeTrainingEndpoint.run_dedupe
       ~ActiveLearningDedupeTrainingEndpoint.setup_active_learning_dedupe
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ActiveLearningDedupeTrainingEndpoint.deduper

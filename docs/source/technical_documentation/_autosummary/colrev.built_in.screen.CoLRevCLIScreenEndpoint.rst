@@ -16,6 +16,6 @@ colrev.built\_in.screen.CoLRevCLIScreenEndpoint
    .. autosummary::
       :nosignatures:
 
-      ~CoLRevCLIScreenEndpoint.get_screening_criteria
+      ~CoLRevCLIScreenEndpoint.get_screening_criteria_from_user_input
       ~CoLRevCLIScreenEndpoint.run_screen
       ~CoLRevCLIScreenEndpoint.screen_cli

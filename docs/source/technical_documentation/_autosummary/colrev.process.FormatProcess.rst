@@ -17,3 +17,13 @@ colrev.process.FormatProcess
       :nosignatures:
 
       ~FormatProcess.check_precondition
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~FormatProcess.force_mode

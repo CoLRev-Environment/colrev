@@ -16,11 +16,16 @@ colrev.status.Status
    .. autosummary::
       :nosignatures:
 
-      ~Status.append_registered_repo_instructions
       ~Status.check_precondition
-      ~Status.get_active_processing_functions
       ~Status.get_analytics
-      ~Status.get_environment_instructions
-      ~Status.get_instructions
-      ~Status.get_priority_transition
-      ~Status.get_review_instructions
+      ~Status.get_review_status_report
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Status.force_mode

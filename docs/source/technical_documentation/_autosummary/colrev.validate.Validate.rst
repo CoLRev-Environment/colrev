@@ -24,3 +24,13 @@ colrev.validate.Validate
       ~Validate.validate_merging_changes
       ~Validate.validate_preparation_changes
       ~Validate.validate_properties
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Validate.force_mode

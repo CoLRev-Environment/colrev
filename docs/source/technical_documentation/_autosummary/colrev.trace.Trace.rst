@@ -18,3 +18,13 @@ colrev.trace.Trace
 
       ~Trace.check_precondition
       ~Trace.main
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Trace.force_mode

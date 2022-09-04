@@ -11,6 +11,13 @@ colrev.settings.ReviewType
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~ReviewType.get_options
+
 
 
 

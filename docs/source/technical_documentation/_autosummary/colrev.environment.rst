@@ -24,6 +24,7 @@ colrev.environment
       EnvironmentManager
       GrobidService
       LocalIndex
+      PDFHashService
       Resources
       ScreenshotService
       TEIParser

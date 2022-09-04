@@ -23,8 +23,9 @@ colrev.record.PrepRecord
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_note
       ~PrepRecord.add_provenance_all
-      ~PrepRecord.change_ENTRYTYPE
+      ~PrepRecord.change_entrytype
       ~PrepRecord.check_potential_retracts
+      ~PrepRecord.cleanup_pdf_processing_fields
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
       ~PrepRecord.copy
@@ -46,14 +47,12 @@ colrev.record.PrepRecord
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_origins
-      ~PrepRecord.get_pages_in_pdf
       ~PrepRecord.get_quality_defects
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
       ~PrepRecord.get_tei_filename
-      ~PrepRecord.get_text_from_pdf
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
@@ -72,7 +71,6 @@ colrev.record.PrepRecord
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
       ~PrepRecord.print_diff_pair
-      ~PrepRecord.remove_accents
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
@@ -80,7 +78,9 @@ colrev.record.PrepRecord
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
+      ~PrepRecord.set_pages_in_pdf
       ~PrepRecord.set_status
+      ~PrepRecord.set_text_from_pdf
       ~PrepRecord.shares_origins
       ~PrepRecord.status_to_prepare
       ~PrepRecord.unify_pages_field

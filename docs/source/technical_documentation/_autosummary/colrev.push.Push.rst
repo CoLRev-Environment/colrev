@@ -20,3 +20,13 @@ colrev.push.Push
       ~Push.main
       ~Push.push_project
       ~Push.push_record_corrections
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Push.force_mode
