@@ -559,6 +559,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
         import colrev.commit
+        import colrev.corrections
 
         with open(msg_file, encoding="utf8") as file:
             available_contents = file.read()
@@ -582,7 +583,8 @@ class ReviewManager:
                 file.write(report)
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
-        self.dataset.check_corrections_of_curated_records()
+        corrections_operation = colrev.corrections.Corrections(review_manager=self)
+        corrections_operation.check_corrections_of_curated_records()
 
         return {"msg": "TODO", "status": 0}
 

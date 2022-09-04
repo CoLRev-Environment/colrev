@@ -39,33 +39,9 @@ class Commit:
         self.manual_author = manual_author
         self.realtime_override = realtime_override
 
-        if "MANUAL" == script_name:
-            script_name = "Commit created manually or by external script"
-        elif " " in script_name:
-            script_name = (
-                script_name.replace("colrev", "colrev")
-                .replace("colrev cli", "colrev")
-                .replace("prescreen_cli", "prescreen")
-            )
-            script_name = (
-                script_name.split(" ")[0]
-                + " "
-                + script_name.split(" ")[1].replace("_", "-")
-            )
-        self.script_name = script_name
+        self.script_name = self.parse_script_name(script_name=script_name)
+        self.saved_args = self.parse_saved_args(saved_args=saved_args)
 
-        self.saved_args = ""
-        if saved_args is not None:
-            saved_args_str = ""
-            for key, value in saved_args.items():
-                if isinstance(value, (bool, float, int, str)):
-                    if value == "":
-                        saved_args_str = saved_args_str + f"     --{key} \\\n"
-                    else:
-                        saved_args_str = saved_args_str + f"     --{key}={value} \\\n"
-            # Replace the last backslash (for argument chaining across linebreaks)
-            saved_args_str = saved_args_str.rstrip(" \\\n")
-            self.saved_args = saved_args_str
         self.last_commit_sha = ""
         try:
             self.last_commit_sha = review_manager.dataset.get_last_commit_sha()
@@ -92,7 +68,7 @@ class Commit:
         self.ext_script_name = ""
         self.ext_script_version = ""
 
-        if script_name is not None:
+        if script_name != "":
             ext_script = script_name.split(" ")[0]
             if ext_script != "colrev":
                 try:
@@ -104,16 +80,42 @@ class Commit:
 
         # Note : this should run as the last element because get_commit_report
         # uses the other attributes
-        # TODO: test and update the following
-        if "apply_correction" in script_name:
-            self.msg = msg
-        else:
-            self.msg = (
-                msg
-                + self.__get_version_flag()
-                + self.get_commit_report()
-                + self.get_detailed_processing_report()
+        self.msg = (
+            msg
+            + self.__get_version_flag()
+            + self.get_commit_report()
+            + self.get_detailed_processing_report()
+        )
+
+    def parse_saved_args(self, *, saved_args: dict = None) -> str:
+        saved_args_str = ""
+        if saved_args is not None:
+            for key, value in saved_args.items():
+                if isinstance(value, (bool, float, int, str)):
+                    if value == "":
+                        saved_args_str = saved_args_str + f"     --{key} \\\n"
+                    else:
+                        saved_args_str = saved_args_str + f"     --{key}={value} \\\n"
+            # Replace the last backslash (for argument chaining across linebreaks)
+            saved_args_str = saved_args_str.rstrip(" \\\n")
+
+        return saved_args_str
+
+    def parse_script_name(self, *, script_name: str) -> str:
+        if "MANUAL" == script_name:
+            script_name = "Commit created manually or by external script"
+        elif " " in script_name:
+            script_name = (
+                script_name.replace("colrev", "colrev")
+                .replace("colrev cli", "colrev")
+                .replace("prescreen_cli", "prescreen")
             )
+            script_name = (
+                script_name.split(" ")[0]
+                + " "
+                + script_name.split(" ")[1].replace("_", "-")
+            )
+        return script_name
 
     def __get_version_flag(self) -> str:
         flag = ""
@@ -223,10 +225,6 @@ class Commit:
                 path=self.review_manager.STATUS_RELATIVE
             )
 
-            # TODO : hooks seem to fail most of the time
-            # TBD: only for init?
-            hook_skipping = True
-
             if self.manual_author:
                 git_author = git.Actor(
                     self.review_manager.committer, self.review_manager.email
@@ -240,7 +238,7 @@ class Commit:
                 committer=git.Actor(
                     self.review_manager.committer, self.review_manager.email
                 ),
-                hook_skipping=hook_skipping,
+                hook_skipping=True,
             )
 
             self.review_manager.logger.info("Created commit")
@@ -252,3 +250,7 @@ class Commit:
             return True
 
         return True
+
+
+if __name__ == "__main__":
+    pass

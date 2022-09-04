@@ -2049,3 +2049,7 @@ class CurationMissingDedupeEndpoint:
                     )
                 records_df.sort_values(by=keys, inplace=True)
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
+
+
+if __name__ == "__main__":
+    pass

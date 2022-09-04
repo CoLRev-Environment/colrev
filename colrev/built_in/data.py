@@ -1034,3 +1034,7 @@ class ManuscriptRecordSourceTagError(Exception):
     def __init__(self, msg):
         self.message = f" {msg}"
         super().__init__(self.message)
+
+
+if __name__ == "__main__":
+    pass

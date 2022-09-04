@@ -705,3 +705,7 @@ class SpreadsheetPrescreenEndpoint:
                     script_call="colrev prescreen",
                 )
         return records
+
+
+if __name__ == "__main__":
+    pass

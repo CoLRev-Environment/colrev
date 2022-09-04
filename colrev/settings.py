@@ -204,7 +204,7 @@ class PrepConfiguration:
 
 @dataclass
 class DedupeConfiguration:
-    same_source_merges: str  # TODO : "prevent" or "apply"
+    same_source_merges: str
     scripts: list
 
     def __str__(self) -> str:

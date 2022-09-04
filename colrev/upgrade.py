@@ -502,3 +502,7 @@ class Upgrade:
                 "If the update notification occurs again, run\n "
                 "git commit -n -m --allow-empty 'update colrev'"
             )
+
+
+if __name__ == "__main__":
+    pass

@@ -1239,3 +1239,7 @@ class PDFSearchEndpoint:
             )
 
         # Note: WITH .. is optional.
+
+
+if __name__ == "__main__":
+    pass

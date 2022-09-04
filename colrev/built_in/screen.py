@@ -431,3 +431,7 @@ class SpreadsheetScreenEndpoint:
                     msg="Screen", manual_author=True, script_call="colrev screen"
                 )
         return records
+
+
+if __name__ == "__main__":
+    pass

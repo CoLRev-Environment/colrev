@@ -223,3 +223,7 @@ class CurationJupyterNotebookManPrep:
             "Press Enter to continue."
         )
         return records
+
+
+if __name__ == "__main__":
+    pass

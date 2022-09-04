@@ -191,3 +191,7 @@ class WebsiteScreenshotEndpoint:
                 pdf_get_operation.review_manager.dataset.import_file(record=record.data)
 
         return record
+
+
+if __name__ == "__main__":
+    pass
