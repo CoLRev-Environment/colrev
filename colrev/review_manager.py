@@ -116,7 +116,8 @@ class ReviewManager:
             self.logger.debug("Settings:\n%s", self.settings)
 
     def _get_global_git_vars(self) -> tuple:
-        global_git_vars = colrev.environment.EnvironmentManager.get_name_mail_from_git()
+        environment_manager = self.get_environment_manager()
+        global_git_vars = environment_manager.get_name_mail_from_git()
         if 2 != len(global_git_vars):
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."
@@ -244,23 +245,6 @@ class ReviewManager:
         )
         file_handler.setFormatter(formatter)
         self.report_logger.addHandler(file_handler)
-
-    @classmethod
-    def retrieve_package_file(cls, *, template_file: Path, target: Path) -> None:
-        filedata = pkgutil.get_data(__name__, str(template_file))
-        if filedata:
-            with open(target, "w", encoding="utf8") as file:
-                file.write(filedata.decode("utf-8"))
-
-    @classmethod
-    def load_jinja_template(cls, template_path) -> str:
-        filedata_b = pkgutil.get_data(__name__, template_path)
-        if filedata_b:
-            filedata = filedata_b.decode("utf-8")
-            filedata = filedata.replace("\n", "")
-            filedata = filedata.replace("<br>", "\n")
-            return filedata
-        return ""
 
     def get_colrev_versions(self) -> list[str]:
         current_colrev_version = version("colrev")
@@ -441,17 +425,18 @@ class ReviewManager:
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.
 
+        environment_manager = self.get_environment_manager()
         check_scripts: list[dict[str, typing.Any]] = [
             {
-                "script": colrev.environment.EnvironmentManager.check_git_installed,
+                "script": environment_manager.check_git_installed,
                 "params": [],
             },
             {
-                "script": colrev.environment.EnvironmentManager.check_docker_installed,
+                "script": environment_manager.check_docker_installed,
                 "params": [],
             },
             {
-                "script": colrev.environment.EnvironmentManager.build_docker_images,
+                "script": environment_manager.build_docker_images,
                 "params": [],
             },
             {"script": self.__check_git_conflicts, "params": []},

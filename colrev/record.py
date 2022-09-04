@@ -6,7 +6,6 @@ import io
 import pprint
 import re
 import textwrap
-import unicodedata
 from copy import deepcopy
 from difflib import SequenceMatcher
 from enum import auto
@@ -33,7 +32,7 @@ from thefuzz import fuzz
 
 import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
-
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
@@ -1170,33 +1169,6 @@ class Record:
                         "note"
                     ] = note.replace("quality_defect", "")
 
-    @classmethod
-    def remove_accents(cls, *, input_str: str) -> str:
-        def rmdiacritics(char):
-            """
-            Return the base character of char, by "removing" any
-            diacritics like accents or curls and strokes and the like.
-            """
-            try:
-                desc = unicodedata.name(char)
-                cutoff = desc.find(" WITH ")
-                if cutoff != -1:
-                    desc = desc[:cutoff]
-                    char = unicodedata.lookup(desc)
-            except (KeyError, ValueError):
-                pass  # removing "WITH ..." produced an invalid name
-            return char
-
-        try:
-            nfkd_form = unicodedata.normalize("NFKD", input_str)
-            wo_ac_list = [
-                rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
-            ]
-            wo_ac = "".join(wo_ac_list)
-        except ValueError:
-            wo_ac = input_str
-        return wo_ac
-
     def get_container_title(self) -> str:
         container_title = "NA"
         if "ENTRYTYPE" not in self.data:
@@ -1282,7 +1254,7 @@ class Record:
             to_append = to_append.replace("emph{", "")
             to_append = to_append.replace("&amp;", "and")
             to_append = to_append.replace(" & ", " and ")
-            to_append = Record.remove_accents(input_str=to_append)
+            to_append = colrev.utils.remove_accents(input_str=to_append)
             to_append = re.sub("[^0-9a-zA-Z -]+", "", to_append)
             to_append = re.sub(r"\s+", "-", to_append)
             to_append = re.sub(r"-+", "-", to_append)
@@ -1806,7 +1778,7 @@ class PrepRecord(Record):
             authors = rec_in.data["author"]
             authors = str(authors).lower()
             authors_string = ""
-            authors = Record.remove_accents(input_str=authors)
+            authors = colrev.utils.remove_accents(input_str=authors)
 
             # abbreviate first names
             # "Webster, Jane" -> "Webster, J"

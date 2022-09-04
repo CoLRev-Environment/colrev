@@ -19,7 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Typing :: Typed",
 ]
-include = ["CONTRIBUTING.rst", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed"]
+include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed"]
 
 [tool.poetry.scripts]
 colrev = "colrev.cli:main"

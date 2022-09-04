@@ -26,6 +26,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.utils
 
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
@@ -522,7 +523,7 @@ class Dataset:
                     temp_id = temp_id.capitalize()
                 # Replace special characters
                 # (because IDs may be used as file names)
-                temp_id = colrev.record.Record.remove_accents(input_str=temp_id)
+                temp_id = colrev.utils.remove_accents(input_str=temp_id)
                 temp_id = re.sub(r"\(.*\)", "", temp_id)
                 temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
 

@@ -31,7 +31,7 @@ class CoLRevCLIScreenEndpoint:
         )
 
     @classmethod
-    def get_screening_criteria(
+    def get_screening_criteria_from_user_input(
         cls, *, screen_operation: colrev.screen.Screen, records: dict
     ) -> dict:
 
@@ -86,7 +86,7 @@ class CoLRevCLIScreenEndpoint:
 
         records = screen_operation.review_manager.dataset.load_records_dict()
 
-        screening_criteria = self.get_screening_criteria(
+        screening_criteria = self.get_screening_criteria_from_user_input(
             screen_operation=screen_operation, records=records
         )
 
@@ -277,8 +277,10 @@ class SpreadsheetScreenEndpoint:
 
         screen_operation.review_manager.logger.info("Loading records for export")
 
-        screening_criteria = CoLRevCLIScreenEndpoint.get_screening_criteria(
-            screen_operation=screen_operation, records=records
+        screening_criteria = (
+            CoLRevCLIScreenEndpoint.get_screening_criteria_from_user_input(
+                screen_operation=screen_operation, records=records
+            )
         )
 
         tbl = []
