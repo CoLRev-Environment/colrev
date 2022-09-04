@@ -26,7 +26,6 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.dataset
-import colrev.environment
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
@@ -663,30 +662,40 @@ class ReviewManager:
         return status_stats.completeness_condition
 
     @classmethod
-    def get_local_index(cls, **kwargs) -> colrev.environment.LocalIndex:
-        return colrev.environment.LocalIndex(**kwargs)
+    def get_local_index(cls, **kwargs) -> colrev.env.local_index.LocalIndex:
+        import colrev.env.local_index
+
+        return colrev.env.local_index.LocalIndex(**kwargs)
 
     @classmethod
-    def get_adapter_manager(cls, **kwargs) -> colrev.environment.AdapterManager:
-        return colrev.environment.AdapterManager(**kwargs)
+    def get_package_manager(cls, **kwargs) -> colrev.env.package_manager.PackageManager:
+        import colrev.env.package_manager
+
+        return colrev.env.package_manager.PackageManager(**kwargs)
 
     @classmethod
-    def get_grobid_service(cls, **kwargs) -> colrev.environment.GrobidService:
-        return colrev.environment.GrobidService(**kwargs)
+    def get_grobid_service(cls, **kwargs) -> colrev.env.grobid_service.GrobidService:
+        import colrev.env.grobid_service
+
+        return colrev.env.grobid_service.GrobidService(**kwargs)
 
     @classmethod
-    def get_tei(cls, **kwargs) -> colrev.environment.TEIParser:
-        return colrev.environment.TEIParser(**kwargs)
+    def get_tei(cls, **kwargs) -> colrev.env.tei_parser.TEIParser:
+        return colrev.env.tei_parser.TEIParser(**kwargs)
 
     @classmethod
-    def get_environment_manager(cls, **kwargs) -> colrev.environment.EnvironmentManager:
-        return colrev.environment.EnvironmentManager(**kwargs)
+    def get_environment_manager(
+        cls, **kwargs
+    ) -> colrev.env.environment_manager.EnvironmentManager:
+        import colrev.env.environment_manager
+
+        return colrev.env.environment_manager.EnvironmentManager(**kwargs)
 
     @classmethod
     def get_cached_session(cls) -> requests_cache.CachedSession:
 
         return requests_cache.CachedSession(
-            str(colrev.environment.EnvironmentManager.cache_path),
+            str(colrev.env.environment_manager.EnvironmentManager.cache_path),
             backend="sqlite",
             expire_after=timedelta(days=30),
         )
@@ -694,20 +703,32 @@ class ReviewManager:
     @classmethod
     def get_zotero_translation_service(
         cls, **kwargs
-    ) -> colrev.environment.ZoteroTranslationService:
-        return colrev.environment.ZoteroTranslationService(**kwargs)
+    ) -> colrev.env.zotero_translation_service.ZoteroTranslationService:
+        import colrev.env.zotero_translation_service
+
+        return colrev.env.zotero_translation_service.ZoteroTranslationService(**kwargs)
 
     @classmethod
-    def get_screenshot_service(cls, **kwargs) -> colrev.environment.ScreenshotService:
-        return colrev.environment.ScreenshotService(**kwargs)
+    def get_screenshot_service(
+        cls, **kwargs
+    ) -> colrev.env.screenshot_service.ScreenshotService:
+        import colrev.env.screenshot_service
+
+        return colrev.env.screenshot_service.ScreenshotService(**kwargs)
 
     @classmethod
-    def get_pdf_hash_service(cls, **kwargs) -> colrev.environment.PDFHashService:
-        return colrev.environment.PDFHashService(**kwargs)
+    def get_pdf_hash_service(
+        cls, **kwargs
+    ) -> colrev.env.pdf_hash_service.PDFHashService:
+        import colrev.env.pdf_hash_service
+
+        return colrev.env.pdf_hash_service.PDFHashService(**kwargs)
 
     @classmethod
-    def get_resources(cls, **kwargs) -> colrev.environment.Resources:
-        return colrev.environment.Resources(**kwargs)
+    def get_resources(cls, **kwargs) -> colrev.env.resources.Resources:
+        import colrev.env.resources
+
+        return colrev.env.resources.Resources(**kwargs)
 
     @classmethod
     def check_init_precondition(cls):

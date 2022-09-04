@@ -401,7 +401,7 @@ class Initializer:
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
             )
 
-        environment_manager = colrev.environment.EnvironmentManager()
+        environment_manager = colrev.env.environment_manager.EnvironmentManager()
         global_git_vars = environment_manager.get_name_mail_from_git()
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
@@ -444,7 +444,7 @@ class Initializer:
         git_repo = git.Repo.init()
 
         # To check if git actors are set
-        environment_manager = colrev.environment.EnvironmentManager()
+        environment_manager = colrev.env.environment_manager.EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")

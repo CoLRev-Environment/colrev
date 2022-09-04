@@ -21,7 +21,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.check_repository_setup
       ~ReviewManager.create_commit
       ~ReviewManager.format_records_file
-      ~ReviewManager.get_adapter_manager
       ~ReviewManager.get_advisor
       ~ReviewManager.get_cached_session
       ~ReviewManager.get_clone_operation
@@ -35,6 +34,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_init_operation
       ~ReviewManager.get_load_operation
       ~ReviewManager.get_local_index
+      ~ReviewManager.get_package_manager
       ~ReviewManager.get_paper_operation
       ~ReviewManager.get_pdf_get_man_operation
       ~ReviewManager.get_pdf_get_operation

@@ -1551,7 +1551,7 @@ class DropFieldsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
-    local_index: colrev.environment.LocalIndex
+    local_index: colrev.env.local_index.LocalIndex
 
     def __init__(
         self,

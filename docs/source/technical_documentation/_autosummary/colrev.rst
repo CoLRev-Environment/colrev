@@ -37,7 +37,6 @@
    colrev.dataset
    colrev.dedupe
    colrev.distribute
-   colrev.environment
    colrev.exceptions
    colrev.init
    colrev.load

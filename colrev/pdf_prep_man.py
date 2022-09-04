@@ -40,8 +40,8 @@ class PDFPrepMan(colrev.process.Process):
 
         self.verbose = True
 
-        adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_prep_man_scripts: dict[str, typing.Any] = adapter_manager.load_scripts(
+        package_manager = self.review_manager.get_package_manager()
+        self.pdf_prep_man_scripts: dict[str, typing.Any] = package_manager.load_scripts(
             process=self,
             scripts=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
         )

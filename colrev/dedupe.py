@@ -713,8 +713,10 @@ class Dedupe(colrev.process.Process):
 
         for dedupe_script in self.review_manager.settings.dedupe.scripts:
 
-            adapter_manager = self.review_manager.get_adapter_manager()
-            endpoint_script = adapter_manager.load_scripts(
+            # Note : load package/script at this point because the same script
+            # may run with different parameters
+            package_manager = self.review_manager.get_package_manager()
+            endpoint_script = package_manager.load_scripts(
                 process=self,
                 scripts=[dedupe_script],
             )

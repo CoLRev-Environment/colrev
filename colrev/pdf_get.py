@@ -56,10 +56,8 @@ class PDFGet(colrev.process.Process):
 
         self.review_manager.pdf_directory.mkdir(exist_ok=True)
 
-        adapter_manager = self.review_manager.get_adapter_manager()
-        self.pdf_retrieval_scripts: dict[
-            str, typing.Any
-        ] = adapter_manager.load_scripts(
+        package_manager = self.review_manager.get_package_manager()
+        self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_scripts(
             process=self,
             scripts=review_manager.settings.pdf_get.scripts,
         )
@@ -111,7 +109,7 @@ class PDFGet(colrev.process.Process):
 
         for pdf_get_script in self.review_manager.settings.pdf_get.scripts:
 
-            endpoint = self.pdf_retrieval_scripts[pdf_get_script["endpoint"]]
+            endpoint = self.pdf_get_scripts[pdf_get_script["endpoint"]]
             self.review_manager.report_logger.info(
                 f'{endpoint.settings.name}({record_dict["ID"]}) called'
             )

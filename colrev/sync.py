@@ -8,7 +8,7 @@ import pybtex.errors
 from pybtex.database.input import bibtex
 
 import colrev.dataset
-import colrev.environment
+import colrev.env.local_index
 import colrev.record
 
 
@@ -64,7 +64,7 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            local_index = colrev.environment.LocalIndex()
+            local_index = colrev.env.local_index.LocalIndex()
 
             query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
             res = local_index.open_search.search(

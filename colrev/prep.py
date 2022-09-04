@@ -658,8 +658,8 @@ class Prep(colrev.process.Process):
 
             required_prep_scripts.append({"endpoint": "update_metadata_status"})
 
-            adapter_manager = self.review_manager.get_adapter_manager()
-            self.prep_scripts = adapter_manager.load_scripts(
+            package_manager = self.review_manager.get_package_manager()
+            self.prep_scripts: dict[str, typing.Any] = package_manager.load_scripts(
                 process=self,
                 scripts=required_prep_scripts,
             )
