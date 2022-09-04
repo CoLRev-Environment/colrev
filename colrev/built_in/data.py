@@ -1032,7 +1032,7 @@ class ZettlrEndpoint:
 @dataclass
 class GHPagesSettings:
     name: str
-    github_pages_endpoint_version: str
+    version: str
     auto_push: bool
 
 
@@ -1044,12 +1044,18 @@ class GithubPagesEndpoint:
         data_operation: colrev.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        # Set default values (if necessary)
+        if "version" not in settings:
+            settings["version"] = "0.1.0"
+        if "auto_push" not in settings:
+            settings["auto_push"] = True
+
         self.settings = from_dict(data_class=GHPagesSettings, data=settings)
 
     def get_default_setup(self) -> dict:
         github_pages_endpoint_details = {
             "endpoint": "GITHUB_PAGES",
-            "github_pages_endpoint_version": "0.1",
+            "version": "0.1",
             "auto_push": True,
         }
 
