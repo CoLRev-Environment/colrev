@@ -1157,7 +1157,7 @@ class GithubPagesEndpoint:
                     .split("/")
                 )
                 data_operation.review_manager.logger.info(
-                    f"Data available at: http://{username}.github.io/{project}/"
+                    f"Data available at: https://{username}.github.io/{project}/"
                 )
             else:
                 data_operation.review_manager.logger.info("No remotes specified")
