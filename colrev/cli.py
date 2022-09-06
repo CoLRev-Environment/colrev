@@ -113,7 +113,7 @@ def init(ctx, name, type, url, example):
     """Initialize repository"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
-    import colrev.settings_editor
+    import colrev.web_ui.settings_editor
 
     try:
         colrev.review_manager.ReviewManager.check_init_precondition()
@@ -121,7 +121,7 @@ def init(ctx, name, type, url, example):
         colrev.ops.init.Initializer.setup_initial_configuration(path=Path.cwd())
 
         review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-        settings_operation = colrev.settings_editor.SettingsEditor(
+        settings_operation = colrev.web_ui.settings_editor.SettingsEditor(
             review_manager=review_manager
         )
         settings_operation.open_settings_editor()
@@ -1720,10 +1720,10 @@ def settings(ctx, upgrade, update_hooks, modify):
         )
         return
 
-    import colrev.settings_editor
+    import colrev.web_ui.settings_editor
 
     review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-    settings_operation = colrev.settings_editor.SettingsEditor(
+    settings_operation = colrev.web_ui.settings_editor.SettingsEditor(
         review_manager=review_manager
     )
     settings_operation.open_settings_editor()
