@@ -39,7 +39,7 @@ class Advisor:
         self.review_manager = review_manager
 
     def get_collaboration_instructions(
-        self, *, status_stats: colrev.status.StatusStats = None
+        self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> dict:
 
         if status_stats is None:
@@ -210,7 +210,7 @@ class Advisor:
         return collaboration_instructions
 
     def get_review_instructions(
-        self, *, status_stats: colrev.status.StatusStats = None
+        self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> list:
 
         if status_stats is None:
@@ -437,7 +437,7 @@ class Advisor:
         return instruction
 
     def get_environment_instructions(
-        self, *, status_stats: colrev.status.StatusStats
+        self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
 
         environment_manager = self.review_manager.get_environment_manager()
@@ -514,7 +514,7 @@ class Advisor:
         return environment_instructions
 
     def get_instructions(
-        self, *, status_stats: colrev.status.StatusStats = None
+        self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> dict:
 
         if status_stats is None:

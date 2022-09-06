@@ -7,7 +7,6 @@ import shutil
 import sys
 import tempfile
 from importlib.metadata import version
-from typing import TYPE_CHECKING
 
 import git
 from jinja2 import Environment
@@ -16,9 +15,6 @@ from jinja2 import FunctionLoader
 import colrev.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.utils
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class Commit:

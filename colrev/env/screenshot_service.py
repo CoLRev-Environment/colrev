@@ -4,7 +4,6 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -12,9 +11,6 @@ import requests
 import colrev.env.environment_manager
 import colrev.process
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class ScreenshotService:

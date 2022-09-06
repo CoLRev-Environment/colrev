@@ -2,16 +2,12 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
 
 import docker
 import requests
 from docker.errors import APIError
 
 import colrev.env.environment_manager
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class ZoteroTranslationService:

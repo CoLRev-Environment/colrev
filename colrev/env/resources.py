@@ -3,16 +3,12 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 
 import colrev.env.environment_manager
 import colrev.process
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class Resources:

@@ -11,7 +11,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 
 if TYPE_CHECKING:
-    import colrev.search.Search
+    import colrev.ops.search.Search
 
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
@@ -26,7 +26,7 @@ class CustomSearch:
         )
 
     def run_search(
-        slef, search_operation: colrev.search.Search, params: dict, feed_file: Path
+        slef, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
     ) -> None:
 
         max_id = 1

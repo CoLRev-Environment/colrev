@@ -1183,7 +1183,7 @@ def data(
 
                 # Note : reload updated settings
                 review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-                data_operation = colrev.data.Data(review_manager=review_manager)
+                data_operation = colrev.ops.data.Data(review_manager=review_manager)
             else:
                 print("Data format not available")
 

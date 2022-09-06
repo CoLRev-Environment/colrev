@@ -5,14 +5,10 @@ import logging
 import os
 import subprocess
 import time
-from typing import TYPE_CHECKING
 
 import requests
 
 import colrev.env.environment_manager
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class GrobidService:

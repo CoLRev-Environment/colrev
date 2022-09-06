@@ -8,7 +8,7 @@ readme = "README.md"
 homepage="https://github.com/geritwagner/colrev"
 repository = "https://github.com/geritwagner/colrev"
 documentation = "https://github.com/geritwagner/colrev"
-keywords = ["research", "reproducible research", "open science", "literautre", "literauture review", "systematic review", "systematic literature review"]
+keywords = ["research", "reproducible research", "open science", "literature", "literature review", "systematic review", "systematic literature review"]
 classifiers = [
    "Development Status :: 2 - Pre-Alpha",
     "License :: OSI Approved :: MIT License",

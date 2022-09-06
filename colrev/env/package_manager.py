@@ -6,17 +6,12 @@ import sys
 import typing
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class PackageManager:

@@ -12,7 +12,6 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 import pandas as pd
@@ -27,9 +26,6 @@ import colrev.process
 import colrev.record
 import colrev.settings
 import colrev.utils
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class Dataset:

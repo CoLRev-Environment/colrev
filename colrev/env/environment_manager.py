@@ -7,7 +7,6 @@ import subprocess
 import typing
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import git
@@ -21,9 +20,6 @@ from yaml import safe_load
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class EnvironmentManager:
@@ -127,18 +123,21 @@ class EnvironmentManager:
         repo_tags = [image.tags for image in client.images.list()]
         repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
 
+        assert colrev.review_manager.__file__
+        colrev_path = Path("")
+        if colrev.review_manager.__file__:
+            colrev_path = Path(colrev.review_manager.__file__).parents[0]
+
         for img_name, img_version in self.docker_images.items():
             if img_name not in repo_tags:
 
                 if "bibutils" == img_name:
                     print("Building bibutils Docker image...")
-                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
                     context_path = colrev_path / Path("docker/bibutils")
                     client.images.build(path=str(context_path), tag="bibutils:latest")
 
                 elif "pdf_hash" == img_name:
                     print("Building pdf_hash Docker image...")
-                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
                     context_path = colrev_path / Path("docker/pdf_hash")
                     client.images.build(path=str(context_path), tag="pdf_hash:latest")
 

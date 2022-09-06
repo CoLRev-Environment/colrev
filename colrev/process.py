@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from enum import auto
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 import zope.interface
@@ -14,9 +13,6 @@ from transitions import Machine
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class ProcessType(Enum):

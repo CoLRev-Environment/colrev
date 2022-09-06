@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import pkgutil
 import pprint
 import sys
 import typing
@@ -141,7 +140,9 @@ class ReviewManager:
         # print(selective_merge(default_settings, project_settings))
 
         if not self.settings_path.is_file():
-            filedata = pkgutil.get_data(__name__, "template/settings.json")
+            filedata = colrev.utils.get_package_file_content(
+                file_path=Path("template/settings.json")
+            )
             if filedata:
                 settings = json.loads(filedata.decode("utf-8"))
                 with open(self.settings_path, "w", encoding="utf8") as file:
@@ -366,7 +367,7 @@ class ReviewManager:
                 x for x in required_hooks if x not in installed_hooks["hooks"]
             ]
             raise colrev_exceptions.RepoSetupError(
-                f"missing hooks in .pre-commit-config.yaml ({missing_hooks})"
+                f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
 
         pch_file = Path(".git/hooks/pre-commit")
@@ -543,7 +544,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
         import colrev.commit
-        import colrev.corrections
+        import colrev.ops.correct
 
         with open(msg_file, encoding="utf8") as file:
             available_contents = file.read()
@@ -567,7 +568,7 @@ class ReviewManager:
                 file.write(report)
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
-        corrections_operation = colrev.corrections.Corrections(review_manager=self)
+        corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
         corrections_operation.check_corrections_of_curated_records()
 
         return {"msg": "TODO", "status": 0}
@@ -643,19 +644,19 @@ class ReviewManager:
         return ret
 
     def upgrade_colrev(self) -> None:
-        import colrev.upgrade
+        import colrev.ops.upgrade
 
-        colrev.upgrade.Upgrade(review_manager=self)
+        colrev.ops.upgrade.Upgrade(review_manager=self)
 
     def get_advisor(self) -> colrev.advisor.Advisor:
         import colrev.advisor
 
         return colrev.advisor.Advisor(review_manager=self)
 
-    def get_status_stats(self) -> colrev.status.StatusStats:
-        import colrev.status
+    def get_status_stats(self) -> colrev.ops.status.StatusStats:
+        import colrev.ops.status
 
-        return colrev.status.StatusStats(review_manager=self)
+        return colrev.ops.status.StatusStats(review_manager=self)
 
     def get_completeness_condition(self) -> bool:
         status_stats = self.get_status_stats()
@@ -733,127 +734,129 @@ class ReviewManager:
 
     @classmethod
     def check_init_precondition(cls):
-        import colrev.init
+        import colrev.ops.init
 
-        return colrev.init.Initializer.check_init_precondition()
-
-    @classmethod
-    def get_init_operation(cls, **kwargs) -> colrev.init.Initializer:
-        import colrev.init
-
-        return colrev.init.Initializer(**kwargs)
+        return colrev.ops.init.Initializer.check_init_precondition()
 
     @classmethod
-    def get_sync_operation(cls, **kwargs) -> colrev.sync.Sync:
-        import colrev.sync
+    def get_init_operation(cls, **kwargs) -> colrev.ops.init.Initializer:
+        import colrev.ops.init
 
-        return colrev.sync.Sync(**kwargs)
+        return colrev.ops.init.Initializer(**kwargs)
 
     @classmethod
-    def get_clone_operation(cls, **kwargs) -> colrev.clone.Clone:
-        import colrev.clone
+    def get_sync_operation(cls, **kwargs) -> colrev.ops.sync.Sync:
+        import colrev.ops.sync
 
-        return colrev.clone.Clone(**kwargs)
+        return colrev.ops.sync.Sync(**kwargs)
 
-    def get_search_operation(self, **kwargs) -> colrev.search.Search:
-        import colrev.search
+    @classmethod
+    def get_clone_operation(cls, **kwargs) -> colrev.ops.clone.Clone:
+        import colrev.ops.clone
 
-        return colrev.search.Search(review_manager=self, **kwargs)
+        return colrev.ops.clone.Clone(**kwargs)
 
-    def get_load_operation(self, **kwargs) -> colrev.load.Loader:
-        import colrev.load
+    def get_search_operation(self, **kwargs) -> colrev.ops.search.Search:
+        import colrev.ops.search
 
-        return colrev.load.Loader(review_manager=self, **kwargs)
+        return colrev.ops.search.Search(review_manager=self, **kwargs)
 
-    def get_prep_operation(self, **kwargs) -> colrev.prep.Prep:
-        import colrev.prep
+    def get_load_operation(self, **kwargs) -> colrev.ops.load.Load:
+        import colrev.ops.load
 
-        return colrev.prep.Prep(review_manager=self, **kwargs)
+        return colrev.ops.load.Load(review_manager=self, **kwargs)
 
-    def get_prep_man_operation(self, **kwargs) -> colrev.prep_man.PrepMan:
-        import colrev.prep_man
+    def get_prep_operation(self, **kwargs) -> colrev.ops.prep.Prep:
+        import colrev.ops.prep
 
-        return colrev.prep_man.PrepMan(review_manager=self, **kwargs)
+        return colrev.ops.prep.Prep(review_manager=self, **kwargs)
 
-    def get_dedupe_operation(self, **kwargs) -> colrev.dedupe.Dedupe:
-        import colrev.dedupe
+    def get_prep_man_operation(self, **kwargs) -> colrev.ops.prep_man.PrepMan:
+        import colrev.ops.prep_man
 
-        return colrev.dedupe.Dedupe(review_manager=self, **kwargs)
+        return colrev.ops.prep_man.PrepMan(review_manager=self, **kwargs)
 
-    def get_prescreen_operation(self, **kwargs) -> colrev.prescreen.Prescreen:
-        import colrev.prescreen
+    def get_dedupe_operation(self, **kwargs) -> colrev.ops.dedupe.Dedupe:
+        import colrev.ops.dedupe
 
-        return colrev.prescreen.Prescreen(review_manager=self, **kwargs)
+        return colrev.ops.dedupe.Dedupe(review_manager=self, **kwargs)
 
-    def get_pdf_get_operation(self, **kwargs) -> colrev.pdf_get.PDFGet:
-        import colrev.pdf_get
+    def get_prescreen_operation(self, **kwargs) -> colrev.ops.prescreen.Prescreen:
+        import colrev.ops.prescreen
 
-        return colrev.pdf_get.PDFGet(review_manager=self, **kwargs)
+        return colrev.ops.prescreen.Prescreen(review_manager=self, **kwargs)
 
-    def get_pdf_get_man_operation(self, **kwargs) -> colrev.pdf_get_man.PDFGetMan:
-        import colrev.pdf_get_man
+    def get_pdf_get_operation(self, **kwargs) -> colrev.ops.pdf_get.PDFGet:
+        import colrev.ops.pdf_get
 
-        return colrev.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get.PDFGet(review_manager=self, **kwargs)
 
-    def get_pdf_prep_operation(self, **kwargs) -> colrev.pdf_prep.PDFPrep:
-        import colrev.pdf_prep
+    def get_pdf_get_man_operation(self, **kwargs) -> colrev.ops.pdf_get_man.PDFGetMan:
+        import colrev.ops.pdf_get_man
 
-        return colrev.pdf_prep.PDFPrep(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
 
-    def get_pdf_prep_man_operation(self, **kwargs) -> colrev.pdf_prep_man.PDFPrepMan:
-        import colrev.pdf_prep_man
+    def get_pdf_prep_operation(self, **kwargs) -> colrev.ops.pdf_prep.PDFPrep:
+        import colrev.ops.pdf_prep
 
-        return colrev.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep.PDFPrep(review_manager=self, **kwargs)
 
-    def get_screen_operation(self, **kwargs) -> colrev.screen.Screen:
-        import colrev.screen
+    def get_pdf_prep_man_operation(
+        self, **kwargs
+    ) -> colrev.ops.pdf_prep_man.PDFPrepMan:
+        import colrev.ops.pdf_prep_man
 
-        return colrev.screen.Screen(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
 
-    def get_data_operation(self, **kwargs) -> colrev.data.Data:
-        import colrev.data
+    def get_screen_operation(self, **kwargs) -> colrev.ops.screen.Screen:
+        import colrev.ops.screen
 
-        return colrev.data.Data(review_manager=self, **kwargs)
+        return colrev.ops.screen.Screen(review_manager=self, **kwargs)
 
-    def get_status_operation(self, **kwargs) -> colrev.status.Status:
-        import colrev.status
+    def get_data_operation(self, **kwargs) -> colrev.ops.data.Data:
+        import colrev.ops.data
 
-        return colrev.status.Status(review_manager=self, **kwargs)
+        return colrev.ops.data.Data(review_manager=self, **kwargs)
 
-    def get_validate_operation(self, **kwargs) -> colrev.validate.Validate:
-        import colrev.validate
+    def get_status_operation(self, **kwargs) -> colrev.ops.status.Status:
+        import colrev.ops.status
 
-        return colrev.validate.Validate(review_manager=self, **kwargs)
+        return colrev.ops.status.Status(review_manager=self, **kwargs)
 
-    def get_trace_operation(self, **kwargs) -> colrev.trace.Trace:
-        import colrev.trace
+    def get_validate_operation(self, **kwargs) -> colrev.ops.validate.Validate:
+        import colrev.ops.validate
 
-        return colrev.trace.Trace(review_manager=self, **kwargs)
+        return colrev.ops.validate.Validate(review_manager=self, **kwargs)
 
-    def get_paper_operation(self, **kwargs) -> colrev.paper.Paper:
-        import colrev.paper
+    def get_trace_operation(self, **kwargs) -> colrev.ops.trace.Trace:
+        import colrev.ops.trace
 
-        return colrev.paper.Paper(review_manager=self, **kwargs)
+        return colrev.ops.trace.Trace(review_manager=self, **kwargs)
 
-    def get_distribute_operation(self, **kwargs) -> colrev.distribute.Distribute:
-        import colrev.distribute
+    def get_paper_operation(self, **kwargs) -> colrev.ops.paper.Paper:
+        import colrev.ops.paper
 
-        return colrev.distribute.Distribute(review_manager=self, **kwargs)
+        return colrev.ops.paper.Paper(review_manager=self, **kwargs)
+
+    def get_distribute_operation(self, **kwargs) -> colrev.ops.distribute.Distribute:
+        import colrev.ops.distribute
+
+        return colrev.ops.distribute.Distribute(review_manager=self, **kwargs)
+
+    def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:
+        import colrev.ops.push
+
+        return colrev.ops.push.Push(review_manager=self, **kwargs)
+
+    def get_pull_operation(self, **kwargs) -> colrev.ops.pull.Pull:
+        import colrev.ops.pull
+
+        return colrev.ops.pull.Pull(review_manager=self, **kwargs)
 
     def get_service_operation(self, **kwargs) -> colrev.service.Service:
         import colrev.service
 
         return colrev.service.Service(review_manager=self, **kwargs)
-
-    def get_push_operation(self, **kwargs) -> colrev.push.Push:
-        import colrev.push
-
-        return colrev.push.Push(review_manager=self, **kwargs)
-
-    def get_pull_operation(self, **kwargs) -> colrev.pull.Pull:
-        import colrev.pull
-
-        return colrev.pull.Pull(review_manager=self, **kwargs)
 
     def get_review_manager(self, **kwargs) -> ReviewManager:
         return type(self)(**kwargs)

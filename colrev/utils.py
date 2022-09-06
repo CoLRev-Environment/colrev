@@ -13,6 +13,10 @@ def retrieve_package_file(*, template_file: Path, target: Path) -> None:
             file.write(filedata.decode("utf-8"))
 
 
+def get_package_file_content(*, file_path: Path):
+    return pkgutil.get_data(__name__, str(file_path))
+
+
 def load_jinja_template(template_path) -> str:
     filedata_b = pkgutil.get_data(__name__, template_path)
     if filedata_b:

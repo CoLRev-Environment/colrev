@@ -13,7 +13,6 @@ from datetime import timedelta
 from json import JSONDecodeError
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -32,8 +31,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 # pylint: disable=too-many-lines
 

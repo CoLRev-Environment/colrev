@@ -8,16 +8,12 @@ import queue
 import threading
 import time
 from collections import deque
-from typing import TYPE_CHECKING
 
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
 import colrev.cli_colors as colors
-import colrev.status
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+import colrev.ops.status
 
 
 class Event(LoggingEventHandler):
