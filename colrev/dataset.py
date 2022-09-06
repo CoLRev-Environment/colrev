@@ -392,7 +392,10 @@ class Dataset:
                 # convert to ISO 639-3
                 # TODO : other languages/more systematically
                 # (see database_connectors) > in record.py?
-                record_dict["language"] = record_dict["language"].replace("en", "eng")
+                if "en" == record_dict["language"]:
+                    record_dict["language"] = record_dict["language"].replace(
+                        "en", "eng"
+                    )
 
                 if len(record_dict["language"]) != 3:
                     self.review_manager.logger.warn(
