@@ -25,6 +25,10 @@ colrev.settings.ProjectConfiguration
 
    .. autosummary::
 
+      ~ProjectConfiguration.title
+      ~ProjectConfiguration.authors
+      ~ProjectConfiguration.keywords
+      ~ProjectConfiguration.protocol
       ~ProjectConfiguration.review_type
       ~ProjectConfiguration.id_pattern
       ~ProjectConfiguration.share_stat_req

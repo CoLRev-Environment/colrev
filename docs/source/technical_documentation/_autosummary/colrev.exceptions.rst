@@ -34,6 +34,7 @@ colrev.exceptions
       GitConflictError
       ImportException
       InvalidQueryException
+      InvalidSettingsError
       MissingDependencyError
       NoPaperEndpointRegistered
       NoRecordsError
@@ -46,13 +47,14 @@ colrev.exceptions
       PropagatedIDChange
       RecordNotInIndexException
       RecordNotInRepoException
+      RecordNotIndexedException
       RepoSetupError
       ReviewManagerNotNofiedError
       SearchSettingsError
       ServiceNotAvailableException
       StatusFieldValueError
       StatusTransitionError
-      TEI_Exception
-      TEI_TimeoutException
+      TEIException
+      TEITimeoutException
       UnstagedGitChangesError
       UnsupportedImportFormatError

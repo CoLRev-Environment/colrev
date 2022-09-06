@@ -11,14 +11,13 @@ import colrev.process
 import colrev.record
 
 if TYPE_CHECKING:
-    import colrev.pdf_prep.PDFPRep
-    import colrev.record.Record
+    import colrev.ops.pdf_prep
 
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class CustomPDFPrep:
     def __init__(
-        self, *, pdf_prep_operation: colrev.pdf_prep.PDFPrep, settings: dict
+        self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -26,7 +25,7 @@ class CustomPDFPrep:
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.pdf_prep.PDFPrep,
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
         pad: int,
     ) -> colrev.record.Record:

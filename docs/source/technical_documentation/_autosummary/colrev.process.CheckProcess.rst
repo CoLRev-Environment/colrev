@@ -17,3 +17,13 @@ colrev.process.CheckProcess
       :nosignatures:
 
       ~CheckProcess.check_precondition
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CheckProcess.force_mode

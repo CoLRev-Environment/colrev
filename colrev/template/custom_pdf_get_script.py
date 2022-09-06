@@ -9,21 +9,20 @@ from dacite import from_dict
 import colrev.process
 
 if TYPE_CHECKING:
-    import colrev.pdf_get.PDFGet
-    import colrev.record.Record
+    import colrev.ops.pdf_get
 
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class CustomPDFGet:
     def __init__(
-        self, *, pdf_get_operation: colrev.pdf_get.PDFGet, settings: dict
+        self, *, pdf_get_operation: colrev.ops.pdf_get.PDFGet, settings: dict
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
         )
 
     def get_pdf(
-        self, pdf_get_operation: colrev.pdf_get.PDFGet, record: colrev.record.Record
+        self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
     ) -> colrev.record.Record:
 
         record.data["file"] = "filepath"

@@ -11,13 +11,13 @@ import colrev.process
 import colrev.record
 
 if TYPE_CHECKING:
-    import colrev.prescreen.Prescreen
+    import colrev.ops.prescreen
 
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class CustomPrescreen:
     def __init__(
-        self, *, prescreen_operation: colrev.prescreen.Prescreen, settings: dict
+        self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, settings: dict
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.process.DefaultSettings, data=settings
@@ -25,7 +25,7 @@ class CustomPrescreen:
 
     def run_prescreen(
         slef,
-        prescreen_operation: colrev.prescreen.Prescreen,
+        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
     ) -> dict:

@@ -10,7 +10,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
@@ -112,13 +112,13 @@ def main(ctx):
 def init(ctx, name, type, url, example):
     """Initialize repository"""
     # pylint: disable=import-outside-toplevel
-    import colrev.init
+    import colrev.ops.init
     import colrev.settings_editor
 
     try:
         colrev.review_manager.ReviewManager.check_init_precondition()
 
-        colrev.init.Initializer.setup_initial_configuration(path=Path.cwd())
+        colrev.ops.init.Initializer.setup_initial_configuration(path=Path.cwd())
 
         review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         settings_operation = colrev.settings_editor.Settings(
@@ -1192,7 +1192,7 @@ def data(
 
                 # Note : reload updated settings
                 review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-                data_operation = colrev.data.Data(review_manager=review_manager)
+                data_operation = colrev.ops.data.Data(review_manager=review_manager)
             else:
                 print("Data format not available")
 
@@ -1433,7 +1433,9 @@ def distribute(ctx, path) -> None:
 def print_environment_status(review_manager) -> None:
 
     environment_manager = review_manager.get_environment_manager()
-    environment_details = environment_manager.get_environment_details()
+    environment_details = environment_manager.get_environment_details(
+        review_manager=review_manager
+    )
 
     print("\nCoLRev environment status\n")
     print("Index\n")

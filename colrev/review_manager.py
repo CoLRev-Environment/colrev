@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import pkgutil
 import pprint
 import sys
 import typing
@@ -12,6 +11,9 @@ from datetime import timedelta
 from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
+from subprocess import check_call
+from subprocess import DEVNULL
+from subprocess import STDOUT
 
 import dacite
 import git
@@ -23,7 +25,7 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.dataset
-import colrev.environment
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
@@ -34,6 +36,11 @@ PASS, FAIL = 0, 1
 
 class ReviewManager:
     """Class for managing individual CoLRev review project (repositories)"""
+
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
+    # pylint: disable=import-outside-toplevel
+    # pylint: disable=redefined-outer-name
 
     notified_next_process = None
     """ReviewManager was notified for the upcoming process and
@@ -90,7 +97,7 @@ class ReviewManager:
                 self.report_logger = self.__setup_report_logger(level=logging.INFO)
                 self.logger = self.__setup_logger(level=logging.INFO)
 
-            self.committer, self.email = self.get_global_git_vars()
+            self.committer, self.email = self._get_global_git_vars()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.dataset = colrev.dataset.Dataset(review_manager=self)
@@ -107,8 +114,9 @@ class ReviewManager:
             self.logger.debug("Created review manager instance")
             self.logger.debug("Settings:\n%s", self.settings)
 
-    def get_global_git_vars(self) -> tuple:
-        global_git_vars = colrev.environment.EnvironmentManager.get_name_mail_from_git()
+    def _get_global_git_vars(self) -> tuple:
+        environment_manager = self.get_environment_manager()
+        global_git_vars = environment_manager.get_name_mail_from_git()
         if 2 != len(global_git_vars):
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."
@@ -133,7 +141,9 @@ class ReviewManager:
         # print(selective_merge(default_settings, project_settings))
 
         if not self.settings_path.is_file():
-            filedata = pkgutil.get_data(__name__, "template/settings.json")
+            filedata = colrev.env.utils.get_package_file_content(
+                file_path=Path("template/settings.json")
+            )
             if filedata:
                 settings = json.loads(filedata.decode("utf-8"))
                 with open(self.settings_path, "w", encoding="utf8") as file:
@@ -222,12 +232,20 @@ class ReviewManager:
 
         return report_logger
 
-    @classmethod
-    def retrieve_package_file(cls, *, template_file: Path, target: Path) -> None:
-        filedata = pkgutil.get_data(__name__, str(template_file))
-        if filedata:
-            with open(target, "w", encoding="utf8") as file:
-                file.write(filedata.decode("utf-8"))
+    def reset_log(self) -> None:
+        self.report_logger.handlers[0].stream.close()  # type: ignore
+        self.report_logger.removeHandler(self.report_logger.handlers[0])
+
+        with open("report.log", "r+", encoding="utf8") as file:
+            file.truncate(0)
+
+        file_handler = logging.FileHandler("report.log")
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        file_handler.setFormatter(formatter)
+        self.report_logger.addHandler(file_handler)
 
     def get_colrev_versions(self) -> list[str]:
         current_colrev_version = version("colrev")
@@ -244,17 +262,10 @@ class ReviewManager:
         if last_version != current_version:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
 
-    def upgrade_colrev(self) -> None:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.upgrade
-
-        colrev.upgrade.Upgrade(review_manager=self)
-
     def check_repository_setup(self) -> None:
 
         # 1. git repository?
-        if not self.__is_git_repo(path=self.path):
+        if not self.__is_git_repo():
             raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
 
         # 2. colrev project?
@@ -273,11 +284,9 @@ class ReviewManager:
         # 4. Pre-commit hooks up-to-date?
         try:
             if not self.__hooks_up_to_date(installed_hooks=installed_hooks):
-                raise colrev_exceptions.RepoSetupError(
-                    "Pre-commit hooks not up-to-date. Use\n"
-                    + "colrev settings --update_hooks"
-                )
-                # This could also be a warning, but hooks should not change often.
+                self.logger.info("Updating pre-commit hooks")
+                check_call(["pre-commit", "autoupdate"], stdout=DEVNULL, stderr=STDOUT)
+                self.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
 
         except GitCommandError:
             self.logger.warning(
@@ -299,7 +308,7 @@ class ReviewManager:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
-        git_repo = git.Repo(str(self.path))
+        git_repo = self.dataset.get_repo()
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
@@ -307,9 +316,9 @@ class ReviewManager:
                 if stage != 0:
                     raise colrev_exceptions.GitConflictError(path)
 
-    def __is_git_repo(self, *, path: Path) -> bool:
+    def __is_git_repo(self) -> bool:
         try:
-            _ = git.Repo(str(path)).git_dir
+            _ = self.dataset.get_repo().git_dir
             return True
         except InvalidGitRepositoryError:
             return False
@@ -359,7 +368,7 @@ class ReviewManager:
                 x for x in required_hooks if x not in installed_hooks["hooks"]
             ]
             raise colrev_exceptions.RepoSetupError(
-                f"missing hooks in .pre-commit-config.yaml ({missing_hooks})"
+                f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
 
         pch_file = Path(".git/hooks/pre-commit")
@@ -408,22 +417,27 @@ class ReviewManager:
         """Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks
         """
-        # Note : we have to return status code and message
-        # because printing from other packages does not work in pre-commit hook.
+
+        # pylint: disable=not-a-mapping
+
+        self.notified_next_process = colrev.process.ProcessType.check
+        self.search_dir.mkdir(exist_ok=True)
 
         # We work with exceptions because each issue may be raised in different checks.
-        self.notified_next_process = colrev.process.ProcessType.check
+        # Currently, linting is limited for the scripts.
+
+        environment_manager = self.get_environment_manager()
         check_scripts: list[dict[str, typing.Any]] = [
             {
-                "script": colrev.environment.EnvironmentManager.check_git_installed,
+                "script": environment_manager.check_git_installed,
                 "params": [],
             },
             {
-                "script": colrev.environment.EnvironmentManager.check_docker_installed,
+                "script": environment_manager.check_docker_installed,
                 "params": [],
             },
             {
-                "script": colrev.environment.EnvironmentManager.build_docker_images,
+                "script": environment_manager.build_docker_images,
                 "params": [],
             },
             {"script": self.__check_git_conflicts, "params": []},
@@ -431,19 +445,9 @@ class ReviewManager:
             {"script": self.__check_software, "params": []},
         ]
 
-        self.search_dir.mkdir(exist_ok=True)
+        if self.dataset.records_file.is_file():
 
-        failure_items = []
-        if not self.dataset.records_file.is_file():
-            self.logger.debug("Checks for RECORDS_FILE not activated")
-        else:
-
-            # Note : retrieving data once is more efficient than
-            # reading the RECORDS_FILE multiple times (for each check)
-
-            if self.dataset.file_in_history(
-                filepath=self.dataset.RECORDS_FILE_RELATIVE
-            ):
+            if self.dataset.records_file_in_history():
                 prior = self.dataset.retrieve_prior()
                 self.logger.debug("prior")
                 self.logger.debug(self.p_printer.pformat(prior))
@@ -451,51 +455,42 @@ class ReviewManager:
                 prior = {}
 
             status_data = self.dataset.retrieve_status_data(prior=prior)
-            self.logger.debug("data")
-            self.logger.debug(self.p_printer.pformat(status_data))
 
             main_refs_checks = [
-                {
-                    "script": self.dataset.check_persisted_id_changes,
-                    "params": {"prior": prior, "status_data": status_data},
-                },
                 {"script": self.dataset.check_sources, "params": []},
                 {
                     "script": self.dataset.check_main_records_duplicates,
                     "params": {"status_data": status_data},
                 },
-                {
-                    "script": self.dataset.check_main_records_origin,
-                    "params": {"status_data": status_data},
-                },
-                {
-                    "script": self.dataset.check_fields,
-                    "params": {"status_data": status_data},
-                },
-                {
-                    "script": self.dataset.check_status_transitions,
-                    "params": {"status_data": status_data},
-                },
-                {
-                    "script": self.dataset.check_main_records_screen,
-                    "params": {"status_data": status_data},
-                },
             ]
 
-            if not prior:  # Selected checks if RECORDS_FILE not yet in git history
-                main_refs_checks = [
-                    x
-                    for x in main_refs_checks
-                    if x["script"]
-                    in [
-                        "check_sources",
-                        "check_main_records_duplicates",
+            if prior:  # if RECORDS_FILE in git history
+                main_refs_checks.extend(
+                    [
+                        {
+                            "script": self.dataset.check_persisted_id_changes,
+                            "params": {"prior": prior, "status_data": status_data},
+                        },
+                        {
+                            "script": self.dataset.check_main_records_origin,
+                            "params": {"status_data": status_data},
+                        },
+                        {
+                            "script": self.dataset.check_fields,
+                            "params": {"status_data": status_data},
+                        },
+                        {
+                            "script": self.dataset.check_status_transitions,
+                            "params": {"status_data": status_data},
+                        },
+                        {
+                            "script": self.dataset.check_main_records_screen,
+                            "params": {"status_data": status_data},
+                        },
                     ]
-                ]
+                )
 
-            check_scripts += main_refs_checks
-
-            self.logger.debug("Checks for RECORDS_FILE activated")
+            check_scripts.extend(main_refs_checks)
 
             data_operation = self.get_data_operation(
                 notify_state_transition_operation=False
@@ -511,13 +506,12 @@ class ReviewManager:
                 },
             ]
 
-            check_scripts += data_checks
-            self.logger.debug("Checks for data activated\n")
+            check_scripts.extend(data_checks)
 
-        # TODO : call scripts directly? (better linting...)
+        failure_items = []
         for check_script in check_scripts:
             try:
-                if [] == check_script["params"]:
+                if not check_script["params"]:
                     self.logger.debug("%s() called", check_script["script"].__name__)
                     check_script["script"]()
                 else:
@@ -550,9 +544,8 @@ class ReviewManager:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.commit
+        import colrev.ops.commit
+        import colrev.ops.correct
 
         with open(msg_file, encoding="utf8") as file:
             available_contents = file.read()
@@ -566,7 +559,7 @@ class ReviewManager:
             if "Properties" in available_contents:
                 update = False
             if update:
-                commit = colrev.commit.Commit(
+                commit = colrev.ops.commit.Commit(
                     review_manager=self,
                     msg=available_contents,
                     manual_author=True,
@@ -576,16 +569,10 @@ class ReviewManager:
                 file.write(report)
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
-        self.dataset.check_corrections_of_curated_records()
+        corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
+        corrections_operation.check_corrections_of_curated_records()
 
         return {"msg": "TODO", "status": 0}
-
-    def get_advisor(self) -> colrev.advisor.Advisor:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.advisor
-
-        return colrev.advisor.Advisor(review_manager=self)
 
     def sharing(self) -> dict:
         """Check whether sharing requirements are met
@@ -593,21 +580,8 @@ class ReviewManager:
         """
 
         advisor = self.get_advisor()
-
-        collaboration_instructions = advisor.get_collaboration_instructions()
-
-        status_code = not all(
-            x["level"] in ["SUCCESS", "WARNING"]
-            for x in collaboration_instructions["items"]
-        )
-
-        msgs = "\n ".join(
-            [
-                x["level"] + x["title"] + x.get("msg", "")
-                for x in collaboration_instructions["items"]
-            ]
-        )
-        return {"msg": msgs, "status": status_code}
+        sharing_advice = advisor.get_sharing_instructions()
+        return sharing_advice
 
     def format_records_file(self) -> dict:
         """Format the records file Entrypoint for pre-commit hooks)"""
@@ -641,47 +615,11 @@ class ReviewManager:
         self.dataset.reset_log_if_no_changes()
 
     def update_status_yaml(self) -> None:
-
         status_stats = self.get_status_stats()
         exported_dict = asdict(status_stats)
         with open(self.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
-
         self.dataset.add_changes(path=self.STATUS_RELATIVE)
-
-    def get_status(self) -> dict:
-        status_dict = {}
-        with open(self.status, encoding="utf8") as stream:
-            try:
-                status_dict = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-        return status_dict
-
-    def load_jinja_template(self, template_path) -> str:
-        filedata_b = pkgutil.get_data(__name__, template_path)
-        if filedata_b:
-            filedata = filedata_b.decode("utf-8")
-            filedata = filedata.replace("\n", "")
-            filedata = filedata.replace("<br>", "\n")
-            return filedata
-        return ""
-
-    def reset_log(self) -> None:
-
-        self.report_logger.handlers[0].stream.close()  # type: ignore
-        self.report_logger.removeHandler(self.report_logger.handlers[0])
-
-        with open("report.log", "r+", encoding="utf8") as file:
-            file.truncate(0)
-
-        file_handler = logging.FileHandler("report.log")
-        file_handler.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        file_handler.setFormatter(formatter)
-        self.report_logger.addHandler(file_handler)
 
     def create_commit(
         self,
@@ -693,11 +631,9 @@ class ReviewManager:
         realtime_override: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.commit
+        import colrev.ops.commit
 
-        commit = colrev.commit.Commit(
+        commit = colrev.ops.commit.Commit(
             review_manager=self,
             msg=msg,
             manual_author=manual_author,
@@ -708,42 +644,61 @@ class ReviewManager:
         ret = commit.create()
         return ret
 
-    def get_status_stats(self) -> colrev.status.StatusStats:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.status
+    def upgrade_colrev(self) -> None:
+        import colrev.ops.upgrade
 
-        return colrev.status.StatusStats(review_manager=self)
+        colrev.ops.upgrade.Upgrade(review_manager=self)
+
+    def get_advisor(self) -> colrev.advisor.Advisor:
+        import colrev.advisor
+
+        return colrev.advisor.Advisor(review_manager=self)
+
+    def get_status_stats(self) -> colrev.ops.status.StatusStats:
+        import colrev.ops.status
+
+        return colrev.ops.status.StatusStats(review_manager=self)
 
     def get_completeness_condition(self) -> bool:
         status_stats = self.get_status_stats()
         return status_stats.completeness_condition
 
     @classmethod
-    def get_local_index(cls, **kwargs) -> colrev.environment.LocalIndex:
-        return colrev.environment.LocalIndex(**kwargs)
+    def get_local_index(cls, **kwargs) -> colrev.env.local_index.LocalIndex:
+        import colrev.env.local_index
+
+        return colrev.env.local_index.LocalIndex(**kwargs)
 
     @classmethod
-    def get_adapter_manager(cls, **kwargs) -> colrev.environment.AdapterManager:
-        return colrev.environment.AdapterManager(**kwargs)
+    def get_package_manager(cls, **kwargs) -> colrev.env.package_manager.PackageManager:
+        import colrev.env.package_manager
+
+        return colrev.env.package_manager.PackageManager(**kwargs)
 
     @classmethod
-    def get_grobid_service(cls, **kwargs) -> colrev.environment.GrobidService:
-        return colrev.environment.GrobidService(**kwargs)
+    def get_grobid_service(cls, **kwargs) -> colrev.env.grobid_service.GrobidService:
+        import colrev.env.grobid_service
+
+        return colrev.env.grobid_service.GrobidService(**kwargs)
+
+    def get_tei(self, **kwargs) -> colrev.env.tei_parser.TEIParser:
+        import colrev.env.tei_parser
+
+        return colrev.env.tei_parser.TEIParser(**kwargs)
 
     @classmethod
-    def get_tei(cls, **kwargs) -> colrev.environment.TEIParser:
-        return colrev.environment.TEIParser(**kwargs)
+    def get_environment_manager(
+        cls, **kwargs
+    ) -> colrev.env.environment_manager.EnvironmentManager:
+        import colrev.env.environment_manager
 
-    @classmethod
-    def get_environment_manager(cls, **kwargs) -> colrev.environment.EnvironmentManager:
-        return colrev.environment.EnvironmentManager(**kwargs)
+        return colrev.env.environment_manager.EnvironmentManager(**kwargs)
 
     @classmethod
     def get_cached_session(cls) -> requests_cache.CachedSession:
 
         return requests_cache.CachedSession(
-            str(colrev.environment.EnvironmentManager.cache_path),
+            str(colrev.env.environment_manager.EnvironmentManager.cache_path),
             backend="sqlite",
             expire_after=timedelta(days=30),
         )
@@ -751,192 +706,158 @@ class ReviewManager:
     @classmethod
     def get_zotero_translation_service(
         cls, **kwargs
-    ) -> colrev.environment.ZoteroTranslationService:
-        return colrev.environment.ZoteroTranslationService(**kwargs)
+    ) -> colrev.env.zotero_translation_service.ZoteroTranslationService:
+        import colrev.env.zotero_translation_service
+
+        return colrev.env.zotero_translation_service.ZoteroTranslationService(**kwargs)
 
     @classmethod
-    def get_screenshot_service(cls, **kwargs) -> colrev.environment.ScreenshotService:
-        return colrev.environment.ScreenshotService(**kwargs)
+    def get_screenshot_service(
+        cls, **kwargs
+    ) -> colrev.env.screenshot_service.ScreenshotService:
+        import colrev.env.screenshot_service
+
+        return colrev.env.screenshot_service.ScreenshotService(**kwargs)
 
     @classmethod
-    def get_pdf_hash_service(cls, **kwargs) -> colrev.environment.PDFHashService:
-        return colrev.environment.PDFHashService(**kwargs)
+    def get_pdf_hash_service(
+        cls, **kwargs
+    ) -> colrev.env.pdf_hash_service.PDFHashService:
+        import colrev.env.pdf_hash_service
+
+        return colrev.env.pdf_hash_service.PDFHashService(**kwargs)
 
     @classmethod
-    def get_resources(cls, **kwargs) -> colrev.environment.Resources:
-        return colrev.environment.Resources(**kwargs)
+    def get_resources(cls, **kwargs) -> colrev.env.resources.Resources:
+        import colrev.env.resources
+
+        return colrev.env.resources.Resources(**kwargs)
 
     @classmethod
     def check_init_precondition(cls):
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.init
+        import colrev.ops.init
 
-        return colrev.init.Initializer.check_init_precondition()
+        return colrev.ops.init.Initializer.check_init_precondition()
 
     @classmethod
-    def get_init_operation(cls, **kwargs) -> colrev.init.Initializer:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.init
+    def get_init_operation(cls, **kwargs) -> colrev.ops.init.Initializer:
+        import colrev.ops.init
 
-        return colrev.init.Initializer(**kwargs)
+        return colrev.ops.init.Initializer(**kwargs)
 
     @classmethod
-    def get_sync_operation(cls, **kwargs) -> colrev.sync.Sync:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.sync
+    def get_sync_operation(cls, **kwargs) -> colrev.ops.sync.Sync:
+        import colrev.ops.sync
 
-        return colrev.sync.Sync(**kwargs)
+        return colrev.ops.sync.Sync(**kwargs)
 
     @classmethod
-    def get_clone_operation(cls, **kwargs) -> colrev.clone.Clone:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.clone
+    def get_clone_operation(cls, **kwargs) -> colrev.ops.clone.Clone:
+        import colrev.ops.clone
 
-        return colrev.clone.Clone(**kwargs)
+        return colrev.ops.clone.Clone(**kwargs)
 
-    def get_search_operation(self, **kwargs) -> colrev.search.Search:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.search
+    def get_search_operation(self, **kwargs) -> colrev.ops.search.Search:
+        import colrev.ops.search
 
-        return colrev.search.Search(review_manager=self, **kwargs)
+        return colrev.ops.search.Search(review_manager=self, **kwargs)
 
-    def get_load_operation(self, **kwargs) -> colrev.load.Loader:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.load
+    def get_load_operation(self, **kwargs) -> colrev.ops.load.Load:
+        import colrev.ops.load
 
-        return colrev.load.Loader(review_manager=self, **kwargs)
+        return colrev.ops.load.Load(review_manager=self, **kwargs)
 
-    def get_prep_operation(self, **kwargs) -> colrev.prep.Prep:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.prep
+    def get_prep_operation(self, **kwargs) -> colrev.ops.prep.Prep:
+        import colrev.ops.prep
 
-        return colrev.prep.Prep(review_manager=self, **kwargs)
+        return colrev.ops.prep.Prep(review_manager=self, **kwargs)
 
-    def get_prep_man_operation(self, **kwargs) -> colrev.prep_man.PrepMan:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.prep_man
+    def get_prep_man_operation(self, **kwargs) -> colrev.ops.prep_man.PrepMan:
+        import colrev.ops.prep_man
 
-        return colrev.prep_man.PrepMan(review_manager=self, **kwargs)
+        return colrev.ops.prep_man.PrepMan(review_manager=self, **kwargs)
 
-    def get_dedupe_operation(self, **kwargs) -> colrev.dedupe.Dedupe:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.dedupe
+    def get_dedupe_operation(self, **kwargs) -> colrev.ops.dedupe.Dedupe:
+        import colrev.ops.dedupe
 
-        return colrev.dedupe.Dedupe(review_manager=self, **kwargs)
+        return colrev.ops.dedupe.Dedupe(review_manager=self, **kwargs)
 
-    def get_prescreen_operation(self, **kwargs) -> colrev.prescreen.Prescreen:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.prescreen
+    def get_prescreen_operation(self, **kwargs) -> colrev.ops.prescreen.Prescreen:
+        import colrev.ops.prescreen
 
-        return colrev.prescreen.Prescreen(review_manager=self, **kwargs)
+        return colrev.ops.prescreen.Prescreen(review_manager=self, **kwargs)
 
-    def get_pdf_get_operation(self, **kwargs) -> colrev.pdf_get.PDFGet:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.pdf_get
+    def get_pdf_get_operation(self, **kwargs) -> colrev.ops.pdf_get.PDFGet:
+        import colrev.ops.pdf_get
 
-        return colrev.pdf_get.PDFGet(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get.PDFGet(review_manager=self, **kwargs)
 
-    def get_pdf_get_man_operation(self, **kwargs) -> colrev.pdf_get_man.PDFGetMan:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.pdf_get_man
+    def get_pdf_get_man_operation(self, **kwargs) -> colrev.ops.pdf_get_man.PDFGetMan:
+        import colrev.ops.pdf_get_man
 
-        return colrev.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
 
-    def get_pdf_prep_operation(self, **kwargs) -> colrev.pdf_prep.PDFPrep:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.pdf_prep
+    def get_pdf_prep_operation(self, **kwargs) -> colrev.ops.pdf_prep.PDFPrep:
+        import colrev.ops.pdf_prep
 
-        return colrev.pdf_prep.PDFPrep(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep.PDFPrep(review_manager=self, **kwargs)
 
-    def get_pdf_prep_man_operation(self, **kwargs) -> colrev.pdf_prep_man.PDFPrepMan:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.pdf_prep_man
+    def get_pdf_prep_man_operation(
+        self, **kwargs
+    ) -> colrev.ops.pdf_prep_man.PDFPrepMan:
+        import colrev.ops.pdf_prep_man
 
-        return colrev.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
 
-    def get_screen_operation(self, **kwargs) -> colrev.screen.Screen:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.screen
+    def get_screen_operation(self, **kwargs) -> colrev.ops.screen.Screen:
+        import colrev.ops.screen
 
-        return colrev.screen.Screen(review_manager=self, **kwargs)
+        return colrev.ops.screen.Screen(review_manager=self, **kwargs)
 
-    def get_data_operation(self, **kwargs) -> colrev.data.Data:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.data
+    def get_data_operation(self, **kwargs) -> colrev.ops.data.Data:
+        import colrev.ops.data
 
-        return colrev.data.Data(review_manager=self, **kwargs)
+        return colrev.ops.data.Data(review_manager=self, **kwargs)
 
-    def get_status_operation(self, **kwargs) -> colrev.status.Status:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.status
+    def get_status_operation(self, **kwargs) -> colrev.ops.status.Status:
+        import colrev.ops.status
 
-        return colrev.status.Status(review_manager=self, **kwargs)
+        return colrev.ops.status.Status(review_manager=self, **kwargs)
 
-    def get_validate_operation(self, **kwargs) -> colrev.validate.Validate:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.validate
+    def get_validate_operation(self, **kwargs) -> colrev.ops.validate.Validate:
+        import colrev.ops.validate
 
-        return colrev.validate.Validate(review_manager=self, **kwargs)
+        return colrev.ops.validate.Validate(review_manager=self, **kwargs)
 
-    def get_trace_operation(self, **kwargs) -> colrev.trace.Trace:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.trace
+    def get_trace_operation(self, **kwargs) -> colrev.ops.trace.Trace:
+        import colrev.ops.trace
 
-        return colrev.trace.Trace(review_manager=self, **kwargs)
+        return colrev.ops.trace.Trace(review_manager=self, **kwargs)
 
-    def get_paper_operation(self, **kwargs) -> colrev.paper.Paper:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.paper
+    def get_paper_operation(self, **kwargs) -> colrev.ops.paper.Paper:
+        import colrev.ops.paper
 
-        return colrev.paper.Paper(review_manager=self, **kwargs)
+        return colrev.ops.paper.Paper(review_manager=self, **kwargs)
 
-    def get_distribute_operation(self, **kwargs) -> colrev.distribute.Distribute:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.distribute
+    def get_distribute_operation(self, **kwargs) -> colrev.ops.distribute.Distribute:
+        import colrev.ops.distribute
 
-        return colrev.distribute.Distribute(review_manager=self, **kwargs)
+        return colrev.ops.distribute.Distribute(review_manager=self, **kwargs)
+
+    def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:
+        import colrev.ops.push
+
+        return colrev.ops.push.Push(review_manager=self, **kwargs)
+
+    def get_pull_operation(self, **kwargs) -> colrev.ops.pull.Pull:
+        import colrev.ops.pull
+
+        return colrev.ops.pull.Pull(review_manager=self, **kwargs)
 
     def get_service_operation(self, **kwargs) -> colrev.service.Service:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
         import colrev.service
 
         return colrev.service.Service(review_manager=self, **kwargs)
-
-    def get_push_operation(self, **kwargs) -> colrev.push.Push:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.push
-
-        return colrev.push.Push(review_manager=self, **kwargs)
-
-    def get_pull_operation(self, **kwargs) -> colrev.pull.Pull:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        import colrev.pull
-
-        return colrev.pull.Pull(review_manager=self, **kwargs)
 
     def get_review_manager(self, **kwargs) -> ReviewManager:
         return type(self)(**kwargs)

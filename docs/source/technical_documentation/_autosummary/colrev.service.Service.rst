@@ -18,3 +18,13 @@ colrev.service.Service
 
       ~Service.start_services
       ~Service.worker
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Service.review_manager

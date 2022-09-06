@@ -8,8 +8,9 @@ from dacite import from_dict
 
 import colrev.process
 
+
 if TYPE_CHECKING:
-    import colrev.data.Data
+    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
@@ -29,7 +30,7 @@ class CustomData:
 
     def update_data(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
     ) -> None:
@@ -37,7 +38,7 @@ class CustomData:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.data.Data,
+        data_operation: colrev.ops.data.Data,
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:

@@ -12,7 +12,7 @@ from flask import request
 from flask import send_from_directory
 from flask_cors import CORS
 
-import colrev.load
+import colrev.ops.load
 import colrev.process
 import colrev.settings
 
@@ -115,7 +115,7 @@ class Settings(colrev.process.Process):
         def getScripts(script_type):
             script_options = []
             if "source_conversion_script" == script_type:
-                script_options = list(colrev.load.Loader.built_in_scripts.keys())
+                script_options = list(colrev.ops.load.Load.built_in_scripts.keys())
 
             if "prep_script" == script_type:
                 # TODO : generate list based on script discovery

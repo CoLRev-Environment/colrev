@@ -20,10 +20,11 @@ colrev.settings
       :template: custom-class-template.rst
       :nosignatures:
 
+      Author
       Configuration
       DataConfiguration
       DedupeConfiguration
-      IDPpattern
+      IDPattern
       LoadConfiguration
       PDFGetConfiguration
       PDFPrepConfiguration
@@ -31,10 +32,13 @@ colrev.settings
       PrepRound
       PrescreenConfiguration
       ProjectConfiguration
+      Protocol
       ReviewType
+      SameSourceMergePolicy
       ScreenConfiguration
       ScreenCriterion
       ScreenCriterionType
       SearchConfiguration
       SearchSource
       SearchType
+      ShareStatReq

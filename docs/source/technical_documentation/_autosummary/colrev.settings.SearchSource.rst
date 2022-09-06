@@ -16,6 +16,8 @@ colrev.settings.SearchSource
    .. autosummary::
       :nosignatures:
 
+      ~SearchSource.create_load_stats
+      ~SearchSource.get_corresponding_bib_file
 
 
 

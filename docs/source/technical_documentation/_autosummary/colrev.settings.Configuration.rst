@@ -16,6 +16,8 @@ colrev.settings.Configuration
    .. autosummary::
       :nosignatures:
 
+      ~Configuration.get_options
+      ~Configuration.get_tooltips
 
 
 

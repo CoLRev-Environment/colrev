@@ -22,7 +22,8 @@ colrev.record.ScreenRecord
       ~ScreenRecord.add_masterdata_provenance
       ~ScreenRecord.add_masterdata_provenance_note
       ~ScreenRecord.add_provenance_all
-      ~ScreenRecord.change_ENTRYTYPE
+      ~ScreenRecord.change_entrytype
+      ~ScreenRecord.cleanup_pdf_processing_fields
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.copy
       ~ScreenRecord.copy_prep_rec
@@ -40,13 +41,11 @@ colrev.record.ScreenRecord
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_origins
-      ~ScreenRecord.get_pages_in_pdf
       ~ScreenRecord.get_quality_defects
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
       ~ScreenRecord.get_tei_filename
-      ~ScreenRecord.get_text_from_pdf
       ~ScreenRecord.get_toc_key
       ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
@@ -64,7 +63,6 @@ colrev.record.ScreenRecord
       ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.print_citation_format
       ~ScreenRecord.print_diff_pair
-      ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes
       ~ScreenRecord.rename_field
@@ -73,7 +71,9 @@ colrev.record.ScreenRecord
       ~ScreenRecord.set_fields_complete
       ~ScreenRecord.set_masterdata_complete
       ~ScreenRecord.set_masterdata_consistent
+      ~ScreenRecord.set_pages_in_pdf
       ~ScreenRecord.set_status
+      ~ScreenRecord.set_text_from_pdf
       ~ScreenRecord.shares_origins
       ~ScreenRecord.update_by_record
       ~ScreenRecord.update_field

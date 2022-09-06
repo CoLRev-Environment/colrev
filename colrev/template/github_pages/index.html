@@ -1,0 +1,130 @@
+---
+layout: home
+---
+
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/cr-1.5.6/sl-1.4.0/datatables.min.css" />
+
+<div class="container p-3 mt-3 border">
+    <div id="literature-table"></div>
+</div>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/citation-js@0.6.1"></script>
+<script type="text/javascript"
+    src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/cr-1.5.6/sl-1.4.0/datatables.min.js"></script>
+<script type="text/javascript">
+    const Cite = require('citation-js');
+
+    let literature;
+
+    $.ajax({
+        type: "GET",
+        url: "./data.bib",
+        success: function (data) {
+            literature = new Cite(data);
+            bibToTable(literature.data);
+        }
+    });
+
+    function bibToTable(tableData) {
+        let table_div = document.getElementById('literature-table');
+        let html = '<table id="literature" class="table table-condensed table-hover table-striped">';
+        if (tableData.length == 0 || typeof (tableData[0]) === 'undefined') {
+            return null
+        } else {
+            const header = ["Author", "Title", "Year", "Journal/Booktitle", "Volume", "Number", "Pages"];
+            html += '<thead>';
+            html += '<tr>';
+            header.forEach(function (colData) {
+                html += '<th>' + colData + '</th>';
+            });
+            html += '</tr>';
+            html += '</thead>';
+            html += '<tbody>';
+
+            tableData.forEach(function (row) {
+                html += '<tr id="' + row['id'] + '">';
+                html += '<td>' + row['author'].map(author => author['family'] + ', ' + author['given']).join(" and ") + '</td>';
+                html += '<td>' + row['title'] + '</td>';
+                html += '<td>' + row['issued']['date-parts'][0][0] + '</td>';
+                html += '<td>' + (row['container-title'] === undefined ? '' : row['container-title']) + '</td>';
+                html += '<td>' + (row['volume'] === undefined ? '' : row['volume']) + '</td>';
+                html += '<td>' + (row['issue'] === undefined ? '' : row['issue']) + '</td>';
+                html += '<td>' + (row['page'] === undefined ? '' : row['page']) + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody>';
+            html += '</table>';
+            table_div.innerHTML = html;
+            initDataTable();
+        }
+    }
+
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+
+    function filter(table) {
+        let filterIds = []
+        for (let i = 0; i < table.rows('.selected').data().length; i++) {
+            filterIds.push(table.rows('.selected').data()[i]['DT_RowId'])
+        }
+        let litExport = new Cite();
+        litExport.add(literature.data.filter(el => filterIds.includes(el.id)));
+        return litExport;
+    }
+
+    function initDataTable() {
+        var table = $('#literature').DataTable({
+            dom: 'Blfrtip',
+            buttons: [
+                'colvis',
+                'selectAll',
+                'selectNone',
+                {
+                    text: 'Export selection as BibTeX',
+                    action: function (e, dt, button, config) {
+                        let downloadData = filter(table);
+                        if (downloadData.data.length > 0) {
+                            download('export.bib', downloadData.format('bibtex'));
+                        }
+                    }
+                },
+                {
+                    text: 'Export selection as RIS',
+                    action: function (e, dt, button, config) {
+                        let downloadData = filter(table);
+                        if (downloadData.data.length > 0) {
+                            download('export.ris', downloadData.format('ris'));
+                        }
+                    }
+                },
+                // enw export requires citation-js plugin
+                // {
+                //     text: 'Export selection as Endnote',
+                //     action: function (e, dt, button, config) {
+                //         let downloadData = filter(table);
+                //         if (downloadData.data.length > 0) {
+                //             download('export.enw', downloadData.format('enw'));
+                //         }
+                //     }
+                // }
+            ],
+            select: true,
+            language: {
+                buttons: {
+                    colvis: 'Column Visibility'
+                }
+            }
+        });
+    }
+</script>

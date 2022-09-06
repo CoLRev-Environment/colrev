@@ -8,7 +8,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import git
 import zope.interface
 from transitions import Machine
 
@@ -16,7 +15,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+    import git
+    import colrev.review_manager
 
 
 class ProcessType(Enum):
@@ -44,6 +44,7 @@ class ProcessType(Enum):
 
 
 class Process:
+    # pylint: disable=too-few-public-methods
 
     force_mode: bool
 
@@ -225,6 +226,8 @@ class Process:
 
 
 class FormatProcess(Process):
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *, review_manager, notify: bool = True) -> None:
         super().__init__(review_manager=review_manager, process_type=ProcessType.format)
         if notify:
@@ -232,6 +235,8 @@ class FormatProcess(Process):
 
 
 class CheckProcess(Process):
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *, review_manager) -> None:
         super().__init__(
             review_manager=review_manager,
