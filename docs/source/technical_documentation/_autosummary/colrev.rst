@@ -37,4 +37,4 @@
    colrev.review_manager
    colrev.service
    colrev.settings
-   colrev.settings_editor
+   colrev.ui_web

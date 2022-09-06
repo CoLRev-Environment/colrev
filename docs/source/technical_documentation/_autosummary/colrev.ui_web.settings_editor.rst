@@ -1,7 +1,7 @@
-colrev.settings\_editor
-=======================
+colrev.ui\_web.settings\_editor
+===============================
 
-.. automodule:: colrev.settings_editor
+.. automodule:: colrev.ui_web.settings_editor
 
 
 
@@ -20,4 +20,4 @@ colrev.settings\_editor
       :template: custom-class-template.rst
       :nosignatures:
 
-      Settings
+      SettingsEditor
