@@ -20,6 +20,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
 
+# pylint: disable=too-few-public-methods
+
 
 class Initializer:
 

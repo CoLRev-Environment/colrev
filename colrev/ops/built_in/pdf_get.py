@@ -20,6 +20,8 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.ops.pdf_get
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class UnpaywallEndpoint:

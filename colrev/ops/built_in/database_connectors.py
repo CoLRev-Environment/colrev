@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     import colrev.ops.prep
 
 
+# pylint: disable=too-few-public-methods
+
+
 class OpenLibraryConnector:
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:

@@ -40,6 +40,7 @@ class ProcessType(Enum):
 
 
 class Process:
+    # pylint: disable=too-few-public-methods
 
     force_mode: bool
 
@@ -221,6 +222,8 @@ class Process:
 
 
 class FormatProcess(Process):
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *, review_manager, notify: bool = True) -> None:
         super().__init__(review_manager=review_manager, process_type=ProcessType.format)
         if notify:
@@ -228,6 +231,8 @@ class FormatProcess(Process):
 
 
 class CheckProcess(Process):
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *, review_manager) -> None:
         super().__init__(
             review_manager=review_manager,

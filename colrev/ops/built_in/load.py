@@ -17,6 +17,8 @@ import colrev.process
 if TYPE_CHECKING:
     import colrev.ops.load
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class BibPybtexLoader:

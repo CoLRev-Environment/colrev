@@ -22,6 +22,8 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCheckOCREndpoint:

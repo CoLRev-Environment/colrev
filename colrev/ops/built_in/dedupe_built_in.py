@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import dedupe as dedupe_io
 
 # pylint: disable=too-many-arguments
+# pylint: disable=too-few-public-methods
 
 
 def console_duplicate_instance_label(

@@ -10,6 +10,8 @@ import colrev.exceptions as colrev_exceptions
 class Clone:
     """Clone CoLRev project from git remote repository"""
 
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *, git_url: str) -> None:
         self.git_url = git_url
         """The git remote URL"""

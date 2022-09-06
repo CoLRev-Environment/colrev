@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     import colrev.ops.prep
     import colrev.env.local_index
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class LoadFixesPrep:

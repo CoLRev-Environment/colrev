@@ -12,6 +12,8 @@ import yaml
 import colrev.env.utils
 import colrev.process
 
+# pylint: disable=too-few-public-methods
+
 
 class Upgrade(colrev.process.Process):
     def __init__(

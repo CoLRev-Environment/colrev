@@ -18,6 +18,8 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.ops.prep_man
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class CoLRevCLIManPrep:

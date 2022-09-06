@@ -15,6 +15,9 @@ if TYPE_CHECKING:
     import colrev.ops.pdf_prep_man
 
 
+# pylint: disable=too-few-public-methods
+
+
 @zope.interface.implementer(colrev.process.PDFPrepManEndpoint)
 class CoLRevCLIPDFManPrep:
     def __init__(

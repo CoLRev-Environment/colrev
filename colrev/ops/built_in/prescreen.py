@@ -18,6 +18,8 @@ import colrev.record
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
 
+# pylint: disable=too-few-public-methods
+
 
 @dataclass
 class ScopePrescreenEndpointSettings:
