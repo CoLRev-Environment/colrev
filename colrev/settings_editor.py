@@ -20,14 +20,11 @@ if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
 
 
-class Settings(colrev.process.Process):
+class SettingsEditor:
     # pylint: disable=invalid-name
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        super().__init__(
-            review_manager=review_manager,
-            process_type=colrev.process.ProcessType.explore,
-        )
+        self.review_manager = review_manager
 
     def _open_browser(self) -> None:
 
@@ -66,14 +63,15 @@ class Settings(colrev.process.Process):
             return response
 
         @app.route("/api/saveSettings", methods=["POST"])
-        def saveSettings():
+        def saveSettings(create_commit: bool = False):
 
             with open(
                 self.review_manager.settings_path, "w", encoding="utf-8"
             ) as outfile:
                 json_string = json.dumps(request.json, indent=4)
                 outfile.write(json_string)
-
+            if create_commit:
+                self.review_manager.create_commit(msg="Update settings")
             return "ok"
 
         @app.route("/api/getOptions")
@@ -158,6 +156,15 @@ class Settings(colrev.process.Process):
                     if "1.0.0" == endpoint_version:
                         script_required = {"retrieval_similarity": True}
             return jsonify(script_required)
+
+        @app.get("/shutdown")
+        def shutdown():
+            # TODO : when the user clicks on the "Create project" button,
+            # the settings should be saved,
+            # the webbrowser/window should be closed
+            # and flask should be stopped:
+            # https://stackoverflow.com/questions/15562446/how-to-stop-flask-application-without-using-ctrl-c
+            return "Server shutting down..."
 
         self._open_browser()
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)

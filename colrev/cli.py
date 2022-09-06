@@ -121,16 +121,12 @@ def init(ctx, name, type, url, example):
         colrev.ops.init.Initializer.setup_initial_configuration(path=Path.cwd())
 
         review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-        settings_operation = colrev.settings_editor.Settings(
+        settings_operation = colrev.settings_editor.SettingsEditor(
             review_manager=review_manager
         )
         settings_operation.open_settings_editor()
 
         colrev.review_manager.ReviewManager.get_init_operation(
-            project_name=name,
-            share_stat_req="PROCESSED",
-            review_type=type,
-            url=url,
             example=example,
         )
 
@@ -1727,7 +1723,9 @@ def settings(ctx, upgrade, update_hooks, modify):
     import colrev.settings_editor
 
     review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-    settings_operation = colrev.settings_editor.Settings(review_manager=review_manager)
+    settings_operation = colrev.settings_editor.SettingsEditor(
+        review_manager=review_manager
+    )
     settings_operation.open_settings_editor()
 
 
