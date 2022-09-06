@@ -9,10 +9,10 @@ from pathlib import Path
 
 from p_tqdm import p_map
 
-import colrev.env.cli_colors as colors
 import colrev.ops.built_in.pdf_get as built_in_pdf_get
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class PDFGet(colrev.process.Process):

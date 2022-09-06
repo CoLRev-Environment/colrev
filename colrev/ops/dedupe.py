@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe_built_in as built_in_dedupe
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager

@@ -13,12 +13,12 @@ from subprocess import STDOUT
 import git
 
 import colrev.dataset
-import colrev.env.cli_colors as colors
 import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=too-few-public-methods
 

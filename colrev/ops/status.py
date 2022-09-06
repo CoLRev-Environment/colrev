@@ -10,10 +10,10 @@ import yaml
 from jinja2 import Environment
 from jinja2 import FunctionLoader
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class Status(colrev.process.Process):

@@ -1,7 +1,7 @@
-colrev.cli
-==========
+colrev.ui\_cli.cli
+==================
 
-.. automodule:: colrev.cli
+.. automodule:: colrev.ui_cli.cli
 
 
 
@@ -17,12 +17,7 @@ colrev.cli
 
       delete_first_pages_cli
       get_value
-      print_collaboration_instructions
-      print_environment_instructions
       print_environment_status
-      print_progress
-      print_project_status
-      print_review_instructions
       validate_commit
       validate_show
       view_dedupe_details

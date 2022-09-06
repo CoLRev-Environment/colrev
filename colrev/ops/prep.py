@@ -11,13 +11,13 @@ from pathlib import Path
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.ops.built_in.database_connectors as db_connectors
 import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)

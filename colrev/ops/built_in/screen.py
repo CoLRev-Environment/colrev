@@ -9,10 +9,10 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
-import colrev.env.cli_colors as colors
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 if TYPE_CHECKING:

@@ -7,13 +7,13 @@ import string
 import typing
 from pathlib import Path
 
-import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.load as built_in_load
 import colrev.ops.search_sources
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 class Load(colrev.process.Process):

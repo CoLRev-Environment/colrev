@@ -10,10 +10,10 @@ from pathlib import Path
 import timeout_decorator
 from p_tqdm import p_map
 
-import colrev.env.cli_colors as colors
 import colrev.ops.built_in.pdf_prep as built_in_pdf_prep
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class PDFPrep(colrev.process.Process):

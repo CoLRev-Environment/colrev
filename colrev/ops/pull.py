@@ -7,10 +7,10 @@ from multiprocessing import Value
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
-import colrev.env.cli_colors as colors
 import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 CHANGE_COUNTER = None

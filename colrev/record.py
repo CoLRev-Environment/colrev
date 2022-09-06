@@ -30,9 +30,9 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
