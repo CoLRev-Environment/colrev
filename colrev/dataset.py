@@ -12,6 +12,7 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import pandas as pd
@@ -26,6 +27,9 @@ import colrev.process
 import colrev.record
 import colrev.settings
 import colrev.utils
+
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Dataset:
@@ -376,8 +380,7 @@ class Dataset:
             }
             yield records_dict
 
-    @classmethod
-    def parse_bibtex_str(cls, *, recs_dict_in: dict) -> str:
+    def parse_bibtex_str(self, *, recs_dict_in: dict) -> str:
 
         # Note: we need a deepcopy because the parsing modifies dicts
         recs_dict = deepcopy(recs_dict_in)
@@ -395,6 +398,19 @@ class Dataset:
             first = False
 
             bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
+
+            if "language" in record_dict:
+                # convert to ISO 639-3
+                # TODO : other languages/more systematically
+                # (see database_connectors) > in record.py?
+                record_dict["language"] = record_dict["language"].replace("en", "eng")
+
+                if len(record_dict["language"]) != 3:
+                    self.review_manager.logger.warn(
+                        "language (%s) of %s not in ISO 639-3 format",
+                        record_dict["language"],
+                        record_dict["ID"],
+                    )
 
             field_order = [
                 "colrev_origin",  # must be in second line
@@ -443,13 +459,12 @@ class Dataset:
 
         return bibtex_str
 
-    @classmethod
-    def save_records_dict_to_file(cls, *, records: dict, save_path: Path) -> None:
+    def save_records_dict_to_file(self, *, records: dict, save_path: Path) -> None:
         """Save the records dict to specifified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = Dataset.parse_bibtex_str(recs_dict_in=records)
+        bibtex_str = self.parse_bibtex_str(recs_dict_in=records)
 
         with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str)
@@ -816,7 +831,7 @@ class Dataset:
     def update_record_by_id(self, *, new_record: dict, delete: bool = False) -> None:
 
         new_record_dict = {new_record["ID"]: new_record}
-        replacement = Dataset.parse_bibtex_str(recs_dict_in=new_record_dict)
+        replacement = self.parse_bibtex_str(recs_dict_in=new_record_dict)
 
         current_id_str = "NA"
         with open(self.records_file, "r+b") as file:
@@ -858,7 +873,7 @@ class Dataset:
             return
 
         record_dict = {r["ID"]: r for r in record_list}
-        parsed = Dataset.parse_bibtex_str(recs_dict_in=record_dict)
+        parsed = self.parse_bibtex_str(recs_dict_in=record_dict)
 
         record_list = [
             {

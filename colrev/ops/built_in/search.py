@@ -127,7 +127,7 @@ class CrossrefSearchEndpoint:
                     available_ids.append(record_dict["doi"])
                     records[record_dict["ID"]] = record_dict
                     max_id += 1
-        except requests.exceptions.JSONDecodeError as exc:
+        except (requests.exceptions.JSONDecodeError, KeyError) as exc:
             if "504 Gateway Time-out" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "Crossref (check https://status.crossref.org/)"
@@ -135,7 +135,6 @@ class CrossrefSearchEndpoint:
             raise colrev_exceptions.ServiceNotAvailableException(
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
-
         search_operation.save_feed_file(records=records, feed_file=feed_file)
 
     def validate_params(self, query: str) -> None:

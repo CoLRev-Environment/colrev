@@ -120,6 +120,68 @@ class Sync:
         if record["ID"] not in [r["ID"] for r in self.records_to_import]:
             self.records_to_import.append(record)
 
+    def save_to_bib(self, *, records: dict, save_path: Path) -> None:
+
+        # pylint: disable=duplicate-code
+
+        def parse_bibtex_str(*, recs_dict_in: dict) -> str:
+            def format_field(field, value) -> str:
+                padd = " " * max(0, 28 - len(field))
+                return f",\n   {field} {padd} = {{{value}}}"
+
+            bibtex_str = ""
+
+            first = True
+            for record_id, record_dict in recs_dict_in.items():
+                if not first:
+                    bibtex_str += "\n"
+                first = False
+
+                bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
+
+                field_order = [
+                    "doi",
+                    "dblp_key",
+                    "sem_scholar_id",
+                    "wos_accession_number",
+                    "author",
+                    "booktitle",
+                    "journal",
+                    "title",
+                    "year",
+                    "volume",
+                    "number",
+                    "pages",
+                    "editor",
+                ]
+
+                for ordered_field in field_order:
+                    if ordered_field in record_dict:
+                        if "" == record_dict[ordered_field]:
+                            continue
+                        if isinstance(record_dict[ordered_field], (list, dict)):
+                            continue
+                        bibtex_str += format_field(
+                            ordered_field, record_dict[ordered_field]
+                        )
+
+                for key, value in record_dict.items():
+                    if key in field_order + ["ID", "ENTRYTYPE"]:
+                        continue
+                    if isinstance(key, (list, dict)):
+                        continue
+
+                    bibtex_str += format_field(key, value)
+
+                bibtex_str += ",\n}\n"
+
+            return bibtex_str
+
+        bibtex_str = parse_bibtex_str(recs_dict_in=records)
+
+        with open(save_path, "w", encoding="utf-8") as out:
+            out.write(bibtex_str)
+
     def add_to_bib(self) -> None:
 
         pybtex.errors.set_strict_mode(False)
@@ -178,9 +240,9 @@ class Sync:
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        colrev.dataset.Dataset.save_records_dict_to_file(
-            records=records_dict, save_path=references_file
-        )
+        self.save_to_bib(records=records_dict, save_path=references_file)
+
+        # TODO : sync creates a settings.json in the directory. This should be prevented.
 
 
 if __name__ == "__main__":

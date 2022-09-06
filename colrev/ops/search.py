@@ -5,7 +5,6 @@ import re
 import typing
 from pathlib import Path
 
-import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search as built_in_search
 import colrev.process
@@ -70,7 +69,7 @@ class Search(colrev.process.Process):
             }
             for r in records.values()
         }
-        colrev.dataset.Dataset.save_records_dict_to_file(
+        self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=feed_file
         )
 

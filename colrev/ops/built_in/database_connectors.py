@@ -488,6 +488,9 @@ class CrossrefConnector:
 
         if "language" in item:
             record_dict["language"] = item["language"]
+            # convert to ISO 639-3
+            # TODO : other languages/more systematically
+            record_dict["language"] = record_dict["language"].replace("en", "eng")
 
         if (
             "published-print" not in item
