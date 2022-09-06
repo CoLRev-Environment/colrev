@@ -74,6 +74,13 @@ class TEIParser:
         options = {}
         options["consolidateHeader"] = "0"
         options["consolidateCitations"] = "0"
+
+        # Note: Grobid offers direct export of Bibtex:
+        # r = requests.post(
+        #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
+        #     headers={"Accept": "application/x-bibtex"},
+        # But parsing the metadata from the tei gives us more control of the details
+
         try:
             # pylint: disable=consider-using-with
             ret = requests.post(

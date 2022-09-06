@@ -48,7 +48,7 @@ class Advisor:
         share_stat_req = self.review_manager.settings.project.share_stat_req
         found_a_conflict = False
 
-        git_repo = git.Repo(str(self.review_manager.path))
+        git_repo = self.review_manager.dataset.get_repo()
         unmerged_blobs = git_repo.index.unmerged_blobs()
         for _, list_of_blobs in unmerged_blobs.items():
             for (stage, _) in list_of_blobs:
@@ -379,6 +379,7 @@ class Advisor:
         instruction = {}
 
         try:
+            # Note : registered_path are other repositories (don't load from dataset.get_repo())
             git_repo = git.Repo(registered_path)
 
             # https://github.com/gitpython-developers/GitPython/issues/652#issuecomment-610511311

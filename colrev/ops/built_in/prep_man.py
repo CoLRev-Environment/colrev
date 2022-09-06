@@ -68,12 +68,6 @@ class CoLRevCLIManPrep:
         return records
 
 
-@dataclass
-class ExportManPrepSettings:
-    name: str
-    pdf_handling_mode: str
-
-
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class ExportManPrep:
     def __init__(
@@ -88,7 +82,12 @@ class ExportManPrep:
 
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
-        self.settings = from_dict(data_class=ExportManPrepSettings, data=settings)
+        self.settings = from_dict(data_class=self.ExportManPrepSettings, data=settings)
+
+    @dataclass
+    class ExportManPrepSettings:
+        name: str
+        pdf_handling_mode: str
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict

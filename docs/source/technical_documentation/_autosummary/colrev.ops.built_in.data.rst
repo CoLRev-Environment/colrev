@@ -21,14 +21,11 @@ colrev.ops.built\_in.data
       :nosignatures:
 
       EndnoteEndpoint
-      GHPagesSettings
       GithubPagesEndpoint
       ManuscriptEndpoint
-      ManuscriptEndpointSettings
       PRISMAEndpoint
       StructuredDataEndpoint
       ZettlrEndpoint
-      ZettlrSettings
 
 
 

@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import git
 import pandas as pd
 import requests
 import zope.interface
@@ -30,13 +29,7 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.ops.data
 
-
-@dataclass
-class ManuscriptEndpointSettings:
-    name: str
-    version: str
-    word_template: str
-    csl_style: str
+# pylint: disable=too-many-lines
 
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
@@ -69,9 +62,18 @@ class ManuscriptEndpoint:
         if "csl_style" not in settings:
             settings["csl_style"] = (self.retrieve_default_csl(),)
 
-        self.settings = from_dict(data_class=ManuscriptEndpointSettings, data=settings)
+        self.settings = from_dict(
+            data_class=self.ManuscriptEndpointSettings, data=settings
+        )
         self.paper = data_operation.review_manager.path / self.PAPER_RELATIVE
         self.data_operation = data_operation
+
+    @dataclass
+    class ManuscriptEndpointSettings:
+        name: str
+        version: str
+        word_template: str
+        csl_style: str
 
     def get_default_setup(self) -> dict:
 
@@ -263,15 +265,15 @@ class ManuscriptEndpoint:
                     template_file=paper_resource_path, target=self.paper
                 )
 
-            review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=self.paper,
                 old_string="{{review_type}}",
                 new_string=str(review_type),
             )
-            review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=self.paper, old_string="{{project_title}}", new_string=title
             )
-            review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=self.paper, old_string="{{author}}", new_string=author
             )
             review_manager.logger.info(
@@ -865,13 +867,6 @@ class PRISMAEndpoint:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
 
-@dataclass
-class ZettlrSettings:
-    name: str
-    zettlr_endpoint_version: str
-    config: dict
-
-
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class ZettlrEndpoint:
 
@@ -883,7 +878,13 @@ class ZettlrEndpoint:
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=ZettlrSettings, data=settings)
+        self.settings = from_dict(data_class=self.ZettlrSettings, data=settings)
+
+    @dataclass
+    class ZettlrSettings:
+        name: str
+        zettlr_endpoint_version: str
+        config: dict
 
     def get_default_setup(self) -> dict:
         zettlr_endpoint_details = {
@@ -901,7 +902,6 @@ class ZettlrEndpoint:
     ) -> None:
 
         data_operation.review_manager.logger.info("Export to zettlr endpoint")
-
         endpoint_path = data_operation.review_manager.path / Path("data/zettlr")
 
         # TODO : check if a main-zettlr file exists.
@@ -1008,7 +1008,6 @@ class ZettlrEndpoint:
             zettlr_path = endpoint_path / Path(zettlr_config.get("general", "main"))
 
         else:
-
             unique_timestamp = current_dt + datetime.timedelta(seconds=3)
             zettlr_resource_path = Path("template/zettlr/") / Path("zettlr.md")
             fname = Path(unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md")
@@ -1025,7 +1024,6 @@ class ZettlrEndpoint:
                 template_file=zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
-
             if data_operation.review_manager.readme.is_file():
                 with open(
                     data_operation.review_manager.readme, encoding="utf-8"
@@ -1033,7 +1031,7 @@ class ZettlrEndpoint:
                     title = file.readline()
                     title = title.replace("# ", "").replace("\n", "")
 
-            data_operation.review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=zettlr_path, old_string="{{project_title}}", new_string=title
             )
             # author = authorship_heuristic(review_manager)
@@ -1042,9 +1040,7 @@ class ZettlrEndpoint:
             )
 
         records_dict = data_operation.review_manager.dataset.load_records_dict()
-
         included = data_operation.get_record_ids_for_synthesis(records_dict)
-
         missing_records = get_zettlr_missing(
             endpoint_path=endpoint_path, included=included
         )
@@ -1073,7 +1069,6 @@ class ZettlrEndpoint:
             data_operation.review_manager.dataset.add_changes(path=zettlr_path)
 
             zettlr_resource_path = Path("template/zettlr/") / Path("zettlr_bib_item.md")
-
             for missing_record_field in missing_record_fields:
                 paper_id, record_field = missing_record_field
                 print(paper_id + record_field)
@@ -1082,7 +1077,7 @@ class ZettlrEndpoint:
                 colrev.env.utils.retrieve_package_file(
                     template_file=zettlr_resource_path, target=zettlr_path
                 )
-                data_operation.review_manager.dataset.inplace_change(
+                colrev.env.utils.inplace_change(
                     filename=zettlr_path,
                     old_string="{{project_name}}",
                     new_string=record_field,
@@ -1112,13 +1107,6 @@ class ZettlrEndpoint:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
 
-@dataclass
-class GHPagesSettings:
-    name: str
-    version: str
-    auto_push: bool
-
-
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class GithubPagesEndpoint:
     def __init__(
@@ -1133,7 +1121,13 @@ class GithubPagesEndpoint:
         if "auto_push" not in settings:
             settings["auto_push"] = True
 
-        self.settings = from_dict(data_class=GHPagesSettings, data=settings)
+        self.settings = from_dict(data_class=self.GHPagesSettings, data=settings)
+
+    @dataclass
+    class GHPagesSettings:
+        name: str
+        version: str
+        auto_push: bool
 
     def get_default_setup(self) -> dict:
         github_pages_endpoint_details = {
@@ -1159,7 +1153,7 @@ class GithubPagesEndpoint:
 
         records = data_operation.review_manager.dataset.load_records_dict()
 
-        git_repo = git.Repo()
+        git_repo = data_operation.review_manager.dataset.get_repo()
         repo_heads_names = [h.name for h in git_repo.heads]
 
         active_branch = git_repo.active_branch
@@ -1196,7 +1190,7 @@ class GithubPagesEndpoint:
                 template_file=Path("template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
             )
-            data_operation.review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=Path("_config.yml"),
                 old_string="{{project_title}}",
                 new_string=title,

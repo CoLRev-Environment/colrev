@@ -21,19 +21,6 @@ if typing.TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@dataclass
-class ScopePrescreenEndpointSettings:
-    # pylint: disable=C0103
-    name: str
-    TimeScopeFrom: typing.Optional[int]
-    TimeScopeTo: typing.Optional[int]
-    LanguageScope: typing.Optional[list]
-    ExcludeComplementaryMaterials: typing.Optional[bool]
-    OutletInclusionScope: typing.Optional[dict]
-    OutletExclusionScope: typing.Optional[dict]
-    ENTRYTYPEScope: typing.Optional[list]
-
-
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ScopePrescreenEndpoint:
 
@@ -71,8 +58,20 @@ class ScopePrescreenEndpoint:
         # TODO : validate values (assert, e.g., LanguageScope)
 
         self.settings = from_dict(
-            data_class=ScopePrescreenEndpointSettings, data=settings
+            data_class=self.ScopePrescreenEndpointSettings, data=settings
         )
+
+    @dataclass
+    class ScopePrescreenEndpointSettings:
+        # pylint: disable=C0103
+        name: str
+        TimeScopeFrom: typing.Optional[int]
+        TimeScopeTo: typing.Optional[int]
+        LanguageScope: typing.Optional[list]
+        ExcludeComplementaryMaterials: typing.Optional[bool]
+        OutletInclusionScope: typing.Optional[dict]
+        OutletExclusionScope: typing.Optional[dict]
+        ENTRYTYPEScope: typing.Optional[list]
 
     def run_prescreen(
         self,

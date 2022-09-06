@@ -265,7 +265,7 @@ class ReviewManager:
     def check_repository_setup(self) -> None:
 
         # 1. git repository?
-        if not self.__is_git_repo(path=self.path):
+        if not self.__is_git_repo():
             raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
 
         # 2. colrev project?
@@ -308,7 +308,7 @@ class ReviewManager:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
-        git_repo = git.Repo(str(self.path))
+        git_repo = self.dataset.get_repo()
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
@@ -316,9 +316,9 @@ class ReviewManager:
                 if stage != 0:
                     raise colrev_exceptions.GitConflictError(path)
 
-    def __is_git_repo(self, *, path: Path) -> bool:
+    def __is_git_repo(self) -> bool:
         try:
-            _ = git.Repo(str(path)).git_dir
+            _ = self.dataset.get_repo().git_dir
             return True
         except InvalidGitRepositoryError:
             return False

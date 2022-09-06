@@ -8,7 +8,6 @@ import typing
 from copy import deepcopy
 from pathlib import Path
 
-import git
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
@@ -336,7 +335,7 @@ class Prep(colrev.process.Process):
 
         record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
-        git_repo = git.Repo(str(self.review_manager.path))
+        git_repo = self.review_manager.dataset.get_repo()
         revlist = (
             (
                 commit.hexsha,

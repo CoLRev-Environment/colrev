@@ -53,7 +53,6 @@ colrev.dataset.Dataset
       ~Dataset.has_changes
       ~Dataset.has_untracked_search_records
       ~Dataset.import_file
-      ~Dataset.inplace_change
       ~Dataset.load_field_dict
       ~Dataset.load_from_git_history
       ~Dataset.load_origin_records

@@ -7,7 +7,6 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import git
 import pandas as pd
 
 import colrev.env.cli_colors as colors
@@ -566,7 +565,7 @@ class Dedupe(colrev.process.Process):
         self.review_manager.logger.info("Dedupe: fix errors")
         saved_args = locals()
 
-        git_repo = git.Repo(str(self.review_manager.path))
+        git_repo = self.review_manager.dataset.get_repo()
         if self.dupe_file.is_file():
             dupes = pd.read_excel(self.dupe_file)
             dupes.fillna("", inplace=True)

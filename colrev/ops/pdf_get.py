@@ -314,20 +314,20 @@ class PDFGet(colrev.process.Process):
                 continue
 
             # This should replace the file fields
-            self.review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
                 old_string="{" + str(file) + "}",
                 new_string="{" + str(new_filename) + "}",
             )
             # This should replace the provenance dict fields
-            self.review_manager.dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
                 old_string=":" + str(file) + ";",
                 new_string=":" + str(new_filename) + ";",
             )
 
             if pdfs_search_file.is_file():
-                self.review_manager.dataset.inplace_change(
+                colrev.env.utils.inplace_change(
                     filename=pdfs_search_file,
                     old_string=str(file),
                     new_string=str(new_filename),

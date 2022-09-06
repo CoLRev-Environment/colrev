@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-import logging
 import os
 import time
 import typing
@@ -28,6 +27,7 @@ if TYPE_CHECKING:
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-lines
 
 
 def console_duplicate_instance_label(
@@ -91,13 +91,6 @@ def console_duplicate_instance_label(
     return user_input
 
 
-@dataclass
-class SimpleDedupeSettings:
-    name: str
-    merging_non_dup_threshold: float
-    merging_dup_threshold: float
-
-
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
@@ -115,12 +108,18 @@ class SimpleDedupeEndpoint:
         if "merging_dup_threshold" not in settings:
             settings["merging_dup_threshold"] = 0.95
 
-        self.settings = from_dict(data_class=SimpleDedupeSettings, data=settings)
+        self.settings = from_dict(data_class=self.SimpleDedupeSettings, data=settings)
 
         assert self.settings.merging_non_dup_threshold >= 0.0
         assert self.settings.merging_non_dup_threshold <= 1.0
         assert self.settings.merging_dup_threshold >= 0.0
         assert self.settings.merging_dup_threshold <= 1.0
+
+    @dataclass
+    class SimpleDedupeSettings:
+        name: str
+        merging_non_dup_threshold: float
+        merging_dup_threshold: float
 
     def __calculate_similarities_record(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records_df: pd.DataFrame
@@ -144,10 +143,10 @@ class SimpleDedupeEndpoint:
             records_df.iloc[base_record_i, details_col] = sim_details["details"]
         # Note: return all other records (not the comparison record/first row)
         # and restrict it to the ID, similarity and details
-        ck_col = records_df.columns.get_loc("ID")
+        id_col = records_df.columns.get_loc("ID")
         sim_col = records_df.columns.get_loc("similarity")
         details_col = records_df.columns.get_loc("details")
-        return records_df.iloc[:, [ck_col, sim_col, details_col]]
+        return records_df.iloc[:, [id_col, sim_col, details_col]]
 
     def append_merges(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
@@ -261,7 +260,6 @@ class SimpleDedupeEndpoint:
         saved_args = locals()
 
         dedupe_operation.review_manager.logger.info("Simple duplicate identification")
-
         dedupe_operation.review_manager.logger.info(
             "Pairwise identification of duplicates based on static similarity measure"
         )
@@ -414,16 +412,13 @@ class SimpleDedupeEndpoint:
         )
 
 
-# # Active-learning deduplication
-
-# # Note: code based on
-# # https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
-
-
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
 
     deduper: dedupe_io.Deduper
+
+    # Code based on
+    # https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
 
     def __init__(
         self,
@@ -446,11 +441,11 @@ class ActiveLearningDedupeTrainingEndpoint:
         # pylint: disable=import-outside-toplevel
         import dedupe as dedupe_io
         import random
+        import logging
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)
         logging.getLogger("dedupe.api").setLevel(logging.WARNING)
-        # logging.getLogger("rlr.crossvalidation:optimum").setLevel(logging.WARNING)
 
         if retrain:
             # Note : removing the training_file would be to start from scratch...
@@ -647,8 +642,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         # pylint: disable=import-outside-toplevel
         from dedupe._typing import TrainingData
         from dedupe._typing import RecordDictPair as TrainingExample
-
-        # from dedupe._typing import TrainingExample
         from dedupe.core import unique
 
         dedupe_operation.review_manager.logger.info(
@@ -799,13 +792,6 @@ class ActiveLearningDedupeTrainingEndpoint:
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
-        # def run_active_learning_dedupe(
-        #     *,
-        #     dedupe,
-        #     saved_args,
-        #     in_memory: bool = True,
-        # ) -> None:
-
         # pylint: disable=import-outside-toplevel
         import dedupe as dedupe_io
 
@@ -837,13 +823,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         # )
 
 
-@dataclass
-class ActiveLearningSettings:
-    name: str
-    merge_threshold: float
-    partition_threshold: float
-
-
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
     def __init__(
@@ -859,12 +838,18 @@ class ActiveLearningDedupeAutomatedEndpoint:
         if "partition_threshold" not in settings:
             settings["partition_threshold"] = 0.5
 
-        self.settings = from_dict(data_class=ActiveLearningSettings, data=settings)
+        self.settings = from_dict(data_class=self.ActiveLearningSettings, data=settings)
 
         assert self.settings.merge_threshold >= 0.0
         assert self.settings.merge_threshold <= 1.0
         assert self.settings.partition_threshold >= 0.0
         assert self.settings.partition_threshold <= 1.0
+
+    @dataclass
+    class ActiveLearningSettings:
+        name: str
+        merge_threshold: float
+        partition_threshold: float
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
@@ -872,7 +857,6 @@ class ActiveLearningDedupeAutomatedEndpoint:
         # pylint: disable=import-outside-toplevel
         import statistics
 
-        # TODO : CHECK:
         import dedupe as dedupe_io
         import sqlite3
         import psutil
@@ -890,8 +874,6 @@ class ActiveLearningDedupeAutomatedEndpoint:
             # Sample size too large
             in_memory = False
 
-        saved_args: dict = {}
-
         with open(dedupe_operation.settings_file, "rb") as sett_file:
             deduper = dedupe_io.StaticDedupe(sett_file, num_cores=4)
 
@@ -905,6 +887,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
 
+        saved_args: dict = {}
         saved_args.update(merge_threshold=str(self.settings.merge_threshold))
         saved_args.update(partition_threshold=str(self.settings.partition_threshold))
 
@@ -1162,8 +1145,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
             return dataframe
 
-        collected_duplicates = []
-        collected_non_duplicates = []
+        collected_duplicates, collected_non_duplicates = [], []
         for cluster_id, vals in data_d.items():
             vals.update(error="")
             if cluster_id in cluster_membership:
@@ -1320,12 +1302,6 @@ class ActiveLearningDedupeAutomatedEndpoint:
             )
 
 
-@dataclass
-class CurationDedupeSettings:
-    name: str
-    selected_source: str
-
-
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class CurationDedupeEndpoint:
     """Deduplication endpoint for curations with full journals/proceedings
@@ -1342,7 +1318,12 @@ class CurationDedupeEndpoint:
         # to select the specific files/grouping properties?!
         # -> see selected_source.
         # TODO : validate whether selected_source is in SOURCES.filenames
-        self.settings = from_dict(data_class=CurationDedupeSettings, data=settings)
+        self.settings = from_dict(data_class=self.CurationDedupeSettings, data=settings)
+
+    @dataclass
+    class CurationDedupeSettings:
+        name: str
+        selected_source: str
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
@@ -1408,12 +1389,6 @@ class CurationDedupeEndpoint:
         def get_toc_items(*, records_list: list) -> list:
             toc_items = []
             for record in records_list:
-                # if record["colrev_status"] in [
-                #     RecordState.md_imported,
-                #     RecordState.md_needs_manual_preparation,
-                #     RecordState.md_prepared,
-                # ]:
-                #     continue
                 toc_item = {}
                 if "article" == record["ENTRYTYPE"]:
                     if "journal" in record:

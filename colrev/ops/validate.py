@@ -5,8 +5,6 @@ import itertools
 from itertools import chain
 from pathlib import Path
 
-import git
-
 import colrev.process
 import colrev.record
 
@@ -47,7 +45,7 @@ class Validate(colrev.process.Process):
 
     def __load_prior_records_dict(self, *, target_commit: str) -> dict:
 
-        repo = git.Repo()
+        git_repo = self.review_manager.dataset.get_repo()
 
         revlist = (
             (
@@ -56,7 +54,7 @@ class Validate(colrev.process.Process):
                     commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
                 ).data_stream.read(),
             )
-            for commit in repo.iter_commits(
+            for commit in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
             )
         )
@@ -166,7 +164,7 @@ class Validate(colrev.process.Process):
             return list(records.values())
 
         self.review_manager.logger.info("Loading data from history...")
-        git_repo = git.Repo()
+        git_repo = self.review_manager.dataset.get_repo()
 
         records_file_relative = self.review_manager.dataset.RECORDS_FILE_RELATIVE
 
@@ -259,14 +257,14 @@ class Validate(colrev.process.Process):
 
         target_commit = self.review_manager.dataset.get_last_commit_sha()
 
-        repo = git.Repo()
+        git_repo = self.review_manager.dataset.get_repo()
 
         revlist = list(
             (
                 commit.hexsha,
                 commit.message,
             )
-            for commit in repo.iter_commits(paths="status.yaml")
+            for commit in git_repo.iter_commits(paths="status.yaml")
         )
         for commit_id, msg in revlist:
             if commit_id == target_commit:
@@ -303,9 +301,9 @@ class Validate(colrev.process.Process):
             )
 
         # if 'unspecified' == scope:
-        #     repo = git.Repo()
-        #     t = repo.head.commit.tree
-        #     print(repo.git.diff('HEAD~1'))
+        #     git_repo = self.review_manager.dataset.get_repo()
+        #     t = git_repo.head.commit.tree
+        #     print(git_repo.git.diff('HEAD~1'))
         #     validation_details = {}
         #     input('stop')
 

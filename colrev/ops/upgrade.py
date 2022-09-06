@@ -4,13 +4,17 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import git
 import pandas as pd
 import yaml
 
 import colrev.env.utils
 import colrev.process
+
+if TYPE_CHECKING:
+    import colrev.review_manager
+
 
 # pylint: disable=too-few-public-methods
 
@@ -172,8 +176,8 @@ class Upgrade(colrev.process.Process):
                         data_script["structured_data_endpoint_version"] = "0.1"
 
             if "curated_metadata" in str(self.review_manager.path):
-                repo = git.Repo(str(self.review_manager.path))
-                settings["project"]["curation_url"] = repo.remote().url.replace(
+                git_repo = self.review_manager.dataset.get_repo()
+                settings["project"]["curation_url"] = git_repo.remote().url.replace(
                     ".git", ""
                 )
 

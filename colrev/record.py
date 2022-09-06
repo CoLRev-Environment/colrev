@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import ansiwrap
 import dictdiffer
@@ -32,6 +33,9 @@ from thefuzz import fuzz
 import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Record:

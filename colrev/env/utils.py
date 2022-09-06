@@ -17,6 +17,16 @@ def get_package_file_content(*, file_path: Path):
     return pkgutil.get_data(__name__, str(file_path))
 
 
+def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
+    with open(filename, encoding="utf8") as file:
+        content = file.read()
+        if old_string not in content:
+            return
+    with open(filename, "w", encoding="utf8") as file:
+        content = content.replace(old_string, new_string)
+        file.write(content)
+
+
 def load_jinja_template(template_path) -> str:
     filedata_b = pkgutil.get_data(__name__, template_path)
     if filedata_b:

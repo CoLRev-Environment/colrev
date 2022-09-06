@@ -3,9 +3,13 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.process
 import colrev.settings
+
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Distribute(colrev.process.Process):

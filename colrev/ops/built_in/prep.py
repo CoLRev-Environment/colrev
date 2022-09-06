@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import git
 import pycountry
 import requests
 import timeout_decorator
@@ -31,6 +30,7 @@ if TYPE_CHECKING:
     import colrev.env.local_index
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-lines
 
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
@@ -202,7 +202,6 @@ class ExcludeLanguagesPrep:
                         f"[{','.join(self.languages_to_include)}]"
                     )
                 )
-
             return record
 
         # To avoid misclassifications for short titles
@@ -481,7 +480,6 @@ class CuratedPrep:
         if record.masterdata_is_curated():
             if colrev.record.RecordState.md_imported == record.data["colrev_status"]:
                 record.data["colrev_status"] = colrev.record.RecordState.md_prepared
-
         return record
 
 
@@ -810,13 +808,11 @@ class SemanticScholarPrep:
                     f"scholar similarity: {similarity} "
                     f"(<{prep_operation.retrieval_similarity})"
                 )
-        except KeyError:
-            pass
         except UnicodeEncodeError:
             prep_operation.review_manager.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, KeyError):
             pass
         return record
 
@@ -1287,7 +1283,6 @@ class CiteAsPrep:
                 same_record_type_required=same_record_type_required,
             )
             if similarity > prep_operation.retrieval_similarity:
-
                 record.merge(merging_record=retrieved_record, default_source=url)
 
         except requests.exceptions.RequestException:
@@ -1461,7 +1456,7 @@ class LocalIndexPrep:
                 default_source=default_source,
             )
 
-            git_repo = git.Repo(str(prep_operation.review_manager.path))
+            git_repo = prep_operation.review_manager.dataset.get_repo()
             cur_project_source_paths = [str(prep_operation.review_manager.path)]
             for remote in git_repo.remotes:
                 if remote.url:
@@ -1670,12 +1665,11 @@ class CorrectRecordTypePrep:
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
 
-        if record.has_inconsistent_fields() and not record.masterdata_is_curated():
-            pass
-        else:
-            return record
-
-        if prep_operation.retrieval_similarity > 0.9:
+        if (
+            not record.has_inconsistent_fields()
+            or record.masterdata_is_curated()
+            or prep_operation.retrieval_similarity > 0.9
+        ):
             return record
 
         if (

@@ -6,7 +6,6 @@ import io
 import typing
 from dataclasses import dataclass
 
-import git
 import yaml
 from jinja2 import Environment
 from jinja2 import FunctionLoader
@@ -27,7 +26,7 @@ class Status(colrev.process.Process):
     def get_analytics(self) -> dict:
 
         analytics_dict = {}
-        git_repo = git.Repo(str(self.review_manager.path))
+        git_repo = self.review_manager.dataset.get_repo()
 
         revlist = list(
             (

@@ -331,7 +331,7 @@ class Initializer:
                 target=Path("readme.md"),
             )
             if self.url:
-                colrev.dataset.Dataset.inplace_change(
+                colrev.env.utils.inplace_change(
                     filename=Path("readme.md"),
                     old_string="{{url}}",
                     new_string=self.url,
@@ -393,7 +393,7 @@ class Initializer:
             json.dump(settings, outfile, indent=4)
 
         if "review" in self.project_name.lower():
-            colrev.dataset.Dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" "),
@@ -402,7 +402,7 @@ class Initializer:
             r_type_suffix = self.review_type.replace("_", " ").replace(
                 "meta analysis", "meta-analysis"
             )
-            colrev.dataset.Dataset.inplace_change(
+            colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",

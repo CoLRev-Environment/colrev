@@ -16,6 +16,7 @@ colrev.env.utils
       :nosignatures:
 
       get_package_file_content
+      inplace_change
       load_jinja_template
       remove_accents
       retrieve_package_file

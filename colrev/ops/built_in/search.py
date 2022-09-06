@@ -24,6 +24,8 @@ import colrev.ops.built_in.database_connectors
 import colrev.process
 import colrev.record
 
+# pylint: disable=too-many-lines
+
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class CrossrefSearchEndpoint:
@@ -263,18 +265,6 @@ class DBLPSearchEndpoint:
 
                     if not retrieved:
                         break
-
-                    # Note : we may have to set temporary IDs to ensure the sort order
-                    # records = sorted(
-                    #     records,
-                    #     key=lambda e: (
-                    #         e.get("year", ""),
-                    #         e.get("volume", ""),
-                    #         e.get("number", ""),
-                    #         e.get("author", ""),
-                    #         e.get("title", ""),
-                    #     ),
-                    # )
 
                     if len(records) == 0:
                         continue
@@ -554,12 +544,10 @@ class IndexSearchEndpoint:
     ) -> None:
         assert "selection_clause" in params
 
-        if not feed_file.is_file():
-            records: list = []
-            imported_ids = []
-        else:
+        records: list = []
+        imported_ids = []
+        if feed_file.is_file():
             with open(feed_file, encoding="utf8") as bibtex_file:
-
                 feed_rd = search_operation.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
@@ -642,7 +630,6 @@ class IndexSearchEndpoint:
                 record = hit["_source"]
                 if "fulltext" in record:
                     del record["fulltext"]
-                # print(record)
 
                 # pylint: disable=possibly-unused-variable
                 rec_df = pd.DataFrame.from_records([record])
@@ -652,14 +639,7 @@ class IndexSearchEndpoint:
                 except PandaSQLException:
                     continue
                 if len(res) > 0:
-                    # if res...: append
                     records_to_import.append(record)
-                    # input('matched')
-
-                # else:
-                # input('not_matched')
-
-                # input(hit)
 
             # IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
 
@@ -769,14 +749,13 @@ class PDFSearchEndpoint:
                     )
                     pdf_path = pdf_fp.parents[0]
                     potential_pdfs = pdf_path.glob("*.pdf")
-                    # print(f'search cpid {cpid}')
+
                     for potential_pdf in potential_pdfs:
                         cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
                             review_manager=search_operation.review_manager,
                             pdf_path=potential_pdf,
                         )
 
-                        # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
                             record_dict["file"] = str(
                                 potential_pdf.relative_to(
@@ -903,7 +882,6 @@ class PDFSearchEndpoint:
         remove_records_if_pdf_no_longer_exists()
 
         indexed_pdf_paths = get_pdf_links(bib_file=feed_file)
-        #  + get_pdf_links(review_manager.dataset.records_file)
 
         indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
         search_operation.review_manager.logger.debug(
@@ -1033,35 +1011,6 @@ class PDFSearchEndpoint:
                 return record
 
             pdf_path = search_operation.review_manager.path / Path(record["file"])
-
-            # Note: activate the following when new grobid version is released (> 0.7)
-            # Note: we have more control and transparency over the consolidation
-            # if we do it in the colrev process
-            # header_data = {"consolidateHeader": "0"}
-
-            # # https://github.com/kermitt2/grobid/issues/837
-            # r = requests.post(
-            #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
-            #     headers={"Accept": "application/x-bibtex"},
-            #     params=header_data,
-            #     files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
-            # )
-
-            # if 200 == r.status_code:
-            #     rec_d = review_manager.dataset.
-            #               load_records_dict(load_str=r.text)
-            #     record = rec_d.values()[0]
-            #     return record
-            # if 500 == r.status_code:
-            #     review_manager.logger.error(f"Not a readable
-            #           pdf file: {pdf_path.name}")
-            #     print(f"Grobid: {r.text}")
-            #     return {}
-
-            # print(f"Status: {r.status_code}")
-            # print(f"Response: {r.text}")
-            # return {}
-
             tei = search_operation.review_manager.get_tei(
                 pdf_path=pdf_path,
             )
@@ -1221,6 +1170,9 @@ class PDFSearchEndpoint:
             print("No records found")
 
     def validate_params(self, query: str) -> None:
+
+        # Note: WITH .. is optional.
+
         if " SCOPE " not in query:
             raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a SCOPE section"
@@ -1231,8 +1183,6 @@ class PDFSearchEndpoint:
             raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a path field in the SCOPE section"
             )
-
-        # Note: WITH .. is optional.
 
 
 if __name__ == "__main__":
