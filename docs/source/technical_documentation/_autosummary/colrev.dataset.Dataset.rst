@@ -43,6 +43,8 @@ colrev.dataset.Dataset
       ~Dataset.get_origin_state_dict
       ~Dataset.get_record_header_list
       ~Dataset.get_record_state_list
+      ~Dataset.get_records_curated_currentl
+      ~Dataset.get_records_curated_prior_from_history
       ~Dataset.get_remote_commit_differences
       ~Dataset.get_repo
       ~Dataset.get_states_set

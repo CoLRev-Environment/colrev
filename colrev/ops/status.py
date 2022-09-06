@@ -11,10 +11,10 @@ import yaml
 from jinja2 import Environment
 from jinja2 import FunctionLoader
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
+import colrev.env.utils
 import colrev.process
 import colrev.record
-import colrev.utils
 
 
 class Status(colrev.process.Process):
@@ -75,7 +75,7 @@ class Status(colrev.process.Process):
         status_stats = self.review_manager.get_status_stats()
 
         environment = Environment(
-            loader=FunctionLoader(colrev.utils.load_jinja_template)
+            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
         )
         template = environment.get_template("template/status.txt")
         content = template.render(status_stats=status_stats, colors=colors)

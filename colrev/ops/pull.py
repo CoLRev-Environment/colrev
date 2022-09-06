@@ -7,7 +7,7 @@ from multiprocessing import Value
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record

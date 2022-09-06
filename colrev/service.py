@@ -12,7 +12,7 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.ops.status
 
 

@@ -13,10 +13,10 @@ from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from PyPDF2 import PdfFileReader
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-import colrev.utils
 
 
 if TYPE_CHECKING:
@@ -449,7 +449,7 @@ class PDFMetadataValidationEndpoint:
 
         text = record.data["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
-        text = colrev.utils.remove_accents(input_str=text)
+        text = colrev.env.utils.remove_accents(input_str=text)
         text = re.sub("[^a-zA-Z ]+", "", text)
 
         title_words = re.sub("[^a-zA-Z ]+", "", record.data["title"]).lower().split()
@@ -495,7 +495,7 @@ class PDFMetadataValidationEndpoint:
             match_count = 0
             for author_name in record.data.get("author", "").split(" and "):
                 author_name = author_name.split(",")[0].lower().replace(" ", "")
-                author_name = colrev.utils.remove_accents(input_str=author_name)
+                author_name = colrev.env.utils.remove_accents(input_str=author_name)
                 author_name = (
                     author_name.replace("ue", "u").replace("ae", "a").replace("oe", "o")
                 )

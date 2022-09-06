@@ -9,8 +9,8 @@ import git
 import pandas as pd
 import yaml
 
+import colrev.env.utils
 import colrev.process
-import colrev.utils
 
 
 class Upgrade(colrev.process.Process):
@@ -39,7 +39,7 @@ class Upgrade(colrev.process.Process):
 
         def print_release_notes(selected_version: str) -> None:
 
-            filedata = colrev.utils.get_package_file_content(
+            filedata = colrev.env.utils.get_package_file_content(
                 file_path=Path("../CHANGELOG.md")
             )
             active = False
@@ -57,7 +57,7 @@ class Upgrade(colrev.process.Process):
         def migrate_0_4_0(self) -> bool:
 
             if not Path("settings.json").is_file():
-                filedata = colrev.utils.get_package_file_content(
+                filedata = colrev.env.utils.get_package_file_content(
                     file_path=Path("template/settings.json")
                 )
 
@@ -261,7 +261,7 @@ class Upgrade(colrev.process.Process):
                 self.review_manager.dataset.save_records_dict(records=records)
                 self.review_manager.dataset.add_record_changes()
 
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/.pre-commit-config.yaml"),
                 target=Path(".pre-commit-config.yaml"),
             )
@@ -441,7 +441,7 @@ class Upgrade(colrev.process.Process):
                 self.review_manager.dataset.save_records_dict(records=records)
                 self.review_manager.dataset.add_record_changes()
 
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/.pre-commit-config.yaml"),
                 target=Path(".pre-commit-config.yaml"),
             )

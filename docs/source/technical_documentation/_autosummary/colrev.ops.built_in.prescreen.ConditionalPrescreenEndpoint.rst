@@ -1,0 +1,19 @@
+colrev.ops.built\_in.prescreen.ConditionalPrescreenEndpoint
+===========================================================
+
+.. currentmodule:: colrev.ops.built_in.prescreen
+
+.. autoclass:: ConditionalPrescreenEndpoint
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~ConditionalPrescreenEndpoint.run_prescreen

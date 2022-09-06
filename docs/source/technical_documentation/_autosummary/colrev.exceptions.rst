@@ -47,6 +47,7 @@ colrev.exceptions
       PropagatedIDChange
       RecordNotInIndexException
       RecordNotInRepoException
+      RecordNotIndexedException
       RepoSetupError
       ReviewManagerNotNofiedError
       SearchSettingsError

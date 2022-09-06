@@ -12,13 +12,13 @@ import git
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
+import colrev.env.utils
 import colrev.ops.built_in.database_connectors as db_connectors
 import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record
 import colrev.settings
-import colrev.utils
 
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -455,7 +455,7 @@ class Prep(colrev.process.Process):
 
     def setup_custom_script(self) -> None:
 
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_prep_script.py")
         )
         if filedata:

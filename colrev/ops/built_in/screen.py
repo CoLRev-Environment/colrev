@@ -9,7 +9,7 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.process
 import colrev.record
 import colrev.settings

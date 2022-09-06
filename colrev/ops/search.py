@@ -417,7 +417,7 @@ class Search(colrev.process.Process):
 
     def setup_custom_script(self) -> None:
 
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_search_script.py")
         )
 

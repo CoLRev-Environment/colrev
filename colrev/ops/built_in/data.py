@@ -21,10 +21,10 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-import colrev.utils
 
 
 if TYPE_CHECKING:
@@ -87,7 +87,7 @@ class ManuscriptEndpoint:
     def retrieve_default_word_template(self) -> str:
         template_name = "APA-7.docx"
 
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/APA-7.docx")
         )
 
@@ -254,12 +254,12 @@ class ManuscriptEndpoint:
                 Path(f"template/review_type/{r_type_path}/") / self.PAPER_RELATIVE
             )
             try:
-                colrev.utils.retrieve_package_file(
+                colrev.env.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
             except FileNotFoundError:
                 paper_resource_path = Path("template/") / self.PAPER_RELATIVE
-                colrev.utils.retrieve_package_file(
+                colrev.env.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
 
@@ -812,7 +812,7 @@ class PRISMAEndpoint:
 
         if prisma_path.is_file():
             os.remove(prisma_path)
-        colrev.utils.retrieve_package_file(
+        colrev.env.utils.retrieve_package_file(
             template_file=prisma_resource_path, target=prisma_path
         )
 
@@ -1021,7 +1021,7 @@ class ZettlrEndpoint:
                 zettlr_config.write(configfile)
             data_operation.review_manager.dataset.add_changes(path=zettlr_config_path)
 
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
@@ -1079,7 +1079,7 @@ class ZettlrEndpoint:
                 print(paper_id + record_field)
                 zettlr_path = endpoint_path / Path(paper_id)
 
-                colrev.utils.retrieve_package_file(
+                colrev.env.utils.retrieve_package_file(
                     template_file=zettlr_resource_path, target=zettlr_path
                 )
                 data_operation.review_manager.dataset.inplace_change(
@@ -1187,12 +1187,12 @@ class GithubPagesEndpoint:
                 file.write("status.yaml\n")
             data_operation.review_manager.dataset.add_changes(path=gitignore_file)
 
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/index.html"),
                 target=Path("index.html"),
             )
             data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/_config.yml"),
                 target=Path("_config.yml"),
             )
@@ -1202,7 +1202,7 @@ class GithubPagesEndpoint:
                 new_string=title,
             )
             data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/about.md"),
                 target=Path("about.md"),
             )

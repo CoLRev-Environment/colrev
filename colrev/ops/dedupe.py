@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import git
 import pandas as pd
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe_built_in as built_in_dedupe
 import colrev.process

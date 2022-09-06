@@ -10,7 +10,7 @@ from pathlib import Path
 import timeout_decorator
 from p_tqdm import p_map
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.ops.built_in.pdf_prep as built_in_pdf_prep
 import colrev.process
 import colrev.record
@@ -326,7 +326,7 @@ class PDFPrep(colrev.process.Process):
 
     def setup_custom_script(self) -> None:
 
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_pdf_prep_script.py")
         )
 

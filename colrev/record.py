@@ -29,9 +29,9 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.utils
 
 
 class Record:
@@ -1243,7 +1243,7 @@ class Record:
             to_append = to_append.replace("emph{", "")
             to_append = to_append.replace("&amp;", "and")
             to_append = to_append.replace(" & ", " and ")
-            to_append = colrev.utils.remove_accents(input_str=to_append)
+            to_append = colrev.env.utils.remove_accents(input_str=to_append)
             to_append = re.sub("[^0-9a-zA-Z -]+", "", to_append)
             to_append = re.sub(r"\s+", "-", to_append)
             to_append = re.sub(r"-+", "-", to_append)
@@ -1767,7 +1767,7 @@ class PrepRecord(Record):
             authors = rec_in.data["author"]
             authors = str(authors).lower()
             authors_string = ""
-            authors = colrev.utils.remove_accents(input_str=authors)
+            authors = colrev.env.utils.remove_accents(input_str=authors)
 
             # abbreviate first names
             # "Webster, Jane" -> "Webster, J"

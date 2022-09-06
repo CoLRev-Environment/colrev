@@ -7,12 +7,12 @@ import string
 import typing
 from pathlib import Path
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.load as built_in_load
+import colrev.ops.search_sources
 import colrev.process
 import colrev.record
-import colrev.search_sources
 import colrev.settings
 
 
@@ -107,7 +107,7 @@ class Load(colrev.process.Process):
         # pylint: disable=redefined-outer-name
 
         sources = self.review_manager.settings.sources
-        search_sources = colrev.search_sources.SearchSources(
+        search_sources = colrev.ops.search_sources.SearchSources(
             review_manager=self.review_manager
         )
 
@@ -628,7 +628,7 @@ class Load(colrev.process.Process):
         for (
             source_name,
             endpoint,
-        ) in colrev.search_sources.SearchSources.built_in_scripts.items():
+        ) in colrev.ops.search_sources.SearchSources.built_in_scripts.items():
             # pylint: disable=no-member
             has_heuristic = getattr(endpoint, "heuristic", None)
             if not has_heuristic:

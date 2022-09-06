@@ -27,40 +27,13 @@
    :recursive:
 
    colrev.advisor
-   colrev.built_in
    colrev.cli
-   colrev.cli_colors
-   colrev.clone
-   colrev.commit
-   colrev.corrections
-   colrev.data
    colrev.dataset
-   colrev.dedupe
-   colrev.distribute
+   colrev.env
    colrev.exceptions
-   colrev.init
-   colrev.load
-   colrev.paper
-   colrev.pdf_get
-   colrev.pdf_get_man
-   colrev.pdf_prep
-   colrev.pdf_prep_man
-   colrev.prep
-   colrev.prep_man
-   colrev.prescreen
+   colrev.ops
    colrev.process
-   colrev.pull
-   colrev.push
    colrev.record
    colrev.review_manager
-   colrev.screen
-   colrev.search
-   colrev.search_sources
    colrev.service
    colrev.settings
-   colrev.status
-   colrev.sync
-   colrev.trace
-   colrev.upgrade
-   colrev.utils
-   colrev.validate

@@ -227,7 +227,7 @@ class Data(colrev.process.Process):
 
     def setup_custom_script(self) -> None:
 
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_data_script.py")
         )
         if filedata:

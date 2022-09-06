@@ -10,9 +10,9 @@ from dacite import from_dict
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
+import colrev.env.utils
 import colrev.process
 import colrev.record
-import colrev.utils
 
 
 if TYPE_CHECKING:
@@ -208,7 +208,7 @@ class CurationJupyterNotebookManPrep:
                 f"Activated jupyter notebook to"
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/prep_man_curation.ipynb"),
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )

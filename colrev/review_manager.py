@@ -25,6 +25,7 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.dataset
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
@@ -140,7 +141,7 @@ class ReviewManager:
         # print(selective_merge(default_settings, project_settings))
 
         if not self.settings_path.is_file():
-            filedata = colrev.utils.get_package_file_content(
+            filedata = colrev.env.utils.get_package_file_content(
                 file_path=Path("template/settings.json")
             )
             if filedata:
@@ -543,7 +544,7 @@ class ReviewManager:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
-        import colrev.commit
+        import colrev.ops.commit
         import colrev.ops.correct
 
         with open(msg_file, encoding="utf8") as file:
@@ -558,7 +559,7 @@ class ReviewManager:
             if "Properties" in available_contents:
                 update = False
             if update:
-                commit = colrev.commit.Commit(
+                commit = colrev.ops.commit.Commit(
                     review_manager=self,
                     msg=available_contents,
                     manual_author=True,
@@ -630,9 +631,9 @@ class ReviewManager:
         realtime_override: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
-        import colrev.commit
+        import colrev.ops.commit
 
-        commit = colrev.commit.Commit(
+        commit = colrev.ops.commit.Commit(
             review_manager=self,
             msg=msg,
             manual_author=manual_author,

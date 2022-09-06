@@ -22,9 +22,9 @@ from thefuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.database_connectors
+import colrev.ops.search_sources
 import colrev.process
 import colrev.record
-import colrev.search_sources
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -53,7 +53,7 @@ class LoadFixesPrep:
     ) -> colrev.record.Record:
         # TODO : may need to rerun import_provenance
 
-        search_sources = colrev.search_sources.SearchSources(
+        search_sources = colrev.ops.search_sources.SearchSources(
             review_manager=prep_operation.review_manager
         )
 

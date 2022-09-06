@@ -10,7 +10,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-import colrev.cli_colors as colors
+import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager

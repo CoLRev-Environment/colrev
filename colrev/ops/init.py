@@ -12,13 +12,13 @@ from subprocess import STDOUT
 
 import git
 
-import colrev.cli_colors as colors
 import colrev.dataset
+import colrev.env.cli_colors as colors
 import colrev.env.environment_manager
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
-import colrev.utils
 
 
 class Initializer:
@@ -151,7 +151,7 @@ class Initializer:
     def __setup_files(self) -> None:
 
         # Note: parse instead of copy to avoid format changes
-        filedata = colrev.utils.get_package_file_content(
+        filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/settings.json")
         )
         if filedata:
@@ -180,7 +180,7 @@ class Initializer:
             ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
 
@@ -324,7 +324,7 @@ class Initializer:
 
         elif "curated_masterdata" == self.review_type:
             # replace readme
-            colrev.utils.retrieve_package_file(
+            colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
@@ -505,7 +505,7 @@ class Initializer:
         not cover advanced features or special cases."""
 
         self.logger.info("Include 30_example_records.bib")
-        colrev.utils.retrieve_package_file(
+        colrev.env.utils.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
             target=Path("search/30_example_records.bib"),
         )
