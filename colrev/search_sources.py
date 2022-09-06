@@ -40,7 +40,7 @@ class SearchSources:
         package_manager = review_manager.get_package_manager()
         self.search_source_scripts: dict[
             str, typing.Any
-        ] = package_manager.load_scripts(
+        ] = package_manager.load_packages(
             process=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 

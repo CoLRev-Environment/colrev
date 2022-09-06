@@ -679,8 +679,9 @@ class ReviewManager:
 
         return colrev.env.grobid_service.GrobidService(**kwargs)
 
-    @classmethod
-    def get_tei(cls, **kwargs) -> colrev.env.tei_parser.TEIParser:
+    def get_tei(self, **kwargs) -> colrev.env.tei_parser.TEIParser:
+        import colrev.env.tei_parser
+
         return colrev.env.tei_parser.TEIParser(**kwargs)
 
     @classmethod

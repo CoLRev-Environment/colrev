@@ -72,7 +72,7 @@ class PDFPrep(colrev.process.Process):
         self.cpus = 8
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_scripts: dict[str, typing.Any] = package_manager.load_scripts(
+        self.pdf_prep_scripts: dict[str, typing.Any] = package_manager.load_packages(
             process=self,
             scripts=review_manager.settings.pdf_prep.scripts,
         )

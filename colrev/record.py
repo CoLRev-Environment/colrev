@@ -2244,20 +2244,41 @@ class RecordState(Enum):
         return f"{self.name}"
 
     @classmethod
-    def get_post_md_processed_states(cls) -> list:
+    def get_non_processed_states(cls) -> list:
         return [
-            str(RecordState.md_processed),
-            str(RecordState.rev_prescreen_included),
-            str(RecordState.rev_prescreen_excluded),
-            str(RecordState.pdf_needs_manual_retrieval),
-            str(RecordState.pdf_imported),
-            str(RecordState.pdf_not_available),
-            str(RecordState.pdf_needs_manual_preparation),
-            str(RecordState.pdf_prepared),
-            str(RecordState.rev_excluded),
-            str(RecordState.rev_included),
-            str(RecordState.rev_synthesized),
+            colrev.record.RecordState.md_retrieved,
+            colrev.record.RecordState.md_imported,
+            colrev.record.RecordState.md_prepared,
+            colrev.record.RecordState.md_needs_manual_preparation,
         ]
+
+    @classmethod
+    def get_post_x_states(cls, *, state: RecordState) -> list:
+
+        if state == RecordState.pdf_prepared:
+            return [
+                colrev.record.RecordState.pdf_prepared,
+                colrev.record.RecordState.rev_excluded,
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]
+        if state == RecordState.md_processed:
+            return [
+                str(RecordState.md_processed),
+                str(RecordState.rev_prescreen_included),
+                str(RecordState.rev_prescreen_excluded),
+                str(RecordState.pdf_needs_manual_retrieval),
+                str(RecordState.pdf_imported),
+                str(RecordState.pdf_not_available),
+                str(RecordState.pdf_needs_manual_preparation),
+                str(RecordState.pdf_prepared),
+                str(RecordState.rev_excluded),
+                str(RecordState.rev_included),
+                str(RecordState.rev_synthesized),
+            ]
+        raise colrev_exceptions.ParameterError(
+            parameter="state", value="state", options="RecordStates"
+        )
 
 
 if __name__ == "__main__":

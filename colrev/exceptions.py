@@ -335,6 +335,17 @@ class RecordNotInIndexException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotIndexedException(CoLRevException):
+    """The requested record could not be added to the LocalIndex."""
+
+    def __init__(self, record_id: str = None):
+        if id is not None:
+            self.message = f"Record not indexed ({record_id})"
+        else:
+            self.message = "Record not indexed"
+        super().__init__(self.message)
+
+
 class CuratedOutletNotUnique(CoLRevException):
     """The outlets (journals or conferences) with curated metadata are not unique."""
 

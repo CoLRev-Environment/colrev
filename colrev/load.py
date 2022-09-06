@@ -58,7 +58,7 @@ class Loader(colrev.process.Process):
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.load_scripts: dict[str, typing.Any] = package_manager.load_scripts(
+        self.load_scripts: dict[str, typing.Any] = package_manager.load_packages(
             process=self,
             scripts=[
                 s.conversion_script
@@ -450,10 +450,11 @@ class Loader(colrev.process.Process):
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if (
-                str(record.get("colrev_status", ""))
-                in colrev.record.RecordState.get_post_md_processed_states()
-            ):
+            post_md_processed_states = colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_processed
+            )
+
+            if str(record.get("colrev_status", "")) in post_md_processed_states:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)

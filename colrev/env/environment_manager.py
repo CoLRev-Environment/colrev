@@ -18,7 +18,6 @@ from git.exc import NoSuchPathError
 from opensearchpy.exceptions import NotFoundError
 from yaml import safe_load
 
-import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
@@ -176,19 +175,9 @@ class EnvironmentManager:
                 print(exc)
         return status_dict
 
-    def get_environment_details(self) -> dict:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        # pylint: disable=cyclic-import
-        import colrev.review_manager
-
-        local_index = colrev.env.local_index.LocalIndex()
-
-        environment_details = {}
-        size = 0
-        last_modified = "NOT_INITIATED"
-        status = ""
-
+    def get_environment_details(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> dict:
         def get_last_modified() -> str:
 
             list_of_files = local_index.opensearch_index.glob(
@@ -197,6 +186,13 @@ class EnvironmentManager:
             latest_file = max(list_of_files, key=os.path.getmtime)
             last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
             return last_mod.strftime("%Y-%m-%d %H:%M")
+
+        local_index = review_manager.get_local_index()
+
+        environment_details = {}
+        size = 0
+        last_modified = "NOT_INITIATED"
+        status = ""
 
         try:
             size = local_index.open_search.cat.count(
@@ -210,12 +206,20 @@ class EnvironmentManager:
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
-            "path": str(colrev.env.local_index.LocalIndex.local_environment_path),
+            "path": str(local_index.local_environment_path),
             "status": status,
         }
 
-        local_repos = self.load_local_registry()
+        environment_stats = self.get_environment_stats()
 
+        environment_details["local_repos"] = {
+            "repos": environment_stats["repos"],
+            "broken_links": environment_stats["broken_links"],
+        }
+        return environment_details
+
+    def get_environment_stats(self) -> dict:
+        local_repos = self.load_local_registry()
         repos = []
         broken_links = []
         for repo in local_repos:
@@ -248,12 +252,7 @@ class EnvironmentManager:
                 repos.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):
                 broken_links.append(repo)
-
-        environment_details["local_repos"] = {
-            "repos": repos,
-            "broken_links": broken_links,
-        }
-        return environment_details
+        return {"repos": repos, "broken_links": broken_links}
 
     def get_curated_outlets(self) -> list:
         curated_outlets: typing.List[str] = []

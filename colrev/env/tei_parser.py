@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 from lxml import etree
@@ -12,9 +11,6 @@ import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class TEIParser:
@@ -58,57 +54,64 @@ class TEIParser:
                 load_from_tei = True
 
         if pdf_path is not None and not load_from_tei:
-            grobid_service = colrev.env.grobid_service.GrobidService()
-            grobid_service.start()
-            # Note: we have more control and transparency over the consolidation
-            # if we do it in the colrev process
-            options = {}
-            options["consolidateHeader"] = "0"
-            options["consolidateCitations"] = "0"
-            try:
-                ret = requests.post(
-                    colrev.env.grobid_service.GrobidService.GROBID_URL
-                    + "/api/processFulltextDocument",
-                    files={"input": open(str(pdf_path), "rb")},
-                    data=options,
-                )
+            self.create_tei()
 
-                # Possible extension: get header only (should be more efficient)
-                # r = requests.post(
-                #     GrobidService.GROBID_URL + "/api/processHeaderDocument",
-                #     files=dict(input=open(filepath, "rb")),
-                #     data=header_data,
-                # )
-
-                if ret.status_code != 200:
-                    raise colrev_exceptions.TEIException()
-
-                if b"[TIMEOUT]" in ret.content:
-                    raise colrev_exceptions.TEITimeoutException()
-
-                self.root = etree.fromstring(ret.content)
-
-                if tei_path is not None:
-                    tei_path.parent.mkdir(exist_ok=True, parents=True)
-                    with open(tei_path, "wb") as file:
-                        file.write(ret.content)
-
-                    # Note : reopen/write to prevent format changes in the enhancement
-                    with open(tei_path, "rb") as file:
-                        xml_fstring = file.read()
-                    self.root = etree.fromstring(xml_fstring)
-
-                    tree = etree.ElementTree(self.root)
-                    tree.write(str(tei_path), pretty_print=True, encoding="utf-8")
-            except requests.exceptions.ConnectionError as exc:
-                print(exc)
-                print(str(pdf_path))
         elif tei_path is not None:
-            with open(tei_path, encoding="utf-8") as file:
-                xml_string = file.read()
-            if "[BAD_INPUT_DATA]" in xml_string[:100]:
+            self.root = self.read_from_tei()
+
+    def read_from_tei(self):
+        with open(self.tei_path, encoding="utf-8") as file:
+            xml_string = file.read()
+        if "[BAD_INPUT_DATA]" in xml_string[:100]:
+            raise colrev_exceptions.TEIException()
+        return etree.fromstring(xml_string)
+
+    def create_tei(self) -> None:
+        grobid_service = colrev.env.grobid_service.GrobidService()
+        grobid_service.start()
+        # Note: we have more control and transparency over the consolidation
+        # if we do it in the colrev process
+        options = {}
+        options["consolidateHeader"] = "0"
+        options["consolidateCitations"] = "0"
+        try:
+            # pylint: disable=consider-using-with
+            ret = requests.post(
+                grobid_service.GROBID_URL + "/api/processFulltextDocument",
+                files={"input": open(str(self.pdf_path), "rb")},
+                data=options,
+            )
+
+            # Possible extension: get header only (should be more efficient)
+            # r = requests.post(
+            #     GrobidService.GROBID_URL + "/api/processHeaderDocument",
+            #     files=dict(input=open(filepath, "rb")),
+            #     data=header_data,
+            # )
+
+            if ret.status_code != 200:
                 raise colrev_exceptions.TEIException()
-            self.root = etree.fromstring(xml_string)
+
+            if b"[TIMEOUT]" in ret.content:
+                raise colrev_exceptions.TEITimeoutException()
+
+            self.root = etree.fromstring(ret.content)
+
+            if self.tei_path is not None:
+                self.tei_path.parent.mkdir(exist_ok=True, parents=True)
+                with open(self.tei_path, "wb") as file:
+                    file.write(ret.content)
+
+                # Note : reopen/write to prevent format changes in the enhancement
+                with open(self.tei_path, "rb") as file:
+                    xml_fstring = file.read()
+                self.root = etree.fromstring(xml_fstring)
+
+                tree = etree.ElementTree(self.root)
+                tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
+        except requests.exceptions.ConnectionError as exc:
+            print(exc)
+            print(str(self.pdf_path))
 
     def get_tei_str(self) -> str:
         return etree.tostring(self.root).decode("utf-8")
@@ -135,6 +138,7 @@ class TEIParser:
         return title_text
 
     def __get_paper_journal(self) -> str:
+        # pylint: disable=too-many-nested-blocks
         journal_name = "NA"
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:

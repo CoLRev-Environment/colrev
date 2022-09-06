@@ -59,7 +59,7 @@ class Data(colrev.process.Process):
         )
 
         package_manager = self.review_manager.get_package_manager()
-        self.data_scripts: dict[str, typing.Any] = package_manager.load_scripts(
+        self.data_scripts: dict[str, typing.Any] = package_manager.load_packages(
             process=self,
             scripts=review_manager.settings.data.scripts,
         )

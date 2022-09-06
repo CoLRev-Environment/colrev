@@ -72,6 +72,7 @@ class ManuscriptEndpoint:
 
         self.settings = from_dict(data_class=ManuscriptEndpointSettings, data=settings)
         self.paper = data_operation.review_manager.path / self.PAPER_RELATIVE
+        self.data_operation = data_operation
 
     def get_default_setup(self) -> dict:
 
@@ -91,7 +92,7 @@ class ManuscriptEndpoint:
         if filedata:
             with open(Path(template_name), "wb") as file:
                 file.write(filedata)
-
+        self.data_operation.review_manager.dataset.add_changes(path=Path(template_name))
         return template_name
 
     def retrieve_default_csl(self) -> str:
@@ -103,6 +104,10 @@ class ManuscriptEndpoint:
         with open(Path(csl_link).name, "wb") as file:
             file.write(ret.content)
         csl = Path(csl_link).name
+
+        self.data_operation.review_manager.dataset.add_changes(
+            path=Path(Path(csl_link).name)
+        )
         return csl
 
     def check_new_record_source_tag(

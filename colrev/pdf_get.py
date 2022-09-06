@@ -57,7 +57,7 @@ class PDFGet(colrev.process.Process):
         self.review_manager.pdf_directory.mkdir(exist_ok=True)
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_scripts(
+        self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_packages(
             process=self,
             scripts=review_manager.settings.pdf_get.scripts,
         )

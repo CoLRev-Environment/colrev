@@ -153,6 +153,50 @@ class Dataset:
 
         return prior_records
 
+    def get_records_curated_prior_from_history(
+        self,
+    ) -> list:
+
+        prior_curated_records = []
+        self.review_manager.logger.debug("Retrieve prior bib")
+        r_file = str(self.RECORDS_FILE_RELATIVE)
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / r_file).data_stream.read(),
+            )
+            for commit in self.__git_repo.iter_commits(paths=r_file)
+        )
+
+        try:
+            filecontents = list(revlist)[0][1]
+        except IndexError:
+            return []
+
+        prior_db_str = io.StringIO(filecontents.decode("utf-8"))
+        for record_string in self.__read_next_record_str(file_object=prior_db_str):
+            if "{CURATED:" in record_string:
+                records_dict = self.load_records_dict(load_str=record_string)
+                record_dict = list(records_dict.values())[0]
+                prior_curated_records.append(record_dict)
+
+        return prior_curated_records
+
+    def get_records_curated_currentl(
+        self,
+    ) -> list:
+
+        record_curated_current = []
+
+        with open(self.records_file, encoding="utf8") as file:
+            for record_string in self.__read_next_record_str(file_object=file):
+                if "{CURATED:" in record_string:
+                    records_dict = self.load_records_dict(load_str=record_string)
+                    record_dict = list(records_dict.values())[0]
+                    record_curated_current.append(record_dict)
+
+        return record_curated_current
+
     @classmethod
     def load_field_dict(cls, *, value: str, field: str) -> dict:
         # pylint: disable=too-many-branches
@@ -827,9 +871,8 @@ class Dataset:
             }
             for item in parsed.split("\n@")
         ]
-        # Correct the first and last items
+        # Correct the first item
         record_list[0]["record"] = "@" + record_list[0]["record"][2:]
-        record_list[-1]["record"] = record_list[-1]["record"][:-1]
 
         current_id_str = "NOTSET"
         if self.records_file.is_file():
@@ -956,10 +999,10 @@ class Dataset:
                 for org in origin.split(";"):
                     status_data["origin_list"].append([record_id, org])
 
-                if (
-                    str(status)
-                    in colrev.record.RecordState.get_post_md_processed_states()
-                ):
+                post_md_processed_states = colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.md_processed
+                )
+                if str(status) in post_md_processed_states:
                     for origin_part in origin.split(";"):
                         status_data["persisted_IDs"].append([origin_part, record_id])
 

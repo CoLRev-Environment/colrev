@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import git
 
 import colrev.env.environment_manager
-import colrev.env.tei_parser
 import colrev.process
 import colrev.record
 

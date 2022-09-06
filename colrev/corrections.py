@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import io
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -16,6 +15,36 @@ if TYPE_CHECKING:
 
 
 class Corrections:
+
+    # pylint: disable=duplicate-code
+    essential_md_keys = [
+        "title",
+        "author",
+        "journal",
+        "year",
+        "booktitle",
+        "number",
+        "volume",
+        "issue",
+        "author",
+        "doi",
+        "colrev_origin",  # Note : for merges
+    ]
+
+    keys_to_ignore = [
+        "screening_criteria",
+        "colrev_status",
+        "source_url",
+        "metadata_source_repository_paths",
+        "ID",
+        "grobid-version",
+        "colrev_pdf_id",
+        "file",
+        "colrev_origin",
+        "colrev_data_provenance",
+        "sem_scholar_id",
+    ]
+
     def __init__(
         self,
         *,
@@ -25,110 +54,42 @@ class Corrections:
         self.review_manager = review_manager
 
     def check_corrections_of_curated_records(self) -> None:
-        # pylint: disable=redefined-outer-name
 
-        if not self.review_manager.dataset.records_file.is_file():
+        dataset = self.review_manager.dataset
+
+        if not dataset.records_file.is_file():
             return
-
-        self.review_manager.logger.debug("Start corrections")
 
         local_index = self.review_manager.get_local_index()
 
-        # TODO : remove the following:
-        # from colrev.prep import Preparation
-        # self.PREPARATION = Preparation(
-        #     review_manager=self.review_manager, notify_state_transition_operation=False
-        # )
+        record_curated_current = dataset.get_records_curated_currentl()
+        record_curated_prior = dataset.get_records_curated_prior_from_history()
 
-        # pylint: disable=duplicate-code
-        essential_md_keys = [
-            "title",
-            "author",
-            "journal",
-            "year",
-            "booktitle",
-            "number",
-            "volume",
-            "issue",
-            "author",
-            "doi",
-            "colrev_origin",  # Note : for merges
-        ]
-
-        self.review_manager.logger.debug("Retrieve prior bib")
-        revlist = (
-            (
-                commit.hexsha,
-                (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read(),
-            )
-            for commit in self.review_manager.dataset.__git_repo.iter_commits(
-                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-            )
-        )
-        prior: dict = {"curated_records": []}
-
-        try:
-            filecontents = list(revlist)[0][1]
-        except IndexError:
-            return
-
-        self.review_manager.logger.debug("Load prior bib")
-        prior_db_str = io.StringIO(filecontents.decode("utf-8"))
-        for record_string in self.review_manager.dataset.__read_next_record_str(
-            file_object=prior_db_str
-        ):
-
-            # TBD: whether/how to detect dblp. Previously:
-            # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
-            if "{CURATED:" in record_string:
-                records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=record_string
-                )
-                record_dict = list(records_dict.values())[0]
-                prior["curated_records"].append(record_dict)
-
-        self.review_manager.logger.debug("Load current bib")
-        curated_records = []
-        with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
-            for record_string in self.review_manager.dataset.__read_next_record_str(
-                file_object=file
-            ):
-
-                # TBD: whether/how to detect dblp. Previously:
-                # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
-                if "{CURATED:" in record_string:
-                    records_dict = self.review_manager.dataset.load_records_dict(
-                        load_str=record_string
-                    )
-                    record_dict = list(records_dict.values())[0]
-                    curated_records.append(record_dict)
-
+        # TODO : The following code should be much simpler...
         resources = self.review_manager.get_resources()
-        for curated_record in curated_records:
+        for curated_record in record_curated_current:
 
             # TODO : use origin-indexed dict (discarding changes during merges)
 
             # identify curated records for which essential metadata is changed
-            prior_crl = [
+            record_curated_prior = [
                 x
-                for x in prior["curated_records"]
+                for x in record_curated_prior
                 if any(
                     y in curated_record["colrev_origin"].split(";")
                     for y in x["colrev_origin"].split(";")
                 )
             ]
 
-            if len(prior_crl) == 0:
+            if len(record_curated_prior) == 0:
                 self.review_manager.logger.debug("No prior records found")
                 continue
 
-            for prior_cr in prior_crl:
+            for prior_cr in record_curated_prior:
 
                 if not all(
                     prior_cr.get(k, "NA") == curated_record.get(k, "NA")
-                    for k in essential_md_keys
+                    for k in self.essential_md_keys
                 ):
                     # after the previous condition, we know that the curated record
                     # has been corrected
@@ -195,32 +156,18 @@ class Corrections:
                     changes = diff(original_curated_record, corrected_curated_record)
                     change_items = list(changes)
 
-                    keys_to_ignore = [
-                        "screening_criteria",
-                        "colrev_status",
-                        "source_url",
-                        "metadata_source_repository_paths",
-                        "ID",
-                        "grobid-version",
-                        "colrev_pdf_id",
-                        "file",
-                        "colrev_origin",
-                        "colrev_data_provenance",
-                        "sem_scholar_id",
-                    ]
-
                     selected_change_items = []
                     for change_item in change_items:
                         change_type, key, val = change_item
                         if "add" == change_type:
                             for add_item in val:
                                 add_item_key, add_item_val = add_item
-                                if add_item_key not in keys_to_ignore:
+                                if add_item_key not in self.keys_to_ignore:
                                     selected_change_items.append(
                                         ("add", "", [(add_item_key, add_item_val)])
                                     )
                         elif "change" == change_type:
-                            if key not in keys_to_ignore:
+                            if key not in self.keys_to_ignore:
                                 selected_change_items.append(change_item)
 
                     change_items = selected_change_items
@@ -276,9 +223,6 @@ class Corrections:
 
                     # TODO : combine merge-record corrections
 
-        # for testing:
-        # raise KeyError
-
     def apply_correction(self, *, source_url: str, change_list: list) -> None:
 
         # TBD: other modes of accepting changes?
@@ -290,6 +234,7 @@ class Corrections:
         git_repo = check_process.review_manager.dataset.get_repo()
 
         if git_repo.is_dirty():
+            # TODO : raise exception
             print(
                 f"Repo not clean ({source_url}): "
                 "commit or stash before updating records"
@@ -309,7 +254,7 @@ class Corrections:
                 return
 
         # pylint: disable=duplicate-code
-        essential_md_keys = [
+        self.essential_md_keys = [
             "title",
             "author",
             "journal",
@@ -382,20 +327,20 @@ class Corrections:
             rec_for_reset = record_dict.copy()
 
             for (edit_type, key, change) in list(change_item["changes"]):
-                # Note : by retricting changes to essential_md_keys,
+                # Note : by retricting changes to self.essential_md_keys,
                 # we also prevent changes in
                 # "colrev_status", "colrev_origin", "file"
 
                 # Note: the most important thing is to update the metadata.
 
                 if edit_type == "change":
-                    if key not in essential_md_keys:
+                    if key not in self.essential_md_keys:
                         continue
                     record_dict[key] = change[1]
                 if edit_type == "add":
                     key = change[0][0]
                     value = change[0][1]
-                    if key not in essential_md_keys:
+                    if key not in self.essential_md_keys:
                         continue
                     record_dict[key] = value
                 # TODO : deal with remove/merge

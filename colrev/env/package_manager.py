@@ -14,6 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
+
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
 
@@ -76,194 +77,122 @@ class PackageManager:
             ]["endpoint"]
             del scripts_dict[script_name]["settings"]["endpoint"]
 
-        if colrev.process.ProcessType.search == process.type:
-            from colrev.process import SearchEndpoint
+        endpoint_overview = [
+            {
+                "process_type": colrev.process.ProcessType.search,
+                "import_name": "SearchEndpoint",
+                "custom_class": "CustomSearch",
+                "operation_name": "search_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.load,
+                "import_name": "LoadEndpoint",
+                "custom_class": "CustomLoad",
+                "operation_name": "load_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.check,
+                "import_name": "SearchSourceEndpoint",
+                "custom_class": "CustomSearchSource",
+                "operation_name": "check_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.prep,
+                "import_name": "PrepEndpoint",
+                "custom_class": "CustomPrep",
+                "operation_name": "prep_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.prep_man,
+                "import_name": "PrepManEndpoint",
+                "custom_class": "CustomPrepMan",
+                "operation_name": "prep_man_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.dedupe,
+                "import_name": "DedupeEndpoint",
+                "custom_class": "CustomDedupe",
+                "operation_name": "dedupe_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.prescreen,
+                "import_name": "PrescreenEndpoint",
+                "custom_class": "CustomPrescreen",
+                "operation_name": "prescreen_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.pdf_get,
+                "import_name": "PDFGetEndpoint",
+                "custom_class": "CustomPDFGet",
+                "operation_name": "pdf_get_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.pdf_get_man,
+                "import_name": "PDFGetManEndpoint",
+                "custom_class": "CustomPDFGetMan",
+                "operation_name": "pdf_get_man_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.pdf_prep,
+                "import_name": "PDFPrepEndpoint",
+                "custom_class": "CustomPDFPrep",
+                "operation_name": "pdf_prep_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.pdf_prep_man,
+                "import_name": "PDFPrepManEndpoint",
+                "custom_class": "CustomPDFPrepMan",
+                "operation_name": "pdf_prep_man_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.screen,
+                "import_name": "ScreenEndpoint",
+                "custom_class": "CustomScreen",
+                "operation_name": "screen_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.data,
+                "import_name": "DataEndpoint",
+                "custom_class": "CustomData",
+                "operation_name": "data_operation",
+            },
+            {
+                "process_type": colrev.process.ProcessType.data,
+                "import_name": "DataEndpoint",
+                "custom_class": "CustomData",
+                "operation_name": "data_operation",
+            },
+        ]
 
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomSearch
-                    del scripts_dict[k]["custom_flag"]
+        endpoint_details = next(
+            item for item in endpoint_overview if item["process_type"] == process.type
+        )
 
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    search_operation=process, settings=script["settings"]
+        for k, val in scripts_dict.items():
+            if "custom_flag" in val:
+                # scripts_dict[k]["endpoint"] = val["endpoint"].CustomSearch
+                scripts_dict[k]["endpoint"] = getattr(  # type: ignore
+                    val["endpoint"], endpoint_details["custom_class"]
                 )
-                verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
+                del scripts_dict[k]["custom_flag"]
 
-        elif colrev.process.ProcessType.load == process.type:
-            from colrev.process import LoadEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomLoad
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    load_operation=process, settings=script["settings"]
-                )
-                verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.prep == process.type:
-            from colrev.process import PrepEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrep
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    prep_operation=process, settings=script["settings"]
-                )
-                verifyObject(PrepEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.prep_man == process.type:
-            from colrev.process import PrepManEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrepMan
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    prep_man_operation=process, settings=script["settings"]
-                )
-                verifyObject(PrepManEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.dedupe == process.type:
-            from colrev.process import DedupeEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomDedupe
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    dedupe_operation=process, settings=script["settings"]
-                )
-                verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.prescreen == process.type:
-            from colrev.process import PrescreenEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPrescreen
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    prescreen_operation=process, settings=script["settings"]
-                )
-                verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.pdf_get == process.type:
-            from colrev.process import PDFGetEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFGet
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_get_operation=process, settings=script["settings"]
-                )
-                verifyObject(PDFGetEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.pdf_get_man == process.type:
-            from colrev.process import PDFGetManEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFGetMan
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_get_man_operation=process, settings=script["settings"]
-                )
-                verifyObject(PDFGetManEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.pdf_prep == process.type:
-            from colrev.process import PDFPrepEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFPrep
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_prep_operation=process, settings=script["settings"]
-                )
-                verifyObject(PDFPrepEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.pdf_prep_man == process.type:
-            from colrev.process import PDFPrepManEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomPDFPrepMan
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    pdf_prep_man_operation=process, settings=script["settings"]
-                )
-                verifyObject(PDFPrepManEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.screen == process.type:
-            from colrev.process import ScreenEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomScreen
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    screen_operation=process, settings=script["settings"]
-                )
-                verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.data == process.type:
-            from colrev.process import DataEndpoint
-
-            for k, val in scripts_dict.items():
-                if "custom_flag" in val:
-                    scripts_dict[k]["endpoint"] = val["endpoint"].CustomData
-                    del scripts_dict[k]["custom_flag"]
-
-            for endpoint_name, script in scripts_dict.items():
-                scripts_dict[endpoint_name] = script["endpoint"](
-                    data_operation=process, settings=script["settings"]
-                )
-                verifyObject(DataEndpoint, scripts_dict[endpoint_name])
-
-        elif colrev.process.ProcessType.check == process.type:
+        endpoint_class = getattr(colrev.process, endpoint_details["import_name"])  # type: ignore
+        for endpoint_name, script in scripts_dict.items():
+            params = {
+                endpoint_details["operation_name"]: process,
+                "settings": script["settings"],
+            }
             if "SearchSource" == script_type:
-                from colrev.process import SearchSourceEndpoint
+                del params["check_operation"]
 
-                for k, val in scripts_dict.items():
-                    if "custom_flag" in val:
-                        scripts_dict[k]["endpoint"] = val["endpoint"].CustomSearchSource
-                        del scripts_dict[k]["custom_flag"]
-
-                for endpoint_name, script in scripts_dict.items():
-                    scripts_dict[endpoint_name] = script["endpoint"](
-                        settings=script["settings"]
-                    )
-                    verifyObject(SearchSourceEndpoint, scripts_dict[endpoint_name])
-            else:
-                print(
-                    f"ERROR: process type not implemented: {process.type}/{script_type}"
-                )
-
-        else:
-            print(f"ERROR: process type not implemented: {process.type}")
+            scripts_dict[endpoint_name] = script["endpoint"](**params)
+            # scripts_dict[endpoint_name] = script["endpoint"](
+            #     search_operation=process, settings=script["settings"]
+            # )
+            verifyObject(endpoint_class, scripts_dict[endpoint_name])
 
         return scripts_dict
+
+
+if __name__ == "__main__":
+    pass

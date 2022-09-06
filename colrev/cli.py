@@ -1424,7 +1424,9 @@ def distribute(ctx, path) -> None:
 def print_environment_status(review_manager) -> None:
 
     environment_manager = review_manager.get_environment_manager()
-    environment_details = environment_manager.get_environment_details()
+    environment_details = environment_manager.get_environment_details(
+        review_manager=review_manager
+    )
 
     print("\nCoLRev environment status\n")
     print("Index\n")
