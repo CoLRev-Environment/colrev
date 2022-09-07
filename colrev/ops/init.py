@@ -135,13 +135,6 @@ class Initializer:
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
-        self.review_manager.report_logger.info("Initialize review repository")
-        self.review_manager.report_logger.info(
-            "%s%s", "Set project title:".ljust(30, " "), self.project_name
-        )
-        self.review_manager.report_logger.info(
-            "%s%s", "Set share_stat_req:".ljust(30, " "), self.share_stat_req
-        )
         del saved_args["local_index_repo"]
         self.review_manager.create_commit(
             msg="Initial commit",

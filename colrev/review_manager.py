@@ -588,8 +588,7 @@ class ReviewManager:
                     manual_author=True,
                     script_name="MANUAL",
                 )
-                report = commit.get_commit_report()
-                file.write(report)
+                commit.update_report(msg_file=msg_file)
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
         corrections_operation = colrev.ops.correct.Corrections(review_manager=self)

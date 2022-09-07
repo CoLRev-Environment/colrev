@@ -1091,13 +1091,24 @@ def validate_commit(ctx, param, value):
     default=None,
     callback=validate_commit,
 )
+@click.option(
+    "-t",
+    "--tree_hash",
+    help="Git tree hash to validate.",
+    default=None,
+)
 @click.pass_context
-def validate(ctx, scope, properties, commit) -> None:
+def validate(ctx, scope, properties, commit, tree_hash) -> None:
     """Validate changes"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
         validate_operation = review_manager.get_validate_operation()
+
+        if tree_hash:
+            assert not commit
+            commit = validate_operation.get_commit_from_tree_hash(tree_hash=tree_hash)
+            input(commit)
 
         validation_details = validate_operation.main(
             scope=scope, properties=properties, target_commit=commit

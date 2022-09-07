@@ -624,7 +624,7 @@ class Dataset:
                 record_dict.update(ID=new_id)
                 records[new_id] = record_dict
                 del records[old_id]
-                self.review_manager.report_logger.info(f"set_ID({old_id}) to {new_id}")
+                self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
                 if old_id in id_list:
                     id_list.remove(old_id)
 
