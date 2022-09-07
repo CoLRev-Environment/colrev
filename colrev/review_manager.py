@@ -263,6 +263,13 @@ class ReviewManager:
         last_version, current_version = self.get_colrev_versions()
         if last_version != current_version:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
+        if not sys.version_info > (2, 7):
+            raise colrev_exceptions.CoLRevException("CoLRev does not support Python 2.")
+        if not sys.version_info < (3, 5):
+            self.logger.warn(
+                "CoLRev uses Python 3.8 features (currently, %s is installed). Please upgrade.",
+                sys.version_info,
+            )
 
     def __lsremote(self, *, url: str) -> dict:
         remote_refs = {}
