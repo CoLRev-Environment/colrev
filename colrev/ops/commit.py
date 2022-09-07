@@ -53,7 +53,6 @@ class Commit:
         self.tree_hash = review_manager.dataset.get_tree_hash()
         self.completeness_condition = review_manager.get_completeness_condition()
         self.colrev_version = f'version {version("colrev")}'
-        self.colrev_hooks_version = f'version {version("colrev_hooks")}'
         sys_v = sys.version
         self.python_version = f'version {sys_v[: sys_v.find(" ")]}'
         stream = os.popen("git --version")
@@ -62,9 +61,7 @@ class Commit:
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
 
         # TODO : the "dirty" mark is no longer included (poetry setup?)
-        self.non_reproducible = any(
-            "dirty" in x for x in [self.colrev_version, self.colrev_hooks_version]
-        )
+        self.non_reproducible = "dirty" in self.colrev_version
 
         self.ext_script_name = ""
         self.ext_script_version = ""

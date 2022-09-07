@@ -14,7 +14,6 @@ Properties for tree {{ commit_details.tree_hash }}<br>
 <br>
 Software<br>
    - colrev:                        {{ commit_details.colrev_version }}<br>
-   - colrev hooks:                  {{ commit_details.colrev_hooks_version }}<br>
    - Python:                        {{ commit_details.python_version }}<br>
    - Git:                           {{ commit_details.git_version }}<br>
    - Docker:                        {{ commit_details.docker_version }}<br>
