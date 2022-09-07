@@ -107,7 +107,7 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
-                print(exc)
+                self.logger.debug(exc)
             else:
                 raise exc
 
@@ -265,8 +265,8 @@ class ReviewManager:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
         if not sys.version_info > (2, 7):
             raise colrev_exceptions.CoLRevException("CoLRev does not support Python 2.")
-        if not sys.version_info < (3, 5):
-            self.logger.warn(
+        if sys.version_info < (3, 5):
+            self.logger.warning(
                 "CoLRev uses Python 3.8 features (currently, %s is installed). Please upgrade.",
                 sys.version_info,
             )
@@ -608,6 +608,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
+        self.notified_next_process = colrev.process.ProcessType.check
         advisor = self.get_advisor()
         sharing_advice = advisor.get_sharing_instructions()
         return sharing_advice
@@ -638,10 +639,16 @@ class ReviewManager:
     def notify(self, *, process: colrev.process.Process, state_transition=True) -> None:
         """Notify the review_manager about the next process"""
 
-        if state_transition:
-            process.check_precondition()
-        self.notified_next_process = process.type
-        self.dataset.reset_log_if_no_changes()
+        try:
+            if state_transition:
+                process.check_precondition()
+            self.notified_next_process = process.type
+            self.dataset.reset_log_if_no_changes()
+        except AttributeError as exc:
+            if self.force_mode:
+                pass
+            else:
+                raise exc
 
     def update_status_yaml(self) -> None:
         status_stats = self.get_status_stats()

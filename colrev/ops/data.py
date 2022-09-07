@@ -261,10 +261,9 @@ class Data(colrev.process.Process):
         self.__pad = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-        if 0 == len(included):
-            if self.verbose:
-                self.review_manager.report_logger.info("No records included yet")
-                self.review_manager.logger.info("No records included yet")
+        if 0 == len(included) and self.verbose:
+            self.review_manager.report_logger.info("No records included yet")
+            self.review_manager.logger.info("No records included yet")
 
         else:
             # TBD: do we assume that records are not changed by the processes?
