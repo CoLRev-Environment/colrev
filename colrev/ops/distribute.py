@@ -1,9 +1,14 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+import os
 import shutil
+import typing
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+import pandas as pd
+from yaml import safe_load
 
 import colrev.process
 import colrev.settings
@@ -16,9 +21,26 @@ class Distribute(colrev.process.Process):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.explore,
+            process_type=colrev.process.ProcessType.check,
             notify_state_transition_operation=False,
         )
+
+    def get_local_registry(self) -> list:
+        local_registry_path = Path.home().joinpath("colrev/registry.yaml")
+        local_registry: typing.List[str] = []
+        if not os.path.exists(local_registry_path):
+            print("no local repositories registered")
+            return local_registry
+
+        with open(local_registry_path, encoding="utf-8") as file:
+            local_registry_df = pd.json_normalize(safe_load(file))
+            local_registry_dict = local_registry_df.to_dict("records")
+            local_registry = [
+                x
+                for x in local_registry_dict
+                if "curated_metadata/" not in x["repo_source_path"]
+            ]
+        return local_registry
 
     def main(self, *, path_str: str, target: Path) -> None:
 
@@ -28,8 +50,16 @@ class Distribute(colrev.process.Process):
         # option: chdir (to target repo)?
         # file: copy or move?
 
+        os.chdir(target)
         path = Path.cwd() / Path(path_str)
+
         if path.is_file():
+
+            if path.suffix == ".bib":
+                # TODO : append if exists
+                path.rename(target / Path("search/local_import.bib"))
+                input(path)
+
             if path.suffix == ".pdf":
 
                 # Note : this is actually correct: camel case for classes...

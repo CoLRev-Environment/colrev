@@ -1203,6 +1203,19 @@ def paper(ctx) -> None:
         )
 
 
+def __select_target_repository(local_registry: list) -> Path:
+    while True:
+        for i, local_source in enumerate(local_registry):
+            print(
+                f"{i+1} - {local_source['repo_name']} ({local_source['repo_source_path']})"
+            )
+        sel_str = input("Select target repository: ")
+        sel = int(sel_str) - 1
+        if sel in range(0, len(local_registry)):
+            target = Path(local_registry[sel]["repo_source_path"])
+            return target
+
+
 @main.command(help_priority=19)
 @click.option(
     "-p",
@@ -1214,42 +1227,15 @@ def paper(ctx) -> None:
 def distribute(ctx, path) -> None:
     """Distribute records to other local CoLRev repositories"""
 
-    # pylint: disable=import-outside-toplevel
-    from yaml import safe_load
-
-    # Note : distribute is designed with the assumption that it is called from
-    # within a colrev project.
-    # In other cases, colrev.review_manager.ReviewManager() will fail.
-    # Other use cases may be related to sync/export (from LocalIndex)
-
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         distribute_operation = review_manager.get_distribute_operation()
+        local_registry = distribute_operation.get_local_registry()
 
-        local_registry_path = Path.home().joinpath(".colrev/registry.yaml")
-        if not os.path.exists(local_registry_path):
-            print("no local repositories registered")
-            return
+        target = __select_target_repository(local_registry=local_registry)
 
-        with open(local_registry_path, encoding="utf-8") as file:
-            local_registry_df = pd.json_normalize(safe_load(file))
-            local_registry = local_registry_df.to_dict("records")
-            local_registry = [
-                x for x in local_registry if "curated_metadata/" not in x["source_url"]
-            ]
-
-        valid_selection = False
-        while not valid_selection:
-            for i, local_source in enumerate(local_registry):
-                print(
-                    f"{i+1} - {local_source['source_name']} ({local_source['source_url']})"
-                )
-            sel_str = input("Select target repository: ")
-            sel = int(sel_str) - 1
-            if sel in range(0, len(local_registry)):
-                target = Path(local_registry[sel]["source_url"])
-                valid_selection = True
-
+        # Note : add a "distribution mode" option?
+        # (whole file -> add as source/load vs. records individually like a prescreen)
         distribute_operation.main(path_str=path, target=target)
 
     except colrev_exceptions.InvalidSettingsError as exc:
