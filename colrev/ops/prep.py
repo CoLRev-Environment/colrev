@@ -428,10 +428,11 @@ class Prep(colrev.process.Process):
                 ]
             )
 
-            if 0 == len(record_state_list):
-                pad = 35
-            else:
-                pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            pad = (
+                35
+                if (0 == len(record_state_list))
+                else min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            )
 
             r_states_to_prepare = [
                 colrev.record.RecordState.md_imported,
@@ -551,16 +552,11 @@ class Prep(colrev.process.Process):
 
         def setup_prep_round(*, i, prep_round) -> None:
 
-            if i == 0:
-                self.first_round = True
+            self.first_round = bool(i == 0)
 
-            else:
-                self.first_round = False
-
-            if i == len(self.review_manager.settings.prep.prep_rounds) - 1:
-                self.last_round = True
-            else:
-                self.last_round = False
+            self.last_round = bool(
+                i == len(self.review_manager.settings.prep.prep_rounds) - 1
+            )
 
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end

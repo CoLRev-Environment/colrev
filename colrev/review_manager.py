@@ -59,6 +59,9 @@ class ReviewManager:
     dataset: colrev.dataset.Dataset
     """The review dataset object"""
 
+    path: Path
+    """Path of the project repository"""
+
     def __init__(
         self,
         *,
@@ -70,11 +73,7 @@ class ReviewManager:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
 
-        if path_str is not None:
-            self.path = Path(path_str)
-            """Path of the project repository"""
-        else:
-            self.path = Path.cwd()
+        self.path = Path(path_str) if path_str is not None else Path.cwd()
 
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE
@@ -84,10 +83,7 @@ class ReviewManager:
         self.readme = self.path / self.README_RELATIVE
         self.status = self.path / self.STATUS_RELATIVE
 
-        if debug_mode:
-            self.debug_mode = True
-        else:
-            self.debug_mode = False
+        self.debug_mode = debug_mode
 
         try:
             if self.debug_mode:

@@ -67,10 +67,9 @@ class PDFCheckOCREndpoint:
         pdf_path = review_manager.path / Path(record_dict["file"])
         ocred_filename = Path(str(pdf_path).replace(".pdf", "_ocr.pdf"))
 
-        if pdf_path.is_file():
-            orig_path = pdf_path.parents[0]
-        else:
-            orig_path = review_manager.pdf_directory
+        orig_path = (
+            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_directory
+        )
 
         # TODO : use variable self.cpus
         options = f"--jobs {4}"

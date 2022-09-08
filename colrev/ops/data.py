@@ -221,11 +221,8 @@ class Data(colrev.process.Process):
 
     def main(self, *, pre_commit_hook=False) -> dict:
 
-        if pre_commit_hook:
-            self.verbose = False
-            # TODO : use self.verbose in the update scripts of data endpoints
-        else:
-            self.verbose = True
+        # TODO : use self.verbose in the update scripts of data endpoints
+        self.verbose = not pre_commit_hook
 
         no_endpoints_registered = 0 == len(self.review_manager.settings.data.scripts)
 

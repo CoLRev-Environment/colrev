@@ -68,10 +68,8 @@ class Process:
         else:
             self.review_manager.notify(process=self, state_transition=False)
 
-        if debug:
-            self.review_manager.debug_mode = True
-        else:
-            self.review_manager.debug_mode = False
+        self.review_manager.debug_mode = debug
+
         self.cpus = 4
 
         # Note: the following call seems to block the flow (if debug is enabled)

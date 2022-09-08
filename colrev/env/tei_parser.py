@@ -497,10 +497,9 @@ class TEIParser:
             title = reference.find(self.ns["tei"] + "monogr").find(
                 self.ns["tei"] + "title"
             )
-        if title is None:
-            title_string = "NA"
-        else:
-            title_string = title.text
+
+        title_string = title.text if (title is not None) else "NA"
+
         return title_string
 
     def __get_reference_year_string(self, *, reference) -> str:
@@ -520,10 +519,7 @@ class TEIParser:
 
         if year is not None:
             for name, value in sorted(year.items()):
-                if name == "when":
-                    year_string = value
-                else:
-                    year_string = "NA"
+                year_string = value if (name == "when") else "NA"
         else:
             year_string = "NA"
         return year_string
@@ -573,10 +569,7 @@ class TEIParser:
             )
 
         for number in number_list:
-            if number is not None:
-                number_string = number.text
-            else:
-                number_string = "NA"
+            number_string = number.text if (number is not None) else "NA"
 
         return number_string
 
@@ -597,10 +590,7 @@ class TEIParser:
             )
 
         for volume in volume_list:
-            if volume is not None:
-                volume_string = volume.text
-            else:
-                volume_string = "NA"
+            volume_string = volume.text if (volume is not None) else "NA"
 
         return volume_string
 

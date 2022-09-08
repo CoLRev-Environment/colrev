@@ -52,10 +52,10 @@ class Dataset:
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 
-        if not self.records_file.is_file():
-            record_state_list = []
-        else:
-            record_state_list = self.__read_record_header_items()
+        record_state_list = (
+            self.__read_record_header_items() if self.records_file.is_file() else []
+        )
+
         return record_state_list
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:

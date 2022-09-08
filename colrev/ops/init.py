@@ -41,10 +41,10 @@ class Initializer:
         saved_args = locals()
 
         assert not (example and local_index_repo)
-        if project_name is not None:
-            self.project_name = project_name
-        else:
-            self.project_name = str(Path.cwd().name)
+        self.project_name = (
+            project_name if (project_name is not None) else str(Path.cwd().name)
+        )
+
         if share_stat_req not in self.share_stat_req_options:
             raise colrev_exceptions.ParameterError(
                 parameter="init.share_stat_req",

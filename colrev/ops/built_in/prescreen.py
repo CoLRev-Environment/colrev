@@ -214,10 +214,7 @@ class CoLRevCLIPrescreenEndpoint:
             split = []
 
         prescreen_data = prescreen_operation.get_data()
-        if len(split) > 0:
-            stat_len = len(split)
-        else:
-            stat_len = prescreen_data["nr_tasks"]
+        stat_len = len(split) if len(split) > 0 else prescreen_data["nr_tasks"]
 
         i, quit_pressed = 0, False
 

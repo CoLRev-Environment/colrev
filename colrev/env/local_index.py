@@ -355,10 +355,9 @@ class LocalIndex:
             toc_key = f"{record_dict.get('journal', '').lower()}"
             if "volume" in record_dict:
                 toc_key = toc_key + f"|{record_dict['volume']}"
-            if "number" in record_dict:
-                toc_key = toc_key + f"|{record_dict['number']}"
-            else:
-                toc_key = toc_key + "|"
+            # TODO : should we append "|" if volume not in record_dict?
+            toc_key += f"|{record_dict['number']}" if ("number" in record_dict) else "|"
+
         elif "inproceedings" == record_dict["ENTRYTYPE"]:
             toc_key = (
                 f"{record_dict.get('booktitle', '').lower()}"

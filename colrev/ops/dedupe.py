@@ -404,10 +404,12 @@ class Dedupe(colrev.process.Process):
             )
             # main_record = MAIN_RECORD.get_data()
 
-            if "score" in dupe:
-                conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
-            else:
-                conf_details = ""
+            conf_details = (
+                f"(confidence: {str(round(dupe['score'], 3))})"
+                if "score" in dupe
+                else ""
+            )
+
             self.review_manager.logger.debug(
                 f"Removed duplicate{conf_details}: "
                 + f'{main_record_dict["ID"]} <- {dupe_record_dict["ID"]}'
