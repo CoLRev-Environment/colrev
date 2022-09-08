@@ -9,7 +9,6 @@ from pathlib import Path
 
 from p_tqdm import p_map
 
-import colrev.ops.built_in.pdf_get as built_in_pdf_get
 import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -20,18 +19,6 @@ class PDFGet(colrev.process.Process):
     to_retrieve: int
     retrieved: int
     not_retrieved: int
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "unpaywall": {
-            "endpoint": built_in_pdf_get.UnpaywallEndpoint,
-        },
-        "local_index": {
-            "endpoint": built_in_pdf_get.LocalIndexEndpoint,
-        },
-        "website_screenshot": {
-            "endpoint": built_in_pdf_get.WebsiteScreenshotEndpoint,
-        },
-    }
 
     def __init__(
         self,
@@ -89,7 +76,7 @@ class PDFGet(colrev.process.Process):
         return record
 
     # Note : no named arguments (multiprocessing)
-    def retrieve_pdf(self, item: dict) -> dict:
+    def get_pdf(self, item: dict) -> dict:
 
         record_dict = item["record"]
 
@@ -108,7 +95,6 @@ class PDFGet(colrev.process.Process):
             self.review_manager.report_logger.info(
                 f'{endpoint.settings.name}({record_dict["ID"]}) called'
             )
-
             endpoint.get_pdf(self, record)
 
             if "file" in record.data:
@@ -478,7 +464,7 @@ class PDFGet(colrev.process.Process):
 
         if pdf_get_data["nr_tasks"] > 0:
 
-            retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
+            retrieved_record_list = p_map(self.get_pdf, pdf_get_data["items"])
 
             self.review_manager.dataset.save_record_list_by_id(
                 record_list=retrieved_record_list

@@ -8,19 +8,11 @@ import pandas as pd
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-import colrev.ops.built_in.pdf_prep_man as built_in_pdf_prep_man
 import colrev.process
 import colrev.record
 
 
 class PDFPrepMan(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "colrev_cli_pdf_prep_man": {
-            "endpoint": built_in_pdf_prep_man.CoLRevCLIPDFManPrep,
-        }
-    }
-
     def __init__(
         self,
         *,

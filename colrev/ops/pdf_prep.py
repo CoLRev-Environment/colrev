@@ -10,7 +10,6 @@ from pathlib import Path
 import timeout_decorator
 from p_tqdm import p_map
 
-import colrev.ops.built_in.pdf_prep as built_in_pdf_prep
 import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -21,27 +20,6 @@ class PDFPrep(colrev.process.Process):
     to_prepare: int
     pdf_prepared: int
     not_prepared: int
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "pdf_check_ocr": {
-            "endpoint": built_in_pdf_prep.PDFCheckOCREndpoint,
-        },
-        "remove_coverpage": {
-            "endpoint": built_in_pdf_prep.PDFCoverPageEndpoint,
-        },
-        "remove_last_page": {
-            "endpoint": built_in_pdf_prep.PDFLastPageEndpoint,
-        },
-        "validate_pdf_metadata": {
-            "endpoint": built_in_pdf_prep.PDFMetadataValidationEndpoint,
-        },
-        "validate_completeness": {
-            "endpoint": built_in_pdf_prep.PDFCompletenessValidationEndpoint,
-        },
-        "create_tei": {
-            "endpoint": built_in_pdf_prep.TEIEndpoint,
-        },
-    }
 
     def __init__(
         self,

@@ -19,11 +19,11 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.check_existing_unlinked_pdfs
       ~PDFGet.check_precondition
       ~PDFGet.copy_pdfs_to_repo
+      ~PDFGet.get_pdf
       ~PDFGet.link_pdf
       ~PDFGet.main
       ~PDFGet.relink_files
       ~PDFGet.rename_pdfs
-      ~PDFGet.retrieve_pdf
       ~PDFGet.setup_custom_script
 
 
@@ -34,7 +34,6 @@ colrev.ops.pdf\_get.PDFGet
 
    .. autosummary::
 
-      ~PDFGet.built_in_scripts
       ~PDFGet.to_retrieve
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved

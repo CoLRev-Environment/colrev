@@ -955,10 +955,13 @@ def data(
             return
         if add_endpoint:
 
-            if add_endpoint in data_operation.built_in_scripts:
-                endpoint_class = data_operation.built_in_scripts[add_endpoint][
-                    "endpoint"
-                ]
+            package_manager = review_manager.get_package_manager()
+            available_data_endpoins = package_manager.discover_packages(
+                script_type="data"
+            )
+
+            if add_endpoint in available_data_endpoins:
+                endpoint_class = available_data_endpoins[add_endpoint]["endpoint"]
                 endpoint = endpoint_class(
                     data_operation=data_operation, settings={"name": add_endpoint}
                 )

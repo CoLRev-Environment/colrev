@@ -7,19 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.ops.built_in.pdf_get_man as built_in_pdf_get_man
 import colrev.process
 import colrev.record
 
 
 class PDFGetMan(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "colrev_cli_pdf_get_man": {
-            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFGetMan,
-        }
-    }
-
     def __init__(
         self,
         *,

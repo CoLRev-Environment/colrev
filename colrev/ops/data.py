@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.ops.built_in.data as built_in_data
 import colrev.process
 import colrev.record
 
@@ -18,27 +17,6 @@ class Data(colrev.process.Process):
     __pad = 0
 
     verbose: bool
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "MANUSCRIPT": {
-            "endpoint": built_in_data.ManuscriptEndpoint,
-        },
-        "STRUCTURED": {
-            "endpoint": built_in_data.StructuredDataEndpoint,
-        },
-        "ENDNOTE": {
-            "endpoint": built_in_data.EndnoteEndpoint,
-        },
-        "PRISMA": {
-            "endpoint": built_in_data.PRISMAEndpoint,
-        },
-        "GITHUB_PAGES": {
-            "endpoint": built_in_data.GithubPagesEndpoint,
-        },
-        "ZETTLR": {
-            "endpoint": built_in_data.ZettlrEndpoint,
-        },
-    }
 
     def __init__(
         self,

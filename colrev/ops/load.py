@@ -8,7 +8,6 @@ import typing
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.load as built_in_load
 import colrev.ops.search_sources
 import colrev.process
 import colrev.record
@@ -20,24 +19,6 @@ class Load(colrev.process.Process):
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "bibtex": {
-            "endpoint": built_in_load.BibPybtexLoader,
-        },
-        "csv": {
-            "endpoint": built_in_load.CSVLoader,
-        },
-        "excel": {"endpoint": built_in_load.ExcelLoader},
-        "zotero_translate": {
-            "endpoint": built_in_load.ZoteroTranslationLoader,
-        },
-        "md_to_bib": {
-            "endpoint": built_in_load.MarkdownLoader,
-        },
-        "bibutils": {
-            "endpoint": built_in_load.BibutilsLoader,
-        },
-    }
 
     def __init__(
         self,
@@ -63,14 +44,26 @@ class Load(colrev.process.Process):
             ],
         )
 
+        self.all_available_packages_names = package_manager.discover_packages(
+            script_type=str(self.type), installed_only=True
+        )
+
+        all_available_packages: dict[str, typing.Any] = package_manager.load_packages(
+            process=self,
+            scripts=[{"endpoint": p} for p in self.all_available_packages_names],
+        )
+
         self.supported_extensions = [
             item
             for sublist in [
-                e["endpoint"].supported_extensions
-                for e in self.built_in_scripts.values()
+                e.supported_extensions for e in all_available_packages.values()
             ]
             for item in sublist
         ]
+
+        self.search_sources = colrev.ops.search_sources.SearchSources(
+            review_manager=self.review_manager
+        )
 
     def get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
@@ -107,9 +100,6 @@ class Load(colrev.process.Process):
         # pylint: disable=redefined-outer-name
 
         sources = self.review_manager.settings.sources
-        search_sources = colrev.ops.search_sources.SearchSources(
-            review_manager=self.review_manager
-        )
 
         for sfp in self.get_new_search_files():
             # Note : for non-bib files, we check sources for corresponding bib file
@@ -148,7 +138,9 @@ class Load(colrev.process.Process):
                 if "NA" == heuristic_source.source_name:
                     if heuristic_source.search_type == "DB":
                         print("   Sources with pre-defined settings:")
-                        cl_scripts = "\n    - ".join(search_sources.built_in_scripts)
+                        cl_scripts = "\n    - ".join(
+                            self.search_sources.all_available_packages_names
+                        )
                         print("    - " + cl_scripts)
                         print("   See colrev/custom_source_load.py for details")
 
@@ -611,7 +603,7 @@ class Load(colrev.process.Process):
             for (
                 endpoint_name,
                 endpoint_dict,
-            ) in colrev.ops.load.Load.built_in_scripts.items():
+            ) in self.all_available_packages_names.items():
                 if filetype in endpoint_dict["endpoint"].supported_extensions:
                     return {"endpoint": endpoint_name}
 
@@ -628,7 +620,7 @@ class Load(colrev.process.Process):
         for (
             source_name,
             endpoint,
-        ) in colrev.ops.search_sources.SearchSources.built_in_scripts.items():
+        ) in self.search_sources.all_available_packages_names.items():
             # pylint: disable=no-member
             has_heuristic = getattr(endpoint, "heuristic", None)
             if not has_heuristic:

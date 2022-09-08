@@ -36,5 +36,4 @@ colrev.ops.search.Search
 
    .. autosummary::
 
-      ~Search.built_in_scripts
       ~Search.force_mode

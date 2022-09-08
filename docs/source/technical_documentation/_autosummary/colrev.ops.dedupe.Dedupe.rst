@@ -38,7 +38,6 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.ACTIVE_LEARNING_DEDUPE
       ~Dedupe.ACTIVE_LEARNING_NON_MEMORY_DEDUPE
       ~Dedupe.SIMPLE_SIMILARITY_BASED_DEDUPE
-      ~Dedupe.built_in_scripts
       ~Dedupe.training_file
       ~Dedupe.settings_file
       ~Dedupe.non_dupe_file_xlsx

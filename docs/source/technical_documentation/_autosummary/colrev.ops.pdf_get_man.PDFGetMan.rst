@@ -31,5 +31,4 @@ colrev.ops.pdf\_get\_man.PDFGetMan
 
    .. autosummary::
 
-      ~PDFGetMan.built_in_scripts
       ~PDFGetMan.force_mode

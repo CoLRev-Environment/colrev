@@ -35,5 +35,4 @@ colrev.ops.load.Load
 
    .. autosummary::
 
-      ~Load.built_in_scripts
       ~Load.force_mode

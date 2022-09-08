@@ -15,14 +15,3 @@ colrev.ops.search\_sources.SearchSources
 
    .. autosummary::
       :nosignatures:
-
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~SearchSources.built_in_scripts

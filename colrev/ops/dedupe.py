@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -10,7 +9,6 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.dedupe_built_in as built_in_dedupe
 import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -20,24 +18,6 @@ if TYPE_CHECKING:
 
 
 class Dedupe(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "simple_dedupe": {
-            "endpoint": built_in_dedupe.SimpleDedupeEndpoint,
-        },
-        "active_learning_training": {
-            "endpoint": built_in_dedupe.ActiveLearningDedupeTrainingEndpoint,
-        },
-        "active_learning_automated": {
-            "endpoint": built_in_dedupe.ActiveLearningDedupeAutomatedEndpoint,
-        },
-        "curation_full_outlet_dedupe": {
-            "endpoint": built_in_dedupe.CurationDedupeEndpoint,
-        },
-        "curation_missing_dedupe": {
-            "endpoint": built_in_dedupe.CurationMissingDedupeEndpoint,
-        },
-    }
 
     SIMPLE_SIMILARITY_BASED_DEDUPE = "simple_similarity_based_dedupe"
     ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"

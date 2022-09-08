@@ -13,7 +13,6 @@ from pathos.multiprocessing import ProcessPool
 
 import colrev.env.utils
 import colrev.ops.built_in.database_connectors as db_connectors
-import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record
 import colrev.settings
@@ -94,82 +93,6 @@ class Prep(colrev.process.Process):
         "cited_by",
         "cited_by_file",
     ]
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "load_fixes": {
-            "endpoint": built_in_prep.LoadFixesPrep,
-        },
-        "exclude_non_latin_alphabets": {
-            "endpoint": built_in_prep.ExcludeNonLatinAlphabetsPrep,
-        },
-        "exclude_languages": {
-            "endpoint": built_in_prep.ExcludeLanguagesPrep,
-        },
-        "exclude_collections": {
-            "endpoint": built_in_prep.ExcludeCollectionsPrep,
-        },
-        "remove_urls_with_500_errors": {
-            "endpoint": built_in_prep.RemoveError500URLsPrep,
-        },
-        "remove_broken_IDs": {
-            "endpoint": built_in_prep.RemoveBrokenIDPrep,
-        },
-        "global_ids_consistency_check": {
-            "endpoint": built_in_prep.GlobalIDConsistencyPrep,
-        },
-        "prep_curated": {
-            "endpoint": built_in_prep.CuratedPrep,
-        },
-        "format": {
-            "endpoint": built_in_prep.FormatPrep,
-        },
-        "resolve_crossrefs": {
-            "endpoint": built_in_prep.BibTexCrossrefResolutionPrep,
-        },
-        "get_doi_from_sem_scholar": {
-            "endpoint": built_in_prep.SemanticScholarPrep,
-        },
-        "get_doi_from_urls": {"endpoint": built_in_prep.DOIFromURLsPrep},
-        "get_masterdata_from_doi": {
-            "endpoint": built_in_prep.DOIMetadataPrep,
-        },
-        "get_masterdata_from_crossref": {
-            "endpoint": built_in_prep.CrossrefMetadataPrep,
-        },
-        "get_masterdata_from_dblp": {
-            "endpoint": built_in_prep.DBLPMetadataPrep,
-        },
-        "get_masterdata_from_open_library": {
-            "endpoint": built_in_prep.OpenLibraryMetadataPrep,
-        },
-        "get_masterdata_from_citeas": {
-            "endpoint": built_in_prep.CiteAsPrep,
-        },
-        "get_year_from_vol_iss_jour_crossref": {
-            "endpoint": built_in_prep.CrossrefYearVolIssPrep,
-        },
-        "get_record_from_local_index": {
-            "endpoint": built_in_prep.LocalIndexPrep,
-        },
-        "remove_nicknames": {
-            "endpoint": built_in_prep.RemoveNicknamesPrep,
-        },
-        "format_minor": {
-            "endpoint": built_in_prep.FormatMinorPrep,
-        },
-        "drop_fields": {
-            "endpoint": built_in_prep.DropFieldsPrep,
-        },
-        "remove_redundant_fields": {
-            "endpoint": built_in_prep.RemoveRedundantFieldPrep,
-        },
-        "correct_recordtype": {
-            "endpoint": built_in_prep.CorrectRecordTypePrep,
-        },
-        "update_metadata_status": {
-            "endpoint": built_in_prep.UpdateMetadataStatusPrep,
-        },
-    }
 
     def __init__(
         self,
