@@ -55,6 +55,10 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
+    AUTHOR_INDEX = "author_index"
+    # TODO/implement:
+    AUTHOR_RECORD_INDEX = "author_record_index"
+    CITATIONS_INDEX = "citations_index"
 
     # Note: we need the local_curated_metadata field for is_duplicate()
 
@@ -228,6 +232,23 @@ class LocalIndex:
                         tei_path=tei_path,
                     )
                     record_dict["fulltext"] = tei.get_tei_str()
+
+                    author_details = tei.get_author_details()
+                    # Iterate over curated metadata and enrich it based on TEI (may vary in quality)
+                    for author in record_dict.get("author", "").split(" and "):
+                        if "," not in author:
+                            continue
+                        author_dict = {}
+                        author_dict["surname"] = author.split(", ")[0]
+                        author_dict["forename"] = author.split(", ")[1]
+                        for author_detail in author_details:
+                            if author_dict["surname"] == author_detail["surname"]:
+                                # Add complementary details
+                                author_dict = {**author_dict, **author_detail}
+                        self.open_search.index(
+                            index=self.AUTHOR_INDEX, body=author_dict
+                        )
+
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
@@ -807,13 +828,23 @@ class LocalIndex:
         # if self.teiind_path.is_dir():
         #     shutil.rmtree(self.teiind_path)
 
+        available_indices = self.open_search.indices.get_alias().keys()
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
-        if self.RECORD_INDEX in self.open_search.indices.get_alias().keys():
+        if self.RECORD_INDEX in available_indices:
             self.open_search.indices.delete(index=self.RECORD_INDEX)
-        if self.TOC_INDEX in self.open_search.indices.get_alias().keys():
+        if self.TOC_INDEX in available_indices:
             self.open_search.indices.delete(index=self.TOC_INDEX)
+        if self.AUTHOR_INDEX in available_indices:
+            self.open_search.indices.delete(index=self.AUTHOR_INDEX)
+        if self.AUTHOR_RECORD_INDEX in available_indices:
+            self.open_search.indices.delete(index=self.AUTHOR_RECORD_INDEX)
+        if self.CITATIONS_INDEX in available_indices:
+            self.open_search.indices.delete(index=self.CITATIONS_INDEX)
         self.open_search.indices.create(index=self.RECORD_INDEX)
         self.open_search.indices.create(index=self.TOC_INDEX)
+        self.open_search.indices.create(index=self.AUTHOR_INDEX)
+        self.open_search.indices.create(index=self.AUTHOR_RECORD_INDEX)
+        self.open_search.indices.create(index=self.CITATIONS_INDEX)
 
         repo_source_paths = [
             x["repo_source_path"]
