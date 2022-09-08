@@ -174,22 +174,25 @@ class StatusStats:
         if review_manager.settings.project.curated_masterdata:
             self.nr_curated_records = self.overall.md_processed
 
-        # note: 10 steps
         self.atomic_steps = (
-            10 * self.overall.md_imported
-            - 8 * self.currently.md_duplicates_removed
-            - 7 * self.currently.rev_prescreen_excluded
-            - 6 * self.currently.pdf_not_available
+            # initially, all records have to pass 8 operations
+            8 * self.overall.md_retrieved
+            # for removed duplicates, 5 operations are no longer needed
+            - 5 * self.currently.md_duplicates_removed
+            # for rev_prescreen_excluded, 4 operations are no longer needed
+            - 4 * self.currently.rev_prescreen_excluded
+            - 3 * self.currently.pdf_not_available
             - self.currently.rev_excluded
-            - self.currently.rev_synthesized
         )
 
         self.perc_curated = 0
         denominator = (
-            self.overall.md_prepared
+            self.overall.md_processed
+            + self.currently.md_prepared
             + self.currently.md_needs_manual_preparation
-            - self.currently.md_duplicates_removed
+            + self.currently.md_imported
         )
+
         if denominator > 0:
             self.perc_curated = int((self.nr_curated_records / (denominator)) * 100)
 

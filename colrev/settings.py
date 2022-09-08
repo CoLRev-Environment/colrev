@@ -112,15 +112,21 @@ class SearchSource:
     def get_corresponding_bib_file(self) -> Path:
         return self.filename.with_suffix(".bib")
 
-    def create_load_stats(self) -> None:
+    def setup_for_load(
+        self,
+        *,
+        record_list: typing.List[typing.Dict],
+        imported_origins: typing.List[str],
+    ) -> None:
         # pylint: disable=attribute-defined-outside-init
         # Note : define outside init because the following
         # attributes are temporary. They should not be
         # saved to settings.json.
-        self.to_import = 0
-        self.imported_origins: typing.List[str] = []
-        self.len_before = 0
-        self.source_records_list: typing.List[typing.Dict] = []
+
+        self.to_import = len(record_list)
+        self.imported_origins: typing.List[str] = imported_origins
+        self.len_before = len(imported_origins)
+        self.source_records_list: typing.List[typing.Dict] = record_list
 
     def __str__(self) -> str:
         source_prep_scripts_string = ",".join(

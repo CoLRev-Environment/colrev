@@ -390,16 +390,13 @@ class Load(colrev.process.Process):
 
             return record.get_data()
 
-        source.create_load_stats()
-
+        search_records = []
         if source.get_corresponding_bib_file().is_file():
             search_records = getbib(file=source.get_corresponding_bib_file())
             self.review_manager.logger.debug(
                 f"Loaded {source.get_corresponding_bib_file().name} "
                 f"with {len(search_records)} records"
             )
-        else:
-            search_records = []
 
         if len(search_records) == 0:
             # source.to_import = 0
@@ -464,11 +461,15 @@ class Load(colrev.process.Process):
             )
             record_list.append(record)
 
+        imported_origins = (
+            self.review_manager.dataset.get_currently_imported_origin_list()
+        )
         record_list = [
-            x for x in record_list if x["colrev_origin"] not in source.imported_origins
+            x for x in record_list if x["colrev_origin"] not in imported_origins
         ]
-        source.to_import = len(record_list)
-        source.source_records_list = record_list
+        source.setup_for_load(
+            record_list=record_list, imported_origins=imported_origins
+        )
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
@@ -706,11 +707,6 @@ class Load(colrev.process.Process):
         for source in load_active_sources():
             self.review_manager.logger.info(f"Loading {source}")
             saved_args["file"] = source.filename.name
-            imported_origins = (
-                self.review_manager.dataset.get_currently_imported_origin_list()
-            )
-            source.imported_origins = imported_origins
-            source.len_before = len(source.imported_origins)
 
             conversion_script_name = source.conversion_script["endpoint"]
 

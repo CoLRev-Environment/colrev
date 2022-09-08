@@ -130,6 +130,8 @@ class CrossrefSearchEndpoint:
                     records[record_dict["ID"]] = record_dict
                     max_id += 1
         except (requests.exceptions.JSONDecodeError, KeyError) as exc:
+            # TODO : watch issue
+            # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "Crossref (check https://status.crossref.org/)"
