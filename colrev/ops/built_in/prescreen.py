@@ -38,8 +38,16 @@ class ScopePrescreenEndpoint:
         ENTRYTYPEScope: typing.Optional[list]
 
         _details = {
-            "TimeScopeFrom": {"tooltip": "Lower bound for the time scope"},
-            "TimeScopeTo": {"tooltip": "Upper bound for the time scope"},
+            "TimeScopeFrom": {
+                "tooltip": "Lower bound for the time scope",
+                "min": 1900,
+                "max": 2050,
+            },
+            "TimeScopeTo": {
+                "tooltip": "Upper bound for the time scope",
+                "min": 1900,
+                "max": 2050,
+            },
             "LanguageScope": {"tooltip": "Language scope"},
             "ExcludeComplementaryMaterials": {
                 "tooltip": "Whether complementary materials (coverpages etc.) are excluded"

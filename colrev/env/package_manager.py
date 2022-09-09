@@ -147,8 +147,87 @@ class PackageManager:
                 except (AttributeError, ModuleNotFoundError):
                     discovered_package["installed"] = False
 
+    def get_package_details(self, *, script_type, script_name) -> dict:
+
+        package_details = {"name": script_name}
+        package_class = self.load_package_endpoint(
+            script_type=script_type, script_name=script_name
+        )
+        package_details["description"] = package_class.__doc__
+        package_details["parameters"] = {}
+        settings_class = getattr(package_class, "settings_class", None)
+        if settings_class is None:
+            msg = f"{script_name} could not be loaded"
+            raise colrev_exceptions.ServiceNotAvailableException(msg)
+
+        if "DefaultSettings" == settings_class.__name__ or not settings_class:
+            return package_details
+
+        for parameter in [
+            i for i in settings_class.__annotations__.keys() if i[:1] != "_"
+        ]:
+
+            # default value: determined from class.__dict__
+            # merging_non_dup_threshold: float= 0.7
+            if parameter in settings_class.__dict__:
+                package_details["parameters"][parameter][
+                    "default"
+                ] = settings_class.__dict__[parameter]
+
+            # not required: determined from typing annotation
+            # variable_name: typing.Optional[str]
+            package_details["parameters"][parameter] = {"required": True}
+
+            # "type":
+            # determined from typing annotation
+            if parameter in settings_class.__annotations__:
+                type_annotation = settings_class.__annotations__[parameter]
+                if "typing.Optional" in type_annotation:
+                    package_details["parameters"][parameter]["required"] = False
+
+                if "typing.Optional[int]" == type_annotation:
+                    type_annotation = "int"
+                if "typing.Optional[float]" == type_annotation:
+                    type_annotation = "float"
+                if "typing.Optional[bool]" == type_annotation:
+                    # TODO : required=False for boolean?!
+                    type_annotation = "bool"
+                # typing.Optional[list] : multiple_selection?
+                package_details["parameters"][parameter]["type"] = type_annotation
+
+            # tooltip, min, max, options: determined from settings_class._details dict
+            # Note : tooltips are not in docstrings because
+            # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
+            # pylint: disable=protected-access
+            if parameter in settings_class._details:
+                if "tooltip" in settings_class._details[parameter]:
+                    package_details["parameters"][parameter][
+                        "tooltip"
+                    ] = settings_class._details[parameter]["tooltip"]
+
+                if "min" in settings_class._details[parameter]:
+                    package_details["parameters"][parameter][
+                        "min"
+                    ] = settings_class._details[parameter]["min"]
+
+                if "max" in settings_class._details[parameter]:
+                    package_details["parameters"][parameter][
+                        "max"
+                    ] = settings_class._details[parameter]["max"]
+
+                if "options" in settings_class._details[parameter]:
+                    package_details["parameters"][parameter][
+                        "options"
+                    ] = settings_class._details[parameter]["options"]
+
+        # TODO apply validation when parsing settings during package init (based on _details)
+
+        # TODO (later) : package version?
+
+        return package_details
+
     def discover_packages(
-        self, *, script_type: str, installed_only: bool = False, details: bool = False
+        self, *, script_type: str, installed_only: bool = False
     ) -> typing.Dict:
 
         discovered_packages = self.packages[script_type]
@@ -159,39 +238,8 @@ class PackageManager:
                 script_type=script_type, script_name=script_name
             )
             discovered_packages[script_name] = package
+            discovered_packages[script_name]["description"] = package_class.__doc__
             discovered_packages[script_name]["installed"] = package["installed"]
-            if details:
-                discovered_packages[script_name]["description"] = package_class.__doc__
-                discovered_packages[script_name]["parameters"] = {}
-                settings_class = getattr(package_class, "settings_class", None)
-                if settings_class:
-                    for parameter in [
-                        i for i in settings_class.__dict__.keys() if i[:1] != "_"
-                    ]:
-                        discovered_packages[script_name]["parameters"][parameter] = {
-                            "default": settings_class.__dict__[parameter],
-                        }
-                        try:
-                            # pylint: disable=protected-access
-                            discovered_packages[script_name]["parameters"][parameter][
-                                "tooltip"
-                            ] = settings_class._details[parameter]["tooltip"]
-                        except AttributeError:
-                            pass
-
-                # Settings dataclass (as package.settings_class): see dedupe/simple_dedupe
-                # not required:
-                # variable_name: typing.Optional[str]
-                # default value:
-                # merging_non_dup_threshold: float= 0.7
-                # Tooltip: _details[parameter_name]
-                # Note : tooltips are not in docstrings because
-                # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
-
-                # TODO : parameters (based on (custom) settings classes?!)
-                # - value range/type (typing annotation?) - Validator class (with to_string method?)
-
-                # TODO (later) : package version?
 
         return discovered_packages
 
