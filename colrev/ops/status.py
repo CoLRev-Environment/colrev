@@ -280,6 +280,8 @@ class StatusStats:
 
     def get_active_metadata_operation_info(self) -> str:
         infos = []
+        if self.currently.md_retrieved > 0:
+            infos.append(f"{self.currently.md_retrieved} to load")
         if self.currently.md_imported > 0:
             infos.append(f"{self.currently.md_imported} to prepare")
         if self.currently.md_needs_manual_preparation > 0:
