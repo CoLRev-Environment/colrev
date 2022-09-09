@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import webbrowser
+from pathlib import Path
 from threading import Timer
 from typing import TYPE_CHECKING
 
@@ -26,6 +27,10 @@ class SettingsEditor:
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
         self.package_manager = review_manager.get_package_manager()
+        self.settings_path: Path = self.review_manager.settings_path
+
+        # For testing:
+        # self.settings_path = Path.cwd()
 
     def _open_browser(self) -> None:
 
@@ -39,7 +44,7 @@ class SettingsEditor:
         app = Flask(__name__, static_url_path="", static_folder="build")
         CORS(app)
 
-        app.config["path"] = str(self.review_manager.settings_path)
+        app.config["path"] = str(self.settings_path)
 
         # print("Settings File Path: ", app.config["path"])
 
@@ -54,7 +59,7 @@ class SettingsEditor:
         @app.route("/api/getSettings")
         def getSettings():
 
-            with open(self.review_manager.settings_path, encoding="utf-8") as file:
+            with open(self.settings_path, encoding="utf-8") as file:
                 json__content = file.read()
 
             response = app.response_class(
@@ -66,9 +71,7 @@ class SettingsEditor:
         @app.route("/api/saveSettings", methods=["POST"])
         def saveSettings(create_commit: bool = False):
 
-            with open(
-                self.review_manager.settings_path, "w", encoding="utf-8"
-            ) as outfile:
+            with open(self.settings_path, "w", encoding="utf-8") as outfile:
                 json_string = json.dumps(request.json, indent=4)
                 outfile.write(json_string)
             if create_commit:
@@ -112,11 +115,14 @@ class SettingsEditor:
 
         @app.route("/api/getScripts")
         def getScripts(script_type):
+
             script_options = self.package_manager.discover_packages(
                 script_type=script_type
             )
 
             # For testing:
+            # Example: script_type="load"
+            # Returns:
             # script_options = {
             #     "bibtex": {
             #         "endpoint": "colrev.ops.built_in.load.BibPybtexLoader",
@@ -146,6 +152,55 @@ class SettingsEditor:
 
             return jsonify(script_options)
 
+        # pylint: disable=unused-argument
+        @app.route("/api/getScriptDetails")
+        def getScriptDetails(script_type, script_name, endpoint_version):
+
+            package_details = self.package_manager.get_package_details(
+                script_type=script_type, script_name=script_name
+            )
+
+            # TODO (GW): use endpoint_version
+
+            # For testing:
+            # Example: script_type="prescreen", script_name="scope_prescreen"
+            # Returns:
+            # package_details = {
+            #     "description": "Prescreens records based on predefined rules (scope)",
+            #     "name": "scope_prescreen",
+            #     "parameters": {
+            #         "ENTRYTYPEScope": {
+            #             "options": ["article", "booktitle"],
+            #             "required": False,
+            #             "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
+            #             "type": "typing.Optional[list]",
+            #         },
+            #         "TimeScopeFrom": {
+            #             "max": 2050,
+            #             "min": 1900,
+            #             "required": False,
+            #             "tooltip": "Lower bound for the time scope",
+            #             "type": "int",
+            #         },
+            #         "TimeScopeTo": {
+            #             "required": False,
+            #             "tooltip": "Upper bound for the time scope",
+            #             "type": "int",
+            #         },
+            #         "name": {"required": True, "type": "str"},
+            #     },
+            # }
+
+            # Example: script_type="prescreen", script_name="spreadsheet_prescreen"
+            # Returns:
+            # package_details = {
+            #     "description": "Prescreen based on a spreadsheet (exported and imported)",
+            #     "name": "spreadsheet_prescreen",
+            #     "parameters": {},
+            # }
+
+            return jsonify(package_details)
+
         @app.route("/api/getScriptsParametersOptions")
         def getScriptsParametersOptions(script_type, endpoint_name, endpoint_version):
             # TODO : generate based on script discovery
@@ -153,7 +208,11 @@ class SettingsEditor:
                 if "crossref_prep" == endpoint_name:
                     if "1.0.0" == endpoint_version:
                         script_options = {
-                            "retrieval_similarity": {"type": "flot", "min": 0, "max": 1}
+                            "retrieval_similarity": {
+                                "type": "float",
+                                "min": 0,
+                                "max": 1,
+                            }
                         }
             return jsonify(script_options)
 
