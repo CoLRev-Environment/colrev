@@ -25,6 +25,7 @@ class SettingsEditor:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
+        self.package_manager = review_manager.get_package_manager()
 
     def _open_browser(self) -> None:
 
@@ -111,18 +112,37 @@ class SettingsEditor:
 
         @app.route("/api/getScripts")
         def getScripts(script_type):
-            script_options = []
-            if "source_conversion_script" == script_type:
-                script_options = list(colrev.ops.load.Load.built_in_scripts.keys())
+            script_options = self.package_manager.discover_packages(
+                script_type=script_type
+            )
 
-            if "prep_script" == script_type:
-                # TODO : generate list based on script discovery
-                script_options = [
-                    {
-                        "endpoint": "crossref_prep",
-                        "description": "The script retrieves metadata from Crossref ...",
-                    }
-                ]
+            # For testing:
+            # script_options = {
+            #     "bibtex": {
+            #         "endpoint": "colrev.ops.built_in.load.BibPybtexLoader",
+            #         "installed": True,
+            #     },
+            #     "csv": {
+            #         "endpoint": "colrev.ops.built_in.load.CSVLoader",
+            #         "installed": True,
+            #     },
+            #     "excel": {
+            #         "endpoint": "colrev.ops.built_in.load.ExcelLoader",
+            #         "installed": True,
+            #     },
+            #     "zotero_translate": {
+            #         "endpoint": "colrev.ops.built_in.load.ZoteroTranslationLoader",
+            #         "installed": True,
+            #     },
+            #     "md_to_bib": {
+            #         "endpoint": "colrev.ops.built_in.load.MarkdownLoader",
+            #         "installed": True,
+            #     },
+            #     "bibutils": {
+            #         "endpoint": "colrev.ops.built_in.load.BibutilsLoader",
+            #         "installed": True,
+            #     },
+            # }
 
             return jsonify(script_options)
 
