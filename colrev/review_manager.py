@@ -869,11 +869,6 @@ class ReviewManager:
 
         return colrev.ops.trace.Trace(review_manager=self, **kwargs)
 
-    def get_paper_operation(self, **kwargs) -> colrev.ops.paper.Paper:
-        import colrev.ops.paper
-
-        return colrev.ops.paper.Paper(review_manager=self, **kwargs)
-
     def get_distribute_operation(self, **kwargs) -> colrev.ops.distribute.Distribute:
         import colrev.ops.distribute
 

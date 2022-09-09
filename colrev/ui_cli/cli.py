@@ -1184,28 +1184,6 @@ def trace(ctx, id) -> None:  # pylint: disable=invalid-name
         return
 
 
-@main.command(help_priority=18)
-@click.pass_context
-def paper(ctx) -> None:
-    """Build the paper"""
-
-    try:
-        review_manager = colrev.review_manager.ReviewManager()
-        paper_operation = review_manager.get_paper_operation()
-
-        paper_operation.main()
-
-    except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
-        return
-    except colrev_exceptions.NoPaperEndpointRegistered as exc:
-        print(f"NoPaperEndpointRegistered: {exc}")
-        print(
-            "To register a paper endpoint, use \n"
-            "    colrev data --add_endpoint MANUSCRIPT"
-        )
-
-
 def __select_target_repository(local_registry: list) -> Path:
     while True:
         for i, local_source in enumerate(local_registry):
@@ -1219,7 +1197,7 @@ def __select_target_repository(local_registry: list) -> Path:
             return target
 
 
-@main.command(help_priority=19)
+@main.command(help_priority=18)
 @click.option(
     "-p",
     "--path",
@@ -1308,7 +1286,7 @@ def print_environment_status(review_manager) -> None:
             print(f'- {broken_link["source_url"]}')
 
 
-@main.command(help_priority=20)
+@main.command(help_priority=19)
 @click.option(
     "-i", "--index", is_flag=True, default=False, help="Create the LocalIndex"
 )
@@ -1446,7 +1424,7 @@ def env(
         local_index.analyze()
 
 
-@main.command(help_priority=21)
+@main.command(help_priority=20)
 # @click.option("-v", "--view", is_flag=True, default=False)
 @click.option(
     "-u",
@@ -1551,7 +1529,7 @@ def settings(ctx, upgrade, update_hooks, modify):
     print("\n")
 
 
-@main.command(help_priority=22)
+@main.command(help_priority=21)
 @click.pass_context
 def sync(ctx):
     """Sync records from CoLRev environment to non-CoLRev repo"""
@@ -1587,7 +1565,7 @@ def sync(ctx):
     sync_operation.add_to_bib()
 
 
-@main.command(help_priority=23)
+@main.command(help_priority=22)
 @click.option(
     "-r",
     "--records_only",
@@ -1616,7 +1594,7 @@ def pull(ctx, records_only, project_only):
         logging.error(exc)
 
 
-@main.command(help_priority=24)
+@main.command(help_priority=23)
 @click.argument("git_url")
 @click.pass_context
 def clone(ctx, git_url):
@@ -1628,7 +1606,7 @@ def clone(ctx, git_url):
     clone_operation.clone_git_repo()
 
 
-@main.command(help_priority=26)
+@main.command(help_priority=24)
 @click.option(
     "-r",
     "--records_only",

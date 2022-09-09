@@ -34,4 +34,3 @@ colrev.ops.built\_in.data.ManuscriptEndpoint
    .. autosummary::
 
       ~ManuscriptEndpoint.NEW_RECORD_SOURCE_TAG
-      ~ManuscriptEndpoint.PAPER_RELATIVE

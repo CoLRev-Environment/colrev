@@ -20,13 +20,3 @@ colrev.ops.built\_in.data.StructuredDataEndpoint
       ~StructuredDataEndpoint.update_data
       ~StructuredDataEndpoint.update_record_status_matrix
       ~StructuredDataEndpoint.validate_structured_data
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~StructuredDataEndpoint.DATA_PATH_RELATIVE

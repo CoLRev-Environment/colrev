@@ -362,15 +362,6 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-        if "MANUSCRIPT" in [
-            s["endpoint"] for s in self.review_manager.settings.data.scripts
-        ]:
-            instruction = {
-                "msg": "Build the paper",
-                "cmd": "colrev paper",
-            }
-            review_instructions.append(instruction)
-
         return review_instructions
 
     # Note : no named arguments for multiprocessing
