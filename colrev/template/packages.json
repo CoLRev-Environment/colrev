@@ -159,7 +159,7 @@
         "conditional_prescreen": {
             "endpoint": "colrev.ops.built_in.prescreen.ConditionalPrescreenEndpoint"
         },
-        "spreadsheed_prescreen": {
+        "spreadsheet_prescreen": {
             "endpoint": "colrev.ops.built_in.prescreen.SpreadsheetPrescreenEndpoint"
         }
     },
@@ -208,7 +208,7 @@
         "colrev_cli_screen": {
             "endpoint": "colrev.ops.built_in.screen.CoLRevCLIScreenEndpoint"
         },
-        "spreadsheed_screen": {
+        "spreadsheet_screen": {
             "endpoint": "colrev.ops.built_in.screen.SpreadsheetScreenEndpoint"
         }
     },
