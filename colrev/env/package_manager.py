@@ -148,16 +148,50 @@ class PackageManager:
                     discovered_package["installed"] = False
 
     def discover_packages(
-        self, *, script_type: str, installed_only: bool = False
+        self, *, script_type: str, installed_only: bool = False, details: bool = False
     ) -> typing.Dict:
 
         discovered_packages = self.packages[script_type]
-        if installed_only:
-            discovered_packages = {
-                script_name: package
-                for script_name, package in discovered_packages.items()
-                if package["installed"]
-            }
+        for script_name, package in discovered_packages.items():
+            if installed_only and not package["installed"]:
+                continue
+            package_class = self.load_package_endpoint(
+                script_type=script_type, script_name=script_name
+            )
+            discovered_packages[script_name] = package
+            discovered_packages[script_name]["installed"] = package["installed"]
+            if details:
+                discovered_packages[script_name]["description"] = package_class.__doc__
+                discovered_packages[script_name]["parameters"] = {}
+                settings_class = getattr(package_class, "settings_class", None)
+                if settings_class:
+                    for parameter in [
+                        i for i in settings_class.__dict__.keys() if i[:1] != "_"
+                    ]:
+                        discovered_packages[script_name]["parameters"][parameter] = {
+                            "default": settings_class.__dict__[parameter],
+                        }
+                        try:
+                            # pylint: disable=protected-access
+                            discovered_packages[script_name]["parameters"][parameter][
+                                "tooltip"
+                            ] = settings_class._details[parameter]["tooltip"]
+                        except AttributeError:
+                            pass
+
+                # Settings dataclass (as package.settings_class): see dedupe/simple_dedupe
+                # not required:
+                # variable_name: typing.Optional[str]
+                # default value:
+                # merging_non_dup_threshold: float= 0.7
+                # Tooltip: _details[parameter_name]
+                # Note : tooltips are not in docstrings because
+                # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
+
+                # TODO : parameters (based on (custom) settings classes?!)
+                # - value range/type (typing annotation?) - Validator class (with to_string method?)
+
+                # TODO (later) : package version?
 
         return discovered_packages
 

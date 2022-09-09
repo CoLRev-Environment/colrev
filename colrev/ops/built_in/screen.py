@@ -21,15 +21,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
+    """Screen documents using a CLI"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         screen_operation: colrev.ops.screen.Screen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
     def get_screening_criteria_from_user_input(
@@ -251,6 +253,10 @@ class CoLRevCLIScreenEndpoint:
 
 @zope.interface.implementer(colrev.process.ScreenEndpoint)
 class SpreadsheetScreenEndpoint:
+    """Screen documents using spreadsheets (exported and imported)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     spreadsheet_path = Path("screen/screen.csv")
 
     def __init__(
@@ -259,9 +265,7 @@ class SpreadsheetScreenEndpoint:
         screen_operation: colrev.ops.screen.Screen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def export_table(
         self,

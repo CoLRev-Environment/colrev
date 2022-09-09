@@ -120,13 +120,13 @@
     },
     "prep_man": {
         "colrev_cli_man_prep": {
-            "endpoint": "colrev.ops.prep_man.CoLRevCLIManPrep"
+            "endpoint": "colrev.ops.built_in.prep_man.CoLRevCLIManPrep"
         },
         "export_man_prep": {
-            "endpoint": "colrev.ops.prep_man.ExportManPrep"
+            "endpoint": "colrev.ops.built_in.prep_man.ExportManPrep"
         },
         "prep_man_curation_jupyter": {
-            "endpoint": "colrev.ops.prep_man.CurationJupyterNotebookManPrep"
+            "endpoint": "colrev.ops.built_in.prep_man.CurationJupyterNotebookManPrep"
         }
     },
     "dedupe": {

@@ -23,15 +23,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class CoLRevCLIManPrep:
+    """Manual preparation using the CLI (Not yet implemented)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
@@ -70,6 +72,21 @@ class CoLRevCLIManPrep:
 
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class ExportManPrep:
+    """Manual preparation based on exported and imported metadata (and PDFs if any)"""
+
+    @dataclass
+    class ExportManPrepSettings:
+        name: str
+        pdf_handling_mode: str = "symlink"
+
+        _details = {
+            "pdf_handling_mode": {
+                "tooltip": "Indicates how linked PDFs are handled (symlink/copy_first_page)"
+            },
+        }
+
+    settings_class = ExportManPrepSettings
+
     def __init__(
         self,
         *,
@@ -77,17 +94,9 @@ class ExportManPrep:
         settings: dict,
     ) -> None:
 
-        if "pdf_handling_mode" not in settings:
-            settings["pdf_handling_mode"] = "symlink"
-
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
-        self.settings = from_dict(data_class=self.ExportManPrepSettings, data=settings)
-
-    @dataclass
-    class ExportManPrepSettings:
-        name: str
-        pdf_handling_mode: str
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
@@ -204,12 +213,14 @@ class ExportManPrep:
 
 @zope.interface.implementer(colrev.process.PrepManEndpoint)
 class CurationJupyterNotebookManPrep:
+    """Manual preparation based on a Jupyter Notebook"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():

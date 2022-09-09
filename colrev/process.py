@@ -431,6 +431,7 @@ class ProcessModel:
 
 class SearchEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute("""Source identifier""")
     mode = zope.interface.Attribute("""Mode""")
 
@@ -446,6 +447,7 @@ class SearchSourceEndpoint(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
 
     # pylint: disable=no-self-argument
@@ -458,6 +460,7 @@ class SearchSourceEndpoint(
 
 class LoadEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
     # pylint: disable=no-self-argument
@@ -467,6 +470,7 @@ class LoadEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-cla
 
 class PrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
 
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_correction_hint = zope.interface.Attribute(
         """Hint on how to correct metadata at source"""
     )
@@ -482,36 +486,54 @@ class PrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-cla
 
 
 class PrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def prepare_manual(prep_man_operation, records):
         pass
 
 
 class DedupeEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def run_dedupe(dedupe_operation):
         pass
 
 
 class PrescreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
         pass
 
 
 class PDFGetEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def get_pdf(pdf_get_operation, record):
         return record
 
 
 class PDFGetManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def get_man_pdf(pdf_get_man_operation, records):
         return records
 
 
 class PDFPrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(pdf_prep_operation, record, pad) -> dict:
@@ -519,18 +541,27 @@ class PDFPrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-
 
 
 class PDFPrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def prep_man_pdf(pdf_prep_man_operation, records):
         return records
 
 
 class ScreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     def run_screen(screen_operation, records: dict, split: list) -> dict:
         pass
 
 
 class DataEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
     # pylint: disable=no-self-argument
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore

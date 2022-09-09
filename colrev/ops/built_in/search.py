@@ -29,6 +29,9 @@ import colrev.record
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class CrossrefSearchEndpoint:
+    """Performs a search using the Crossref API"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
@@ -39,9 +42,7 @@ class CrossrefSearchEndpoint:
         search_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
@@ -157,6 +158,9 @@ class CrossrefSearchEndpoint:
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class DBLPSearchEndpoint:
+    """Performs a search using the DBLP API"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_identifier = "{{dblp_key}}"
     mode = "all"
@@ -167,9 +171,7 @@ class DBLPSearchEndpoint:
         search_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
@@ -304,6 +306,11 @@ class DBLPSearchEndpoint:
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class BackwardSearchEndpoint:
+    """Performs a backward search extracting references from PDFs using GROBID
+    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
+    """
+
+    settings_class = colrev.process.DefaultSettings
 
     source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
@@ -312,9 +319,7 @@ class BackwardSearchEndpoint:
         self, *, search_operation: colrev.ops.search.Search, settings: dict
     ) -> None:
 
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.grobid_service = search_operation.review_manager.get_grobid_service()
         self.grobid_service.start()
@@ -428,6 +433,9 @@ class BackwardSearchEndpoint:
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class ColrevProjectSearchEndpoint:
+    """Performs a search in a CoLRev project"""
+
+    settings_class = colrev.process.DefaultSettings
 
     # TODO : add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "project"
@@ -439,9 +447,7 @@ class ColrevProjectSearchEndpoint:
         search_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
@@ -527,6 +533,9 @@ class ColrevProjectSearchEndpoint:
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class IndexSearchEndpoint:
+    """Performs a search of the local index"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_identifier = "index"
     mode = "individual"
@@ -537,9 +546,7 @@ class IndexSearchEndpoint:
         search_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
@@ -702,6 +709,9 @@ class IndexSearchEndpoint:
 
 @zope.interface.implementer(colrev.process.SearchEndpoint)
 class PDFSearchEndpoint:
+    """Performs a search of a directory containing PDF files"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_identifier = "{{file}}"
     mode = "all"
@@ -714,9 +724,7 @@ class PDFSearchEndpoint:
         search_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path

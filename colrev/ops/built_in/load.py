@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class BibPybtexLoader:
+    """Loads BibTeX files (based on pybtex)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     supported_extensions = ["bib"]
 
@@ -31,9 +34,7 @@ class BibPybtexLoader:
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -126,6 +127,10 @@ class SpreadsheetLoadUtility:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class CSVLoader:
+    """Loads csv files (based on pandas)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     supported_extensions = ["csv"]
 
     def __init__(
@@ -134,9 +139,7 @@ class CSVLoader:
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -164,6 +167,9 @@ class CSVLoader:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class ExcelLoader:
+    """Loads Excel (xls, xlsx) files (based on pandas)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     supported_extensions = ["xls", "xlsx"]
 
@@ -173,9 +179,7 @@ class ExcelLoader:
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -205,14 +209,16 @@ class ExcelLoader:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class ZoteroTranslationLoader:
+    """Loads bibliography files (based on pandas).
+    Supports ris, rdf, json, mods, xml, marc, txt"""
+
+    settings_class = colrev.process.DefaultSettings
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
     def __init__(self, *, load_operation: colrev.ops.load.Load, settings: dict):
 
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.zotero_translation_service = (
             load_operation.review_manager.get_zotero_translation_service()
@@ -261,6 +267,9 @@ class ZoteroTranslationLoader:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class MarkdownLoader:
+    """Loads reference strings from text (md) files (based on GROBID)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     supported_extensions = ["md"]
 
@@ -270,9 +279,7 @@ class MarkdownLoader:
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -312,6 +319,10 @@ class MarkdownLoader:
 
 @zope.interface.implementer(colrev.process.LoadEndpoint)
 class BibutilsLoader:
+    """Loads bibliography files (based on bibutils)
+    Supports ris, end, enl, copac, isi, med"""
+
+    settings_class = colrev.process.DefaultSettings
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
@@ -321,9 +332,7 @@ class BibutilsLoader:
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
