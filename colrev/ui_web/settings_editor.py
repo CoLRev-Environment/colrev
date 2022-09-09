@@ -35,7 +35,7 @@ class SettingsEditor:
 
     def open_settings_editor(self):
 
-        app = Flask(__name__, static_url_path="", static_folder="frontend/build")
+        app = Flask(__name__, static_url_path="", static_folder="build")
         CORS(app)
 
         app.config["path"] = str(self.review_manager.settings_path)
