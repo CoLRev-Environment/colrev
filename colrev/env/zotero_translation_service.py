@@ -8,13 +8,16 @@ import requests
 from docker.errors import APIError
 
 import colrev.env.environment_manager
+import colrev.exceptions as colrev_exceptions
 
 
 class ZoteroTranslationService:
     def __init__(self):
         pass
 
-    def start_zotero_translators(self) -> None:
+    def start_zotero_translators(
+        self, *, startup_without_waiting: bool = False
+    ) -> None:
 
         if self.zotero_service_available():
             return
@@ -37,13 +40,19 @@ class ZoteroTranslationService:
         except APIError:
             pass
 
+        if startup_without_waiting:
+            return
+
         i = 0
         while i < 45:
+            print("check")
             if self.zotero_service_available():
-                break
+                return
             time.sleep(1)
             i += 1
-        return
+        raise colrev_exceptions.ServiceNotAvailableException(
+            "Zotero translators (docker) not available"
+        )
 
     def zotero_service_available(self) -> bool:
 

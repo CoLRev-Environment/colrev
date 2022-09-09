@@ -676,6 +676,10 @@ class EndnoteEndpoint:
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+        data_operation.review_manager.get_zotero_translation_service(
+            startup_without_waiting=True
+        )
+
     def get_default_setup(self) -> dict:
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",

@@ -85,6 +85,9 @@ class ReviewManager:
 
         self.debug_mode = debug_mode
 
+        # Start LocalIndex to prevent waiting times
+        self.get_local_index(startup_without_waiting=True)
+
         try:
             if self.debug_mode:
                 self.report_logger = self.__setup_report_logger(level=logging.DEBUG)

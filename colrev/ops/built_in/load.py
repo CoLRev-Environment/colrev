@@ -223,14 +223,16 @@ class ZoteroTranslationLoader:
         self.zotero_translation_service = (
             load_operation.review_manager.get_zotero_translation_service()
         )
-        self.zotero_translation_service.start_zotero_translators()
+        self.zotero_translation_service.start_zotero_translators(
+            startup_without_waiting=True
+        )
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ):
 
+        self.zotero_translation_service.start_zotero_translators()
         # pylint: disable=consider-using-with
-
         files = {"file": open(source.filename, "rb")}
         headers = {"Content-type": "text/plain"}
         ret = requests.post(
