@@ -23,6 +23,39 @@ if typing.TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ScopePrescreenEndpoint:
+    """Prescreens records based on predefined rules (scope)"""
+
+    @dataclass
+    class ScopePrescreenEndpointSettings:
+        # pylint: disable=C0103
+        name: str
+        TimeScopeFrom: typing.Optional[int]
+        TimeScopeTo: typing.Optional[int]
+        LanguageScope: typing.Optional[list]
+        ExcludeComplementaryMaterials: typing.Optional[bool]
+        OutletInclusionScope: typing.Optional[dict]
+        OutletExclusionScope: typing.Optional[dict]
+        ENTRYTYPEScope: typing.Optional[list]
+
+        _details = {
+            "TimeScopeFrom": {"tooltip": "Lower bound for the time scope"},
+            "TimeScopeTo": {"tooltip": "Upper bound for the time scope"},
+            "LanguageScope": {"tooltip": "Language scope"},
+            "ExcludeComplementaryMaterials": {
+                "tooltip": "Whether complementary materials (coverpages etc.) are excluded"
+            },
+            "OutletInclusionScope": {
+                "tooltip": "Particular outlets that should be included (exclusively)"
+            },
+            "OutletExclusionScope": {
+                "tooltip": "Particular outlets that should be excluded"
+            },
+            "ENTRYTYPEScope": {
+                "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)"
+            },
+        }
+
+    settings_class = ScopePrescreenEndpointSettings
 
     title_complementary_materials_keywords = [
         "about our authors",
@@ -57,21 +90,7 @@ class ScopePrescreenEndpoint:
             assert settings["TimeScopeTo"] < 2100
         # TODO : validate values (assert, e.g., LanguageScope)
 
-        self.settings = from_dict(
-            data_class=self.ScopePrescreenEndpointSettings, data=settings
-        )
-
-    @dataclass
-    class ScopePrescreenEndpointSettings:
-        # pylint: disable=C0103
-        name: str
-        TimeScopeFrom: typing.Optional[int]
-        TimeScopeTo: typing.Optional[int]
-        LanguageScope: typing.Optional[list]
-        ExcludeComplementaryMaterials: typing.Optional[bool]
-        OutletInclusionScope: typing.Optional[dict]
-        OutletExclusionScope: typing.Optional[dict]
-        ENTRYTYPEScope: typing.Optional[list]
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_prescreen(
         self,
@@ -193,15 +212,17 @@ class ScopePrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
+    """Prescreen based on a CLI interface"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_prescreen(
         self,
@@ -284,6 +305,9 @@ class CoLRevCLIPrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ASReviewPrescreenEndpoint:
+    """Prescreen based on ASReview"""
+
+    settings_class = colrev.process.DefaultSettings
 
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
@@ -294,9 +318,7 @@ class ASReviewPrescreenEndpoint:
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         try:
             # pylint: disable=import-outside-toplevel
@@ -518,15 +540,17 @@ class ASReviewPrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
+    """Prescreen based on a condition (currently: include all)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_prescreen(
         self,
@@ -562,15 +586,17 @@ class ConditionalPrescreenEndpoint:
 
 @zope.interface.implementer(colrev.process.PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
+    """Prescreen based on a spreadsheet (exported and imported)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def export_table(
         self,

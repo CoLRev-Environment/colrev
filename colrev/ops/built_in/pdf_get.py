@@ -25,15 +25,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class UnpaywallEndpoint:
+    """Get PDFs from unpaywall.org"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __unpaywall(
         self,
@@ -129,15 +131,17 @@ class UnpaywallEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class LocalIndexEndpoint:
+    """Get PDFs from LocalIndex"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_pdf(
         self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
@@ -162,15 +166,17 @@ class LocalIndexEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFGetEndpoint)
 class WebsiteScreenshotEndpoint:
+    """Get PDFs from webisite screenshot (for "online" ENTRYTYPES)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_pdf(
         self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record

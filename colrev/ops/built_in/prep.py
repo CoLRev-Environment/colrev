@@ -35,6 +35,9 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class LoadFixesPrep:
+    """Prepares records based on the source_prep_scripts specified in the source settings"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -45,9 +48,7 @@ class LoadFixesPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -94,6 +95,10 @@ class LoadFixesPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class ExcludeNonLatinAlphabetsPrep:
+    """Prepares records by excluding ones that have a non-latin alphabet
+    (in the title, author, journal, or booktitle field)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -105,9 +110,7 @@ class ExcludeNonLatinAlphabetsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -139,15 +142,16 @@ class ExcludeNonLatinAlphabetsPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class ExcludeLanguagesPrep:
+    """Prepares records by excluding ones that are not in the languages_to_include"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
 
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
@@ -164,6 +168,7 @@ class ExcludeLanguagesPrep:
         # Language formats: ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
+        # TODO : set as settings parameter?
         languages_to_include = ["eng"]
         if "scope_prescreen" in [
             s["endpoint"]
@@ -245,6 +250,9 @@ class ExcludeLanguagesPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class ExcludeCollectionsPrep:
+    """Prepares records by excluding collection entries (e.g., proceedings)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -255,9 +263,7 @@ class ExcludeCollectionsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -272,6 +278,9 @@ class ExcludeCollectionsPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class RemoveError500URLsPrep:
+    """Prepares records by removing urls that are not available"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -282,9 +291,7 @@ class RemoveError500URLsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -323,6 +330,9 @@ class RemoveError500URLsPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class RemoveBrokenIDPrep:
+    """Prepares records by removing invalid IDs DOIs/ISBNs"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -334,9 +344,7 @@ class RemoveBrokenIDPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -368,6 +376,9 @@ class RemoveBrokenIDPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class GlobalIDConsistencyPrep:
+    """Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -378,9 +389,7 @@ class GlobalIDConsistencyPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -457,6 +466,9 @@ class GlobalIDConsistencyPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class CuratedPrep:
+    """Prepares records by setting records with curated masterdata to md_prepared"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -467,9 +479,7 @@ class CuratedPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -485,6 +495,9 @@ class CuratedPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class FormatPrep:
+    """Prepares records by formatting fields"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -495,9 +508,7 @@ class FormatPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -639,6 +650,9 @@ class FormatPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class BibTexCrossrefResolutionPrep:
+    """Prepares records by resolving BibTex crossref links (e.g., to proceedings)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -649,9 +663,7 @@ class BibTexCrossrefResolutionPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -671,6 +683,9 @@ class BibTexCrossrefResolutionPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class SemanticScholarPrep:
+    """Prepares records based on SemanticScholar metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "fill out the online form: "
@@ -684,9 +699,7 @@ class SemanticScholarPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def retrieve_record_from_semantic_scholar(
         self, *, prep_operation, url: str, record_in: colrev.record.PrepRecord
@@ -819,6 +832,9 @@ class SemanticScholarPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class DOIFromURLsPrep:
+    """Prepares records by retrieving its DOI from the website (URL)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -832,9 +848,7 @@ class DOIFromURLsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -907,6 +921,9 @@ class DOIFromURLsPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class DOIMetadataPrep:
+    """Prepares records based on doi.org metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -921,9 +938,7 @@ class DOIMetadataPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -945,6 +960,9 @@ class DOIMetadataPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class CrossrefMetadataPrep:
+    """Prepares records based on crossref.org metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -959,9 +977,7 @@ class CrossrefMetadataPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -975,6 +991,9 @@ class CrossrefMetadataPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class DBLPMetadataPrep:
+    """Prepares records based on dblp.org metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "send and email to dblp@dagstuhl.de"
@@ -988,9 +1007,7 @@ class DBLPMetadataPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1058,12 +1075,11 @@ class DBLPMetadataPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class OpenLibraryMetadataPrep:
+    """Prepares records based on openlibrary.org metadata"""
 
-    source_correction_hint = (
-        "ask the publisher to correct the metadata"
-        + " (see https://www.crossref.org/blog/"
-        + "metadata-corrections-updates-and-additions-in-metadata-manager/"
-    )
+    settings_class = colrev.process.DefaultSettings
+
+    source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False
 
     def __init__(
@@ -1072,9 +1088,7 @@ class OpenLibraryMetadataPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1202,6 +1216,9 @@ class OpenLibraryMetadataPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class CiteAsPrep:
+    """Prepares records based on citeas.org metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
@@ -1212,9 +1229,7 @@ class CiteAsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1297,6 +1312,9 @@ class CiteAsPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class CrossrefYearVolIssPrep:
+    """Prepares records by adding missing years based on crossref.org metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -1311,9 +1329,7 @@ class CrossrefYearVolIssPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1384,6 +1400,9 @@ class CrossrefYearVolIssPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class LocalIndexPrep:
+    """Prepares records based on LocalIndex metadata"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = (
         "correct the metadata in the source "
@@ -1395,9 +1414,7 @@ class LocalIndexPrep:
 
         self.local_index = prep_operation.review_manager.get_local_index()
 
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1475,6 +1492,9 @@ class LocalIndexPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class RemoveNicknamesPrep:
+    """Prepares records by removing author nicknames"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1485,9 +1505,7 @@ class RemoveNicknamesPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1504,6 +1522,9 @@ class RemoveNicknamesPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class FormatMinorPrep:
+    """Prepares records by applying minor formatting changes"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1515,9 +1536,7 @@ class FormatMinorPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1548,6 +1567,9 @@ class FormatMinorPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class DropFieldsPrep:
+    """Prepares records by dropping fields that are not needed"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1559,9 +1581,7 @@ class DropFieldsPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1601,6 +1621,10 @@ class DropFieldsPrep:
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class RemoveRedundantFieldPrep:
 
+    """Prepares records by removing redundant fields"""
+
+    settings_class = colrev.process.DefaultSettings
+
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
@@ -1610,9 +1634,7 @@ class RemoveRedundantFieldPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1646,6 +1668,9 @@ class RemoveRedundantFieldPrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class CorrectRecordTypePrep:
+    """Prepares records by correcting the record type (ENTRYTYPE)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -1656,9 +1681,7 @@ class CorrectRecordTypePrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -1730,6 +1753,9 @@ class CorrectRecordTypePrep:
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
 class UpdateMetadataStatusPrep:
+    """Prepares records by updating the metadata status"""
+
+    settings_class = colrev.process.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -1740,9 +1766,7 @@ class UpdateMetadataStatusPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(

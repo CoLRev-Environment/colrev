@@ -19,15 +19,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PDFGetManEndpoint)
 class CoLRevCLIPDFGetMan:
+    """Get PDFs manually based on a CLI"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,  # pylint: disable=unused-argument
         settings,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_man_pdf(
         self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict

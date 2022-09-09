@@ -93,7 +93,26 @@ def console_duplicate_instance_label(
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class SimpleDedupeEndpoint:
-    """Simple duplicate identification when the sample size is too small"""
+    """Simple duplicate identification (for small sample sizes)"""
+
+    @dataclass
+    class SimpleDedupeSettings:
+        name: str
+        merging_non_dup_threshold: float = 0.7
+        merging_dup_threshold: float = 0.95
+
+        _details = {
+            "merging_non_dup_threshold": {
+                "tooltip": "Threshold: record pairs with a similarity "
+                "below this threshold are considered non-duplicates"
+            },
+            "merging_dup_threshold": {
+                "tooltip": "Threshold: record pairs with a similarity "
+                "above this threshold are considered duplicates"
+            },
+        }
+
+    settings_class = SimpleDedupeSettings
 
     def __init__(
         self,
@@ -102,24 +121,12 @@ class SimpleDedupeEndpoint:
         settings: dict,
     ):
 
-        # Set default values (if necessary)
-        if "merging_non_dup_threshold" not in settings:
-            settings["merging_non_dup_threshold"] = 0.7
-        if "merging_dup_threshold" not in settings:
-            settings["merging_dup_threshold"] = 0.95
-
-        self.settings = from_dict(data_class=self.SimpleDedupeSettings, data=settings)
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         assert self.settings.merging_non_dup_threshold >= 0.0
         assert self.settings.merging_non_dup_threshold <= 1.0
         assert self.settings.merging_dup_threshold >= 0.0
         assert self.settings.merging_dup_threshold <= 1.0
-
-    @dataclass
-    class SimpleDedupeSettings:
-        name: str
-        merging_non_dup_threshold: float
-        merging_dup_threshold: float
 
     def __calculate_similarities_record(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records_df: pd.DataFrame
@@ -414,6 +421,9 @@ class SimpleDedupeEndpoint:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
+    """Active learning: training phase (minimum sample size of 50 required)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     deduper: dedupe_io.Deduper
 
@@ -426,9 +436,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def setup_active_learning_dedupe(
         self,
@@ -825,6 +833,21 @@ class ActiveLearningDedupeTrainingEndpoint:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
+    """Applies trained (active learning) model"""
+
+    @dataclass
+    class ActiveLearningSettings:
+        name: str
+        merge_threshold: float = 0.8
+        partition_threshold: float = 0.5
+
+        _details = {
+            "merge_threshold": {"tooltip": "Threshold for merging record pairs"},
+            "partition_threshold": {"tooltip": "Threshold for partitioning"},
+        }
+
+    settings_class = ActiveLearningSettings
+
     def __init__(
         self,
         *,
@@ -832,24 +855,12 @@ class ActiveLearningDedupeAutomatedEndpoint:
         settings: dict,
     ):
 
-        # Set default values (if necessary)
-        if "merge_threshold" not in settings:
-            settings["merge_threshold"] = 0.8
-        if "partition_threshold" not in settings:
-            settings["partition_threshold"] = 0.5
-
-        self.settings = from_dict(data_class=self.ActiveLearningSettings, data=settings)
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         assert self.settings.merge_threshold >= 0.0
         assert self.settings.merge_threshold <= 1.0
         assert self.settings.partition_threshold >= 0.0
         assert self.settings.partition_threshold <= 1.0
-
-    @dataclass
-    class ActiveLearningSettings:
-        name: str
-        merge_threshold: float
-        partition_threshold: float
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
@@ -1308,6 +1319,17 @@ class CurationDedupeEndpoint:
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
+    @dataclass
+    class CurationDedupeSettings:
+        name: str
+        selected_source: str
+
+        _details = {
+            "selected_source": {"tooltip": "Source (path) selected for the dedupe run"},
+        }
+
+    settings_class = CurationDedupeSettings
+
     def __init__(
         self,
         *,
@@ -1318,12 +1340,7 @@ class CurationDedupeEndpoint:
         # to select the specific files/grouping properties?!
         # -> see selected_source.
         # TODO : validate whether selected_source is in SOURCES.filenames
-        self.settings = from_dict(data_class=self.CurationDedupeSettings, data=settings)
-
-    @dataclass
-    class CurationDedupeSettings:
-        name: str
-        selected_source: str
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
@@ -1785,15 +1802,17 @@ class CurationDedupeEndpoint:
 
 @zope.interface.implementer(colrev.process.DedupeEndpoint)
 class CurationMissingDedupeEndpoint:
+    """Endpoint for deduplicating remaining records in a curated metadata repository"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 

@@ -719,7 +719,7 @@ class Load(colrev.process.Process):
 
             # 3. load and add records to records.bib
             self.load_source_records(source=source, keep_ids=keep_ids)
-            if 0 == source.to_import:
+            if 0 == getattr(source, "to_import", 0):
                 continue
 
             # 4. validate load

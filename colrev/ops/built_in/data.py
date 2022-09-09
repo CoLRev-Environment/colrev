@@ -34,6 +34,16 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class ManuscriptEndpoint:
+    """Synthesize the literature in a manuscript
+
+    The manuscript (paper.md) is created automatically.
+    Records are added for synthesis after the <!-- NEW_RECORD_SOURCE -->
+    Once records are moved to other parts of the manuscript (cited or in comments)
+    they are assumed to be synthesized in the manuscript.
+    Once they are synthesized in all data endpoints,
+    CoLRev sets their status to rev_synthesized.
+    The data operation also builds the manuscript (using pandoc, csl and a template).
+    """
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
     """Tag for appending new records in paper.md
@@ -44,7 +54,22 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
-    PAPER_RELATIVE = Path("paper.md")
+    @dataclass
+    class ManuscriptEndpointSettings:
+        name: str
+        version: str
+        word_template: str
+        csl_style: str
+        paper_path: Path = Path("paper.md")
+        # TODO : output path
+
+        _details = {
+            "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
+            "csl_style": {"tooltip": "Path to the csl file (for Pandoc)"},
+            "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
+        }
+
+    settings_class = ManuscriptEndpointSettings
 
     def __init__(
         self,
@@ -62,18 +87,10 @@ class ManuscriptEndpoint:
         if "csl_style" not in settings:
             settings["csl_style"] = (self.retrieve_default_csl(),)
 
-        self.settings = from_dict(
-            data_class=self.ManuscriptEndpointSettings, data=settings
-        )
-        self.paper = data_operation.review_manager.path / self.PAPER_RELATIVE
-        self.data_operation = data_operation
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    @dataclass
-    class ManuscriptEndpointSettings:
-        name: str
-        version: str
-        word_template: str
-        csl_style: str
+        self.paper = data_operation.review_manager.path / self.settings.paper_path
+        self.data_operation = data_operation
 
     def get_default_setup(self) -> dict:
 
@@ -253,14 +270,14 @@ class ManuscriptEndpoint:
 
             r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
             paper_resource_path = (
-                Path(f"template/review_type/{r_type_path}/") / self.PAPER_RELATIVE
+                Path(f"template/review_type/{r_type_path}/") / self.settings.paper_path
             )
             try:
                 colrev.env.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
             except FileNotFoundError:
-                paper_resource_path = Path("template/") / self.PAPER_RELATIVE
+                paper_resource_path = Path("template/") / self.settings.paper_path
                 colrev.env.utils.retrieve_package_file(
                     template_file=paper_resource_path, target=self.paper
                 )
@@ -312,7 +329,7 @@ class ManuscriptEndpoint:
                 f"{nr_records_added} records added to {self.paper.name}"
             )
 
-        review_manager.dataset.add_changes(path=self.PAPER_RELATIVE)
+        review_manager.dataset.add_changes(path=self.settings.paper_path)
 
         return records
 
@@ -450,8 +467,19 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class StructuredDataEndpoint:
+    """Summarize the literature in a structured data extraction (a spreadsheet)"""
 
-    DATA_PATH_RELATIVE = Path("data.csv")
+    @dataclass
+    class StructuredDataEndpointSettings:
+        name: str
+        version: str
+        fields: dict  # TODO : Field dataclass (name, explanation, data_type)
+
+        _details = {
+            "fields": {"tooltip": "Fields for the structured data extraction"},
+        }
+
+    settings_class = StructuredDataEndpointSettings
 
     def __init__(
         self,
@@ -459,16 +487,16 @@ class StructuredDataEndpoint:
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
         # TODO : integrate filename in custom settings
-        self.data_path = data_operation.review_manager.path / self.DATA_PATH_RELATIVE
+        self.data_path = (
+            data_operation.review_manager.path / self.settings.data_path_relative
+        )
 
     def get_default_setup(self) -> dict:
         structured_endpoint_details = {
             "endpoint": "STRUCTURED",
-            "structured_data_endpoint_version": "0.1",
+            "version": "0.1",
             "fields": [
                 {
                     "name": "field name",
@@ -518,7 +546,7 @@ class StructuredDataEndpoint:
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
 
-            if not self.DATA_PATH_RELATIVE.is_file():
+            if not self.settings.data_path_relative.is_file():
 
                 coding_dimensions_str = input(
                     "\n\nEnter columns for data extraction (comma-separted)"
@@ -534,14 +562,14 @@ class StructuredDataEndpoint:
                 data_df.sort_values(by=["ID"], inplace=True)
 
                 data_df.to_csv(
-                    self.DATA_PATH_RELATIVE, index=False, quoting=csv.QUOTE_ALL
+                    self.settings.data_path_relative, index=False, quoting=csv.QUOTE_ALL
                 )
 
             else:
 
                 nr_records_added = 0
 
-                data_df = pd.read_csv(self.DATA_PATH_RELATIVE, dtype=str)
+                data_df = pd.read_csv(self.settings.data_path_relative, dtype=str)
 
                 for record_id in list(synthesized_record_status_matrix.keys()):
                     # skip when already available
@@ -560,14 +588,14 @@ class StructuredDataEndpoint:
                 data_df.sort_values(by=["ID"], inplace=True)
 
                 data_df.to_csv(
-                    self.DATA_PATH_RELATIVE, index=False, quoting=csv.QUOTE_ALL
+                    self.settings.data_path_relative, index=False, quoting=csv.QUOTE_ALL
                 )
 
                 review_manager.report_logger.info(
-                    f"{nr_records_added} records added ({self.DATA_PATH_RELATIVE})"
+                    f"{nr_records_added} records added ({self.settings.data_path_relative})"
                 )
                 review_manager.logger.info(
-                    f"{nr_records_added} records added ({self.DATA_PATH_RELATIVE})"
+                    f"{nr_records_added} records added ({self.settings.data_path_relative})"
                 )
 
             return records
@@ -578,7 +606,9 @@ class StructuredDataEndpoint:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        data_operation.review_manager.dataset.add_changes(path=self.DATA_PATH_RELATIVE)
+        data_operation.review_manager.dataset.add_changes(
+            path=self.settings.data_path_relative
+        )
 
     def update_record_status_matrix(
         self,
@@ -634,15 +664,17 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class EndnoteEndpoint:
+    """Export the sample references in Endpoint format"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
         endnote_endpoint_details = {
@@ -784,15 +816,17 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class PRISMAEndpoint:
+    """Create a PRISMA diagram"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
         prisma_endpoint_details = {
@@ -869,6 +903,21 @@ class PRISMAEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class ZettlrEndpoint:
+    """Export the sample into a Zettlr database"""
+
+    @dataclass
+    class ZettlrSettings:
+        name: str
+        version: str
+        config: dict
+
+        # _details = {
+        #     "config": {
+        #         "tooltip": "TODO"
+        #     },
+        # }
+
+    settings_class = ZettlrSettings
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
@@ -878,18 +927,12 @@ class ZettlrEndpoint:
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.ZettlrSettings, data=settings)
-
-    @dataclass
-    class ZettlrSettings:
-        name: str
-        zettlr_endpoint_version: str
-        config: dict
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
         zettlr_endpoint_details = {
             "endpoint": "ZETTLR",
-            "zettlr_endpoint_version": "0.1",
+            "version": "0.1",
             "config": {},
         }
         return zettlr_endpoint_details
@@ -1109,6 +1152,23 @@ class ZettlrEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class GithubPagesEndpoint:
+    """Export the literature review into a Github Page"""
+
+    @dataclass
+    class GHPagesSettings:
+        name: str
+        version: str
+        auto_push: bool
+
+        _details = {
+            "auto_push": {
+                "tooltip": "Indicates whether the Github Pages branch "
+                "should be pushed automatically"
+            },
+        }
+
+    settings_class = GHPagesSettings
+
     def __init__(
         self,
         *,
@@ -1121,13 +1181,7 @@ class GithubPagesEndpoint:
         if "auto_push" not in settings:
             settings["auto_push"] = True
 
-        self.settings = from_dict(data_class=self.GHPagesSettings, data=settings)
-
-    @dataclass
-    class GHPagesSettings:
-        name: str
-        version: str
-        auto_push: bool
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
         github_pages_endpoint_details = {

@@ -73,12 +73,13 @@ def drop_fields(
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class AISeLibrarySearchSource:
+
+    settings_class = colrev.process.DefaultSettings
+
     source_identifier = "https://aisel.aisnet.org/"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -229,12 +230,11 @@ class AISeLibrarySearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class GoogleScholarSearchSource:
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "https://scholar.google.com/"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -252,14 +252,13 @@ class GoogleScholarSearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class WebOfScienceSearchSource:
+    settings_class = colrev.process.DefaultSettings
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -286,12 +285,11 @@ class WebOfScienceSearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class ScopusSearchSource:
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{url}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -347,13 +345,12 @@ class ScopusSearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class ACMDigitalLibrary:
+    settings_class = colrev.process.DefaultSettings
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -374,13 +371,11 @@ class ACMDigitalLibrary:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class PubMed:
-
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -426,13 +421,11 @@ class PubMed:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class WileyOnlineLibrary:
-
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{url}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -453,13 +446,11 @@ class WileyOnlineLibrary:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class DBLP:
-
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{biburl}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -478,13 +469,11 @@ class DBLP:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class TransportResearchInternationalDocumentation:
-
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{biburl}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
@@ -503,12 +492,11 @@ class TransportResearchInternationalDocumentation:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class PDFSearchSource:
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{file}}"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(self, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -531,12 +519,11 @@ class PDFSearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class BackwardSearchSearchSource:
+    settings_class = colrev.process.DefaultSettings
     source_identifier = "{{cited_by_file}} (references)"
 
     def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument

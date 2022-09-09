@@ -20,15 +20,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PDFPrepManEndpoint)
 class CoLRevCLIPDFManPrep:
+    """Manually prepare PDFs based on a CLI (not yet implemented)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def prep_man_pdf(
         self, pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, records: dict

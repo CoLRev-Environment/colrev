@@ -27,15 +27,17 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCheckOCREndpoint:
+    """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     # TODO : test whether this is too slow:
     language_detector = (
@@ -139,15 +141,17 @@ class PDFCheckOCREndpoint:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCoverPageEndpoint:
+    """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
@@ -314,15 +318,17 @@ class PDFCoverPageEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFLastPageEndpoint:
+    """Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
@@ -426,15 +432,17 @@ class PDFLastPageEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFMetadataValidationEndpoint:
+    """Prepare PDFs by validating it against its associated metadata"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def validates_based_on_metadata(
         self,
@@ -568,6 +576,9 @@ class PDFMetadataValidationEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class PDFCompletenessValidationEndpoint:
+    """Prepare PDFs by validating its completeness (based on the number of pages)"""
+
+    settings_class = colrev.process.DefaultSettings
 
     roman_pages_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
@@ -584,9 +595,7 @@ class PDFCompletenessValidationEndpoint:
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __longer_with_appendix(
         self,
@@ -733,13 +742,15 @@ class PDFCompletenessValidationEndpoint:
 
 @zope.interface.implementer(colrev.process.PDFPrepEndpoint)
 class TEIEndpoint:
+    """Prepare PDFs by creating an annotated TEI document"""
+
+    settings_class = colrev.process.DefaultSettings
+
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
 
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
         grobid_service.start()
