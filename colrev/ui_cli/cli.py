@@ -2,18 +2,17 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from time import sleep
 
 import click
 import click_completion.core
 import pandas as pd
 import requests
-from tqdm import tqdm
 
-import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
+import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_status_printer
 
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
@@ -137,180 +136,6 @@ def init(ctx, name, type, url, example):
         logging.error(exc)
 
 
-def print_review_instructions(review_instructions: dict) -> None:
-
-    print("Review project\n")
-
-    verbose = False
-
-    key_list = [list(x.keys()) for x in review_instructions]
-    keys = [item for sublist in key_list for item in sublist]
-    priority_item_set = "priority" in keys
-
-    for review_instruction in review_instructions:
-        if priority_item_set and "priority" not in review_instruction.keys():
-            continue
-        if "info" in review_instruction:
-            print("  " + review_instruction["info"])
-        if "msg" in review_instruction:
-            if "cmd" in review_instruction:
-                if verbose:
-                    print("  " + review_instruction["msg"] + ", i.e., use ")
-                print(f'  {colors.ORANGE}{review_instruction["cmd"]}{colors.END}')
-            else:
-                print(f"  {colors.ORANGE}{review_instruction['msg']}{colors.END}")
-        if "cmd_after" in review_instruction:
-            print("  Then use " + review_instruction["cmd_after"])
-        print()
-
-
-def print_collaboration_instructions(collaboration_instructions: dict) -> None:
-
-    print("Versioning and collaboration\n")
-
-    if "status" in collaboration_instructions:
-        if "title" in collaboration_instructions["status"]:
-            title = collaboration_instructions["status"]["title"]
-            if "WARNING" == collaboration_instructions["status"].get("level", "NA"):
-                print(f"  {colors.RED}{title}{colors.END}")
-            elif "SUCCESS" == collaboration_instructions["status"].get("level", "NA"):
-                print(f"  {colors.GREEN}{title}{colors.END}")
-            else:
-                print("  " + title)
-        if "msg" in collaboration_instructions["status"]:
-            print(f'  {collaboration_instructions["status"]["msg"]}')
-
-    for item in collaboration_instructions["items"]:
-        if "title" in item:
-            if "level" in item:
-                if "WARNING" == item["level"]:
-                    print(f'  {colors.RED}{item["title"]}{colors.END}')
-                elif "SUCCESS" == item["level"]:
-                    print(f'  {colors.GREEN}{item["title"]}{colors.END}')
-            else:
-                print("  " + item["title"])
-
-        if "msg" in item:
-            print("  " + item["msg"])
-        if "cmd_after" in item:
-            print(f'  {item["cmd_after"]}')
-        print()
-
-
-def print_environment_instructions(environment_instructions: dict) -> None:
-    if len(environment_instructions) == 0:
-        return
-
-    print("CoLRev environment\n")
-
-    key_list = [list(x.keys()) for x in environment_instructions]
-    keys = [item for sublist in key_list for item in sublist]
-    priority_item_set = "priority" in keys
-
-    for environment_instruction in environment_instructions:
-        if priority_item_set and "priority" not in environment_instruction.keys():
-            continue
-        if "info" in environment_instruction:
-            print("  " + environment_instruction["info"])
-        if "msg" in environment_instruction:
-            if "cmd" in environment_instruction:
-                print("  " + environment_instruction["msg"] + "  i.e., use ")
-                print(f'  {colors.ORANGE}{environment_instruction["cmd"]}{colors.END}')
-            else:
-                print("  " + environment_instruction["msg"])
-        if "cmd_after" in environment_instruction:
-            print("  Then use " + environment_instruction["cmd_after"])
-        print()
-
-
-def print_progress(*, total_atomic_steps, completed_steps) -> None:
-    # Prints the percentage of atomic processing tasks that have been completed
-    # possible extension: estimate the number of manual tasks (making assumptions on
-    # frequencies of man-prep, ...)?
-
-    if total_atomic_steps != 0:
-        current_percentage = int((completed_steps / total_atomic_steps) * 100)
-    else:
-        current_percentage = -1
-
-    sleep_interval = 1.1 / max(current_percentage, 100)
-    print()
-
-    for i in tqdm(
-        range(100),
-        desc="  Progress:",
-        bar_format="{desc} |{bar}|{percentage:.0f}%",
-        ncols=40,
-    ):
-        sleep(sleep_interval)
-        if current_percentage in [i, -1]:
-            break
-
-
-def print_project_status(status_operation) -> None:
-
-    try:
-        status_stats = status_operation.review_manager.get_status_stats()
-        status_report = status_operation.get_review_status_report()
-        print(status_report)
-
-        if not status_stats.completeness_condition:
-            print_progress(
-                total_atomic_steps=status_stats.atomic_steps,
-                completed_steps=status_stats.completed_atomic_steps,
-            )
-        print("")
-
-        advisor = status_operation.review_manager.get_advisor()
-        instructions = advisor.get_instructions(status_stats=status_stats)
-        print_review_instructions(instructions["review_instructions"])
-        print_collaboration_instructions(instructions["collaboration_instructions"])
-        print_environment_instructions(instructions["environment_instructions"])
-
-    except colrev_exceptions.RepoSetupError as exc:
-        print(f"Status failed ({exc})")
-
-    print("Checks\n")
-    try:
-
-        ret_check = status_operation.review_manager.check_repo()
-    except colrev_exceptions.RepoSetupError as exc:
-        ret_check = {"status": 1, "msg": exc}
-
-    if 0 == ret_check["status"]:
-        print(
-            "  ReviewManager.check_repo()  ...  "
-            f'{colors.GREEN}{ret_check["msg"]}{colors.END}'
-        )
-    if 1 == ret_check["status"]:
-        print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
-        print(f'{ret_check["msg"]}\n')
-        return
-
-    try:
-        ret_f = status_operation.review_manager.format_records_file()
-    except KeyError as exc:
-        logging.error(exc)
-        ret_f = {"status": 1, "msg": "KeyError"}
-    if 0 == ret_f["status"]:
-        print(
-            "  ReviewManager.format()      ...  "
-            f'{colors.GREEN}{ret_f["msg"]}{colors.END}'
-        )
-    if 1 == ret_f["status"]:
-        print(f"  ReviewManager.format()      ...  {colors.RED}FAIL{colors.END}")
-        print(f'\n    {ret_f["msg"]}\n')
-    if not status_operation.review_manager.in_virtualenv():
-        print(
-            f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
-        )
-        print(
-            "  For instructions to set up a virtual environment, run\n"
-            f"  {colors.ORANGE}colrev show venv{colors.END}"
-        )
-    print()
-
-
 @main.command(help_priority=2)
 @click.option(
     "-a",
@@ -333,7 +158,7 @@ def status(ctx, analytics) -> None:
                 print(f"{cid} - {data_item}")
             return
 
-        print_project_status(status_operation)
+        colrev.ui_cli.cli_status_printer.print_project_status(status_operation)
 
     except KeyboardInterrupt:
         print("Stopped...")
@@ -1135,10 +960,13 @@ def data(
             return
         if add_endpoint:
 
-            if add_endpoint in data_operation.built_in_scripts:
-                endpoint_class = data_operation.built_in_scripts[add_endpoint][
-                    "endpoint"
-                ]
+            package_manager = review_manager.get_package_manager()
+            available_data_endpoins = package_manager.discover_packages(
+                script_type="data"
+            )
+
+            if add_endpoint in available_data_endpoins:
+                endpoint_class = available_data_endpoins[add_endpoint]["endpoint"]
                 endpoint = endpoint_class(
                     data_operation=data_operation, settings={"name": add_endpoint}
                 )
@@ -1271,13 +1099,24 @@ def validate_commit(ctx, param, value):
     default=None,
     callback=validate_commit,
 )
+@click.option(
+    "-t",
+    "--tree_hash",
+    help="Git tree hash to validate.",
+    default=None,
+)
 @click.pass_context
-def validate(ctx, scope, properties, commit) -> None:
+def validate(ctx, scope, properties, commit, tree_hash) -> None:
     """Validate changes"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager()
         validate_operation = review_manager.get_validate_operation()
+
+        if tree_hash:
+            assert not commit
+            commit = validate_operation.get_commit_from_tree_hash(tree_hash=tree_hash)
+            input(commit)
 
         validation_details = validate_operation.main(
             scope=scope, properties=properties, target_commit=commit
@@ -1372,6 +1211,19 @@ def paper(ctx) -> None:
         )
 
 
+def __select_target_repository(local_registry: list) -> Path:
+    while True:
+        for i, local_source in enumerate(local_registry):
+            print(
+                f"{i+1} - {local_source['repo_name']} ({local_source['repo_source_path']})"
+            )
+        sel_str = input("Select target repository: ")
+        sel = int(sel_str) - 1
+        if sel in range(0, len(local_registry)):
+            target = Path(local_registry[sel]["repo_source_path"])
+            return target
+
+
 @main.command(help_priority=19)
 @click.option(
     "-p",
@@ -1383,42 +1235,15 @@ def paper(ctx) -> None:
 def distribute(ctx, path) -> None:
     """Distribute records to other local CoLRev repositories"""
 
-    # pylint: disable=import-outside-toplevel
-    from yaml import safe_load
-
-    # Note : distribute is designed with the assumption that it is called from
-    # within a colrev project.
-    # In other cases, colrev.review_manager.ReviewManager() will fail.
-    # Other use cases may be related to sync/export (from LocalIndex)
-
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         distribute_operation = review_manager.get_distribute_operation()
+        local_registry = distribute_operation.get_local_registry()
 
-        local_registry_path = Path.home().joinpath(".colrev/registry.yaml")
-        if not os.path.exists(local_registry_path):
-            print("no local repositories registered")
-            return
+        target = __select_target_repository(local_registry=local_registry)
 
-        with open(local_registry_path, encoding="utf-8") as file:
-            local_registry_df = pd.json_normalize(safe_load(file))
-            local_registry = local_registry_df.to_dict("records")
-            local_registry = [
-                x for x in local_registry if "curated_metadata/" not in x["source_url"]
-            ]
-
-        valid_selection = False
-        while not valid_selection:
-            for i, local_source in enumerate(local_registry):
-                print(
-                    f"{i+1} - {local_source['source_name']} ({local_source['source_url']})"
-                )
-            sel_str = input("Select target repository: ")
-            sel = int(sel_str) - 1
-            if sel in range(0, len(local_registry)):
-                target = Path(local_registry[sel]["source_url"])
-                valid_selection = True
-
+        # Note : add a "distribution mode" option?
+        # (whole file -> add as source/load vs. records individually like a prescreen)
         distribute_operation.main(path_str=path, target=target)
 
     except colrev_exceptions.InvalidSettingsError as exc:

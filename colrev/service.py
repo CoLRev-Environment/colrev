@@ -12,8 +12,8 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
-import colrev.env.cli_colors as colors
 import colrev.ops.status
+import colrev.ui_cli.cli_colors as colors
 
 
 class Event(LoggingEventHandler):

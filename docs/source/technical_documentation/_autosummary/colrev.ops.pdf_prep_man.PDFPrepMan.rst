@@ -33,5 +33,4 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
 
    .. autosummary::
 
-      ~PDFPrepMan.built_in_scripts
       ~PDFPrepMan.force_mode

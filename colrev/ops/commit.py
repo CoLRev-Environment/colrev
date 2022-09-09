@@ -7,15 +7,16 @@ import shutil
 import sys
 import tempfile
 from importlib.metadata import version
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
 from jinja2 import Environment
 from jinja2 import FunctionLoader
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -40,8 +41,10 @@ class Commit:
         self.manual_author = manual_author
         self.realtime_override = realtime_override
 
-        self.script_name = self.parse_script_name(script_name=script_name)
-        self.saved_args = self.parse_saved_args(saved_args=saved_args)
+        self.msg = msg
+        self.script_name = self.__parse_script_name(script_name=script_name)
+        self.saved_args = self.__parse_saved_args(saved_args=saved_args)
+        self.tree_hash = ""
 
         self.last_commit_sha = ""
         try:
@@ -50,10 +53,8 @@ class Commit:
             pass
 
         self.records_committed = review_manager.dataset.records_file.is_file()
-        self.tree_hash = review_manager.dataset.get_tree_hash()
         self.completeness_condition = review_manager.get_completeness_condition()
         self.colrev_version = f'version {version("colrev")}'
-        self.colrev_hooks_version = f'version {version("colrev_hooks")}'
         sys_v = sys.version
         self.python_version = f'version {sys_v[: sys_v.find(" ")]}'
         stream = os.popen("git --version")
@@ -62,9 +63,7 @@ class Commit:
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
 
         # TODO : the "dirty" mark is no longer included (poetry setup?)
-        self.non_reproducible = any(
-            "dirty" in x for x in [self.colrev_version, self.colrev_hooks_version]
-        )
+        self.non_reproducible = "dirty" in self.colrev_version
 
         self.ext_script_name = ""
         self.ext_script_version = ""
@@ -79,16 +78,7 @@ class Commit:
                 except importlib.metadata.PackageNotFoundError:
                     pass
 
-        # Note : this should run as the last element because get_commit_report
-        # uses the other attributes
-        self.msg = (
-            msg
-            + self.__get_version_flag()
-            + self.get_commit_report()
-            + self.get_detailed_processing_report()
-        )
-
-    def parse_saved_args(self, *, saved_args: dict = None) -> str:
+    def __parse_saved_args(self, *, saved_args: dict = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():
@@ -102,7 +92,7 @@ class Commit:
 
         return saved_args_str
 
-    def parse_script_name(self, *, script_name: str) -> str:
+    def __parse_script_name(self, *, script_name: str) -> str:
         if "MANUAL" == script_name:
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
@@ -124,7 +114,7 @@ class Commit:
             flag = "*"
         return flag
 
-    def get_commit_report_header(self) -> str:
+    def __get_commit_report_header(self) -> str:
 
         environment = Environment(
             loader=FunctionLoader(colrev.env.utils.load_jinja_template)
@@ -134,7 +124,7 @@ class Commit:
 
         return content
 
-    def get_commit_report_details(self) -> str:
+    def __get_commit_report_details(self) -> str:
 
         environment = Environment(
             loader=FunctionLoader(colrev.env.utils.load_jinja_template)
@@ -144,17 +134,7 @@ class Commit:
 
         return content
 
-    def get_commit_report(self) -> str:
-
-        status_operation = self.review_manager.get_status_operation()
-
-        report = self.get_commit_report_header()
-        report += status_operation.get_review_status_report(commit_report=True)
-        report += self.get_commit_report_details()
-
-        return report
-
-    def get_detailed_processing_report(self) -> str:
+    def __get_detailed_processing_report(self) -> str:
 
         processing_report = ""
         if self.review_manager.report_path.is_file():
@@ -211,6 +191,16 @@ class Commit:
             processing_report = "\nProcessing report\n" + "".join(processing_report)
         return processing_report
 
+    def __get_commit_report(self) -> str:
+
+        status_operation = self.review_manager.get_status_operation()
+
+        report = self.__get_commit_report_header()
+        report += status_operation.get_review_status_report(commit_report=True)
+        report += self.__get_commit_report_details()
+
+        return report
+
     def create(self) -> bool:
 
         if (
@@ -233,6 +223,15 @@ class Commit:
             else:
                 git_author = git.Actor(f"script:{self.script_name}", "")
 
+            # Note : this should run as the last command before creating the commit
+            # to ensure that the git tree_hash is up-to-date.
+            self.tree_hash = self.review_manager.dataset.get_tree_hash()
+            self.msg = (
+                self.msg
+                + self.__get_version_flag()
+                + self.__get_commit_report()
+                + self.__get_detailed_processing_report()
+            )
             self.review_manager.dataset.create_commit(
                 msg=self.msg,
                 author=git_author,
@@ -251,6 +250,11 @@ class Commit:
             return True
 
         return True
+
+    def update_report(self, *, msg_file: Path) -> None:
+        report = self.__get_commit_report()
+        with open(msg_file, "a", encoding="utf8") as file:
+            file.write(report)
 
 
 if __name__ == "__main__":

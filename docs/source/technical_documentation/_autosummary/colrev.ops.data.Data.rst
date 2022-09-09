@@ -32,6 +32,5 @@ colrev.ops.data.Data
 
    .. autosummary::
 
-      ~Data.built_in_scripts
       ~Data.verbose
       ~Data.force_mode

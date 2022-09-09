@@ -18,6 +18,7 @@ colrev.env.tei\_parser.TEIParser
 
       ~TEIParser.create_tei
       ~TEIParser.get_abstract
+      ~TEIParser.get_author_details
       ~TEIParser.get_author_name_from_node
       ~TEIParser.get_bibliography
       ~TEIParser.get_citations_per_section

@@ -8,19 +8,9 @@ from pathlib import Path
 import colrev.process
 import colrev.record
 import colrev.settings
-from colrev.ops.built_in import screen as built_in_screen
 
 
 class Screen(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "colrev_cli_screen": {
-            "endpoint": built_in_screen.CoLRevCLIScreenEndpoint,
-        },
-        "spreadsheed_screen": {"endpoint": built_in_screen.SpreadsheetScreenEndpoint},
-        # "conditional_screen": {"endpoint": built_in_screen.ConditionalScreenEndpoint},
-    }
-
     def __init__(
         self,
         *,

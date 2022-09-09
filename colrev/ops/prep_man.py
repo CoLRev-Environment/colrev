@@ -5,25 +5,11 @@ import typing
 
 import pandas as pd
 
-import colrev.ops.built_in.prep_man as built_in_prep_man
 import colrev.process
 import colrev.record
 
 
 class PrepMan(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "colrev_cli_man_prep": {
-            "endpoint": built_in_prep_man.CoLRevCLIManPrep,
-        },
-        "export_man_prep": {
-            "endpoint": built_in_prep_man.ExportManPrep,
-        },
-        "prep_man_curation_jupyter": {
-            "endpoint": built_in_prep_man.CurationJupyterNotebookManPrep,
-        },
-    }
-
     def __init__(
         self,
         *,

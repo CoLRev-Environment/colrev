@@ -30,7 +30,6 @@ colrev.ops.pdf\_prep.PDFPrep
 
    .. autosummary::
 
-      ~PDFPrep.built_in_scripts
       ~PDFPrep.to_prepare
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared

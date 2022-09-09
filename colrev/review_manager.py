@@ -54,8 +54,13 @@ class ReviewManager:
     README_RELATIVE = Path("readme.md")
     STATUS_RELATIVE = Path("status.yaml")
 
+    __COLREV_HOOKS_URL = "https://github.com/geritwagner/colrev-hooks"
+
     dataset: colrev.dataset.Dataset
     """The review dataset object"""
+
+    path: Path
+    """Path of the project repository"""
 
     def __init__(
         self,
@@ -68,11 +73,7 @@ class ReviewManager:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
 
-        if path_str is not None:
-            self.path = Path(path_str)
-            """Path of the project repository"""
-        else:
-            self.path = Path.cwd()
+        self.path = Path(path_str) if path_str is not None else Path.cwd()
 
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE
@@ -82,10 +83,7 @@ class ReviewManager:
         self.readme = self.path / self.README_RELATIVE
         self.status = self.path / self.STATUS_RELATIVE
 
-        if debug_mode:
-            self.debug_mode = True
-        else:
-            self.debug_mode = False
+        self.debug_mode = debug_mode
 
         try:
             if self.debug_mode:
@@ -105,7 +103,7 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
-                print(exc)
+                self.logger.debug(exc)
             else:
                 raise exc
 
@@ -261,6 +259,52 @@ class ReviewManager:
         last_version, current_version = self.get_colrev_versions()
         if last_version != current_version:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
+        if not sys.version_info > (2, 7):
+            raise colrev_exceptions.CoLRevException("CoLRev does not support Python 2.")
+        if sys.version_info < (3, 5):
+            self.logger.warning(
+                "CoLRev uses Python 3.8 features (currently, %s is installed). Please upgrade.",
+                sys.version_info,
+            )
+
+    def __lsremote(self, *, url: str) -> dict:
+        remote_refs = {}
+        git_repo = git.cmd.Git()
+        for ref in git_repo.ls_remote(url).split("\n"):
+            hash_ref_list = ref.split("\t")
+            remote_refs[hash_ref_list[1]] = hash_ref_list[0]
+        return remote_refs
+
+    def __colrev_hook_up_to_date(self) -> bool:
+
+        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
+            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+
+        local_hooks_version = ""
+        for repository in pre_commit_config["repos"]:
+            if repository["repo"] == self.__COLREV_HOOKS_URL:
+                local_hooks_version = repository["rev"]
+
+        refs = self.__lsremote(url=self.__COLREV_HOOKS_URL)
+        remote_sha = refs["HEAD"]
+        if remote_sha == local_hooks_version:
+            return True
+        return False
+
+    def __update_colrev_hooks(self) -> None:
+        if self.__COLREV_HOOKS_URL not in self.__get_installed_repos():
+            return
+        try:
+            if not self.__colrev_hook_up_to_date():
+                self.logger.info("Updating pre-commit hooks")
+                check_call(["pre-commit", "autoupdate"], stdout=DEVNULL, stderr=STDOUT)
+                self.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
+        except GitCommandError:
+            self.logger.warning(
+                "No Internet connection, cannot check remote "
+                "colrev-hooks repository for updates."
+            )
+        return
 
     def check_repository_setup(self) -> None:
 
@@ -278,21 +322,10 @@ class ReviewManager:
             )
 
         # 3. Pre-commit hooks installed?
-        installed_hooks = self.__get_installed_hooks()
-        self.__require_hooks_installed(installed_hooks=installed_hooks)
+        self.__require_colrev_hooks_installed()
 
         # 4. Pre-commit hooks up-to-date?
-        try:
-            if not self.__hooks_up_to_date(installed_hooks=installed_hooks):
-                self.logger.info("Updating pre-commit hooks")
-                check_call(["pre-commit", "autoupdate"], stdout=DEVNULL, stderr=STDOUT)
-                self.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
-
-        except GitCommandError:
-            self.logger.warning(
-                "No Internet connection, cannot check remote "
-                "colrev-hooks repository for updates."
-            )
+        self.__update_colrev_hooks()
 
     def in_virtualenv(self) -> bool:
         def get_base_prefix_compat() -> str:
@@ -333,40 +366,33 @@ class ReviewManager:
             return False
         return True
 
-    def __get_installed_hooks(self) -> dict:
-        installed_hooks: dict = {"hooks": []}
+    def __get_installed_hooks(self) -> list:
+        installed_hooks = []
         with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
             pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-        colrev_hooks_url = "https://github.com/geritwagner/colrev-hooks"
-        installed_hooks["remote_pv_hooks_repo"] = colrev_hooks_url
         for repository in pre_commit_config["repos"]:
-            if repository["repo"] == installed_hooks["remote_pv_hooks_repo"]:
-                installed_hooks["local_hooks_version"] = repository["rev"]
-                installed_hooks["hooks"] = [hook["id"] for hook in repository["hooks"]]
+            installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
         return installed_hooks
 
-    def __lsremote(self, *, url: str) -> dict:
-        remote_refs = {}
-        git_repo = git.cmd.Git()
-        for ref in git_repo.ls_remote(url).split("\n"):
-            hash_ref_list = ref.split("\t")
-            remote_refs[hash_ref_list[1]] = hash_ref_list[0]
-        return remote_refs
+    def __get_installed_repos(self) -> list:
+        installed_repos = []
+        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
+            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+        for repository in pre_commit_config["repos"]:
+            installed_repos.append(repository["repo"])
+        return installed_repos
 
-    def __hooks_up_to_date(self, *, installed_hooks: dict) -> bool:
-        refs = self.__lsremote(url=installed_hooks["remote_pv_hooks_repo"])
-        remote_sha = refs["HEAD"]
-        if remote_sha == installed_hooks["local_hooks_version"]:
-            return True
-        return False
-
-    def __require_hooks_installed(self, *, installed_hooks: dict) -> bool:
-        required_hooks = ["check", "format", "report", "sharing"]
-        hooks_activated = set(installed_hooks["hooks"]) == set(required_hooks)
+    def __require_colrev_hooks_installed(self) -> bool:
+        required_hooks = [
+            "colrev-hooks-check",
+            "colrev-hooks-format",
+            "colrev-hooks-report",
+            "colrev-hooks-share",
+        ]
+        installed_hooks = self.__get_installed_hooks()
+        hooks_activated = set(required_hooks).issubset(set(installed_hooks))
         if not hooks_activated:
-            missing_hooks = [
-                x for x in required_hooks if x not in installed_hooks["hooks"]
-            ]
+            missing_hooks = [x for x in required_hooks if x not in installed_hooks]
             raise colrev_exceptions.RepoSetupError(
                 f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
@@ -565,8 +591,7 @@ class ReviewManager:
                     manual_author=True,
                     script_name="MANUAL",
                 )
-                report = commit.get_commit_report()
-                file.write(report)
+                commit.update_report(msg_file=msg_file)
 
         colrev.process.CheckProcess(review_manager=self)  # to notify
         corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
@@ -579,6 +604,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
+        self.notified_next_process = colrev.process.ProcessType.check
         advisor = self.get_advisor()
         sharing_advice = advisor.get_sharing_instructions()
         return sharing_advice
@@ -609,10 +635,16 @@ class ReviewManager:
     def notify(self, *, process: colrev.process.Process, state_transition=True) -> None:
         """Notify the review_manager about the next process"""
 
-        if state_transition:
-            process.check_precondition()
-        self.notified_next_process = process.type
-        self.dataset.reset_log_if_no_changes()
+        try:
+            if state_transition:
+                process.check_precondition()
+            self.notified_next_process = process.type
+            self.dataset.reset_log_if_no_changes()
+        except AttributeError as exc:
+            if self.force_mode:
+                pass
+            else:
+                raise exc
 
     def update_status_yaml(self) -> None:
         status_stats = self.get_status_stats()

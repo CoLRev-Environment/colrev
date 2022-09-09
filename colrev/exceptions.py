@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import colrev.env.cli_colors as colors
+import colrev.ui_cli.cli_colors as colors
 
 
 class CoLRevException(Exception):

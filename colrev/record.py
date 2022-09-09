@@ -30,9 +30,9 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -260,15 +260,13 @@ class Record:
 
     def get_origins(self) -> list:
         if "colrev_origin" in self.data:
-            origins = self.data["colrev_origin"].split(";")
-        else:
-            origins = []
+            return self.data["colrev_origin"].split(";")
 
         # Note : to cover legacy key:
         if "origin" in self.data:
-            origins = self.data["origin"].split(";")
+            return self.data["origin"].split(";")
 
-        return origins
+        return []
 
     def shares_origins(self, *, other_record: Record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
@@ -863,14 +861,9 @@ class Record:
 
             if str(df_a["journal"]) != "nan":
                 # Note: for journals papers, we expect more details
-                if df_a["volume"] == df_b["volume"]:
-                    volume_similarity = 1
-                else:
-                    volume_similarity = 0
-                if df_a["number"] == df_b["number"]:
-                    number_similarity = 1
-                else:
-                    number_similarity = 0
+                volume_similarity = 1 if (df_a["volume"] == df_b["volume"]) else 0
+
+                number_similarity = 1 if (df_a["number"] == df_b["number"]) else 0
 
                 # page similarity is not considered at the moment.
                 #

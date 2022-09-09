@@ -22,7 +22,7 @@ classifiers = [
 include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed"]
 
 [tool.poetry.scripts]
-colrev = "colrev.cli:main"
+colrev = "colrev.ui_cli.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"

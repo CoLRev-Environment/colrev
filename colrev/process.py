@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import git
 import zope.interface
 from transitions import Machine
 
@@ -15,7 +16,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 if TYPE_CHECKING:
-    import git
     import colrev.review_manager
 
 
@@ -68,10 +68,8 @@ class Process:
         else:
             self.review_manager.notify(process=self, state_transition=False)
 
-        if debug:
-            self.review_manager.debug_mode = True
-        else:
-            self.review_manager.debug_mode = False
+        self.review_manager.debug_mode = debug
+
         self.cpus = 4
 
         # Note: the following call seems to block the flow (if debug is enabled)

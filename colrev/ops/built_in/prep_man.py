@@ -78,7 +78,7 @@ class ExportManPrep:
     ) -> None:
 
         if "pdf_handling_mode" not in settings:
-            settings["pdf_handling_mode"] = "copy_first_page"
+            settings["pdf_handling_mode"] = "symlink"
 
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
@@ -121,7 +121,7 @@ class ExportManPrep:
                             with open(target_path, "wb") as outfile:
                                 writer.write(outfile)
 
-        if not export_path.is_file():
+        def export_prep_man() -> None:
             prep_man_operation.review_manager.logger.info(
                 f"Export records for man-prep to {export_path}"
             )
@@ -138,58 +138,66 @@ class ExportManPrep:
             if any("file" in r for r in man_prep_recs.values()):
                 copy_files_for_man_prep(records=man_prep_recs)
 
+        def import_prep_man() -> None:
+            prep_man_operation.review_manager.logger.info(
+                f"Load import changes from {export_path}"
+            )
+
+            with open(export_path, encoding="utf8") as target_bib:
+                man_prep_recs = (
+                    prep_man_operation.review_manager.dataset.load_records_dict(
+                        load_str=target_bib.read()
+                    )
+                )
+
+            records = prep_man_operation.review_manager.dataset.load_records_dict()
+            for record_id, record_dict in man_prep_recs.items():
+                record = colrev.record.PrepRecord(data=record_dict)
+                record.update_masterdata_provenance(
+                    unprepared_record=record.copy(),
+                    review_manager=prep_man_operation.review_manager,
+                )
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+                for k in list(record.data.keys()):
+                    if k in ["colrev_status"]:
+                        continue
+                    if k in records[record_id]:
+                        if record.data[k] != records[record_id][k]:
+                            if k in record.data.get("colrev_masterdata_provenance", {}):
+                                record.add_masterdata_provenance(
+                                    key=k, source="man_prep"
+                                )
+                            else:
+                                record.add_data_provenance(key=k, source="man_prep")
+                    else:
+                        if k in records[record_id]:
+                            del records[record_id][k]
+                        if k in record.data.get("colrev_masterdata_provenance", {}):
+                            record.add_masterdata_provenance(
+                                key=k, source="man_prep", note="not_missing"
+                            )
+                        else:
+                            record.add_data_provenance(
+                                key=k, source="man_prep", note="not_missing"
+                            )
+                records[record_id] = record.get_data()
+
+            prep_man_operation.review_manager.dataset.save_records_dict(records=records)
+            prep_man_operation.review_manager.dataset.add_record_changes()
+            prep_man_operation.review_manager.create_commit(
+                msg="Prep-man (ExportManPrep)"
+            )
+
+            prep_man_operation.review_manager.dataset.set_ids()
+            prep_man_operation.review_manager.create_commit(
+                msg="Set IDs", script_call="colrev prep", saved_args={}
+            )
+
+        if not export_path.is_file():
+            export_prep_man()
         else:
             if "y" == input(f"Import changes from {export_path} [y,n]?"):
-
-                prep_man_operation.review_manager.logger.info(
-                    f"Load import changes from {export_path}"
-                )
-
-                with open(export_path, encoding="utf8") as target_bib:
-                    man_prep_recs = (
-                        prep_man_operation.review_manager.dataset.load_records_dict(
-                            load_str=target_bib.read()
-                        )
-                    )
-
-                records = prep_man_operation.review_manager.dataset.load_records_dict()
-                for record_id, record_dict in man_prep_recs.items():
-                    record = colrev.record.PrepRecord(data=record_dict)
-                    record.update_masterdata_provenance(
-                        unprepared_record=record.copy(),
-                        review_manager=prep_man_operation.review_manager,
-                    )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
-                    for k in list(record.data.keys()):
-                        if k in ["colrev_status"]:
-                            continue
-                        if k in records[record_id]:
-                            if record.data[k] != records[record_id][k]:
-                                if k in record.data.get(
-                                    "colrev_masterdata_provenance", {}
-                                ):
-                                    record.add_masterdata_provenance(
-                                        key=k, source="man_prep"
-                                    )
-                                else:
-                                    record.add_data_provenance(key=k, source="man_prep")
-
-                    records[record_id] = record.get_data()
-
-                prep_man_operation.review_manager.dataset.save_records_dict(
-                    records=records
-                )
-                prep_man_operation.review_manager.dataset.add_record_changes()
-                prep_man_operation.review_manager.create_commit(
-                    msg="Prep-man (ExportManPrep)"
-                )
-
-                prep_man_operation.review_manager.dataset.set_ids()
-                prep_man_operation.review_manager.create_commit(
-                    msg="Set IDs", script_call="colrev prep", saved_args={}
-                )
+                import_prep_man()
 
         return records
 

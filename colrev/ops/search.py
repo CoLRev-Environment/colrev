@@ -6,34 +6,11 @@ import typing
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search as built_in_search
 import colrev.process
 import colrev.settings
 
 
 class Search(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "search_crossref": {
-            "endpoint": built_in_search.CrossrefSearchEndpoint,
-        },
-        "search_dblp": {
-            "endpoint": built_in_search.DBLPSearchEndpoint,
-        },
-        "backward_search": {
-            "endpoint": built_in_search.BackwardSearchEndpoint,
-        },
-        "search_colrev_project": {
-            "endpoint": built_in_search.ColrevProjectSearchEndpoint,
-        },
-        "search_local_index": {
-            "endpoint": built_in_search.IndexSearchEndpoint,
-        },
-        "search_pdfs_dir": {
-            "endpoint": built_in_search.PDFSearchEndpoint,
-        },
-    }
-
     def __init__(
         self,
         *,
@@ -210,9 +187,18 @@ class Search(colrev.process.Process):
         elif source_name == "PDFS":
             search_script = {"endpoint": "search_pdfs_dir"}
 
+        package_manager = self.review_manager.get_package_manager()
+
+        available_search_scripts = package_manager.discover_packages(
+            script_type="search"
+        )
+
         source_identifier = "TODO"
-        if search_script["endpoint"] in self.built_in_scripts:
-            source_identifier = self.built_in_scripts[search_script["endpoint"]][
+        if search_script["endpoint"] in available_search_scripts:
+            search_script_packages = package_manager.load_packages(
+                process=self, scripts=[search_script["endpoint"]]
+            )
+            source_identifier = search_script_packages[search_script["endpoint"]][
                 "endpoint"
             ].source_identifier
 

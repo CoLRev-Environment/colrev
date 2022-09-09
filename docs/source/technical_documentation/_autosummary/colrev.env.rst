@@ -26,7 +26,6 @@ colrev.env
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.env.cli_colors
    colrev.env.environment_manager
    colrev.env.grobid_service
    colrev.env.local_index

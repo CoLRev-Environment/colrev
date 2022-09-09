@@ -33,7 +33,6 @@ colrev.ops.prep.Prep
 
    .. autosummary::
 
-      ~Prep.built_in_scripts
       ~Prep.fields_to_keep
       ~Prep.max_retries_on_error
       ~Prep.requests_headers

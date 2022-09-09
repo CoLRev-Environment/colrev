@@ -41,6 +41,9 @@ colrev.env.local\_index.LocalIndex
 
    .. autosummary::
 
+      ~LocalIndex.AUTHOR_INDEX
+      ~LocalIndex.AUTHOR_RECORD_INDEX
+      ~LocalIndex.CITATIONS_INDEX
       ~LocalIndex.RECORD_INDEX
       ~LocalIndex.TOC_INDEX
       ~LocalIndex.annotators_path

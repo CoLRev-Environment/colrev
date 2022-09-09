@@ -52,10 +52,10 @@ class Dataset:
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 
-        if not self.records_file.is_file():
-            record_state_list = []
-        else:
-            record_state_list = self.__read_record_header_items()
+        record_state_list = (
+            self.__read_record_header_items() if self.records_file.is_file() else []
+        )
+
         return record_state_list
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:
@@ -392,7 +392,10 @@ class Dataset:
                 # convert to ISO 639-3
                 # TODO : other languages/more systematically
                 # (see database_connectors) > in record.py?
-                record_dict["language"] = record_dict["language"].replace("en", "eng")
+                if "en" == record_dict["language"]:
+                    record_dict["language"] = record_dict["language"].replace(
+                        "en", "eng"
+                    )
 
                 if len(record_dict["language"]) != 3:
                     self.review_manager.logger.warn(
@@ -621,7 +624,7 @@ class Dataset:
                 record_dict.update(ID=new_id)
                 records[new_id] = record_dict
                 del records[old_id]
-                self.review_manager.report_logger.info(f"set_ID({old_id}) to {new_id}")
+                self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
                 if old_id in id_list:
                     id_list.remove(old_id)
 

@@ -60,11 +60,13 @@ class TEIParser:
             self.root = self.read_from_tei()
 
     def read_from_tei(self):
-        with open(self.tei_path, encoding="utf-8") as file:
-            xml_string = file.read()
-        if "[BAD_INPUT_DATA]" in xml_string[:100]:
+        with open(self.tei_path, "rb") as data:
+            xslt_content = data.read()
+
+        if b"[BAD_INPUT_DATA]" in xslt_content[:100]:
             raise colrev_exceptions.TEIException()
-        return etree.fromstring(xml_string)
+
+        return etree.XML(xslt_content)
 
     def create_tei(self) -> None:
         grobid_service = colrev.env.grobid_service.GrobidService()
@@ -240,28 +242,25 @@ class TEIParser:
                             year = re.sub(r".*([1-2][0-9]{3}).*", r"\1", year)
         return year
 
-    def get_author_name_from_node(self, *, author_node) -> str:
-        authorname = ""
-
-        author_pers_node = author_node.find(self.ns["tei"] + "persName")
-        if author_pers_node is None:
-            return authorname
+    def __parse_author_dict(self, *, author_pers_node):
+        author_dict = {}
         surname_node = author_pers_node.find(self.ns["tei"] + "surname")
         if surname_node is not None:
             surname = surname_node.text if surname_node.text is not None else ""
+            author_dict["surname"] = surname
         else:
-            surname = ""
+            author_dict["surname"] = ""
 
         forename_node = author_pers_node.find(
             self.ns["tei"] + 'forename[@type="first"]'
         )
         if forename_node is not None:
             forename = forename_node.text if forename_node.text is not None else ""
+            if 1 == len(forename):
+                forename = forename + "."
+            author_dict["forename"] = forename
         else:
-            forename = ""
-
-        if 1 == len(forename):
-            forename = forename + "."
+            author_dict["forename"] = ""
 
         middlename_node = author_pers_node.find(
             self.ns["tei"] + 'forename[@type="middle"]'
@@ -270,13 +269,29 @@ class TEIParser:
             middlename = (
                 " " + middlename_node.text if middlename_node.text is not None else ""
             )
+            if 1 == len(middlename):
+                middlename = middlename + "."
+            author_dict["middlename"] = middlename
         else:
             middlename = ""
 
-        if 1 == len(middlename):
-            middlename = middlename + "."
+        return author_dict
 
-        authorname = surname + ", " + forename + middlename
+    def get_author_name_from_node(self, *, author_node) -> str:
+        authorname = ""
+
+        author_pers_node = author_node.find(self.ns["tei"] + "persName")
+        if author_pers_node is None:
+            return authorname
+
+        author_dict = self.__parse_author_dict(author_pers_node=author_pers_node)
+
+        authorname = (
+            author_dict["surname"]
+            + ", "
+            + author_dict["forename"]
+            + author_dict["middlename"]
+        )
 
         authorname = (
             authorname.replace("\n", " ")
@@ -388,6 +403,43 @@ class TEIParser:
                 keywords.append(keyword.text)
         return keywords
 
+    def get_author_details(self) -> list:
+        author_details = []
+
+        file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
+
+        if file_description is not None:
+            if file_description.find(".//" + self.ns["tei"] + "analytic") is not None:
+                analytic_node = file_description.find(
+                    ".//" + self.ns["tei"] + "analytic"
+                )
+                if analytic_node is not None:
+                    for author_node in analytic_node.iterfind(
+                        self.ns["tei"] + "author"
+                    ):
+                        author_pers_node = author_node.find(self.ns["tei"] + "persName")
+                        if author_pers_node is None:
+                            continue
+
+                        author_dict = self.__parse_author_dict(
+                            author_pers_node=author_pers_node
+                        )
+
+                        email_node = author_node.find(self.ns["tei"] + "email")
+                        if email_node is not None:
+                            author_dict["emai"] = email_node.text
+
+                        orcid_node = author_node.find(
+                            self.ns["tei"] + 'idno[@type="ORCID"]'
+                        )
+                        if orcid_node is not None:
+                            orcid = orcid_node.text
+                            author_dict["ORCID"] = orcid
+                        # TODO : affiliation, ...
+                        author_details.append(author_dict)
+
+        return author_details
+
     # (individual) bibliography-reference elements  ----------------------------
 
     def __get_reference_bibliography_id(self, *, reference) -> str:
@@ -445,10 +497,9 @@ class TEIParser:
             title = reference.find(self.ns["tei"] + "monogr").find(
                 self.ns["tei"] + "title"
             )
-        if title is None:
-            title_string = "NA"
-        else:
-            title_string = title.text
+
+        title_string = title.text if (title is not None) else "NA"
+
         return title_string
 
     def __get_reference_year_string(self, *, reference) -> str:
@@ -468,10 +519,7 @@ class TEIParser:
 
         if year is not None:
             for name, value in sorted(year.items()):
-                if name == "when":
-                    year_string = value
-                else:
-                    year_string = "NA"
+                year_string = value if (name == "when") else "NA"
         else:
             year_string = "NA"
         return year_string
@@ -521,10 +569,7 @@ class TEIParser:
             )
 
         for number in number_list:
-            if number is not None:
-                number_string = number.text
-            else:
-                number_string = "NA"
+            number_string = number.text if (number is not None) else "NA"
 
         return number_string
 
@@ -545,10 +590,7 @@ class TEIParser:
             )
 
         for volume in volume_list:
-            if volume is not None:
-                volume_string = volume.text
-            else:
-                volume_string = "NA"
+            volume_string = volume.text if (volume is not None) else "NA"
 
         return volume_string
 

@@ -15,11 +15,11 @@ from dacite import from_dict
 from thefuzz import fuzz
 from tqdm import tqdm
 
-import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.pdf_prep
 import colrev.process
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe

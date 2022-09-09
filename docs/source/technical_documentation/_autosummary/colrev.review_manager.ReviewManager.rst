@@ -86,7 +86,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_process
       ~ReviewManager.dataset
-      ~ReviewManager.force_mode
       ~ReviewManager.path
+      ~ReviewManager.force_mode
       ~ReviewManager.report_logger
       ~ReviewManager.logger

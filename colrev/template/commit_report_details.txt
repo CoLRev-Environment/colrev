@@ -1,20 +1,19 @@
 <br><br>
 {% if commit_details.records_committed %}
-Properties for tree {{ commit_details.tree_hash }}<br>
+Properties<br>
    - Traceability of records        YES<br>
    - Consistency (based on hooks)   YES<br>
    - Completeness of iteration      
 {% if commit_details.completeness_condition %}YES
 {% else %}NO{% endif %}<br>
    To check tree_hash use           git log --pretty=raw -1<br>
-   To validate use                  colrev validate --properties<br>
-                                    --commit INSERT_COMMIT_HASH
+   To validate use                  colrev validate --properties \<br>
+                                    --tree_hash {{ commit_details.tree_hash }}
 {% endif %}
 <br>
 <br>
 Software<br>
    - colrev:                        {{ commit_details.colrev_version }}<br>
-   - colrev hooks:                  {{ commit_details.colrev_hooks_version }}<br>
    - Python:                        {{ commit_details.python_version }}<br>
    - Git:                           {{ commit_details.git_version }}<br>
    - Docker:                        {{ commit_details.docker_version }}<br>

@@ -17,6 +17,7 @@ colrev.ops.distribute.Distribute
       :nosignatures:
 
       ~Distribute.check_precondition
+      ~Distribute.get_local_registry
       ~Distribute.main
 
 

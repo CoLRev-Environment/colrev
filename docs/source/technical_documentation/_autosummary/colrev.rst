@@ -27,7 +27,6 @@
    :recursive:
 
    colrev.advisor
-   colrev.cli
    colrev.dataset
    colrev.env
    colrev.exceptions
@@ -38,3 +37,4 @@
    colrev.service
    colrev.settings
    colrev.ui_web
+   colrev.ui_cli

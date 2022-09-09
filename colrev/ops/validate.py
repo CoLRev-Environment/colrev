@@ -5,6 +5,7 @@ import itertools
 from itertools import chain
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 
@@ -252,6 +253,16 @@ class Validate(colrev.process.Process):
             )
 
         git_repo.git.checkout(cur_branch, force=True)
+
+    def get_commit_from_tree_hash(self, tree_hash: str) -> str:
+        valid_options = []
+        for commit in self.review_manager.dataset.get_repo().iter_commits():
+            if str(commit.tree) == tree_hash:
+                return commit.hexsha
+            valid_options.append(str(commit.tree))
+        raise colrev_exceptions.ParameterError(
+            parameter="validate.tree_hash", value=tree_hash, options=valid_options
+        )
 
     def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
 

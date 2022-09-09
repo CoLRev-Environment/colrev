@@ -7,37 +7,18 @@ import string
 import typing
 from pathlib import Path
 
-import colrev.env.cli_colors as colors
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.load as built_in_load
 import colrev.ops.search_sources
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 class Load(colrev.process.Process):
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "bibtex": {
-            "endpoint": built_in_load.BibPybtexLoader,
-        },
-        "csv": {
-            "endpoint": built_in_load.CSVLoader,
-        },
-        "excel": {"endpoint": built_in_load.ExcelLoader},
-        "zotero_translate": {
-            "endpoint": built_in_load.ZoteroTranslationLoader,
-        },
-        "md_to_bib": {
-            "endpoint": built_in_load.MarkdownLoader,
-        },
-        "bibutils": {
-            "endpoint": built_in_load.BibutilsLoader,
-        },
-    }
 
     def __init__(
         self,
@@ -63,14 +44,26 @@ class Load(colrev.process.Process):
             ],
         )
 
+        self.all_available_packages_names = package_manager.discover_packages(
+            script_type=str(self.type), installed_only=True
+        )
+
+        all_available_packages: dict[str, typing.Any] = package_manager.load_packages(
+            process=self,
+            scripts=[{"endpoint": p} for p in self.all_available_packages_names],
+        )
+
         self.supported_extensions = [
             item
             for sublist in [
-                e["endpoint"].supported_extensions
-                for e in self.built_in_scripts.values()
+                e.supported_extensions for e in all_available_packages.values()
             ]
             for item in sublist
         ]
+
+        self.search_sources = colrev.ops.search_sources.SearchSources(
+            review_manager=self.review_manager
+        )
 
     def get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
@@ -107,9 +100,6 @@ class Load(colrev.process.Process):
         # pylint: disable=redefined-outer-name
 
         sources = self.review_manager.settings.sources
-        search_sources = colrev.ops.search_sources.SearchSources(
-            review_manager=self.review_manager
-        )
 
         for sfp in self.get_new_search_files():
             # Note : for non-bib files, we check sources for corresponding bib file
@@ -148,7 +138,9 @@ class Load(colrev.process.Process):
                 if "NA" == heuristic_source.source_name:
                     if heuristic_source.search_type == "DB":
                         print("   Sources with pre-defined settings:")
-                        cl_scripts = "\n    - ".join(search_sources.built_in_scripts)
+                        cl_scripts = "\n    - ".join(
+                            self.search_sources.all_available_packages_names
+                        )
                         print("    - " + cl_scripts)
                         print("   See colrev/custom_source_load.py for details")
 
@@ -398,16 +390,13 @@ class Load(colrev.process.Process):
 
             return record.get_data()
 
-        source.create_load_stats()
-
+        search_records = []
         if source.get_corresponding_bib_file().is_file():
             search_records = getbib(file=source.get_corresponding_bib_file())
             self.review_manager.logger.debug(
                 f"Loaded {source.get_corresponding_bib_file().name} "
                 f"with {len(search_records)} records"
             )
-        else:
-            search_records = []
 
         if len(search_records) == 0:
             # source.to_import = 0
@@ -472,11 +461,15 @@ class Load(colrev.process.Process):
             )
             record_list.append(record)
 
+        imported_origins = (
+            self.review_manager.dataset.get_currently_imported_origin_list()
+        )
         record_list = [
-            x for x in record_list if x["colrev_origin"] not in source.imported_origins
+            x for x in record_list if x["colrev_origin"] not in imported_origins
         ]
-        source.to_import = len(record_list)
-        source.source_records_list = record_list
+        source.setup_for_load(
+            record_list=record_list, imported_origins=imported_origins
+        )
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
@@ -611,7 +604,7 @@ class Load(colrev.process.Process):
             for (
                 endpoint_name,
                 endpoint_dict,
-            ) in colrev.ops.load.Load.built_in_scripts.items():
+            ) in self.all_available_packages_names.items():
                 if filetype in endpoint_dict["endpoint"].supported_extensions:
                     return {"endpoint": endpoint_name}
 
@@ -628,7 +621,7 @@ class Load(colrev.process.Process):
         for (
             source_name,
             endpoint,
-        ) in colrev.ops.search_sources.SearchSources.built_in_scripts.items():
+        ) in self.search_sources.all_available_packages_names.items():
             # pylint: disable=no-member
             has_heuristic = getattr(endpoint, "heuristic", None)
             if not has_heuristic:
@@ -714,11 +707,6 @@ class Load(colrev.process.Process):
         for source in load_active_sources():
             self.review_manager.logger.info(f"Loading {source}")
             saved_args["file"] = source.filename.name
-            imported_origins = (
-                self.review_manager.dataset.get_currently_imported_origin_list()
-            )
-            source.imported_origins = imported_origins
-            source.len_before = len(source.imported_origins)
 
             conversion_script_name = source.conversion_script["endpoint"]
 

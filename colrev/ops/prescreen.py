@@ -11,25 +11,6 @@ import colrev.record
 
 
 class Prescreen(colrev.process.Process):
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "scope_prescreen": {
-            "endpoint": built_in_prescreen.ScopePrescreenEndpoint,
-        },
-        "colrev_cli_prescreen": {
-            "endpoint": built_in_prescreen.CoLRevCLIPrescreenEndpoint,
-        },
-        "asreview_prescreen": {
-            "endpoint": built_in_prescreen.ASReviewPrescreenEndpoint,
-        },
-        "conditional_prescreen": {
-            "endpoint": built_in_prescreen.ConditionalPrescreenEndpoint
-        },
-        "spreadsheed_prescreen": {
-            "endpoint": built_in_prescreen.SpreadsheetPrescreenEndpoint
-        },
-    }
-
     def __init__(
         self,
         *,

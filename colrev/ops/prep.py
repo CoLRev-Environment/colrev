@@ -11,13 +11,12 @@ from pathlib import Path
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
-import colrev.env.cli_colors as colors
 import colrev.env.utils
 import colrev.ops.built_in.database_connectors as db_connectors
-import colrev.ops.built_in.prep as built_in_prep
 import colrev.process
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -94,82 +93,6 @@ class Prep(colrev.process.Process):
         "cited_by",
         "cited_by_file",
     ]
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "load_fixes": {
-            "endpoint": built_in_prep.LoadFixesPrep,
-        },
-        "exclude_non_latin_alphabets": {
-            "endpoint": built_in_prep.ExcludeNonLatinAlphabetsPrep,
-        },
-        "exclude_languages": {
-            "endpoint": built_in_prep.ExcludeLanguagesPrep,
-        },
-        "exclude_collections": {
-            "endpoint": built_in_prep.ExcludeCollectionsPrep,
-        },
-        "remove_urls_with_500_errors": {
-            "endpoint": built_in_prep.RemoveError500URLsPrep,
-        },
-        "remove_broken_IDs": {
-            "endpoint": built_in_prep.RemoveBrokenIDPrep,
-        },
-        "global_ids_consistency_check": {
-            "endpoint": built_in_prep.GlobalIDConsistencyPrep,
-        },
-        "prep_curated": {
-            "endpoint": built_in_prep.CuratedPrep,
-        },
-        "format": {
-            "endpoint": built_in_prep.FormatPrep,
-        },
-        "resolve_crossrefs": {
-            "endpoint": built_in_prep.BibTexCrossrefResolutionPrep,
-        },
-        "get_doi_from_sem_scholar": {
-            "endpoint": built_in_prep.SemanticScholarPrep,
-        },
-        "get_doi_from_urls": {"endpoint": built_in_prep.DOIFromURLsPrep},
-        "get_masterdata_from_doi": {
-            "endpoint": built_in_prep.DOIMetadataPrep,
-        },
-        "get_masterdata_from_crossref": {
-            "endpoint": built_in_prep.CrossrefMetadataPrep,
-        },
-        "get_masterdata_from_dblp": {
-            "endpoint": built_in_prep.DBLPMetadataPrep,
-        },
-        "get_masterdata_from_open_library": {
-            "endpoint": built_in_prep.OpenLibraryMetadataPrep,
-        },
-        "get_masterdata_from_citeas": {
-            "endpoint": built_in_prep.CiteAsPrep,
-        },
-        "get_year_from_vol_iss_jour_crossref": {
-            "endpoint": built_in_prep.CrossrefYearVolIssPrep,
-        },
-        "get_record_from_local_index": {
-            "endpoint": built_in_prep.LocalIndexPrep,
-        },
-        "remove_nicknames": {
-            "endpoint": built_in_prep.RemoveNicknamesPrep,
-        },
-        "format_minor": {
-            "endpoint": built_in_prep.FormatMinorPrep,
-        },
-        "drop_fields": {
-            "endpoint": built_in_prep.DropFieldsPrep,
-        },
-        "remove_redundant_fields": {
-            "endpoint": built_in_prep.RemoveRedundantFieldPrep,
-        },
-        "correct_recordtype": {
-            "endpoint": built_in_prep.CorrectRecordTypePrep,
-        },
-        "update_metadata_status": {
-            "endpoint": built_in_prep.UpdateMetadataStatusPrep,
-        },
-    }
 
     def __init__(
         self,
@@ -505,10 +428,11 @@ class Prep(colrev.process.Process):
                 ]
             )
 
-            if 0 == len(record_state_list):
-                pad = 35
-            else:
-                pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            pad = (
+                35
+                if (0 == len(record_state_list))
+                else min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            )
 
             r_states_to_prepare = [
                 colrev.record.RecordState.md_imported,
@@ -628,16 +552,11 @@ class Prep(colrev.process.Process):
 
         def setup_prep_round(*, i, prep_round) -> None:
 
-            if i == 0:
-                self.first_round = True
+            self.first_round = bool(i == 0)
 
-            else:
-                self.first_round = False
-
-            if i == len(self.review_manager.settings.prep.prep_rounds) - 1:
-                self.last_round = True
-            else:
-                self.last_round = False
+            self.last_round = bool(
+                i == len(self.review_manager.settings.prep.prep_rounds) - 1
+            )
 
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end

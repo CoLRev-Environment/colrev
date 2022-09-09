@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.ops.built_in.data as built_in_data
 import colrev.process
 import colrev.record
 
@@ -18,27 +17,6 @@ class Data(colrev.process.Process):
     __pad = 0
 
     verbose: bool
-
-    built_in_scripts: dict[str, dict[str, typing.Any]] = {
-        "MANUSCRIPT": {
-            "endpoint": built_in_data.ManuscriptEndpoint,
-        },
-        "STRUCTURED": {
-            "endpoint": built_in_data.StructuredDataEndpoint,
-        },
-        "ENDNOTE": {
-            "endpoint": built_in_data.EndnoteEndpoint,
-        },
-        "PRISMA": {
-            "endpoint": built_in_data.PRISMAEndpoint,
-        },
-        "GITHUB_PAGES": {
-            "endpoint": built_in_data.GithubPagesEndpoint,
-        },
-        "ZETTLR": {
-            "endpoint": built_in_data.ZettlrEndpoint,
-        },
-    }
 
     def __init__(
         self,
@@ -243,11 +221,8 @@ class Data(colrev.process.Process):
 
     def main(self, *, pre_commit_hook=False) -> dict:
 
-        if pre_commit_hook:
-            self.verbose = False
-            # TODO : use self.verbose in the update scripts of data endpoints
-        else:
-            self.verbose = True
+        # TODO : use self.verbose in the update scripts of data endpoints
+        self.verbose = not pre_commit_hook
 
         no_endpoints_registered = 0 == len(self.review_manager.settings.data.scripts)
 
@@ -261,10 +236,9 @@ class Data(colrev.process.Process):
         self.__pad = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-        if 0 == len(included):
-            if self.verbose:
-                self.review_manager.report_logger.info("No records included yet")
-                self.review_manager.logger.info("No records included yet")
+        if 0 == len(included) and self.verbose:
+            self.review_manager.report_logger.info("No records included yet")
+            self.review_manager.logger.info("No records included yet")
 
         else:
             # TBD: do we assume that records are not changed by the processes?

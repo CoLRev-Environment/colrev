@@ -17,6 +17,7 @@ colrev.ops.validate.Validate
       :nosignatures:
 
       ~Validate.check_precondition
+      ~Validate.get_commit_from_tree_hash
       ~Validate.get_search_records
       ~Validate.load_records
       ~Validate.load_search_records

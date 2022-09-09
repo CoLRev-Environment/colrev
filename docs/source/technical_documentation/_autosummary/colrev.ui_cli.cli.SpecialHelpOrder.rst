@@ -1,7 +1,7 @@
-colrev.cli.SpecialHelpOrder
-===========================
+colrev.ui\_cli.cli.SpecialHelpOrder
+===================================
 
-.. currentmodule:: colrev.cli
+.. currentmodule:: colrev.ui_cli.cli
 
 .. autoclass:: SpecialHelpOrder
    :members:

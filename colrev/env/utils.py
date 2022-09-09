@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
+"""Collection of utility functions"""
 import pkgutil
 import unicodedata
 from pathlib import Path
 
-# Collection of utility functions
+import colrev.exceptions as colrev_exceptions
 
 
 def retrieve_package_file(*, template_file: Path, target: Path) -> None:
-    filedata = pkgutil.get_data(__name__, str(template_file))
+    filedata = pkgutil.get_data("colrev", str(template_file))
     if filedata:
         with open(target, "w", encoding="utf8") as file:
             file.write(filedata.decode("utf-8"))
+        return
+    raise colrev_exceptions.RepoSetupError(f"{template_file} not available")
 
 
 def get_package_file_content(*, file_path: Path):
-    return pkgutil.get_data(__name__, str(file_path))
+    return pkgutil.get_data("colrev", str(file_path))
 
 
 def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
@@ -28,13 +31,13 @@ def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
 
 
 def load_jinja_template(template_path) -> str:
-    filedata_b = pkgutil.get_data(__name__, template_path)
+    filedata_b = pkgutil.get_data("colrev", template_path)
     if filedata_b:
         filedata = filedata_b.decode("utf-8")
         filedata = filedata.replace("\n", "")
         filedata = filedata.replace("<br>", "\n")
         return filedata
-    return ""
+    raise colrev_exceptions.RepoSetupError(f"{template_path} not available")
 
 
 def remove_accents(*, input_str: str) -> str:

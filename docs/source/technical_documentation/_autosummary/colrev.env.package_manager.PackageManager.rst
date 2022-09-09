@@ -16,4 +16,18 @@ colrev.env.package\_manager.PackageManager
    .. autosummary::
       :nosignatures:
 
+      ~PackageManager.discover_packages
+      ~PackageManager.load_package_endpoint
+      ~PackageManager.load_package_index
       ~PackageManager.load_packages
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PackageManager.endpoint_overview
+      ~PackageManager.package
