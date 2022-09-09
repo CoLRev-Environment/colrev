@@ -20,7 +20,7 @@ Status<br>
 {{ status_stats.currently.rev_prescreen_excluded }} prescreen excluded]{% endif %}
 <br>
 
-    Document retrieval  
+    PDF retrieval       
 {{ "{:>10}".format(status_stats.overall.pdf_prepared) }} prepared     
 
 {% if status_stats.get_active_pdf_operation_info() != "" %}{{ colors.ORANGE }}{{ status_stats.get_active_pdf_operation_info() }}{{ colors.END }} {% endif %}
@@ -29,7 +29,7 @@ Status<br>
 {{ status_stats.currently.pdf_not_available }} not available]{% endif %}
 <br>
 
-    Document screen     
+    PDF screen          
 {{ "{:>10}".format(status_stats.overall.rev_included) }} included     
 
 {% if status_stats.currently.pdf_prepared > 0 %}{{ colors.ORANGE }}{{ status_stats.currently.pdf_prepared }} to screen{{ colors.END }} {% endif %}
