@@ -32,6 +32,8 @@ class Upgrade(colrev.process.Process):
         )
         self.review_manager = review_manager
 
+    def main(self) -> None:
+
         last_version, current_version = self.review_manager.get_colrev_versions()
 
         if "+" in last_version:

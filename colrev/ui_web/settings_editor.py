@@ -86,293 +86,272 @@ class SettingsEditor:
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
 
-            # setting_options = {
-            #     "project": {
-            #         "review_type": colrev.settings.ReviewType.getOptions(),
-            #         "id_pattern": colrev.settings.IDPpattern.getOptions(),
-            #     },
-            # }
-
             # options = {
-            #     "project": {
-            #         "title": "str",
-            #         "authors": [
-            #             {
-            #                 "name": "str",
-            #                 "initials": "str",
-            #                 "email": "str",
-            #                 "orcid": ["str", "optional"],
-            #                 "contributions": [[], "optional"],
-            #                 "affiliations": [[], "optional"],
-            #                 "funding": [[], "optional"],
-            #                 "identifiers": [[], "optional"],
-            #             }
-            #         ],
-            #         "keywords": ["str"],
-            #         "protocol": [{"url": "str"}, "optional"],
-            #         "review_type": [
-            #             "curated_masterdata",
-            #             "realtime",
-            #             "literature_review",
-            #             "narrative_review",
-            #             "descriptive_review",
-            #             "scoping_review",
-            #             "critical_review",
-            #             "theoretical_review",
-            #             "conceptual_review",
-            #             "qualitative_systematic_review",
-            #             "meta_analysis",
-            #             "scientometric",
-            #             "peer_review",
-            #         ],
-            #         "id_pattern": ["first_author_year", "three_authors_year"],
-            #         "share_stat_req": ["none", "processed", "screened", "completed"],
-            #         "delay_automated_processing": "bool",
-            #         "curation_url": ["str", "optional"],
-            #         "curated_masterdata": "bool",
-            #         "curated_fields": ["str"],
-            #         "colrev_version": "str",
-            #     },
-            #     "sources": {},
-            #     "search": {"retrieve_forthcoming": "bool"},
-            #     "load": {},
-            #     "prep": {
-            #         "fields_to_keep": ["str"],
-            #         "prep_rounds": [
-            #             {"name": "str", "similarity": "float", "scripts": []}
-            #         ],
-            #         "man_prep_scripts": [],
-            #     },
-            #     "dedupe": {
-            #         "same_source_merges": ["prevent", "apply", "warn"],
-            #         "scripts": [],
-            #     },
-            #     "prescreen": {"explanation": "str", "scripts": []},
-            #     "pdf_get": {
-            #         "pdf_path_type": "str",
-            #         "pdf_required_for_screen_and_synthesis": "bool",
-            #         "rename_pdfs": "bool",
-            #         "scripts": [],
-            #         "man_pdf_get_scripts": [],
-            #     },
-            #     "pdf_prep": {"scripts": [], "man_pdf_prep_scripts": []},
-            #     "screen": {
-            #         "explanation": ["str", "optional"],
-            #         "criteria": {
-            #             "str": {
-            #                 "explanation": "str",
-            #                 "comment": ["str", "optional"],
-            #                 "criterion_type": [
-            #                     "inclusion_criterion",
-            #                     "exclusion_criterion",
-            #                 ],
-            #             }
-            #         },
-            #         "scripts": [],
-            #     },
-            #     "data": {"scripts": []},
-            # }
-
-            # options = {
-            #     "data": {
-            #         "properties": {
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "data",
-            #                 "type": "script_multiple_selector",
-            #             }
-            #         },
-            #         "type": "object",
-            #     },
-            #     "dedupe": {
-            #         "properties": {
-            #             "same_source_merges": {
-            #                 "options": ["prevent", "apply", "warn"],
-            #                 "tooltip": "Policy for applying merges within the same search source",
-            #                 "type": "selection",
-            #             },
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "dedupe",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "load": {"properties": {}, "type": "object"},
-            #     "pdf_get": {
-            #         "properties": {
-            #             "man_pdf_get_scripts": {
-            #                 "list": True,
-            #                 "script_type": "pdf_get_man",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #             "pdf_path_type": {
-            #                 "options": ["symlink", "copy"],
-            #                 "tooltip": "Policy for handling PDFs (create symlinks or copy files)",
-            #                 "type": "selection",
-            #             },
-            #             "pdf_required_for_screen_and_synthesis": {"type": "bool"},
-            #             "rename_pdfs": {"type": "bool"},
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "pdf_get",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "pdf_prep": {
-            #         "properties": {
-            #             "man_pdf_prep_scripts": {
-            #                 "list": True,
-            #                 "script_type": "pdf_prep_man",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "pdf_prep",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "prep": {
-            #         "properties": {
-            #             "fields_to_keep": {"list": True, "type": "str"},
-            #             "man_prep_scripts": {
-            #                 "list": True,
-            #                 "script_type": "prep_man",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #             "prep_rounds": {
-            #                 "list": True,
-            #                 "properties": {
-            #                     "name": {"type": "str"},
-            #                     "scripts": {
-            #                         "list": True,
-            #                         "script_type": "prep",
-            #                         "type": "script_multiple_selector",
-            #                     },
-            #                     "similarity": {"type": "float"},
-            #                 },
-            #                 "type": "object",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "prescreen": {
-            #         "properties": {
-            #             "explanation": {"type": "str"},
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "prescreen",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "project": {
-            #         "properties": {
-            #             "authors": {
-            #                 "list": True,
-            #                 "properties": {
-            #                     "affiliations": {"type": "str"},
-            #                     "contributions": {"list": True, "type": "str"},
-            #                     "email": {"type": "str"},
-            #                     "funding": {"list": True, "type": "str"},
-            #                     "identifiers": {"list": True, "type": "str"},
-            #                     "initials": {"type": "str"},
-            #                     "name": {"type": "str"},
-            #                     "orcid": {"type": "str"},
-            #                 },
-            #                 "type": "object",
-            #             },
-            #             "colrev_version": {"type": "str"},
-            #             "curated_fields": {"list": True, "type": "str"},
-            #             "curated_masterdata": {"type": "bool"},
-            #             "curation_url": {"type": "str"},
-            #             "delay_automated_processing": {"type": "bool"},
-            #             "id_pattern": {
-            #                 "options": ["first_author_year", "three_authors_year"],
-            #                 "tooltip": "The pattern for generating record IDs",
-            #                 "type": "selection",
-            #             },
-            #             "keywords": {"list": True, "type": "str"},
-            #             "protocol": {"type": {"url": {"type": "str"}}},
-            #             "review_type": {
-            #                 "options": [
-            #                     "curated_masterdata",
-            #                     "realtime",
-            #                     "literature_review",
-            #                     "narrative_review",
-            #                     "descriptive_review",
-            #                     "scoping_review",
-            #                     "critical_review",
-            #                     "theoretical_review",
-            #                     "conceptual_review",
-            #                     "qualitative_systematic_review",
-            #                     "meta_analysis",
-            #                     "scientometric",
-            #                     "peer_review",
-            #                 ],
-            #                 "tooltip": "The type of review",
-            #                 "type": "selection",
-            #             },
-            #             "share_stat_req": {
-            #                 "options": ["none", "processed", "screened", "completed"],
-            #                 "tooltip": "Record status requirements for sharing",
-            #                 "type": "selection",
-            #             },
-            #             "title": {"tooltip": "The title of the review", "type": "str"},
-            #         },
-            #         "type": "object",
-            #     },
-            #     "screen": {
-            #         "properties": {
-            #             "criteria": {
-            #                 "custom_dict_key": {
-            #                     "comment": {"type": "str"},
-            #                     "criterion_type": {
-            #                         "options": [
-            #                             "inclusion_criterion",
-            #                             "exclusion_criterion",
-            #                         ],
-            #                         "tooltip": "Type of screening criterion",
-            #                         "type": "selection",
-            #                     },
-            #                     "explanation": {"type": "str"},
-            #                 }
-            #             },
-            #             "explanation": {"type": "str"},
-            #             "scripts": {
-            #                 "list": True,
-            #                 "script_type": "screen",
-            #                 "type": "script_multiple_selector",
-            #             },
-            #         },
-            #         "type": "object",
-            #     },
-            #     "search": {
-            #         "properties": {"retrieve_forthcoming": {"type": "bool"}},
-            #         "type": "object",
-            #     },
-            #     "sources": {
-            #         "properties": {
-            #             "conversion_script": {
-            #                 "list": False,
-            #                 "script_type": "conversion",
-            #                 "type": "script_selector",
-            #             },
-            #             "list": True,
+            #     "$schema": "http://json-schema.org/draft-06/schema#",
+            #     "definitions": {
+            #         "Author": {
+            #             "description": "Author of the review",
             #             "properties": {
-            #                 "comment": {"type": "str"},
-            #                 "conversion_script": {"properties": {}},
-            #                 "filename": {"type": "Path"},
-            #                 "search_parameters": {"type": "str"},
-            #                 "search_script": {"properties": {}},
+            #                 "affiliations": {"type": "string"},
+            #                 "contributions": {
+            #                     "default": [],
+            #                     "items": {"type": "string"},
+            #                     "type": "array",
+            #                 },
+            #                 "email": {"type": "string"},
+            #                 "funding": {
+            #                     "default": [],
+            #                     "items": {"type": "string"},
+            #                     "type": "array",
+            #                 },
+            #                 "identifiers": {
+            #                     "default": [],
+            #                     "items": {"type": "string"},
+            #                     "type": "array",
+            #                 },
+            #                 "initials": {"type": "string"},
+            #                 "name": {"type": "string"},
+            #                 "orcid": {"type": "string"},
+            #             },
+            #             "required": ["name", "initials", "email"],
+            #             "type": "object",
+            #         },
+            #         "DataSettings": {
+            #             "description": "Data settings",
+            #             "properties": {
+            #                 "scripts": {"script_type": "data", "type": "script_array"}
+            #             },
+            #             "required": ["scripts"],
+            #             "type": "object",
+            #         },
+            #         "DedupeSettings": {
+            #             "description": "Dedupe settings",
+            #             "properties": {
+            #                 "same_source_merges": {
+            #                     "enum": ["prevent", "apply", "warn"],
+            #                     "type": "string",
+            #                 },
+            #                 "scripts": {
+            #                     "script_type": "dedupe",
+            #                     "type": "script_array",
+            #                 },
+            #             },
+            #             "required": ["same_source_merges", "scripts"],
+            #             "type": "object",
+            #         },
+            #         "LoadSettings": {
+            #             "description": "Load settings",
+            #             "properties": {},
+            #             "type": "object",
+            #         },
+            #         "PDFGetSettings": {
+            #             "description": "PDF get settings",
+            #             "properties": {
+            #                 "man_pdf_get_scripts": {
+            #                     "script_type": "pdf_get_man",
+            #                     "type": "script_array",
+            #                 },
+            #                 "pdf_path_type": {
+            #                     "enum": ["symlink", "copy"],
+            #                     "type": "string",
+            #                 },
+            #                 "pdf_required_for_screen_and_synthesis": {
+            #                     "type": "boolean"
+            #                 },
+            #                 "rename_pdfs": {"type": "boolean"},
+            #                 "scripts": {
+            #                     "script_type": "pdf_get",
+            #                     "type": "script_array",
+            #                 },
+            #             },
+            #             "required": [
+            #                 "pdf_path_type",
+            #                 "pdf_required_for_screen_and_synthesis",
+            #                 "rename_pdfs",
+            #                 "scripts",
+            #                 "man_pdf_get_scripts",
+            #             ],
+            #             "type": "object",
+            #         },
+            #         "PDFPrepSettings": {
+            #             "description": "PDF prep settings",
+            #             "properties": {
+            #                 "man_pdf_prep_scripts": {
+            #                     "script_type": "pdf_prep_man",
+            #                     "type": "script_array",
+            #                 },
+            #                 "scripts": {
+            #                     "script_type": "pdf_prep",
+            #                     "type": "script_array",
+            #                 },
+            #             },
+            #             "required": ["scripts", "man_pdf_prep_scripts"],
+            #             "type": "object",
+            #         },
+            #         "PrepRound": {
+            #             "description": "Prep round settings",
+            #             "properties": {
+            #                 "name": {"type": "string"},
+            #                 "scripts": {"type": "array"},
+            #                 "similarity": {"type": "number"},
+            #             },
+            #             "required": ["name", "similarity", "scripts"],
+            #             "type": "object",
+            #         },
+            #         "PrepSettings": {
+            #             "description": "Prep settings",
+            #             "properties": {
+            #                 "PrepSettings": {
+            #                     "script_type": "prep_man",
+            #                     "type": "script_array",
+            #                 },
+            #                 "fields_to_keep": {
+            #                     "items": {"type": "string"},
+            #                     "type": "array",
+            #                 },
+            #                 "man_prep_scripts": {"type": "array"},
+            #                 "prep_rounds": {
+            #                     "items": {"$ref": "#/definitions/PrepRound"},
+            #                     "type": "array",
+            #                 },
+            #             },
+            #             "required": [
+            #                 "fields_to_keep",
+            #                 "prep_rounds",
+            #                 "man_prep_scripts",
+            #             ],
+            #             "type": "object",
+            #         },
+            #         "PrescreenSettings": {
+            #             "description": "Prescreen settings",
+            #             "properties": {
+            #                 "explanation": {"type": "string"},
+            #                 "scripts": {
+            #                     "script_type": "prescreen",
+            #                     "type": "script_array",
+            #                 },
+            #             },
+            #             "required": ["explanation", "scripts"],
+            #             "type": "object",
+            #         },
+            #         "ProjectSettings": {
+            #             "description": "Project settings",
+            #             "properties": {
+            #                 "authors": {
+            #                     "items": {"$ref": "#/definitions/Author"},
+            #                     "type": "array",
+            #                 },
+            #                 "colrev_version": {"type": "string"},
+            #                 "curated_fields": {
+            #                     "items": {"type": "string"},
+            #                     "type": "array",
+            #                 },
+            #                 "curated_masterdata": {"type": "boolean"},
+            #                 "curation_url": {"type": "string"},
+            #                 "delay_automated_processing": {"type": "boolean"},
+            #                 "id_pattern": {
+            #                     "enum": ["first_author_year", "three_authors_year"],
+            #                     "type": "string",
+            #                 },
+            #                 "keywords": {"items": {"type": "string"}, "type": "array"},
+            #                 "protocol": {"$ref": "#/definitions/Protocol"},
+            #                 "review_type": {
+            #                     "enum": [
+            #                         "curated_masterdata",
+            #                         "realtime",
+            #                         "literature_review",
+            #                         "narrative_review",
+            #                         "descriptive_review",
+            #                         "scoping_review",
+            #                         "critical_review",
+            #                         "theoretical_review",
+            #                         "conceptual_review",
+            #                         "qualitative_systematic_review",
+            #                         "meta_analysis",
+            #                         "scientometric",
+            #                         "peer_review",
+            #                     ],
+            #                     "type": "string",
+            #                 },
+            #                 "share_stat_req": {
+            #                     "enum": ["none", "processed", "screened", "completed"],
+            #                     "type": "string",
+            #                 },
+            #                 "title": {"type": "string"},
+            #             },
+            #             "required": [
+            #                 "title",
+            #                 "authors",
+            #                 "keywords",
+            #                 "review_type",
+            #                 "id_pattern",
+            #                 "share_stat_req",
+            #                 "delay_automated_processing",
+            #                 "curated_masterdata",
+            #                 "curated_fields",
+            #                 "colrev_version",
+            #             ],
+            #             "type": "object",
+            #         },
+            #         "Protocol": {
+            #             "description": "Review protocol",
+            #             "properties": {"url": {"type": "string"}},
+            #             "required": ["url"],
+            #             "type": "object",
+            #         },
+            #         "ScreenCriterion": {
+            #             "description": "Screen criterion",
+            #             "properties": {
+            #                 "comment": {"type": "string"},
+            #                 "criterion_type": {
+            #                     "enum": ["inclusion_criterion", "exclusion_criterion"],
+            #                     "type": "string",
+            #                 },
+            #                 "explanation": {"type": "string"},
+            #             },
+            #             "required": ["explanation", "criterion_type"],
+            #             "type": "object",
+            #         },
+            #         "ScreenSettings": {
+            #             "description": "Screen settings",
+            #             "properties": {
+            #                 "criteria": {
+            #                     "additionalProperties": {
+            #                         "$ref": "#/definitions/ScreenCriterion"
+            #                     },
+            #                     "type": "object",
+            #                 },
+            #                 "explanation": {"type": "string"},
+            #                 "scripts": {
+            #                     "script_type": "screen",
+            #                     "type": "script_array",
+            #                 },
+            #             },
+            #             "required": ["criteria", "scripts"],
+            #             "type": "object",
+            #         },
+            #         "SearchSettings": {
+            #             "description": "Search settings",
+            #             "properties": {"retrieve_forthcoming": {"type": "boolean"}},
+            #             "required": ["retrieve_forthcoming"],
+            #             "type": "object",
+            #         },
+            #         "SearchSource": {
+            #             "description": "Search source settings",
+            #             "properties": {
+            #                 "comment": {"type": "string"},
+            #                 "conversion_script": {
+            #                     "script_type": "conversion",
+            #                     "type": "script_item",
+            #                 },
+            #                 "filename": {},
+            #                 "search_parameters": {"type": "string"},
+            #                 "search_script": {
+            #                     "script_type": "search",
+            #                     "type": "script_item",
+            #                 },
             #                 "search_type": {
-            #                     "options": [
+            #                     "enum": [
             #                         "DB",
             #                         "TOC",
             #                         "BACKWARD_SEARCH",
@@ -380,30 +359,62 @@ class SettingsEditor:
             #                         "PDFS",
             #                         "OTHER",
             #                     ],
-            #                     "tooltip": "Type of search source",
-            #                     "type": "selection",
+            #                     "type": "string",
             #                 },
-            #                 "source_identifier": {"type": "str"},
-            #                 "source_name": {"type": "str"},
-            #                 "source_prep_scripts": {"properties": "List"},
+            #                 "source_identifier": {"type": "string"},
+            #                 "source_name": {"type": "string"},
+            #                 "source_prep_scripts": {
+            #                     "script_type": "source_prep_script",
+            #                     "type": "script_array",
+            #                 },
             #             },
-            #             "search_script": {
-            #                 "list": False,
-            #                 "script_type": "search",
-            #                 "type": "script_selector",
-            #             },
-            #             "source_prep_scripts": {
-            #                 "list": True,
-            #                 "script_type": "source_prep_script",
-            #                 "type": "script_multiple_selector",
-            #             },
+            #             "required": [
+            #                 "filename",
+            #                 "search_type",
+            #                 "source_name",
+            #                 "source_identifier",
+            #                 "search_parameters",
+            #                 "search_script",
+            #                 "conversion_script",
+            #                 "source_prep_scripts",
+            #             ],
             #             "type": "object",
             #         },
-            #         "type": "object",
             #     },
+            #     "description": "CoLRev project settings",
+            #     "properties": {
+            #         "data": {"$ref": "#/definitions/DataSettings"},
+            #         "dedupe": {"$ref": "#/definitions/DedupeSettings"},
+            #         "load": {"$ref": "#/definitions/LoadSettings"},
+            #         "pdf_get": {"$ref": "#/definitions/PDFGetSettings"},
+            #         "pdf_prep": {"$ref": "#/definitions/PDFPrepSettings"},
+            #         "prep": {"$ref": "#/definitions/PrepSettings"},
+            #         "prescreen": {"$ref": "#/definitions/PrescreenSettings"},
+            #         "project": {"$ref": "#/definitions/ProjectSettings"},
+            #         "screen": {"$ref": "#/definitions/ScreenSettings"},
+            #         "search": {"$ref": "#/definitions/SearchSettings"},
+            #         "sources": {
+            #             "items": {"$ref": "#/definitions/SearchSource"},
+            #             "type": "array",
+            #         },
+            #     },
+            #     "required": [
+            #         "project",
+            #         "sources",
+            #         "search",
+            #         "load",
+            #         "prep",
+            #         "dedupe",
+            #         "prescreen",
+            #         "pdf_get",
+            #         "pdf_prep",
+            #         "screen",
+            #         "data",
+            #     ],
+            #     "type": "object",
             # }
 
-            return jsonify(colrev.settings.Configuration.get_settings_schema())
+            return jsonify(colrev.settings.Settings.get_settings_schema())
 
         @app.route("/api/getScripts")
         def getScripts(script_type):

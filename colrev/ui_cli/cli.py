@@ -97,7 +97,6 @@ def main(ctx):
 @click.option(
     "--type",
     type=str,
-    default="literature_review",
     help="Review type (e.g., literature_review (default), curated_masterdata, realtime)",
 )
 @click.option("--url", help="Git remote URL (optional)")
@@ -119,7 +118,7 @@ def init(ctx, name, type, url, example):
         if type is None:
             # TODO : the type (if not passed as an argument) should
             # be selected as the first step of the web-ui
-            type = colrev.settings.ReviewType.literature_review
+            type = "literature_review"
 
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=colrev.settings.ReviewType[type],
@@ -1492,7 +1491,8 @@ def settings(ctx, upgrade, update_hooks, modify):
     review_manager = colrev.review_manager.ReviewManager()
 
     if upgrade:
-        review_manager.upgrade_colrev()
+        upgrad_operation = review_manager.get_upgrade()
+        upgrad_operation.main()
         return
 
     if update_hooks:

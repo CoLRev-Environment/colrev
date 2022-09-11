@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import dataclasses
-import inspect
 import typing
 from dataclasses import dataclass
 from enum import Enum
-from enum import EnumMeta
 from pathlib import Path
+
+from dataclasses_jsonschema import JsonSchemaMixin
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
@@ -62,13 +62,13 @@ class ReviewType(Enum):
         return cls._member_names_
 
     def __str__(self) -> str:
-        return (
-            f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
-        )
+        return f"{self.name}"
 
 
 @dataclass
-class Author:
+class Author(JsonSchemaMixin):
+    """Author of the review"""
+
     name: str
     initials: str
     email: str
@@ -80,7 +80,9 @@ class Author:
 
 
 @dataclass
-class Protocol:
+class Protocol(JsonSchemaMixin):
+    """Review protocol"""
+
     url: str
 
 
@@ -105,7 +107,7 @@ class ShareStatReq(Enum):
 
 
 @dataclass
-class ProjectConfiguration:
+class ProjectSettings(JsonSchemaMixin):
     """Project settings"""
 
     title: str
@@ -157,7 +159,9 @@ class SearchType(Enum):
 
 
 @dataclass
-class SearchSource:
+class SearchSource(JsonSchemaMixin):
+    """Search source settings"""
+
     filename: Path
     search_type: SearchType
     source_name: str
@@ -204,7 +208,9 @@ class SearchSource:
 
 
 @dataclass
-class SearchConfiguration:
+class SearchSettings(JsonSchemaMixin):
+    """Search settings"""
+
     retrieve_forthcoming: bool
 
     def __str__(self) -> str:
@@ -215,7 +221,9 @@ class SearchConfiguration:
 
 
 @dataclass
-class LoadConfiguration:
+class LoadSettings(JsonSchemaMixin):
+    """Load settings"""
+
     def __str__(self) -> str:
         return " - TODO"
 
@@ -224,10 +232,8 @@ class LoadConfiguration:
 
 
 @dataclass
-class PrepRound:
-    """The scripts are either in Prepare.prep_scripts, in a custom project script
-    (the script in settings.json must have the same name), or otherwise in a
-    python package (locally installed)."""
+class PrepRound(JsonSchemaMixin):
+    """Prep round settings"""
 
     name: str
     similarity: float
@@ -241,7 +247,9 @@ class PrepRound:
 
 
 @dataclass
-class PrepConfiguration:
+class PrepSettings(JsonSchemaMixin):
+    """Prep settings"""
+
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
 
@@ -278,7 +286,9 @@ class SameSourceMergePolicy(Enum):
 
 
 @dataclass
-class DedupeConfiguration:
+class DedupeSettings(JsonSchemaMixin):
+    """Dedupe settings"""
+
     same_source_merges: SameSourceMergePolicy
     scripts: list
 
@@ -294,7 +304,9 @@ class DedupeConfiguration:
 
 
 @dataclass
-class PrescreenConfiguration:
+class PrescreenSettings(JsonSchemaMixin):
+    """Prescreen settings"""
+
     explanation: str
     scripts: list
 
@@ -324,7 +336,9 @@ class PDFPathType(Enum):
 
 
 @dataclass
-class PDFGetConfiguration:
+class PDFGetSettings(JsonSchemaMixin):
+    """PDF get settings"""
+
     pdf_path_type: PDFPathType
     pdf_required_for_screen_and_synthesis: bool
     """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
@@ -346,7 +360,9 @@ class PDFGetConfiguration:
 
 
 @dataclass
-class PDFPrepConfiguration:
+class PDFPrepSettings(JsonSchemaMixin):
+    """PDF prep settings"""
+
     scripts: list
 
     man_pdf_prep_scripts: list
@@ -380,7 +396,9 @@ class ScreenCriterionType(Enum):
 
 
 @dataclass
-class ScreenCriterion:
+class ScreenCriterion(JsonSchemaMixin):
+    """Screen criterion"""
+
     explanation: str
     comment: typing.Optional[str]
     criterion_type: ScreenCriterionType
@@ -390,7 +408,9 @@ class ScreenCriterion:
 
 
 @dataclass
-class ScreenConfiguration:
+class ScreenSettings(JsonSchemaMixin):
+    """Screen settings"""
+
     explanation: typing.Optional[str]
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
@@ -403,7 +423,9 @@ class ScreenConfiguration:
 
 
 @dataclass
-class DataConfiguration:
+class DataSettings(JsonSchemaMixin):
+    """Data settings"""
+
     scripts: list
 
     def __str__(self) -> str:
@@ -411,19 +433,20 @@ class DataConfiguration:
 
 
 @dataclass
-class Configuration:
+class Settings(JsonSchemaMixin):
+    """CoLRev project settings"""
 
-    project: ProjectConfiguration
+    project: ProjectSettings
     sources: typing.List[SearchSource]
-    search: SearchConfiguration
-    load: LoadConfiguration
-    prep: PrepConfiguration
-    dedupe: DedupeConfiguration
-    prescreen: PrescreenConfiguration
-    pdf_get: PDFGetConfiguration
-    pdf_prep: PDFPrepConfiguration
-    screen: ScreenConfiguration
-    data: DataConfiguration
+    search: SearchSettings
+    load: LoadSettings
+    prep: PrepSettings
+    dedupe: DedupeSettings
+    prescreen: PrescreenSettings
+    pdf_get: PDFGetSettings
+    pdf_prep: PDFPrepSettings
+    screen: ScreenSettings
+    data: DataSettings
 
     def __str__(self) -> str:
         return (
@@ -453,187 +476,67 @@ class Configuration:
     @classmethod
     def get_settings_schema(cls):
 
-        # https://json-schema.org/learn/getting-started-step-by-step
+        schema = cls.json_schema()
 
-        def get_configuration_options(conf_input):
-            conf_options_dict = {}
-            conf_cls = conf_input
-
-            # https://stackoverflow.com/questions/50563546/validating-detailed-types-in-python-dataclasses
-            if hasattr(conf_cls, "__dict__"):
-
-                if typing.get_origin(conf_cls) == list:
-                    # example: SearchSource
-                    properties = get_configuration_options(typing.get_args(conf_cls)[0])
-                    return {"list": True, "type": "object", "properties": properties}
-
-                if "__dataclass_fields__" in conf_cls.__dict__:
-                    for key, value in conf_cls.__dict__["__dataclass_fields__"].items():
-
-                        conf_options_dict[key] = {}
-
-                        if value.type in (str, int, float, bool):
-                            if hasattr(conf_cls, f"__doc_{key}__"):
-                                conf_options_dict[key]["tooltip"] = getattr(
-                                    conf_cls, f"__doc_{key}__"
-                                )
-
-                        elif isinstance(value.type, EnumMeta):
-                            conf_options_dict[key]["tooltip"] = value.type.__doc__
-                            conf_options_dict[key]["type"] = "selection"
-                            conf_options_dict[key]["options"] = value.type.get_options()
-                            continue
-                        # elif inspect.isclass(value.type):
-                        #     conf_options_dict[key]["tooltip"] = get_configuration_tooltips(value)
-
-                        # Add tooltips
-                        # conf_options_dict[key]["tooltips"] = get_configuration_tooltips(value)
-
-                        # Add type/required
-                        if value.type in (int, str, float, bool):
-                            conf_options_dict[key]["type"] = value.type.__name__
-                            continue
-
-                        if typing.get_origin(value.type) == list:
-                            conf_options_dict[key]["list"] = True
-
-                            rets = [
-                                get_configuration_options(element)
-                                for element in typing.get_args(value.type)
-                            ]
-                            if str == type(rets[0]):  # noqa: E721
-                                conf_options_dict[key]["type"] = rets[0]
-
-                            if dict == type(rets[0]):  # noqa: E721
-                                conf_options_dict[key]["type"] = "object"
-                                conf_options_dict[key]["properties"] = rets[0]
-
-                            if value.type in (int, str, float, bool):
-                                conf_options_dict[key]["type"] = value.type.__name__
-
-                        # Note : typing.Optional occurs as "typing.Union[str, NoneType]"
-                        elif typing.get_origin(value.type) == typing.Union:
-                            for element in typing.get_args(value.type):
-                                ret = get_configuration_options(element)
-
-                                if "optional" != ret:
-                                    conf_options_dict[key]["type"] = ret
-                                # else:
-                                #     conf_options_dict[key]["required"] = False
-
-                        elif typing.get_origin(value.type) in [dict]:
-                            conf_options_dict[key] = {}
-                            _, dict_value = typing.get_args(value.type)
-                            conf_options_dict[key][
-                                "custom_dict_key"
-                            ] = get_configuration_options(dict_value)
-
-                        elif inspect.isclass(value.type):
-                            if "Path" == value.type.__name__:
-                                conf_options_dict[key]["type"] = "Path"
-                            else:
-                                conf_options_dict[key][
-                                    "properties"
-                                ] = get_configuration_options(value.type)
-                        else:
-                            print(f"Error 2: {conf_cls}")
-
-                else:
-                    if conf_cls == type(None):  # noqa: E721
-                        return "optional"
-
-                    if conf_cls in (int, str, float, bool):
-                        return conf_cls.__name__
-
-                    if conf_cls == list:
-                        return "List"
-
-                    print(f"Error 1: {conf_cls}")
-
-            else:
-                print(f"not hasattr __dict_: {conf_cls}")
-
-            return conf_options_dict
-
-        options_dict = {}
-        for key, value in cls.__dict__["__dataclass_fields__"].items():
-            options_dict[key] = {"type": "object"}
-            options_dict[key]["properties"] = get_configuration_options(value.type)
-
-        options_dict["sources"]["properties"]["conversion_script"] = {  # type: ignore
-            "type": "script_selector",
+        schema["definitions"]["SearchSource"]["properties"]["conversion_script"] = {  # type: ignore
             "script_type": "conversion",
-            "list": False,
+            "type": "script_item",
         }
 
-        options_dict["sources"]["properties"]["search_script"] = {  # type: ignore
-            "type": "script_selector",
+        schema["definitions"]["SearchSource"]["properties"]["search_script"] = {  # type: ignore
             "script_type": "search",
-            "list": False,
+            "type": "script_item",
         }
 
-        options_dict["sources"]["properties"]["source_prep_scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["SearchSource"]["properties"]["source_prep_scripts"] = {  # type: ignore
             "script_type": "source_prep_script",
-            "list": True,
+            "type": "script_array",
         }
 
         # pylint: disable=unused-variable
-        prep_rounds = options_dict["prep"]["properties"]["prep_rounds"]["properties"][
-            "scripts"
-        ]
+        prep_rounds = schema["definitions"]["PrepRound"]["properties"]["scripts"]
         prep_rounds = {  # type: ignore # noqa: F841
-            "type": "script_multiple_selector",
             "script_type": "prep",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["prep"]["properties"]["man_prep_scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PrepSettings"]["properties"]["PrepSettings"] = {  # type: ignore
             "script_type": "prep_man",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["dedupe"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["DedupeSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "dedupe",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["prescreen"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PrescreenSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "prescreen",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["pdf_get"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PDFGetSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "pdf_get",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["pdf_get"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PDFGetSettings"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
             "script_type": "pdf_get_man",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["pdf_prep"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PDFPrepSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "pdf_prep",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["pdf_prep"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["PDFPrepSettings"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
             "script_type": "pdf_prep_man",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["screen"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["ScreenSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "screen",
-            "list": True,
+            "type": "script_array",
         }
-        options_dict["data"]["properties"]["scripts"] = {  # type: ignore
-            "type": "script_multiple_selector",
+        schema["definitions"]["DataSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "data",
-            "list": True,
+            "type": "script_array",
         }
 
-        return options_dict
+        return schema
 
 
 if __name__ == "__main__":

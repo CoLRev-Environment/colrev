@@ -64,6 +64,7 @@ pycountry = "^22.3.5"
 glom = "^22.1.0"
 pre-commit = "^2.20.0"
 Jinja2 = "^3.1.2"
+dataclasses-jsonschema = "^2.15.3"
 
 [tool.poetry.dev-dependencies]
 coverage = "^6.4.2"

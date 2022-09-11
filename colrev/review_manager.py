@@ -121,7 +121,7 @@ class ReviewManager:
             )
         return global_git_vars
 
-    def load_settings(self) -> colrev.settings.Configuration:
+    def load_settings(self) -> colrev.settings.Settings:
 
         # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
         # possible extension : integrate/merge global, default settings
@@ -153,7 +153,7 @@ class ReviewManager:
         try:
             converters = {Path: Path, Enum: Enum}
             settings = from_dict(
-                data_class=colrev.settings.Configuration,
+                data_class=colrev.settings.Settings,
                 data=loaded_settings,
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
@@ -676,10 +676,10 @@ class ReviewManager:
         ret = commit.create()
         return ret
 
-    def upgrade_colrev(self) -> None:
+    def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
         import colrev.ops.upgrade
 
-        colrev.ops.upgrade.Upgrade(review_manager=self)
+        return colrev.ops.upgrade.Upgrade(review_manager=self)
 
     def get_advisor(self) -> colrev.advisor.Advisor:
         import colrev.advisor
