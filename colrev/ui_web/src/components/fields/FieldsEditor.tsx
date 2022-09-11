@@ -24,7 +24,7 @@ const FiedlsEditor: React.FC<{
 
   return (
     <div>
-      <label htmlFor="title">{title}</label>
+      <label>{title}</label>
       <ul className="list-group">
         {fields.map((field: string, index: number) => (
           <li

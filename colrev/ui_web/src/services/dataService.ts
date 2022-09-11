@@ -12,6 +12,7 @@ import Data from "../models/data";
 import PdfGet from "../models/pdfGet";
 import PdfPrep from "../models/pdfPrep";
 import Screen from "../models/screen";
+import Search from "../models/search";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -32,6 +33,9 @@ const getSettings = async (): Promise<Settings> => {
     sourceFromSettings(source, s);
     settings.sources.push(source);
   }
+
+  settings.search = new Search();
+  searchFromSettings(settings.search, settingsFile.search);
 
   settings.prep = new Prep();
   prepFromSettings(settings.prep, settingsFile.prep);
@@ -62,6 +66,7 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     ...settingsFile,
     project: projectToSettings(settings.project),
     sources: [],
+    search: searchToSettings(settings.search),
     prep: prepToSettings(settings.prep),
     dedupe: dedupeToSettings(settings.dedupe),
     prescreen: prescreenToSettings(settings.prescreen),
@@ -84,6 +89,10 @@ const saveSettings = async (settings: Settings): Promise<void> => {
 };
 
 const projectFromSettings = (project: Project, settingsProject: any) => {
+  project.title = settingsProject.title;
+  project.authors = settingsProject.authors;
+  project.keywords = settingsProject.keywords;
+  project.protocol = settingsProject.protocol;
   project.reviewType = settingsProject.review_type;
   project.idPattern = settingsProject.id_pattern;
   project.shareStatReq = settingsProject.share_stat_req;
@@ -91,11 +100,16 @@ const projectFromSettings = (project: Project, settingsProject: any) => {
   project.curationUrl = settingsProject.curation_url;
   project.curatedMasterdata = settingsProject.curated_masterdata;
   project.curatedFields = settingsProject.curated_fields;
+  project.colrevVersion = settingsProject.colrev_version;
 };
 
 const projectToSettings = (project: Project): any => {
   const settingsFileProject = {
     ...settingsFile.project,
+    title: project.title,
+    authors: project.authors,
+    keywords: project.keywords,
+    protocol: project.protocol,
     review_type: project.reviewType,
     id_pattern: project.idPattern,
     share_stat_req: project.shareStatReq,
@@ -143,6 +157,18 @@ const sourceToSettings = (source: Source): any => {
   };
 
   return settingsFileSource;
+};
+
+const searchFromSettings = (search: Search, settingsSearch: any) => {
+  search.retrieveForthcoming = settingsSearch.retrieve_forthcoming;
+};
+
+const searchToSettings = (search: Search): any => {
+  const settingsFileSearch = {
+    ...settingsFile.search,
+    retrieve_forthcoming: search.retrieveForthcoming,
+  };
+  return settingsFileSearch;
 };
 
 const prepFromSettings = (prep: Prep, settingsPrep: any) => {
@@ -238,6 +264,9 @@ const prescreenToSettings = (prescreen: Prescreen): any => {
 
 const pdfGetFromSettings = (pdfGet: PdfGet, settingsPdfGet: any) => {
   pdfGet.pdfPathType = settingsPdfGet.pdf_path_type;
+  pdfGet.pdfRequiredForScreenAndSynthesis =
+    settingsPdfGet.pdf_required_for_screen_and_synthesis;
+  pdfGet.renamePdfs = settingsPdfGet.rename_pdfs;
   pdfGet.scripts = scriptsFromSettings(settingsPdfGet.scripts);
   pdfGet.manPdfGetScripts = scriptsFromSettings(
     settingsPdfGet.man_pdf_get_scripts
@@ -247,6 +276,9 @@ const pdfGetFromSettings = (pdfGet: PdfGet, settingsPdfGet: any) => {
 const pdfGetToSettings = (pdfGet: PdfGet): any => {
   const settingsPdfGet = {
     pdf_path_type: pdfGet.pdfPathType,
+    pdf_required_for_screen_and_synthesis:
+      pdfGet.pdfRequiredForScreenAndSynthesis,
+    rename_pdfs: pdfGet.renamePdfs,
     scripts: scriptsToSettings(pdfGet.scripts),
     man_pdf_get_scripts: scriptsToSettings(pdfGet.manPdfGetScripts),
   };

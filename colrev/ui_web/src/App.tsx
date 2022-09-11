@@ -24,10 +24,13 @@ import Screen from "./models/screen";
 import PdfGetEditor from "./components/pdf/PdfGetEditor";
 import PdfPrepEditor from "./components/pdf/PdfPrepEditor";
 import ScreenEditor from "./components/screen/ScreenEditor";
+import Search from "./models/search";
+import SearchEditor from "./components/search/SearchEditor";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
   const [sources, setSources] = useState<Source[]>([]);
+  const [search, setSearch] = useState<Search>(new Search());
   const [prep, setPrep] = useState<Prep>(new Prep());
   const [dedupe, setDedupe] = useState<Dedupe>(new Dedupe());
   const [prescreen, setPrescreen] = useState<Prescreen>(new Prescreen());
@@ -58,6 +61,7 @@ function App() {
     const settings = await dataService.getSettings();
     setProject(settings.project);
     setSources(settings.sources);
+    setSearch(settings.search);
     setPrep(settings.prep);
     setDedupe(settings.dedupe);
     setPrescreen(settings.prescreen);
@@ -75,6 +79,11 @@ function App() {
   const onSourcesChanged = (sources: Source[]) => {
     setIsFileSaved(false);
     setSources(sources);
+  };
+
+  const onSearchChanged = (search: Search) => {
+    setIsFileSaved(false);
+    setSearch(search);
   };
 
   const onPrepChanged = (prep: Prep) => {
@@ -116,6 +125,7 @@ function App() {
     const settings = new Settings();
     settings.project = project;
     settings.sources = sources;
+    settings.search = search;
     settings.prep = prep;
     settings.dedupe = dedupe;
     settings.prescreen = prescreen;
@@ -169,12 +179,20 @@ function App() {
                 name="Sources"
                 id="sources"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <SourcesEditor
                   sources={sources}
                   sourcesChanged={onSourcesChanged}
                 />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Search"
+                id="search"
+                parentContainerId="settingsExpander"
+                show={true}
+              >
+                <SearchEditor search={search} searchChanged={onSearchChanged} />
               </ExpanderItem>
               <ExpanderItem
                 name="Prep"
