@@ -766,12 +766,6 @@ class ReviewManager:
         return colrev.env.resources.Resources(**kwargs)
 
     @classmethod
-    def check_init_precondition(cls):
-        import colrev.ops.init
-
-        return colrev.ops.init.Initializer.check_init_precondition()
-
-    @classmethod
     def get_init_operation(cls, **kwargs) -> colrev.ops.init.Initializer:
         import colrev.ops.init
 

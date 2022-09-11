@@ -32,26 +32,27 @@ class Initializer:
     def __init__(
         self,
         *,
+        review_type=colrev.settings.ReviewType,
         example: bool = False,
         local_index_repo: bool = False,
     ) -> None:
 
         saved_args = locals()
         assert not (example and local_index_repo)
-        assert Path("settings.json").is_file()
+
+        self.__check_init_precondition()
 
         # TODO : this will change to project.title
         self.project_name = str(Path.cwd().name)
+        self.review_type = review_type
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
-        self.review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-
         self.__require_empty_directory()
-        self.logger.info("Setup files")
-        self.__setup_files()
         self.logger.info("Setup git")
         self.__setup_git()
+        self.logger.info("Setup files")
+        self.__setup_files(path=Path.cwd())
         self.logger.info("Create commit")
         if example:
             self.__create_example_repo()
@@ -72,8 +73,7 @@ class Initializer:
         for instruction in self.instructions:
             self.review_manager.logger.info(instruction)
 
-    @classmethod
-    def check_init_precondition(cls) -> None:
+    def __check_init_precondition(self) -> None:
         cur_content = [str(x) for x in Path.cwd().glob("**/*")]
 
         # pylint: disable=duplicate-code
@@ -124,18 +124,17 @@ class Initializer:
             saved_args=saved_args,
         )
 
-    @classmethod
-    def setup_initial_configuration(cls, *, path: Path) -> None:
+    def __setup_files(self, *, path: Path) -> None:
+
         # Note: parse instead of copy to avoid format changes
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/settings.json")
         )
         if filedata:
             settings = json.loads(filedata.decode("utf-8"))
+            settings["project"]["review_type"] = str(self.review_type)
             with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
-
-    def __setup_files(self) -> None:
 
         Path("search").mkdir()
         Path("pdfs").mkdir()
@@ -162,119 +161,95 @@ class Initializer:
                 template_file=retrieval_path, target=target_path
             )
 
-        with open("settings.json", encoding="utf-8") as file:
-            settings = json.load(file)
+        self.review_manager = colrev.review_manager.ReviewManager()
 
-        settings["project"]["authors"] = [
-            {
-                "name": self.review_manager.committer,
-                "initials": "".join(
+        settings = self.review_manager.settings
+
+        settings.project.authors = [
+            colrev.settings.Author(
+                name=self.review_manager.committer,
+                initials="".join(
                     part[0] for part in self.review_manager.committer.split(" ")
                 ),
-                "email": self.review_manager.email,
-            }
+                email=self.review_manager.email,
+            )
         ]
-
-        if settings["project"]["share_stat_req"] not in self.share_stat_req_options:
-            raise colrev_exceptions.ParameterError(
-                parameter="settings.project.share_stat_req",
-                value=settings["project"]["share_stat_req"],
-                options=self.share_stat_req_options,
-            )
-
-        if (
-            settings["project"]["review_type"]
-            not in colrev.settings.ReviewType.get_options()
-        ):
-            raise colrev_exceptions.ParameterError(
-                parameter="settings.project.review_type",
-                value=f"'{settings['project']['review_type']}'",
-                options=colrev.settings.ReviewType.get_options(),
-            )
-
-        self.review_type = settings["project"]["review_type"]
 
         colrev_version = version("colrev_core")
         colrev_version = colrev_version[: colrev_version.find("+")]
-        settings["project"]["colrev_version"] = colrev_version
+        settings.project.colrev_version = colrev_version
 
-        settings["project"]["review_type"] = self.review_type
+        self.review_type = settings.project.review_type
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
 
-        if self.review_type not in ["curated_masterdata"]:
-            settings["data"]["scripts"] = [
+        if self.review_type not in [colrev.settings.ReviewType.curated_masterdata]:
+            settings.data.scripts = [
                 {
                     "endpoint": "MANUSCRIPT",
-                    "paper_endpoint_version": "1.0",
+                    "version": "1.0",
                     "word_template": "APA-7.docx",
                     "csl_style": "apa.csl",
                 }
             ]
 
-        if "literature_review" == self.review_type:
+        if colrev.settings.ReviewType.literature_review == self.review_type:
             pass
 
-        elif "narrative_review" == self.review_type:
+        elif colrev.settings.ReviewType.narrative_review == self.review_type:
             pass
 
-        elif "descriptive_review" == self.review_type:
-            settings["data"]["scripts"].append(
-                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
-            )
+        elif colrev.settings.ReviewType.descriptive_review == self.review_type:
+            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
 
-        elif "scoping_review" == self.review_type:
-            settings["data"]["scripts"].append(
-                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
-            )
+        elif colrev.settings.ReviewType.scoping_review == self.review_type:
+            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
 
-        elif "critical_review" == self.review_type:
-            settings["data"]["scripts"].append(
-                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
-            )
+        elif colrev.settings.ReviewType.critical_review == self.review_type:
+            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
 
-        elif "theoretical_review" == self.review_type:
+        elif colrev.settings.ReviewType.theoretical_review == self.review_type:
             pass
 
-        elif "conceptual_review" == self.review_type:
+        elif colrev.settings.ReviewType.conceptual_review == self.review_type:
             pass
 
-        elif "qualitative_systematic_review" == self.review_type:
-            settings["data"]["scripts"].append(
+        elif (
+            colrev.settings.ReviewType.qualitative_systematic_review == self.review_type
+        ):
+            settings.data.scripts.append(
                 {
                     "endpoint": "STRUCTURED",
-                    "structured_data_endpoint_version": "1.0",
+                    "version": "1.0",
                     "fields": [],
                 }
             )
-            settings["data"]["scripts"].append(
-                {"endpoint": "PrismaDiagram", "prisma_data_endpoint_version": "1.0"}
+            settings.data.scripts.append(
+                {"endpoint": "PrismaDiagram", "version": "1.0"}
             )
 
-        elif "meta_analysis" == self.review_type:
-            settings["data"]["scripts"].append(
+        elif colrev.settings.ReviewType.meta_analysis == self.review_type:
+            settings.data.scripts.append(
                 {
                     "endpoint": "STRUCTURED",
-                    "structured_data_endpoint_version": "1.0",
+                    "version": "1.0",
                     "fields": [],
                 }
             )
-            settings["data"]["scripts"].append(
-                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
-            )
+            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
 
-        elif "scientometric" == self.review_type:
-            settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = False
+        elif colrev.settings.ReviewType.scientometric == self.review_type:
+            settings.pdf_get.pdf_required_for_screen_and_synthesis = False
 
-        elif "peer_review" == self.review_type:
-            settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = False
+        elif colrev.settings.ReviewType.peer_review == self.review_type:
+            settings.pdf_get.pdf_required_for_screen_and_synthesis = False
 
-            settings["data"]["scripts"].append(
+            settings.data.scripts.append(
                 {
                     "endpoint": "peer_review",
                 }
             )
-            settings["sources"].append(
+            settings.sources.append(
                 {
                     "filename": "search/references.bib",
                     "search_type": "DB",
@@ -288,7 +263,7 @@ class Initializer:
                 }
             )
 
-            settings["prep"]["prep_rounds"] = [
+            settings.prep.prep_rounds = [
                 d
                 for d in settings["prep"]["prep_rounds"]
                 if d.get("name", "") != "exclusion"
@@ -305,9 +280,9 @@ class Initializer:
             # endpoint: extract diff between imported metadata and prepared metadata
             # ordered in terms of change significance
 
-        elif "realtime" == self.review_type:
-            settings["project"]["delay_automated_processing"] = False
-            settings["prep"]["prep_rounds"] = [
+        elif colrev.settings.ReviewType.realtime == self.review_type:
+            settings.project.delay_automated_processing = False
+            settings.prep.prep_rounds = [
                 {
                     "name": "high_confidence",
                     "similarity": 0.95,
@@ -333,7 +308,7 @@ class Initializer:
                 }
             ]
 
-        elif "curated_masterdata" == self.review_type:
+        elif colrev.settings.ReviewType.curated_masterdata == self.review_type:
             # replace readme
             colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
@@ -356,34 +331,34 @@ class Initializer:
                 "source_prep_scripts": [],
                 "comment": "",
             }
-            settings["sources"].insert(0, crossref_source)
-            settings["search"]["retrieve_forthcoming"] = False
+            settings.sources.insert(0, crossref_source)
+            settings.search.retrieve_forthcoming = False
 
             # TODO : exclude complementary materials in prep scripts
             # TODO : exclude get_masterdata_from_citeas etc. from prep
-            settings["prep"]["man_prep_scripts"] = [
+            settings.prep.man_prep_scripts = [
                 {"endpoint": "prep_man_curation_jupyter"},
                 {"endpoint": "export_man_prep"},
             ]
-            settings["prescreen"][
-                "explanation"
-            ] = "All records are automatically prescreen included."
+            settings.prescreen.explanation = (
+                "All records are automatically prescreen included."
+            )
 
-            settings["screen"][
-                "explanation"
-            ] = "All records are automatically included in the screen."
+            settings.screen.explanation = (
+                "All records are automatically included in the screen."
+            )
 
-            settings["project"]["curated_masterdata"] = True
-            settings["prescreen"]["scripts"] = [
+            settings.project.curated_masterdata = True
+            settings.prescreen.scripts = [
                 {"endpoint": "scope_prescreen", "ExcludeComplementaryMaterials": True},
                 {"endpoint": "conditional_prescreen"},
             ]
-            settings["screen"]["scripts"] = [{"endpoint": "conditional_screen"}]
-            settings["pdf_get"]["scripts"] = []
+            settings.screen.scripts = [{"endpoint": "conditional_screen"}]
+            settings.pdf_get.scripts = []
             # TODO : Deactivate languages, ...
             #  exclusion and add a complementary exclusion built-in script
 
-            settings["dedupe"]["scripts"] = [
+            settings.dedupe.scripts = [
                 {
                     "endpoint": "curation_full_outlet_dedupe",
                     "selected_source": "search/CROSSREF.bib",
@@ -398,8 +373,7 @@ class Initializer:
             # curated repo: automatically prescreen/screen-include papers
             # (no data endpoint -> automatically rev_synthesized)
 
-        with open("settings.json", "w", encoding="utf-8") as outfile:
-            json.dump(settings, outfile, indent=4)
+        self.review_manager.save_settings()
 
         if "review" in self.project_name.lower():
             colrev.env.utils.inplace_change(
@@ -408,8 +382,10 @@ class Initializer:
                 new_string=self.project_name.rstrip(" "),
             )
         else:
-            r_type_suffix = self.review_type.replace("_", " ").replace(
-                "meta analysis", "meta-analysis"
+            r_type_suffix = (
+                str(self.review_type)
+                .replace("_", " ")
+                .replace("meta analysis", "meta-analysis")
             )
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
@@ -422,6 +398,18 @@ class Initializer:
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
             return
+
+        files_to_add = [
+            "readme.md",
+            ".pre-commit-config.yaml",
+            ".gitattributes",
+            ".gitignore",
+            "settings.json",
+            ".markdownlint.yaml",
+            "LICENSE.txt",
+        ]
+        for file_to_add in files_to_add:
+            self.review_manager.dataset.add_changes(path=Path(file_to_add))
 
     def __post_commit_edits(self) -> None:
 
@@ -457,7 +445,7 @@ class Initializer:
 
     def __setup_git(self) -> None:
 
-        git_repo = git.Repo.init()
+        git.Repo.init()
 
         # To check if git actors are set
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
@@ -484,18 +472,6 @@ class Initializer:
                     )
                 else:
                     self.logger.info("Failed: %s", " ".join(script_to_call))
-
-        git_repo.index.add(
-            [
-                "readme.md",
-                ".pre-commit-config.yaml",
-                ".gitattributes",
-                ".gitignore",
-                "settings.json",
-                ".markdownlint.yaml",
-                "LICENSE.txt",
-            ]
-        )
 
     def __require_empty_directory(self) -> None:
 

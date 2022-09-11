@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import dataclasses
 import inspect
 import typing
 from dataclasses import dataclass
@@ -15,9 +16,16 @@ from pathlib import Path
 
 
 class IDPattern(Enum):
+    """The pattern for generating record IDs"""
+
     # pylint: disable=invalid-name
     first_author_year = "first_author_year"
     three_authors_year = "three_authors_year"
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
@@ -44,8 +52,13 @@ class ReviewType(Enum):
     peer_review = "peer_review"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_field_details(cls) -> typing.Dict:
         # pylint: disable=E1101
+        return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
         return cls._member_names_
 
     def __str__(self) -> str:
@@ -59,11 +72,11 @@ class Author:
     name: str
     initials: str
     email: str
-    orcid: typing.Optional[str]
-    contributions: typing.Optional[list]
-    affiliations: typing.Optional[list]
-    funding: typing.Optional[list]
-    identifiers: typing.Optional[list]
+    orcid: typing.Optional[str] = None
+    contributions: typing.List[str] = dataclasses.field(default_factory=list)
+    affiliations: typing.Optional[str] = None
+    funding: typing.List[str] = dataclasses.field(default_factory=list)
+    identifiers: typing.List[str] = dataclasses.field(default_factory=list)
 
 
 @dataclass
@@ -84,6 +97,11 @@ class ShareStatReq(Enum):
     def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
 
 @dataclass
@@ -128,6 +146,11 @@ class SearchType(Enum):
     def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
     def __str__(self):
         return f"{self.name}"
@@ -178,15 +201,6 @@ class SearchSource:
             + f"   source_prep_script:  {source_prep_scripts_string}\n"
             + f"   comment:             {self.comment}"
         )
-
-
-# @dataclass
-# class SearchSources:
-
-#     sources: typing.List[SearchSource]
-
-#     def __str__(self):
-#         return " - " + "\n - ".join([str(s) for s in self.sources])
 
 
 @dataclass
@@ -257,6 +271,11 @@ class SameSourceMergePolicy(Enum):
         # pylint: disable=no-member
         return cls._member_names_
 
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
 
 @dataclass
 class DedupeConfiguration:
@@ -286,9 +305,27 @@ class PrescreenConfiguration:
 # PDF get
 
 
+class PDFPathType(Enum):
+    """Policy for handling PDFs (create symlinks or copy files)"""
+
+    # pylint: disable=invalid-name
+    symlink = "symlink"
+    copy = "copy"
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
 @dataclass
 class PDFGetConfiguration:
-    pdf_path_type: str  # TODO : "symlink" or "copy"
+    pdf_path_type: PDFPathType
     pdf_required_for_screen_and_synthesis: bool
     """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
     can be specified as mandatory (true) or optional (false) for the following steps"""
@@ -332,6 +369,11 @@ class ScreenCriterionType(Enum):
     def get_options(cls) -> typing.List[str]:
         # pylint: disable=no-member
         return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
     def __str__(self) -> str:
         return self.name
@@ -409,61 +451,104 @@ class Configuration:
         )
 
     @classmethod
-    def get_options(cls) -> typing.Dict[str, typing.List[str]]:
+    def get_settings_schema(cls):
+
+        # https://json-schema.org/learn/getting-started-step-by-step
+
         def get_configuration_options(conf_input):
             conf_options_dict = {}
-            # conf_cls = conf_input.type
             conf_cls = conf_input
 
             # https://stackoverflow.com/questions/50563546/validating-detailed-types-in-python-dataclasses
             if hasattr(conf_cls, "__dict__"):
-                if "__dataclass_fields__" not in conf_cls.__dict__:
 
+                if typing.get_origin(conf_cls) == list:
+                    # example: SearchSource
+                    properties = get_configuration_options(typing.get_args(conf_cls)[0])
+                    return {"list": True, "type": "object", "properties": properties}
+
+                if "__dataclass_fields__" in conf_cls.__dict__:
+                    for key, value in conf_cls.__dict__["__dataclass_fields__"].items():
+
+                        conf_options_dict[key] = {}
+
+                        if value.type in (str, int, float, bool):
+                            if hasattr(conf_cls, f"__doc_{key}__"):
+                                conf_options_dict[key]["tooltip"] = getattr(
+                                    conf_cls, f"__doc_{key}__"
+                                )
+
+                        elif isinstance(value.type, EnumMeta):
+                            conf_options_dict[key]["tooltip"] = value.type.__doc__
+                            conf_options_dict[key]["type"] = "selection"
+                            conf_options_dict[key]["options"] = value.type.get_options()
+                            continue
+                        # elif inspect.isclass(value.type):
+                        #     conf_options_dict[key]["tooltip"] = get_configuration_tooltips(value)
+
+                        # Add tooltips
+                        # conf_options_dict[key]["tooltips"] = get_configuration_tooltips(value)
+
+                        # Add type/required
+                        if value.type in (int, str, float, bool):
+                            conf_options_dict[key]["type"] = value.type.__name__
+                            continue
+
+                        if typing.get_origin(value.type) == list:
+                            conf_options_dict[key]["list"] = True
+
+                            rets = [
+                                get_configuration_options(element)
+                                for element in typing.get_args(value.type)
+                            ]
+                            if str == type(rets[0]):  # noqa: E721
+                                conf_options_dict[key]["type"] = rets[0]
+
+                            if dict == type(rets[0]):  # noqa: E721
+                                conf_options_dict[key]["type"] = "object"
+                                conf_options_dict[key]["properties"] = rets[0]
+
+                            if value.type in (int, str, float, bool):
+                                conf_options_dict[key]["type"] = value.type.__name__
+
+                        # Note : typing.Optional occurs as "typing.Union[str, NoneType]"
+                        elif typing.get_origin(value.type) == typing.Union:
+                            for element in typing.get_args(value.type):
+                                ret = get_configuration_options(element)
+
+                                if "optional" != ret:
+                                    conf_options_dict[key]["type"] = ret
+                                # else:
+                                #     conf_options_dict[key]["required"] = False
+
+                        elif typing.get_origin(value.type) in [dict]:
+                            conf_options_dict[key] = {}
+                            _, dict_value = typing.get_args(value.type)
+                            conf_options_dict[key][
+                                "custom_dict_key"
+                            ] = get_configuration_options(dict_value)
+
+                        elif inspect.isclass(value.type):
+                            if "Path" == value.type.__name__:
+                                conf_options_dict[key]["type"] = "Path"
+                            else:
+                                conf_options_dict[key][
+                                    "properties"
+                                ] = get_configuration_options(value.type)
+                        else:
+                            print(f"Error 2: {conf_cls}")
+
+                else:
                     if conf_cls == type(None):  # noqa: E721
                         return "optional"
 
                     if conf_cls in (int, str, float, bool):
-                        return conf_cls
+                        return conf_cls.__name__
 
-                    if conf_cls in [list]:
-                        # input(conf_cls)
-                        return []
+                    if conf_cls == list:
+                        return "List"
 
-                    print(f"Error: {conf_cls}")
-
-                else:
-                    for key, value in conf_cls.__dict__["__dataclass_fields__"].items():
-
-                        if value.type in (int, str, float, bool):
-                            conf_options_dict[key] = value.type
-                            continue
-
-                        get_options = getattr(value.type, "get_options", None)
-                        if callable(get_options):
-                            conf_options_dict[key] = value.type.get_options()
-                            continue
-
-                        if typing.get_origin(value.type) in [list, typing.Union]:
-                            conf_options_dict[key] = []
-                            for element in typing.get_args(value.type):
-                                conf_options_dict[key].append(
-                                    get_configuration_options(element)
-                                )
-                            continue
-
-                        if typing.get_origin(value.type) in [dict]:
-                            conf_options_dict[key] = {}
-                            dict_key, dict_value = typing.get_args(value.type)
-                            conf_options_dict[key][
-                                dict_key
-                            ] = get_configuration_options(dict_value)
-
-                        elif inspect.isclass(value.type):
-                            conf_options_dict[key] = get_configuration_options(
-                                value.type
-                            )
-                        else:
-                            print(f"Error: {conf_cls}")
+                    print(f"Error 1: {conf_cls}")
 
             else:
                 print(f"not hasattr __dict_: {conf_cls}")
@@ -472,50 +557,83 @@ class Configuration:
 
         options_dict = {}
         for key, value in cls.__dict__["__dataclass_fields__"].items():
-            options_dict[key] = get_configuration_options(value.type)
+            options_dict[key] = {"type": "object"}
+            options_dict[key]["properties"] = get_configuration_options(value.type)
+
+        options_dict["sources"]["properties"]["conversion_script"] = {  # type: ignore
+            "type": "script_selector",
+            "script_type": "conversion",
+            "list": False,
+        }
+
+        options_dict["sources"]["properties"]["search_script"] = {  # type: ignore
+            "type": "script_selector",
+            "script_type": "search",
+            "list": False,
+        }
+
+        options_dict["sources"]["properties"]["source_prep_scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "source_prep_script",
+            "list": True,
+        }
+
+        # pylint: disable=unused-variable
+        prep_rounds = options_dict["prep"]["properties"]["prep_rounds"]["properties"][
+            "scripts"
+        ]
+        prep_rounds = {  # type: ignore # noqa: F841
+            "type": "script_multiple_selector",
+            "script_type": "prep",
+            "list": True,
+        }
+        options_dict["prep"]["properties"]["man_prep_scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "prep_man",
+            "list": True,
+        }
+        options_dict["dedupe"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "dedupe",
+            "list": True,
+        }
+        options_dict["prescreen"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "prescreen",
+            "list": True,
+        }
+        options_dict["pdf_get"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "pdf_get",
+            "list": True,
+        }
+        options_dict["pdf_get"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "pdf_get_man",
+            "list": True,
+        }
+        options_dict["pdf_prep"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "pdf_prep",
+            "list": True,
+        }
+        options_dict["pdf_prep"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "pdf_prep_man",
+            "list": True,
+        }
+        options_dict["screen"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "screen",
+            "list": True,
+        }
+        options_dict["data"]["properties"]["scripts"] = {  # type: ignore
+            "type": "script_multiple_selector",
+            "script_type": "data",
+            "list": True,
+        }
+
         return options_dict
-
-    @classmethod
-    def get_tooltips(cls):
-
-        # https://peps.python.org/pep-0224/
-        # the pep was rejected. we follow the suggestion of adding
-        # attribute docstrings as __doc_<attributename>__
-
-        # Note : currently, only fields have tooltips (not objects)
-
-        def get_configuration_tooltips(conf_input):
-            conf_tooltips_dict = {}
-
-            if hasattr(conf_input.type, "__dict__"):
-
-                if "__dataclass_fields__" in conf_input.type.__dict__:
-                    for key, value in conf_input.type.__dict__[
-                        "__dataclass_fields__"
-                    ].items():
-
-                        if value.type in (str, int, float, bool):
-                            if hasattr(conf_input.type, f"__doc_{key}__"):
-                                conf_tooltips_dict[key] = getattr(
-                                    conf_input.type, f"__doc_{key}__"
-                                )
-                            continue
-
-                        if isinstance(value.type, EnumMeta):
-                            conf_tooltips_dict[key] = value.type.__doc__
-                            continue
-
-                        if inspect.isclass(value.type):
-                            conf_tooltips_dict[key] = get_configuration_tooltips(value)
-
-            return conf_tooltips_dict
-
-        tooltips = {}
-
-        for key, value in cls.__dict__["__dataclass_fields__"].items():
-            tooltips[key] = get_configuration_tooltips(value)
-
-        return tooltips
 
 
 if __name__ == "__main__":

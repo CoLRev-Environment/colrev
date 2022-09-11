@@ -115,19 +115,22 @@ def init(ctx, name, type, url, example):
     import colrev.ui_web.settings_editor
 
     try:
-        colrev.review_manager.ReviewManager.check_init_precondition()
 
-        colrev.ops.init.Initializer.setup_initial_configuration(path=Path.cwd())
+        if type is None:
+            # TODO : the type (if not passed as an argument) should
+            # be selected as the first step of the web-ui
+            type = colrev.settings.ReviewType.literature_review
 
-        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        colrev.review_manager.ReviewManager.get_init_operation(
+            review_type=colrev.settings.ReviewType[type],
+            example=example,
+        )
+
+        review_manager = colrev.review_manager.ReviewManager()
         settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
             review_manager=review_manager
         )
         settings_operation.open_settings_editor()
-
-        colrev.review_manager.ReviewManager.get_init_operation(
-            example=example,
-        )
 
     except (
         colrev_exceptions.ParameterError,
