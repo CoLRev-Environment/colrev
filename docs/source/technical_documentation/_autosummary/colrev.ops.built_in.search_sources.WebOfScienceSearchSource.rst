@@ -17,7 +17,10 @@ colrev.ops.built\_in.search\_sources.WebOfScienceSearchSource
       :nosignatures:
 
       ~WebOfScienceSearchSource.heuristic
+      ~WebOfScienceSearchSource.load_fixes
       ~WebOfScienceSearchSource.prepare
+      ~WebOfScienceSearchSource.run_search
+      ~WebOfScienceSearchSource.validate_search_params
 
 
 
@@ -27,4 +30,6 @@ colrev.ops.built\_in.search\_sources.WebOfScienceSearchSource
 
    .. autosummary::
 
+      ~WebOfScienceSearchSource.search_mode
       ~WebOfScienceSearchSource.source_identifier
+      ~WebOfScienceSearchSource.source_identifier_search

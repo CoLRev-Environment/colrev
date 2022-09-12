@@ -17,6 +17,7 @@ colrev.ops.built\_in.search\_sources.TransportResearchInternationalDocumentation
       :nosignatures:
 
       ~TransportResearchInternationalDocumentation.heuristic
+      ~TransportResearchInternationalDocumentation.load_fixes
       ~TransportResearchInternationalDocumentation.prepare
 
 

@@ -17,7 +17,10 @@ colrev.ops.built\_in.search\_sources.AISeLibrarySearchSource
       :nosignatures:
 
       ~AISeLibrarySearchSource.heuristic
+      ~AISeLibrarySearchSource.load_fixes
       ~AISeLibrarySearchSource.prepare
+      ~AISeLibrarySearchSource.run_search
+      ~AISeLibrarySearchSource.validate_search_params
 
 
 
@@ -27,4 +30,6 @@ colrev.ops.built\_in.search\_sources.AISeLibrarySearchSource
 
    .. autosummary::
 
+      ~AISeLibrarySearchSource.search_mode
       ~AISeLibrarySearchSource.source_identifier
+      ~AISeLibrarySearchSource.source_identifier_search

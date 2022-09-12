@@ -1,49 +1,27 @@
 {
-    "check": {},
-    "explore": {},
-    "search": {
-        "search_crossref": {
-            "endpoint": "colrev.ops.built_in.search.CrossrefSearchEndpoint"
-        },
-        "search_dblp": {
-            "endpoint": "colrev.ops.built_in.search.DBLPSearchEndpoint"
-        },
-        "backward_search": {
-            "endpoint": "colrev.ops.built_in.search.BackwardSearchEndpoint"
-        },
-        "search_colrev_project": {
-            "endpoint": "colrev.ops.built_in.search.ColrevProjectSearchEndpoint"
-        },
-        "search_local_index": {
-            "endpoint": "colrev.ops.built_in.search.IndexSearchEndpoint"
-        },
-        "search_pdfs_dir": {
-            "endpoint": "colrev.ops.built_in.search.PDFSearchEndpoint"
-        }
-    },
-    "load": {
+    "load_conversion": {
         "bibtex": {
-            "endpoint": "colrev.ops.built_in.load.BibPybtexLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.BibPybtexLoader"
         },
         "csv": {
-            "endpoint": "colrev.ops.built_in.load.CSVLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.CSVLoader"
         },
         "excel": {
-            "endpoint": "colrev.ops.built_in.load.ExcelLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.ExcelLoader"
         },
         "zotero_translate": {
-            "endpoint": "colrev.ops.built_in.load.ZoteroTranslationLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.ZoteroTranslationLoader"
         },
         "md_to_bib": {
-            "endpoint": "colrev.ops.built_in.load.MarkdownLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.MarkdownLoader"
         },
         "bibutils": {
-            "endpoint": "colrev.ops.built_in.load.BibutilsLoader"
+            "endpoint": "colrev.ops.built_in.load_conversion.BibutilsLoader"
         }
     },
     "prep": {
-        "load_fixes": {
-            "endpoint": "colrev.ops.built_in.prep.LoadFixesPrep"
+        "source_specific_prep": {
+            "endpoint": "colrev.ops.built_in.prep.SourceSpecificPrep"
         },
         "exclude_non_latin_alphabets": {
             "endpoint": "colrev.ops.built_in.prep.ExcludeNonLatinAlphabetsPrep"
@@ -57,7 +35,7 @@
         "remove_urls_with_500_errors": {
             "endpoint": "colrev.ops.built_in.prep.RemoveError500URLsPrep"
         },
-        "remove_broken_IDs": {
+        "remove_broken_ids": {
             "endpoint": "colrev.ops.built_in.prep.RemoveBrokenIDPrep"
         },
         "global_ids_consistency_check": {
@@ -213,37 +191,40 @@
         }
     },
     "data": {
-        "MANUSCRIPT": {
+        "manuscript": {
             "endpoint": "colrev.ops.built_in.data.ManuscriptEndpoint"
         },
-        "STRUCTURED": {
+        "structured": {
             "endpoint": "colrev.ops.built_in.data.StructuredDataEndpoint"
         },
-        "ENDNOTE": {
+        "endnote": {
             "endpoint": "colrev.ops.built_in.data.EndnoteEndpoint"
         },
-        "PRISMA": {
+        "prisma": {
             "endpoint": "colrev.ops.built_in.data.PRISMAEndpoint"
         },
-        "GITHUB_PAGES": {
+        "github_pages": {
             "endpoint": "colrev.ops.built_in.data.GithubPagesEndpoint"
         },
-        "ZETTLR": {
+        "zettlr": {
             "endpoint": "colrev.ops.built_in.data.ZettlrEndpoint"
         }
     },
-    "SearchSource": {
+    "search_source": {
+        "crossref": {
+            "endpoint": "colrev.ops.built_in.search_sources.CrossrefSourceSearchSource"
+        },
         "dblp": {
-            "endpoint": "colrev.ops.built_in.search_sources.DBLP"
+            "endpoint": "colrev.ops.built_in.search_sources.DBLPSearchSource"
         },
         "acm_digital_library": {
-            "endpoint": "colrev.ops.built_in.search_sources.ACMDigitalLibrary"
+            "endpoint": "colrev.ops.built_in.search_sources.ACMDigitalLibrarySearchSource"
         },
         "pubmed": {
-            "endpoint": "colrev.ops.built_in.search_sources.PubMed"
+            "endpoint": "colrev.ops.built_in.search_sources.PubMedSearchSource"
         },
         "wiley": {
-            "endpoint": "colrev.ops.built_in.search_sources.WileyOnlineLibrary"
+            "endpoint": "colrev.ops.built_in.search_sources.WileyOnlineLibrarySearchSource"
         },
         "ais_library": {
             "endpoint": "colrev.ops.built_in.search_sources.AISeLibrarySearchSource"
@@ -257,11 +238,17 @@
         "scopus": {
             "endpoint": "colrev.ops.built_in.search_sources.ScopusSearchSource"
         },
-        "PDF": {
+        "pdfs_dir": {
             "endpoint": "colrev.ops.built_in.search_sources.PDFSearchSource"
         },
-        "PDF backward search": {
-            "endpoint": "colrev.ops.built_in.search_sources.BackwardSearchSearchSource"
+        "pdf_backward_search": {
+            "endpoint": "colrev.ops.built_in.search_sources.BackwardSearchSource"
+        },
+        "colrev_project": {
+            "endpoint": "colrev.ops.built_in.search_sources.ColrevProjectSearchSource"
+        },
+        "local_index": {
+            "endpoint": "colrev.ops.built_in.search_sources.LocalIndexSearchSource"
         }
     }
 }

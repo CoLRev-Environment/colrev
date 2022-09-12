@@ -182,7 +182,7 @@ class Prep(colrev.process.Process):
         for prep_round_script in deepcopy(item["prep_round_scripts"]):
 
             try:
-                prep_script = self.prep_scripts[prep_round_script["endpoint"]]
+                prep_script = self.prep_scripts[prep_round_script["endpoint"].lower()]
 
                 if self.review_manager.debug_mode:
                     self.review_manager.logger.info(
@@ -560,7 +560,7 @@ class Prep(colrev.process.Process):
 
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end
-            if prep_round.name not in ["load_fixes", "exclusion"]:
+            if prep_round.name not in ["source_specific_prep", "exclusion"]:
                 prep_round.scripts.append({"endpoint": "update_metadata_status"})
 
             self.review_manager.logger.info(f"Prepare ({prep_round.name})")
@@ -577,8 +577,9 @@ class Prep(colrev.process.Process):
 
             package_manager = self.review_manager.get_package_manager()
             self.prep_scripts: dict[str, typing.Any] = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageType.prep,
+                selected_packages=required_prep_scripts,
                 process=self,
-                scripts=required_prep_scripts,
             )
 
         def log_details(*, prepared_records: list) -> None:

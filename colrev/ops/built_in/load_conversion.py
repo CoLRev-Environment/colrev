@@ -18,9 +18,10 @@ if TYPE_CHECKING:
     import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class BibPybtexLoader:
     """Loads BibTeX files (based on pybtex)"""
 
@@ -31,21 +32,41 @@ class BibPybtexLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+    def __general_load_fixes(self, records):
+
+        return records
+
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ):
+        records = {}
+        # TODO : implement set_incremental_ids() and fix_keys() (text-file replacements)
+        # here (pybtex does not load records with identical IDs /
+        # fields with keys containing white spaces)
         if source.filename.is_file():
             with open(source.filename, encoding="utf8") as bibtex_file:
                 records = load_operation.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
+        records = self.__general_load_fixes(records)
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
 
-            load_operation.check_bib_file(source=source, records=records)
+        return records
 
 
 class SpreadsheetLoadUtility:
@@ -125,7 +146,7 @@ class SpreadsheetLoadUtility:
         return records_dict
 
 
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class CSVLoader:
     """Loads csv files (based on pandas)"""
 
@@ -136,7 +157,7 @@ class CSVLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -156,16 +177,25 @@ class CSVLoader:
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
         records = data.to_dict("records")
+
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        load_operation.check_bib_file(source=source, records=records)
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
 
-        load_operation.save_records(
-            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
-        )
+        return records
 
 
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 
@@ -176,7 +206,7 @@ class ExcelLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -193,21 +223,29 @@ class ExcelLoader:
             load_operation.review_manager.logger.error(
                 f"Error: Not an xlsx file: {source.filename.name}"
             )
-            return
+            return {}
+
         data.columns = data.columns.str.replace(" ", "_")
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
 
-        load_operation.check_bib_file(source=source, records=records)
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
+        return records
 
-        load_operation.save_records(
-            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
-        )
 
-
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class ZoteroTranslationLoader:
     """Loads bibliography files (based on pandas).
     Supports ris, rdf, json, mods, xml, marc, txt"""
@@ -260,14 +298,21 @@ class ZoteroTranslationLoader:
                 f"Zotero import translators failed ({exc})"
             )
 
-        load_operation.check_bib_file(source=source, records=records)
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
+        return records
 
-        load_operation.save_records(
-            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
-        )
 
-
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class MarkdownLoader:
     """Loads reference strings from text (md) files (based on GROBID)"""
 
@@ -278,7 +323,7 @@ class MarkdownLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -312,14 +357,21 @@ class MarkdownLoader:
 
         records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        load_operation.check_bib_file(source=source, records=records)
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
+        return records
 
-        load_operation.save_records(
-            records=records, corresponding_bib_file=source.get_corresponding_bib_file()
-        )
 
-
-@zope.interface.implementer(colrev.process.LoadEndpoint)
+@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
 class BibutilsLoader:
     """Loads bibliography files (based on bibutils)
     Supports ris, end, enl, copac, isi, med"""
@@ -331,7 +383,7 @@ class BibutilsLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -394,12 +446,18 @@ class BibutilsLoader:
 
         records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        load_operation.check_bib_file(source=source, records=records)
-
-        load_operation.save_records(
-            records=records,
-            corresponding_bib_file=source.get_corresponding_bib_file(),
-        )
+        if source.source_name in load_operation.search_sources.packages:
+            search_source_package = load_operation.search_sources.packages[
+                source.source_name
+            ]
+            records = search_source_package.load_fixes(
+                self, source=source, records=records
+            )
+        else:
+            load_operation.review_manager.logger.info(
+                "No custom source load_fixes for %s", source.source_name
+            )
+        return records
 
 
 if __name__ == "__main__":

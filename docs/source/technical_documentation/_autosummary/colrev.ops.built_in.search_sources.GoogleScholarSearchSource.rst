@@ -17,7 +17,10 @@ colrev.ops.built\_in.search\_sources.GoogleScholarSearchSource
       :nosignatures:
 
       ~GoogleScholarSearchSource.heuristic
+      ~GoogleScholarSearchSource.load_fixes
       ~GoogleScholarSearchSource.prepare
+      ~GoogleScholarSearchSource.run_search
+      ~GoogleScholarSearchSource.validate_search_params
 
 
 
@@ -27,4 +30,6 @@ colrev.ops.built\_in.search\_sources.GoogleScholarSearchSource
 
    .. autosummary::
 
+      ~GoogleScholarSearchSource.search_mode
       ~GoogleScholarSearchSource.source_identifier
+      ~GoogleScholarSearchSource.source_identifier_search

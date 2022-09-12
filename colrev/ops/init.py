@@ -71,12 +71,12 @@ class Initializer:
         self.__setup_files()
         self.logger.info("Setup git")
         self.__setup_git()
-        self.logger.info("Create commit")
         if example:
             self.__create_example_repo()
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
+        self.logger.info("Create commit")
         self.__create_commit(saved_args=saved_args)
         if not example:
             self.review_manager.logger.info("Register repo")
@@ -266,8 +266,7 @@ class Initializer:
                     "source_identifier": "{{cited_by_file}} (references)",
                     "search_parameters": "SCOPE file='paper.pdf'",
                     "search_script": {"endpoint": "backward_search"},
-                    "conversion_script": {"endpoint": "bibtex"},
-                    "source_prep_scripts": [],
+                    "load_conversion_script": {"endpoint": "bibtex"},
                     "comment": "",
                 }
             )
@@ -336,8 +335,7 @@ class Initializer:
                 "source_identifier": "https://api.crossref.org/works/{{doi}}",
                 "search_parameters": "",
                 "search_script": {"endpoint": "search_crossref"},
-                "conversion_script": {"endpoint": "bibtex"},
-                "source_prep_scripts": [],
+                "load_conversion_script": {"endpoint": "bibtex"},
                 "comment": "",
             }
             settings["sources"].insert(0, crossref_source)

@@ -32,8 +32,9 @@ class PDFPrepMan(colrev.process.Process):
         self.pdf_prep_man_scripts: dict[
             str, typing.Any
         ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.pdf_prep_man,
+            selected_packages=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
             process=self,
-            scripts=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
         )
 
     def get_data(self) -> dict:

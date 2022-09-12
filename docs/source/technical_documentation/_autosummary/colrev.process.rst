@@ -22,6 +22,7 @@ colrev.process
 
       CheckProcess
       DefaultSettings
+      DefaultSourceSettings
       FormatProcess
       Process
       ProcessModel

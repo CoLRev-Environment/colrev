@@ -27,8 +27,9 @@ class Prescreen(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.prescreen_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.prescreen,
+            selected_packages=review_manager.settings.prescreen.scripts,
             process=self,
-            scripts=review_manager.settings.prescreen.scripts,
         )
 
     def export_table(self, *, export_table_format: str = "csv") -> None:

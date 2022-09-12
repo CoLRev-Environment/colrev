@@ -100,9 +100,7 @@ class Distribute(colrev.process.Process):
                         source_name="locally_distributed_references",
                         source_identifier="",
                         search_parameters="",
-                        search_script={},
-                        conversion_script={},
-                        source_prep_scripts=[{}],
+                        load_conversion_script={},
                         comment="",
                     )
 

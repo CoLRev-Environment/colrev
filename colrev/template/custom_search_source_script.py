@@ -14,16 +14,16 @@ if TYPE_CHECKING:
     import colrev.ops.search.Search
 
 
-@zope.interface.implementer(colrev.process.SearchEndpoint)
+@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class CustomSearch:
 
-    source_identifier = "https://api.crossref.org/works/{{doi}}"
-    mode = "all"
+    settings_class = colrev.process.DefaultSettings
+    source_identifier = "{{custom}}"
+    source_identifier_search = "{{custom}}"
+    search_mode = "all"
 
-    def __init__(self, *, settings: dict) -> None:
-        self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
-        )
+    def __init__(self, *, source_operation, settings: dict) -> None:
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
         slef, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
@@ -60,7 +60,7 @@ class CustomSearch:
         return
 
     @classmethod
-    def validate_params(cls, query: str) -> None:
+    def validate_search_params(cls, query: str) -> None:
         if " SCOPE " not in query:
             raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a SCOPE section"
@@ -72,3 +72,17 @@ class CustomSearch:
                 "CROSSREF queries require a journal_issn field in the SCOPE section"
             )
         pass
+
+    def heuristic(self, filename: Path, data: str) -> dict:
+        # TODO
+        result = {"confidence": 0, "source_identifier": self.source_identifier}
+
+        return result
+
+    def load_fixes(self, load_operation, source, records):
+
+        return records
+
+    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+
+        return record

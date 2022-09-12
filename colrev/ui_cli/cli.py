@@ -957,7 +957,7 @@ def data(
 
             package_manager = review_manager.get_package_manager()
             available_data_endpoins = package_manager.discover_packages(
-                script_type="data"
+                package_type=colrev.env.package_manager.PackageType.data
             )
 
             if add_endpoint in available_data_endpoins:

@@ -301,7 +301,7 @@ class Upgrade(colrev.process.Process):
                         source["search_script"] = source["script"]
                         del source["script"]
 
-                        source["conversion_script"] = {"endpoint": "bibtex"}
+                        source["load_conversion_script"] = {"endpoint": "bibtex"}
 
                         source["source_prep_scripts"] = []
                         if "CROSSREF" == source["source_name"]:
@@ -339,6 +339,16 @@ class Upgrade(colrev.process.Process):
                 settings["project"]["id_pattern"] = "three_authors_year"
 
             for source in settings["sources"]:
+                if "PDFs" == source["source_name"]:
+                    source["source_name"] = "pdfs_dir"
+                source["source_name"] = source["source_name"].lower()
+                if "conversion_script" in source:
+                    source["load_conversion_script"] = source["conversion_script"]
+                    del source["conversion_script"]
+                if "search_script" in source:
+                    del source["search_script"]
+                if "source_prep_scripts" in source:
+                    del source["source_prep_scripts"]
                 if "FEED" == source["search_type"]:
                     if "CROSSREF" == source["source_name"]:
                         source["search_type"] = "DB"

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import typing
+from dataclasses import asdict
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -28,10 +29,9 @@ class Search(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.search_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.search_source,
+            selected_packages=[asdict(s) for s in self.sources],
             process=self,
-            scripts=[
-                s.search_script for s in self.sources if "endpoint" in s.search_script
-            ],
         )
 
     def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
@@ -125,88 +125,30 @@ class Search(colrev.process.Process):
 
         return params
 
-    def validate_query(self, *, query: str) -> None:
-
-        if " FROM " not in query:
-            raise colrev_exceptions.InvalidQueryException('Query missing "FROM" clause')
-
-        sources = self.parse_sources(query=query)
-
-        scripts = []
-        for source_name in sources:
-            feed_config = self.get_feed_config(source_name=source_name)
-            scripts.append(feed_config["search_script"])
-
-        required_search_scripts = [
-            s.search_script for s in self.review_manager.settings.sources
-        ]
-
-        package_manager = self.review_manager.get_package_manager()
-        self.search_scripts = package_manager.load_packages(
-            process=self,
-            scripts=scripts + required_search_scripts,
-        )
-
-        if len(sources) > 1:
-            individual_sources = [
-                k
-                for k, v in self.search_scripts.items()
-                if "individual" == v["endpoint"].mode
-            ]
-            if any(source in individual_sources for source in sources):
-                violations = [
-                    source for source in sources if source in individual_sources
-                ]
-                raise colrev_exceptions.InvalidQueryException(
-                    "Multiple query sources include a source that can only be"
-                    f" used individually: {violations}"
-                )
-
-        for source_name in sources:
-            feed_config = self.get_feed_config(source_name=source_name)
-            for source in sources:
-                # TODO : parse params (which may also raise errors)
-                script = self.search_scripts[feed_config["search_script"]["endpoint"]]
-                script.validate_params(query=query)  # type: ignore
-
     def get_feed_config(self, *, source_name: str) -> dict:
 
-        conversion_script = {"endpoint": "bibtex"}
-
-        search_script = {"endpoint": "TODO"}
-        if source_name == "DBLP":
-            search_script = {"endpoint": "search_dblp"}
-        elif source_name == "CROSSREF":
-            search_script = {"endpoint": "search_crossref"}
-        elif source_name == "BACKWARD_SEARCH":
-            search_script = {"endpoint": "backward_search"}
-        elif source_name == "COLREV_PROJECT":
-            search_script = {"endpoint": "search_colrev_project"}
-        elif source_name == "INDEX":
-            search_script = {"endpoint": "search_local_index"}
-        elif source_name == "PDFS":
-            search_script = {"endpoint": "search_pdfs_dir"}
+        load_conversion_script = {"endpoint": "bibtex"}
 
         package_manager = self.review_manager.get_package_manager()
 
         available_search_scripts = package_manager.discover_packages(
-            script_type="search"
+            package_type=colrev.env.package_manager.PackageType.search_source
         )
 
         source_identifier = "TODO"
-        if search_script["endpoint"] in available_search_scripts:
+        if source_name in available_search_scripts:
             search_script_packages = package_manager.load_packages(
-                process=self, scripts=[search_script["endpoint"]]
+                package_type=colrev.env.package_manager.PackageType.search_source,
+                selected_packages=[{"endpoint": source_name}],
+                process=self,
             )
-            source_identifier = search_script_packages[search_script["endpoint"]][
+            source_identifier = search_script_packages[source_name][
                 "endpoint"
             ].source_identifier
 
         return {
             "source_identifier": source_identifier,
-            "search_script": search_script,
-            "conversion_script": conversion_script,
-            "source_prep_scripts": [],
+            "load_conversion_script": load_conversion_script,
         }
 
     def add_source(self, *, query: str) -> None:
@@ -237,7 +179,7 @@ class Search(colrev.process.Process):
             query = query[: query.find(" AS ")]
         query = f"SELECT * {query}"
 
-        self.validate_query(query=query)
+        # TODO : query validation based on search_source settings
 
         # TODO : check whether url exists (dblp, project, ...)
         sources = self.parse_sources(query=query)
@@ -292,13 +234,9 @@ class Search(colrev.process.Process):
             if search_type == "DB":
                 feed_config = self.get_feed_config(source_name=source_name)
                 source_identifier = feed_config["source_identifier"]
-                search_script = feed_config["search_script"]
-                conversion_script = feed_config["conversion_script"]
-                source_prep_scripts = feed_config["source_prep_scripts"]
+                load_conversion_script = feed_config["load_conversion_script"]
             else:
-                search_script = {}
-                conversion_script = {"endpoint": "bibtex"}
-                source_prep_scripts = []
+                load_conversion_script = {"endpoint": "bibtex"}
 
             # NOTE: for now, the parameters are limited to whole journals.
             add_source = colrev.settings.SearchSource(
@@ -309,9 +247,7 @@ class Search(colrev.process.Process):
                 source_name=source_name,
                 source_identifier=source_identifier,
                 search_parameters=selection,
-                search_script=search_script,
-                conversion_script=conversion_script,
-                source_prep_scripts=source_prep_scripts,
+                load_conversion_script=load_conversion_script,
                 comment="",
             )
             self.review_manager.p_printer.pprint(add_source)
@@ -351,10 +287,10 @@ class Search(colrev.process.Process):
 
         def load_automated_search_sources() -> list[colrev.settings.SearchSource]:
 
-            automated_sources = [
-                x for x in self.sources if "endpoint" in x.search_script
-            ]
-
+            # automated_sources = [
+            #     x for x in self.sources if "endpoint" in x.search_script
+            # ]
+            automated_sources = self.sources
             automated_sources_selected = automated_sources
             if selection_str is not None:
                 if "all" != selection_str:
@@ -385,7 +321,7 @@ class Search(colrev.process.Process):
                 f"Retrieve from {source.source_name}: {params}"
             )
 
-            search_script = self.search_scripts[source.search_script["endpoint"]]
+            search_script = self.search_scripts[source.source_name.lower()]
             search_script.run_search(
                 search_operation=self,
                 params=params,
@@ -419,9 +355,7 @@ class Search(colrev.process.Process):
             source_name="custom_search_script",
             source_identifier="TODO",
             search_parameters="TODO",
-            search_script={"endpoint": "TODO"},
-            conversion_script={"endpoint": "TODO"},
-            source_prep_scripts=[{"endpoint": "TODO"}],
+            load_conversion_script={"endpoint": "TODO"},
             comment="",
         )
 

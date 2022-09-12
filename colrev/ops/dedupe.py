@@ -698,8 +698,9 @@ class Dedupe(colrev.process.Process):
             # may run with different parameters
             package_manager = self.review_manager.get_package_manager()
             endpoint_script = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageType.dedupe,
+                selected_packages=[dedupe_script],
                 process=self,
-                scripts=[dedupe_script],
             )
 
             endpoint = endpoint_script[dedupe_script["endpoint"]]

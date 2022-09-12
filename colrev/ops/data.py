@@ -33,8 +33,9 @@ class Data(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.data_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.data,
+            selected_packages=review_manager.settings.data.scripts,
             process=self,
-            scripts=review_manager.settings.data.scripts,
         )
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
@@ -266,7 +267,7 @@ class Data(colrev.process.Process):
 
             for data_script in self.review_manager.settings.data.scripts:
 
-                endpoint = self.data_scripts[data_script["endpoint"]]
+                endpoint = self.data_scripts[data_script["endpoint"].lower()]
 
                 endpoint.update_data(self, records, synthesized_record_status_matrix)
                 endpoint.update_record_status_matrix(

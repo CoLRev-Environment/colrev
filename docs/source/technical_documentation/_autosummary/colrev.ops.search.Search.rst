@@ -25,7 +25,6 @@ colrev.ops.search.Search
       ~Search.remove_forthcoming
       ~Search.save_feed_file
       ~Search.setup_custom_script
-      ~Search.validate_query
       ~Search.view_sources
 
 

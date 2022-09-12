@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import typing
 from dataclasses import dataclass
 from enum import auto
 from enum import Enum
@@ -429,36 +430,40 @@ class ProcessModel:
                 )
 
 
-class SearchEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    source_identifier = zope.interface.Attribute("""Source identifier""")
-    mode = zope.interface.Attribute("""Mode""")
-
-    # pylint: disable=no-self-argument
-    def run_search(search_operation, params: dict, feed_file: Path) -> None:
-        pass
-
-    def validate_params(query: str) -> None:
-        pass
-
-
 class SearchSourceEndpoint(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
+    source_identifier_search = zope.interface.Attribute(
+        """Source identifier for search (corretions?)"""
+    )
+
+    search_mode = zope.interface.Attribute("""Mode""")
+
+    # pylint: disable=no-self-argument
+    def run_search(search_operation, params: dict, feed_file: Path) -> None:
+        pass
+
+    def validate_search_params(query: str) -> None:
+        pass
 
     # pylint: disable=no-self-argument
     def heuristic(filename, data):
         pass
 
+    def load_fixes(load_operation, source, records):
+        """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
+
     def prepare(record):
         pass
 
 
-class LoadEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
+class LoadConversionEndpoint(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+    """Interface for packages that load records from different filetypes"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
@@ -581,6 +586,19 @@ class DataEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-cla
 @dataclass
 class DefaultSettings:
     name: str
+
+
+@dataclass
+class DefaultSourceSettings:
+    # pylint: disable=duplicate-code
+    name: str
+    filename: Path
+    search_type: colrev.settings.SearchType
+    source_name: str
+    source_identifier: str
+    search_parameters: str
+    load_conversion_script: dict
+    comment: typing.Optional[str]
 
 
 if __name__ == "__main__":

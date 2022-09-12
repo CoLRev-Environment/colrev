@@ -21,3 +21,4 @@ colrev.env.package\_manager
       :nosignatures:
 
       PackageManager
+      PackageType
