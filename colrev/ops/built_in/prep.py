@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.process.PrepEndpoint)
-class LoadFixesPrep:
-    """Prepares records based on the source_prep_scripts specified in the source settings"""
+class SourceSpecificPrep:
+    """Prepares records based on the prepare scripts specified by the SearchSource"""
 
     settings_class = colrev.process.DefaultSettings
 
@@ -62,21 +62,21 @@ class LoadFixesPrep:
 
         origin_source = record.data["colrev_origin"].split("/")[0]
 
-        custom_prep_scripts = [
-            r["endpoint"]
+        sources = [
+            s.source_name
             for s in prep_operation.review_manager.settings.sources
             if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
-            for r in s.source_prep_scripts
         ]
 
-        for custom_prep_script_name in custom_prep_scripts:
-
-            endpoint = search_sources.search_source_scripts[custom_prep_script_name]
+        for source in sources:
+            if source not in search_sources.packages:
+                continue
+            endpoint = search_sources.packages[source]
 
             if callable(endpoint.prepare):
                 record = endpoint.prepare(record)
             else:
-                print(f"error: {custom_prep_script_name}")
+                print(f"error: {source}")
 
         if "howpublished" in record.data and "url" not in record.data:
             if "url" in record.data["howpublished"]:

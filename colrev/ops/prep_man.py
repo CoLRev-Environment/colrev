@@ -26,8 +26,9 @@ class PrepMan(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.prep_man_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.prep_man,
+            selected_packages=review_manager.settings.prep.man_prep_scripts,
             process=self,
-            scripts=review_manager.settings.prep.man_prep_scripts,
         )
 
     def prep_man_stats(self) -> None:
@@ -121,7 +122,7 @@ class PrepMan(colrev.process.Process):
         self.review_manager.p_printer.pprint(stats["ENTRYTYPE"])
 
     def get_data(self) -> dict:
-
+        # pylint: disable=duplicate-code
         record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
             [

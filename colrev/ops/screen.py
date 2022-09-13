@@ -27,8 +27,9 @@ class Screen(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.screen_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.screen,
+            selected_packages=review_manager.settings.screen.scripts,
             process=self,
-            scripts=review_manager.settings.screen.scripts,
         )
 
     def include_all_in_screen(

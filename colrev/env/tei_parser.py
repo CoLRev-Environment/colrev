@@ -286,12 +286,9 @@ class TEIParser:
 
         author_dict = self.__parse_author_dict(author_pers_node=author_pers_node)
 
-        authorname = (
-            author_dict["surname"]
-            + ", "
-            + author_dict["forename"]
-            + author_dict["middlename"]
-        )
+        authorname = author_dict["surname"] + ", " + author_dict["forename"]
+        if "middlename" in author_dict:
+            authorname += author_dict["middlename"]
 
         authorname = (
             authorname.replace("\n", " ")

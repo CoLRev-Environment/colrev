@@ -166,10 +166,8 @@ class SearchSource(JsonSchemaMixin):
     search_type: SearchType
     source_name: str
     source_identifier: str
-    search_parameters: str
-    search_script: dict
-    conversion_script: dict
-    source_prep_scripts: list
+    search_parameters: dict
+    load_conversion_script: dict
     comment: typing.Optional[str]
 
     def get_corresponding_bib_file(self) -> Path:
@@ -192,17 +190,12 @@ class SearchSource(JsonSchemaMixin):
         self.source_records_list: typing.List[typing.Dict] = record_list
 
     def __str__(self) -> str:
-        source_prep_scripts_string = ",".join(
-            s["endpoint"] for s in self.source_prep_scripts
-        )
         return (
             f"{self.source_name} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
             + f"   source identifier:   {self.source_identifier}\n"
             + f"   search parameters:   {self.search_parameters}\n"
-            + f"   search_script:       {self.search_script.get('endpoint', '')}\n"
-            + f"   conversion_script:   {self.conversion_script['endpoint']}\n"
-            + f"   source_prep_script:  {source_prep_scripts_string}\n"
+            + f"   load_conversion_script:   {self.load_conversion_script['endpoint']}\n"
             + f"   comment:             {self.comment}"
         )
 

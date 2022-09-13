@@ -6,6 +6,7 @@ import json
 import sys
 import typing
 from copy import deepcopy
+from enum import Enum
 from pathlib import Path
 
 from zope.interface.verify import verifyObject
@@ -15,83 +16,93 @@ import colrev.process
 import colrev.record
 
 
+class PackageType(Enum):
+    # pylint: disable=C0103
+    load_conversion = "load_conversion"
+    search_source = "search_source"
+    prep = "prep"
+    prep_man = "prep_man"
+    dedupe = "dedupe"
+    prescreen = "prescreen"
+    pdf_get = "pdf_get"
+    pdf_get_man = "pdf_get_man"
+    pdf_prep = "pdf_prep"
+    pdf_prep_man = "pdf_prep_man"
+    screen = "screen"
+    data = "data"
+
+
 class PackageManager:
 
     endpoint_overview = [
         {
-            "process_type": colrev.process.ProcessType.search,
-            "import_name": "SearchEndpoint",
-            "custom_class": "CustomSearch",
-            "operation_name": "search_operation",
-        },
-        {
-            "process_type": colrev.process.ProcessType.load,
-            "import_name": "LoadEndpoint",
+            "package_type": PackageType.load_conversion,
+            "import_name": "LoadConversionEndpoint",
             "custom_class": "CustomLoad",
             "operation_name": "load_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.check,
+            "package_type": PackageType.search_source,
             "import_name": "SearchSourceEndpoint",
             "custom_class": "CustomSearchSource",
-            "operation_name": "check_operation",
+            "operation_name": "source_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.prep,
+            "package_type": PackageType.prep,
             "import_name": "PrepEndpoint",
             "custom_class": "CustomPrep",
             "operation_name": "prep_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.prep_man,
+            "package_type": PackageType.prep_man,
             "import_name": "PrepManEndpoint",
             "custom_class": "CustomPrepMan",
             "operation_name": "prep_man_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.dedupe,
+            "package_type": PackageType.dedupe,
             "import_name": "DedupeEndpoint",
             "custom_class": "CustomDedupe",
             "operation_name": "dedupe_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.prescreen,
+            "package_type": PackageType.prescreen,
             "import_name": "PrescreenEndpoint",
             "custom_class": "CustomPrescreen",
             "operation_name": "prescreen_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.pdf_get,
+            "package_type": PackageType.pdf_get,
             "import_name": "PDFGetEndpoint",
             "custom_class": "CustomPDFGet",
             "operation_name": "pdf_get_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.pdf_get_man,
+            "package_type": PackageType.pdf_get_man,
             "import_name": "PDFGetManEndpoint",
             "custom_class": "CustomPDFGetMan",
             "operation_name": "pdf_get_man_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.pdf_prep,
+            "package_type": PackageType.pdf_prep,
             "import_name": "PDFPrepEndpoint",
             "custom_class": "CustomPDFPrep",
             "operation_name": "pdf_prep_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.pdf_prep_man,
+            "package_type": PackageType.pdf_prep_man,
             "import_name": "PDFPrepManEndpoint",
             "custom_class": "CustomPDFPrepMan",
             "operation_name": "pdf_prep_man_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.screen,
+            "package_type": PackageType.screen,
             "import_name": "ScreenEndpoint",
             "custom_class": "CustomScreen",
             "operation_name": "screen_operation",
         },
         {
-            "process_type": colrev.process.ProcessType.data,
+            "package_type": PackageType.data,
             "import_name": "DataEndpoint",
             "custom_class": "CustomData",
             "operation_name": "data_operation",
@@ -127,6 +138,14 @@ class PackageManager:
 
         package_dict = json.loads(filedata.decode("utf-8"))
 
+        packages = {}
+        for key, value in package_dict.items():
+            packages[PackageType[key]] = value
+            for package_identifier, package_path in value.items():
+                assert " " not in package_identifier
+                assert " " not in package_path
+                assert package_identifier.islower()
+
         # TODO : testing: validate the structure of packages.json
         # and whether all endpoints are available
 
@@ -134,30 +153,32 @@ class PackageManager:
         # because the discover_packages and load_packages access the
         # packages through strings anyway
 
-        return package_dict
+        return packages
 
     def __flag_installed_packages(self) -> None:
-        for script_type, package in self.packages.items():
-            for script_name, discovered_package in package.items():
+        for package_type, package in self.packages.items():
+            for package_identifier, discovered_package in package.items():
                 try:
                     self.load_package_endpoint(
-                        script_type=script_type, script_name=script_name
+                        package_type=package_type, package_identifier=package_identifier
                     )
                     discovered_package["installed"] = True
                 except (AttributeError, ModuleNotFoundError):
                     discovered_package["installed"] = False
 
-    def get_package_details(self, *, script_type, script_name) -> dict:
-
-        package_details = {"name": script_name}
+    def get_package_details(
+        self, *, package_type: PackageType, package_identifier
+    ) -> dict:
+        package_identifier = package_identifier.lower()
+        package_details = {"name": package_identifier}
         package_class = self.load_package_endpoint(
-            script_type=script_type, script_name=script_name
+            package_type=package_type, package_identifier=package_identifier
         )
         package_details["description"] = package_class.__doc__
         package_details["parameters"] = {}
         settings_class = getattr(package_class, "settings_class", None)
         if settings_class is None:
-            msg = f"{script_name} could not be loaded"
+            msg = f"{package_identifier} could not be loaded"
             raise colrev_exceptions.ServiceNotAvailableException(msg)
 
         if "DefaultSettings" == settings_class.__name__ or not settings_class:
@@ -227,118 +248,160 @@ class PackageManager:
         return package_details
 
     def discover_packages(
-        self, *, script_type: str, installed_only: bool = False
+        self, *, package_type: PackageType, installed_only: bool = False
     ) -> typing.Dict:
 
-        discovered_packages = self.packages[script_type]
-        for script_name, package in discovered_packages.items():
+        discovered_packages = self.packages[package_type]
+        for package_identifier, package in discovered_packages.items():
             if installed_only and not package["installed"]:
                 continue
             package_class = self.load_package_endpoint(
-                script_type=script_type, script_name=script_name
+                package_type=package_type, package_identifier=package_identifier
             )
-            discovered_packages[script_name] = package
-            discovered_packages[script_name]["description"] = package_class.__doc__
-            discovered_packages[script_name]["installed"] = package["installed"]
+            discovered_packages[package_identifier] = package
+            discovered_packages[package_identifier][
+                "description"
+            ] = package_class.__doc__
+            discovered_packages[package_identifier]["installed"] = package["installed"]
 
         return discovered_packages
 
-    def load_package_endpoint(self, *, script_type: str, script_name: str):
-        package_str = self.packages[script_type][script_name]["endpoint"]
-        script_module = package_str.rsplit(".", 1)[0]
-        script_class = package_str.rsplit(".", 1)[-1]
-        imported_package = importlib.import_module(script_module)
-        package_class = getattr(imported_package, script_class)  # type: ignore
+    def load_package_endpoint(
+        self, *, package_type: PackageType, package_identifier: str
+    ):
+        package_identifier = package_identifier.lower()
+        package_str = self.packages[package_type][package_identifier]["endpoint"]
+        package_module = package_str.rsplit(".", 1)[0]
+        package_class = package_str.rsplit(".", 1)[-1]
+        imported_package = importlib.import_module(package_module)
+        package_class = getattr(imported_package, package_class)  # type: ignore
         return package_class
 
     def load_packages(
-        self, *, process: colrev.process.Process, scripts: list, script_type: str = ""
+        self,
+        *,
+        package_type: PackageType,
+        selected_packages: list,
+        process: colrev.process.Process,
+        ignore_not_available: bool = False,
+        instantiate_objects=True,
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=unnecessary-dict-index-lookup
-        # Note : when iterating over script_dict.items(),
+        # Note : when iterating over packages_dict.items(),
         # changes to the values (or del k) would not persist
 
-        # TODO : generally change from process.type to script_name
+        # TODO : generally change from process.type to package_type
         # (each process can involve different endpoints)
 
-        if "" == script_type:
-            script_type = str(process.type)
-
         # avoid changes in the config
-        scripts = deepcopy(scripts)
-        scripts_dict: typing.Dict = {}
-        for script in scripts:
-            script_name = script["endpoint"]
-            scripts_dict[script_name] = {}
+        selected_packages = deepcopy(selected_packages)
+        packages_dict: typing.Dict = {}
+        for selected_package in selected_packages:
 
-            # 1. Load built-in scripts
-            # if script_name in cls.packages[process.type]
-            if script_name in self.packages[script_type]:
-                if self.packages[script_type][script_name]["installed"]:
-                    scripts_dict[script_name]["settings"] = script
-                    scripts_dict[script_name]["endpoint"] = self.load_package_endpoint(
-                        script_type=script_type, script_name=script_name
+            # quick fix:
+            if "endpoint" not in selected_package:
+                selected_package["endpoint"] = selected_package["source_name"]
+
+            package_identifier = selected_package["endpoint"].lower()
+            packages_dict[package_identifier] = {}
+
+            packages_dict[package_identifier]["settings"] = selected_package
+            # 1. Load built-in packages
+            # if package_identifier in cls.packages[process.type]
+            if package_identifier in self.packages[package_type]:
+                if not self.packages[package_type][package_identifier]["installed"]:
+                    print(f"Cannot load {package_identifier} (not installed)")
+                    continue
+
+                if self.packages[package_type][package_identifier]["installed"]:
+                    packages_dict[package_identifier][
+                        "endpoint"
+                    ] = self.load_package_endpoint(
+                        package_type=package_type, package_identifier=package_identifier
                     )
 
-            # 2. Load module scripts
+            # 2. Load module packages
             # TODO : test the module prep_scripts
-            elif not Path(script_name + ".py").is_file():
+            elif not Path(package_identifier + ".py").is_file():
                 try:
-                    scripts_dict[script_name]["settings"] = script
-                    scripts_dict[script_name]["endpoint"] = importlib.import_module(
-                        script_name
-                    )
-                    scripts_dict[script_name]["custom_flag"] = True
+                    packages_dict[package_identifier]["settings"] = selected_package
+                    packages_dict[package_identifier][
+                        "endpoint"
+                    ] = importlib.import_module(package_identifier)
+                    packages_dict[package_identifier]["custom_flag"] = True
                 except ModuleNotFoundError as exc:
+                    if ignore_not_available:
+                        del packages_dict[package_identifier]
+                        continue
                     raise colrev_exceptions.MissingDependencyError(
-                        "Dependency " + f"{script_name} not found. "
+                        "Dependency " + f"{package_identifier} not found. "
                         "Please install it\n  pip install "
-                        f"{script_name}"
+                        f"{package_type} {package_identifier}"
                     ) from exc
 
-            # 3. Load custom scripts in the directory
-            elif Path(script_name + ".py").is_file():
-                sys.path.append(".")  # to import custom scripts from the project dir
-                scripts_dict[script_name]["settings"] = script
-                scripts_dict[script_name]["endpoint"] = importlib.import_module(
-                    script_name, "."
+            # 3. Load custom packages in the directory
+            elif Path(package_identifier + ".py").is_file():
+                sys.path.append(".")  # to import custom packages from the project dir
+                packages_dict[package_identifier]["settings"] = selected_package
+                packages_dict[package_identifier]["endpoint"] = importlib.import_module(
+                    package_identifier, "."
                 )
-                scripts_dict[script_name]["custom_flag"] = True
+                packages_dict[package_identifier]["custom_flag"] = True
             else:
-                print(f"Could not load {script}")
+                print(f"Could not load {selected_package}")
                 continue
-            scripts_dict[script_name]["settings"]["name"] = scripts_dict[script_name][
-                "settings"
-            ]["endpoint"]
-            del scripts_dict[script_name]["settings"]["endpoint"]
 
-        endpoint_details = next(
-            item
-            for item in self.endpoint_overview
-            if item["process_type"] == process.type
-        )
+            packages_dict[package_identifier]["settings"]["name"] = packages_dict[
+                package_identifier
+            ]["settings"]["endpoint"]
+            del packages_dict[package_identifier]["settings"]["endpoint"]
 
-        for k, val in scripts_dict.items():
+        try:
+            package_details = next(
+                item
+                for item in self.endpoint_overview
+                if item["package_type"] == package_type
+            )
+        except StopIteration as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"package_type {package_type} not available"
+            ) from exc
+
+        broken_packages = []
+        for k, val in packages_dict.items():
             if "custom_flag" in val:
-                scripts_dict[k]["endpoint"] = getattr(  # type: ignore
-                    val["endpoint"], endpoint_details["custom_class"]
-                )
-                del scripts_dict[k]["custom_flag"]
+                try:
+                    packages_dict[k]["endpoint"] = getattr(  # type: ignore
+                        val["endpoint"], package_details["custom_class"]
+                    )
+                    del packages_dict[k]["custom_flag"]
+                except AttributeError:
+                    # Note : these may also be (package name) conflicts
+                    broken_packages.append(k)
 
-        endpoint_class = getattr(colrev.process, endpoint_details["import_name"])  # type: ignore
-        for endpoint_name, script in scripts_dict.items():
+        for k in broken_packages:
+            print(f"Skipping broken package ({k})")
+            packages_dict.pop(k, None)
+
+        endpoint_class = getattr(colrev.process, package_details["import_name"])  # type: ignore
+        for package_identifier, selected_package in packages_dict.items():
             params = {
-                endpoint_details["operation_name"]: process,
-                "settings": script["settings"],
+                package_details["operation_name"]: process,
+                "settings": selected_package["settings"],
             }
-            if "SearchSource" == script_type:
+            if "search_source" == package_type:
                 del params["check_operation"]
 
-            scripts_dict[endpoint_name] = script["endpoint"](**params)
-            verifyObject(endpoint_class, scripts_dict[endpoint_name])
+            if instantiate_objects:
+                packages_dict[package_identifier] = selected_package["endpoint"](
+                    **params
+                )
+                verifyObject(endpoint_class, packages_dict[package_identifier])
+            else:
+                packages_dict[package_identifier] = selected_package["endpoint"]
 
-        return scripts_dict
+        return packages_dict
 
 
 if __name__ == "__main__":

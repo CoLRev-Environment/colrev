@@ -17,7 +17,9 @@ colrev.ops.built\_in.search\_sources.PDFSearchSource
       :nosignatures:
 
       ~PDFSearchSource.heuristic
+      ~PDFSearchSource.load_fixes
       ~PDFSearchSource.prepare
+      ~PDFSearchSource.run_search
 
 
 
@@ -27,4 +29,6 @@ colrev.ops.built\_in.search\_sources.PDFSearchSource
 
    .. autosummary::
 
+      ~PDFSearchSource.search_mode
       ~PDFSearchSource.source_identifier
+      ~PDFSearchSource.source_identifier_search

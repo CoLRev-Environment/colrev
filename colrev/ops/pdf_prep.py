@@ -46,8 +46,9 @@ class PDFPrep(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_prep_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.pdf_prep,
+            selected_packages=review_manager.settings.pdf_prep.scripts,
             process=self,
-            scripts=review_manager.settings.pdf_prep.scripts,
         )
 
     # Note : no named arguments (multiprocessing)

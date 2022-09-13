@@ -27,6 +27,8 @@ class Load(colrev.process.Process):
         notify_state_transition_operation=True,
     ) -> None:
 
+        review_manager.logger.info("Loading source heuristics...")
+
         super().__init__(
             review_manager=review_manager,
             process_type=colrev.process.ProcessType.load,
@@ -35,28 +37,36 @@ class Load(colrev.process.Process):
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.load_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            process=self,
-            scripts=[
-                s.conversion_script
+        self.load_conversion_scripts: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            selected_packages=[
+                s.load_conversion_script
                 for s in review_manager.settings.sources
-                if "endpoint" in s.conversion_script
+                if "endpoint" in s.load_conversion_script
             ],
+            process=self,
         )
 
         self.all_available_packages_names = package_manager.discover_packages(
-            script_type=str(self.type), installed_only=True
+            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            installed_only=True,
         )
 
-        all_available_packages: dict[str, typing.Any] = package_manager.load_packages(
+        self.all_available_packages = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            selected_packages=[
+                {"endpoint": p} for p in self.all_available_packages_names
+            ],
             process=self,
-            scripts=[{"endpoint": p} for p in self.all_available_packages_names],
         )
 
         self.supported_extensions = [
             item
             for sublist in [
-                e.supported_extensions for e in all_available_packages.values()
+                e.supported_extensions  # type: ignore
+                for _, e in self.all_available_packages.items()
             ]
             for item in sublist
         ]
@@ -65,7 +75,7 @@ class Load(colrev.process.Process):
             review_manager=self.review_manager
         )
 
-    def get_new_search_files(self) -> list[Path]:
+    def __get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
 
         if not self.review_manager.search_dir.is_dir():
@@ -101,14 +111,14 @@ class Load(colrev.process.Process):
 
         sources = self.review_manager.settings.sources
 
-        for sfp in self.get_new_search_files():
+        for sfp in self.__get_new_search_files():
             # Note : for non-bib files, we check sources for corresponding bib file
             # (which will be created later in the process)
 
             sfp_name = sfp
             if sfp_name not in [str(source.filename) for source in sources]:
 
-                print(f"Please provide details for {sfp_name}")
+                self.review_manager.logger.info(f"Discovering new source: {sfp_name}")
 
                 # Assuming that all other search types are added by query
                 # search_type_input = "NA"
@@ -117,107 +127,101 @@ class Load(colrev.process.Process):
                 #     cmd = "Enter search type".ljust(40, " ") + ": "
                 #     search_type_input = input(cmd)
 
-                heuristic_result_list = self.apply_source_heuristics(filepath=sfp)
+                heuristic_result_list = self.__apply_source_heuristics(filepath=sfp)
 
                 if 1 == len(heuristic_result_list):
                     heuristic_source = heuristic_result_list[0]
                 else:
                     print("\nSelect search source:")
                     for i, heuristic_source in enumerate(heuristic_result_list):
-                        print(f"{i+1} {heuristic_source}")
+                        print(
+                            f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
+                            f" {heuristic_source['source_candidate'].source_name}"
+                        )
 
                     while True:
                         selection = input("select nr")
                         if not selection.isdigit():
                             continue
-                        if int(selection) in range(0, len(heuristic_result_list)):
+                        if int(selection) in range(1, len(heuristic_result_list) + 1):
                             heuristic_source = heuristic_result_list[int(selection) - 1]
                             break
 
-                # source_name, source_identifier, source_prep_scripts = heuristic_result
-                if "NA" == heuristic_source.source_name:
-                    if heuristic_source.search_type == "DB":
-                        print("   Sources with pre-defined settings:")
-                        cl_scripts = "\n    - ".join(
-                            self.search_sources.all_available_packages_names
-                        )
-                        print("    - " + cl_scripts)
-                        print("   See colrev/custom_source_load.py for details")
+                if "unknown_source" == heuristic_source["source_candidate"].source_name:
+                    self.review_manager.logger.warning("Could not detect source")
+                    # if heuristic_source["source_candidate"].search_type ==
+                    #  colrev.settings.SearchType.DB:
+                    #     print("   Sources with pre-defined settings:")
+                    #     cl_scripts = "\n    - ".join(
+                    #         self.search_sources.all_available_packages
+                    #     )
+                    #     print("    - " + cl_scripts)
+                    #     print("   See colrev/custom_source_load.py for details")
 
-                    while heuristic_source.source_name in ["", "NA"]:
-                        cmd = (
-                            "Enter source name (e.g., a url or a description)".ljust(
-                                40, " "
-                            )
-                            + ": "
+                    while heuristic_source["source_candidate"].source_identifier in [
+                        "",
+                        "NA",
+                    ]:
+                        cmd = "\nEnter source identifier (e.g., {{url}} or a short description)"
+                        cmd = cmd.ljust(70, " ") + ": "
+                        heuristic_source["source_candidate"].source_identifier = input(
+                            cmd
                         )
-                        heuristic_source.source_name = input(cmd)
 
-                    while heuristic_source.source_identifier in ["", "NA"]:
-                        cmd = (
-                            "Enter source identifier "
-                            + "(e.g., {{url}} or a description)".ljust(40, " ")
-                            + ": "
-                        )
-                        heuristic_source.source_identifier = input(cmd)
+                    cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
+                    heuristic_source["source_candidate"].search_parameters = {
+                        "query": input(cmd)
+                    }
 
-                    cmd = "Enter source_prep_scripts or NA".ljust(40, " ") + ": "
-                    prep_script_selection = input(cmd)
-                    if prep_script_selection in ["", "NA"]:
-                        heuristic_source.source_prep_scripts = []
-                    else:
-                        heuristic_source.source_prep_scripts = [
-                            {"endpoint": str(prep_script_selection)}
-                        ]
                 else:
                     print(
-                        "Source name".ljust(40, " ")
-                        + f": {heuristic_source.source_name}"
+                        "Source name".ljust(70, " ")
+                        + f": {heuristic_source['source_candidate'].source_name}"
                     )
                     print(
-                        "Source identifier".ljust(40, " ")
-                        + f": {heuristic_source.source_identifier}"
-                    )
-                    print(
-                        "Source prep scripts".ljust(40, " ")
-                        + f": {heuristic_source.source_prep_scripts}"
+                        "Source identifier".ljust(70, " ")
+                        + f": {heuristic_source['source_candidate'].source_identifier}"
                     )
 
-                cmd = "Enter search_parameters".ljust(40, " ") + ": "
-                search_parameters = input(cmd)
-                heuristic_source.search_parameters = search_parameters
+                # cmd = "Enter search_parameters".ljust(70, " ") + ": "
+                # search_parameters = input(cmd)
+                # heuristic_source[
+                #     "source_candidate"
+                # ].search_parameters = search_parameters
 
-                cmd = "Enter a comment (or NA)".ljust(40, " ") + ": "
+                cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
                 comment_input = input(cmd)
                 if comment_input != "":
                     comment = comment_input
                 else:
                     comment = None  # type: ignore
-                heuristic_source.comment = comment
+                heuristic_source["source_candidate"].comment = comment
 
-                if {} == heuristic_source.conversion_script:
+                if {} == heuristic_source["source_candidate"].load_conversion_script:
                     custom_load_script = input(
-                        "provide custom conversion_script [or NA]:"
+                        "provide custom load_conversion_script [or NA]:"
                     )
                     if "NA" == custom_load_script:
-                        heuristic_source.conversion_script = {}
+                        heuristic_source["source_candidate"].load_conversion_script = {}
                     else:
-                        heuristic_source.conversion_script = {
+                        heuristic_source["source_candidate"].load_conversion_script = {
                             "endpoint": custom_load_script
                         }
                     # TODO : check if custom_load_script is available?
 
-                sources.append(heuristic_source)
+                sources.append(heuristic_source["source_candidate"])
                 self.review_manager.save_settings()
                 self.review_manager.logger.info(
                     f"{colors.GREEN}Added new source: "
-                    f"{heuristic_source.source_name}{colors.END}"
+                    f"{heuristic_source['source_candidate'].source_name}{colors.END}"
                 )
                 print("\n")
 
-    def check_bib_file(
+    def __check_bib_file(
         self, *, source: colrev.settings.SearchSource, records: dict
     ) -> None:
+        if len(records.items()) == 0:
+            return
         if not any("author" in r for ID, r in records.items()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with author field): {source.filename.name}"
@@ -228,7 +232,7 @@ class Load(colrev.process.Process):
                 f"Import failed (no record with title field): {source.filename.name}"
             )
 
-    def resolve_non_unique_ids(self, *, source: colrev.settings.SearchSource) -> None:
+    def __resolve_non_unique_ids(self, *, source: colrev.settings.SearchSource) -> None:
         def get_unique_id(*, non_unique_id: str, id_list: list[str]) -> str:
 
             order = 0
@@ -310,7 +314,7 @@ class Load(colrev.process.Process):
                 msg=f"Resolve non-unique IDs in {source.get_corresponding_bib_file().name}"
             )
 
-    def load_source_records(
+    def __load_source_records(
         self, *, source: colrev.settings.SearchSource, keep_ids: bool
     ) -> None:
         def getbib(*, file: Path) -> list[dict]:
@@ -488,6 +492,7 @@ class Load(colrev.process.Process):
             source_record["ID"] = next_unique_id
             records[source_record["ID"]] = source_record
 
+        self.__check_bib_file(source=source, records=records)
         self.review_manager.dataset.save_records_dict(records=records)
 
         self.review_manager.logger.info(
@@ -510,7 +515,7 @@ class Load(colrev.process.Process):
         self.review_manager.dataset.add_changes(path=source.filename)
         self.review_manager.dataset.add_record_changes()
 
-    def validate_load(self, *, source: colrev.settings.SearchSource) -> None:
+    def __validate_load(self, *, source: colrev.settings.SearchSource) -> None:
 
         imported_origins = (
             self.review_manager.dataset.get_currently_imported_origin_list()
@@ -539,9 +544,7 @@ class Load(colrev.process.Process):
                     f"PROBLEM: {source.to_import - imported} records too much"
                 )
 
-    def save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
-        """Convenience function for the load script implementations"""
-
+    def __save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
         def fix_keys(*, records: dict) -> dict:
             for record in records.values():
                 record = {
@@ -579,34 +582,34 @@ class Load(colrev.process.Process):
 
             return {r["ID"]: r for r in records_list}
 
+        if len(records) == 0:
+            self.review_manager.report_logger.error("No records loaded")
+            self.review_manager.logger.error("No records loaded")
+            return
+
         records = fix_keys(records=records)
         records = set_incremental_ids(records=records)
         records = drop_empty_fields(records=records)
 
-        if len(records) == 0:
-            self.review_manager.report_logger.error("No records loaded")
-            self.review_manager.logger.error("No records loaded")
+        # if corresponding_bib_file.is_file():
+        #     return
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records, save_path=corresponding_bib_file
+        )
 
-        if not corresponding_bib_file.is_file():
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=corresponding_bib_file
-            )
-
-    def apply_source_heuristics(
-        self, *, filepath: Path
-    ) -> list[colrev.settings.SearchSource]:
+    def __apply_source_heuristics(self, *, filepath: Path) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
-        def get_conversion_script(*, filepath: Path) -> dict:
+        def get_load_conversion_script(*, filepath: Path) -> dict:
 
             filetype = filepath.suffix.replace(".", "")
 
             for (
-                endpoint_name,
-                endpoint_dict,
-            ) in self.all_available_packages_names.items():
-                if filetype in endpoint_dict["endpoint"].supported_extensions:
-                    return {"endpoint": endpoint_name}
+                package_identifier,
+                selected_package,
+            ) in self.all_available_packages.items():
+                if filetype in selected_package.supported_extensions:  # type: ignore
+                    return {"endpoint": package_identifier}
 
             raise colrev_exceptions.UnsupportedImportFormatError(filepath)
 
@@ -617,11 +620,10 @@ class Load(colrev.process.Process):
             pass
 
         results_list = []
-
         for (
             source_name,
             endpoint,
-        ) in self.search_sources.all_available_packages_names.items():
+        ) in self.search_sources.all_available_packages.items():
             # pylint: disable=no-member
             has_heuristic = getattr(endpoint, "heuristic", None)
             if not has_heuristic:
@@ -631,11 +633,6 @@ class Load(colrev.process.Process):
                 search_type = colrev.settings.SearchType("DB")
 
                 res["source_name"] = source_name
-                res["source_prep_scripts"] = (
-                    [source_name] if callable(endpoint.prepare) else []  # type: ignore
-                )
-                if "search_script" not in res:
-                    res["search_script"] = {}
 
                 if "filename" not in res:
                     # Correct the file extension if necessary
@@ -648,39 +645,41 @@ class Load(colrev.process.Process):
                         filepath.rename(new_filename)
                         filepath = new_filename
 
-                if "conversion_script" not in res:
-                    res["conversion_script"] = get_conversion_script(filepath=filepath)
+                if "load_conversion_script" not in res:
+                    res["load_conversion_script"] = get_load_conversion_script(
+                        filepath=filepath
+                    )
 
                 source_candidate = colrev.settings.SearchSource(
                     filename=filepath,
                     search_type=search_type,
                     source_name=source_name,
                     source_identifier=res["source_identifier"],
-                    search_parameters="",
-                    search_script=res["search_script"],
-                    conversion_script=res["conversion_script"],
-                    source_prep_scripts=[
-                        {"endpoint": s}
-                        for s in res["source_prep_scripts"]  # type: ignore
-                    ],
+                    search_parameters={},
+                    load_conversion_script=res["load_conversion_script"],
                     comment="",
                 )
 
-                results_list.append(source_candidate)
+                results_list.append(
+                    {
+                        "source_candidate": source_candidate,
+                        "confidence": res["confidence"],
+                    }
+                )
 
         if 0 == len(results_list):
             source_candidate = colrev.settings.SearchSource(
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
-                source_name="NA",
+                source_name="unknown_source",
                 source_identifier="NA",
-                search_parameters="NA",
-                search_script={},  # Note : primarily adding files (not feeds)
-                conversion_script={"endpoint": "bibtex"},
-                source_prep_scripts=[],
+                search_parameters={},
+                load_conversion_script={"endpoint": "bibtex"},
                 comment="",
             )
-            results_list.append(source_candidate)
+            results_list.append(
+                {"source_candidate": source_candidate, "confidence": res["confidence"]}
+            )
 
         return results_list
 
@@ -695,10 +694,13 @@ class Load(colrev.process.Process):
             self.review_manager.dataset.check_sources()
             sources = []
             for source in self.review_manager.settings.sources:
-                if source.conversion_script["endpoint"] not in self.load_scripts:
+                if (
+                    source.load_conversion_script["endpoint"]
+                    not in self.load_conversion_scripts
+                ):
                     if self.verbose:
                         print(
-                            f"Error: endpoint not available: {source.conversion_script}"
+                            f"Error: endpoint not available: {source.load_conversion_script}"
                         )
                     continue
                 sources.append(source)
@@ -707,23 +709,29 @@ class Load(colrev.process.Process):
         for source in load_active_sources():
             self.review_manager.logger.info(f"Loading {source}")
             saved_args["file"] = source.filename.name
+            records = {}
 
-            conversion_script_name = source.conversion_script["endpoint"]
-
-            # 1. convert to bib (if necessary)
-            endpoint = self.load_scripts[conversion_script_name]
-            endpoint.load(self, source)
+            # 1. convert to bib and fix format (if necessary)
+            load_conversion_script_name = source.load_conversion_script["endpoint"]
+            load_conversion_script = self.load_conversion_scripts[
+                load_conversion_script_name
+            ]
+            records = load_conversion_script.load(self, source)
+            self.__save_records(
+                records=records,
+                corresponding_bib_file=source.get_corresponding_bib_file(),
+            )
 
             # 2. resolve non-unique IDs (if any)
-            self.resolve_non_unique_ids(source=source)
+            self.__resolve_non_unique_ids(source=source)
 
             # 3. load and add records to records.bib
-            self.load_source_records(source=source, keep_ids=keep_ids)
+            self.__load_source_records(source=source, keep_ids=keep_ids)
             if 0 == getattr(source, "to_import", 0):
                 continue
 
             # 4. validate load
-            self.validate_load(source=source)
+            self.__validate_load(source=source)
 
             if not combine_commits:
                 self.review_manager.create_commit(

@@ -29,14 +29,18 @@ colrev.ops.built\_in.search\_sources
       :template: custom-class-template.rst
       :nosignatures:
 
-      ACMDigitalLibrary
+      ACMDigitalLibrarySearchSource
       AISeLibrarySearchSource
-      BackwardSearchSearchSource
-      DBLP
+      BackwardSearchSource
+      ColrevProjectSearchSource
+      CrossrefSourceSearchSource
+      DBLPSearchSource
       GoogleScholarSearchSource
+      LocalIndexSearchSource
       PDFSearchSource
-      PubMed
+      PubMedSearchSource
       ScopusSearchSource
       TransportResearchInternationalDocumentation
+      UnknownSearchSource
       WebOfScienceSearchSource
-      WileyOnlineLibrary
+      WileyOnlineLibrarySearchSource

@@ -40,8 +40,9 @@ class PDFGet(colrev.process.Process):
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.pdf_get,
+            selected_packages=review_manager.settings.pdf_get.scripts,
             process=self,
-            scripts=review_manager.settings.pdf_get.scripts,
         )
 
     def copy_pdfs_to_repo(self) -> None:

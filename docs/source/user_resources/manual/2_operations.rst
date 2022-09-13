@@ -152,17 +152,20 @@ Search
 
     Examples:
 
-    colrev search -a "FROM CROSSREF WHERE Digital AND Platform SCOPE journal_issn='1506-2941'"
+    colrev search -a '{"source_name": "crossref","search_parameters": {"query": "digital AND platform"}}'
 
-    colrev search -a "FROM DBLP SCOPE venue_key='journals/dss' AND journal_abbreviation='Decis. Support Syst.'"
+    colrev search -a '{"source_name": "dblp","search_parameters": {"scope": {"venue_key": "journals/dss", "journal_abbreviation": "Decis. Support Syst."}}}'
 
-    colrev search -a "FROM COLREV_PROJECT SCOPE url='/home/projects/review9'"
+    colrev search -a '{"source_name": "colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a "FROM BACKWARD_SEARCH SCOPE colrev_status='rev_included|rev_synthesized'"
+    colrev search -a '{"source_name": "pdf_backward_search","search_parameters": {"scope": {"colrev_status": "rev_included|rev_synthesized"}}}'
 
-    colrev search -a "FROM INDEX WHERE lower(fulltext) like '%digital platform%'"
+    colrev search -a '{"source_name": "colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a "FROM PDFS SCOPE path='/home/journals/PLOS' WITH sub_dir_pattern='volume_number' AND journal='PLOS One'"
+    colrev search -a '{"source_name": "local_index","search_parameters": {"query": "digital AND (platform OR market)"}}'
+
+    colrev search -a '{"source_name": "pdfs_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
+
 
 .. option:: --selected TEXT
 

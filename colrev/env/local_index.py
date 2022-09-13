@@ -854,9 +854,8 @@ class LocalIndex:
 
         # for annotator in self.annotators_path.glob("*/annotate.py"):
         #     print(f"Load {annotator}")
-        #     import imp
 
-        #     annotator_module = imp.load_source("annotator_module", str(annotator))
+        #     annotator_module = ....load_source("annotator_module", str(annotator))
         #     annotate = getattr(annotator_module, "annotate")
         #     annotate(self)
         # Note : es.update can use functions applied to each record (for the update)

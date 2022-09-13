@@ -81,8 +81,6 @@ colrev screen
 # Complete the data analysis/synthesis
 colrev data
 
-# Build the paper
-colrev paper
 ```
 
 For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.

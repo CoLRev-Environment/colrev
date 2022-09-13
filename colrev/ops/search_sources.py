@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import asdict
 
 import colrev.process
 
@@ -12,24 +13,30 @@ class SearchSources:
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         package_manager = review_manager.get_package_manager()
+        check_process = colrev.process.CheckProcess(review_manager=review_manager)
 
         self.all_available_packages_names = package_manager.discover_packages(
-            script_type="SearchSource", installed_only=True
+            package_type=colrev.env.package_manager.PackageType.search_source,
+            installed_only=True,
         )
-        required_search_scripts = [
-            r for s in review_manager.settings.sources for r in s.source_prep_scripts
-        ] + [{"endpoint": k} for k in list(self.all_available_packages_names.keys())]
-
-        self.type = colrev.process.ProcessType.check
-
-        check_process = colrev.process.CheckProcess(review_manager=review_manager)
-        package_manager = review_manager.get_package_manager()
-        self.search_source_scripts: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
+        # Note: class-objects only (instantiate_objects) for heuristics
+        self.all_available_packages = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.search_source,
+            selected_packages=[
+                {
+                    "endpoint": k,
+                }
+                for k in list(self.all_available_packages_names.keys())
+            ],
             process=check_process,
-            scripts=required_search_scripts,
-            script_type="SearchSource",
+            instantiate_objects=False,
+        )
+
+        self.packages: dict[str, typing.Any] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageType.search_source,
+            selected_packages=[asdict(s) for s in review_manager.settings.sources],
+            process=check_process,
+            ignore_not_available=False,
         )
 
 

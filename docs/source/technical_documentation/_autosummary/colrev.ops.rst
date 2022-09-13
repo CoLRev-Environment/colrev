@@ -35,7 +35,6 @@ colrev.ops
    colrev.ops.distribute
    colrev.ops.init
    colrev.ops.load
-   colrev.ops.paper
    colrev.ops.pdf_get
    colrev.ops.pdf_get_man
    colrev.ops.pdf_prep

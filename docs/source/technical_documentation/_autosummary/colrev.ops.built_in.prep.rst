@@ -36,7 +36,6 @@ colrev.ops.built\_in.prep
       FormatMinorPrep
       FormatPrep
       GlobalIDConsistencyPrep
-      LoadFixesPrep
       LocalIndexPrep
       OpenLibraryMetadataPrep
       RemoveBrokenIDPrep
@@ -44,4 +43,5 @@ colrev.ops.built\_in.prep
       RemoveNicknamesPrep
       RemoveRedundantFieldPrep
       SemanticScholarPrep
+      SourceSpecificPrep
       UpdateMetadataStatusPrep

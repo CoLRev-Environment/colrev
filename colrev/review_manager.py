@@ -21,6 +21,7 @@ import requests_cache
 import yaml
 from dacite import from_dict
 from dacite.exceptions import MissingValueError
+from dacite.exceptions import WrongTypeError
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
@@ -84,6 +85,9 @@ class ReviewManager:
         self.status = self.path / self.STATUS_RELATIVE
 
         self.debug_mode = debug_mode
+
+        # Start LocalIndex to prevent waiting times
+        self.get_local_index(startup_without_waiting=True)
 
         try:
             if self.debug_mode:
@@ -157,7 +161,7 @@ class ReviewManager:
                 data=loaded_settings,
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
-        except (ValueError, MissingValueError) as exc:
+        except (ValueError, MissingValueError, WrongTypeError) as exc:
             raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
 
         return settings
@@ -859,11 +863,6 @@ class ReviewManager:
         import colrev.ops.trace
 
         return colrev.ops.trace.Trace(review_manager=self, **kwargs)
-
-    def get_paper_operation(self, **kwargs) -> colrev.ops.paper.Paper:
-        import colrev.ops.paper
-
-        return colrev.ops.paper.Paper(review_manager=self, **kwargs)
 
     def get_distribute_operation(self, **kwargs) -> colrev.ops.distribute.Distribute:
         import colrev.ops.distribute

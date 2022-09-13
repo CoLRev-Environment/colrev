@@ -16,8 +16,8 @@ colrev.settings.SearchSource
    .. autosummary::
       :nosignatures:
 
-      ~SearchSource.create_load_stats
       ~SearchSource.get_corresponding_bib_file
+      ~SearchSource.setup_for_load
 
 
 
@@ -32,7 +32,5 @@ colrev.settings.SearchSource
       ~SearchSource.source_name
       ~SearchSource.source_identifier
       ~SearchSource.search_parameters
-      ~SearchSource.search_script
-      ~SearchSource.conversion_script
-      ~SearchSource.source_prep_scripts
+      ~SearchSource.load_conversion_script
       ~SearchSource.comment

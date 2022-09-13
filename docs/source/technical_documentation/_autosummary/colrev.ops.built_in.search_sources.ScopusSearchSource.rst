@@ -17,7 +17,9 @@ colrev.ops.built\_in.search\_sources.ScopusSearchSource
       :nosignatures:
 
       ~ScopusSearchSource.heuristic
+      ~ScopusSearchSource.load_fixes
       ~ScopusSearchSource.prepare
+      ~ScopusSearchSource.run_search
 
 
 
@@ -27,4 +29,6 @@ colrev.ops.built\_in.search\_sources.ScopusSearchSource
 
    .. autosummary::
 
+      ~ScopusSearchSource.search_mode
       ~ScopusSearchSource.source_identifier
+      ~ScopusSearchSource.source_identifier_search

@@ -1612,9 +1612,7 @@ class CurationDedupeEndpoint:
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = (
-                "search_pdfs_dir" == relevant_source[0].search_script["endpoint"]
-            )
+            pdf_source = "pdfs_dir" == relevant_source[0].source_name
 
         if not pdf_source:
             dedupe_operation.review_manager.logger.info(
