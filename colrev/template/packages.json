@@ -192,22 +192,22 @@
     },
     "data": {
         "manuscript": {
-            "endpoint": "colrev.ops.built_in.data.ManuscriptEndpoint"
+            "endpoint": "colrev.ops.built_in.data.manuscript.ManuscriptEndpoint"
         },
         "structured": {
-            "endpoint": "colrev.ops.built_in.data.StructuredDataEndpoint"
+            "endpoint": "colrev.ops.built_in.data.structured.StructuredDataEndpoint"
         },
         "endnote": {
             "endpoint": "colrev.ops.built_in.data.EndnoteEndpoint"
         },
         "prisma": {
-            "endpoint": "colrev.ops.built_in.data.PRISMAEndpoint"
+            "endpoint": "colrev.ops.built_in.data.prisma.PRISMAEndpoint"
         },
         "github_pages": {
-            "endpoint": "colrev.ops.built_in.data.GithubPagesEndpoint"
+            "endpoint": "colrev.ops.built_in.data.pages.GithubPagesEndpoint"
         },
         "zettlr": {
-            "endpoint": "colrev.ops.built_in.data.ZettlrEndpoint"
+            "endpoint": "colrev.ops.built_in.data.zettlr.ZettlrEndpoint"
         }
     },
     "search_source": {
