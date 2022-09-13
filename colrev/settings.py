@@ -99,6 +99,8 @@ class SearchType(Enum):
 
 @dataclass
 class SearchSource:
+    # pylint: disable=too-many-instance-attributes
+
     filename: Path
     search_type: SearchType
     source_name: str
@@ -306,6 +308,7 @@ class DataConfiguration:
 
 @dataclass
 class Configuration:
+    # pylint: disable=too-many-instance-attributes
 
     project: ProjectConfiguration
     sources: typing.List[SearchSource]

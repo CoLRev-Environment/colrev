@@ -17,9 +17,11 @@ colrev.ops.push.Push
       :nosignatures:
 
       ~Push.check_precondition
+      ~Push.check_process_model_precondition
       ~Push.main
       ~Push.push_project
       ~Push.push_record_corrections
+      ~Push.require_clean_repo_general
 
 
 

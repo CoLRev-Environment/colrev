@@ -17,6 +17,8 @@ colrev.ops.upgrade.Upgrade
       :nosignatures:
 
       ~Upgrade.check_precondition
+      ~Upgrade.check_process_model_precondition
+      ~Upgrade.require_clean_repo_general
 
 
 

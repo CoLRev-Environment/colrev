@@ -17,8 +17,10 @@ colrev.ops.load.Load
       :nosignatures:
 
       ~Load.check_precondition
+      ~Load.check_process_model_precondition
       ~Load.check_update_sources
       ~Load.main
+      ~Load.require_clean_repo_general
 
 
 

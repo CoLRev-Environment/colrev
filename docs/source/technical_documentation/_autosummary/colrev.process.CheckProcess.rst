@@ -17,6 +17,8 @@ colrev.process.CheckProcess
       :nosignatures:
 
       ~CheckProcess.check_precondition
+      ~CheckProcess.check_process_model_precondition
+      ~CheckProcess.require_clean_repo_general
 
 
 

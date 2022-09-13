@@ -212,46 +212,49 @@
     },
     "search_source": {
         "unknown_source": {
-            "endpoint": "colrev.ops.built_in.search_sources.UnknownSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource"
         },
         "crossref": {
-            "endpoint": "colrev.ops.built_in.search_sources.CrossrefSourceSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSourceSearchSource"
         },
         "dblp": {
-            "endpoint": "colrev.ops.built_in.search_sources.DBLPSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource"
         },
         "acm_digital_library": {
-            "endpoint": "colrev.ops.built_in.search_sources.ACMDigitalLibrarySearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource"
         },
         "pubmed": {
-            "endpoint": "colrev.ops.built_in.search_sources.PubMedSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource"
         },
         "wiley": {
-            "endpoint": "colrev.ops.built_in.search_sources.WileyOnlineLibrarySearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource"
         },
         "ais_library": {
-            "endpoint": "colrev.ops.built_in.search_sources.AISeLibrarySearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource"
         },
         "google_scholar": {
-            "endpoint": "colrev.ops.built_in.search_sources.GoogleScholarSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource"
         },
         "web_of_science": {
-            "endpoint": "colrev.ops.built_in.search_sources.WebOfScienceSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource"
         },
         "scopus": {
-            "endpoint": "colrev.ops.built_in.search_sources.ScopusSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource"
         },
         "pdfs_dir": {
-            "endpoint": "colrev.ops.built_in.search_sources.PDFSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource"
         },
         "pdf_backward_search": {
-            "endpoint": "colrev.ops.built_in.search_sources.BackwardSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource"
         },
         "colrev_project": {
-            "endpoint": "colrev.ops.built_in.search_sources.ColrevProjectSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource"
         },
         "local_index": {
-            "endpoint": "colrev.ops.built_in.search_sources.LocalIndexSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource"
+        },
+        "transport_research_international_documentation": {
+            "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation"
         }
     }
 }

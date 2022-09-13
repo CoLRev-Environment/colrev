@@ -79,6 +79,59 @@ class Process:
         # Note: we call review_manager.notify() in the subclasses
         # to make sure that the review_manager calls the right check_preconditions()
 
+    def check_process_model_precondition(self) -> None:
+        process_model = ProcessModel(
+            process=self.type, review_manager=self.review_manager
+        )
+        process_model.check_process_precondition(process=self)
+
+    def require_clean_repo_general(
+        self, *, git_repo: git.Repo = None, ignore_pattern: list = None
+    ) -> bool:
+
+        if git_repo is None:
+            git_repo = git.Repo(self.review_manager.path)
+
+        # Note : not considering untracked files.
+
+        if len(git_repo.index.diff("HEAD")) == 0:
+            unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
+            if self.review_manager.dataset.RECORDS_FILE_RELATIVE in unstaged_changes:
+                git_repo.index.add([self.review_manager.dataset.RECORDS_FILE_RELATIVE])
+
+        # Principle: working tree always has to be clean
+        # because processing functions may change content
+        if git_repo.is_dirty(index=False):
+            changed_files = [item.a_path for item in git_repo.index.diff(None)]
+            raise colrev_exceptions.UnstagedGitChangesError(changed_files)
+
+        if git_repo.is_dirty():
+            if ignore_pattern is None:
+                changed_files = [item.a_path for item in git_repo.index.diff(None)] + [
+                    x.a_path
+                    for x in git_repo.head.commit.diff()
+                    if x.a_path not in [str(self.review_manager.STATUS_RELATIVE)]
+                ]
+                if len(changed_files) > 0:
+                    raise colrev_exceptions.CleanRepoRequiredError(changed_files, "")
+            else:
+                changed_files = [
+                    item.a_path
+                    for item in git_repo.index.diff(None)
+                    if not any(str(ip) in item.a_path for ip in ignore_pattern)
+                ] + [
+                    x.a_path
+                    for x in git_repo.head.commit.diff()
+                    if not any(str(ip) in x.a_path for ip in ignore_pattern)
+                ]
+                if str(self.review_manager.STATUS_RELATIVE) in changed_files:
+                    changed_files.remove(str(self.review_manager.STATUS_RELATIVE))
+                if changed_files:
+                    raise colrev_exceptions.CleanRepoRequiredError(
+                        changed_files, ",".join([str(x) for x in ignore_pattern])
+                    )
+        return True
+
     def check_precondition(self) -> None:
         """Check the process precondition"""
 
@@ -88,125 +141,56 @@ class Process:
         ):
             return
 
-        def check_process_model_precondition() -> None:
-            process_model = ProcessModel(
-                process=self.type, review_manager=self.review_manager
-            )
-            process_model.check_process_precondition(process=self)
-
-        def require_clean_repo_general(
-            *, git_repo: git.Repo = None, ignore_pattern: list = None
-        ) -> bool:
-
-            if git_repo is None:
-                git_repo = git.Repo(self.review_manager.path)
-
-            # Note : not considering untracked files.
-
-            if len(git_repo.index.diff("HEAD")) == 0:
-                unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
-                if (
-                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
-                    in unstaged_changes
-                ):
-                    git_repo.index.add(
-                        [self.review_manager.dataset.RECORDS_FILE_RELATIVE]
-                    )
-
-            # Principle: working tree always has to be clean
-            # because processing functions may change content
-            if git_repo.is_dirty(index=False):
-                changed_files = [item.a_path for item in git_repo.index.diff(None)]
-                raise colrev_exceptions.UnstagedGitChangesError(changed_files)
-
-            if git_repo.is_dirty():
-                if ignore_pattern is None:
-                    changed_files = [
-                        item.a_path for item in git_repo.index.diff(None)
-                    ] + [
-                        x.a_path
-                        for x in git_repo.head.commit.diff()
-                        if x.a_path not in [str(self.review_manager.STATUS_RELATIVE)]
-                    ]
-                    if len(changed_files) > 0:
-                        raise colrev_exceptions.CleanRepoRequiredError(
-                            changed_files, ""
-                        )
-                else:
-                    changed_files = [
-                        item.a_path
-                        for item in git_repo.index.diff(None)
-                        if not any(str(ip) in item.a_path for ip in ignore_pattern)
-                    ] + [
-                        x.a_path
-                        for x in git_repo.head.commit.diff()
-                        if not any(str(ip) in x.a_path for ip in ignore_pattern)
-                    ]
-                    if str(self.review_manager.STATUS_RELATIVE) in changed_files:
-                        changed_files.remove(str(self.review_manager.STATUS_RELATIVE))
-                    if changed_files:
-                        raise colrev_exceptions.CleanRepoRequiredError(
-                            changed_files, ",".join([str(x) for x in ignore_pattern])
-                        )
-            return True
-
         if ProcessType.load == self.type:
-            require_clean_repo_general(
+            self.require_clean_repo_general(
                 ignore_pattern=[
                     self.review_manager.SEARCHDIR_RELATIVE,
                     self.review_manager.SETTINGS_RELATIVE,
                 ]
             )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
         elif ProcessType.prep == self.type:
 
             if self.notify_state_transition_operation:
-                require_clean_repo_general()
-                check_process_model_precondition()
+                self.require_clean_repo_general()
+                self.check_process_model_precondition()
 
         elif ProcessType.prep_man == self.type:
-            require_clean_repo_general(
+            self.require_clean_repo_general(
                 ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
         elif ProcessType.dedupe == self.type:
-            require_clean_repo_general()
-            check_process_model_precondition()
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
 
         elif ProcessType.prescreen == self.type:
-            require_clean_repo_general(
+            self.require_clean_repo_general(
                 ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
         elif ProcessType.pdf_get == self.type:
-            require_clean_repo_general(
+            self.require_clean_repo_general(
                 ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
-            require_clean_repo_general(
+            self.require_clean_repo_general(
                 ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
             )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
         elif ProcessType.pdf_prep == self.type:
-            require_clean_repo_general()
-            check_process_model_precondition()
-
-        elif ProcessType.pdf_prep_man == self.type:
-            # require_clean_repo_general(
-            #     ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
-            # )
-            # check_process_model_precondition()
-            pass
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
 
         elif ProcessType.screen == self.type:
-            require_clean_repo_general()
-            check_process_model_precondition()
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
 
         elif ProcessType.data == self.type:
             # require_clean_repo_general(
@@ -214,14 +198,9 @@ class Process:
             #         # data.csv, paper.md etc.?,
             #     ]
             # )
-            check_process_model_precondition()
+            self.check_process_model_precondition()
 
-        elif ProcessType.format == self.type:
-            pass
-        elif ProcessType.explore == self.type:
-            pass
-        elif ProcessType.check == self.type:
-            pass
+        # ie., implicit pass for format, explore, check, pdf_prep_man
 
 
 class FormatProcess(Process):
@@ -588,6 +567,7 @@ class DefaultSettings:
 @dataclass
 class DefaultSourceSettings:
     # pylint: disable=duplicate-code
+    # pylint: disable=too-many-instance-attributes
     name: str
     filename: Path
     search_type: colrev.settings.SearchType

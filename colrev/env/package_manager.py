@@ -385,21 +385,19 @@ class PackageManager:
             packages_dict.pop(k, None)
 
         endpoint_class = getattr(colrev.process, package_details["import_name"])  # type: ignore
-        for package_identifier, selected_package in packages_dict.items():
+        for package_identifier, package_class in packages_dict.items():
             params = {
                 package_details["operation_name"]: process,
-                "settings": selected_package["settings"],
+                "settings": package_class["settings"],
             }
             if "search_source" == package_type:
                 del params["check_operation"]
 
             if instantiate_objects:
-                packages_dict[package_identifier] = selected_package["endpoint"](
-                    **params
-                )
+                packages_dict[package_identifier] = package_class["endpoint"](**params)
                 verifyObject(endpoint_class, packages_dict[package_identifier])
             else:
-                packages_dict[package_identifier] = selected_package["endpoint"]
+                packages_dict[package_identifier] = package_class["endpoint"]
 
         return packages_dict
 
