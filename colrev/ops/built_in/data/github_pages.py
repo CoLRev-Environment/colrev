@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.process.DataEndpoint)
-class GithubPagesEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+class GithubPages:
     """Export the literature review into a Github Page"""
 
     @dataclass

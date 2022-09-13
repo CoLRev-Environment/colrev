@@ -10,8 +10,8 @@ from dacite import from_dict
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.process.PrepManEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
 class CoLRevCLIManPrep:
     """Manual preparation using the CLI (Not yet implemented)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -70,7 +70,7 @@ class CoLRevCLIManPrep:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrepManEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
 class ExportManPrep:
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
@@ -211,11 +211,11 @@ class ExportManPrep:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrepManEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
 class CurationJupyterNotebookManPrep:
     """Manual preparation based on a Jupyter Notebook"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict

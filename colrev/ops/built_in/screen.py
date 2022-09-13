@@ -9,7 +9,7 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
-import colrev.process
+import colrev.env.package_manager
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -19,11 +19,11 @@ if TYPE_CHECKING:
     import colrev.ops.screen
 
 
-@zope.interface.implementer(colrev.process.ScreenEndpoint)
-class CoLRevCLIScreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
+class CoLRevCLIScreen:
     """Screen documents using a CLI"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -251,11 +251,11 @@ class CoLRevCLIScreenEndpoint:
         return records
 
 
-@zope.interface.implementer(colrev.process.ScreenEndpoint)
-class SpreadsheetScreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
+class SpreadsheetScreen:
     """Screen documents using spreadsheets (exported and imported)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     spreadsheet_path = Path("screen/screen.csv")
 
@@ -284,10 +284,8 @@ class SpreadsheetScreenEndpoint:
 
         screen_operation.review_manager.logger.info("Loading records for export")
 
-        screening_criteria = (
-            CoLRevCLIScreenEndpoint.get_screening_criteria_from_user_input(
-                screen_operation=screen_operation, records=records
-            )
+        screening_criteria = CoLRevCLIScreen.get_screening_criteria_from_user_input(
+            screen_operation=screen_operation, records=records
         )
 
         tbl = []

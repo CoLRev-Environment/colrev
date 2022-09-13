@@ -6,9 +6,11 @@ import json
 import sys
 import typing
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+import zope.interface
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -32,78 +34,267 @@ class PackageType(Enum):
     data = "data"
 
 
+class SearchSourcePackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+    source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
+    source_identifier_search = zope.interface.Attribute(
+        """Source identifier for search (corretions?)"""
+    )
+
+    search_mode = zope.interface.Attribute("""Mode""")
+
+    # pylint: disable=no-self-argument
+    def run_search(search_operation) -> None:
+        pass
+
+    # pylint: disable=no-self-argument
+    def heuristic(filename, data):
+        pass
+
+    def load_fixes(load_operation, source, records):
+        """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
+
+    def prepare(record):
+        pass
+
+
+class LoadConversionPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+    """Interface for packages that load records from different filetypes"""
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+    supported_extensions = zope.interface.Attribute("""List of supported extensions""")
+
+    # pylint: disable=no-self-argument
+    def load(load_operation, source):
+        pass
+
+
+class PrepPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+    source_correction_hint = zope.interface.Attribute(
+        """Hint on how to correct metadata at source"""
+    )
+
+    always_apply_changes = zope.interface.Attribute(
+        """Flag indicating whether changes should always be applied
+        (even if the colrev_status does not transition to md_prepared)"""
+    )
+
+    # pylint: disable=no-self-argument
+    def prepare(prep_operation, prep_record):
+        pass
+
+
+class PrepManPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def prepare_manual(prep_man_operation, records):
+        pass
+
+
+class DedupePackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def run_dedupe(dedupe_operation):
+        pass
+
+
+class PrescreenPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
+        pass
+
+
+class PDFGetPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def get_pdf(pdf_get_operation, record):
+        return record
+
+
+class PDFGetManPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def get_man_pdf(pdf_get_man_operation, records):
+        return records
+
+
+class PDFPrepPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=unused-argument
+    # pylint: disable=no-self-argument
+    def prep_pdf(pdf_prep_operation, record, pad) -> dict:
+        return record.data
+
+
+class PDFPrepManPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def prep_man_pdf(pdf_prep_man_operation, records):
+        return records
+
+
+class ScreenPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    def run_screen(screen_operation, records: dict, split: list) -> dict:
+        pass
+
+
+class DataPackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+
+    # pylint: disable=no-self-argument
+    # pylint: disable=no-method-argument
+    def get_default_setup() -> dict:  # type: ignore
+        return {}
+
+    def update_data(
+        data_operation, records: dict, synthesized_record_status_matrix: dict
+    ) -> None:
+        pass
+
+    def update_record_status_matrix(
+        data_operation, synthesized_record_status_matrix, endpoint_identifier
+    ) -> None:
+        pass
+
+
+@dataclass
+class DefaultSettings:
+    name: str
+
+
+@dataclass
+class DefaultSourceSettings:
+    # pylint: disable=duplicate-code
+    # pylint: disable=too-many-instance-attributes
+    name: str
+    filename: Path
+    search_type: colrev.settings.SearchType
+    source_name: str
+    source_identifier: str
+    search_parameters: dict
+    load_conversion_script: dict
+    comment: typing.Optional[str]
+
+
 class PackageManager:
 
     endpoint_overview = [
         {
             "package_type": PackageType.load_conversion,
-            "import_name": "LoadConversionEndpoint",
+            "import_name": LoadConversionPackageInterface,
             "custom_class": "CustomLoad",
             "operation_name": "load_operation",
         },
         {
             "package_type": PackageType.search_source,
-            "import_name": "SearchSourceEndpoint",
+            "import_name": SearchSourcePackageInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
         },
         {
             "package_type": PackageType.prep,
-            "import_name": "PrepEndpoint",
+            "import_name": PrepPackageInterface,
             "custom_class": "CustomPrep",
             "operation_name": "prep_operation",
         },
         {
             "package_type": PackageType.prep_man,
-            "import_name": "PrepManEndpoint",
+            "import_name": PrepManPackageInterface,
             "custom_class": "CustomPrepMan",
             "operation_name": "prep_man_operation",
         },
         {
             "package_type": PackageType.dedupe,
-            "import_name": "DedupeEndpoint",
+            "import_name": DedupePackageInterface,
             "custom_class": "CustomDedupe",
             "operation_name": "dedupe_operation",
         },
         {
             "package_type": PackageType.prescreen,
-            "import_name": "PrescreenEndpoint",
+            "import_name": PrescreenPackageInterface,
             "custom_class": "CustomPrescreen",
             "operation_name": "prescreen_operation",
         },
         {
             "package_type": PackageType.pdf_get,
-            "import_name": "PDFGetEndpoint",
+            "import_name": PDFGetPackageInterface,
             "custom_class": "CustomPDFGet",
             "operation_name": "pdf_get_operation",
         },
         {
             "package_type": PackageType.pdf_get_man,
-            "import_name": "PDFGetManEndpoint",
+            "import_name": PDFGetManPackageInterface,
             "custom_class": "CustomPDFGetMan",
             "operation_name": "pdf_get_man_operation",
         },
         {
             "package_type": PackageType.pdf_prep,
-            "import_name": "PDFPrepEndpoint",
+            "import_name": PDFPrepPackageInterface,
             "custom_class": "CustomPDFPrep",
             "operation_name": "pdf_prep_operation",
         },
         {
             "package_type": PackageType.pdf_prep_man,
-            "import_name": "PDFPrepManEndpoint",
+            "import_name": PDFPrepManPackageInterface,
             "custom_class": "CustomPDFPrepMan",
             "operation_name": "pdf_prep_man_operation",
         },
         {
             "package_type": PackageType.screen,
-            "import_name": "ScreenEndpoint",
+            "import_name": ScreenPackageInterface,
             "custom_class": "CustomScreen",
             "operation_name": "screen_operation",
         },
         {
             "package_type": PackageType.data,
-            "import_name": "DataEndpoint",
+            "import_name": DataPackageInterface,
             "custom_class": "CustomData",
             "operation_name": "data_operation",
         },
@@ -274,7 +465,7 @@ class PackageManager:
         package_module = package_str.rsplit(".", 1)[0]
         package_class = package_str.rsplit(".", 1)[-1]
         imported_package = importlib.import_module(package_module)
-        package_class = getattr(imported_package, package_class)  # type: ignore
+        package_class = getattr(imported_package, package_class)
         return package_class
 
     def load_packages(
@@ -384,7 +575,7 @@ class PackageManager:
             print(f"Skipping broken package ({k})")
             packages_dict.pop(k, None)
 
-        endpoint_class = getattr(colrev.process, package_details["import_name"])  # type: ignore
+        endpoint_class = package_details["import_name"]  # type: ignore
         for package_identifier, package_class in packages_dict.items():
             params = {
                 package_details["operation_name"]: process,

@@ -109,47 +109,47 @@
     },
     "dedupe": {
         "simple_dedupe": {
-            "endpoint": "colrev.ops.built_in.dedupe_built_in.SimpleDedupeEndpoint"
+            "endpoint": "colrev.ops.built_in.dedupe_built_in.SimpleDedupe"
         },
         "active_learning_training": {
-            "endpoint": "colrev.ops.built_in.dedupe_built_in.ActiveLearningDedupeTrainingEndpoint"
+            "endpoint": "colrev.ops.built_in.dedupe_built_in.ActiveLearningDedupeTraining"
         },
         "active_learning_automated": {
-            "endpoint": "colrev.ops.built_in.dedupe_built_in.ActiveLearningDedupeAutomatedEndpoint"
+            "endpoint": "colrev.ops.built_in.dedupe_built_in.ActiveLearningDedupeAutomated"
         },
         "curation_full_outlet_dedupe": {
-            "endpoint": "colrev.ops.built_in.dedupe_built_in.CurationDedupeEndpoint"
+            "endpoint": "colrev.ops.built_in.dedupe_built_in.CurationDedupe"
         },
         "curation_missing_dedupe": {
-            "endpoint": "colrev.ops.built_in.dedupe_built_in.CurationMissingDedupeEndpoint"
+            "endpoint": "colrev.ops.built_in.dedupe_built_in.CurationMissingDedupe"
         }
     },
     "prescreen": {
         "scope_prescreen": {
-            "endpoint": "colrev.ops.built_in.prescreen.ScopePrescreenEndpoint"
+            "endpoint": "colrev.ops.built_in.prescreen.ScopePrescreen"
         },
         "colrev_cli_prescreen": {
-            "endpoint": "colrev.ops.built_in.prescreen.CoLRevCLIPrescreenEndpoint"
+            "endpoint": "colrev.ops.built_in.prescreen.CoLRevCLIPrescreen"
         },
         "asreview_prescreen": {
-            "endpoint": "colrev.ops.built_in.prescreen.ASReviewPrescreenEndpoint"
+            "endpoint": "colrev.ops.built_in.prescreen.ASReviewPrescreen"
         },
         "conditional_prescreen": {
-            "endpoint": "colrev.ops.built_in.prescreen.ConditionalPrescreenEndpoint"
+            "endpoint": "colrev.ops.built_in.prescreen.ConditionalPrescreen"
         },
         "spreadsheet_prescreen": {
-            "endpoint": "colrev.ops.built_in.prescreen.SpreadsheetPrescreenEndpoint"
+            "endpoint": "colrev.ops.built_in.prescreen.SpreadsheetPrescreen"
         }
     },
     "pdf_get": {
         "unpaywall": {
-            "endpoint": "colrev.ops.built_in.pdf_get.UnpaywallEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_get.Unpaywall"
         },
         "local_index": {
-            "endpoint": "colrev.ops.built_in.pdf_get.LocalIndexEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_get.LocalIndexPDFGet"
         },
         "website_screenshot": {
-            "endpoint": "colrev.ops.built_in.pdf_get.WebsiteScreenshotEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_get.WebsiteScreenshot"
         }
     },
     "pdf_get_man": {
@@ -159,22 +159,22 @@
     },
     "pdf_prep": {
         "pdf_check_ocr": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCheckOCREndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCheckOCR"
         },
         "remove_coverpage": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCoverPageEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCoverPage"
         },
         "remove_last_page": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.PDFLastPageEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.PDFLastPage"
         },
         "validate_pdf_metadata": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.PDFMetadataValidationEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.PDFMetadataValidation"
         },
         "validate_completeness": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCompletenessValidationEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.PDFCompletenessValidation"
         },
         "create_tei": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.TEIEndpoint"
+            "endpoint": "colrev.ops.built_in.pdf_prep.TEIPDFPrep"
         }
     },
     "pdf_prep_man": {
@@ -184,30 +184,30 @@
     },
     "screen": {
         "colrev_cli_screen": {
-            "endpoint": "colrev.ops.built_in.screen.CoLRevCLIScreenEndpoint"
+            "endpoint": "colrev.ops.built_in.screen.CoLRevCLIScreen"
         },
         "spreadsheet_screen": {
-            "endpoint": "colrev.ops.built_in.screen.SpreadsheetScreenEndpoint"
+            "endpoint": "colrev.ops.built_in.screen.SpreadsheetScreen"
         }
     },
     "data": {
         "manuscript": {
-            "endpoint": "colrev.ops.built_in.data.manuscript.ManuscriptEndpoint"
+            "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript"
         },
         "structured": {
-            "endpoint": "colrev.ops.built_in.data.structured.StructuredDataEndpoint"
+            "endpoint": "colrev.ops.built_in.data.structured.StructuredData"
         },
-        "endnote": {
-            "endpoint": "colrev.ops.built_in.data.EndnoteEndpoint"
+        "bibliography_export": {
+            "endpoint": "colrev.ops.built_in.data.BibliographyExport"
         },
         "prisma": {
-            "endpoint": "colrev.ops.built_in.data.prisma.PRISMAEndpoint"
+            "endpoint": "colrev.ops.built_in.data.prisma.PRISMA"
         },
         "github_pages": {
-            "endpoint": "colrev.ops.built_in.data.pages.GithubPagesEndpoint"
+            "endpoint": "colrev.ops.built_in.data.pages.GithubPages"
         },
         "zettlr": {
-            "endpoint": "colrev.ops.built_in.data.zettlr.ZettlrEndpoint"
+            "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr"
         }
     },
     "search_source": {

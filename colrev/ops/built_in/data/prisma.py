@@ -9,8 +9,8 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -18,11 +18,11 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.process.DataEndpoint)
-class PRISMAEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+class PRISMA:
     """Create a PRISMA diagram"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

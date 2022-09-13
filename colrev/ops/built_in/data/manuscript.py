@@ -14,8 +14,8 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.process.DataEndpoint)
-class ManuscriptEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+class Manuscript:
     """Synthesize the literature in a manuscript
 
     The manuscript (paper.md) is created automatically.
@@ -46,7 +46,7 @@ class ManuscriptEndpoint:
     the corresponding record will be marked as rev_synthesized."""
 
     @dataclass
-    class ManuscriptEndpointSettings:
+    class ManuscriptSettings:
         name: str
         version: str
         word_template: str
@@ -60,7 +60,7 @@ class ManuscriptEndpoint:
             "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
         }
 
-    settings_class = ManuscriptEndpointSettings
+    settings_class = ManuscriptSettings
 
     def __init__(
         self,

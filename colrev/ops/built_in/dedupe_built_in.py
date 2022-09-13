@@ -15,9 +15,9 @@ from dacite import from_dict
 from thefuzz import fuzz
 from tqdm import tqdm
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.pdf_prep
-import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -91,8 +91,8 @@ def console_duplicate_instance_label(
     return user_input
 
 
-@zope.interface.implementer(colrev.process.DedupeEndpoint)
-class SimpleDedupeEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+class SimpleDedupe:
     """Simple duplicate identification (for small sample sizes)"""
 
     @dataclass
@@ -419,11 +419,11 @@ class SimpleDedupeEndpoint:
         )
 
 
-@zope.interface.implementer(colrev.process.DedupeEndpoint)
-class ActiveLearningDedupeTrainingEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+class ActiveLearningDedupeTraining:
     """Active learning: training phase (minimum sample size of 50 required)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     deduper: dedupe_io.Deduper
 
@@ -831,8 +831,8 @@ class ActiveLearningDedupeTrainingEndpoint:
         # )
 
 
-@zope.interface.implementer(colrev.process.DedupeEndpoint)
-class ActiveLearningDedupeAutomatedEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+class ActiveLearningDedupeAutomated:
     """Applies trained (active learning) model"""
 
     @dataclass
@@ -1313,8 +1313,8 @@ class ActiveLearningDedupeAutomatedEndpoint:
             )
 
 
-@zope.interface.implementer(colrev.process.DedupeEndpoint)
-class CurationDedupeEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+class CurationDedupe:
     """Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
@@ -1668,7 +1668,7 @@ class CurationDedupeEndpoint:
                 dedupe_operation.review_manager.get_pdf_prep_operation()
             )
             pdf_metadata_validation = (
-                colrev.ops.built_in.pdf_prep.PDFMetadataValidationEndpoint(
+                colrev.ops.built_in.pdf_prep.PDFMetadataValidation(
                     pdf_prep_operation=pdf_prep_operation,
                     settings={"name": "dedupe_pdf_md_validation"},
                 )
@@ -1798,11 +1798,11 @@ class CurationDedupeEndpoint:
             )
 
 
-@zope.interface.implementer(colrev.process.DedupeEndpoint)
-class CurationMissingDedupeEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+class CurationMissingDedupe:
     """Endpoint for deduplicating remaining records in a curated metadata repository"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

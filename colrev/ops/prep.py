@@ -25,6 +25,8 @@ logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 class Prep(colrev.process.Process):
 
+    # pylint: disable=too-many-instance-attributes
+
     timeout = 10
     max_retries_on_error = 3
 
@@ -134,7 +136,7 @@ class Prep(colrev.process.Process):
         *,
         prior: colrev.record.PrepRecord,
         preparation_record: colrev.record.PrepRecord,
-        prep_script: colrev.process.PrepEndpoint,
+        prep_script: colrev.env.package_manager.PrepPackageInterface,
     ) -> None:
         diffs = prior.get_diff(other_record=preparation_record)
         if diffs:

@@ -4,9 +4,9 @@ from pathlib import Path
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 # pylint: disable=unused-argument
@@ -29,10 +29,10 @@ def apply_field_mapping(
     return record
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class AISeLibrarySearchSource:
 
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
 
     source_identifier = "https://aisel.aisnet.org/"
     source_identifier_search = "https://aisel.aisnet.org/"

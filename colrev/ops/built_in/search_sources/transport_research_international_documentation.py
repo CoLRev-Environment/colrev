@@ -4,9 +4,9 @@ from pathlib import Path
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 
@@ -14,9 +14,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class TransportResearchInternationalDocumentation:
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{biburl}}"
 
     def __init__(self, *, source_operation, settings: dict) -> None:

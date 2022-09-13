@@ -2262,8 +2262,10 @@ class RecordState(Enum):
                 str(RecordState.rev_included),
                 str(RecordState.rev_synthesized),
             ]
+
+        # pylint: disable=no-member
         raise colrev_exceptions.ParameterError(
-            parameter="state", value="state", options="RecordStates"
+            parameter="state", value="state", options=cls._member_names_
         )
 
 

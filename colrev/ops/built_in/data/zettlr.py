@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.DataEndpoint)
-class ZettlrEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+class Zettlr:
     """Export the sample into a Zettlr database"""
 
     @dataclass

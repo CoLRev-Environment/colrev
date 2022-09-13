@@ -36,7 +36,7 @@ class ReviewType(Enum):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        # pylint: disable=E1101
+        # pylint: disable=no-member
         return cls._member_names_
 
     def __str__(self) -> str:

@@ -20,5 +20,5 @@ colrev.ops.built\_in.screen
       :template: custom-class-template.rst
       :nosignatures:
 
-      CoLRevCLIScreenEndpoint
-      SpreadsheetScreenEndpoint
+      CoLRevCLIScreen
+      SpreadsheetScreen

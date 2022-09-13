@@ -4,18 +4,18 @@ from pathlib import Path
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class PubMedSearchSource:
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
     source_identifier_search = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
     search_mode = "individual"

@@ -11,20 +11,20 @@ from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.database_connectors
-import colrev.ops.built_in.search_sources.pdf_backward_search
+import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class PDFSearchSource:
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
     source_identifier_search = "{{file}}"
     search_mode = "all"
@@ -509,11 +509,8 @@ class PDFSearchSource:
     def heuristic(cls, filename: Path, data: str) -> dict:
         result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
-        if (
-            filename.suffix == ".pdf"
-            and not colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource.heuristic(
-                filename=filename, data=data
-            )
+        if filename.suffix == ".pdf" and not bws.BackwardSearchSource.heuristic(
+            filename=filename, data=data
         ):
             result["confidence"] = 1.0
             return result

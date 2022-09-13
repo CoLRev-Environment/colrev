@@ -13,11 +13,10 @@ from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from PyPDF2 import PdfFileReader
 
+import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.process
 import colrev.record
-
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -25,11 +24,11 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class PDFCheckOCREndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class PDFCheckOCR:
     """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -139,11 +138,11 @@ class PDFCheckOCREndpoint:
         return record.data
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class PDFCoverPageEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class PDFCoverPage:
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -316,11 +315,11 @@ class PDFCoverPageEndpoint:
         return record.data
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class PDFLastPageEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class PDFLastPage:
     """Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -430,11 +429,11 @@ class PDFLastPageEndpoint:
         return record.data
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class PDFMetadataValidationEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class PDFMetadataValidation:
     """Prepare PDFs by validating it against its associated metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -574,11 +573,11 @@ class PDFMetadataValidationEndpoint:
         return record.data
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class PDFCompletenessValidationEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class PDFCompletenessValidation:
     """Prepare PDFs by validating its completeness (based on the number of pages)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     roman_pages_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
@@ -740,11 +739,11 @@ class PDFCompletenessValidationEndpoint:
         return record.data
 
 
-@zope.interface.implementer(colrev.process.PDFPrepEndpoint)
-class TEIEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+class TEIPDFPrep:
     """Prepare PDFs by creating an annotated TEI document"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict

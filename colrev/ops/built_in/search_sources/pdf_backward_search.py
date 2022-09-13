@@ -6,23 +6,23 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class BackwardSearchSource:
     """Performs a backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{cited_by_file}} (references)"
 
     source_identifier_search = "{{cited_by_file}} (references)"

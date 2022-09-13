@@ -11,8 +11,8 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.process
 import colrev.record
 
 if typing.TYPE_CHECKING:
@@ -21,13 +21,15 @@ if typing.TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.process.PrescreenEndpoint)
-class ScopePrescreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+class ScopePrescreen:
     """Prescreens records based on predefined rules (scope)"""
 
     @dataclass
-    class ScopePrescreenEndpointSettings:
-        # pylint: disable=C0103
+    class ScopePrescreenSettings:
+        # pylint: disable=invalid-name
+        # pylint: disable=too-many-instance-attributes
+
         name: str
         TimeScopeFrom: typing.Optional[int]
         TimeScopeTo: typing.Optional[int]
@@ -63,7 +65,7 @@ class ScopePrescreenEndpoint:
             },
         }
 
-    settings_class = ScopePrescreenEndpointSettings
+    settings_class = ScopePrescreenSettings
 
     title_complementary_materials_keywords = [
         "about our authors",
@@ -218,11 +220,11 @@ class ScopePrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrescreenEndpoint)
-class CoLRevCLIPrescreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+class CoLRevCLIPrescreen:
     """Prescreen based on a CLI interface"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -311,11 +313,11 @@ class CoLRevCLIPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrescreenEndpoint)
-class ASReviewPrescreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+class ASReviewPrescreen:
     """Prescreen based on ASReview"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
@@ -546,11 +548,11 @@ class ASReviewPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrescreenEndpoint)
-class ConditionalPrescreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+class ConditionalPrescreen:
     """Prescreen based on a condition (currently: include all)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -592,11 +594,11 @@ class ConditionalPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(colrev.process.PrescreenEndpoint)
-class SpreadsheetPrescreenEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+class SpreadsheetPrescreen:
     """Prescreen based on a spreadsheet (exported and imported)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

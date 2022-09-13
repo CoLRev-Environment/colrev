@@ -12,8 +12,8 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.env.utils
-import colrev.process
 import colrev.record
 
 
@@ -21,12 +21,12 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.process.DataEndpoint)
-class StructuredDataEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+class StructuredData:
     """Summarize the literature in a structured data extraction (a spreadsheet)"""
 
     @dataclass
-    class StructuredDataEndpointSettings:
+    class StructuredDataSettings:
         name: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)
@@ -35,7 +35,7 @@ class StructuredDataEndpoint:
             "fields": {"tooltip": "Fields for the structured data extraction"},
         }
 
-    settings_class = StructuredDataEndpointSettings
+    settings_class = StructuredDataSettings
 
     def __init__(
         self,

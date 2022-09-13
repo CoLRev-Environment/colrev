@@ -162,7 +162,7 @@ class ReviewManager:
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
         except (ValueError, MissingValueError, WrongTypeError) as exc:
-            raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
+            raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
         return settings
 

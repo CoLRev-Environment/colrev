@@ -2,15 +2,11 @@
 from __future__ import annotations
 
 import logging
-import typing
-from dataclasses import dataclass
 from enum import auto
 from enum import Enum
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
-import zope.interface
 from transitions import Machine
 
 import colrev.exceptions as colrev_exceptions
@@ -405,177 +401,8 @@ class ProcessModel:
                 raise colrev_exceptions.NoRecordsError()
             if len(intersection) != 0:
                 raise colrev_exceptions.ProcessOrderViolation(
-                    process, self.state, intersection
+                    process.type.name, self.state, intersection
                 )
-
-
-class SearchSourceEndpoint(
-    zope.interface.Interface
-):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
-    source_identifier_search = zope.interface.Attribute(
-        """Source identifier for search (corretions?)"""
-    )
-
-    search_mode = zope.interface.Attribute("""Mode""")
-
-    # pylint: disable=no-self-argument
-    def run_search(search_operation) -> None:
-        pass
-
-    # pylint: disable=no-self-argument
-    def heuristic(filename, data):
-        pass
-
-    def load_fixes(load_operation, source, records):
-        """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
-
-    def prepare(record):
-        pass
-
-
-class LoadConversionEndpoint(
-    zope.interface.Interface
-):  # pylint: disable=inherit-non-class
-    """Interface for packages that load records from different filetypes"""
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    supported_extensions = zope.interface.Attribute("""List of supported extensions""")
-
-    # pylint: disable=no-self-argument
-    def load(load_operation, source):
-        pass
-
-
-class PrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    source_correction_hint = zope.interface.Attribute(
-        """Hint on how to correct metadata at source"""
-    )
-
-    always_apply_changes = zope.interface.Attribute(
-        """Flag indicating whether changes should always be applied
-        (even if the colrev_status does not transition to md_prepared)"""
-    )
-
-    # pylint: disable=no-self-argument
-    def prepare(prep_operation, prep_record):
-        pass
-
-
-class PrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def prepare_manual(prep_man_operation, records):
-        pass
-
-
-class DedupeEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def run_dedupe(dedupe_operation):
-        pass
-
-
-class PrescreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
-        pass
-
-
-class PDFGetEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def get_pdf(pdf_get_operation, record):
-        return record
-
-
-class PDFGetManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def get_man_pdf(pdf_get_man_operation, records):
-        return records
-
-
-class PDFPrepEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=unused-argument
-    # pylint: disable=no-self-argument
-    def prep_pdf(pdf_prep_operation, record, pad) -> dict:
-        return record.data
-
-
-class PDFPrepManEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def prep_man_pdf(pdf_prep_man_operation, records):
-        return records
-
-
-class ScreenEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    def run_screen(screen_operation, records: dict, split: list) -> dict:
-        pass
-
-
-class DataEndpoint(zope.interface.Interface):  # pylint: disable=inherit-non-class
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-
-    # pylint: disable=no-self-argument
-    # pylint: disable=no-method-argument
-    def get_default_setup() -> dict:  # type: ignore
-        return {}
-
-    def update_data(
-        data_operation, records: dict, synthesized_record_status_matrix: dict
-    ) -> None:
-        pass
-
-    def update_record_status_matrix(
-        data_operation, synthesized_record_status_matrix, endpoint_identifier
-    ) -> None:
-        pass
-
-
-@dataclass
-class DefaultSettings:
-    name: str
-
-
-@dataclass
-class DefaultSourceSettings:
-    # pylint: disable=duplicate-code
-    # pylint: disable=too-many-instance-attributes
-    name: str
-    filename: Path
-    search_type: colrev.settings.SearchType
-    source_name: str
-    source_identifier: str
-    search_parameters: dict
-    load_conversion_script: dict
-    comment: typing.Optional[str]
 
 
 if __name__ == "__main__":

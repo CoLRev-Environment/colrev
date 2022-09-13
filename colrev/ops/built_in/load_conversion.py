@@ -11,8 +11,8 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.process
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class BibPybtexLoader:
     """Loads BibTeX files (based on pybtex)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["bib"]
 
@@ -146,11 +146,11 @@ class SpreadsheetLoadUtility:
         return records_dict
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class CSVLoader:
     """Loads csv files (based on pandas)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["csv"]
 
@@ -195,11 +195,11 @@ class CSVLoader:
         return records
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["xls", "xlsx"]
 
@@ -245,12 +245,12 @@ class ExcelLoader:
         return records
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class ZoteroTranslationLoader:
     """Loads bibliography files (based on pandas).
     Supports ris, rdf, json, mods, xml, marc, txt"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
@@ -312,11 +312,11 @@ class ZoteroTranslationLoader:
         return records
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class MarkdownLoader:
     """Loads reference strings from text (md) files (based on GROBID)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["md"]
 
@@ -371,12 +371,12 @@ class MarkdownLoader:
         return records
 
 
-@zope.interface.implementer(colrev.process.LoadConversionEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
 class BibutilsLoader:
     """Loads bibliography files (based on bibutils)
     Supports ris, end, enl, copac, isi, med"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 

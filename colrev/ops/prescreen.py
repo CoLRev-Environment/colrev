@@ -34,7 +34,7 @@ class Prescreen(colrev.process.Process):
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
 
-        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+        endpoint = built_in_prescreen.SpreadsheetPrescreen(
             prescreen_operation=self, settings={"name": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -47,7 +47,7 @@ class Prescreen(colrev.process.Process):
 
     def import_table(self, *, import_table_path: str) -> None:
 
-        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+        endpoint = built_in_prescreen.SpreadsheetPrescreen(
             prescreen_operation=self, settings={"name": "import_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -59,7 +59,7 @@ class Prescreen(colrev.process.Process):
 
     def include_all_in_prescreen(self) -> None:
 
-        endpoint = built_in_prescreen.ConditionalPrescreenEndpoint(
+        endpoint = built_in_prescreen.ConditionalPrescreen(
             prescreen_operation=self, settings={"name": "include_all"}
         )
         records = self.review_manager.dataset.load_records_dict()

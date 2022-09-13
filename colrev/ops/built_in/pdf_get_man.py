@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
+import colrev.env.package_manager
 import colrev.ops.pdf_get
-import colrev.process
 import colrev.record
 
 if TYPE_CHECKING:
@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.process.PDFGetManEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PDFGetManPackageInterface)
 class CoLRevCLIPDFGetMan:
     """Get PDFs manually based on a CLI"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

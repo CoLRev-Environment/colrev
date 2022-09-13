@@ -9,21 +9,21 @@ from dacite import from_dict
 from pandasql.sqldf import PandaSQLException
 from tqdm import tqdm
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search
-import colrev.process
 import colrev.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class LocalIndexSearchSource:
     """Performs a search in the LocalIndex"""
 
-    settings_class = colrev.process.DefaultSourceSettings
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
     # TODO : add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "index"
     source_identifier_search = "index"

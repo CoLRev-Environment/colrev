@@ -12,10 +12,9 @@ from dacite import from_dict
 from pdfminer.high_level import extract_text
 from pdfminer.pdftypes import PDFException
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.process
 import colrev.record
-
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_get
@@ -23,11 +22,11 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.process.PDFGetEndpoint)
-class UnpaywallEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
+class Unpaywall:
     """Get PDFs from unpaywall.org"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -129,11 +128,11 @@ class UnpaywallEndpoint:
         return record
 
 
-@zope.interface.implementer(colrev.process.PDFGetEndpoint)
-class LocalIndexEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
+class LocalIndexPDFGet:
     """Get PDFs from LocalIndex"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -164,11 +163,11 @@ class LocalIndexEndpoint:
         return record
 
 
-@zope.interface.implementer(colrev.process.PDFGetEndpoint)
-class WebsiteScreenshotEndpoint:
+@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
+class WebsiteScreenshot:
     """Get PDFs from webisite screenshot (for "online" ENTRYTYPES)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

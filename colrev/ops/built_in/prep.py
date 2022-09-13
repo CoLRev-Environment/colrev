@@ -19,10 +19,10 @@ from opensearchpy import NotFoundError
 from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.database_connectors
 import colrev.ops.search_sources
-import colrev.process
 import colrev.record
 
 if TYPE_CHECKING:
@@ -33,11 +33,11 @@ if TYPE_CHECKING:
 # pylint: disable=too-many-lines
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class SourceSpecificPrep:
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -93,12 +93,12 @@ class SourceSpecificPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class ExcludeNonLatinAlphabetsPrep:
     """Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -140,11 +140,11 @@ class ExcludeNonLatinAlphabetsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class ExcludeLanguagesPrep:
     """Prepares records by excluding ones that are not in the languages_to_include"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -248,11 +248,11 @@ class ExcludeLanguagesPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class ExcludeCollectionsPrep:
     """Prepares records by excluding collection entries (e.g., proceedings)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -276,11 +276,11 @@ class ExcludeCollectionsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class RemoveError500URLsPrep:
     """Prepares records by removing urls that are not available"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -328,11 +328,11 @@ class RemoveError500URLsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class RemoveBrokenIDPrep:
     """Prepares records by removing invalid IDs DOIs/ISBNs"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -374,11 +374,11 @@ class RemoveBrokenIDPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class GlobalIDConsistencyPrep:
     """Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -464,11 +464,11 @@ class GlobalIDConsistencyPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CuratedPrep:
     """Prepares records by setting records with curated masterdata to md_prepared"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -493,11 +493,11 @@ class CuratedPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class FormatPrep:
     """Prepares records by formatting fields"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -648,11 +648,11 @@ class FormatPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class BibTexCrossrefResolutionPrep:
     """Prepares records by resolving BibTex crossref links (e.g., to proceedings)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -681,11 +681,11 @@ class BibTexCrossrefResolutionPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class SemanticScholarPrep:
     """Prepares records based on SemanticScholar metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "fill out the online form: "
@@ -830,11 +830,11 @@ class SemanticScholarPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class DOIFromURLsPrep:
     """Prepares records by retrieving its DOI from the website (URL)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -919,11 +919,11 @@ class DOIFromURLsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class DOIMetadataPrep:
     """Prepares records based on doi.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -958,11 +958,11 @@ class DOIMetadataPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CrossrefMetadataPrep:
     """Prepares records based on crossref.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -989,11 +989,11 @@ class CrossrefMetadataPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class DBLPMetadataPrep:
     """Prepares records based on dblp.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "send and email to dblp@dagstuhl.de"
@@ -1073,11 +1073,11 @@ class DBLPMetadataPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class OpenLibraryMetadataPrep:
     """Prepares records based on openlibrary.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False
@@ -1214,11 +1214,11 @@ class OpenLibraryMetadataPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CiteAsPrep:
     """Prepares records based on citeas.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
@@ -1310,11 +1310,11 @@ class CiteAsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CrossrefYearVolIssPrep:
     """Prepares records by adding missing years based on crossref.org metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -1398,11 +1398,11 @@ class CrossrefYearVolIssPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class LocalIndexPrep:
     """Prepares records based on LocalIndex metadata"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = (
         "correct the metadata in the source "
@@ -1490,11 +1490,11 @@ class LocalIndexPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class RemoveNicknamesPrep:
     """Prepares records by removing author nicknames"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1520,11 +1520,11 @@ class RemoveNicknamesPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class FormatMinorPrep:
     """Prepares records by applying minor formatting changes"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1565,11 +1565,11 @@ class FormatMinorPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class DropFieldsPrep:
     """Prepares records by dropping fields that are not needed"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1618,12 +1618,12 @@ class DropFieldsPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class RemoveRedundantFieldPrep:
 
     """Prepares records by removing redundant fields"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -1666,11 +1666,11 @@ class RemoveRedundantFieldPrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CorrectRecordTypePrep:
     """Prepares records by correcting the record type (ENTRYTYPE)"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -1751,11 +1751,11 @@ class CorrectRecordTypePrep:
         return record
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class UpdateMetadataStatusPrep:
     """Prepares records by updating the metadata status"""
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
