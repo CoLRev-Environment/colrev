@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.ACMDigitalLibrarySearchSource
       ~ACMDigitalLibrarySearchSource.load_fixes
       ~ACMDigitalLibrarySearchSource.prepare
       ~ACMDigitalLibrarySearchSource.run_search
-      ~ACMDigitalLibrarySearchSource.validate_search_params
 
 
 

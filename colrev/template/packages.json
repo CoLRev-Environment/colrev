@@ -211,6 +211,9 @@
         }
     },
     "search_source": {
+        "unknown_source": {
+            "endpoint": "colrev.ops.built_in.search_sources.UnknownSearchSource"
+        },
         "crossref": {
             "endpoint": "colrev.ops.built_in.search_sources.CrossrefSourceSearchSource"
         },

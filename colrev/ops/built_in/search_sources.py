@@ -2,10 +2,12 @@
 import re
 import typing
 from collections import Counter
-from dataclasses import asdict
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 
+import dacite
 import pandas as pd
 import pandasql as ps
 import requests
@@ -23,7 +25,6 @@ import colrev.ops.built_in.database_connectors
 import colrev.ops.search
 import colrev.process
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 
@@ -90,6 +91,50 @@ def drop_fields(
 
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+class UnknownSearchSource:
+
+    settings_class = colrev.process.DefaultSourceSettings
+
+    source_identifier = "unknown_source"
+    source_identifier_search = "unknown_source"
+    search_mode = "individual"
+
+    def __init__(self, *, source_operation, settings: dict) -> None:
+        converters = {Path: Path, Enum: Enum}
+        self.settings = from_dict(
+            data_class=self.settings_class,
+            data=settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+        converters = {Path: Path, Enum: Enum}
+        self.settings = from_dict(
+            data_class=self.settings_class,
+            data=settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        # TODO
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+
+        return result
+
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
+
+    def load_fixes(self, load_operation, source, records):
+
+        return records
+
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+
+        return record
+
+
+@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class AISeLibrarySearchSource:
 
     settings_class = colrev.process.DefaultSourceSettings
@@ -101,36 +146,19 @@ class AISeLibrarySearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         nr_ais_links = data.count("https://aisel.aisnet.org/")
-        if nr_ais_links > 0:
-            # for the enl file:
-            if nr_ais_links >= data.count("%U "):
-                result["confidence"] = 0.7
-                result["load_conversion_script"] = {"endpoint": "bibutils"}
-                new_filename = filename.with_suffix(".enl")
-                print(
-                    f"{colors.GREEN}Renaming to {new_filename} "
-                    f"(because the format is .enl, not .txt.){colors.END}"
-                )
-                filename.rename(new_filename)
-                result["filename"] = new_filename
-                return result
-            # for the bib file:
-            if nr_ais_links == data.count("\n}"):
-                result["confidence"] = 0.7
-                return result
+        nr_items = data.count("\n@")
+        result["confidence"] = nr_ais_links / nr_items
 
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -271,20 +299,18 @@ class GoogleScholarSearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
             return result
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -311,9 +337,10 @@ class WebOfScienceSearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
 
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         if "Unique-ID = {WOS:" in data:
             result["confidence"] = 0.7
@@ -327,13 +354,10 @@ class WebOfScienceSearchSource:
 
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -356,20 +380,18 @@ class ScopusSearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
             return result
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -429,8 +451,9 @@ class ACMDigitalLibrarySearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:
@@ -439,13 +462,10 @@ class ACMDigitalLibrarySearchSource:
         # We may also check whether the ID=doi=url
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -466,8 +486,9 @@ class PubMedSearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         # Simple heuristic:
         if "PMID,Title,Authors,Citation,First Author,Journal/Book," in data:
@@ -479,13 +500,10 @@ class PubMedSearchSource:
 
         return result
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
-
-    def validate_search_params(self, query: str) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
     def load_fixes(self, load_operation, source, records):
 
@@ -529,16 +547,14 @@ class WileyOnlineLibrarySearchSource:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        return
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
 
-    def validate_search_params(self, query: str) -> None:
-        return
-
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         # Simple heuristic:
         if "eprint = {https://onlinelibrary.wiley.com/doi/pdf/" in data:
@@ -558,11 +574,32 @@ class WileyOnlineLibrarySearchSource:
 
 @zope.interface.implementer(colrev.process.SearchSourceEndpoint)
 class DBLPSearchSource:
-    settings_class = colrev.process.DefaultSourceSettings
+    # settings_class = colrev.process.DefaultSourceSettings
     source_identifier = "{{biburl}}"
 
     source_identifier_search = "{{dblp_key}}"
     search_mode = "all"
+
+    @dataclass
+    class DBLPSearchSourceSettings:
+        # pylint: disable=duplicate-code
+        name: str
+        filename: Path
+        search_type: colrev.settings.SearchType
+        source_name: str
+        source_identifier: str
+        search_parameters: dict
+        load_conversion_script: dict
+        comment: typing.Optional[str]
+
+        _details = {
+            "search_parameters": {
+                "tooltip": "Currently supports a scope item "
+                "with venue_key and journal_abbreviated fields."
+            },
+        }
+
+    settings_class = DBLPSearchSourceSettings
 
     def __init__(
         self,
@@ -570,20 +607,27 @@ class DBLPSearchSource:
         source_operation,
         settings: dict,
     ) -> None:
+        # maybe : validate/assert that the venue_key is available
+        if "scope" not in settings["search_parameters"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "scope required in search_parameters"
+            )
+        if "venue_key" not in settings["search_parameters"]["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "venue_key required in search_parameters/scope"
+            )
+        if "journal_abbreviated" not in settings["search_parameters"]["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "journal_abbreviated required in search_parameters/scope"
+            )
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
-        if "venue_key" not in params["scope"]:
-            print("Error: venue_key not in params")
-            return
-        if "journal_abbreviated" not in params["scope"]:
-            print("Error: journal_abbreviated not in params")
-            return
         search_operation.review_manager.logger.info(f"Retrieve DBLP: {params}")
 
         available_ids = []
@@ -686,24 +730,9 @@ class DBLPSearchSource:
         ):
             pass
 
-    def validate_search_params(self, query: str) -> None:
-        if " SCOPE " not in query:
-            raise colrev_exceptions.InvalidQueryException(
-                "DBLP queries require a SCOPE section"
-            )
-
-        scope = query[query.find(" SCOPE ") :]
-        if "venue_key" not in scope:
-            raise colrev_exceptions.InvalidQueryException(
-                "DBLP queries require a venue_key in the SCOPE section"
-            )
-        if "journal_abbreviated" not in scope:
-            raise colrev_exceptions.InvalidQueryException(
-                "DBLP queries require a journal_abbreviated field in the SCOPE section"
-            )
-
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
             result["confidence"] = 1.0
@@ -727,8 +756,9 @@ class TransportResearchInternationalDocumentation:
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
             result["confidence"] = 0.9
@@ -755,11 +785,19 @@ class CrossrefSourceSearchSource:
     search_mode = "all"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
+        if not any(
+            x in settings["search_parameters"]["scope"]
+            for x in ["query", "journal_issn"]
+        ):
+            raise colrev_exceptions.InvalidQueryException(
+                "Crossref search_parameters/scope requires a query or journal_issn field"
+            )
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
         # pylint: disable=import-outside-toplevel
         from colrev.ops.built_in.database_connectors import (
             CrossrefConnector,
@@ -855,22 +893,10 @@ class CrossrefSourceSearchSource:
             )
         search_operation.save_feed_file(records=records, feed_file=feed_file)
 
-    def validate_search_params(self, query: str) -> None:
-        if " SCOPE " not in query and " WHERE " not in query:
-            raise colrev_exceptions.InvalidQueryException(
-                "CROSSREF queries require a SCOPE or WHERE section"
-            )
-
-        if " SCOPE " in query:
-            scope = query[query.find(" SCOPE ") :]
-            if "journal_issn" not in scope:
-                raise colrev_exceptions.InvalidQueryException(
-                    "CROSSREF queries require a journal_issn field in the SCOPE section"
-                )
-
-    def heuristic(self, filename: Path, data: str) -> dict:
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         return result
 
@@ -900,9 +926,9 @@ class BackwardSearchSource:
         self.grobid_service = source_operation.review_manager.get_grobid_service()
         self.grobid_service.start()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
 
         if "colrev_status" in params["scope"]:
             if params["scope"]["colrev_status"] not in [
@@ -1003,13 +1029,9 @@ class BackwardSearchSource:
         else:
             print("No new records added.")
 
-    def validate_search_params(
-        self, query: str
-    ) -> None:  # pylint: disable=unused-argument
-        print("not yet imlemented")
-
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0
             return result
@@ -1035,11 +1057,15 @@ class ColrevProjectSearchSource:
     search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
+        if "url" not in settings["search_parameters"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "url field required in search_parameters"
+            )
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
 
         if not feed_file.is_file():
             records = []
@@ -1106,21 +1132,10 @@ class ColrevProjectSearchSource:
         else:
             print("No records retrieved.")
 
-    def validate_search_params(self, query: str) -> None:
-        if " SCOPE " not in query:
-            raise colrev_exceptions.InvalidQueryException(
-                "PROJECT queries require a SCOPE section"
-            )
-
-        scope = query[query.find(" SCOPE ") :]
-        if "url" not in scope:
-            raise colrev_exceptions.InvalidQueryException(
-                "PROJECT queries require a url field in the SCOPE section"
-            )
-
-    def heuristic(self, filename: Path, data: str) -> dict:
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         return result
 
@@ -1144,12 +1159,15 @@ class LocalIndexSearchSource:
     search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
+        if "selection_clause" not in settings["search_parameters"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "selection_clause required in search_parameters"
+            )
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
-        assert "selection_clause" in params
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
 
         records: list = []
         imported_ids = []
@@ -1301,14 +1319,10 @@ class LocalIndexSearchSource:
         else:
             print("No records found")
 
-    def validate_search_params(
-        self, query: str
-    ) -> None:  # pylint: disable=unused-argument
-        print("not yet imlemented")
-
-    def heuristic(self, filename: Path, data: str) -> dict:
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
         return result
 
@@ -1329,6 +1343,27 @@ class PDFSearchSource:
     search_mode = "all"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
+
+        if "sub_dir_pattern" in settings["search_parameters"]:
+            if settings["search_parameters"]["sub_dir_pattern"] != [
+                "NA",
+                "volume_number",
+                "year",
+                "volume",
+            ]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "sub_dir_pattern not in [NA, volume_number, year, volume]"
+                )
+
+        if "scope" not in settings["search_parameters"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "scope required in search_parameters"
+            )
+        if "path" not in settings["search_parameters"]["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "path required in search_parameters/scope"
+            )
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
         self.pdf_preparation_operation = (
@@ -1337,9 +1372,9 @@ class PDFSearchSource:
             )
         )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
-    ) -> None:
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        params = self.settings.search_parameters
+        feed_file = self.settings.filename
 
         skip_duplicates = True
 
@@ -1576,7 +1611,6 @@ class PDFSearchSource:
 
             if "sub_dir_pattern" in params["params"]:
                 sub_dir_pattern = params["params"]["sub_dir_pattern"]
-                assert sub_dir_pattern in ["NA", "volume_number", "year", "volume"]
 
                 # Note : no file access here (just parsing the patterns)
                 # no absolute paths needed
@@ -1784,28 +1818,11 @@ class PDFSearchSource:
         else:
             print("No records found")
 
-    def validate_search_params(self, query: str) -> None:
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        result = {"confidence": 0, "source_identifier": cls.source_identifier}
 
-        # Note: WITH .. is optional.
-
-        if " SCOPE " not in query:
-            raise colrev_exceptions.InvalidQueryException(
-                "PDFS_DIR queries require a SCOPE section"
-            )
-
-        scope = query[query.find(" SCOPE ") :]
-        if "path" not in scope:
-            raise colrev_exceptions.InvalidQueryException(
-                "PDFS_DIR queries require a path field in the SCOPE section"
-            )
-
-    def heuristic(self, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
-        # Note : quick fix (passing the PDFSearchSource settings)
-        backward_search_source = BackwardSearchSource(
-            source_operation=self.source_operation, settings=asdict(self.settings)
-        )
-        if filename.suffix == ".pdf" and not backward_search_source.heuristic(
+        if filename.suffix == ".pdf" and not BackwardSearchSource.heuristic(
             filename=filename, data=data
         ):
             result["confidence"] = 1.0

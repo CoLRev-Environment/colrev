@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.PubMedSearchSource
       ~PubMedSearchSource.load_fixes
       ~PubMedSearchSource.prepare
       ~PubMedSearchSource.run_search
-      ~PubMedSearchSource.validate_search_params
 
 
 

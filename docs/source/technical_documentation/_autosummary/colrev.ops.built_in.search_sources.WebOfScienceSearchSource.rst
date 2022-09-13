@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.load_fixes
       ~WebOfScienceSearchSource.prepare
       ~WebOfScienceSearchSource.run_search
-      ~WebOfScienceSearchSource.validate_search_params
 
 
 

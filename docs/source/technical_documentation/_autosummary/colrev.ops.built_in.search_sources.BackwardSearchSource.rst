@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.BackwardSearchSource
       ~BackwardSearchSource.load_fixes
       ~BackwardSearchSource.prepare
       ~BackwardSearchSource.run_search
-      ~BackwardSearchSource.validate_search_params
 
 
 

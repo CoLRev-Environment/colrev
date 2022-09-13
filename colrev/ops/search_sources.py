@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import typing
 from dataclasses import asdict
-from pathlib import Path
 
 import colrev.process
 
@@ -20,28 +19,24 @@ class SearchSources:
             package_type=colrev.env.package_manager.PackageType.search_source,
             installed_only=True,
         )
+        # Note: class-objects only (instantiate_objects) for heuristics
         self.all_available_packages = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageType.search_source,
             selected_packages=[
                 {
                     "endpoint": k,
-                    "filename": Path(""),
-                    "search_type": colrev.settings.SearchType.DB,
-                    "source_name": k,
-                    "source_identifier": f"{k}",
-                    "search_parameters": "",
-                    "load_conversion_script": {},
                 }
                 for k in list(self.all_available_packages_names.keys())
             ],
             process=check_process,
+            instantiate_objects=False,
         )
 
         self.packages: dict[str, typing.Any] = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageType.search_source,
             selected_packages=[asdict(s) for s in review_manager.settings.sources],
             process=check_process,
-            ignore_not_available=True,
+            ignore_not_available=False,
         )
 
 

@@ -14,7 +14,7 @@
             "search_type": "PDFS",
             "source_name": "pdfs_dir",
             "source_identifier": "{{file}}",
-            "search_parameters": "SCOPE path='pdfs'",
+            "search_parameters": {"scope": {"path": "pdfs"}},
             "load_conversion_script": {"endpoint": "bibtex"},
             "comment": ""
         }

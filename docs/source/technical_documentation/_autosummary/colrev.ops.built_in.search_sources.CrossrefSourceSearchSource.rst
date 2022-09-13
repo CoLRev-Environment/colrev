@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.CrossrefSourceSearchSource
       ~CrossrefSourceSearchSource.load_fixes
       ~CrossrefSourceSearchSource.prepare
       ~CrossrefSourceSearchSource.run_search
-      ~CrossrefSourceSearchSource.validate_search_params
 
 
 

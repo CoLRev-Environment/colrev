@@ -284,6 +284,7 @@ class PackageManager:
         selected_packages: list,
         process: colrev.process.Process,
         ignore_not_available: bool = False,
+        instantiate_objects=True,
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=unnecessary-dict-index-lookup
@@ -392,8 +393,13 @@ class PackageManager:
             if "search_source" == package_type:
                 del params["check_operation"]
 
-            packages_dict[package_identifier] = selected_package["endpoint"](**params)
-            verifyObject(endpoint_class, packages_dict[package_identifier])
+            if instantiate_objects:
+                packages_dict[package_identifier] = selected_package["endpoint"](
+                    **params
+                )
+                verifyObject(endpoint_class, packages_dict[package_identifier])
+            else:
+                packages_dict[package_identifier] = selected_package["endpoint"]
 
         return packages_dict
 

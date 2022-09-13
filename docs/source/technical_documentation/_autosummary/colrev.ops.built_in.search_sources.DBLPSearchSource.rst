@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.DBLPSearchSource
       ~DBLPSearchSource.load_fixes
       ~DBLPSearchSource.prepare
       ~DBLPSearchSource.run_search
-      ~DBLPSearchSource.validate_search_params
 
 
 

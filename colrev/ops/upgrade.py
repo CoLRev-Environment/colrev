@@ -359,6 +359,61 @@ class Upgrade(colrev.process.Process):
                     else:
                         source["search_type"] = "DB"
 
+                if "crossref" == source["source_name"].lower():
+                    if isinstance(source["search_parameters"], str):
+                        jissn = (
+                            source["search_parameters"]
+                            .replace("SCOPE journal_issn=", "")
+                            .strip("'")
+                        )
+                        source["search_parameters"] = {"scope": {"journal_issn": jissn}}
+                elif "dblp" == source["source_name"].lower():
+                    if isinstance(source["search_parameters"], str):
+                        venue_key, journal_abbreviated = source[
+                            "search_parameters"
+                        ].split(" AND ")
+                        venue_key = venue_key.replace("SCOPE venue_key=", "").strip("'")
+                        journal_abbreviated = journal_abbreviated.replace(
+                            "journal_abbreviated=", ""
+                        ).strip("'")
+                        source["search_parameters"] = {
+                            "scope": {
+                                "venue_key": venue_key,
+                                "journal_abbreviated": journal_abbreviated,
+                            }
+                        }
+                elif source["source_name"].lower() in ["pdfs_dir", "pdfs"]:
+                    if isinstance(source["search_parameters"], str):
+                        param_string = source["search_parameters"]
+                        temp = {"scope": {}}  # type: ignore
+                        if "sub_dir_pattern" in param_string:
+                            param_string, subdir_pattern = param_string.split(
+                                "sub_dir_pattern="
+                            )
+                            param_string = param_string.rstrip(" AND ")
+                            subdir_pattern = subdir_pattern.strip("'")
+                            temp["scope"][  # type: ignore
+                                "subdir_pattern"
+                            ] = subdir_pattern
+                        if "journal" in param_string:
+                            param_string, journal = param_string.split("journal=")
+                            param_string = param_string.rstrip(" WITH ")
+                            journal = journal.strip("'")
+                            temp["scope"]["type"] = "journal"  # type: ignore
+                            temp["scope"]["journal"] = journal  # type: ignore
+                        if "conference" in param_string:
+                            param_string, conference = param_string.split("conference=")
+                            param_string = param_string.rstrip(" WITH ")
+                            conference = conference.strip("'")
+                            temp["scope"]["type"] = "conference"  # type: ignore
+                            temp["scope"]["conference"] = conference  # type: ignore
+
+                        if "path" in param_string:
+                            param_string, path_name = param_string.split("path=")
+                            path_name = path_name.strip("'")
+                            temp["scope"]["path"] = path_name  # type: ignore
+                        source["search_parameters"] = temp
+
             for prep_round in settings["prep"]["prep_rounds"]:
                 prep_round["scripts"] = [
                     s

@@ -99,7 +99,7 @@ class Distribute(colrev.process.Process):
                         search_type=colrev.settings.SearchType.OTHER,
                         source_name="locally_distributed_references",
                         source_identifier="",
-                        search_parameters="",
+                        search_parameters={},
                         load_conversion_script={},
                         comment="",
                     )

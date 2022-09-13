@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.PDFSearchSource
       ~PDFSearchSource.load_fixes
       ~PDFSearchSource.prepare
       ~PDFSearchSource.run_search
-      ~PDFSearchSource.validate_search_params
 
 
 

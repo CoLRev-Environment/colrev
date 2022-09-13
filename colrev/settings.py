@@ -103,7 +103,7 @@ class SearchSource:
     search_type: SearchType
     source_name: str
     source_identifier: str
-    search_parameters: str
+    search_parameters: dict
     load_conversion_script: dict
     comment: typing.Optional[str]
 

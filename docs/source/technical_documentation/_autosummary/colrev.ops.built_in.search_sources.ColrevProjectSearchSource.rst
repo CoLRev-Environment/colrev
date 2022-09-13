@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.load_fixes
       ~ColrevProjectSearchSource.prepare
       ~ColrevProjectSearchSource.run_search
-      ~ColrevProjectSearchSource.validate_search_params
 
 
 

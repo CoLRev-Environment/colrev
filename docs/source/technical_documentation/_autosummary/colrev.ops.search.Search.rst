@@ -18,11 +18,7 @@ colrev.ops.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
-      ~Search.get_feed_config
       ~Search.main
-      ~Search.parse_parameters
-      ~Search.parse_sources
-      ~Search.remove_forthcoming
       ~Search.save_feed_file
       ~Search.setup_custom_script
       ~Search.view_sources

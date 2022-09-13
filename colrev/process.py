@@ -443,10 +443,7 @@ class SearchSourceEndpoint(
     search_mode = zope.interface.Attribute("""Mode""")
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation, params: dict, feed_file: Path) -> None:
-        pass
-
-    def validate_search_params(query: str) -> None:
+    def run_search(search_operation) -> None:
         pass
 
     # pylint: disable=no-self-argument
@@ -596,7 +593,7 @@ class DefaultSourceSettings:
     search_type: colrev.settings.SearchType
     source_name: str
     source_identifier: str
-    search_parameters: str
+    search_parameters: dict
     load_conversion_script: dict
     comment: typing.Optional[str]
 

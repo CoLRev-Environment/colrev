@@ -41,5 +41,6 @@ colrev.ops.built\_in.search\_sources
       PubMedSearchSource
       ScopusSearchSource
       TransportResearchInternationalDocumentation
+      UnknownSearchSource
       WebOfScienceSearchSource
       WileyOnlineLibrarySearchSource

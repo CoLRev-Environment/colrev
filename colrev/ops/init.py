@@ -262,10 +262,9 @@ class Initializer:
                 {
                     "filename": "search/references.bib",
                     "search_type": "DB",
-                    "source_name": "BACKWARD_SEARCH",
+                    "source_name": "pdf_backward_search",
                     "source_identifier": "{{cited_by_file}} (references)",
-                    "search_parameters": "SCOPE file='paper.pdf'",
-                    "search_script": {"endpoint": "backward_search"},
+                    "search_parameters": {"scope": {"file": "paper.pdf"}},
                     "load_conversion_script": {"endpoint": "bibtex"},
                     "comment": "",
                 }
@@ -331,10 +330,9 @@ class Initializer:
             crossref_source = {
                 "filename": "search/CROSSREF.bib",
                 "search_type": "DB",
-                "source_name": "CROSSREF",
+                "source_name": "crossref",
                 "source_identifier": "https://api.crossref.org/works/{{doi}}",
-                "search_parameters": "",
-                "search_script": {"endpoint": "search_crossref"},
+                "search_parameters": {},
                 "load_conversion_script": {"endpoint": "bibtex"},
                 "comment": "",
             }
@@ -416,17 +414,20 @@ class Initializer:
                 for s in self.review_manager.settings.sources
                 if "search/pdfs.bib" == str(s.filename)
             ][0]
-            pdf_source.search_parameters = (
-                "SCOPE path='pdfs' WITH journal='TODO' "
-                + "AND sub_dir_pattern='TODO:volume_number|year'"
-            )
+            pdf_source.search_parameters = {
+                "scope": {
+                    "path": "pdfs",
+                    "journal": "TODO",
+                    "sub_dir_pattern": "TODO:volume_number|year",
+                }
+            }
 
             crossref_source = [
                 s
                 for s in self.review_manager.settings.sources
                 if "search/CROSSREF.bib" == str(s.filename)
             ][0]
-            crossref_source.search_parameters = "SCOPE journal_issn='TODO'"
+            crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
 
             self.review_manager.save_settings()
 

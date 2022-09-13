@@ -21,6 +21,7 @@ import requests_cache
 import yaml
 from dacite import from_dict
 from dacite.exceptions import MissingValueError
+from dacite.exceptions import WrongTypeError
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
@@ -160,7 +161,7 @@ class ReviewManager:
                 data=loaded_settings,
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
-        except (ValueError, MissingValueError) as exc:
+        except (ValueError, MissingValueError, WrongTypeError) as exc:
             raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
 
         return settings

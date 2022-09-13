@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.LocalIndexSearchSource
       ~LocalIndexSearchSource.load_fixes
       ~LocalIndexSearchSource.prepare
       ~LocalIndexSearchSource.run_search
-      ~LocalIndexSearchSource.validate_search_params
 
 
 

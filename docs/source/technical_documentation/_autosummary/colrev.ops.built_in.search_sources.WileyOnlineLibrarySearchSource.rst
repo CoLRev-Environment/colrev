@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.load_fixes
       ~WileyOnlineLibrarySearchSource.prepare
       ~WileyOnlineLibrarySearchSource.run_search
-      ~WileyOnlineLibrarySearchSource.validate_search_params
 
 
 

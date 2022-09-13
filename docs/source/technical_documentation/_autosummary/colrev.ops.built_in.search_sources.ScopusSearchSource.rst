@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.ScopusSearchSource
       ~ScopusSearchSource.load_fixes
       ~ScopusSearchSource.prepare
       ~ScopusSearchSource.run_search
-      ~ScopusSearchSource.validate_search_params
 
 
 

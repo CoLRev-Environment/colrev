@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.load_fixes
       ~GoogleScholarSearchSource.prepare
       ~GoogleScholarSearchSource.run_search
-      ~GoogleScholarSearchSource.validate_search_params
 
 
 

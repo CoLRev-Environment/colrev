@@ -20,7 +20,6 @@ colrev.ops.built\_in.search\_sources.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.load_fixes
       ~AISeLibrarySearchSource.prepare
       ~AISeLibrarySearchSource.run_search
-      ~AISeLibrarySearchSource.validate_search_params
 
 
 
