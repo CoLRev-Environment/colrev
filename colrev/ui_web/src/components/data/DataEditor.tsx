@@ -16,7 +16,7 @@ const DataEditor: React.FC<{
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          id="dataScripts"
+          packageType="data_scripts"
           scripts={data.scripts}
           scriptsChanged={(scripts: Script[]) =>
             dataScriptsChangedHandler(scripts)

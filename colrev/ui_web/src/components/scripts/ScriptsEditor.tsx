@@ -5,14 +5,11 @@ import EditIcon from "../common/icons/EditIcon";
 import EditScript from "./EditScript";
 
 const ScriptsEditor: React.FC<{
-  id: string;
+  packageType: string;
   scripts: Script[];
   scriptsChanged: any;
   isSingleScript?: boolean;
-}> = ({ id, scripts, scriptsChanged, isSingleScript = false }) => {
-  // TODO pass from outside where used
-  const scriptType: string = "prep_script";
-
+}> = ({ packageType, scripts, scriptsChanged, isSingleScript = false }) => {
   const [isShowEditScript, setIsShowEditScript] = useState(false);
   const [editScript, setEditScript] = useState<Script | null>(null);
 
@@ -91,7 +88,7 @@ const ScriptsEditor: React.FC<{
       )}
       {isShowEditScript && (
         <EditScript
-          scriptType={scriptType}
+          packageType={packageType}
           editScript={editScript}
           onClose={() => setIsShowEditScript(false)}
         />

@@ -403,8 +403,8 @@ class SettingsEditor:
             return jsonify(options)
 
         @app.route("/api/getScripts")
-        def getScripts(package_type):
-
+        def getScripts():
+            package_type = request.args.get('package_type')
             # discovered_packages = self.package_manager.discover_packages(
             #     package_type=package_type
             # )
@@ -449,8 +449,10 @@ class SettingsEditor:
 
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
-        def getScriptDetails(package_type, package_identifier, endpoint_version):
-
+        def getScriptDetails():
+            package_type = request.args.get('package_type')
+            package_identifier = request.args.get('package_identifier')
+            endpoint_version = request.args.get('endpoint_version')
             # package_details = self.package_manager.get_package_details(
             #     package_type=package_type, package_identifier=package_identifier
             # )

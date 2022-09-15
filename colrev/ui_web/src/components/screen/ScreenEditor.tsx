@@ -16,7 +16,7 @@ const ScreenEditor: React.FC<{
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          id="screenScripts"
+          packageType="screen_scripts"
           scripts={screen.scripts}
           scriptsChanged={(scripts: Script[]) =>
             screenScriptsChangedHandler(scripts)

@@ -190,7 +190,7 @@ function App() {
                 name="Search"
                 id="search"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <SearchEditor search={search} searchChanged={onSearchChanged} />
               </ExpanderItem>
@@ -214,7 +214,7 @@ function App() {
                 name="Prescreen"
                 id="prescreen"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <PrescreenEditor
                   prescreen={prescreen}

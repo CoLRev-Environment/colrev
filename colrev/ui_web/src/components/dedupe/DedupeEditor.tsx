@@ -31,7 +31,7 @@ const DedupeEditor: React.FC<{ dedupe: Dedupe; dedupeChanged: any }> = ({
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          id="dedupeScripts"
+          packageType="dedupe_scripts"
           scripts={dedupe.scripts}
           scriptsChanged={(scripts: Script[]) =>
             dedupeScriptsChangedHandler(scripts)

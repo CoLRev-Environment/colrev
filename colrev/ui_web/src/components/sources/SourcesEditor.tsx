@@ -113,7 +113,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
             <div className="mb-3">
               <label>Search Script</label>
               <ScriptsEditor
-                id="sourceSearchScript"
+                packageType="source_search_scripts"
                 isSingleScript={true}
                 scripts={[source.searchScript]}
                 scriptsChanged={(scripts: Script[]) => {
@@ -125,7 +125,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
             <div className="mb-3">
               <label>Conversion Script</label>
               <ScriptsEditor
-                id="sourceConversionScript"
+                packageType="source_conversion_scripts"
                 isSingleScript={true}
                 scripts={[source.conversionScript]}
                 scriptsChanged={(scripts: Script[]) => {
@@ -137,7 +137,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
             <div className="mb-3">
               <label>Source Prep Scripts</label>
               <ScriptsEditor
-                id="sourcePrepScripts"
+                packageType="source_prep_scripts"
                 scripts={source.sourcePrepScripts}
                 scriptsChanged={(scripts: Script[]) =>
                   sourcePrepScriptsChangedHandler(scripts, source)

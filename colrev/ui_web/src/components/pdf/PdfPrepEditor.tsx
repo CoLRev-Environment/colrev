@@ -21,7 +21,7 @@ const PdfPrepEditor: React.FC<{
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          id="pdfPrepScripts"
+          packageType="pdf_prep_scripts"
           scripts={pdfPrep.scripts}
           scriptsChanged={(scripts: Script[]) =>
             pdfPrepScriptsChangedHandler(scripts)
@@ -31,7 +31,7 @@ const PdfPrepEditor: React.FC<{
       <div className="mb-3">
         <label>Man PDF Prep Scripts</label>
         <ScriptsEditor
-          id="pdfPrepManPdfPrepScripts"
+          packageType="pdf_prep_man_pdf_prep_scripts"
           scripts={pdfPrep.manPdfPrepScripts}
           scriptsChanged={(scripts: Script[]) =>
             manPdfPrepScriptsChangedHandler(scripts)

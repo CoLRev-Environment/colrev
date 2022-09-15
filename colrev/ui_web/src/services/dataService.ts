@@ -327,9 +327,31 @@ const dataToSettings = (data: Data): any => {
   return settingsData;
 };
 
+const getScripts = async (packageType: string): Promise<Script[]> => {
+  const response = await httpService.get(
+    `${apiEndpoint}/getScripts?packageType=${packageType}`
+  );
+
+  const scripts: Script[] = [];
+
+  for (const property in response.data) {
+    const script = new Script();
+    script.name = property;
+
+    const propertyValues = response.data[property];
+    script.description = propertyValues.description;
+    script.endpoint = propertyValues.endpoint;
+
+    scripts.push(script);
+  }
+
+  return Promise.resolve<Script[]>(scripts.slice());
+};
+
 const dataService = {
   getSettings,
   saveSettings,
+  getScripts,
 };
 
 export default dataService;

@@ -1,35 +1,30 @@
 import { useEffect, useState } from "react";
 import Script from "../../models/script";
+import dataService from "../../services/dataService";
 import ModalWindow from "../common/ModalWindow";
 import ScriptParametersEditor from "./ScriptParametersEditor";
 
-//API: getScripts(script_type)
-const scriptEndpoints = [
-  {
-    endpoint: "crossref_prep",
-    description: "The script retrieves metadata from Crossref ...",
-  },
-  {
-    endpoint: "search_pdfs_dir",
-    description: "The script hadles searching pdfs ...",
-  },
-  {
-    endpoint: "drop_fields",
-    description: "The script drops fields ...",
-  },
-];
-
 const EditScript: React.FC<{
-  scriptType: string;
+  packageType: string;
   editScript: Script | null;
   onClose: any;
-}> = ({ scriptType, editScript, onClose }) => {
+}> = ({ packageType, editScript, onClose }) => {
+  const [scripts, setScripts] = useState<Script[]>([]);
   const [isShowNext, setIsShowNext] = useState(false);
   const [isNextEnabled, setIsNextEnabled] = useState(false);
   const [isShowOk, setIsShowOk] = useState(false);
   const [isOkEnabled, setIsOkEnabled] = useState(false);
   const [stepIndex, setStepIndex] = useState<number>(0);
   const [selectedScriptEndpoint, setSelectedScriptEndpoint] = useState<any>();
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const scripts = await dataService.getScripts(packageType);
+    setScripts(scripts);
+  };
 
   useEffect(() => {
     if (editScript) {
@@ -40,7 +35,7 @@ const EditScript: React.FC<{
     if (stepIndex === 0) {
       setIsShowNext(true);
     }
-  }, [editScript, stepIndex]);
+  }, [editScript, stepIndex, packageType]);
 
   const nextHandler = () => {
     setStepIndex(1);
@@ -65,36 +60,43 @@ const EditScript: React.FC<{
       {stepIndex === 0 && (
         <div>
           <p>Select Script</p>
-          <div className="list-group">
-            {scriptEndpoints.map((scriptEndpoint: any, index: number) => (
-              <button
-                type="button"
-                className={
-                  "list-group-item list-group-item-action" +
-                  (selectedScriptEndpoint?.endpoint === scriptEndpoint.endpoint
-                    ? " active"
-                    : "")
-                }
-                key={index.toString()}
-                onClick={() => {
-                  setSelectedScriptEndpoint(scriptEndpoint);
-                  setIsNextEnabled(true);
-                }}
-              >
-                <div>
-                  <div>{scriptEndpoint.endpoint}</div>
+          <div
+            className="list-group"
+            style={{
+              maxHeight: "300px",
+            }}
+          >
+            <div style={{ overflowY: "auto" }}>
+              {scripts.map((script: any, index: number) => (
+                <button
+                  type="button"
+                  className={
+                    "list-group-item list-group-item-action" +
+                    (selectedScriptEndpoint?.endpoint === script.endpoint
+                      ? " active"
+                      : "")
+                  }
+                  key={index.toString()}
+                  onClick={() => {
+                    setSelectedScriptEndpoint(script);
+                    setIsNextEnabled(true);
+                  }}
+                >
                   <div>
-                    <em>{scriptEndpoint.description}</em>
+                    <div>
+                      {script.name} - {script.description}
+                    </div>
+                    <div style={{ fontSize: "0.8em" }}>{script.endpoint}</div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
       {stepIndex === 1 && (
         <ScriptParametersEditor
-          scriptType={scriptType}
+          scriptType={packageType}
           scriptEndpoint={selectedScriptEndpoint?.endpoint}
         />
       )}
