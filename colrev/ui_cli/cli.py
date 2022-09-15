@@ -93,13 +93,11 @@ def main(ctx):
 
 
 @main.command(help_priority=1)
-@click.option("-n", "--name", help="Name of the repository (project)")
 @click.option(
     "--type",
     type=str,
     help="Review type (e.g., literature_review (default), curated_masterdata, realtime)",
 )
-@click.option("--url", help="Git remote URL (optional)")
 @click.option(
     "--example",
     is_flag=True,
@@ -107,21 +105,20 @@ def main(ctx):
     help="Add search results example",
 )
 @click.pass_context
-def init(ctx, name, type, url, example):
+def init(ctx, type, example):
     """Initialize repository"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
     import colrev.ui_web.settings_editor
 
     try:
-
         if type is None:
             # TODO : the type (if not passed as an argument) should
             # be selected as the first step of the web-ui
             type = "literature_review"
 
         colrev.review_manager.ReviewManager.get_init_operation(
-            review_type=colrev.settings.ReviewType[type],
+            review_type=type,
             example=example,
         )
 

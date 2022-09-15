@@ -9,38 +9,35 @@ colrev.ops.built\_in.search\_sources
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      apply_field_mapping
-      drop_fields
 
 
 
 
 
-   .. rubric:: Classes
 
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
 
-      ACMDigitalLibrarySearchSource
-      AISeLibrarySearchSource
-      BackwardSearchSource
-      ColrevProjectSearchSource
-      CrossrefSourceSearchSource
-      DBLPSearchSource
-      GoogleScholarSearchSource
-      LocalIndexSearchSource
-      PDFSearchSource
-      PubMedSearchSource
-      ScopusSearchSource
-      TransportResearchInternationalDocumentation
-      UnknownSearchSource
-      WebOfScienceSearchSource
-      WileyOnlineLibrarySearchSource
+
+
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ops.built_in.search_sources.acm_digital_library
+   colrev.ops.built_in.search_sources.aisel
+   colrev.ops.built_in.search_sources.colrev_project
+   colrev.ops.built_in.search_sources.crossref
+   colrev.ops.built_in.search_sources.dblp
+   colrev.ops.built_in.search_sources.google_scholar
+   colrev.ops.built_in.search_sources.local_index
+   colrev.ops.built_in.search_sources.pdf_backward_search
+   colrev.ops.built_in.search_sources.pdfs_dir
+   colrev.ops.built_in.search_sources.pubmed
+   colrev.ops.built_in.search_sources.scopus
+   colrev.ops.built_in.search_sources.transport_research_international_documentation
+   colrev.ops.built_in.search_sources.unknown_source
+   colrev.ops.built_in.search_sources.web_of_science
+   colrev.ops.built_in.search_sources.wiley

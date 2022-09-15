@@ -651,7 +651,7 @@ class Dataset:
 
         # Note : more than 10x faster than load_records_dict()
 
-        def parse_k_v(current_key_value_pair_str):
+        def parse_k_v(current_key_value_pair_str: str) -> tuple:
             if " = " in current_key_value_pair_str:
                 key, value = current_key_value_pair_str.split(" = ", 1)
             else:

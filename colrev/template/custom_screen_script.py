@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     import colrev.screen.Screen
 
 
-@zope.interface.implementer(colrev.process.ScreenEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
 class CustomScreen:
     def __init__(
         self, *, screen_operation: colrev.screen.Screen, settings: dict
     ) -> None:
         self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
+            data_class=colrev.env.package_manager.DefaultSettings, data=settings
         )
 
     def run_screen(

@@ -30,8 +30,7 @@ class Push(colrev.process.Process):
         self.review_manager.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()
 
-    def push_record_corrections(self) -> None:
-
+    def __get_change_sets(self) -> dict:
         self.review_manager.logger.info("Collect corrections for curated repositories")
 
         # group by target-repo to bundle changes in a commit
@@ -50,6 +49,13 @@ class Push(colrev.process.Process):
             else:
                 change_sets[source_url] = [output]
 
+        return change_sets
+
+    def push_record_corrections(self) -> None:
+        # pylint: disable=too-many-branches
+
+        change_sets = self.__get_change_sets()
+
         for source_url, change_itemset in change_sets.items():
             if not Path(source_url).is_dir:
                 print(f"Path {source_url} is not a dir. Skipping...")
@@ -59,6 +65,7 @@ class Push(colrev.process.Process):
                 self.review_manager.logger.info(f"Share corrections with {source_url}")
             else:
                 self.review_manager.logger.info(f"Apply corrections to {source_url}")
+
             # print(change_itemset)
             for item in change_itemset:
                 print()

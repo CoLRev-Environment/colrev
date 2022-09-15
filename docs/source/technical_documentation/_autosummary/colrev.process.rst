@@ -21,8 +21,6 @@ colrev.process
       :nosignatures:
 
       CheckProcess
-      DefaultSettings
-      DefaultSourceSettings
       FormatProcess
       Process
       ProcessModel

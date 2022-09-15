@@ -51,6 +51,65 @@ class PDFPrep(colrev.process.Process):
             process=self,
         )
 
+    def __complete_successful_pdf_prep(
+        self, *, record: colrev.record.Record, original_filename: str
+    ) -> None:
+
+        record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
+        pdf_path = self.review_manager.path / Path(record.data["file"])
+        record.data.update(
+            colrev_pdf_id=record.get_colrev_pdf_id(
+                review_manager=self.review_manager, pdf_path=pdf_path
+            )
+        )
+
+        # colrev_status == pdf_imported : means successful
+        # create *_backup.pdf if record["file"] was changed
+        if original_filename != record.data["file"]:
+
+            current_file = self.review_manager.path / Path(record.data["file"])
+            original_file = self.review_manager.path / Path(original_filename)
+            if current_file.is_file() and original_file.is_file():
+                backup_filename = self.review_manager.path / Path(
+                    original_filename.replace(".pdf", "_backup.pdf")
+                )
+                original_file.rename(backup_filename)
+                current_file.rename(original_filename)
+                record.data["file"] = str(
+                    original_file.relative_to(self.review_manager.path)
+                )
+                bfp = backup_filename.relative_to(self.review_manager.path)
+                self.review_manager.report_logger.info(
+                    f"created backup after successful pdf-prep: {bfp}"
+                )
+
+        # Backup:
+        # Create a copy of the original PDF if users cannot
+        # restore it from git
+        # linked_file.rename(str(linked_file).replace(".pdf", "_backup.pdf"))
+
+        # TODO: rm_temp_if_successful should be a settings attribute of pdf-prep
+        rm_temp_if_successful = False
+        if rm_temp_if_successful:
+            # Remove temporary PDFs when processing has succeeded
+            target_fname = self.review_manager.path / Path(f'{record.data["ID"]}.pdf')
+            linked_file = self.review_manager.path / Path(record.data["file"])
+
+            if target_fname.name != linked_file.name:
+                if target_fname.is_file():
+                    os.remove(target_fname)
+                linked_file.rename(target_fname)
+                record.data["file"] = str(
+                    target_fname.relative_to(self.review_manager.path)
+                )
+
+            if not self.review_manager.debug_mode:
+                # Delete temporary PDFs for which processing has failed:
+                if target_fname.is_file():
+                    for fpath in self.review_manager.pdf_directory.glob("*.pdf"):
+                        if record.data["ID"] in str(fpath) and fpath != target_fname:
+                            os.remove(fpath)
+
     # Note : no named arguments (multiprocessing)
     def prepare_pdf(self, item: dict) -> dict:
         record_dict = item["record"]
@@ -65,15 +124,12 @@ class PDFPrep(colrev.process.Process):
 
         pdf_path = self.review_manager.path / Path(record_dict["file"])
         if not Path(pdf_path).is_file():
-            msg = (
+            self.review_manager.logger.error(
                 f'{record_dict["ID"]}'.ljust(pad, " ")
                 + "Linked file/pdf does not exist"
             )
-            self.review_manager.report_logger.error(msg)
-            self.review_manager.logger.error(msg)
             return record_dict
 
-        # RECORD.data.update(colrev_status=RecordState.pdf_prepared)
         record = colrev.record.Record(data=record_dict)
         record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
@@ -95,13 +151,7 @@ class PDFPrep(colrev.process.Process):
                 )
 
                 record.data = endpoint.prep_pdf(self, record, pad)
-                # Note : the record should not be changed
-                # if the prep_script throws an exception
-                # prepped_record = prep_script["script"](*prep_script["params"])
-                # if isinstance(prepped_record, dict):
-                #     record = prepped_record
-                # else:
-                #     record["colrev_status"] = RecordState.pdf_needs_manual_preparation
+
             except (
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
@@ -137,64 +187,13 @@ class PDFPrep(colrev.process.Process):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
-        if colrev.record.RecordState.pdf_imported == record.data["colrev_status"]:
-            record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
-            pdf_path = self.review_manager.path / Path(record.data["file"])
-            record.data.update(
-                colrev_pdf_id=record.get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_path
-                )
+        successfully_prepared = (
+            colrev.record.RecordState.pdf_imported == record.data["colrev_status"]
+        )
+        if successfully_prepared:
+            self.__complete_successful_pdf_prep(
+                record=record, original_filename=original_filename
             )
-
-            # colrev_status == pdf_imported : means successful
-            # create *_backup.pdf if record["file"] was changed
-            if original_filename != record.data["file"]:
-
-                current_file = self.review_manager.path / Path(record.data["file"])
-                original_file = self.review_manager.path / Path(original_filename)
-                if current_file.is_file() and original_file.is_file():
-                    backup_filename = self.review_manager.path / Path(
-                        original_filename.replace(".pdf", "_backup.pdf")
-                    )
-                    original_file.rename(backup_filename)
-                    current_file.rename(original_filename)
-                    record.data["file"] = str(
-                        original_file.relative_to(self.review_manager.path)
-                    )
-                    bfp = backup_filename.relative_to(self.review_manager.path)
-                    self.review_manager.report_logger.info(
-                        f"created backup after successful pdf-prep: {bfp}"
-                    )
-
-        # Backup:
-        # Create a copy of the original PDF if users cannot
-        # restore it from git
-        # linked_file.rename(str(linked_file).replace(".pdf", "_backup.pdf"))
-
-        rm_temp_if_successful = False
-        if rm_temp_if_successful:
-            # Remove temporary PDFs when processing has succeeded
-            target_fname = self.review_manager.path / Path(f'{record.data["ID"]}.pdf')
-            linked_file = self.review_manager.path / Path(record.data["file"])
-
-            if target_fname.name != linked_file.name:
-                if target_fname.is_file():
-                    os.remove(target_fname)
-                linked_file.rename(target_fname)
-                record.data["file"] = str(
-                    target_fname.relative_to(self.review_manager.path)
-                )
-
-            if not self.review_manager.debug_mode:
-                # Delete temporary PDFs for which processing has failed:
-                if target_fname.is_file():
-                    for fpath in self.review_manager.pdf_directory.glob("*.pdf"):
-                        if record.data["ID"] in str(fpath) and fpath != target_fname:
-                            os.remove(fpath)
-
-            # TODO : REVIEW_MANAGER not part of item!?
-            git_repo = item["REVIEW_MANAGER"].get_repo()
-            git_repo.index.add([record.data["file"]])
 
         record.cleanup_pdf_processing_fields()
 

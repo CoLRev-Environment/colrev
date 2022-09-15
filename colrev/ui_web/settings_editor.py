@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 class SettingsEditor:
     # pylint: disable=invalid-name
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager

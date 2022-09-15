@@ -7,7 +7,8 @@ from multiprocessing import Value
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
-import colrev.ops.built_in.prep as built_in_prep
+import colrev.ops.built_in.prep.crossref_metadata_prep as built_in_crossref_prep
+import colrev.ops.built_in.prep.local_index_prep as built_in_local_index_prep
 import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -69,7 +70,7 @@ class Pull(colrev.process.Process):
             notify_state_transition_operation=False
         )
 
-        crossref_prep = built_in_prep.CrossrefMetadataPrep(
+        crossref_prep = built_in_crossref_prep.CrossrefMetadataPrep(
             prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 
@@ -83,59 +84,62 @@ class Pull(colrev.process.Process):
             record = colrev.record.PrepRecord(data=record_dict)
             previous_record = record.copy_prep_rec()
             # TODO : use masterdata_is_curated() for identifying_fields_keys only?
-            if "doi" in record.data and not record.masterdata_is_curated():
-                crossref_record = crossref_prep.prepare(
-                    prep_operation, record.copy_prep_rec()
+            if not ("doi" in record.data and not record.masterdata_is_curated()):
+                continue
+
+            crossref_record = crossref_prep.prepare(
+                prep_operation, record.copy_prep_rec()
+            )
+
+            if "retracted" in crossref_record.data.get("prescreen_exclusion", ""):
+
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Found paper retract: "
+                    f"{record.data['ID']}{colors.END}"
                 )
+                record.prescreen_exclude(reason="retracted", print_warning=True)
+                record.remove_field(key="warning")
+                continue
 
-                if "retracted" in crossref_record.data.get("prescreen_exclusion", ""):
+            if "forthcoming" == record.data["year"]:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Update published forthcoming paper: "
+                    f"{record.data['ID']}{colors.END}"
+                )
+                record = crossref_prep.prepare(prep_operation, record)
 
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Found paper retract: "
-                        f"{record.data['ID']}{colors.END}"
+                # TODO : we may create a full list here
+                colrev_id = record.create_colrev_id(
+                    also_known_as_record=record.get_data()
+                )
+                record.data["colrev_id"] = colrev_id
+                continue
+
+            for key, value in crossref_record.data.items():
+                if (
+                    key
+                    not in colrev.record.Record.identifying_field_keys
+                    + colrev.record.Record.provenance_keys
+                    + ["ID", "ENTRYTYPE", "screening_criteria"]
+                ):
+                    try:
+                        source = crossref_record.data["colrev_data_provenance"][key][
+                            "source"
+                        ]
+                    except KeyError:
+                        source = (
+                            "https://api.crossref.org/works/" + f"{record.data['doi']}"
+                        )
+                    record.update_field(
+                        key=key,
+                        value=value,
+                        source=source,
+                        keep_source_if_equal=True,
                     )
-                    record.prescreen_exclude(reason="retracted", print_warning=True)
-                    record.remove_field(key="warning")
 
-                elif "forthcoming" == record.data["year"]:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Update published forthcoming paper: "
-                        f"{record.data['ID']}{colors.END}"
-                    )
-                    record = crossref_prep.prepare(prep_operation, record)
-
-                    # TODO : we may create a full list here
-                    colrev_id = record.create_colrev_id(
-                        also_known_as_record=record.get_data()
-                    )
-                    record.data["colrev_id"] = colrev_id
-
-                else:
-                    for key, value in crossref_record.data.items():
-                        if (
-                            key
-                            not in colrev.record.Record.identifying_field_keys
-                            + colrev.record.Record.provenance_keys
-                            + ["ID", "ENTRYTYPE", "screening_criteria"]
-                        ):
-                            try:
-                                source = crossref_record.data["colrev_data_provenance"][
-                                    key
-                                ]["source"]
-                            except KeyError:
-                                source = (
-                                    "https://api.crossref.org/works/"
-                                    + f"{record.data['doi']}"
-                                )
-                            record.update_field(
-                                key=key,
-                                value=value,
-                                source=source,
-                                keep_source_if_equal=True,
-                            )
-                if previous_record != record:
-                    with CHANGE_COUNTER.get_lock():
-                        CHANGE_COUNTER.value += 1
+            if previous_record != record:
+                with CHANGE_COUNTER.get_lock():
+                    CHANGE_COUNTER.value += 1
 
         if CHANGE_COUNTER.value > 0:
             self.review_manager.logger.info(
@@ -162,7 +166,7 @@ class Pull(colrev.process.Process):
             notify_state_transition_operation=False
         )
 
-        local_index_prep = built_in_prep.LocalIndexPrep(
+        local_index_prep = built_in_local_index_prep.LocalIndexPrep(
             prep_operation=prep_operation, settings={"name": "local_index_prep"}
         )
 

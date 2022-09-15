@@ -22,6 +22,8 @@ import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
+# from importlib.metadata import version
+
 # pylint: disable=too-few-public-methods
 
 
@@ -32,7 +34,7 @@ class Initializer:
     def __init__(
         self,
         *,
-        review_type=colrev.settings.ReviewType,
+        review_type: str,
         example: bool = False,
         local_index_repo: bool = False,
     ) -> None:
@@ -40,11 +42,19 @@ class Initializer:
         saved_args = locals()
         assert not (example and local_index_repo)
 
+        # TODO : adapt to  new colrev.review_types
+        # if review_type not in colrev.settings.ReviewType.get_options():
+        #     raise colrev_exceptions.ParameterError(
+        #         parameter="init.review_type",
+        #         value=f"'{review_type}'",
+        #         options=colrev.settings.ReviewType.get_options(),
+        #     )
+
         self.__check_init_precondition()
 
         # TODO : this will change to project.title
         self.project_name = str(Path.cwd().name)
-        self.review_type = review_type
+        self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
@@ -164,6 +174,10 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
+        review_types = self.review_manager.get_review_types(
+            review_type=self.review_type
+        )
+
         settings = self.review_manager.settings
 
         settings.project.authors = [
@@ -181,194 +195,11 @@ class Initializer:
         settings.project.colrev_version = colrev_version
 
         self.review_type = settings.project.review_type
+
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
 
-        if self.review_type not in [colrev.settings.ReviewType.curated_masterdata]:
-            settings.data.scripts = [
-                {
-                    "endpoint": "MANUSCRIPT",
-                    "version": "1.0",
-                    "word_template": "APA-7.docx",
-                    "csl_style": "apa.csl",
-                }
-            ]
-
-        if colrev.settings.ReviewType.literature_review == self.review_type:
-            pass
-
-        elif colrev.settings.ReviewType.narrative_review == self.review_type:
-            pass
-
-        elif colrev.settings.ReviewType.descriptive_review == self.review_type:
-            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
-
-        elif colrev.settings.ReviewType.scoping_review == self.review_type:
-            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
-
-        elif colrev.settings.ReviewType.critical_review == self.review_type:
-            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
-
-        elif colrev.settings.ReviewType.theoretical_review == self.review_type:
-            pass
-
-        elif colrev.settings.ReviewType.conceptual_review == self.review_type:
-            pass
-
-        elif (
-            colrev.settings.ReviewType.qualitative_systematic_review == self.review_type
-        ):
-            settings.data.scripts.append(
-                {
-                    "endpoint": "STRUCTURED",
-                    "version": "1.0",
-                    "fields": [],
-                }
-            )
-            settings.data.scripts.append(
-                {"endpoint": "PrismaDiagram", "version": "1.0"}
-            )
-
-        elif colrev.settings.ReviewType.meta_analysis == self.review_type:
-            settings.data.scripts.append(
-                {
-                    "endpoint": "STRUCTURED",
-                    "version": "1.0",
-                    "fields": [],
-                }
-            )
-            settings.data.scripts.append({"endpoint": "PRISMA", "version": "1.0"})
-
-        elif colrev.settings.ReviewType.scientometric == self.review_type:
-            settings.pdf_get.pdf_required_for_screen_and_synthesis = False
-
-        elif colrev.settings.ReviewType.peer_review == self.review_type:
-            settings.pdf_get.pdf_required_for_screen_and_synthesis = False
-
-            settings.data.scripts.append(
-                {
-                    "endpoint": "peer_review",
-                }
-            )
-            settings.sources.append(
-                {
-                    "filename": "search/references.bib",
-                    "search_type": "DB",
-                    "source_name": "pdf_backward_search",
-                    "source_identifier": "{{cited_by_file}} (references)",
-                    "search_parameters": {"scope": {"file": "paper.pdf"}},
-                    "load_conversion_script": {"endpoint": "bibtex"},
-                    "comment": "",
-                }
-            )
-
-            settings.prep.prep_rounds = [
-                d
-                for d in settings["prep"]["prep_rounds"]
-                if d.get("name", "") != "exclusion"
-            ]
-
-            self.instructions.append(
-                "Store the file as paper.pdf in the pdfs directory"
-            )
-            self.instructions.append(
-                "Afterwards, run colrev search && colrev load && colrev search"
-            )
-
-            # TODO : add backward search (only for peer-reviewed pdf)
-            # endpoint: extract diff between imported metadata and prepared metadata
-            # ordered in terms of change significance
-
-        elif colrev.settings.ReviewType.realtime == self.review_type:
-            settings.project.delay_automated_processing = False
-            settings.prep.prep_rounds = [
-                {
-                    "name": "high_confidence",
-                    "similarity": 0.95,
-                    "scripts": [
-                        "load_fixes",
-                        "remove_urls_with_500_errors",
-                        "remove_broken_IDs",
-                        "global_ids_consistency_check",
-                        "prep_curated",
-                        "format",
-                        "resolve_crossrefs",
-                        "get_doi_from_urls",
-                        "get_masterdata_from_doi",
-                        "get_masterdata_from_crossref",
-                        "get_masterdata_from_dblp",
-                        "get_masterdata_from_open_library",
-                        "get_year_from_vol_iss_jour_crossref",
-                        "get_record_from_local_index",
-                        "remove_nicknames",
-                        "format_minor",
-                        "drop_fields",
-                    ],
-                }
-            ]
-
-        elif colrev.settings.ReviewType.curated_masterdata == self.review_type:
-            # replace readme
-            colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/review_type/curated_masterdata/readme.md"),
-                target=Path("readme.md"),
-            )
-            if self.review_manager.settings.project.curation_url:
-                colrev.env.utils.inplace_change(
-                    filename=Path("readme.md"),
-                    old_string="{{url}}",
-                    new_string=self.review_manager.settings.project.curation_url,
-                )
-            crossref_source = {
-                "filename": "search/CROSSREF.bib",
-                "search_type": "DB",
-                "source_name": "crossref",
-                "source_identifier": "https://api.crossref.org/works/{{doi}}",
-                "search_parameters": {},
-                "load_conversion_script": {"endpoint": "bibtex"},
-                "comment": "",
-            }
-            settings.sources.insert(0, crossref_source)
-            settings.search.retrieve_forthcoming = False
-
-            # TODO : exclude complementary materials in prep scripts
-            # TODO : exclude get_masterdata_from_citeas etc. from prep
-            settings.prep.man_prep_scripts = [
-                {"endpoint": "prep_man_curation_jupyter"},
-                {"endpoint": "export_man_prep"},
-            ]
-            settings.prescreen.explanation = (
-                "All records are automatically prescreen included."
-            )
-
-            settings.screen.explanation = (
-                "All records are automatically included in the screen."
-            )
-
-            settings.project.curated_masterdata = True
-            settings.prescreen.scripts = [
-                {"endpoint": "scope_prescreen", "ExcludeComplementaryMaterials": True},
-                {"endpoint": "conditional_prescreen"},
-            ]
-            settings.screen.scripts = [{"endpoint": "conditional_screen"}]
-            settings.pdf_get.scripts = []
-            # TODO : Deactivate languages, ...
-            #  exclusion and add a complementary exclusion built-in script
-
-            settings.dedupe.scripts = [
-                {
-                    "endpoint": "curation_full_outlet_dedupe",
-                    "selected_source": "search/CROSSREF.bib",
-                },
-                {
-                    "endpoint": "curation_full_outlet_dedupe",
-                    "selected_source": "search/pdfs.bib",
-                },
-                {"endpoint": "curation_missing_dedupe"},
-            ]
-
-            # curated repo: automatically prescreen/screen-include papers
-            # (no data endpoint -> automatically rev_synthesized)
+        settings = review_types.packages[self.review_type].initialize(settings=settings)
 
         self.review_manager.save_settings()
 
@@ -518,6 +349,7 @@ class Initializer:
             # SHARE_STAT_REQ="PROCESSED",
             # review_type="curated_masterdata",
             Initializer(
+                review_type="curated_masterdata",
                 local_index_repo=True,
             )
             self.logger.info("Created local_index repository")

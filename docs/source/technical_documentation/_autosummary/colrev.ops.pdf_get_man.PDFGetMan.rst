@@ -17,11 +17,13 @@ colrev.ops.pdf\_get\_man.PDFGetMan
       :nosignatures:
 
       ~PDFGetMan.check_precondition
+      ~PDFGetMan.check_process_model_precondition
       ~PDFGetMan.export_retrieval_table
       ~PDFGetMan.get_data
       ~PDFGetMan.get_pdf_get_man
       ~PDFGetMan.main
       ~PDFGetMan.pdfs_retrieved_manually
+      ~PDFGetMan.require_clean_repo_general
 
 
 

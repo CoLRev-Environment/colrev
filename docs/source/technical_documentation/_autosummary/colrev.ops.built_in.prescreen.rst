@@ -20,8 +20,8 @@ colrev.ops.built\_in.prescreen
       :template: custom-class-template.rst
       :nosignatures:
 
-      ASReviewPrescreenEndpoint
-      CoLRevCLIPrescreenEndpoint
-      ConditionalPrescreenEndpoint
-      ScopePrescreenEndpoint
-      SpreadsheetPrescreenEndpoint
+      ASReviewPrescreen
+      CoLRevCLIPrescreen
+      ConditionalPrescreen
+      ScopePrescreen
+      SpreadsheetPrescreen

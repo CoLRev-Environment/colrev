@@ -17,8 +17,10 @@ colrev.ops.distribute.Distribute
       :nosignatures:
 
       ~Distribute.check_precondition
+      ~Distribute.check_process_model_precondition
       ~Distribute.get_local_registry
       ~Distribute.main
+      ~Distribute.require_clean_repo_general
 
 
 

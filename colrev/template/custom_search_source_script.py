@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     import colrev.ops.search.Search
 
 
-@zope.interface.implementer(colrev.process.SearchSourceEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
 class CustomSearch:
 
-    settings_class = colrev.process.DefaultSettings
+    settings_class = colrev.env.package_manager.DefaultSettings
     source_identifier = "{{custom}}"
     source_identifier_search = "{{custom}}"
     search_mode = "all"

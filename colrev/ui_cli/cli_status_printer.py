@@ -37,6 +37,8 @@ def print_review_instructions(review_instructions: dict) -> None:
 
 def print_collaboration_instructions(collaboration_instructions: dict) -> None:
 
+    # pylint: disable=too-many-branches
+
     print("Versioning and collaboration\n")
 
     if "status" in collaboration_instructions:

@@ -13,27 +13,22 @@ colrev.ops.built\_in.data
 
 
 
-   .. rubric:: Classes
-
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
-
-      EndnoteEndpoint
-      GithubPagesEndpoint
-      ManuscriptEndpoint
-      PRISMAEndpoint
-      StructuredDataEndpoint
-      ZettlrEndpoint
 
 
 
 
 
-   .. rubric:: Exceptions
 
-   .. autosummary::
-      :toctree:
 
-      ManuscriptRecordSourceTagError
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ops.built_in.data.bibliography_export
+   colrev.ops.built_in.data.github_pages
+   colrev.ops.built_in.data.manuscript
+   colrev.ops.built_in.data.prisma
+   colrev.ops.built_in.data.structured
+   colrev.ops.built_in.data.zettlr

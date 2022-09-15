@@ -20,6 +20,6 @@ colrev.ops.built\_in.pdf\_get
       :template: custom-class-template.rst
       :nosignatures:
 
-      LocalIndexEndpoint
-      UnpaywallEndpoint
-      WebsiteScreenshotEndpoint
+      LocalIndexPDFGet
+      Unpaywall
+      WebsiteScreenshot

@@ -1758,7 +1758,7 @@ class PrepRecord(Record):
         retrieved_record_original: Record,
         same_record_type_required: bool = False,
     ) -> float:
-        def format_authors_string_for_comparison(rec_in):
+        def format_authors_string_for_comparison(rec_in: Record) -> None:
             if "author" not in rec_in.data:
                 return
             authors = rec_in.data["author"]
@@ -2262,8 +2262,10 @@ class RecordState(Enum):
                 str(RecordState.rev_included),
                 str(RecordState.rev_synthesized),
             ]
+
+        # pylint: disable=no-member
         raise colrev_exceptions.ParameterError(
-            parameter="state", value="state", options="RecordStates"
+            parameter="state", value="state", options=cls._member_names_
         )
 
 

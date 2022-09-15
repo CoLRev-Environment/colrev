@@ -5,7 +5,7 @@ import imagehash
 from pdf2image import convert_from_path
 
 
-def main():
+def main() -> None:
     pdf_path = sys.argv[1]
     page_nr = sys.argv[2]
     hash_size = sys.argv[3]

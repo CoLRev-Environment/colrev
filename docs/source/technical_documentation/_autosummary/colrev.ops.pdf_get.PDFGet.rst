@@ -18,12 +18,14 @@ colrev.ops.pdf\_get.PDFGet
 
       ~PDFGet.check_existing_unlinked_pdfs
       ~PDFGet.check_precondition
+      ~PDFGet.check_process_model_precondition
       ~PDFGet.copy_pdfs_to_repo
       ~PDFGet.get_pdf
       ~PDFGet.link_pdf
       ~PDFGet.main
       ~PDFGet.relink_files
       ~PDFGet.rename_pdfs
+      ~PDFGet.require_clean_repo_general
       ~PDFGet.setup_custom_script
 
 

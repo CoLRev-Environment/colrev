@@ -5,7 +5,8 @@ import math
 import typing
 from pathlib import Path
 
-import colrev.ops.built_in.prescreen as built_in_prescreen
+import colrev.ops.built_in.prescreen.conditional_prescreen
+import colrev.ops.built_in.prescreen.spreadsheet_prescreen
 import colrev.process
 import colrev.record
 
@@ -34,8 +35,10 @@ class Prescreen(colrev.process.Process):
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
 
-        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
-            prescreen_operation=self, settings={"name": "export_table"}
+        endpoint = (
+            colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
+                prescreen_operation=self, settings={"name": "export_table"}
+            )
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.export_table(
@@ -47,8 +50,10 @@ class Prescreen(colrev.process.Process):
 
     def import_table(self, *, import_table_path: str) -> None:
 
-        endpoint = built_in_prescreen.SpreadsheetPrescreenEndpoint(
-            prescreen_operation=self, settings={"name": "import_table"}
+        endpoint = (
+            colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
+                prescreen_operation=self, settings={"name": "import_table"}
+            )
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.import_table(
@@ -59,8 +64,10 @@ class Prescreen(colrev.process.Process):
 
     def include_all_in_prescreen(self) -> None:
 
-        endpoint = built_in_prescreen.ConditionalPrescreenEndpoint(
-            prescreen_operation=self, settings={"name": "include_all"}
+        endpoint = (
+            colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
+                prescreen_operation=self, settings={"name": "include_all"}
+            )
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.run_prescreen(self, records, [])

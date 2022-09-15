@@ -28,8 +28,8 @@ colrev.ops.built\_in.dedupe\_built\_in
       :template: custom-class-template.rst
       :nosignatures:
 
-      ActiveLearningDedupeAutomatedEndpoint
-      ActiveLearningDedupeTrainingEndpoint
-      CurationDedupeEndpoint
-      CurationMissingDedupeEndpoint
-      SimpleDedupeEndpoint
+      ActiveLearningDedupeAutomated
+      ActiveLearningDedupeTraining
+      CurationDedupe
+      CurationMissingDedupe
+      SimpleDedupe

@@ -17,6 +17,8 @@ colrev.process.FormatProcess
       :nosignatures:
 
       ~FormatProcess.check_precondition
+      ~FormatProcess.check_process_model_precondition
+      ~FormatProcess.require_clean_repo_general
 
 
 

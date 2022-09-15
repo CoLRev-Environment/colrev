@@ -20,5 +20,7 @@ colrev.env.package\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
+      DefaultSettings
+      DefaultSourceSettings
       PackageManager
       PackageType

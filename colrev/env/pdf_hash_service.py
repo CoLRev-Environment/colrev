@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
+
+import colrev.exceptions as colrev_exceptions
 
 
 class PDFHashService:
@@ -22,7 +25,17 @@ class PDFHashService:
             f'docker run --rm -v "{pdf_dir}:/home/docker" '
             f'pdf_hash python app.py "{pdf_path.name}" {page_nr} {hash_size}'
         )
-        ret = subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
+
+        try:
+            ret = subprocess.check_output(
+                [command], stderr=subprocess.STDOUT, shell=True
+            )
+        except subprocess.CalledProcessError as exc:
+
+            if 0 == os.path.getsize(pdf_path):
+                print(f"PDF with size 0: {pdf_path}")
+
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
 
         # TODO : raise exception if errors occur
 

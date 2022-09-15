@@ -33,41 +33,11 @@ class IDPattern(Enum):
         return cls._member_names_
 
 
-class ReviewType(Enum):
-    """The type of review"""
-
-    # pylint: disable=invalid-name
-    curated_masterdata = "curated_masterdata"
-    realtime = "realtime"
-    literature_review = "literature_review"
-    narrative_review = "narrative_review"
-    descriptive_review = "descriptive_review"
-    scoping_review = "scoping_review"
-    critical_review = "critical_review"
-    theoretical_review = "theoretical_review"
-    conceptual_review = "conceptual_review"
-    qualitative_systematic_review = "qualitative_systematic_review"
-    meta_analysis = "meta_analysis"
-    scientometric = "scientometric"
-    peer_review = "peer_review"
-
-    @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        # pylint: disable=E1101
-        return {"options": cls._member_names_, "type": "selection"}
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    def __str__(self) -> str:
-        return f"{self.name}"
-
-
 @dataclass
 class Author(JsonSchemaMixin):
     """Author of the review"""
+
+    # pylint: disable=too-many-instance-attributes
 
     name: str
     initials: str
@@ -110,6 +80,8 @@ class ShareStatReq(Enum):
 class ProjectSettings(JsonSchemaMixin):
     """Project settings"""
 
+    # pylint: disable=too-many-instance-attributes
+
     title: str
     __doc_title__ = "The title of the review"
     authors: typing.List[Author]
@@ -117,7 +89,7 @@ class ProjectSettings(JsonSchemaMixin):
     # status ? (development/published?)
     protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
-    review_type: ReviewType
+    review_type: str
     id_pattern: IDPattern
     share_stat_req: ShareStatReq
     delay_automated_processing: bool
@@ -161,6 +133,8 @@ class SearchType(Enum):
 @dataclass
 class SearchSource(JsonSchemaMixin):
     """Search source settings"""
+
+    # pylint: disable=too-many-instance-attributes
 
     filename: Path
     search_type: SearchType
@@ -429,6 +403,8 @@ class DataSettings(JsonSchemaMixin):
 class Settings(JsonSchemaMixin):
     """CoLRev project settings"""
 
+    # pylint: disable=too-many-instance-attributes
+
     project: ProjectSettings
     sources: typing.List[SearchSource]
     search: SearchSettings
@@ -470,61 +446,61 @@ class Settings(JsonSchemaMixin):
     def get_settings_schema(cls):
 
         schema = cls.json_schema()
-
-        schema["definitions"]["SearchSource"]["properties"]["conversion_script"] = {  # type: ignore
+        sdefs = schema["definitions"]
+        sdefs["SearchSource"]["properties"]["conversion_script"] = {  # type: ignore
             "script_type": "conversion",
             "type": "script_item",
         }
 
-        schema["definitions"]["SearchSource"]["properties"]["search_script"] = {  # type: ignore
+        sdefs["SearchSource"]["properties"]["search_script"] = {  # type: ignore
             "script_type": "search",
             "type": "script_item",
         }
 
-        schema["definitions"]["SearchSource"]["properties"]["source_prep_scripts"] = {  # type: ignore
+        sdefs["SearchSource"]["properties"]["source_prep_scripts"] = {  # type: ignore
             "script_type": "source_prep_script",
             "type": "script_array",
         }
 
         # pylint: disable=unused-variable
-        prep_rounds = schema["definitions"]["PrepRound"]["properties"]["scripts"]
+        prep_rounds = sdefs["PrepRound"]["properties"]["scripts"]
         prep_rounds = {  # type: ignore # noqa: F841
             "script_type": "prep",
             "type": "script_array",
         }
-        schema["definitions"]["PrepSettings"]["properties"]["PrepSettings"] = {  # type: ignore
+        sdefs["PrepSettings"]["properties"]["PrepSettings"] = {  # type: ignore
             "script_type": "prep_man",
             "type": "script_array",
         }
-        schema["definitions"]["DedupeSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["DedupeSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "dedupe",
             "type": "script_array",
         }
-        schema["definitions"]["PrescreenSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["PrescreenSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "prescreen",
             "type": "script_array",
         }
-        schema["definitions"]["PDFGetSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["PDFGetSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "pdf_get",
             "type": "script_array",
         }
-        schema["definitions"]["PDFGetSettings"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
+        sdefs["PDFGetSettings"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
             "script_type": "pdf_get_man",
             "type": "script_array",
         }
-        schema["definitions"]["PDFPrepSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["PDFPrepSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "pdf_prep",
             "type": "script_array",
         }
-        schema["definitions"]["PDFPrepSettings"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
+        sdefs["PDFPrepSettings"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
             "script_type": "pdf_prep_man",
             "type": "script_array",
         }
-        schema["definitions"]["ScreenSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["ScreenSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "screen",
             "type": "script_array",
         }
-        schema["definitions"]["DataSettings"]["properties"]["scripts"] = {  # type: ignore
+        sdefs["DataSettings"]["properties"]["scripts"] = {  # type: ignore
             "script_type": "data",
             "type": "script_array",
         }

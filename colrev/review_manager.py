@@ -162,7 +162,7 @@ class ReviewManager:
                 config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
             )
         except (ValueError, MissingValueError, WrongTypeError) as exc:
-            raise colrev_exceptions.InvalidSettingsError(msg=exc) from exc
+            raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
         return settings
 
@@ -883,6 +883,16 @@ class ReviewManager:
         import colrev.service
 
         return colrev.service.Service(review_manager=self, **kwargs)
+
+    def get_search_sources(self, **kwargs) -> colrev.ops.search_sources.SearchSources:
+        import colrev.ops.search_sources
+
+        return colrev.ops.search_sources.SearchSources(review_manager=self, **kwargs)
+
+    def get_review_types(self, **kwargs) -> colrev.ops.review_types.ReviewTypes:
+        import colrev.ops.review_types
+
+        return colrev.ops.review_types.ReviewTypes(review_manager=self, **kwargs)
 
     def get_review_manager(self, **kwargs) -> ReviewManager:
         return type(self)(**kwargs)

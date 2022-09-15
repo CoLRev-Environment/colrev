@@ -111,97 +111,102 @@ class PDFGet(colrev.process.Process):
 
         return record.get_data()
 
-    def relink_files(self) -> None:
-        def relink_pdf_files(records):
-            # Relink files in source file
-            feed_filename = ""
-            feed_filepath = ""
-            source_records = []
-            for source in self.review_manager.settings.sources:
-                if "{{file}}" == source.source_identifier:
-                    feed_filepath = Path("search") / source.filename
-                    if feed_filepath.is_file():
-                        feed_filename = source.filename
-                        with open(
-                            Path("search") / source.filename, encoding="utf8"
-                        ) as target_db:
-                            source_records_dict = (
-                                self.review_manager.REVIEW_DATASEt.load_records_dict(
-                                    load_str=target_db.read()
-                                )
+    def __relink_pdf_files(
+        self,
+        *,
+        records: typing.Dict[str, typing.Dict],
+    ) -> typing.Dict[str, typing.Dict]:
+        # pylint: disable=too-many-branches
+
+        # Relink files in source file
+        feed_filename: Path
+        feed_filepath: Path
+        source_records: typing.List[typing.Dict] = []
+        for source in self.review_manager.settings.sources:
+            if "{{file}}" == source.source_identifier:
+                feed_filepath = Path("search") / Path(source.filename)
+                if feed_filepath.is_file():
+                    feed_filename = Path(source.filename)
+                    with open(
+                        Path("search") / source.filename, encoding="utf8"
+                    ) as target_db:
+                        source_records_dict = (
+                            self.review_manager.dataset.load_records_dict(
+                                load_str=target_db.read()
                             )
-                        source_records = source_records_dict.values()
+                        )
+                    source_records = list(source_records_dict.values())
 
-            self.review_manager.logger.info("Calculate colrev_pdf_ids")
-            pdf_candidates = {
-                pdf_candidate.relative_to(
-                    self.review_manager.path
-                ): colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_candidate
-                )
-                for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
-            }
+        self.review_manager.logger.info("Calculate colrev_pdf_ids")
+        pdf_candidates = {
+            pdf_candidate.relative_to(
+                self.review_manager.path
+            ): colrev.record.Record.get_colrev_pdf_id(
+                review_manager=self.review_manager, pdf_path=pdf_candidate
+            )
+            for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
+        }
 
-            for record in records.values():
-                if "file" not in record:
+        for record in records.values():
+            if "file" not in record:
+                continue
+
+            # Note: we check the source_records based on the cpids
+            # in the record because cpids are not stored in the source_record
+            # (pdf hashes may change after import/preparation)
+            source_rec = {}
+            if feed_filename != "":
+                source_origin_l = [
+                    o for o in record["colrev_origin"].split(";") if feed_filename in o
+                ]
+                if len(source_origin_l) == 1:
+                    source_origin = source_origin_l[0]
+                    source_origin = source_origin.replace(f"{feed_filename}/", "")
+                    source_rec_l = [
+                        s for s in source_records if s["ID"] == source_origin
+                    ]
+                    if len(source_rec_l) == 1:
+                        source_rec = source_rec_l[0]
+
+            if source_rec:
+                if (self.review_manager.path / Path(record["file"])).is_file() and (
+                    self.review_manager.path / Path(source_rec["file"])
+                ).is_file():
+                    continue
+            else:
+                if (self.review_manager.path / Path(record["file"])).is_file():
                     continue
 
-                # Note: we check the source_records based on the cpids
-                # in the record because cpids are not stored in the source_record
-                # (pdf hashes may change after import/preparation)
-                source_rec = {}
-                if feed_filename != "":
-                    source_origin_l = [
-                        o
-                        for o in record["colrev_origin"].split(";")
-                        if feed_filename in o
-                    ]
-                    if len(source_origin_l) == 1:
-                        source_origin = source_origin_l[0]
-                        source_origin = source_origin.replace(f"{feed_filename}/", "")
-                        source_rec_l = [
-                            s for s in source_records if s["ID"] == source_origin
-                        ]
-                        if len(source_rec_l) == 1:
-                            source_rec = source_rec_l[0]
+            self.review_manager.logger.info(record["ID"])
 
-                if source_rec:
-                    if (self.review_manager.path / Path(record["file"])).is_file() and (
-                        self.review_manager.path / Path(source_rec["file"])
-                    ).is_file():
-                        continue
-                else:
-                    if (self.review_manager.path / Path(record["file"])).is_file():
-                        continue
+            for pdf_candidate, cpid in pdf_candidates.items():
+                if record.get("colrev_pdf_id", "") == cpid:
+                    record["file"] = str(pdf_candidate)
+                    source_rec["file"] = str(pdf_candidate)
 
-                self.review_manager.logger.info(record["ID"])
+                    self.review_manager.logger.info(
+                        f"Found and linked PDF: {pdf_candidate}"
+                    )
 
-                for pdf_candidate, cpid in pdf_candidates.items():
-                    if record.get("colrev_pdf_id", "") == cpid:
-                        record["file"] = str(pdf_candidate)
-                        source_rec["file"] = str(pdf_candidate)
+                    break
 
-                        self.review_manager.logger.info(
-                            f"Found and linked PDF: {pdf_candidate}"
-                        )
+        if len(source_records) > 0:
+            source_records_dict = {r["ID"]: r for r in source_records}
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=source_records_dict, save_path=feed_filepath
+            )
 
-                        break
+        self.review_manager.dataset.add_changes(path=feed_filepath)
 
-            if len(source_records) > 0:
-                source_records_dict = {r["ID"]: r for r in source_records}
-                self.review_manager.dataset.save_records_dict_to_file(
-                    source_records_dict, save_path=feed_filepath
-                )
+        return records
 
-            if feed_filepath != "":
-                self.review_manager.dataset.add_changes(path=str(feed_filepath))
-            return records
+    def relink_files(self) -> None:
 
         self.review_manager.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
         records = self.review_manager.dataset.load_records_dict()
-        records = relink_pdf_files(records)
+        records = self.__relink_pdf_files(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
 

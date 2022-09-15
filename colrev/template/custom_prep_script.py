@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import colrev.ops.prep
 
 
-@zope.interface.implementer(colrev.process.PrepEndpoint)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
 class CustomPrep:
 
     source_correction_hint = "check with the developer"
@@ -21,7 +21,7 @@ class CustomPrep:
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
         self.settings = from_dict(
-            data_class=colrev.process.DefaultSettings, data=settings
+            data_class=colrev.env.package_manager.DefaultSettings, data=settings
         )
 
     @timeout_decorator.timeout(60, use_signals=False)
