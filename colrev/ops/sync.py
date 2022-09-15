@@ -20,17 +20,14 @@ class Sync:
         self.records_to_import: typing.List[typing.Dict] = []
         self.non_unique_for_import: typing.List[typing.Dict] = []
 
-    def get_cited_papers(self) -> None:
-
+    def __get_cited_papers_citation_keys(self) -> list:
         if Path("paper.md").is_file():
             paper_md = Path("paper.md")
         elif Path("review.md"):
             paper_md = Path("review.md")
         rst_files = list(Path.cwd().rglob("*.rst"))
 
-        ids_in_bib = self.get_ids_in_paper()
-        print(f"References in bib: {len(ids_in_bib)}")
-
+        citation_keys = []
         if paper_md.is_file():
             print("Loading cited references from paper.md")
             content = paper_md.read_text(encoding="utf-8")
@@ -41,7 +38,6 @@ class Sync:
 
         elif len(rst_files) > 0:
             print("Loading cited references from *.rst")
-            citation_keys = []
             for rst_file in rst_files:
                 content = rst_file.read_text()
                 res = re.findall(r":cite:p:`(.*)`", content)
@@ -54,7 +50,14 @@ class Sync:
 
         else:
             print("Not found paper.md or *.rst")
-            return
+        return citation_keys
+
+    def get_cited_papers(self) -> None:
+
+        citation_keys = self.__get_cited_papers_citation_keys()
+
+        ids_in_bib = self.__get_ids_in_paper()
+        print(f"References in bib: {len(ids_in_bib)}")
 
         for citation_key in citation_keys:
             if citation_key in ids_in_bib:
@@ -94,9 +97,7 @@ class Sync:
                     listed_item[citation_key].append(item["_source"])
                 self.non_unique_for_import.append(listed_item)
 
-        return
-
-    def get_ids_in_paper(self) -> typing.List:
+    def __get_ids_in_paper(self) -> typing.List:
 
         pybtex.errors.set_strict_mode(False)
 

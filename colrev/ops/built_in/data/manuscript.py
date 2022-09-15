@@ -134,164 +134,172 @@ class Manuscript:
             f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.paper}"
         )
 
-    def update_manuscript(
+    def __authorship_heuristic(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> str:
+        git_repo = review_manager.dataset.get_repo()
+        commits_list = list(git_repo.iter_commits())
+        commits_authors = []
+        for commit in commits_list:
+            committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
+            if "GitHub" == committer:
+                continue
+            commits_authors.append(committer)
+            # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
+            # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
+        author = ", ".join(dict(Counter(commits_authors)))
+        return author
+
+    def __get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
+        available = []
+        with open(paper, encoding="utf-8") as file:
+            line = file.read()
+            for record in record_id_list:
+                if record in line:
+                    available.append(record)
+
+        return list(set(record_id_list) - set(available))
+
+    def __add_missing_records_to_manuscript(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        records: typing.Dict,
-        synthesized_record_status_matrix: dict,
-    ) -> typing.Dict:
-        def authorship_heuristic() -> str:
-            git_repo = review_manager.dataset.get_repo()
-            commits_list = list(git_repo.iter_commits())
-            commits_authors = []
-            for commit in commits_list:
-                committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
-                if "GitHub" == committer:
-                    continue
-                commits_authors.append(committer)
-                # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
-                # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
-            author = ", ".join(dict(Counter(commits_authors)))
-            return author
+        paper_path: Path,
+        missing_records: list,
+    ):
+        # pylint: disable=consider-using-with
+        # pylint: disable=too-many-branches
 
-        def get_data_page_missing(paper: Path, record_id_list: list) -> list:
-            available = []
-            with open(paper, encoding="utf-8") as file:
-                line = file.read()
-                for record in record_id_list:
-                    if record in line:
-                        available.append(record)
-
-            return list(set(record_id_list) - set(available))
-
-        def add_missing_records_to_manuscript(
-            *, review_manager, paper_path: Path, missing_records: list
-        ):
-            # pylint: disable=consider-using-with
-            temp = tempfile.NamedTemporaryFile()
-            paper_path.rename(temp.name)
-            with open(temp.name, encoding="utf-8") as reader, open(
-                paper_path, "w", encoding="utf-8"
-            ) as writer:
-                appended, completed = False, False
-                line = reader.readline()
-                while line != "":
-                    if self.NEW_RECORD_SOURCE_TAG in line:
-                        if "_Records to synthesize" not in line:
-                            line = "_Records to synthesize_:" + line + "\n"
-                            writer.write(line)
-                        else:
-                            writer.write(line)
-                            writer.write("\n")
-
-                        for missing_record in missing_records:
-                            writer.write(missing_record)
-                            review_manager.report_logger.info(
-                                # f" {missing_record}".ljust(self.__PAD, " ")
-                                f" {missing_record}"
-                                + f" added to {paper_path.name}"
-                            )
-
-                            review_manager.logger.info(
-                                # f" {missing_record}".ljust(self.__PAD, " ")
-                                f" {missing_record}"
-                                + f" added to {paper_path.name}"
-                            )
-
-                        # skip empty lines between to connect lists
-                        line = reader.readline()
-                        if "\n" != line:
-                            writer.write(line)
-
-                        appended = True
-
-                    elif appended and not completed:
-                        if "- @" == line[:3]:
-                            writer.write(line)
-                        else:
-                            if "\n" != line:
-                                writer.write("\n")
-                            writer.write(line)
-                            completed = True
+        temp = tempfile.NamedTemporaryFile()
+        paper_path.rename(temp.name)
+        with open(temp.name, encoding="utf-8") as reader, open(
+            paper_path, "w", encoding="utf-8"
+        ) as writer:
+            appended, completed = False, False
+            line = reader.readline()
+            while line != "":
+                if self.NEW_RECORD_SOURCE_TAG in line:
+                    if "_Records to synthesize" not in line:
+                        line = "_Records to synthesize_:" + line + "\n"
+                        writer.write(line)
                     else:
                         writer.write(line)
-                    line = reader.readline()
-
-                if not appended:
-                    msg = (
-                        f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
-                        + f"{paper_path.name}. Adding records at the end of "
-                        + "the document."
-                    )
-                    review_manager.report_logger.warning(msg)
-                    review_manager.logger.warning(msg)
-
-                    if line != "\n":
                         writer.write("\n")
-                    marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
-                    writer.write(marker)
+
                     for missing_record in missing_records:
                         writer.write(missing_record)
                         review_manager.report_logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
-                            f" {missing_record} added"
+                            # f" {missing_record}".ljust(self.__PAD, " ")
+                            f" {missing_record}"
+                            + f" added to {paper_path.name}"
                         )
+
                         review_manager.logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
-                            f" {missing_record} added"
+                            # f" {missing_record}".ljust(self.__PAD, " ")
+                            f" {missing_record}"
+                            + f" added to {paper_path.name}"
                         )
 
-        if not self.paper.is_file():
-            # missing_records = synthesized_record_status_matrix.keys()
+                    # skip empty lines between to connect lists
+                    line = reader.readline()
+                    if "\n" != line:
+                        writer.write(line)
 
-            review_manager.report_logger.info("Creating manuscript")
-            review_manager.logger.info("Creating manuscript")
+                    appended = True
 
-            title = "Manuscript template"
-            readme_file = review_manager.readme
-            if readme_file.is_file():
-                with open(readme_file, encoding="utf-8") as file:
-                    title = file.readline()
-                    title = title.replace("# ", "").replace("\n", "")
+                elif appended and not completed:
+                    if "- @" == line[:3]:
+                        writer.write(line)
+                    else:
+                        if "\n" != line:
+                            writer.write("\n")
+                        writer.write(line)
+                        completed = True
+                else:
+                    writer.write(line)
+                line = reader.readline()
 
-            author = authorship_heuristic()
-
-            review_type = review_manager.settings.project.review_type
-
-            r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
-            paper_resource_path = (
-                Path(f"template/review_type/{r_type_path}/") / self.settings.paper_path
-            )
-            try:
-                colrev.env.utils.retrieve_package_file(
-                    template_file=paper_resource_path, target=self.paper
+            if not appended:
+                msg = (
+                    f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
+                    + f"{paper_path.name}. Adding records at the end of "
+                    + "the document."
                 )
-            except FileNotFoundError:
-                paper_resource_path = Path("template/") / self.settings.paper_path
-                colrev.env.utils.retrieve_package_file(
-                    template_file=paper_resource_path, target=self.paper
-                )
+                review_manager.report_logger.warning(msg)
+                review_manager.logger.warning(msg)
+                if line != "\n":
+                    writer.write("\n")
+                marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
+                writer.write(marker)
+                for missing_record in missing_records:
+                    writer.write(missing_record)
+                    review_manager.report_logger.info(
+                        # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                        f" {missing_record} added"
+                    )
+                    review_manager.logger.info(
+                        # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                        f" {missing_record} added"
+                    )
 
-            colrev.env.utils.inplace_change(
-                filename=self.paper,
-                old_string="{{review_type}}",
-                new_string=str(review_type),
+    def __create_paper(
+        self, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
+
+        review_manager.report_logger.info("Creating manuscript")
+        review_manager.logger.info("Creating manuscript")
+
+        title = "Manuscript template"
+        readme_file = review_manager.readme
+        if readme_file.is_file():
+            with open(readme_file, encoding="utf-8") as file:
+                title = file.readline()
+                title = title.replace("# ", "").replace("\n", "")
+
+        author = self.__authorship_heuristic(review_manager=review_manager)
+
+        review_type = review_manager.settings.project.review_type
+
+        r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
+        paper_resource_path = (
+            Path(f"template/review_type/{r_type_path}/") / self.settings.paper_path
+        )
+        try:
+            colrev.env.utils.retrieve_package_file(
+                template_file=paper_resource_path, target=self.paper
             )
-            colrev.env.utils.inplace_change(
-                filename=self.paper, old_string="{{project_title}}", new_string=title
-            )
-            colrev.env.utils.inplace_change(
-                filename=self.paper, old_string="{{author}}", new_string=author
-            )
-            review_manager.logger.info(
-                f"Please update title and authors in {self.paper.name}"
+        except FileNotFoundError:
+            paper_resource_path = Path("template/") / self.settings.paper_path
+            colrev.env.utils.retrieve_package_file(
+                template_file=paper_resource_path, target=self.paper
             )
 
+        colrev.env.utils.inplace_change(
+            filename=self.paper,
+            old_string="{{review_type}}",
+            new_string=str(review_type),
+        )
+        colrev.env.utils.inplace_change(
+            filename=self.paper, old_string="{{project_title}}", new_string=title
+        )
+        colrev.env.utils.inplace_change(
+            filename=self.paper, old_string="{{author}}", new_string=author
+        )
+        review_manager.logger.info(
+            f"Please update title and authors in {self.paper.name}"
+        )
+
+    def __add_missing_records(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        synthesized_record_status_matrix: dict,
+    ) -> None:
         review_manager.report_logger.info("Updating manuscript")
         review_manager.logger.info("Updating manuscript")
-        missing_records = get_data_page_missing(
-            self.paper, list(synthesized_record_status_matrix.keys())
+        missing_records = self.__get_data_page_missing(
+            paper=self.paper,
+            record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
         review_manager.logger.debug(f"missing_records: {missing_records}")
@@ -304,7 +312,7 @@ class Manuscript:
             )
             review_manager.logger.info(f"All records included in {self.paper.name}")
         else:
-            add_missing_records_to_manuscript(
+            self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 paper_path=self.paper,
                 missing_records=[
@@ -319,6 +327,22 @@ class Manuscript:
             review_manager.logger.info(
                 f"{nr_records_added} records added to {self.paper.name}"
             )
+
+    def update_manuscript(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        records: typing.Dict,
+        synthesized_record_status_matrix: dict,
+    ) -> typing.Dict:
+
+        if not self.paper.is_file():
+            self.__create_paper(review_manager=review_manager)
+
+        self.__add_missing_records(
+            review_manager=review_manager,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
+        )
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
 
@@ -389,14 +413,52 @@ class Manuscript:
         records: dict,
         synthesized_record_status_matrix: dict,
     ):
-        # Update manuscript
         records = self.update_manuscript(
             review_manager=data_operation.review_manager,
             records=records,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
-        # Build manuscript
         self.build_manuscript(data_operation=data_operation)
+
+    def __get_to_synthesize_in_manuscript(
+        self, *, paper: Path, records_for_synthesis: list
+    ) -> list:
+        in_manuscript_to_synthesize = []
+        if paper.is_file():
+            with open(paper, encoding="utf-8") as file:
+                for line in file:
+                    if self.NEW_RECORD_SOURCE_TAG in line:
+                        while line != "":
+                            line = file.readline()
+                            if re.search(r"- @.*", line):
+                                record_id = re.findall(r"- @(.*)$", line)
+                                in_manuscript_to_synthesize.append(record_id[0])
+                                if line == "\n":
+                                    break
+
+            in_manuscript_to_synthesize = [
+                x for x in in_manuscript_to_synthesize if x in records_for_synthesis
+            ]
+        else:
+            in_manuscript_to_synthesize = records_for_synthesis
+        return in_manuscript_to_synthesize
+
+    def __get_synthesized_ids_paper(
+        self, *, paper: Path, synthesized_record_status_matrix: dict
+    ) -> list:
+
+        in_manuscript_to_synthesize = self.__get_to_synthesize_in_manuscript(
+            paper=paper,
+            records_for_synthesis=list(synthesized_record_status_matrix.keys()),
+        )
+        # Assuming that all records have been added to the paper before
+        synthesized_ids = [
+            x
+            for x in list(synthesized_record_status_matrix.keys())
+            if x not in in_manuscript_to_synthesize
+        ]
+
+        return synthesized_ids
 
     def update_record_status_matrix(
         self,
@@ -404,50 +466,10 @@ class Manuscript:
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ):
-        def get_to_synthesize_in_manuscript(
-            *, paper: Path, records_for_synthesis: list
-        ) -> list:
-            in_manuscript_to_synthesize = []
-            if paper.is_file():
-                with open(paper, encoding="utf-8") as file:
-                    for line in file:
-                        if self.NEW_RECORD_SOURCE_TAG in line:
-                            while line != "":
-                                line = file.readline()
-                                if re.search(r"- @.*", line):
-                                    record_id = re.findall(r"- @(.*)$", line)
-                                    in_manuscript_to_synthesize.append(record_id[0])
-                                    if line == "\n":
-                                        break
-
-                in_manuscript_to_synthesize = [
-                    x for x in in_manuscript_to_synthesize if x in records_for_synthesis
-                ]
-            else:
-                in_manuscript_to_synthesize = records_for_synthesis
-            return in_manuscript_to_synthesize
-
-        def get_synthesized_ids_paper(
-            paper: Path, synthesized_record_status_matrix: dict
-        ) -> list:
-
-            in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(
-                paper=paper,
-                records_for_synthesis=list(synthesized_record_status_matrix.keys()),
-            )
-            # Assuming that all records have been added to the paper before
-            synthesized_ids = [
-                x
-                for x in list(synthesized_record_status_matrix.keys())
-                if x not in in_manuscript_to_synthesize
-            ]
-
-            return synthesized_ids
-
         # Update status / synthesized_record_status_matrix
-        synthesized_in_manuscript = get_synthesized_ids_paper(
-            self.paper,
-            synthesized_record_status_matrix,
+        synthesized_in_manuscript = self.__get_synthesized_ids_paper(
+            paper=self.paper,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
         for syn_id in synthesized_in_manuscript:
             if syn_id in synthesized_record_status_matrix:

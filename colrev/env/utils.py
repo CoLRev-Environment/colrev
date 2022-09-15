@@ -41,7 +41,7 @@ def load_jinja_template(template_path) -> str:
 
 
 def remove_accents(*, input_str: str) -> str:
-    def rmdiacritics(char):
+    def rmdiacritics(char: str) -> str:
         """
         Return the base character of char, by "removing" any
         diacritics like accents or curls and strokes and the like.

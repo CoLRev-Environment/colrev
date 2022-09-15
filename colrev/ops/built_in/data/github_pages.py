@@ -15,6 +15,7 @@ import colrev.record
 
 if TYPE_CHECKING:
     import colrev.ops.data
+    import git
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
@@ -33,6 +34,8 @@ class GithubPages:
                 "should be pushed automatically"
             },
         }
+
+    GH_PAGES_BRANCH_NAME = "gh-pages"
 
     settings_class = GHPagesSettings
 
@@ -59,71 +62,53 @@ class GithubPages:
 
         return github_pages_endpoint_details
 
-    def update_data(
-        self,
-        data_operation: colrev.ops.data.Data,
-        records: dict,  # pylint: disable=unused-argument
-        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+    def __setup_github_pages_branch(
+        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
     ) -> None:
+        # if branch does not exist: create and add index.html
+        data_operation.review_manager.logger.info("Setup github pages")
+        git_repo.create_head(self.GH_PAGES_BRANCH_NAME)
+        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
+        title = "Manuscript template"
+        readme_file = data_operation.review_manager.readme
+        if readme_file.is_file():
+            with open(readme_file, encoding="utf-8") as file:
+                title = file.readline()
+                title = title.replace("# ", "").replace("\n", "")
+                title = '"' + title + '"'
+        git_repo.git.rm("-rf", Path("."))
 
-        if data_operation.review_manager.dataset.has_changes():
-            data_operation.review_manager.logger.error(
-                "Cannot update github pages because there are uncommited changes."
-            )
-            return
+        gitignore_file = Path(".gitignore")
+        git_repo.git.checkout("HEAD", "--", gitignore_file)
+        with gitignore_file.open("a", encoding="utf-8") as file:
+            file.write("status.yaml\n")
+        data_operation.review_manager.dataset.add_changes(path=gitignore_file)
 
-        records = data_operation.review_manager.dataset.load_records_dict()
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path("template/github_pages/index.html"),
+            target=Path("index.html"),
+        )
+        data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path("template/github_pages/_config.yml"),
+            target=Path("_config.yml"),
+        )
+        colrev.env.utils.inplace_change(
+            filename=Path("_config.yml"),
+            old_string="{{project_title}}",
+            new_string=title,
+        )
+        data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path("template/github_pages/about.md"),
+            target=Path("about.md"),
+        )
+        data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
 
-        git_repo = data_operation.review_manager.dataset.get_repo()
-        repo_heads_names = [h.name for h in git_repo.heads]
-
-        active_branch = git_repo.active_branch
-        gh_pages_branch_name = "gh-pages"
-
-        if gh_pages_branch_name in repo_heads_names:
-            git_repo.git.checkout(gh_pages_branch_name)
-        else:
-            # if branch does not exist: create and add index.html
-            data_operation.review_manager.logger.info("Setup github pages")
-            git_repo.create_head(gh_pages_branch_name)
-            git_repo.git.checkout(gh_pages_branch_name)
-            title = "Manuscript template"
-            readme_file = data_operation.review_manager.readme
-            if readme_file.is_file():
-                with open(readme_file, encoding="utf-8") as file:
-                    title = file.readline()
-                    title = title.replace("# ", "").replace("\n", "")
-                    title = '"' + title + '"'
-            git_repo.git.rm("-rf", Path("."))
-
-            gitignore_file = Path(".gitignore")
-            git_repo.git.checkout("HEAD", "--", gitignore_file)
-            with gitignore_file.open("a", encoding="utf-8") as file:
-                file.write("status.yaml\n")
-            data_operation.review_manager.dataset.add_changes(path=gitignore_file)
-
-            colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/github_pages/index.html"),
-                target=Path("index.html"),
-            )
-            data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
-            colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/github_pages/_config.yml"),
-                target=Path("_config.yml"),
-            )
-            colrev.env.utils.inplace_change(
-                filename=Path("_config.yml"),
-                old_string="{{project_title}}",
-                new_string=title,
-            )
-            data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
-            colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/github_pages/about.md"),
-                target=Path("about.md"),
-            )
-            data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
+    def __update_data(self, *, data_operation: colrev.ops.data.Data) -> None:
 
         data_operation.review_manager.logger.info("Update data on github pages")
+        records = data_operation.review_manager.dataset.load_records_dict()
 
         # pylint: disable=duplicate-code
         included_records = {
@@ -145,26 +130,59 @@ class GithubPages:
             msg="Update sample", script_call="colrev data"
         )
 
-        if self.settings.auto_push:
-            data_operation.review_manager.logger.info("Push to github pages")
-            if "origin" in git_repo.remotes:
-                if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
-                    git_repo.git.push("origin", gh_pages_branch_name, "--no-verify")
-                else:
-                    git_repo.git.push(
-                        "--set-upstream", "origin", gh_pages_branch_name, "--no-verify"
-                    )
-
-                username, project = (
-                    git_repo.remotes.origin.url.replace("https://github.com/", "")
-                    .replace(".git", "")
-                    .split("/")
-                )
-                data_operation.review_manager.logger.info(
-                    f"Data available at: https://{username}.github.io/{project}/"
-                )
+    def __push_branch(
+        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
+    ) -> None:
+        data_operation.review_manager.logger.info("Push to github pages")
+        if "origin" in git_repo.remotes:
+            if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
+                git_repo.git.push("origin", self.GH_PAGES_BRANCH_NAME, "--no-verify")
             else:
-                data_operation.review_manager.logger.info("No remotes specified")
+                git_repo.git.push(
+                    "--set-upstream",
+                    "origin",
+                    self.GH_PAGES_BRANCH_NAME,
+                    "--no-verify",
+                )
+
+            username, project = (
+                git_repo.remotes.origin.url.replace("https://github.com/", "")
+                .replace(".git", "")
+                .split("/")
+            )
+            data_operation.review_manager.logger.info(
+                f"Data available at: https://{username}.github.io/{project}/"
+            )
+        else:
+            data_operation.review_manager.logger.info("No remotes specified")
+
+    def update_data(
+        self,
+        data_operation: colrev.ops.data.Data,
+        records: dict,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+    ) -> None:
+
+        if data_operation.review_manager.dataset.has_changes():
+            data_operation.review_manager.logger.error(
+                "Cannot update github pages because there are uncommited changes."
+            )
+            return
+
+        git_repo = data_operation.review_manager.dataset.get_repo()
+        active_branch = git_repo.active_branch
+
+        if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
+            self.__setup_github_pages_branch(
+                data_operation=data_operation, git_repo=git_repo
+            )
+
+        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
+
+        self.__update_data(data_operation=data_operation)
+
+        if self.settings.auto_push:
+            self.__push_branch(data_operation=data_operation, git_repo=git_repo)
 
         git_repo.git.checkout(active_branch)
 

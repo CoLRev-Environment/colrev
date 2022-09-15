@@ -69,30 +69,100 @@ class DBLPSearchSource:
             )
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+    def __retrieve_and_append_year_batch(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        records_dict: typing.Dict[str, typing.Dict],
+        year: int,
+    ) -> typing.Dict[str, typing.Dict]:
+
+        search_operation.review_manager.logger.info(f"Retrieving year {year}")
+        api_url = "https://dblp.org/search/publ/api?q="
+
+        query = (
+            self.settings.search_parameters["scope"]["journal_abbreviated"]
+            + "+"
+            + str(year)
+        )
+        # query = params['scope']["venue_key"] + "+" + str(year)
+
+        available_ids = [
+            x["dblp_key"] for x in records_dict.values() if "dblp_key" in x
+        ]
+        max_id = (
+            max(
+                [int(x["ID"]) for x in records_dict.values() if x["ID"].isdigit()] + [1]
+            )
+            + 1
+        )
+
+        nr_retrieved = 0
+        batch_size = 250
+        dblp_connector = colrev.ops.built_in.database_connectors.DBLPConnector
+        while True:
+            url = (
+                api_url
+                + query.replace(" ", "+")
+                + f"&format=json&h={batch_size}&f={nr_retrieved}"
+            )
+            nr_retrieved += batch_size
+            search_operation.review_manager.logger.debug(url)
+
+            retrieved = False
+            for retrieved_record in dblp_connector.retrieve_dblp_records(
+                review_manager=search_operation.review_manager, url=url
+            ):
+                if "colrev_data_provenance" in retrieved_record.data:
+                    del retrieved_record.data["colrev_data_provenance"]
+                if "colrev_masterdata_provenance" in retrieved_record.data:
+                    del retrieved_record.data["colrev_masterdata_provenance"]
+
+                retrieved = True
+
+                if (
+                    f"{self.settings.search_parameters['scope']['venue_key']}/"
+                    not in retrieved_record.data["dblp_key"]
+                ):
+                    continue
+
+                if retrieved_record.data["dblp_key"] not in available_ids:
+                    retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
+                    if retrieved_record.data.get("ENTRYTYPE", "") not in [
+                        "article",
+                        "inproceedings",
+                    ]:
+                        continue
+                        # retrieved_record["ENTRYTYPE"] = "misc"
+                    if "pages" in retrieved_record.data:
+                        del retrieved_record.data["pages"]
+                    available_ids.append(retrieved_record.data["dblp_key"])
+
+                    records_dict[retrieved_record.data["ID"]] = retrieved_record.data
+                    max_id += 1
+
+            if not retrieved:
+                break
+
+        return records_dict
+
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
-        params = self.settings.search_parameters
-        feed_file = self.settings.filename
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
-        search_operation.review_manager.logger.info(f"Retrieve DBLP: {params}")
+        search_operation.review_manager.logger.info(
+            f"Retrieve DBLP: {self.settings.search_parameters}"
+        )
 
-        available_ids = []
-        max_id = 1
-        if not feed_file.is_file():
-            records: list = []
-        else:
-            with open(feed_file, encoding="utf8") as bibtex_file:
+        records: list = []
+        if self.settings.filename.is_file():
+            with open(self.settings.filename, encoding="utf8") as bibtex_file:
                 feed_rd = search_operation.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = list(feed_rd.values())
 
-            available_ids = [x["dblp_key"] for x in records if "dblp_key" in x]
-            max_id = max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
-
         try:
-            api_url = "https://dblp.org/search/publ/api?q="
 
             # Note : journal_abbreviated is the abbreviated venue_key
             # TODO : tbd how the abbreviated venue_key can be retrieved
@@ -103,69 +173,14 @@ class DBLPSearchSource:
                 start = datetime.now().year - 2
             records_dict = {r["ID"]: r for r in records}
             for year in range(start, datetime.now().year):
-                search_operation.review_manager.logger.info(f"Retrieving year {year}")
-                query = params["scope"]["journal_abbreviated"] + "+" + str(year)
-                # query = params['scope']["venue_key"] + "+" + str(year)
-                nr_retrieved = 0
-                batch_size = 250
-                dblp_connector = colrev.ops.built_in.database_connectors.DBLPConnector
-                while True:
-                    url = (
-                        api_url
-                        + query.replace(" ", "+")
-                        + f"&format=json&h={batch_size}&f={nr_retrieved}"
-                    )
-                    nr_retrieved += batch_size
-                    search_operation.review_manager.logger.debug(url)
+                records_dict = self.__retrieve_and_append_year_batch(
+                    search_operation=search_operation,
+                    records_dict=records_dict,
+                    year=year,
+                )
 
-                    retrieved = False
-                    for retrieved_record in dblp_connector.retrieve_dblp_records(
-                        review_manager=search_operation.review_manager, url=url
-                    ):
-                        if "colrev_data_provenance" in retrieved_record.data:
-                            del retrieved_record.data["colrev_data_provenance"]
-                        if "colrev_masterdata_provenance" in retrieved_record.data:
-                            del retrieved_record.data["colrev_masterdata_provenance"]
-
-                        retrieved = True
-
-                        if (
-                            f"{params['scope']['venue_key']}/"
-                            not in retrieved_record.data["dblp_key"]
-                        ):
-                            continue
-
-                        if retrieved_record.data["dblp_key"] not in available_ids:
-                            retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
-                            if retrieved_record.data.get("ENTRYTYPE", "") not in [
-                                "article",
-                                "inproceedings",
-                            ]:
-                                continue
-                                # retrieved_record["ENTRYTYPE"] = "misc"
-                            if "pages" in retrieved_record.data:
-                                del retrieved_record.data["pages"]
-                            available_ids.append(retrieved_record.data["dblp_key"])
-
-                            records = [
-                                {
-                                    k: v.replace("\n", "").replace("\r", "")
-                                    for k, v in r.items()
-                                }
-                                for r in records
-                            ]
-                            records.append(retrieved_record.data)
-                            max_id += 1
-
-                    if not retrieved:
-                        break
-
-                    if len(records) == 0:
-                        continue
-
-                    records_dict = {r["ID"]: r for r in records}
                 search_operation.save_feed_file(
-                    records=records_dict, feed_file=feed_file
+                    records=records_dict, feed_file=self.settings.filename
                 )
 
         except UnicodeEncodeError:

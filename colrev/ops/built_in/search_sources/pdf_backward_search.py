@@ -42,8 +42,10 @@ class BackwardSearchSource:
         self.grobid_service = source_operation.review_manager.get_grobid_service()
         self.grobid_service.start()
 
-    def __load_feed_file_records(self, *, search_operation):
-        feed_file_records = []
+    def __load_feed_file_records(
+        self, *, search_operation: colrev.ops.search.Search
+    ) -> typing.List[typing.Dict]:
+        feed_file_records: typing.List[typing.Dict] = []
         if self.settings.filename.is_file():
             with open(self.settings.filename, encoding="utf8") as bibtex_file:
                 if bibtex_file.read() == "":
@@ -77,7 +79,11 @@ class BackwardSearchSource:
         return True
 
     def __append_references_from_pdf(
-        self, *, search_operation, feed_file_records: list, record: dict
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        feed_file_records: list,
+        record: dict,
     ) -> list:
 
         pdf_path = search_operation.review_manager.path / Path(record["file"])

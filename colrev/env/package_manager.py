@@ -584,6 +584,11 @@ class PackageManager:
             if "search_source" == package_type:
                 del params["check_operation"]
 
+            if "endpoint" not in package_class:
+                raise colrev_exceptions.MissingDependencyError(
+                    f"{package_identifier} is not available"
+                )
+
             if instantiate_objects:
                 packages_dict[package_identifier] = package_class["endpoint"](**params)
                 verifyObject(endpoint_class, packages_dict[package_identifier])

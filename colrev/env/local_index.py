@@ -220,6 +220,23 @@ class LocalIndex:
     def __get_tei_index_file(self, *, paper_hash: str) -> Path:
         return self.teiind_path / Path(f"{paper_hash[:2]}/{paper_hash[2:]}.tei.xml")
 
+    def __index_author(
+        self, tei: colrev.env.tei_parser.TEIParser, record_dict: dict
+    ) -> None:
+        author_details = tei.get_author_details()
+        # Iterate over curated metadata and enrich it based on TEI (may vary in quality)
+        for author in record_dict.get("author", "").split(" and "):
+            if "," not in author:
+                continue
+            author_dict = {}
+            author_dict["surname"] = author.split(", ")[0]
+            author_dict["forename"] = author.split(", ")[1]
+            for author_detail in author_details:
+                if author_dict["surname"] == author_detail["surname"]:
+                    # Add complementary details
+                    author_dict = {**author_dict, **author_detail}
+            self.open_search.index(index=self.AUTHOR_INDEX, body=author_dict)
+
     def __store_record(self, *, paper_hash: str, record_dict: dict) -> None:
 
         if "file" in record_dict:
@@ -233,21 +250,7 @@ class LocalIndex:
                     )
                     record_dict["fulltext"] = tei.get_tei_str()
 
-                    author_details = tei.get_author_details()
-                    # Iterate over curated metadata and enrich it based on TEI (may vary in quality)
-                    for author in record_dict.get("author", "").split(" and "):
-                        if "," not in author:
-                            continue
-                        author_dict = {}
-                        author_dict["surname"] = author.split(", ")[0]
-                        author_dict["forename"] = author.split(", ")[1]
-                        for author_detail in author_details:
-                            if author_dict["surname"] == author_detail["surname"]:
-                                # Add complementary details
-                                author_dict = {**author_dict, **author_detail}
-                        self.open_search.index(
-                            index=self.AUTHOR_INDEX, body=author_dict
-                        )
+                    self.__index_author(tei=tei, record_dict=record_dict)
 
             except (
                 colrev_exceptions.TEIException,

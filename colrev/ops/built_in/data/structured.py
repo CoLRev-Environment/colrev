@@ -30,6 +30,7 @@ class StructuredData:
         name: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)
+        data_path_relative: Path = Path("data.csv")
 
         _details = {
             "fields": {"tooltip": "Fields for the structured data extraction"},

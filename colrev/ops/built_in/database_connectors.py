@@ -57,6 +57,70 @@ class OpenLibraryConnector:
 
 class URLConnector:
     @classmethod
+    def __update_record(
+        cls,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        item: dict,
+    ) -> None:
+        # pylint: disable=too-many-branches
+
+        record.data["ID"] = item["key"]
+        record.data["ENTRYTYPE"] = "article"  # default
+        if "journalArticle" == item.get("itemType", ""):
+            record.data["ENTRYTYPE"] = "article"
+            if "publicationTitle" in item:
+                record.data["journal"] = item["publicationTitle"]
+            if "volume" in item:
+                record.data["volume"] = item["volume"]
+            if "issue" in item:
+                record.data["number"] = item["issue"]
+        if "conferencePaper" == item.get("itemType", ""):
+            record.data["ENTRYTYPE"] = "inproceedings"
+            if "proceedingsTitle" in item:
+                record.data["booktitle"] = item["proceedingsTitle"]
+        if "creators" in item:
+            author_str = ""
+            for creator in item["creators"]:
+                author_str += (
+                    " and "
+                    + creator.get("lastName", "")
+                    + ", "
+                    + creator.get("firstName", "")
+                )
+            author_str = author_str[5:]  # drop the first " and "
+            record.data["author"] = author_str
+        if "title" in item:
+            record.data["title"] = item["title"]
+        if "doi" in item:
+            record.data["doi"] = item["doi"]
+        if "date" in item:
+            year = re.search(r"\d{4}", item["date"])
+            if year:
+                record.data["year"] = year.group(0)
+        if "pages" in item:
+            record.data["pages"] = item["pages"]
+        if "url" in item:
+            if "https://doi.org/" in item["url"]:
+                record.data["doi"] = item["url"].replace("https://doi.org/", "")
+                dummy_record = colrev.record.PrepRecord(
+                    data={"doi": record.data["doi"]}
+                )
+                DOIConnector.get_link_from_doi(
+                    record=dummy_record,
+                    review_manager=prep_operation.review_manager,
+                )
+                if "https://doi.org/" not in dummy_record.data["url"]:
+                    record.data["url"] = dummy_record.data["url"]
+            else:
+                record.data["url"] = item["url"]
+
+        if "tags" in item:
+            if len(item["tags"]) > 0:
+                keywords = ", ".join([k["tag"] for k in item["tags"]])
+                record.data["keywords"] = keywords
+
+    @classmethod
     def retrieve_md_from_url(
         cls, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
     ) -> None:
@@ -92,61 +156,8 @@ class URLConnector:
             if "Shibboleth Authentication Request" == item["title"]:
                 return
 
-            # self.review_manager.p_printer.pprint(item)
-            record.data["ID"] = item["key"]
-            record.data["ENTRYTYPE"] = "article"  # default
-            if "journalArticle" == item.get("itemType", ""):
-                record.data["ENTRYTYPE"] = "article"
-                if "publicationTitle" in item:
-                    record.data["journal"] = item["publicationTitle"]
-                if "volume" in item:
-                    record.data["volume"] = item["volume"]
-                if "issue" in item:
-                    record.data["number"] = item["issue"]
-            if "conferencePaper" == item.get("itemType", ""):
-                record.data["ENTRYTYPE"] = "inproceedings"
-                if "proceedingsTitle" in item:
-                    record.data["booktitle"] = item["proceedingsTitle"]
-            if "creators" in item:
-                author_str = ""
-                for creator in item["creators"]:
-                    author_str += (
-                        " and "
-                        + creator.get("lastName", "")
-                        + ", "
-                        + creator.get("firstName", "")
-                    )
-                author_str = author_str[5:]  # drop the first " and "
-                record.data["author"] = author_str
-            if "title" in item:
-                record.data["title"] = item["title"]
-            if "doi" in item:
-                record.data["doi"] = item["doi"]
-            if "date" in item:
-                year = re.search(r"\d{4}", item["date"])
-                if year:
-                    record.data["year"] = year.group(0)
-            if "pages" in item:
-                record.data["pages"] = item["pages"]
-            if "url" in item:
-                if "https://doi.org/" in item["url"]:
-                    record.data["doi"] = item["url"].replace("https://doi.org/", "")
-                    dummy_record = colrev.record.PrepRecord(
-                        data={"doi": record.data["doi"]}
-                    )
-                    DOIConnector.get_link_from_doi(
-                        record=dummy_record,
-                        review_manager=prep_operation.review_manager,
-                    )
-                    if "https://doi.org/" not in dummy_record.data["url"]:
-                        record.data["url"] = dummy_record.data["url"]
-                else:
-                    record.data["url"] = item["url"]
+            cls.__update_record(prep_operation=prep_operation, record=record, item=item)
 
-            if "tags" in item:
-                if len(item["tags"]) > 0:
-                    keywords = ", ".join([k["tag"] for k in item["tags"]])
-                    record.data["keywords"] = keywords
         except (
             json.decoder.JSONDecodeError,
             UnicodeEncodeError,
@@ -385,6 +396,9 @@ class CrossrefConnector:
 
     @classmethod
     def crossref_json_to_record(cls, *, item: dict) -> dict:
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         # Note: the format differst between crossref and doi.org
         record_dict: dict = {}
 
@@ -534,6 +548,10 @@ class CrossrefConnector:
         jour_vol_iss_list: bool = False,
         timeout: int = 10,
     ) -> list:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         # https://github.com/CrossRef/rest-api-doc
         api_url = "https://api.crossref.org/works?"
 
@@ -775,6 +793,120 @@ class DBLPConnector:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
 
     @classmethod
+    def __get_dblp_venue(
+        cls, *, session, review_manager, timeout, venue_string: str, venue_type: str
+    ) -> str:
+        # Note : venue_string should be like "behaviourIT"
+        # Note : journals that have been renamed seem to return the latest
+        # journal name. Example:
+        # https://dblp.org/db/journals/jasis/index.html
+        venue = venue_string
+        api_url = "https://dblp.org/search/venue/api?q="
+        url = api_url + venue_string.replace(" ", "+") + "&format=json"
+        headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+        try:
+            ret = session.request("GET", url, headers=headers, timeout=timeout)
+            ret.raise_for_status()
+            data = json.loads(ret.text)
+            if "hit" not in data["result"]["hits"]:
+                return ""
+            hits = data["result"]["hits"]["hit"]
+            for hit in hits:
+                if hit["info"]["type"] != venue_type:
+                    continue
+                if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
+                    venue = hit["info"]["venue"]
+                    break
+
+            venue = re.sub(r" \(.*?\)", "", venue)
+        except requests.exceptions.RequestException:
+            pass
+        return venue
+
+    @classmethod
+    def __dblp_json_to_dict(
+        cls, *, review_manager, session, item: dict, timeout
+    ) -> dict:
+        # pylint: disable=too-many-branches
+
+        # To test in browser:
+        # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
+
+        retrieved_record = {}
+        if "Withdrawn Items" == item["type"]:
+            if "journals" == item["key"][:8]:
+                item["type"] = "Journal Articles"
+            if "conf" == item["key"][:4]:
+                item["type"] = "Conference and Workshop Papers"
+            retrieved_record["warning"] = "Withdrawn (according to DBLP)"
+        if "Journal Articles" == item["type"]:
+            retrieved_record["ENTRYTYPE"] = "article"
+            lpos = item["key"].find("/") + 1
+            rpos = item["key"].rfind("/")
+            ven_key = item["key"][lpos:rpos]
+            retrieved_record["journal"] = cls.__get_dblp_venue(
+                session=session,
+                review_manager=review_manager,
+                timeout=timeout,
+                venue_string=ven_key,
+                venue_type="Journal",
+            )
+        if "Conference and Workshop Papers" == item["type"]:
+            retrieved_record["ENTRYTYPE"] = "inproceedings"
+            lpos = item["key"].find("/") + 1
+            rpos = item["key"].rfind("/")
+            ven_key = item["key"][lpos:rpos]
+            retrieved_record["booktitle"] = cls.__get_dblp_venue(
+                session=session,
+                review_manager=review_manager,
+                venue_string=ven_key,
+                venue_type="Conference or Workshop",
+                timeout=timeout,
+            )
+        if "title" in item:
+            retrieved_record["title"] = item["title"].rstrip(".")
+        if "year" in item:
+            retrieved_record["year"] = item["year"]
+        if "volume" in item:
+            retrieved_record["volume"] = item["volume"]
+        if "number" in item:
+            retrieved_record["number"] = item["number"]
+        if "pages" in item:
+            retrieved_record["pages"] = item["pages"].replace("-", "--")
+        if "authors" in item:
+            if "author" in item["authors"]:
+                if isinstance(item["authors"]["author"], dict):
+                    author_string = item["authors"]["author"]["text"]
+                else:
+                    authors_nodes = [
+                        author
+                        for author in item["authors"]["author"]
+                        if isinstance(author, dict)
+                    ]
+                    authors = [x["text"] for x in authors_nodes if "text" in x]
+                    author_string = " and ".join(authors)
+                author_string = colrev.record.PrepRecord.format_author_field(
+                    input_string=author_string
+                )
+                retrieved_record["author"] = author_string
+
+        if "key" in item:
+            retrieved_record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
+
+        if "doi" in item:
+            retrieved_record["doi"] = item["doi"].upper()
+        if "ee" in item:
+            if "https://doi.org" not in item["ee"]:
+                retrieved_record["url"] = item["ee"]
+
+        for key, value in retrieved_record.items():
+            retrieved_record[key] = (
+                html.unescape(value).replace("{", "").replace("}", "")
+            )
+
+        return retrieved_record
+
+    @classmethod
     def retrieve_dblp_records(
         cls,
         *,
@@ -783,101 +915,6 @@ class DBLPConnector:
         url: str = None,
         timeout: int = 10,
     ) -> list:
-        def dblp_json_to_dict(item: dict) -> dict:
-            # To test in browser:
-            # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
-
-            def get_dblp_venue(venue_string: str, venue_type: str) -> str:
-                # Note : venue_string should be like "behaviourIT"
-                # Note : journals that have been renamed seem to return the latest
-                # journal name. Example:
-                # https://dblp.org/db/journals/jasis/index.html
-                venue = venue_string
-                api_url = "https://dblp.org/search/venue/api?q="
-                url = api_url + venue_string.replace(" ", "+") + "&format=json"
-                headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
-                try:
-                    ret = session.request("GET", url, headers=headers, timeout=timeout)
-                    ret.raise_for_status()
-                    data = json.loads(ret.text)
-                    if "hit" not in data["result"]["hits"]:
-                        return ""
-                    hits = data["result"]["hits"]["hit"]
-                    for hit in hits:
-                        if hit["info"]["type"] != venue_type:
-                            continue
-                        if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
-                            venue = hit["info"]["venue"]
-                            break
-
-                    venue = re.sub(r" \(.*?\)", "", venue)
-                except requests.exceptions.RequestException:
-                    pass
-                return venue
-
-            retrieved_record = {}
-            if "Withdrawn Items" == item["type"]:
-                if "journals" == item["key"][:8]:
-                    item["type"] = "Journal Articles"
-                if "conf" == item["key"][:4]:
-                    item["type"] = "Conference and Workshop Papers"
-                retrieved_record["warning"] = "Withdrawn (according to DBLP)"
-            if "Journal Articles" == item["type"]:
-                retrieved_record["ENTRYTYPE"] = "article"
-                lpos = item["key"].find("/") + 1
-                rpos = item["key"].rfind("/")
-                ven_key = item["key"][lpos:rpos]
-                retrieved_record["journal"] = get_dblp_venue(ven_key, "Journal")
-            if "Conference and Workshop Papers" == item["type"]:
-                retrieved_record["ENTRYTYPE"] = "inproceedings"
-                lpos = item["key"].find("/") + 1
-                rpos = item["key"].rfind("/")
-                ven_key = item["key"][lpos:rpos]
-                retrieved_record["booktitle"] = get_dblp_venue(
-                    ven_key, "Conference or Workshop"
-                )
-            if "title" in item:
-                retrieved_record["title"] = item["title"].rstrip(".")
-            if "year" in item:
-                retrieved_record["year"] = item["year"]
-            if "volume" in item:
-                retrieved_record["volume"] = item["volume"]
-            if "number" in item:
-                retrieved_record["number"] = item["number"]
-            if "pages" in item:
-                retrieved_record["pages"] = item["pages"].replace("-", "--")
-            if "authors" in item:
-                if "author" in item["authors"]:
-                    if isinstance(item["authors"]["author"], dict):
-                        author_string = item["authors"]["author"]["text"]
-                    else:
-                        authors_nodes = [
-                            author
-                            for author in item["authors"]["author"]
-                            if isinstance(author, dict)
-                        ]
-                        authors = [x["text"] for x in authors_nodes if "text" in x]
-                        author_string = " and ".join(authors)
-                    author_string = colrev.record.PrepRecord.format_author_field(
-                        input_string=author_string
-                    )
-                    retrieved_record["author"] = author_string
-
-            if "key" in item:
-                retrieved_record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
-
-            if "doi" in item:
-                retrieved_record["doi"] = item["doi"].upper()
-            if "ee" in item:
-                if "https://doi.org" not in item["ee"]:
-                    retrieved_record["url"] = item["ee"]
-
-            for key, value in retrieved_record.items():
-                retrieved_record[key] = (
-                    html.unescape(value).replace("{", "").replace("}", "")
-                )
-
-            return retrieved_record
 
         try:
 
@@ -908,7 +945,15 @@ class DBLPConnector:
                 return []
             hits = data["result"]["hits"]["hit"]
             items = [hit["info"] for hit in hits]
-            dblp_dicts = [dblp_json_to_dict(item) for item in items]
+            dblp_dicts = [
+                cls.__dblp_json_to_dict(
+                    review_manager=review_manager,
+                    session=session,
+                    item=item,
+                    timeout=timeout,
+                )
+                for item in items
+            ]
             retrieved_records = [
                 colrev.record.PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts
             ]

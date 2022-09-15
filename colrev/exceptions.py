@@ -306,6 +306,17 @@ class RecordNotInRepoException(CoLRevException):
         super().__init__(self.message)
 
 
+# PDF Hash service
+
+
+class InvalidPDFException(CoLRevException):
+    """The PDF is invalid (empty or broken)."""
+
+    def __init__(self, path: Path) -> None:
+        self.message = f"Invalid PDF (empty/broken): {path}"
+        super().__init__(self.message)
+
+
 # Environment services
 
 
