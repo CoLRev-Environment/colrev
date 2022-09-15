@@ -105,6 +105,7 @@ class Load(colrev.process.Process):
 
     def check_update_sources(self) -> None:
         # pylint: disable=redefined-outer-name
+        # pylint: disable=too-many-branches
 
         sources = self.review_manager.settings.sources
 
@@ -113,106 +114,105 @@ class Load(colrev.process.Process):
             # (which will be created later in the process)
 
             sfp_name = sfp
-            if sfp_name not in [str(source.filename) for source in sources]:
+            if sfp_name in [str(source.filename) for source in sources]:
+                continue
 
-                self.review_manager.logger.info(f"Discovering new source: {sfp_name}")
+            self.review_manager.logger.info(f"Discovering new source: {sfp_name}")
 
-                # Assuming that all other search types are added by query
-                # search_type_input = "NA"
-                # while search_type_input not in SearchType._member_names_:
-                #     print(f"Search type options: {SearchType._member_names_}")
-                #     cmd = "Enter search type".ljust(70, " ") + ": "
-                #     search_type_input = input(cmd)
+            # Assuming that all other search types are added by query
+            # search_type_input = "NA"
+            # while search_type_input not in SearchType._member_names_:
+            #     print(f"Search type options: {SearchType._member_names_}")
+            #     cmd = "Enter search type".ljust(70, " ") + ": "
+            #     search_type_input = input(cmd)
 
-                heuristic_result_list = self.__apply_source_heuristics(filepath=sfp)
+            heuristic_result_list = self.__apply_source_heuristics(filepath=sfp)
 
-                if 1 == len(heuristic_result_list):
-                    heuristic_source = heuristic_result_list[0]
-                else:
-                    print("\nSelect search source:")
-                    for i, heuristic_source in enumerate(heuristic_result_list):
-                        print(
-                            f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
-                            f" {heuristic_source['source_candidate'].source_name}"
-                        )
-
-                    while True:
-                        selection = input("select nr")
-                        if not selection.isdigit():
-                            continue
-                        if int(selection) in range(1, len(heuristic_result_list) + 1):
-                            heuristic_source = heuristic_result_list[int(selection) - 1]
-                            break
-
-                if "unknown_source" == heuristic_source["source_candidate"].source_name:
-                    self.review_manager.logger.warning("Could not detect source")
-                    # if heuristic_source["source_candidate"].search_type ==
-                    #  colrev.settings.SearchType.DB:
-                    #     print("   Sources with pre-defined settings:")
-                    #     cl_scripts = "\n    - ".join(
-                    #         self.search_sources.all_available_packages
-                    #     )
-                    #     print("    - " + cl_scripts)
-                    #     print("   See colrev/custom_source_load.py for details")
-
-                    while heuristic_source["source_candidate"].source_identifier in [
-                        "",
-                        "NA",
-                    ]:
-                        cmd = "\nEnter source identifier (e.g., {{url}} or a short description)"
-                        cmd = cmd.ljust(70, " ") + ": "
-                        heuristic_source["source_candidate"].source_identifier = input(
-                            cmd
-                        )
-
-                    cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
-                    heuristic_source["source_candidate"].search_parameters = {
-                        "query": input(cmd)
-                    }
-
-                else:
+            if 1 == len(heuristic_result_list):
+                heuristic_source = heuristic_result_list[0]
+            else:
+                print("\nSelect search source:")
+                for i, heuristic_source in enumerate(heuristic_result_list):
                     print(
-                        "Source name".ljust(70, " ")
-                        + f": {heuristic_source['source_candidate'].source_name}"
-                    )
-                    print(
-                        "Source identifier".ljust(70, " ")
-                        + f": {heuristic_source['source_candidate'].source_identifier}"
+                        f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
+                        f" {heuristic_source['source_candidate'].source_name}"
                     )
 
-                # cmd = "Enter search_parameters".ljust(70, " ") + ": "
-                # search_parameters = input(cmd)
-                # heuristic_source[
-                #     "source_candidate"
-                # ].search_parameters = search_parameters
+                while True:
+                    selection = input("select nr")
+                    if not selection.isdigit():
+                        continue
+                    if int(selection) in range(1, len(heuristic_result_list) + 1):
+                        heuristic_source = heuristic_result_list[int(selection) - 1]
+                        break
 
-                cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
-                comment_input = input(cmd)
-                if comment_input != "":
-                    comment = comment_input
-                else:
-                    comment = None  # type: ignore
-                heuristic_source["source_candidate"].comment = comment
+            if "unknown_source" == heuristic_source["source_candidate"].source_name:
+                self.review_manager.logger.warning("Could not detect source")
+                # if heuristic_source["source_candidate"].search_type ==
+                #  colrev.settings.SearchType.DB:
+                #     print("   Sources with pre-defined settings:")
+                #     cl_scripts = "\n    - ".join(
+                #         self.search_sources.all_available_packages
+                #     )
+                #     print("    - " + cl_scripts)
+                #     print("   See colrev/custom_source_load.py for details")
 
-                if {} == heuristic_source["source_candidate"].load_conversion_script:
-                    custom_load_script = input(
-                        "provide custom load_conversion_script [or NA]:"
-                    )
-                    if "NA" == custom_load_script:
-                        heuristic_source["source_candidate"].load_conversion_script = {}
-                    else:
-                        heuristic_source["source_candidate"].load_conversion_script = {
-                            "endpoint": custom_load_script
-                        }
-                    # TODO : check if custom_load_script is available?
+                while heuristic_source["source_candidate"].source_identifier in [
+                    "",
+                    "NA",
+                ]:
+                    cmd = "\nEnter source identifier (e.g., {{url}} or a short description)"
+                    cmd = cmd.ljust(70, " ") + ": "
+                    heuristic_source["source_candidate"].source_identifier = input(cmd)
 
-                sources.append(heuristic_source["source_candidate"])
-                self.review_manager.save_settings()
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Added new source: "
-                    f"{heuristic_source['source_candidate'].source_name}{colors.END}"
+                cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
+                heuristic_source["source_candidate"].search_parameters = {
+                    "query": input(cmd)
+                }
+
+            else:
+                print(
+                    "Source name".ljust(70, " ")
+                    + f": {heuristic_source['source_candidate'].source_name}"
                 )
-                print("\n")
+                print(
+                    "Source identifier".ljust(70, " ")
+                    + f": {heuristic_source['source_candidate'].source_identifier}"
+                )
+
+            # cmd = "Enter search_parameters".ljust(70, " ") + ": "
+            # search_parameters = input(cmd)
+            # heuristic_source[
+            #     "source_candidate"
+            # ].search_parameters = search_parameters
+
+            cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
+            comment_input = input(cmd)
+            if comment_input != "":
+                comment = comment_input
+            else:
+                comment = None  # type: ignore
+            heuristic_source["source_candidate"].comment = comment
+
+            if {} == heuristic_source["source_candidate"].load_conversion_script:
+                custom_load_script = input(
+                    "provide custom load_conversion_script [or NA]:"
+                )
+                if "NA" == custom_load_script:
+                    heuristic_source["source_candidate"].load_conversion_script = {}
+                else:
+                    heuristic_source["source_candidate"].load_conversion_script = {
+                        "endpoint": custom_load_script
+                    }
+                # TODO : check if custom_load_script is available?
+
+            sources.append(heuristic_source["source_candidate"])
+            self.review_manager.save_settings()
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Added new source: "
+                f"{heuristic_source['source_candidate'].source_name}{colors.END}"
+            )
+            print("\n")
 
     def __check_bib_file(
         self, *, source: colrev.settings.SearchSource, records: dict
@@ -311,122 +311,88 @@ class Load(colrev.process.Process):
                 msg=f"Resolve non-unique IDs in {source.get_corresponding_bib_file().name}"
             )
 
-    def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool
-    ) -> None:
-        def getbib(*, file: Path) -> list[dict]:
-            with open(file, encoding="utf8") as bibtex_file:
-                contents = bibtex_file.read()
-                bib_r = re.compile(r"@.*{.*,", re.M)
-                if len(re.findall(bib_r, contents)) == 0:
-                    self.review_manager.logger.error(f"Not a bib file? {file.name}")
-                if "Early Access Date" in contents:
-                    raise colrev_exceptions.BibFileFormatError(
-                        "Replace Early Access Date in bibfile before loading! "
-                        f"{file.name}"
-                    )
-            with open(file, encoding="utf8") as bibtex_file:
-                search_records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
+    def __getbib(self, *, file: Path) -> list[dict]:
+        with open(file, encoding="utf8") as bibtex_file:
+            contents = bibtex_file.read()
+            bib_r = re.compile(r"@.*{.*,", re.M)
+            if len(re.findall(bib_r, contents)) == 0:
+                self.review_manager.logger.error(f"Not a bib file? {file.name}")
+            if "Early Access Date" in contents:
+                raise colrev_exceptions.BibFileFormatError(
+                    "Replace Early Access Date in bibfile before loading! "
+                    f"{file.name}"
                 )
-            return list(search_records_dict.values())
-
-        def import_record(*, record_dict: dict) -> dict:
-            self.review_manager.logger.debug(
-                f'import_record {record_dict["ID"]}: '
-                f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
+        with open(file, encoding="utf8") as bibtex_file:
+            search_records_dict = self.review_manager.dataset.load_records_dict(
+                load_str=bibtex_file.read()
             )
-            if colrev.record.RecordState.md_retrieved != record_dict["colrev_status"]:
-                return record_dict
+        return list(search_records_dict.values())
 
-            # Consistently set keys to lower case
-            lower_keys = [k.lower() for k in list(record_dict.keys())]
-            for key, n_key in zip(list(record_dict.keys()), lower_keys):
-                if key in ["ID", "ENTRYTYPE"]:
-                    continue
-                record_dict[n_key] = record_dict.pop(key)
-
-            # pylint: disable=duplicate-code
-            # For better readability of the git diff:
-            fields_to_process = [
-                "author",
-                "year",
-                "title",
-                "journal",
-                "booktitle",
-                "series",
-                "volume",
-                "number",
-                "pages",
-                "doi",
-                "abstract",
-            ]
-            for field in fields_to_process:
-                if field in record_dict:
-                    record_dict[field] = (
-                        record_dict[field]
-                        .replace("\n", " ")
-                        .rstrip()
-                        .lstrip()
-                        .replace("{", "")
-                        .replace("}", "")
-                    )
-            if "pages" in record_dict:
-                record_dict["pages"] = record_dict["pages"].replace("–", "--")
-                if record_dict["pages"].count("-") == 1:
-                    record_dict["pages"] = record_dict["pages"].replace("-", "--")
-
-            if "number" not in record_dict and "issue" in record_dict:
-                record_dict.update(number=record_dict["issue"])
-                del record_dict["issue"]
-
-            record = colrev.record.Record(data=record_dict)
-            if "doi" in record.data:
-                record.data.update(
-                    doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
-                )
-
-            record.import_provenance(source_identifier=source.source_identifier)
-            record.set_status(target_state=colrev.record.RecordState.md_imported)
-
-            return record.get_data()
-
-        search_records = []
-        if source.get_corresponding_bib_file().is_file():
-            search_records = getbib(file=source.get_corresponding_bib_file())
-            self.review_manager.logger.debug(
-                f"Loaded {source.get_corresponding_bib_file().name} "
-                f"with {len(search_records)} records"
-            )
-
-        if len(search_records) == 0:
-            # source.to_import = 0
-            # source.source_records_list = list()
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No records to load{colors.END}"
-            )
-            print()
-
-            return
-
-        nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
-            file_path=source.get_corresponding_bib_file()
+    def __import_record(
+        self, *, source: colrev.settings.SearchSource, record_dict: dict
+    ) -> dict:
+        self.review_manager.logger.debug(
+            f'import_record {record_dict["ID"]}: '
+            f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
         )
-        if len(search_records) < nr_in_bib:
-            self.review_manager.logger.error(
-                "broken bib file (not imported all records)"
-            )
-            with open(source.get_corresponding_bib_file(), encoding="utf8") as file:
-                line = file.readline()
-                while line:
-                    if "@" in line[:3]:
-                        record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x["ID"] for x in search_records]:
-                            self.review_manager.logger.error(
-                                f"{record_id} not imported"
-                            )
-                    line = file.readline()
+        if colrev.record.RecordState.md_retrieved != record_dict["colrev_status"]:
+            return record_dict
 
+        # Consistently set keys to lower case
+        lower_keys = [k.lower() for k in list(record_dict.keys())]
+        for key, n_key in zip(list(record_dict.keys()), lower_keys):
+            if key in ["ID", "ENTRYTYPE"]:
+                continue
+            record_dict[n_key] = record_dict.pop(key)
+
+        # pylint: disable=duplicate-code
+        # For better readability of the git diff:
+        fields_to_process = [
+            "author",
+            "year",
+            "title",
+            "journal",
+            "booktitle",
+            "series",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+            "abstract",
+        ]
+        for field in fields_to_process:
+            if field in record_dict:
+                record_dict[field] = (
+                    record_dict[field]
+                    .replace("\n", " ")
+                    .rstrip()
+                    .lstrip()
+                    .replace("{", "")
+                    .replace("}", "")
+                )
+        if "pages" in record_dict:
+            record_dict["pages"] = record_dict["pages"].replace("–", "--")
+            if record_dict["pages"].count("-") == 1:
+                record_dict["pages"] = record_dict["pages"].replace("-", "--")
+
+        if "number" not in record_dict and "issue" in record_dict:
+            record_dict.update(number=record_dict["issue"])
+            del record_dict["issue"]
+
+        record = colrev.record.Record(data=record_dict)
+        if "doi" in record.data:
+            record.data.update(
+                doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
+            )
+
+        record.import_provenance(source_identifier=source.source_identifier)
+        record.set_status(target_state=colrev.record.RecordState.md_imported)
+
+        return record.get_data()
+
+    def __prep_records_for_import(
+        self, *, source: colrev.settings.SearchSource, search_records: list
+    ) -> list:
         record_list = []
         for record in search_records:
             record.update(
@@ -461,6 +427,51 @@ class Load(colrev.process.Process):
                 f"\n{self.review_manager.p_printer.pformat(record)}\n\n"
             )
             record_list.append(record)
+        return record_list
+
+    def __load_source_records(
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+    ) -> None:
+
+        search_records = []
+        if source.get_corresponding_bib_file().is_file():
+            search_records = self.__getbib(file=source.get_corresponding_bib_file())
+            self.review_manager.logger.debug(
+                f"Loaded {source.get_corresponding_bib_file().name} "
+                f"with {len(search_records)} records"
+            )
+
+        if len(search_records) == 0:
+            # source.to_import = 0
+            # source.source_records_list = list()
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No records to load{colors.END}"
+            )
+            print()
+
+            return
+
+        nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
+            file_path=source.get_corresponding_bib_file()
+        )
+        if len(search_records) < nr_in_bib:
+            self.review_manager.logger.error(
+                "broken bib file (not imported all records)"
+            )
+            with open(source.get_corresponding_bib_file(), encoding="utf8") as file:
+                line = file.readline()
+                while line:
+                    if "@" in line[:3]:
+                        record_id = line[line.find("{") + 1 : line.rfind(",")]
+                        if record_id not in [x["ID"] for x in search_records]:
+                            self.review_manager.logger.error(
+                                f"{record_id} not imported"
+                            )
+                    line = file.readline()
+
+        record_list = self.__prep_records_for_import(
+            source=source, search_records=search_records
+        )
 
         imported_origins = (
             self.review_manager.dataset.get_currently_imported_origin_list()
@@ -474,7 +485,9 @@ class Load(colrev.process.Process):
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
-            source_record = import_record(record_dict=source_record)
+            source_record = self.__import_record(
+                source=source, record_dict=source_record
+            )
 
             # Make sure IDs are unique / do not replace existing records
             order = 0
