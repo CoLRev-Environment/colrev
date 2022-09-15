@@ -18,33 +18,6 @@ class IDPattern(Enum):
     three_authors_year = "three_authors_year"
 
 
-class ReviewType(Enum):
-    # pylint: disable=C0103
-    curated_masterdata = "curated_masterdata"
-    realtime = "realtime"
-    literature_review = "literature_review"
-    narrative_review = "narrative_review"
-    descriptive_review = "descriptive_review"
-    scoping_review = "scoping_review"
-    critical_review = "critical_review"
-    theoretical_review = "theoretical_review"
-    conceptual_review = "conceptual_review"
-    qualitative_systematic_review = "qualitative_systematic_review"
-    meta_analysis = "meta_analysis"
-    scientometric = "scientometric"
-    peer_review = "peer_review"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    def __str__(self) -> str:
-        return (
-            f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
-        )
-
-
 # @dataclass
 # class Author:
 #     name: str
@@ -69,7 +42,7 @@ class ProjectConfiguration:
     # status ? (development/published?)
     # protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
-    review_type: ReviewType
+    review_type: str
     id_pattern: IDPattern
     share_stat_req: str
     delay_automated_processing: bool

@@ -20,6 +20,7 @@ import colrev.record
 
 class PackageType(Enum):
     # pylint: disable=C0103
+    review_type = "review_type"
     load_conversion = "load_conversion"
     search_source = "search_source"
     prep = "prep"
@@ -32,6 +33,15 @@ class PackageType(Enum):
     pdf_prep_man = "pdf_prep_man"
     screen = "screen"
     data = "data"
+
+
+class ReviewTypePackageInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    # pylint: disable=no-self-argument
+    def initialize(settings: dict) -> dict:
+        return settings
 
 
 class SearchSourcePackageInterface(
@@ -226,6 +236,12 @@ class DefaultSourceSettings:
 class PackageManager:
 
     endpoint_overview = [
+        {
+            "package_type": PackageType.review_type,
+            "import_name": ReviewTypePackageInterface,
+            "custom_class": "CustomReviewType",
+            "operation_name": "operation",
+        },
         {
             "package_type": PackageType.load_conversion,
             "import_name": LoadConversionPackageInterface,
@@ -511,6 +527,10 @@ class PackageManager:
                     ] = self.load_package_endpoint(
                         package_type=package_type, package_identifier=package_identifier
                     )
+            elif ignore_not_available:
+                raise colrev_exceptions.MissingDependencyError(
+                    f"Dependency {package_identifier} not available."
+                )
 
             # 2. Load module packages
             # TODO : test the module prep_scripts
@@ -555,25 +575,28 @@ class PackageManager:
                 if item["package_type"] == package_type
             )
         except StopIteration as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
+            raise colrev_exceptions.MissingDependencyError(
                 f"package_type {package_type} not available"
             ) from exc
 
         broken_packages = []
         for k, val in packages_dict.items():
-            if "custom_flag" in val:
-                try:
-                    packages_dict[k]["endpoint"] = getattr(  # type: ignore
-                        val["endpoint"], package_details["custom_class"]
-                    )
-                    del packages_dict[k]["custom_flag"]
-                except AttributeError:
-                    # Note : these may also be (package name) conflicts
-                    broken_packages.append(k)
-
-        for k in broken_packages:
-            print(f"Skipping broken package ({k})")
-            packages_dict.pop(k, None)
+            if "custom_flag" not in val:
+                continue
+            try:
+                packages_dict[k]["endpoint"] = getattr(  # type: ignore
+                    val["endpoint"], package_details["custom_class"]
+                )
+                del packages_dict[k]["custom_flag"]
+            except AttributeError as exc:
+                # Note : these may also be (package name) conflicts
+                if not ignore_not_available:
+                    raise colrev_exceptions.MissingDependencyError(
+                        f"Dependency {k} not available"
+                    ) from exc
+                broken_packages.append(k)
+                print(f"Skipping broken package ({k})")
+                packages_dict.pop(k, None)
 
         endpoint_class = package_details["import_name"]  # type: ignore
         for package_identifier, package_class in packages_dict.items():
@@ -583,7 +606,6 @@ class PackageManager:
             }
             if "search_source" == package_type:
                 del params["check_operation"]
-
             if "endpoint" not in package_class:
                 raise colrev_exceptions.MissingDependencyError(
                     f"{package_identifier} is not available"

@@ -256,5 +256,43 @@
         "transport_research_international_documentation": {
             "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation"
         }
+    },
+    "review_type": {
+        "curated_masterdata": {
+            "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata"
+        },
+        "realtime": {
+            "endpoint": "colrev.ops.built_in.review_types.realtime.RealTimeReview"
+        },
+        "literature_review": {
+            "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview"
+        },
+        "narrative_review": {
+            "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview"
+        },
+        "descriptive_review": {
+            "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview"
+        },
+        "scoping_review": {
+            "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview"
+        },
+        "critical_review": {
+            "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview"
+        },
+        "theoretical_review": {
+            "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview"
+        },
+        "conceptual_review": {
+            "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview"
+        },
+        "qualitative_systematic_review": {
+            "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview"
+        },
+        "meta_analysis": {
+            "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis"
+        },
+        "scientometric": {
+            "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview"
+        }
     }
 }

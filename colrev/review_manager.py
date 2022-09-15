@@ -770,12 +770,6 @@ class ReviewManager:
         return colrev.env.resources.Resources(**kwargs)
 
     @classmethod
-    def check_init_precondition(cls):
-        import colrev.ops.init
-
-        return colrev.ops.init.Initializer.check_init_precondition()
-
-    @classmethod
     def get_init_operation(cls, **kwargs) -> colrev.ops.init.Initializer:
         import colrev.ops.init
 
@@ -889,6 +883,16 @@ class ReviewManager:
         import colrev.service
 
         return colrev.service.Service(review_manager=self, **kwargs)
+
+    def get_search_sources(self, **kwargs) -> colrev.ops.search_sources.SearchSources:
+        import colrev.ops.search_sources
+
+        return colrev.ops.search_sources.SearchSources(review_manager=self, **kwargs)
+
+    def get_review_types(self, **kwargs) -> colrev.ops.review_types.ReviewTypes:
+        import colrev.ops.review_types
+
+        return colrev.ops.review_types.ReviewTypes(review_manager=self, **kwargs)
 
     def get_review_manager(self, **kwargs) -> ReviewManager:
         return type(self)(**kwargs)

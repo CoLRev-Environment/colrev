@@ -8,7 +8,6 @@ import typing
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search_sources
 import colrev.process
 import colrev.record
 import colrev.settings
@@ -71,9 +70,7 @@ class Load(colrev.process.Process):
             for item in sublist
         ]
 
-        self.search_sources = colrev.ops.search_sources.SearchSources(
-            review_manager=self.review_manager
-        )
+        self.search_sources = self.review_manager.get_search_sources()
 
     def __get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
