@@ -5,20 +5,18 @@ import json
 import webbrowser
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import jsonify
 from flask import request
 from flask import send_from_directory
 from flask_cors import CORS
+# from typing import TYPE_CHECKING
 
-import colrev.ops.load
-import colrev.process
-import colrev.settings
+# import colrev.settings
 
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+# if TYPE_CHECKING:
+#     import colrev.review_manager.ReviewManager
 
 
 class SettingsEditor:
@@ -26,13 +24,15 @@ class SettingsEditor:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        self.review_manager = review_manager
-        self.package_manager = review_manager.get_package_manager()
-        self.settings_path: Path = self.review_manager.settings_path
+    # def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def __init__(self) -> None:
+
+        # self.review_manager = review_manager
+        # self.package_manager = review_manager.get_package_manager()
+        # self.settings_path: Path = self.review_manager.settings_path
 
         # For testing:
-        # self.settings_path = Path.cwd()
+        self.settings_path = Path.cwd() / Path("settings.json")
 
         # Note : no need for default values (they are already inserted before by the template setup)
 
@@ -78,8 +78,8 @@ class SettingsEditor:
             with open(self.settings_path, "w", encoding="utf-8") as outfile:
                 json_string = json.dumps(request.json, indent=4)
                 outfile.write(json_string)
-            if create_commit:
-                self.review_manager.create_commit(msg="Update settings")
+            # if create_commit:
+            #     self.review_manager.create_commit(msg="Update settings")
             return "ok"
 
         @app.route("/api/getOptions")
@@ -88,421 +88,424 @@ class SettingsEditor:
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
 
-            # options = {
-            #     "$schema": "http://json-schema.org/draft-06/schema#",
-            #     "definitions": {
-            #         "Author": {
-            #             "description": "Author of the review",
-            #             "properties": {
-            #                 "affiliations": {"type": "string"},
-            #                 "contributions": {
-            #                     "default": [],
-            #                     "items": {"type": "string"},
-            #                     "type": "array",
-            #                 },
-            #                 "email": {"type": "string"},
-            #                 "funding": {
-            #                     "default": [],
-            #                     "items": {"type": "string"},
-            #                     "type": "array",
-            #                 },
-            #                 "identifiers": {
-            #                     "default": [],
-            #                     "items": {"type": "string"},
-            #                     "type": "array",
-            #                 },
-            #                 "initials": {"type": "string"},
-            #                 "name": {"type": "string"},
-            #                 "orcid": {"type": "string"},
-            #             },
-            #             "required": ["name", "initials", "email"],
-            #             "type": "object",
-            #         },
-            #         "DataSettings": {
-            #             "description": "Data settings",
-            #             "properties": {
-            #                 "scripts": {"script_type": "data", "type": "script_array"}
-            #             },
-            #             "required": ["scripts"],
-            #             "type": "object",
-            #         },
-            #         "DedupeSettings": {
-            #             "description": "Dedupe settings",
-            #             "properties": {
-            #                 "same_source_merges": {
-            #                     "enum": ["prevent", "apply", "warn"],
-            #                     "type": "string",
-            #                 },
-            #                 "scripts": {
-            #                     "script_type": "dedupe",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": ["same_source_merges", "scripts"],
-            #             "type": "object",
-            #         },
-            #         "LoadSettings": {
-            #             "description": "Load settings",
-            #             "properties": {},
-            #             "type": "object",
-            #         },
-            #         "PDFGetSettings": {
-            #             "description": "PDF get settings",
-            #             "properties": {
-            #                 "man_pdf_get_scripts": {
-            #                     "script_type": "pdf_get_man",
-            #                     "type": "script_array",
-            #                 },
-            #                 "pdf_path_type": {
-            #                     "enum": ["symlink", "copy"],
-            #                     "type": "string",
-            #                 },
-            #                 "pdf_required_for_screen_and_synthesis": {
-            #                     "type": "boolean"
-            #                 },
-            #                 "rename_pdfs": {"type": "boolean"},
-            #                 "scripts": {
-            #                     "script_type": "pdf_get",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": [
-            #                 "pdf_path_type",
-            #                 "pdf_required_for_screen_and_synthesis",
-            #                 "rename_pdfs",
-            #                 "scripts",
-            #                 "man_pdf_get_scripts",
-            #             ],
-            #             "type": "object",
-            #         },
-            #         "PDFPrepSettings": {
-            #             "description": "PDF prep settings",
-            #             "properties": {
-            #                 "man_pdf_prep_scripts": {
-            #                     "script_type": "pdf_prep_man",
-            #                     "type": "script_array",
-            #                 },
-            #                 "scripts": {
-            #                     "script_type": "pdf_prep",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": ["scripts", "man_pdf_prep_scripts"],
-            #             "type": "object",
-            #         },
-            #         "PrepRound": {
-            #             "description": "Prep round settings",
-            #             "properties": {
-            #                 "name": {"type": "string"},
-            #                 "scripts": {"type": "array"},
-            #                 "similarity": {"type": "number"},
-            #             },
-            #             "required": ["name", "similarity", "scripts"],
-            #             "type": "object",
-            #         },
-            #         "PrepSettings": {
-            #             "description": "Prep settings",
-            #             "properties": {
-            #                 "PrepSettings": {
-            #                     "script_type": "prep_man",
-            #                     "type": "script_array",
-            #                 },
-            #                 "fields_to_keep": {
-            #                     "items": {"type": "string"},
-            #                     "type": "array",
-            #                 },
-            #                 "man_prep_scripts": {"type": "array"},
-            #                 "prep_rounds": {
-            #                     "items": {"$ref": "#/definitions/PrepRound"},
-            #                     "type": "array",
-            #                 },
-            #             },
-            #             "required": [
-            #                 "fields_to_keep",
-            #                 "prep_rounds",
-            #                 "man_prep_scripts",
-            #             ],
-            #             "type": "object",
-            #         },
-            #         "PrescreenSettings": {
-            #             "description": "Prescreen settings",
-            #             "properties": {
-            #                 "explanation": {"type": "string"},
-            #                 "scripts": {
-            #                     "script_type": "prescreen",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": ["explanation", "scripts"],
-            #             "type": "object",
-            #         },
-            #         "ProjectSettings": {
-            #             "description": "Project settings",
-            #             "properties": {
-            #                 "authors": {
-            #                     "items": {"$ref": "#/definitions/Author"},
-            #                     "type": "array",
-            #                 },
-            #                 "colrev_version": {"type": "string"},
-            #                 "curated_fields": {
-            #                     "items": {"type": "string"},
-            #                     "type": "array",
-            #                 },
-            #                 "curated_masterdata": {"type": "boolean"},
-            #                 "curation_url": {"type": "string"},
-            #                 "delay_automated_processing": {"type": "boolean"},
-            #                 "id_pattern": {
-            #                     "enum": ["first_author_year", "three_authors_year"],
-            #                     "type": "string",
-            #                 },
-            #                 "keywords": {"items": {"type": "string"}, "type": "array"},
-            #                 "protocol": {"$ref": "#/definitions/Protocol"},
-            #                 "review_type": {
-            #                     "enum": [
-            #                         "curated_masterdata",
-            #                         "realtime",
-            #                         "literature_review",
-            #                         "narrative_review",
-            #                         "descriptive_review",
-            #                         "scoping_review",
-            #                         "critical_review",
-            #                         "theoretical_review",
-            #                         "conceptual_review",
-            #                         "qualitative_systematic_review",
-            #                         "meta_analysis",
-            #                         "scientometric",
-            #                         "peer_review",
-            #                     ],
-            #                     "type": "string",
-            #                 },
-            #                 "share_stat_req": {
-            #                     "enum": ["none", "processed", "screened", "completed"],
-            #                     "type": "string",
-            #                 },
-            #                 "title": {"type": "string"},
-            #             },
-            #             "required": [
-            #                 "title",
-            #                 "authors",
-            #                 "keywords",
-            #                 "review_type",
-            #                 "id_pattern",
-            #                 "share_stat_req",
-            #                 "delay_automated_processing",
-            #                 "curated_masterdata",
-            #                 "curated_fields",
-            #                 "colrev_version",
-            #             ],
-            #             "type": "object",
-            #         },
-            #         "Protocol": {
-            #             "description": "Review protocol",
-            #             "properties": {"url": {"type": "string"}},
-            #             "required": ["url"],
-            #             "type": "object",
-            #         },
-            #         "ScreenCriterion": {
-            #             "description": "Screen criterion",
-            #             "properties": {
-            #                 "comment": {"type": "string"},
-            #                 "criterion_type": {
-            #                     "enum": ["inclusion_criterion", "exclusion_criterion"],
-            #                     "type": "string",
-            #                 },
-            #                 "explanation": {"type": "string"},
-            #             },
-            #             "required": ["explanation", "criterion_type"],
-            #             "type": "object",
-            #         },
-            #         "ScreenSettings": {
-            #             "description": "Screen settings",
-            #             "properties": {
-            #                 "criteria": {
-            #                     "additionalProperties": {
-            #                         "$ref": "#/definitions/ScreenCriterion"
-            #                     },
-            #                     "type": "object",
-            #                 },
-            #                 "explanation": {"type": "string"},
-            #                 "scripts": {
-            #                     "script_type": "screen",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": ["criteria", "scripts"],
-            #             "type": "object",
-            #         },
-            #         "SearchSettings": {
-            #             "description": "Search settings",
-            #             "properties": {"retrieve_forthcoming": {"type": "boolean"}},
-            #             "required": ["retrieve_forthcoming"],
-            #             "type": "object",
-            #         },
-            #         "SearchSource": {
-            #             "description": "Search source settings",
-            #             "properties": {
-            #                 "comment": {"type": "string"},
-            #                 "conversion_script": {
-            #                     "script_type": "conversion",
-            #                     "type": "script_item",
-            #                 },
-            #                 "filename": {},
-            #                 "search_parameters": {"type": "string"},
-            #                 "search_script": {
-            #                     "script_type": "search",
-            #                     "type": "script_item",
-            #                 },
-            #                 "search_type": {
-            #                     "enum": [
-            #                         "DB",
-            #                         "TOC",
-            #                         "BACKWARD_SEARCH",
-            #                         "FORWARD_SEARCH",
-            #                         "PDFS",
-            #                         "OTHER",
-            #                     ],
-            #                     "type": "string",
-            #                 },
-            #                 "source_identifier": {"type": "string"},
-            #                 "source_name": {"type": "string"},
-            #                 "source_prep_scripts": {
-            #                     "script_type": "source_prep_script",
-            #                     "type": "script_array",
-            #                 },
-            #             },
-            #             "required": [
-            #                 "filename",
-            #                 "search_type",
-            #                 "source_name",
-            #                 "source_identifier",
-            #                 "search_parameters",
-            #                 "search_script",
-            #                 "conversion_script",
-            #                 "source_prep_scripts",
-            #             ],
-            #             "type": "object",
-            #         },
-            #     },
-            #     "description": "CoLRev project settings",
-            #     "properties": {
-            #         "data": {"$ref": "#/definitions/DataSettings"},
-            #         "dedupe": {"$ref": "#/definitions/DedupeSettings"},
-            #         "load": {"$ref": "#/definitions/LoadSettings"},
-            #         "pdf_get": {"$ref": "#/definitions/PDFGetSettings"},
-            #         "pdf_prep": {"$ref": "#/definitions/PDFPrepSettings"},
-            #         "prep": {"$ref": "#/definitions/PrepSettings"},
-            #         "prescreen": {"$ref": "#/definitions/PrescreenSettings"},
-            #         "project": {"$ref": "#/definitions/ProjectSettings"},
-            #         "screen": {"$ref": "#/definitions/ScreenSettings"},
-            #         "search": {"$ref": "#/definitions/SearchSettings"},
-            #         "sources": {
-            #             "items": {"$ref": "#/definitions/SearchSource"},
-            #             "type": "array",
-            #         },
-            #     },
-            #     "required": [
-            #         "project",
-            #         "sources",
-            #         "search",
-            #         "load",
-            #         "prep",
-            #         "dedupe",
-            #         "prescreen",
-            #         "pdf_get",
-            #         "pdf_prep",
-            #         "screen",
-            #         "data",
-            #     ],
-            #     "type": "object",
-            # }
+            # options = colrev.settings.Settings.get_settings_schema()
 
-            return jsonify(colrev.settings.Settings.get_settings_schema())
+            options = {
+                "type": "object",
+                "required": [
+                    "project",
+                    "sources",
+                    "search",
+                    "load",
+                    "prep",
+                    "dedupe",
+                    "prescreen",
+                    "pdf_get",
+                    "pdf_prep",
+                    "screen",
+                    "data",
+                ],
+                "properties": {
+                    "project": {"$ref": "#/definitions/ProjectSettings"},
+                    "sources": {
+                        "type": "array",
+                        "items": {"$ref": "#/definitions/SearchSource"},
+                    },
+                    "search": {"$ref": "#/definitions/SearchSettings"},
+                    "load": {"$ref": "#/definitions/LoadSettings"},
+                    "prep": {"$ref": "#/definitions/PrepSettings"},
+                    "dedupe": {"$ref": "#/definitions/DedupeSettings"},
+                    "prescreen": {"$ref": "#/definitions/PrescreenSettings"},
+                    "pdf_get": {"$ref": "#/definitions/PDFGetSettings"},
+                    "pdf_prep": {"$ref": "#/definitions/PDFPrepSettings"},
+                    "screen": {"$ref": "#/definitions/ScreenSettings"},
+                    "data": {"$ref": "#/definitions/DataSettings"},
+                },
+                "description": "CoLRev project settings",
+                "$schema": "http://json-schema.org/draft-06/schema#",
+                "definitions": {
+                    "ProjectSettings": {
+                        "type": "object",
+                        "required": [
+                            "title",
+                            "authors",
+                            "keywords",
+                            "review_type",
+                            "id_pattern",
+                            "share_stat_req",
+                            "delay_automated_processing",
+                            "curated_masterdata",
+                            "curated_fields",
+                            "colrev_version",
+                        ],
+                        "properties": {
+                            "title": {"type": "string"},
+                            "authors": {
+                                "type": "array",
+                                "items": {"$ref": "#/definitions/Author"},
+                            },
+                            "keywords": {"type": "array", "items": {"type": "string"}},
+                            "protocol": {"$ref": "#/definitions/Protocol"},
+                            "review_type": {"type": "string"},
+                            "id_pattern": {
+                                "type": "string",
+                                "enum": ["first_author_year", "three_authors_year"],
+                            },
+                            "share_stat_req": {
+                                "type": "string",
+                                "enum": ["none", "processed", "screened", "completed"],
+                            },
+                            "delay_automated_processing": {"type": "boolean"},
+                            "curation_url": {"type": "string"},
+                            "curated_masterdata": {"type": "boolean"},
+                            "curated_fields": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "colrev_version": {"type": "string"},
+                        },
+                        "description": "Project settings",
+                    },
+                    "Author": {
+                        "type": "object",
+                        "required": ["name", "initials", "email"],
+                        "properties": {
+                            "name": {"type": "string"},
+                            "initials": {"type": "string"},
+                            "email": {"type": "string"},
+                            "orcid": {"type": "string"},
+                            "contributions": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [],
+                            },
+                            "affiliations": {"type": "string"},
+                            "funding": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [],
+                            },
+                            "identifiers": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [],
+                            },
+                        },
+                        "description": "Author of the review",
+                    },
+                    "Protocol": {
+                        "type": "object",
+                        "required": ["url"],
+                        "properties": {"url": {"type": "string"}},
+                        "description": "Review protocol",
+                    },
+                    "SearchSource": {
+                        "type": "object",
+                        "required": [
+                            "filename",
+                            "search_type",
+                            "source_name",
+                            "source_identifier",
+                            "search_parameters",
+                            "load_conversion_script",
+                        ],
+                        "properties": {
+                            "filename": {},
+                            "search_type": {
+                                "type": "string",
+                                "enum": [
+                                    "DB",
+                                    "TOC",
+                                    "BACKWARD_SEARCH",
+                                    "FORWARD_SEARCH",
+                                    "PDFS",
+                                    "OTHER",
+                                ],
+                            },
+                            "source_name": {"type": "string"},
+                            "source_identifier": {"type": "string"},
+                            "search_parameters": {"type": "object"},
+                            "load_conversion_script": {"type": "object"},
+                            "comment": {"type": "string"},
+                            "conversion_script": {
+                                "script_type": "conversion",
+                                "type": "script_item",
+                            },
+                            "search_script": {
+                                "script_type": "search",
+                                "type": "script_item",
+                            },
+                            "source_prep_scripts": {
+                                "script_type": "source_prep_script",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "Search source settings",
+                    },
+                    "SearchSettings": {
+                        "type": "object",
+                        "required": ["retrieve_forthcoming"],
+                        "properties": {"retrieve_forthcoming": {"type": "boolean"}},
+                        "description": "Search settings",
+                    },
+                    "LoadSettings": {
+                        "type": "object",
+                        "properties": {},
+                        "description": "Load settings",
+                    },
+                    "PrepSettings": {
+                        "type": "object",
+                        "required": [
+                            "fields_to_keep",
+                            "prep_rounds",
+                            "man_prep_scripts",
+                        ],
+                        "properties": {
+                            "fields_to_keep": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "prep_rounds": {
+                                "type": "array",
+                                "items": {"$ref": "#/definitions/PrepRound"},
+                            },
+                            "man_prep_scripts": {"type": "array"},
+                            "PrepSettings": {
+                                "script_type": "prep_man",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "Prep settings",
+                    },
+                    "PrepRound": {
+                        "type": "object",
+                        "required": ["name", "similarity", "scripts"],
+                        "properties": {
+                            "name": {"type": "string"},
+                            "similarity": {"type": "number"},
+                            "scripts": {"type": "array"},
+                        },
+                        "description": "Prep round settings",
+                    },
+                    "DedupeSettings": {
+                        "type": "object",
+                        "required": ["same_source_merges", "scripts"],
+                        "properties": {
+                            "same_source_merges": {
+                                "type": "string",
+                                "enum": ["prevent", "apply", "warn"],
+                            },
+                            "scripts": {
+                                "script_type": "dedupe",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "Dedupe settings",
+                    },
+                    "PrescreenSettings": {
+                        "type": "object",
+                        "required": ["explanation", "scripts"],
+                        "properties": {
+                            "explanation": {"type": "string"},
+                            "scripts": {
+                                "script_type": "prescreen",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "Prescreen settings",
+                    },
+                    "PDFGetSettings": {
+                        "type": "object",
+                        "required": [
+                            "pdf_path_type",
+                            "pdf_required_for_screen_and_synthesis",
+                            "rename_pdfs",
+                            "scripts",
+                            "man_pdf_get_scripts",
+                        ],
+                        "properties": {
+                            "pdf_path_type": {
+                                "type": "string",
+                                "enum": ["symlink", "copy"],
+                            },
+                            "pdf_required_for_screen_and_synthesis": {
+                                "type": "boolean"
+                            },
+                            "rename_pdfs": {"type": "boolean"},
+                            "scripts": {
+                                "script_type": "pdf_get",
+                                "type": "script_array",
+                            },
+                            "man_pdf_get_scripts": {
+                                "script_type": "pdf_get_man",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "PDF get settings",
+                    },
+                    "PDFPrepSettings": {
+                        "type": "object",
+                        "required": ["scripts", "man_pdf_prep_scripts"],
+                        "properties": {
+                            "scripts": {
+                                "script_type": "pdf_prep",
+                                "type": "script_array",
+                            },
+                            "man_pdf_prep_scripts": {
+                                "script_type": "pdf_prep_man",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "PDF prep settings",
+                    },
+                    "ScreenSettings": {
+                        "type": "object",
+                        "required": ["criteria", "scripts"],
+                        "properties": {
+                            "explanation": {"type": "string"},
+                            "criteria": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/ScreenCriterion"
+                                },
+                            },
+                            "scripts": {
+                                "script_type": "screen",
+                                "type": "script_array",
+                            },
+                        },
+                        "description": "Screen settings",
+                    },
+                    "ScreenCriterion": {
+                        "type": "object",
+                        "required": ["explanation", "criterion_type"],
+                        "properties": {
+                            "explanation": {"type": "string"},
+                            "comment": {"type": "string"},
+                            "criterion_type": {
+                                "type": "string",
+                                "enum": ["inclusion_criterion", "exclusion_criterion"],
+                            },
+                        },
+                        "description": "Screen criterion",
+                    },
+                    "DataSettings": {
+                        "type": "object",
+                        "required": ["scripts"],
+                        "properties": {
+                            "scripts": {"script_type": "data", "type": "script_array"}
+                        },
+                        "description": "Data settings",
+                    },
+                },
+            }
+
+            return jsonify(options)
 
         @app.route("/api/getScripts")
-        def getScripts(script_type):
+        def getScripts(package_type):
 
-            script_options = self.package_manager.discover_packages(
-                script_type=script_type
-            )
+            # discovered_packages = self.package_manager.discover_packages(
+            #     package_type=package_type
+            # )
 
             # For testing:
             # Example: script_type="load"
             # Returns:
-            # script_options = {
-            #     "bibtex": {
-            #         "endpoint": "colrev.ops.built_in.load.BibPybtexLoader",
-            #         "installed": True,
-            #     },
-            #     "csv": {
-            #         "endpoint": "colrev.ops.built_in.load.CSVLoader",
-            #         "installed": True,
-            #     },
-            #     "excel": {
-            #         "endpoint": "colrev.ops.built_in.load.ExcelLoader",
-            #         "installed": True,
-            #     },
-            #     "zotero_translate": {
-            #         "endpoint": "colrev.ops.built_in.load.ZoteroTranslationLoader",
-            #         "installed": True,
-            #     },
-            #     "md_to_bib": {
-            #         "endpoint": "colrev.ops.built_in.load.MarkdownLoader",
-            #         "installed": True,
-            #     },
-            #     "bibutils": {
-            #         "endpoint": "colrev.ops.built_in.load.BibutilsLoader",
-            #         "installed": True,
-            #     },
-            # }
+            discovered_packages = {
+                "bibtex": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
+                    "installed": True,
+                    "description": "Loads BibTeX files (based on pybtex)",
+                },
+                "csv": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
+                    "installed": True,
+                    "description": "Loads csv files (based on pandas)",
+                },
+                "excel": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
+                    "installed": True,
+                    "description": "Loads Excel (xls, xlsx) files (based on pandas)",
+                },
+                "zotero_translate": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
+                    "installed": True,
+                    "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
+                },
+                "md_to_bib": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
+                    "installed": True,
+                    "description": "Loads reference strings from text (md) files (based on GROBID)",
+                },
+                "bibutils": {
+                    "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
+                    "installed": True,
+                    "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
+                },
+            }
 
-            return jsonify(script_options)
+            return jsonify(discovered_packages)
 
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
-        def getScriptDetails(script_type, script_name, endpoint_version):
+        def getScriptDetails(package_type, package_identifier, endpoint_version):
 
-            package_details = self.package_manager.get_package_details(
-                script_type=script_type, script_name=script_name
-            )
+            # package_details = self.package_manager.get_package_details(
+            #     package_type=package_type, package_identifier=package_identifier
+            # )
 
             # TODO (GW): use endpoint_version
 
             # For testing:
             # Example: script_type="prescreen", script_name="scope_prescreen"
             # Returns:
-            # package_details = {
-            #     "description": "Prescreens records based on predefined rules (scope)",
-            #     "name": "scope_prescreen",
-            #     "parameters": {
-            #         "ENTRYTYPEScope": {
-            #             "options": ["article", "booktitle"],
-            #             "required": False,
-            #             "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
-            #             "type": "typing.Optional[list]",
-            #         },
-            #         "TimeScopeFrom": {
-            #             "max": 2050,
-            #             "min": 1900,
-            #             "required": False,
-            #             "tooltip": "Lower bound for the time scope",
-            #             "type": "int",
-            #         },
-            #         "TimeScopeTo": {
-            #             "required": False,
-            #             "tooltip": "Upper bound for the time scope",
-            #             "type": "int",
-            #         },
-            #         "name": {"required": True, "type": "str"},
-            #     },
-            # }
-
-            # Example: script_type="prescreen", script_name="spreadsheet_prescreen"
-            # Returns:
-            # package_details = {
-            #     "description": "Prescreen based on a spreadsheet (exported and imported)",
-            #     "name": "spreadsheet_prescreen",
-            #     "parameters": {},
-            # }
+            package_details = {
+                "name": "scope_prescreen",
+                "description": "Prescreens records based on predefined rules (scope)",
+                "parameters": {
+                    "name": {"required": True, "type": "str"},
+                    "TimeScopeFrom": {
+                        "required": False,
+                        "type": "int",
+                        "tooltip": "Lower bound for the time scope",
+                        "min": 1900,
+                        "max": 2050,
+                    },
+                    "TimeScopeTo": {
+                        "required": False,
+                        "type": "int",
+                        "tooltip": "Upper bound for the time scope",
+                        "min": 1900,
+                        "max": 2050,
+                    },
+                    "LanguageScope": {
+                        "required": False,
+                        "type": "typing.Optional[list]",
+                        "tooltip": "Language scope",
+                    },
+                    "ExcludeComplementaryMaterials": {
+                        "required": False,
+                        "type": "bool",
+                        "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
+                    },
+                    "OutletInclusionScope": {
+                        "required": False,
+                        "type": "typing.Optional[dict]",
+                        "tooltip": "Particular outlets that should be included (exclusively)",
+                    },
+                    "OutletExclusionScope": {
+                        "required": False,
+                        "type": "typing.Optional[dict]",
+                        "tooltip": "Particular outlets that should be excluded",
+                    },
+                    "ENTRYTYPEScope": {
+                        "required": False,
+                        "type": "typing.Optional[list]",
+                        "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
+                    },
+                },
+            }
 
             return jsonify(package_details)
 
@@ -517,3 +520,8 @@ class SettingsEditor:
 
         self._open_browser()
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)
+
+
+if __name__ == "__main__":
+    se_instance = SettingsEditor()
+    se_instance.open_settings_editor()
