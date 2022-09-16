@@ -490,101 +490,130 @@ class Dataset:
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
+    def __create_temp_id(self, *, local_index, record_dict: dict) -> str:
+
+        try:
+
+            retrieved_record = local_index.retrieve(record_dict=record_dict)
+            temp_id = retrieved_record["ID"]
+
+        except colrev_exceptions.RecordNotInIndexException:
+
+            if "" != record_dict.get("author", record_dict.get("editor", "")):
+                authors_string = record_dict.get(
+                    "author", record_dict.get("editor", "Anonymous")
+                )
+                authors = colrev.record.PrepRecord.format_author_field(
+                    input_string=authors_string
+                ).split(" and ")
+            else:
+                authors = ["Anonymous"]
+
+            # Use family names
+            for author in authors:
+                if "," in author:
+                    author = author.split(",", maxsplit=1)[0]
+                else:
+                    author = author.split(" ", maxsplit=1)[0]
+
+            id_pattern = self.review_manager.settings.project.id_pattern
+
+            if colrev.settings.IDPattern.first_author_year == id_pattern:
+                temp_id = (
+                    f'{author.replace(" ", "")}{str(record_dict.get("year", "NoYear"))}'
+                )
+
+            if colrev.settings.IDPattern.three_authors_year == id_pattern:
+                temp_id = ""
+                indices = len(authors)
+                if len(authors) > 3:
+                    indices = 3
+                for ind in range(0, indices):
+                    temp_id = temp_id + f'{authors[ind].split(",")[0].replace(" ", "")}'
+                if len(authors) > 3:
+                    temp_id = temp_id + "EtAl"
+                temp_id = temp_id + str(record_dict.get("year", "NoYear"))
+
+            if temp_id.isupper():
+                temp_id = temp_id.capitalize()
+            # Replace special characters
+            # (because IDs may be used as file names)
+            temp_id = colrev.env.utils.remove_accents(input_str=temp_id)
+            temp_id = re.sub(r"\(.*\)", "", temp_id)
+            temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
+
+        return temp_id
+
+    def __update_temp_id_based_on_id_blacklist(
+        self,
+        *,
+        record_in_bib_db: bool,
+        record_dict: dict,
+        temp_id: str,
+        id_blacklist: list,
+    ) -> str:
+        if record_in_bib_db:
+            # allow IDs to remain the same.
+            other_ids = id_blacklist
+            # Note: only remove it once. It needs to change when there are
+            # other records with the same ID
+            if record_dict["ID"] in other_ids:
+                other_ids.remove(record_dict["ID"])
+        else:
+            # ID can remain the same, but it has to change
+            # if it is already in bib_db
+            other_ids = id_blacklist
+
+        order = 0
+        letters = list(string.ascii_lowercase)
+        next_unique_id = temp_id
+        appends: list = []
+        while next_unique_id.lower() in [i.lower() for i in other_ids]:
+            if len(appends) == 0:
+                order += 1
+                appends = list(itertools.product(letters, repeat=order))
+            next_unique_id = temp_id + "".join(list(appends.pop(0)))
+        temp_id = next_unique_id
+        return temp_id
+
+    def __generate_id_blacklist(
+        self,
+        *,
+        local_index: colrev.env.local_index.LocalIndex,
+        record_dict: dict,
+        id_blacklist: list = None,
+        record_in_bib_db: bool = False,
+        raise_error: bool = True,
+    ) -> str:
+        """Generate a blacklist to avoid setting duplicate IDs"""
+
+        # Make sure that IDs that have been propagated to the
+        # screen or data will not be replaced
+        # (this would break the chain of evidence)
+        if raise_error:
+            if self.propagated_id(record_id=record_dict["ID"]):
+                raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
+
+        temp_id = self.__create_temp_id(
+            local_index=local_index, record_dict=record_dict
+        )
+
+        if id_blacklist:
+            temp_id = self.__update_temp_id_based_on_id_blacklist(
+                record_in_bib_db=record_in_bib_db,
+                record_dict=record_dict,
+                temp_id=temp_id,
+                id_blacklist=id_blacklist,
+            )
+
+        return temp_id
+
     def set_ids(self, *, records: dict = None, selected_ids: list = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         # pylint: disable=redefined-outer-name
 
         local_index = self.review_manager.get_local_index()
-
-        def generate_id_blacklist(
-            *,
-            record_dict: dict,
-            id_blacklist: list = None,
-            record_in_bib_db: bool = False,
-            raise_error: bool = True,
-        ) -> str:
-            """Generate a blacklist to avoid setting duplicate IDs"""
-
-            # Make sure that IDs that have been propagated to the
-            # screen or data will not be replaced
-            # (this would break the chain of evidence)
-            if raise_error:
-                if self.propagated_id(record_id=record_dict["ID"]):
-                    raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
-            try:
-                retrieved_record = local_index.retrieve(record_dict=record_dict)
-                temp_id = retrieved_record["ID"]
-            except colrev_exceptions.RecordNotInIndexException:
-
-                if "" != record_dict.get("author", record_dict.get("editor", "")):
-                    authors_string = record_dict.get(
-                        "author", record_dict.get("editor", "Anonymous")
-                    )
-                    authors = colrev.record.PrepRecord.format_author_field(
-                        input_string=authors_string
-                    ).split(" and ")
-                else:
-                    authors = ["Anonymous"]
-
-                # Use family names
-                for author in authors:
-                    if "," in author:
-                        author = author.split(",", maxsplit=1)[0]
-                    else:
-                        author = author.split(" ", maxsplit=1)[0]
-
-                id_pattern = self.review_manager.settings.project.id_pattern
-
-                if colrev.settings.IDPattern.first_author_year == id_pattern:
-                    temp_id = f'{author.replace(" ", "")}{str(record_dict.get("year", "NoYear"))}'
-
-                if colrev.settings.IDPattern.three_authors_year == id_pattern:
-                    temp_id = ""
-                    indices = len(authors)
-                    if len(authors) > 3:
-                        indices = 3
-                    for ind in range(0, indices):
-                        temp_id = (
-                            temp_id + f'{authors[ind].split(",")[0].replace(" ", "")}'
-                        )
-                    if len(authors) > 3:
-                        temp_id = temp_id + "EtAl"
-                    temp_id = temp_id + str(record_dict.get("year", "NoYear"))
-
-                if temp_id.isupper():
-                    temp_id = temp_id.capitalize()
-                # Replace special characters
-                # (because IDs may be used as file names)
-                temp_id = colrev.env.utils.remove_accents(input_str=temp_id)
-                temp_id = re.sub(r"\(.*\)", "", temp_id)
-                temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
-
-            if id_blacklist is not None:
-                if record_in_bib_db:
-                    # allow IDs to remain the same.
-                    other_ids = id_blacklist
-                    # Note: only remove it once. It needs to change when there are
-                    # other records with the same ID
-                    if record_dict["ID"] in other_ids:
-                        other_ids.remove(record_dict["ID"])
-                else:
-                    # ID can remain the same, but it has to change
-                    # if it is already in bib_db
-                    other_ids = id_blacklist
-
-                order = 0
-                letters = list(string.ascii_lowercase)
-                next_unique_id = temp_id
-                appends: list = []
-                while next_unique_id.lower() in [i.lower() for i in other_ids]:
-                    if len(appends) == 0:
-                        order += 1
-                        appends = list(itertools.product(letters, repeat=order))
-                    next_unique_id = temp_id + "".join(list(appends.pop(0)))
-                temp_id = next_unique_id
-
-            return temp_id
 
         if records is None:
             records = {}
@@ -610,7 +639,8 @@ class Dataset:
                 continue
 
             old_id = record_id
-            new_id = generate_id_blacklist(
+            new_id = self.__generate_id_blacklist(
+                local_index=local_index,
                 record_dict=record_dict,
                 id_blacklist=id_list,
                 record_in_bib_db=True,
@@ -935,6 +965,8 @@ class Dataset:
         return changed
 
     def retrieve_status_data(self, *, prior: dict) -> dict:
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         status_data: dict = {
             "pdf_not_exists": [],
@@ -1286,6 +1318,8 @@ class Dataset:
 
     def check_main_records_screen(self, *, status_data: dict) -> None:
 
+        # pylint: disable=too-many-branches
+
         # Check screen
         # Note: consistency of inclusion_2=yes -> inclusion_1=yes
         # is implicitly ensured through status
@@ -1360,6 +1394,7 @@ class Dataset:
             )
 
     def check_propagated_ids(self, *, prior_id: str, new_id: str) -> list:
+        # pylint: disable=too-many-branches
 
         ignore_patterns = [
             ".git",

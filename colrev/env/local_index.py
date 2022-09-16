@@ -193,7 +193,9 @@ class LocalIndex:
 
     def check_opensearch_docker_available(self) -> None:
         # If not available after 120s: raise error
+        logging.getLogger("opensearch").setLevel(logging.ERROR)
         self.open_search.info()
+        logging.getLogger("opensearch").setLevel(logging.WARNING)
 
     def __get_record_hash(self, *, record_dict: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException

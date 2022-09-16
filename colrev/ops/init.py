@@ -191,6 +191,8 @@ class Initializer:
         #     )
         # ]
 
+        settings.project.title = self.project_name
+
         # colrev_version = version("colrev_core")
         # colrev_version = colrev_version[: colrev_version.find("+")]
         # settings.project.colrev_version = colrev_version

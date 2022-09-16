@@ -1297,8 +1297,9 @@ def env(
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
             print("colrev env --index")
+        return
 
-    elif pull:
+    if pull:
         environment_manager = review_manager.get_environment_manager()
         for curated_resource in environment_manager.load_local_registry():
             curated_resource_path = curated_resource["source_url"]
@@ -1309,11 +1310,13 @@ def env(
             )
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
-
-    elif status:
+        return
+   
+    if status:
         print_environment_status(review_manager)
+        return
 
-    elif stop:
+    if stop:
         client = docker.from_env()
         environment_manager = review_manager.get_environment_manager()
 
@@ -1322,12 +1325,14 @@ def env(
             if any(x in str(container.image) for x in images_to_stop):
                 container.stop()
                 print(f"Stopped container {container.name} ({container.image})")
+        return
 
-    elif register:
+    if register:
         environment_manager = review_manager.get_environment_manager()
         environment_manager.register_repo(path_to_register=Path.cwd())
+        return
 
-    elif unregister is not None:
+    if unregister is not None:
         environment_manager = review_manager.get_environment_manager()
 
         local_registry = environment_manager.load_local_registry()
