@@ -447,28 +447,17 @@ class Settings(JsonSchemaMixin):
 
         schema = cls.json_schema()
         sdefs = schema["definitions"]
-        sdefs["SearchSource"]["properties"]["conversion_script"] = {  # type: ignore
-            "script_type": "conversion",
+        sdefs["SearchSource"]["properties"]["load_conversion_script"] = {  # type: ignore
+            "script_type": "load_conversion",
             "type": "script_item",
-        }
-
-        sdefs["SearchSource"]["properties"]["search_script"] = {  # type: ignore
-            "script_type": "search",
-            "type": "script_item",
-        }
-
-        sdefs["SearchSource"]["properties"]["source_prep_scripts"] = {  # type: ignore
-            "script_type": "source_prep_script",
-            "type": "script_array",
         }
 
         # pylint: disable=unused-variable
-        prep_rounds = sdefs["PrepRound"]["properties"]["scripts"]
-        prep_rounds = {  # type: ignore # noqa: F841
+        sdefs["PrepRound"]["properties"]["scripts"] = {  # type: ignore # noqa: F841
             "script_type": "prep",
             "type": "script_array",
         }
-        sdefs["PrepSettings"]["properties"]["PrepSettings"] = {  # type: ignore
+        sdefs["PrepSettings"]["properties"]["man_prep_scripts"] = {  # type: ignore
             "script_type": "prep_man",
             "type": "script_array",
         }

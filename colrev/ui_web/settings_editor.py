@@ -225,20 +225,11 @@ class SettingsEditor:
                             "source_name": {"type": "string"},
                             "source_identifier": {"type": "string"},
                             "search_parameters": {"type": "object"},
-                            "load_conversion_script": {"type": "object"},
+                            "load_conversion_script": {
+                                "script_type": "load_conversion",
+                                "type": "script_item",
+                            },
                             "comment": {"type": "string"},
-                            "conversion_script": {
-                                "script_type": "conversion",
-                                "type": "script_item",
-                            },
-                            "search_script": {
-                                "script_type": "search",
-                                "type": "script_item",
-                            },
-                            "source_prep_scripts": {
-                                "script_type": "source_prep_script",
-                                "type": "script_array",
-                            },
                         },
                         "description": "Search source settings",
                     },
@@ -269,8 +260,7 @@ class SettingsEditor:
                                 "type": "array",
                                 "items": {"$ref": "#/definitions/PrepRound"},
                             },
-                            "man_prep_scripts": {"type": "array"},
-                            "PrepSettings": {
+                            "man_prep_scripts": {
                                 "script_type": "prep_man",
                                 "type": "script_array",
                             },
@@ -283,7 +273,7 @@ class SettingsEditor:
                         "properties": {
                             "name": {"type": "string"},
                             "similarity": {"type": "number"},
-                            "scripts": {"type": "array"},
+                            "scripts": {"script_type": "prep", "type": "script_array"},
                         },
                         "description": "Prep round settings",
                     },
@@ -404,7 +394,7 @@ class SettingsEditor:
 
         @app.route("/api/getScripts")
         def getScripts():
-            package_type = request.args.get('package_type')
+            package_type = request.args.get("packageType")
             # discovered_packages = self.package_manager.discover_packages(
             #     package_type=package_type
             # )
@@ -450,9 +440,9 @@ class SettingsEditor:
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
         def getScriptDetails():
-            package_type = request.args.get('package_type')
-            package_identifier = request.args.get('package_identifier')
-            endpoint_version = request.args.get('endpoint_version')
+            package_type = request.args.get("packageType")
+            package_identifier = request.args.get("packageIdentifier")
+            endpoint_version = request.args.get("endpointVersion")
             # package_details = self.package_manager.get_package_details(
             #     package_type=package_type, package_identifier=package_identifier
             # )
