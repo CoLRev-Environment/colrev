@@ -153,6 +153,115 @@ class Service:
 
         return service_logger
 
+    def __run_queue_item(self) -> None:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
+        print()
+        self.logger.info(
+            "Queue: %s",
+            ", ".join(q_item["cmd"] for q_item in self.service_queue.queue),
+        )
+
+        item = self.service_queue.get()
+        item["cmd"] = item["cmd"].replace("_", "-")
+
+        self.previous_command = item["cmd"]
+
+        print()
+        if "colrev search" == item["cmd"]:
+
+            search_operation = self.review_manager.get_search_operation()
+            search_operation.main(selection_str=None)
+
+        elif "colrev load" == item["cmd"]:
+
+            if len(list(self.review_manager.search_dir.glob("*"))) > 0:
+
+                self.logger.info("Running %s", item["name"])
+
+                load_operation = self.review_manager.get_load_operation()
+                print()
+                load_operation.check_update_sources()
+                load_operation.main(keep_ids=False, combine_commits=False)
+            else:
+                self.service_queue.task_done()
+                return
+
+        elif "colrev prep" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+            preparation_operation = self.review_manager.get_prep_operation()
+            preparation_operation.main()
+        elif "colrev dedupe" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+
+            # Note : settings should be
+            # simple_dedupe
+            # merge_threshold=0.5,
+            # partition_threshold=0.8,
+            dedupe_operation = self.review_manager.get_dedupe_operation()
+            dedupe_operation.main()
+
+        elif "colrev prescreen" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+            prescreen_operation = self.review_manager.get_prescreen_operation()
+            prescreen_operation.include_all_in_prescreen()
+
+        elif "colrev pdf-get" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+            pdf_get_operation = self.review_manager.get_pdf_get_operation()
+            pdf_get_operation.main()
+
+        elif "colrev pdf-prep" == item["cmd"]:
+
+            # TODO : this may be solved more elegantly,
+            # but we need colrev to link existing pdfs (file field)
+
+            self.logger.info("Running %s", item["name"])
+            pdf_get_operation = self.review_manager.get_pdf_get_operation()
+            pdf_get_operation.main()
+
+            pdf_preparation_operation = self.review_manager.get_pdf_prep_operation()
+            pdf_preparation_operation.main()
+
+        elif "colrev screen" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+            screen_operation = self.review_manager.get_screen_operation()
+            screen_operation.include_all_in_screen()
+
+        elif "colrev data" == item["cmd"]:
+
+            self.logger.info("Running %s", item["name"])
+            data_operation = self.review_manager.get_data_operation()
+            data_operation.main()
+            input("Waiting for synthesis (press enter to continue)")
+
+        elif item["cmd"] in [
+            '"colrev man-prep"',
+            "colrev pdf-get-man",
+            "colrev pdf-prep-man",
+        ]:
+            print(
+                f"As a next step, please complete {item['name']}"
+                " manually (or press Enter to skip)"
+            )
+            self.service_queue.task_done()
+            return
+        else:
+            if item["name"] not in ["git add records.bib"]:
+                input(f'Complete task: {item["name"]}')
+            self.service_queue.task_done()
+
+            return
+
+        self.logger.info("%sCompleted %s%s", colors.GREEN, item["name"], colors.END)
+
     def worker(self) -> None:
         try:
             while True:
@@ -184,113 +293,7 @@ class Service:
                     # self.previous_command = "none"
                     continue
 
-                print()
-                self.logger.info(
-                    "Queue: %s",
-                    ", ".join(q_item["cmd"] for q_item in self.service_queue.queue),
-                )
-
-                item = self.service_queue.get()
-                item["cmd"] = item["cmd"].replace("_", "-")
-
-                self.previous_command = item["cmd"]
-
-                print()
-                if "colrev search" == item["cmd"]:
-
-                    search_operation = self.review_manager.get_search_operation()
-                    search_operation.main(selection_str=None)
-
-                elif "colrev load" == item["cmd"]:
-
-                    if len(list(self.review_manager.search_dir.glob("*"))) > 0:
-
-                        self.logger.info("Running %s", item["name"])
-
-                        load_operation = self.review_manager.get_load_operation()
-                        print()
-                        load_operation.check_update_sources()
-                        load_operation.main(keep_ids=False, combine_commits=False)
-                    else:
-                        self.service_queue.task_done()
-                        continue
-
-                elif "colrev prep" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-                    preparation_operation = self.review_manager.get_prep_operation()
-                    preparation_operation.main()
-                elif "colrev dedupe" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-
-                    # Note : settings should be
-                    # simple_dedupe
-                    # merge_threshold=0.5,
-                    # partition_threshold=0.8,
-                    dedupe_operation = self.review_manager.get_dedupe_operation()
-                    dedupe_operation.main()
-
-                elif "colrev prescreen" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-                    prescreen_operation = self.review_manager.get_prescreen_operation()
-                    prescreen_operation.include_all_in_prescreen()
-
-                elif "colrev pdf-get" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
-                    pdf_get_operation.main()
-
-                elif "colrev pdf-prep" == item["cmd"]:
-
-                    # TODO : this may be solved more elegantly,
-                    # but we need colrev to link existing pdfs (file field)
-
-                    self.logger.info("Running %s", item["name"])
-                    pdf_get_operation = self.review_manager.get_pdf_get_operation()
-                    pdf_get_operation.main()
-
-                    pdf_preparation_operation = (
-                        self.review_manager.get_pdf_prep_operation()
-                    )
-                    pdf_preparation_operation.main()
-
-                elif "colrev screen" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-                    screen_operation = self.review_manager.get_screen_operation()
-                    screen_operation.include_all_in_screen()
-
-                elif "colrev data" == item["cmd"]:
-
-                    self.logger.info("Running %s", item["name"])
-                    data_operation = self.review_manager.get_data_operation()
-                    data_operation.main()
-                    input("Waiting for synthesis (press enter to continue)")
-
-                elif item["cmd"] in [
-                    '"colrev man-prep"',
-                    "colrev pdf-get-man",
-                    "colrev pdf-prep-man",
-                ]:
-                    print(
-                        f"As a next step, please complete {item['name']}"
-                        " manually (or press Enter to skip)"
-                    )
-                    self.service_queue.task_done()
-                    continue
-                else:
-                    if item["name"] not in ["git add records.bib"]:
-                        input(f'Complete task: {item["name"]}')
-                    self.service_queue.task_done()
-
-                    continue
-
-                self.logger.info(
-                    "%sCompleted %s%s", colors.GREEN, item["name"], colors.END
-                )
+                self.__run_queue_item()
 
                 if 0 == self.service_queue.qsize():
                     time.sleep(1)

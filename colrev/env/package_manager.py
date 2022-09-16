@@ -415,9 +415,9 @@ class PackageManager:
 
                 if "typing.Optional[int]" == type_annotation:
                     type_annotation = "int"
-                if "typing.Optional[float]" == type_annotation:
+                elif "typing.Optional[float]" == type_annotation:
                     type_annotation = "float"
-                if "typing.Optional[bool]" == type_annotation:
+                elif "typing.Optional[bool]" == type_annotation:
                     # TODO : required=False for boolean?!
                     type_annotation = "bool"
                 # typing.Optional[list] : multiple_selection?

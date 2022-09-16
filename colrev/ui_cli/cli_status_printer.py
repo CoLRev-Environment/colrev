@@ -182,3 +182,7 @@ def print_project_status(status_operation) -> None:
             f"  {colors.ORANGE}colrev show venv{colors.END}"
         )
     print()
+
+
+if __name__ == "__main__":
+    pass
