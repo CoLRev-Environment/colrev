@@ -1,6 +1,7 @@
 import Author from "../../models/author";
 import Expander from "../common/Expander";
 import ExpanderItem from "../common/ExpanderItem";
+import FiedlsEditor from "../fields/FieldsEditor";
 
 const AuthorsEditor: React.FC<{ authors: Author[]; authorsChanged: any }> = ({
   authors,
@@ -24,7 +25,24 @@ const AuthorsEditor: React.FC<{ authors: Author[]; authorsChanged: any }> = ({
   };
 
   const fieldChangedHandler = (fieldName: string, source: any, event: any) => {
-    const newValue = event.target.value;
+    let newValue = event.target.value;
+
+    if (
+      (fieldName === "orcid" || fieldName === "affiliations") &&
+      newValue === ""
+    ) {
+      newValue = null;
+    }
+
+    source[fieldName] = newValue;
+    authorsChangedHandler();
+  };
+
+  const fieldChangedHandlerNewValue = (
+    fieldName: string,
+    source: any,
+    newValue: any
+  ) => {
     source[fieldName] = newValue;
     authorsChangedHandler();
   };
@@ -74,6 +92,59 @@ const AuthorsEditor: React.FC<{ authors: Author[]; authorsChanged: any }> = ({
                 value={author.email}
                 onChange={(event) =>
                   fieldChangedHandler("email", author, event)
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor={`authorOrcid${index + 1}`}>Orcid</label>
+              <input
+                className="form-control"
+                type="text"
+                id={`authorOrcid${index + 1}`}
+                value={author.orcid ?? ""}
+                onChange={(event) =>
+                  fieldChangedHandler("orcid", author, event)
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <FiedlsEditor
+                title="Contributions"
+                fields={author.contributions}
+                fieldsChanged={(newValue: any) =>
+                  fieldChangedHandlerNewValue("contributions", author, newValue)
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor={`authorAffiliations${index + 1}`}>
+                Affiliations
+              </label>
+              <input
+                className="form-control"
+                type="text"
+                id={`authorAffiliations${index + 1}`}
+                value={author.affiliations ?? ""}
+                onChange={(event) =>
+                  fieldChangedHandler("affiliations", author, event)
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <FiedlsEditor
+                title="Funding"
+                fields={author.funding}
+                fieldsChanged={(newValue: any) =>
+                  fieldChangedHandlerNewValue("funding", author, newValue)
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <FiedlsEditor
+                title="Identifiers"
+                fields={author.identifiers}
+                fieldsChanged={(newValue: any) =>
+                  fieldChangedHandlerNewValue("identifiers", author, newValue)
                 }
               />
             </div>

@@ -109,7 +109,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
               <div className="mb-3">
                 <label>Source Prep Scripts</label>
                 <ScriptsEditor
-                  packageType="prep_source_prep_scrips"
+                  packageType="prep"
                   scripts={prepRound.scripts}
                   scriptsChanged={(scripts: Script[]) =>
                     sourcePrepScriptsChangedHandler(scripts, prepRound)
@@ -130,7 +130,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
       <div className="mb-3">
         <label>Man Prep Scripts</label>
         <ScriptsEditor
-          packageType="prep_man_prep_scripts"
+          packageType="prep_man"
           scripts={prep.manPrepScripts}
           scriptsChanged={(scripts: Script[]) =>
             mapPrepScriptsChangedHandler(scripts)

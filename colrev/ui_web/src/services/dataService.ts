@@ -126,14 +126,11 @@ const sourceFromSettings = (source: Source, settingsSource: any) => {
   source.searchType = settingsSource.search_type;
   source.sourceName = settingsSource.source_name;
   source.sourceIdentifier = settingsSource.source_identifier;
+
   source.searchParameters = settingsSource.search_parameters;
 
-  source.searchScript.endpoint = settingsSource.search_script.endpoint;
-  source.conversionScript.endpoint = settingsSource.conversion_script.endpoint;
-
-  source.sourcePrepScripts = scriptsFromSettings(
-    settingsSource.source_prep_scripts
-  );
+  source.loadConversionScript.endpoint =
+    settingsSource.load_conversion_script.endpoint;
 
   source.comment = settingsSource.comment;
 };
@@ -144,15 +141,13 @@ const sourceToSettings = (source: Source): any => {
     search_type: source.searchType,
     source_name: source.sourceName,
     source_identifier: source.sourceIdentifier,
+
     search_parameters: source.searchParameters,
 
-    search_script: {
-      endpoint: source.searchScript.endpoint,
+    load_conversion_script: {
+      endpoint: source.loadConversionScript.endpoint,
     },
-    conversion_script: {
-      endpoint: source.conversionScript.endpoint,
-    },
-    source_prep_scripts: scriptsToSettings(source.sourcePrepScripts),
+
     comment: source.comment,
   };
 
@@ -303,11 +298,13 @@ const pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
 };
 
 const screenFromSettings = (screen: Screen, settingsScreen: any) => {
+  screen.explanation = settingsScreen.explanation;
   screen.scripts = scriptsFromSettings(settingsScreen.scripts);
 };
 
 const screenToSettings = (screen: Screen): any => {
   const settingsScreen = {
+    explanation: screen.explanation,
     criteria: {},
     scripts: scriptsToSettings(screen.scripts),
   };

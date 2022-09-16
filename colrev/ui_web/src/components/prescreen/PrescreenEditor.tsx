@@ -31,7 +31,7 @@ const PrescreenEditor: React.FC<{
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          packageType="prescreen_scripts"
+          packageType="prescreen"
           scripts={prescreen.scripts}
           scriptsChanged={(scripts: Script[]) =>
             prescreenScriptsChangedHandler(scripts)

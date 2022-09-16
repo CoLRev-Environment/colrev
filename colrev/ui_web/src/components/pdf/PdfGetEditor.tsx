@@ -99,7 +99,7 @@ const PdfGetEditor: React.FC<{
       <div className="mb-3">
         <label>Scripts</label>
         <ScriptsEditor
-          packageType="pdf_get_scripts"
+          packageType="pdf_get"
           scripts={pdfGet.scripts}
           scriptsChanged={(scripts: Script[]) =>
             pdfGetScriptsChangedHandler(scripts)
@@ -109,7 +109,7 @@ const PdfGetEditor: React.FC<{
       <div className="mb-3">
         <label>Man PDF Get Scripts</label>
         <ScriptsEditor
-          packageType="pdf_get_man_pdf_get_scripts"
+          packageType="pdf_get_man"
           scripts={pdfGet.manPdfGetScripts}
           scriptsChanged={(scripts: Script[]) =>
             manPdfGetScriptsChangedHandler(scripts)

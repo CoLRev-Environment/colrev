@@ -1,4 +1,5 @@
 import Script from "../../models/script";
+import SearchParameters from "../../models/searchParameters";
 import Source from "../../models/source";
 import Expander from "../common/Expander";
 import ExpanderItem from "../common/ExpanderItem";
@@ -29,11 +30,12 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
     sourcesChangedHandler();
   };
 
-  const sourcePrepScriptsChangedHandler = (
-    scripts: Script[],
-    source: Source
+  const searchParametersScopePathChangedHandler = (
+    source: Source,
+    event: any
   ) => {
-    source.sourcePrepScripts = scripts;
+    const newValue = event.target.value;
+    source.searchParameters.scope.path = newValue;
     sourcesChangedHandler();
   };
 
@@ -99,49 +101,29 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
               />
             </div>
             <div className="mb-3">
-              <label htmlFor="searchParameters">Search Parameters</label>
+              <label htmlFor="searchParameters">
+                Search Parameters Scope Path
+              </label>
               <input
                 className="form-control"
                 type="text"
-                id="searchParameters"
-                value={source.searchParameters}
+                id="searchParametersScopePath"
+                value={source.searchParameters.scope.path}
                 onChange={(event) =>
-                  fieldChangedHandler("searchParameters", source, event)
+                  searchParametersScopePathChangedHandler(source, event)
                 }
               />
             </div>
             <div className="mb-3">
-              <label>Search Script</label>
+              <label>Load Conversion Script</label>
               <ScriptsEditor
-                packageType="source_search_scripts"
+                packageType="load_conversion"
                 isSingleScript={true}
-                scripts={[source.searchScript]}
+                scripts={[source.loadConversionScript]}
                 scriptsChanged={(scripts: Script[]) => {
-                  source.searchScript = scripts[0];
+                  source.loadConversionScript = scripts[0];
                   sourcesChangedHandler();
                 }}
-              />
-            </div>
-            <div className="mb-3">
-              <label>Conversion Script</label>
-              <ScriptsEditor
-                packageType="source_conversion_scripts"
-                isSingleScript={true}
-                scripts={[source.conversionScript]}
-                scriptsChanged={(scripts: Script[]) => {
-                  source.conversionScript = scripts[0];
-                  sourcesChangedHandler();
-                }}
-              />
-            </div>
-            <div className="mb-3">
-              <label>Source Prep Scripts</label>
-              <ScriptsEditor
-                packageType="source_prep_scripts"
-                scripts={source.sourcePrepScripts}
-                scriptsChanged={(scripts: Script[]) =>
-                  sourcePrepScriptsChangedHandler(scripts, source)
-                }
               />
             </div>
             <div className="mb-3">
