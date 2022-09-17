@@ -11,6 +11,7 @@ from flask import jsonify
 from flask import request
 from flask import send_from_directory
 from flask_cors import CORS
+
 # from typing import TYPE_CHECKING
 
 # import colrev.settings
@@ -395,6 +396,10 @@ class SettingsEditor:
         @app.route("/api/getScripts")
         def getScripts():
             package_type = request.args.get("packageType")
+            # TODO : this is a temporary fix
+            # package_type_string = package_type_string.replace('_scripts', '')
+
+            # package_type = colrev.env.package_manager.PackageType[package_type_string]
             # discovered_packages = self.package_manager.discover_packages(
             #     package_type=package_type
             # )
