@@ -13,17 +13,21 @@ colrev.ops.built\_in.load\_conversion
 
 
 
-   .. rubric:: Classes
 
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
 
-      BibPybtexLoader
-      BibutilsLoader
-      CSVLoader
-      ExcelLoader
-      MarkdownLoader
-      SpreadsheetLoadUtility
-      ZoteroTranslationLoader
+
+
+
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ops.built_in.load_conversion.bib_pybtex_loader
+   colrev.ops.built_in.load_conversion.bibutils_loader
+   colrev.ops.built_in.load_conversion.markdown_loader
+   colrev.ops.built_in.load_conversion.spreadsheet_loader
+   colrev.ops.built_in.load_conversion.zotero_loader

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev pdf_prep operation: Prepare PDF documents."""
 from __future__ import annotations
 
 import logging

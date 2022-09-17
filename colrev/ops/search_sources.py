@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Manages CoLRev search sources."""
 from __future__ import annotations
 
 import typing

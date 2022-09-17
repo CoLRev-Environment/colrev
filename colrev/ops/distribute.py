@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Distribte records or PDFs to local CoLRev repositories."""
 from __future__ import annotations
 
 import os

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Functionality for records.bib and git repository."""
 from __future__ import annotations
 
 import io

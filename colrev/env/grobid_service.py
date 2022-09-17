@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""GROBID service to extract and annotate PDF contents."""
 from __future__ import annotations
 
 import logging

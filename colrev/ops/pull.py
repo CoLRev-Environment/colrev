@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev pull operation: Pull project and records."""
 from __future__ import annotations
 
 import multiprocessing as mp

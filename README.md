@@ -39,7 +39,7 @@ colrev status
 After each step, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
 
 <p align="center">
-<img src="../../figures/workflow.svg" width="800">
+<img src="../../figures/workflow.svg" width="700">
 </p>
 
 <!-- .. figure:: docs/figures/workflow.svg
@@ -87,7 +87,7 @@ For each operation, the **colrev settings** document the tools and parameters. Y
 
 
 <p align="center">
-<img src="../../figures/settings.svg" width="600">
+<img src="../../figures/settings.svg" width="700">
 </p>
 
 <!-- .. figure:: ../figures/settings.svg

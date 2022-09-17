@@ -1311,7 +1311,7 @@ def env(
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
         return
-   
+
     if status:
         print_environment_status(review_manager)
         return

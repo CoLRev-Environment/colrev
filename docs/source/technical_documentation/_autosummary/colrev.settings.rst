@@ -31,7 +31,6 @@ colrev.settings
       PrepRound
       PrescreenConfiguration
       ProjectConfiguration
-      ReviewType
       ScreenConfiguration
       ScreenCriterion
       ScreenCriterionType

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Create a commit, including the CoLRev report."""
 from __future__ import annotations
 
 import importlib

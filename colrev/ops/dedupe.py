@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev dedupe operation: identify and merge duplicate records."""
 from __future__ import annotations
 
 import re

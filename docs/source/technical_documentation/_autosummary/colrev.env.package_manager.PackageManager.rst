@@ -30,5 +30,5 @@ colrev.env.package\_manager.PackageManager
 
    .. autosummary::
 
-      ~PackageManager.endpoint_overview
+      ~PackageManager.package_type_overview
       ~PackageManager.package

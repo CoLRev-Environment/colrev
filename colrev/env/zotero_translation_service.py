@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Service translating between file formats (based on Zotero)."""
 from __future__ import annotations
 
 import time

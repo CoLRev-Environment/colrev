@@ -16,7 +16,6 @@ colrev.review\_manager.ReviewManager
    .. autosummary::
       :nosignatures:
 
-      ~ReviewManager.check_init_precondition
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
       ~ReviewManager.create_commit
@@ -47,9 +46,11 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_push_operation
       ~ReviewManager.get_resources
       ~ReviewManager.get_review_manager
+      ~ReviewManager.get_review_types
       ~ReviewManager.get_screen_operation
       ~ReviewManager.get_screenshot_service
       ~ReviewManager.get_search_operation
+      ~ReviewManager.get_search_sources
       ~ReviewManager.get_service_operation
       ~ReviewManager.get_status_operation
       ~ReviewManager.get_status_stats

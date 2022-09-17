@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev prescreen operation: Prescreen records (metadata)."""
 from __future__ import annotations
 
 import math

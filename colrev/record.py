@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Functionality for individual records."""
 from __future__ import annotations
 
 import difflib

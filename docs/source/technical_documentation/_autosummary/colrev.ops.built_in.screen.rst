@@ -13,12 +13,19 @@ colrev.ops.built\_in.screen
 
 
 
-   .. rubric:: Classes
 
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
 
-      CoLRevCLIScreen
-      SpreadsheetScreen
+
+
+
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ops.built_in.screen.screen_cli
+   colrev.ops.built_in.screen.spreadsheet_screen
+   colrev.ops.built_in.screen.utils

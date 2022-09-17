@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev load operation: Load records from search sources into references.bib."""
 from __future__ import annotations
 
 import itertools

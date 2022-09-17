@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Service creating screenshots from urls (online ENTRYTYPES)."""
 from __future__ import annotations
 
 import time

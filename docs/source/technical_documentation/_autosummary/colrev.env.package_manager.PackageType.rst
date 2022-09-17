@@ -19,6 +19,7 @@ colrev.env.package\_manager.PackageType
 
    .. autosummary::
 
+      ~PackageType.review_type
       ~PackageType.load_conversion
       ~PackageType.search_source
       ~PackageType.prep
