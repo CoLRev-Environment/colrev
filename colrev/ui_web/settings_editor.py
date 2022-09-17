@@ -395,9 +395,7 @@ class SettingsEditor:
 
         @app.route("/api/getScripts")
         def getScripts():
-            package_type = request.args.get("packageType")
-            # TODO : this is a temporary fix
-            # package_type_string = package_type_string.replace('_scripts', '')
+            package_type_string = request.args.get("packageType")
 
             # package_type = colrev.env.package_manager.PackageType[package_type_string]
             # discovered_packages = self.package_manager.discover_packages(
@@ -445,9 +443,10 @@ class SettingsEditor:
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
         def getScriptDetails():
-            package_type = request.args.get("packageType")
+            package_type_string = request.args.get("packageType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
+            # package_type = colrev.env.package_manager.PackageType[package_type_string]
             # package_details = self.package_manager.get_package_details(
             #     package_type=package_type, package_identifier=package_identifier
             # )

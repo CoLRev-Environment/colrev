@@ -198,13 +198,13 @@
             "endpoint": "colrev.ops.built_in.data.structured.StructuredData"
         },
         "bibliography_export": {
-            "endpoint": "colrev.ops.built_in.data.BibliographyExport"
+            "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport"
         },
         "prisma": {
             "endpoint": "colrev.ops.built_in.data.prisma.PRISMA"
         },
         "github_pages": {
-            "endpoint": "colrev.ops.built_in.data.pages.GithubPages"
+            "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages"
         },
         "zettlr": {
             "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr"

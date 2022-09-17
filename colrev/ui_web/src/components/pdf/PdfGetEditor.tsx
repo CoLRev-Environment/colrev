@@ -81,7 +81,7 @@ const PdfGetEditor: React.FC<{
           className="form-check-label"
           htmlFor="pdfRequiredForScreenAndSynthesis"
         >
-          Pdf Required for Screen and Synthesis
+          PDF Required for Screen and Synthesis
         </label>
       </div>
       <div className="form-check form-switch mb-3">
@@ -93,7 +93,7 @@ const PdfGetEditor: React.FC<{
           onChange={renamePdfsChangedHandler}
         />
         <label className="form-check-label" htmlFor="renamePdfs">
-          Rename Pdfs
+          Rename PDFs
         </label>
       </div>
       <div className="mb-3">

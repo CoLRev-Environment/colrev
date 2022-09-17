@@ -107,7 +107,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
                 />
               </div>
               <div className="mb-3">
-                <label>Source Prep Scripts</label>
+                <label>Prep Scripts</label>
                 <ScriptsEditor
                   packageType="prep"
                   scripts={prepRound.scripts}
