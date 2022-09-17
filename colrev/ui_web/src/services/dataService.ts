@@ -3,7 +3,6 @@ import Settings from "../models/settings";
 import httpService from "./httpService";
 import config from "../config.json";
 import Source from "../models/source";
-import Script from "../models/script";
 import Prep from "../models/prep";
 import PrepRound from "../models/prepRound";
 import Dedupe from "../models/dedupe";
@@ -13,6 +12,10 @@ import PdfGet from "../models/pdfGet";
 import PdfPrep from "../models/pdfPrep";
 import Screen from "../models/screen";
 import Search from "../models/search";
+import ScriptParameterType from "../models/scriptParameterType";
+import ScriptParameterDefinition from "../models/scriptParameterDefinition";
+import Script from "../models/script";
+import ScriptDefinition from "../models/scriptDefinition";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -207,6 +210,11 @@ const scriptsFromSettings = (settingsScripts: any) => {
   for (const settingsScript of settingsScripts) {
     const script = new Script();
     script.endpoint = settingsScript.endpoint;
+
+    const paramsMap = new Map(Object.entries(settingsScript));
+    paramsMap.delete("endpoint");
+    script.parameters = paramsMap;
+
     scripts.push(script);
   }
 
@@ -217,9 +225,15 @@ const scriptsToSettings = (scripts: Script[]) => {
   const settingsScripts: any[] = [];
 
   for (const script of scripts) {
-    const settingsScript = {
-      endpoint: script.endpoint,
-    };
+    const paramsMap = new Map<string, any>();
+    paramsMap.set("endpoint", script.endpoint);
+
+    for (const [key, value] of Array.from(script.parameters)) {
+      paramsMap.set(key, value);
+    }
+
+    const settingsScript = Object.fromEntries(paramsMap);
+
     settingsScripts.push(settingsScript);
   }
 
@@ -324,31 +338,88 @@ const dataToSettings = (data: Data): any => {
   return settingsData;
 };
 
-const getScripts = async (packageType: string): Promise<Script[]> => {
+const getScriptDefinitions = async (
+  packageType: string
+): Promise<ScriptDefinition[]> => {
   const response = await httpService.get(
     `${apiEndpoint}/getScripts?packageType=${packageType}`
   );
 
-  const scripts: Script[] = [];
+  const scriptDefinitions: ScriptDefinition[] = [];
 
   for (const property in response.data) {
-    const script = new Script();
-    script.name = property;
+    const scriptDefinition = new ScriptDefinition();
+    scriptDefinition.name = property;
 
     const propertyValues = response.data[property];
-    script.description = propertyValues.description;
-    script.endpoint = propertyValues.endpoint;
+    scriptDefinition.description = propertyValues.description;
+    scriptDefinition.endpoint = propertyValues.endpoint;
 
-    scripts.push(script);
+    scriptDefinitions.push(scriptDefinition);
   }
 
-  return Promise.resolve<Script[]>(scripts.slice());
+  return Promise.resolve<ScriptDefinition[]>(scriptDefinitions);
+};
+
+const getScriptParameterDefinitions = async (
+  packageType: string,
+  packageIdentifier: string
+): Promise<ScriptParameterDefinition[]> => {
+  const response = await httpService.get(
+    `${apiEndpoint}/getScriptDetails?pakageType=${packageType}&packageIdentifier=${packageIdentifier}&endpointVersion=1.0`
+  );
+
+  const scriptParameterDefinitions: ScriptParameterDefinition[] = [];
+
+  const paramsMap = new Map(Object.entries(response.data.parameters));
+
+  for (const [key, value] of Array.from<any>(paramsMap)) {
+    const param = new ScriptParameterDefinition();
+    param.name = key;
+    param.required = value.required;
+    param.tooltip = value.tooltip;
+    param.type = getScriptParameterType(value.type);
+    param.min = value.min;
+    param.max = value.max;
+
+    scriptParameterDefinitions.push(param);
+  }
+
+  return Promise.resolve<ScriptParameterDefinition[]>(
+    scriptParameterDefinitions
+  );
+};
+
+const getScriptParameterType = (parameterType: string): ScriptParameterType => {
+  let scriptParameterType = ScriptParameterType.String;
+
+  switch (parameterType) {
+    case "int":
+      scriptParameterType = ScriptParameterType.Int;
+      break;
+    case "float":
+      scriptParameterType = ScriptParameterType.Float;
+      break;
+    case "bool":
+      scriptParameterType = ScriptParameterType.Boolean;
+      break;
+    case "str":
+      scriptParameterType = ScriptParameterType.String;
+      break;
+    case "typing.Optional[dict]":
+    case "typing.Optional[list]":
+      scriptParameterType = ScriptParameterType.StringList;
+      break;
+  }
+
+  return scriptParameterType;
 };
 
 const dataService = {
   getSettings,
   saveSettings,
-  getScripts,
+  getScriptDefinitions,
+  getScriptParameterDefinitions,
 };
 
 export default dataService;

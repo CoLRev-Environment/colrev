@@ -6,25 +6,12 @@ const portalElement: any = document.getElementById("overlays");
 
 const ModalWindow: React.FC<{
   title: string;
-  isShowNext: boolean;
-  isNextEnabled: boolean;
   isShowOk: boolean;
   isOkEnabled: boolean;
-  onNext: any;
   onOk: any;
-  onClose: any;
+  onCancel: any;
   children: any;
-}> = ({
-  title,
-  isShowNext,
-  isNextEnabled,
-  isShowOk,
-  isOkEnabled,
-  onNext,
-  onOk,
-  onClose,
-  children,
-}) => {
+}> = ({ title, isShowOk, isOkEnabled, onOk, onCancel, children }) => {
   const modalRef = useRef<any>();
 
   const showModal = () => {
@@ -45,7 +32,16 @@ const ModalWindow: React.FC<{
     const modalElement = modalRef.current;
     const modal = Modal.getInstance(modalElement);
     modal?.hide();
-    onClose();
+  };
+
+  const cancleHandler = () => {
+    hideModal();
+    onCancel();
+  };
+
+  const okHandler = () => {
+    hideModal();
+    onOk();
   };
 
   useEffect(() => {
@@ -63,7 +59,7 @@ const ModalWindow: React.FC<{
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={hideModal}
+                  onClick={cancleHandler}
                   aria-label="Close"
                 ></button>
               </div>
@@ -72,25 +68,16 @@ const ModalWindow: React.FC<{
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={hideModal}
+                  onClick={cancleHandler}
                 >
                   Cancel
                 </button>
-                {isShowNext && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={!isNextEnabled}
-                    onClick={() => onNext()}
-                  >
-                    Next
-                  </button>
-                )}
                 {isShowOk && (
                   <button
                     type="button"
                     className="btn btn-primary"
                     disabled={!isOkEnabled}
+                    onClick={okHandler}
                   >
                     Ok
                   </button>

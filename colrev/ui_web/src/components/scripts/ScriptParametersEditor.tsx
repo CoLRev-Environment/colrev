@@ -1,94 +1,169 @@
 import { useEffect, useState } from "react";
-
-//API: getScriptsParametersOptions(script_type, endpoint_name)
-//Map<string, any>
-const parameters = {
-  retrieval_similarity: { type: "float", min: 0, max: 1 },
-  rank: { type: "int", min: 0, max: 100 },
-  label: { type: "text" },
-  use_filers: { type: "boolean" },
-};
+import Script from "../../models/script";
+import ScriptDefinition from "../../models/scriptDefinition";
+import ScriptParameterDefinition from "../../models/scriptParameterDefinition";
+import ScriptParameterType from "../../models/scriptParameterType";
+import dataService from "../../services/dataService";
+import FiedlsEditor from "../fields/FieldsEditor";
+import ScriptTitle from "./ScriptTitle";
 
 const ScriptParametersEditor: React.FC<{
-  scriptType: string;
-  scriptEndpoint: string;
-}> = ({ scriptType, scriptEndpoint }) => {
-  const [parametersMap, setParametersMap] = useState<Map<string, any>>(
-    new Map()
-  );
+  packageType: string;
+  scriptDefinition: ScriptDefinition;
+  script: Script;
+  scriptChanged: any;
+}> = ({ packageType, scriptDefinition, script, scriptChanged }) => {
+  const [hasParameters, setHasParameters] = useState<boolean>(false);
+  const [parameterDefinitions, setParameterDefinitions] = useState<
+    ScriptParameterDefinition[]
+  >([]);
 
   useEffect(() => {
-    if (scriptEndpoint === "search_pdfs_dir") {
-      setHasParameters(false);
-      return;
-    }
+    const init = async () => {
+      const paramDefs = await dataService.getScriptParameterDefinitions(
+        packageType,
+        scriptDefinition.name
+      );
 
-    setHasParameters(true);
-    const paramsMap = new Map(Object.entries(parameters));
-    setParametersMap(paramsMap);
-  }, [scriptEndpoint]);
+      if (paramDefs.length === 0) {
+        setHasParameters(false);
+        return;
+      }
 
-  const [hasParameters, setHasParameters] = useState<boolean>(false);
+      setHasParameters(true);
+      setParameterDefinitions(paramDefs);
+
+      for (const pd of paramDefs) {
+        if (!script.parameters.has(pd.name)) {
+          let paramValue = undefined;
+
+          if (pd.type === ScriptParameterType.StringList) {
+            paramValue = [];
+          } else if (pd.type === ScriptParameterType.Boolean) {
+            paramValue = false;
+          }
+
+          script.parameters.set(pd.name, paramValue);
+        }
+      }
+    };
+
+    init();
+  }, [packageType, scriptDefinition, script]);
+
+  const getParameterValue = (paramDef: ScriptParameterDefinition) => {
+    let paramValue = script.parameters.get(paramDef.name);
+    return paramValue;
+  };
+
+  const setParameterValue = (
+    paramDef: ScriptParameterDefinition,
+    paramValue: any
+  ) => {
+    const newScript = { ...script };
+    newScript.parameters.set(paramDef.name, paramValue);
+    scriptChanged(newScript);
+  };
+
   return (
     <div>
-      <p>
-        Script <b>{scriptEndpoint}</b>
-      </p>
-      {!hasParameters && <p>Script has no paramaters.</p>}
-      {hasParameters && (
-        <>
-          <p>Set Script Parameters</p>
-          {Array.from(parametersMap).map(([key, value], index) => (
-            <div
-              key={index.toString()}
-              className={
-                "mb-3" +
-                (value.type === "boolean" ? " form-check form-switch" : "")
-              }
-            >
-              {value.type !== "boolean" && (
-                <>
-                  <label style={{ textTransform: "capitalize" }}>
-                    {key.replace("_", " ")}
-                  </label>
-                  {value.type === "float" && (
+      <ScriptTitle scriptDefinition={scriptDefinition} />
+      <div style={{ marginTop: "10px" }}>
+        {!hasParameters && <p>Script has no paramaters</p>}
+        {hasParameters && (
+          <>
+            <p>Set Script Parameters</p>
+            {parameterDefinitions.map((parameterDefinition, index) => (
+              <div key={index.toString()} className="mb-3">
+                {parameterDefinition.type === ScriptParameterType.Boolean && (
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={getParameterValue(parameterDefinition)}
+                      onChange={() =>
+                        setParameterValue(
+                          parameterDefinition,
+                          !getParameterValue(parameterDefinition)
+                        )
+                      }
+                    />
+                    <label className="form-check-label">
+                      {parameterDefinition.name}
+                    </label>
+                  </div>
+                )}
+                {parameterDefinition.type === ScriptParameterType.Float && (
+                  <div>
+                    <label>{parameterDefinition.name}</label>
                     <input
                       className="form-control"
                       type="number"
                       step={0.1}
-                      min={value.min}
-                      max={value.max}
+                      min={parameterDefinition.min}
+                      max={parameterDefinition.max}
+                      value={getParameterValue(parameterDefinition) ?? ""}
+                      onChange={(event) =>
+                        setParameterValue(
+                          parameterDefinition,
+                          Number(event.target.value)
+                        )
+                      }
                     />
-                  )}
-                  {value.type === "int" && (
+                  </div>
+                )}
+                {parameterDefinition.type === ScriptParameterType.Int && (
+                  <div>
+                    <label>{parameterDefinition.name}</label>
                     <input
                       className="form-control"
                       type="number"
                       step="any"
-                      min={value.min}
-                      max={value.max}
+                      min={parameterDefinition.min}
+                      max={parameterDefinition.max}
+                      value={getParameterValue(parameterDefinition) ?? ""}
+                      onChange={(event) =>
+                        setParameterValue(
+                          parameterDefinition,
+                          Number(event.target.value)
+                        )
+                      }
                     />
-                  )}
-                  {value.type === "text" && (
-                    <input className="form-control" type="text" />
-                  )}
-                </>
-              )}
-              {value.type === "boolean" && (
-                <>
-                  <input className="form-check-input" type="checkbox" />
-                  <label
-                    className="form-check-label"
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {key.replace("_", " ")}
-                  </label>
-                </>
-              )}
-            </div>
-          ))}
-        </>
-      )}
+                  </div>
+                )}
+                {parameterDefinition.type === ScriptParameterType.String && (
+                  <div>
+                    <label>{parameterDefinition.name}</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={getParameterValue(parameterDefinition) ?? ""}
+                      onChange={(event) =>
+                        setParameterValue(
+                          parameterDefinition,
+                          event.target.value
+                        )
+                      }
+                    />
+                  </div>
+                )}
+                {parameterDefinition.type ===
+                  ScriptParameterType.StringList && (
+                  <div>
+                    <FiedlsEditor
+                      title={parameterDefinition.name}
+                      fields={getParameterValue(parameterDefinition)}
+                      fieldsChanged={(newValues: string[]) =>
+                        setParameterValue(parameterDefinition, newValues)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 };

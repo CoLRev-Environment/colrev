@@ -2,7 +2,7 @@ import { useState } from "react";
 import Script from "../../models/script";
 import DeleteIcon from "../common/icons/DeleteIcon";
 import EditIcon from "../common/icons/EditIcon";
-import EditScript from "./EditScript";
+import ScriptEditWizard from "./ScriptEditWizard";
 
 const ScriptsEditor: React.FC<{
   packageType: string;
@@ -10,40 +10,56 @@ const ScriptsEditor: React.FC<{
   scriptsChanged: any;
   isSingleScript?: boolean;
 }> = ({ packageType, scripts, scriptsChanged, isSingleScript = false }) => {
-  const [isShowEditScript, setIsShowEditScript] = useState(false);
-  const [editScript, setEditScript] = useState<Script | null>(null);
+  const [showScriptEditor, setShowScriptEditor] = useState(false);
+  const [isEditScript, setIsEditScript] = useState(false);
+  const [script, setScript] = useState<Script>(new Script());
+  const [scriptCopy, setScriptCopy] = useState<Script>(new Script());
 
   // const scriptChangedHandler = () => {
   //   const newScripts = [...scripts];
   //   scriptsChanged(newScripts);
   // };
 
-  const deleteScriptHandler = (script: Script) => {
-    const newScripts = scripts.filter((s) => s !== script);
+  const deleteScriptHandler = (s: Script) => {
+    const newScripts = scripts.filter((scr) => scr !== s);
     scriptsChanged(newScripts);
   };
 
   const addScriptHandler = () => {
-    setEditScript(null);
-    setIsShowEditScript(true);
-
-    // const newScript = new Script();
-    // newScript.endpoint = "new";
-    // const newScripts = [...scripts, newScript];
-    // scriptsChanged(newScripts);
+    setIsEditScript(false);
+    setScript(new Script());
+    setShowScriptEditor(true);
   };
 
-  const editScriptHandler = (script: Script) => {
-    // TODO remove this - this is just to init selected script
-    script.endpoint = "search_pdfs_dir";
+  const editScriptHandler = (s: Script) => {
+    setIsEditScript(true);
+    setScript(s);
+    setScriptCopy(s.clone());
+    setShowScriptEditor(true);
+  };
 
-    setEditScript(script);
-    setIsShowEditScript(true);
+  const cancelHanlder = () => {
+    setShowScriptEditor(false);
+  };
 
-    // const newScript = new Script();
-    // newScript.endpoint = "new";
-    // const newScripts = [...scripts, newScript];
-    // scriptsChanged(newScripts);
+  const okHander = (newScript: Script) => {
+    setShowScriptEditor(false);
+
+    let newScripts: Script[] = [];
+
+    if (!isEditScript) {
+      newScripts = [...scripts, newScript];
+    } else {
+      for (const s of scripts) {
+        if (s !== script) {
+          newScripts.push(s);
+        } else {
+          newScripts.push(newScript);
+        }
+      }
+    }
+
+    scriptsChanged(newScripts);
   };
 
   return (
@@ -86,11 +102,13 @@ const ScriptsEditor: React.FC<{
           </button>
         </div>
       )}
-      {isShowEditScript && (
-        <EditScript
+      {showScriptEditor && (
+        <ScriptEditWizard
           packageType={packageType}
-          editScript={editScript}
-          onClose={() => setIsShowEditScript(false)}
+          isEditScript={isEditScript}
+          script={scriptCopy}
+          onOk={okHander}
+          onCancel={cancelHanlder}
         />
       )}
     </div>
