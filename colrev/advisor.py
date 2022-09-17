@@ -38,42 +38,15 @@ class Advisor:
 
         self.review_manager = review_manager
 
-    def get_collaboration_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
-    ) -> dict:
-
-        if status_stats is None:
-            status_stats = self.review_manager.get_status_stats()
-
-        share_stat_req = self.review_manager.settings.project.share_stat_req
+    def __append_merge_conflict_warning(
+        self, *, collaboration_instructions: dict, git_repo: git.Repo
+    ) -> None:
         found_a_conflict = False
-
-        git_repo = self.review_manager.dataset.get_repo()
         unmerged_blobs = git_repo.index.unmerged_blobs()
         for _, list_of_blobs in unmerged_blobs.items():
             for (stage, _) in list_of_blobs:
                 if stage != 0:
                     found_a_conflict = True
-
-        nr_commits_behind, nr_commits_ahead = 0, 0
-
-        collaboration_instructions: dict = {"items": []}
-        connected_remote = 0 != len(git_repo.remotes)
-        if connected_remote:
-            origin = git_repo.remotes.origin
-            if origin.exists():
-                (
-                    nr_commits_behind,
-                    nr_commits_ahead,
-                ) = self.review_manager.dataset.get_remote_commit_differences()
-        if connected_remote:
-            collaboration_instructions["title"] = "Versioning and collaboration"
-            collaboration_instructions["SHARE_STAT_REQ"] = share_stat_req
-        else:
-            collaboration_instructions[
-                "title"
-            ] = "Versioning (not connected to shared repository)"
-
         if found_a_conflict:
             item = {
                 "title": "Git merge conflict detected",
@@ -84,6 +57,10 @@ class Advisor:
                 + "using-the-command-line",
             }
             collaboration_instructions["items"].append(item)
+
+    def __notify_non_staged_files(
+        self, *, collaboration_instructions: dict, git_repo: git.Repo
+    ) -> None:
 
         # Notify when changes in bib files are not staged
         # (this may raise unexpected errors)
@@ -100,105 +77,153 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-        elif not found_a_conflict:
-            if connected_remote:
-                if nr_commits_behind > 0:
-                    item = {
-                        "title": "Remote changes available on the server",
-                        "level": "WARNING",
-                        "msg": "Once you have committed your changes, get the latest "
-                        + "remote changes",
-                        "cmd_after": "git add FILENAME \n  git commit -m 'MSG' \n  "
-                        + "git pull --rebase",
-                    }
-                    collaboration_instructions["items"].append(item)
+    def __add_sharing_notifications(
+        self,
+        *,
+        collaboration_instructions: dict,
+        status_stats: colrev.ops.status.StatusStats,
+        git_repo: git.Repo,
+    ) -> None:
+        # pylint: disable=too-many-branches
 
-                if nr_commits_ahead > 0:
-                    # TODO : suggest detailed commands
-                    # (depending on the working directory/index)
-                    item = {
-                        "title": "Local changes not yet on the server",
-                        "level": "WARNING",
-                        "msg": "Once you have committed your changes, upload them "
-                        + "to the shared repository.",
-                        "cmd_after": "git push",
-                    }
-                    collaboration_instructions["items"].append(item)
+        nr_commits_behind, nr_commits_ahead = 0, 0
+        if len(git_repo.remotes) >= 0:
+            origin = git_repo.remotes.origin
+            if origin.exists():
+                (
+                    nr_commits_behind,
+                    nr_commits_ahead,
+                ) = self.review_manager.dataset.get_remote_commit_differences()
 
-                if share_stat_req == "NONE":
-                    collaboration_instructions["status"] = {
-                        "title": "Sharing: currently ready for sharing",
-                        "level": "SUCCESS",
-                        "msg": "",
-                        # If consistency checks pass -
-                        # if they didn't pass, the message wouldn't be displayed
-                    }
+        share_stat_req = self.review_manager.settings.project.share_stat_req
+        collaboration_instructions["SHARE_STAT_REQ"] = share_stat_req
 
-                # TODO : all the following: should all search results be imported?!
-                if share_stat_req == "PROCESSED":
-                    if 0 == status_stats.currently.non_processed:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
+        if nr_commits_behind > 0:
+            item = {
+                "title": "Remote changes available on the server",
+                "level": "WARNING",
+                "msg": "Once you have committed your changes, get the latest "
+                + "remote changes",
+                "cmd_after": "git add FILENAME \n  git commit -m 'MSG' \n  "
+                + "git pull --rebase",
+            }
+            collaboration_instructions["items"].append(item)
 
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be processed before sharing "
-                            + "(see instructions above).",
-                        }
+        if nr_commits_ahead > 0:
+            # TODO : suggest detailed commands
+            # (depending on the working directory/index)
+            item = {
+                "title": "Local changes not yet on the server",
+                "level": "WARNING",
+                "msg": "Once you have committed your changes, upload them "
+                + "to the shared repository.",
+                "cmd_after": "git push",
+            }
+            collaboration_instructions["items"].append(item)
 
-                # Note: if we use all(...) in the following,
-                # we do not need to distinguish whether
-                # a PRE_SCREEN or INCLUSION_SCREEN is needed
-                if share_stat_req == "SCREENED":
-                    # TODO : the following condition is probably not sufficient
-                    if 0 == status_stats.currently.pdf_prepared:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
+        if share_stat_req == "NONE":
+            collaboration_instructions["status"] = {
+                "title": "Sharing: currently ready for sharing",
+                "level": "SUCCESS",
+                "msg": "",
+                # If consistency checks pass -
+                # if they didn't pass, the message wouldn't be displayed
+            }
 
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be screened before sharing "
-                            + "(see instructions above).",
-                        }
+        # TODO : all the following: should all search results be imported?!
+        if share_stat_req == "PROCESSED":
+            if 0 == status_stats.currently.non_processed:
+                collaboration_instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "",
+                    # If consistency checks pass -
+                    # if they didn't pass, the message wouldn't be displayed
+                }
 
-                if share_stat_req == "COMPLETED":
-                    if 0 == status_stats.currently.non_completed:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be completed before sharing "
-                            + "(see instructions above).",
-                        }
-
-        else:
-            if connected_remote:
+            else:
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently not ready for sharing",
                     "level": "WARNING",
-                    "msg": "Merge conflicts need to be resolved first.",
+                    "msg": "All records should be processed before sharing "
+                    + "(see instructions above).",
                 }
+
+        # Note: if we use all(...) in the following,
+        # we do not need to distinguish whether
+        # a PRE_SCREEN or INCLUSION_SCREEN is needed
+        if share_stat_req == "SCREENED":
+            # TODO : the following condition is probably not sufficient
+            if 0 == status_stats.currently.pdf_prepared:
+                collaboration_instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "",
+                    # If consistency checks pass -
+                    # if they didn't pass, the message wouldn't be displayed
+                }
+
+            else:
+                collaboration_instructions["status"] = {
+                    "title": "Sharing: currently not ready for sharing",
+                    "level": "WARNING",
+                    "msg": "All records should be screened before sharing "
+                    + "(see instructions above).",
+                }
+
+        if share_stat_req == "COMPLETED":
+            if 0 == status_stats.currently.non_completed:
+                collaboration_instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "",
+                    # If consistency checks pass -
+                    # if they didn't pass, the message wouldn't be displayed
+                }
+            else:
+                collaboration_instructions["status"] = {
+                    "title": "Sharing: currently not ready for sharing",
+                    "level": "WARNING",
+                    "msg": "All records should be completed before sharing "
+                    + "(see instructions above).",
+                }
+
+    def get_collaboration_instructions(
+        self, *, status_stats: colrev.ops.status.StatusStats = None
+    ) -> dict:
+
+        if status_stats is None:
+            status_stats = self.review_manager.get_status_stats()
+
+        collaboration_instructions: dict = {"items": []}
+        git_repo = self.review_manager.dataset.get_repo()
+
+        remote_connected = 0 != len(git_repo.remotes)
+        if remote_connected:
+            collaboration_instructions["title"] = "Versioning and collaboration"
+        else:
+            collaboration_instructions[
+                "title"
+            ] = "Versioning (not connected to shared repository)"
+
+        self.__append_merge_conflict_warning(
+            collaboration_instructions=collaboration_instructions, git_repo=git_repo
+        )
+        if len(collaboration_instructions["items"]) > 0:
+            # Don't append any other instructions.
+            # Resolving the merge conflict is always prio 1
+            return collaboration_instructions
+
+        self.__notify_non_staged_files(
+            collaboration_instructions=collaboration_instructions, git_repo=git_repo
+        )
+
+        if remote_connected:
+            self.__add_sharing_notifications(
+                collaboration_instructions=collaboration_instructions,
+                status_stats=status_stats,
+                git_repo=git_repo,
+            )
 
         if 0 == len(collaboration_instructions["items"]):
             item = {
@@ -209,17 +234,24 @@ class Advisor:
 
         return collaboration_instructions
 
-    def get_review_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
-    ) -> list:
+    def __append_initial_load_instruction(self, *, review_instructions: list) -> None:
+        if not self.review_manager.dataset.records_file.is_file():
+            instruction = {
+                "msg": "To import, copy search results to the search directory.",
+                "cmd": "colrev load",
+            }
+            if instruction["cmd"] not in [
+                ri["cmd"] for ri in review_instructions if "cmd" in ri
+            ]:
+                review_instructions.append(instruction)
 
-        if status_stats is None:
-            status_stats = self.review_manager.get_status_stats()
-
-        review_instructions = []
-        missing_files = self.review_manager.dataset.get_missing_files()
-        current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
-
+    def __append_operation_in_progress_instructions(
+        self,
+        *,
+        review_instructions: list,
+        status_stats: colrev.ops.status.StatusStats,
+        current_origin_states_dict: dict,
+    ) -> None:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if self.review_manager.dataset.records_changed():
             # Detect and validate transitions
@@ -275,15 +307,53 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-        active_processing_functions = status_stats.get_active_processing_functions(
-            current_origin_states_dict=current_origin_states_dict
-        )
+    def __append_next_operation_instructions(
+        self,
+        *,
+        review_instructions: list,
+        status_stats: colrev.ops.status.StatusStats,
+        current_origin_states_dict: dict,
+    ) -> None:
+        if status_stats.currently.md_retrieved > 0:
+            instruction = {
+                "msg": self._next_step_description["load"],
+                "cmd": "colrev load",
+                "priority": "yes",
+                # "high_level_cmd": "colrev metadata",
+            }
+            review_instructions.append(instruction)
 
-        priority_processing_functions = status_stats.get_priority_transition(
-            current_origin_states_dict=current_origin_states_dict
-        )
+        else:
+            active_processing_functions = status_stats.get_active_processing_functions(
+                current_origin_states_dict=current_origin_states_dict
+            )
+
+            priority_processing_functions = status_stats.get_priority_transition(
+                current_origin_states_dict=current_origin_states_dict
+            )
+            for active_processing_function in active_processing_functions:
+                instruction = {
+                    "msg": self._next_step_description[active_processing_function],
+                    "cmd": f"colrev {active_processing_function.replace('_', '-')}"
+                    # "high_level_cmd": "colrev metadata",
+                }
+                if active_processing_function in priority_processing_functions:
+                    # keylist = [list(x.keys()) for x in review_instructions]
+                    # keys = [item for sublist in keylist for item in sublist]
+                    # if "priority" not in keys:
+                    instruction["priority"] = "yes"
+                else:
+                    if self.review_manager.settings.project.delay_automated_processing:
+                        continue
+                if instruction["cmd"] not in [
+                    ri["cmd"] for ri in review_instructions if "cmd" in ri
+                ]:
+                    review_instructions.append(instruction)
+
+    def __append_pdf_issue_instructions(self, *, review_instructions: list) -> None:
 
         # Check pdf files
+        missing_files = self.review_manager.dataset.get_missing_files()
         if len(missing_files) > 0:
             review_instructions.append(
                 {
@@ -304,45 +374,9 @@ class Advisor:
                 }
             )
 
-        if status_stats.currently.md_retrieved > 0:
-            instruction = {
-                "msg": self._next_step_description["load"],
-                "cmd": "colrev load",
-                "priority": "yes",
-                # "high_level_cmd": "colrev metadata",
-            }
-            review_instructions.append(instruction)
-
-        else:
-            for active_processing_function in active_processing_functions:
-                instruction = {
-                    "msg": self._next_step_description[active_processing_function],
-                    "cmd": f"colrev {active_processing_function.replace('_', '-')}"
-                    # "high_level_cmd": "colrev metadata",
-                }
-                if active_processing_function in priority_processing_functions:
-                    # keylist = [list(x.keys()) for x in review_instructions]
-                    # keys = [item for sublist in keylist for item in sublist]
-                    # if "priority" not in keys:
-                    instruction["priority"] = "yes"
-                else:
-                    if self.review_manager.settings.project.delay_automated_processing:
-                        continue
-                if instruction["cmd"] not in [
-                    ri["cmd"] for ri in review_instructions if "cmd" in ri
-                ]:
-                    review_instructions.append(instruction)
-
-        if not self.review_manager.dataset.records_file.is_file():
-            instruction = {
-                "msg": "To import, copy search results to the search directory.",
-                "cmd": "colrev load",
-            }
-            if instruction["cmd"] not in [
-                ri["cmd"] for ri in review_instructions if "cmd" in ri
-            ]:
-                review_instructions.append(instruction)
-
+    def __append_iteration_completed_instructions(
+        self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
+    ) -> None:
         if (
             status_stats.completeness_condition
             and status_stats.currently.md_retrieved > 0
@@ -361,6 +395,36 @@ class Advisor:
                     "cmd": "colrev load",
                 }
                 review_instructions.append(instruction)
+
+    def get_review_instructions(
+        self, *, status_stats: colrev.ops.status.StatusStats = None
+    ) -> list:
+
+        if status_stats is None:
+            status_stats = self.review_manager.get_status_stats()
+
+        review_instructions: typing.List[typing.Dict] = []
+        current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
+
+        self.__append_initial_load_instruction(review_instructions=review_instructions)
+
+        self.__append_operation_in_progress_instructions(
+            review_instructions=review_instructions,
+            status_stats=status_stats,
+            current_origin_states_dict=current_origin_states_dict,
+        )
+
+        self.__append_next_operation_instructions(
+            review_instructions=review_instructions,
+            status_stats=status_stats,
+            current_origin_states_dict=current_origin_states_dict,
+        )
+
+        self.__append_pdf_issue_instructions(review_instructions=review_instructions)
+
+        self.__append_iteration_completed_instructions(
+            review_instructions=review_instructions, status_stats=status_stats
+        )
 
         return review_instructions
 

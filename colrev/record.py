@@ -171,27 +171,64 @@ class Record:
         )
         return bib_formatted
 
-    def get_data(self, *, stringify=False) -> dict:
-        def save_field_dict(*, input_dict: dict, input_key: str) -> list:
-            list_to_return = []
-            if "colrev_masterdata_provenance" == input_key:
-                for key, value in input_dict.items():
-                    formated_node = ",".join(
-                        sorted(e for e in value["note"].split(",") if "" != e)
-                    )
-                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
+    def __save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
+        list_to_return = []
+        if "colrev_masterdata_provenance" == input_key:
+            for key, value in input_dict.items():
+                formated_node = ",".join(
+                    sorted(e for e in value["note"].split(",") if "" != e)
+                )
+                list_to_return.append(f"{key}:{value['source']};{formated_node};")
 
-            elif "colrev_data_provenance" == input_key:
-                for key, value in input_dict.items():
-                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
+        elif "colrev_data_provenance" == input_key:
+            for key, value in input_dict.items():
+                list_to_return.append(f"{key}:{value['source']};{value['note']};")
 
-            else:
-                print(f"error in to_string of dict_field: {input_key}")
+        else:
+            print(f"error in to_string of dict_field: {input_key}")
 
-            return list_to_return
+        return list_to_return
+
+    def __get_stringified_record(self) -> dict:
+        data_copy = deepcopy(self.data)
 
         def list_to_str(*, val: list) -> str:
             return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+        # TODO : maybe add to self.list_fields_keys?
+        if ";" in data_copy.get("colrev_origin", ""):
+            data_copy["colrev_origin"] = ";".join(
+                sorted(list(set(data_copy["colrev_origin"].split(";"))))
+            )
+
+        # separated by \n
+        for key in self.list_fields_keys:
+            if key in data_copy:
+                if isinstance(data_copy[key], str):
+                    data_copy[key] = [
+                        element.lstrip().rstrip()
+                        for element in data_copy[key].split(";")
+                    ]
+                if "colrev_id" == key:
+                    data_copy[key] = sorted(list(set(data_copy[key])))
+                for ind, val in enumerate(data_copy[key]):
+                    if len(val) > 0:
+                        if ";" != val[-1]:
+                            data_copy[key][ind] = val + ";"
+                data_copy[key] = list_to_str(val=data_copy[key])
+
+        for key in self.dict_fields_keys:
+            if key in data_copy:
+                if isinstance(data_copy[key], dict):
+                    data_copy[key] = self.__save_field_dict(
+                        input_dict=data_copy[key], input_key=key
+                    )
+                if isinstance(data_copy[key], list):
+                    data_copy[key] = list_to_str(val=data_copy[key])
+
+        return data_copy
+
+    def get_data(self, *, stringify=False) -> dict:
 
         if not isinstance(self.data.get("colrev_id", []), list):
             print(self.data)
@@ -200,40 +237,7 @@ class Record:
 
         if stringify:
 
-            data_copy = deepcopy(self.data)
-
-            # TODO : maybe add to self.list_fields_keys?
-            if ";" in data_copy.get("colrev_origin", ""):
-                data_copy["colrev_origin"] = ";".join(
-                    sorted(list(set(data_copy["colrev_origin"].split(";"))))
-                )
-
-            # separated by \n
-            for key in self.list_fields_keys:
-                if key in data_copy:
-                    if isinstance(data_copy[key], str):
-                        data_copy[key] = [
-                            element.lstrip().rstrip()
-                            for element in data_copy[key].split(";")
-                        ]
-                    if "colrev_id" == key:
-                        data_copy[key] = sorted(list(set(data_copy[key])))
-                    for ind, val in enumerate(data_copy[key]):
-                        if len(val) > 0:
-                            if ";" != val[-1]:
-                                data_copy[key][ind] = val + ";"
-                    data_copy[key] = list_to_str(val=data_copy[key])
-
-            for key in self.dict_fields_keys:
-                if key in data_copy:
-                    if isinstance(data_copy[key], dict):
-                        data_copy[key] = save_field_dict(
-                            input_dict=data_copy[key], input_key=key
-                        )
-                    if isinstance(data_copy[key], list):
-                        data_copy[key] = list_to_str(val=data_copy[key])
-
-            return data_copy
+            return self.__get_stringified_record()
 
         return self.data
 
@@ -785,38 +789,21 @@ class Record:
         record_a_dict = record_a.copy().get_data()
         record_b_dict = record_b.copy().get_data()
 
-        if "title" not in record_a_dict:
-            record_a_dict["title"] = ""
-        if "author" not in record_a_dict:
-            record_a_dict["author"] = ""
-        if "year" not in record_a_dict:
-            record_a_dict["year"] = ""
-        if "journal" not in record_a_dict:
-            record_a_dict["journal"] = ""
-        if "volume" not in record_a_dict:
-            record_a_dict["volume"] = ""
-        if "number" not in record_a_dict:
-            record_a_dict["number"] = ""
-        if "pages" not in record_a_dict:
-            record_a_dict["pages"] = ""
-        if "booktitle" not in record_a_dict:
-            record_a_dict["booktitle"] = ""
-        if "title" not in record_b_dict:
-            record_b_dict["title"] = ""
-        if "author" not in record_b_dict:
-            record_b_dict["author"] = ""
-        if "year" not in record_b_dict:
-            record_b_dict["year"] = ""
-        if "journal" not in record_b_dict:
-            record_b_dict["journal"] = ""
-        if "volume" not in record_b_dict:
-            record_b_dict["volume"] = ""
-        if "number" not in record_b_dict:
-            record_b_dict["number"] = ""
-        if "pages" not in record_b_dict:
-            record_b_dict["pages"] = ""
-        if "booktitle" not in record_b_dict:
-            record_b_dict["booktitle"] = ""
+        mandatory_fields = [
+            "title",
+            "author",
+            "year",
+            "journal",
+            "volume",
+            "number",
+            "pages",
+            "booktitle",
+        ]
+        for mandatory_field in mandatory_fields:
+            if mandatory_field not in record_a_dict:
+                record_a_dict[mandatory_field] = ""
+            if mandatory_field not in record_b_dict:
+                record_b_dict[mandatory_field] = ""
 
         if "container_title" not in record_a_dict:
             record_a_dict["container_title"] = (
@@ -1178,10 +1165,13 @@ class Record:
         also_known_as_record (using the Record as the reference to decide whether
         required fields are missing)"""
 
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         if also_known_as_record is None:
             also_known_as_record = {}
 
-        def format_author_field(input_string: str) -> str:
+        def format_author_field_for_cid(input_string: str) -> str:
             input_string = input_string.replace("\n", " ").replace("'", "")
             names = input_string.replace("; ", " and ").split(" and ")
             author_list = []
@@ -1323,7 +1313,7 @@ class Record:
                     input_string=srep, to_append=record_dict.get("number", "-")
                 )
             srep = robust_append(input_string=srep, to_append=record_dict["year"])
-            author = format_author_field(record_dict["author"])
+            author = format_author_field_for_cid(record_dict["author"])
             if "" == author.replace("-", ""):
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
                     "author field format error"
@@ -1455,13 +1445,7 @@ class Record:
         )
         return cpid1
 
-    def import_provenance(self, *, source_identifier: str) -> None:
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
-
-        # Initialize colrev_masterdata_provenance
-        colrev_masterdata_provenance = {}
-        colrev_data_provenance = {}
+    def __get_source_identifier_string(self, *, source_identifier: str) -> str:
         marker = re.search(r"\{\{(.*)\}\}", source_identifier)
         source_identifier_string = source_identifier
         if marker:
@@ -1475,6 +1459,11 @@ class Record:
                 )
             except KeyError as exc:
                 print(exc)
+        return source_identifier_string
+
+    def __set_initial_import_provenance(self, *, source_identifier_string: str) -> None:
+        # Initialize colrev_masterdata_provenance
+        colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
         for key in self.data.keys():
             if key in Record.identifying_field_keys:
@@ -1496,50 +1485,64 @@ class Record:
         self.data["colrev_data_provenance"] = colrev_data_provenance
         self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
 
-        if not self.masterdata_is_curated():
-            if self.data["ENTRYTYPE"] in self.record_field_requirements:
-                required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
-                for required_field in required_fields:
-                    if self.data.get(required_field, "") not in ["UNKNOWN", ""]:
-                        if percent_upper_chars(self.data[required_field]) > 0.8:
-                            self.add_masterdata_provenance_note(
-                                key=required_field, note="quality_defect"
-                            )
-                    else:
-                        # self.data[required_field] = "UNKNOWN"
-                        self.update_field(
-                            key=required_field,
-                            value="UNKNOWN",
-                            source="LOADER.import_provenance",
-                            note="missing",
-                        )
-            # TODO : how to handle cases where we do not have field_requirements?
+    def __set_initial_non_curated_import_provenance(self) -> None:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
 
-            if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
-                inconsistent_fields = self.record_field_inconsistencies[
-                    self.data["ENTRYTYPE"]
-                ]
-                for inconsistent_field in inconsistent_fields:
-                    if inconsistent_field in self.data:
-                        inconsistency_note = (
-                            f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                        )
+        if self.data["ENTRYTYPE"] in self.record_field_requirements:
+            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+            for required_field in required_fields:
+                if self.data.get(required_field, "") not in ["UNKNOWN", ""]:
+                    if percent_upper_chars(self.data[required_field]) > 0.8:
                         self.add_masterdata_provenance_note(
-                            key=inconsistent_field, note=inconsistency_note
+                            key=required_field, note="quality_defect"
                         )
+                else:
+                    # self.data[required_field] = "UNKNOWN"
+                    self.update_field(
+                        key=required_field,
+                        value="UNKNOWN",
+                        source="LOADER.import_provenance",
+                        note="missing",
+                    )
+        # TODO : how to handle cases where we do not have field_requirements?
 
-            incomplete_fields = self.get_incomplete_fields()
-            for incomplete_field in incomplete_fields:
+        if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
+            inconsistent_fields = self.record_field_inconsistencies[
+                self.data["ENTRYTYPE"]
+            ]
+            for inconsistent_field in inconsistent_fields:
+                if inconsistent_field in self.data:
+                    inconsistency_note = (
+                        f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    self.add_masterdata_provenance_note(
+                        key=inconsistent_field, note=inconsistency_note
+                    )
+
+        incomplete_fields = self.get_incomplete_fields()
+        for incomplete_field in incomplete_fields:
+            self.add_masterdata_provenance_note(key=incomplete_field, note="incomplete")
+
+        defect_fields = self.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
                 self.add_masterdata_provenance_note(
-                    key=incomplete_field, note="incomplete"
+                    key=defect_field, note="quality_defect"
                 )
 
-            defect_fields = self.get_quality_defects()
-            if defect_fields:
-                for defect_field in defect_fields:
-                    self.add_masterdata_provenance_note(
-                        key=defect_field, note="quality_defect"
-                    )
+    def import_provenance(self, *, source_identifier: str) -> None:
+
+        source_identifier_string = self.__get_source_identifier_string(
+            source_identifier=source_identifier
+        )
+
+        self.__set_initial_import_provenance(
+            source_identifier_string=source_identifier_string
+        )
+
+        if not self.masterdata_is_curated():
+            self.__set_initial_non_curated_import_provenance()
 
     def pdf_get_man(
         self,
@@ -1751,6 +1754,35 @@ class PrepRecord(Record):
         return author_string
 
     @classmethod
+    def __format_authors_string_for_comparison(cls, *, record: Record) -> None:
+        if "author" not in record.data:
+            return
+        authors = record.data["author"]
+        authors = str(authors).lower()
+        authors_string = ""
+        authors = colrev.env.utils.remove_accents(input_str=authors)
+
+        # abbreviate first names
+        # "Webster, Jane" -> "Webster, J"
+        # also remove all special characters and do not include separators (and)
+        for author in authors.split(" and "):
+            if "," in author:
+                last_names = [
+                    word[0] for word in author.split(",")[1].split(" ") if len(word) > 0
+                ]
+                authors_string = (
+                    authors_string
+                    + author.split(",")[0]
+                    + " "
+                    + " ".join(last_names)
+                    + " "
+                )
+            else:
+                authors_string = authors_string + author + " "
+        authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
+        record.data["author"] = authors_string
+
+    @classmethod
     def get_retrieval_similarity(
         cls,
         *,
@@ -1758,36 +1790,7 @@ class PrepRecord(Record):
         retrieved_record_original: Record,
         same_record_type_required: bool = False,
     ) -> float:
-        def format_authors_string_for_comparison(rec_in: Record) -> None:
-            if "author" not in rec_in.data:
-                return
-            authors = rec_in.data["author"]
-            authors = str(authors).lower()
-            authors_string = ""
-            authors = colrev.env.utils.remove_accents(input_str=authors)
-
-            # abbreviate first names
-            # "Webster, Jane" -> "Webster, J"
-            # also remove all special characters and do not include separators (and)
-            for author in authors.split(" and "):
-                if "," in author:
-                    last_names = [
-                        word[0]
-                        for word in author.split(",")[1].split(" ")
-                        if len(word) > 0
-                    ]
-                    authors_string = (
-                        authors_string
-                        + author.split(",")[0]
-                        + " "
-                        + " ".join(last_names)
-                        + " "
-                    )
-                else:
-                    authors_string = authors_string + author + " "
-            authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-            rec_in.data["author"] = authors_string
-            return
+        # pylint: disable=too-many-branches
 
         if same_record_type_required:
             if record_original.data.get(
@@ -1813,10 +1816,10 @@ class PrepRecord(Record):
             retrieved_record.data["title"] = retrieved_record.data["title"][:90]
 
         if "author" in record.data:
-            format_authors_string_for_comparison(record)
+            cls.__format_authors_string_for_comparison(record=record)
             record.data["author"] = record.data["author"][:45]
         if "author" in retrieved_record.data:
-            format_authors_string_for_comparison(retrieved_record)
+            cls.__format_authors_string_for_comparison(record=retrieved_record)
             retrieved_record.data["author"] = retrieved_record.data["author"][:45]
         if not ("volume" in record.data and "volume" in retrieved_record.data):
             record.data["volume"] = "nan"
@@ -2012,6 +2015,7 @@ class PrepRecord(Record):
         unprepared_record: Record,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        # pylint: disable=too-many-branches
 
         if not self.masterdata_is_curated():
             if "colrev_masterdata_provenance" not in self.data:

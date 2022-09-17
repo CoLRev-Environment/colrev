@@ -6,7 +6,6 @@ from pathlib import Path
 import click
 import click_completion.core
 import pandas as pd
-import requests
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -941,6 +940,9 @@ def data(
 ) -> None:
     """Extract data"""
 
+    # pylint: disable=import-outside-toplevel
+    import colrev.ui_cli.add_packages
+
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
         data_operation = review_manager.get_data_operation()
@@ -957,74 +959,16 @@ def data(
             print("Activated custom_data_script.py.")
             print("Please update the data_format in settings.json and commit.")
             return
+
         if add_endpoint:
 
-            package_manager = review_manager.get_package_manager()
-            available_data_endpoins = package_manager.discover_packages(
-                package_type=colrev.env.package_manager.PackageType.data
+            colrev.ui_cli.add_packages.add_data(
+                data_operation=data_operation,
+                review_manager=review_manager,
+                add_endpoint=add_endpoint,
+                force=force,
             )
 
-            if add_endpoint in available_data_endpoins:
-                endpoint_class = available_data_endpoins[add_endpoint]["endpoint"]
-                endpoint = endpoint_class(
-                    data_operation=data_operation, settings={"name": add_endpoint}
-                )
-
-                default_endpoint_conf = endpoint.get_default_setup()
-
-                if "MANUSCRIPT" == add_endpoint:
-                    if "y" == input("Select a custom word template (y/n)?"):
-
-                        template_name = input(
-                            'Please copy the word template to " \
-                        "the project directory and enter the filename.'
-                        )
-                        default_endpoint_conf["word_template"] = template_name
-                    else:
-                        print("Adding APA as a default")
-
-                    if "y" == input("Select a custom citation stlye (y/n)?"):
-                        print(
-                            "Citation stlyes are available at: \n"
-                            "https://github.com/citation-style-language/styles"
-                        )
-                        csl_link = input(
-                            "Please select a citation style and provide the link."
-                        )
-                        ret = requests.get(csl_link, allow_redirects=True)
-                        with open(Path(csl_link).name, "wb") as file:
-                            file.write(ret.content)
-                        default_endpoint_conf["csl_style"] = Path(csl_link).name
-                    else:
-                        print("Adding APA as a default")
-
-                    data_operation.review_manager.dataset.add_changes(
-                        path=default_endpoint_conf["csl_style"]
-                    )
-                    data_operation.review_manager.dataset.add_changes(
-                        path=default_endpoint_conf["word_template"]
-                    )
-                    # TODO : check whether template_name is_file
-                    # and csl_link.name is_file()
-
-                data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
-                data_operation.review_manager.create_commit(
-                    msg="Add data endpoint",
-                    script_call="colrev data",
-                )
-
-                # Note : reload updated settings
-                review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-                data_operation = colrev.ops.data.Data(review_manager=review_manager)
-            else:
-                print("Data format not available")
-
-            ret = data_operation.main()
-            if ret["ask_to_commit"]:
-                if "y" == input("Create commit (y/n)?"):
-                    review_manager.create_commit(
-                        msg="Data and synthesis", manual_author=True
-                    )
             return
 
         ret = data_operation.main()
@@ -1349,6 +1293,7 @@ def env(
 
     # pylint: disable=import-outside-toplevel
     # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches
     import webbrowser
     import docker
 
@@ -1414,17 +1359,14 @@ def env(
         local_index.start_opensearch_docker_dashboards()
         print("Started.")
         webbrowser.open("http://localhost:5601/app/home#/", new=2)
-        return
 
-    if index:
+    elif index:
         local_index.index()
-        return
 
-    if start:
+    elif start:
         print("Started.")
-        return
 
-    if analyze:
+    elif analyze:
         local_index.analyze()
 
 
@@ -1673,88 +1615,23 @@ def show(ctx, keyword, callback=validate_show):
 
     # pylint: disable=import-outside-toplevel
     import colrev.process
+    import colrev.ui_cli.show_printer
 
     review_manager = colrev.review_manager.ReviewManager()
 
     if "sample" == keyword:
-        colrev.process.CheckProcess(review_manager=review_manager)
-        records = review_manager.dataset.load_records_dict()
-        sample = [
-            r
-            for r in records.values()
-            if r["colrev_status"]
-            in [
-                colrev.record.RecordState.rev_synthesized,
-                colrev.record.RecordState.rev_included,
-            ]
-        ]
-        if 0 == len(sample):
-            print("No records included in sample (yet)")
+        colrev.ui_cli.show_printer.print_sample(review_manager=review_manager)
 
-        for sample_r in sample:
-            colrev.record.Record(data=sample_r).print_citation_format()
-        # TODO : print sample size, distributions over years/journals
-        return
-
-    if "settings" == keyword:
+    elif "settings" == keyword:
         print(f"Settings:\n{review_manager.settings}")
-        return
 
-    if "prisma" == keyword:
+    elif "prisma" == keyword:
         status_operation = review_manager.get_status_operation()
         stats_report = status_operation.get_review_status_report()
         print(stats_report)
 
-        return
-
-    if "venv" == keyword:
-        # pylint: disable=import-outside-toplevel
-        import platform
-
-        # TODO : test installation of colrev in venv
-
-        current_platform = platform.system()
-        if "Linux" == current_platform:
-            print("Detected platform: Linux")
-            if not Path("venv").is_dir():
-                print("To create virtualenv, run")
-                print(f"  {colors.ORANGE}python3 -m venv venv{colors.END}")
-            print("To activate virtualenv, run")
-            print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
-            print("To install colrev/colrev, run")
-            print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
-            print("To deactivate virtualenv, run")
-            print(f"  {colors.ORANGE}deactivate{colors.END}")
-        elif "Darwin" == current_platform:
-            print("Detected platform: MacOS")
-            if not Path("venv").is_dir():
-                print("To create virtualenv, run")
-                print(f"  {colors.ORANGE}python3 -m venv venv{colors.END}")
-            print("To activate virtualenv, run")
-            print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
-            print("To install colrev/colrev, run")
-            print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
-            print("To deactivate virtualenv, run")
-            print(f"  {colors.ORANGE}deactivate{colors.END}")
-        elif "Windows" == current_platform:
-            print("Detected platform: Windows")
-            if not Path("venv").is_dir():
-                print("To create virtualenv, run")
-                print(f"  {colors.ORANGE}python -m venv venv{colors.END}")
-            print("To activate virtualenv, run")
-            print(f"  {colors.ORANGE}venv\\Scripts\\Activate.ps1{colors.END}")
-            print("To install colrev/colrev, run")
-            print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
-            print("To deactivate virtualenv, run")
-            print(f"  {colors.ORANGE}deactivate{colors.END}")
-        else:
-            print(
-                "Platform not detected... "
-                "cannot provide infos in how to activate virtualenv"
-            )
-        return
-
-    print("Keyword unknown")
+    elif "venv" == keyword:
+        colrev.ui_cli.show_printer.print_venv_notes()
 
 
 @main.command(hidden=True)

@@ -235,86 +235,73 @@ class DefaultSourceSettings:
 
 class PackageManager:
 
-    endpoint_overview = [
-        {
-            "package_type": PackageType.review_type,
+    package_type_overview = {
+        PackageType.review_type: {
             "import_name": ReviewTypePackageInterface,
             "custom_class": "CustomReviewType",
             "operation_name": "operation",
         },
-        {
-            "package_type": PackageType.load_conversion,
+        PackageType.load_conversion: {
             "import_name": LoadConversionPackageInterface,
             "custom_class": "CustomLoad",
             "operation_name": "load_operation",
         },
-        {
-            "package_type": PackageType.search_source,
+        PackageType.search_source: {
             "import_name": SearchSourcePackageInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
         },
-        {
-            "package_type": PackageType.prep,
+        PackageType.prep: {
             "import_name": PrepPackageInterface,
             "custom_class": "CustomPrep",
             "operation_name": "prep_operation",
         },
-        {
-            "package_type": PackageType.prep_man,
+        PackageType.prep_man: {
             "import_name": PrepManPackageInterface,
             "custom_class": "CustomPrepMan",
             "operation_name": "prep_man_operation",
         },
-        {
-            "package_type": PackageType.dedupe,
+        PackageType.dedupe: {
             "import_name": DedupePackageInterface,
             "custom_class": "CustomDedupe",
             "operation_name": "dedupe_operation",
         },
-        {
-            "package_type": PackageType.prescreen,
+        PackageType.prescreen: {
             "import_name": PrescreenPackageInterface,
             "custom_class": "CustomPrescreen",
             "operation_name": "prescreen_operation",
         },
-        {
-            "package_type": PackageType.pdf_get,
+        PackageType.pdf_get: {
             "import_name": PDFGetPackageInterface,
             "custom_class": "CustomPDFGet",
             "operation_name": "pdf_get_operation",
         },
-        {
-            "package_type": PackageType.pdf_get_man,
+        PackageType.pdf_get_man: {
             "import_name": PDFGetManPackageInterface,
             "custom_class": "CustomPDFGetMan",
             "operation_name": "pdf_get_man_operation",
         },
-        {
-            "package_type": PackageType.pdf_prep,
+        PackageType.pdf_prep: {
             "import_name": PDFPrepPackageInterface,
             "custom_class": "CustomPDFPrep",
             "operation_name": "pdf_prep_operation",
         },
-        {
-            "package_type": PackageType.pdf_prep_man,
+        PackageType.pdf_prep_man: {
             "import_name": PDFPrepManPackageInterface,
             "custom_class": "CustomPDFPrepMan",
             "operation_name": "pdf_prep_man_operation",
         },
-        {
-            "package_type": PackageType.screen,
+        PackageType.screen: {
             "import_name": ScreenPackageInterface,
             "custom_class": "CustomScreen",
             "operation_name": "screen_operation",
         },
-        {
-            "package_type": PackageType.data,
+        PackageType.data: {
             "import_name": DataPackageInterface,
             "custom_class": "CustomData",
             "operation_name": "data_operation",
         },
-    ]
+    }
 
     package: typing.Dict[str, typing.Dict[str, typing.Dict]]
 
@@ -376,6 +363,9 @@ class PackageManager:
     def get_package_details(
         self, *, package_type: PackageType, package_identifier
     ) -> dict:
+        # pylint: disable=too-many-branches
+
+        # TODO : switch to cls.json_schema() (in line with settings.json)?
         package_identifier = package_identifier.lower()
         package_details = {"name": package_identifier}
         package_class = self.load_package_endpoint(
@@ -415,9 +405,9 @@ class PackageManager:
 
                 if "typing.Optional[int]" == type_annotation:
                     type_annotation = "int"
-                if "typing.Optional[float]" == type_annotation:
+                elif "typing.Optional[float]" == type_annotation:
                     type_annotation = "float"
-                if "typing.Optional[bool]" == type_annotation:
+                elif "typing.Optional[bool]" == type_annotation:
                     # TODO : required=False for boolean?!
                     type_annotation = "bool"
                 # typing.Optional[list] : multiple_selection?
@@ -484,23 +474,40 @@ class PackageManager:
         package_class = getattr(imported_package, package_class)
         return package_class
 
-    def load_packages(
+    def __drop_broken_packages(
         self,
         *,
+        packages_dict: dict,
         package_type: PackageType,
+        ignore_not_available: bool,
+    ) -> None:
+        package_details = self.package_type_overview[package_type]
+        broken_packages = []
+        for k, val in packages_dict.items():
+            if "custom_flag" not in val:
+                continue
+            try:
+                packages_dict[k]["endpoint"] = getattr(  # type: ignore
+                    val["endpoint"], package_details["custom_class"]
+                )
+                del packages_dict[k]["custom_flag"]
+            except AttributeError as exc:
+                # Note : these may also be (package name) conflicts
+                if not ignore_not_available:
+                    raise colrev_exceptions.MissingDependencyError(
+                        f"Dependency {k} not available"
+                    ) from exc
+                broken_packages.append(k)
+                print(f"Skipping broken package ({k})")
+                packages_dict.pop(k, None)
+
+    def __get_packages_dict(
+        self,
+        *,
         selected_packages: list,
-        process: colrev.process.Process,
-        ignore_not_available: bool = False,
-        instantiate_objects=True,
-    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=unnecessary-dict-index-lookup
-        # Note : when iterating over packages_dict.items(),
-        # changes to the values (or del k) would not persist
-
-        # TODO : generally change from process.type to package_type
-        # (each process can involve different endpoints)
-
+        package_type: PackageType,
+        ignore_not_available: bool,
+    ) -> typing.Dict:
         # avoid changes in the config
         selected_packages = deepcopy(selected_packages)
         packages_dict: typing.Dict = {}
@@ -550,7 +557,6 @@ class PackageManager:
                         "Please install it\n  pip install "
                         f"{package_type} {package_identifier}"
                     ) from exc
-
             # 3. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
                 sys.path.append(".")  # to import custom packages from the project dir
@@ -568,36 +574,43 @@ class PackageManager:
             ]["settings"]["endpoint"]
             del packages_dict[package_identifier]["settings"]["endpoint"]
 
-        try:
-            package_details = next(
-                item
-                for item in self.endpoint_overview
-                if item["package_type"] == package_type
-            )
-        except StopIteration as exc:
+        return packages_dict
+
+    def load_packages(
+        self,
+        *,
+        package_type: PackageType,
+        selected_packages: list,
+        process: colrev.process.Process,
+        ignore_not_available: bool = False,
+        instantiate_objects=True,
+    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=unnecessary-dict-index-lookup
+        # Note : when iterating over packages_dict.items(),
+        # changes to the values (or del k) would not persist
+
+        # TODO : generally change from process.type to package_type
+        # (each process can involve different endpoints)
+
+        if package_type not in self.package_type_overview:
             raise colrev_exceptions.MissingDependencyError(
                 f"package_type {package_type} not available"
-            ) from exc
+            )
 
-        broken_packages = []
-        for k, val in packages_dict.items():
-            if "custom_flag" not in val:
-                continue
-            try:
-                packages_dict[k]["endpoint"] = getattr(  # type: ignore
-                    val["endpoint"], package_details["custom_class"]
-                )
-                del packages_dict[k]["custom_flag"]
-            except AttributeError as exc:
-                # Note : these may also be (package name) conflicts
-                if not ignore_not_available:
-                    raise colrev_exceptions.MissingDependencyError(
-                        f"Dependency {k} not available"
-                    ) from exc
-                broken_packages.append(k)
-                print(f"Skipping broken package ({k})")
-                packages_dict.pop(k, None)
+        packages_dict = self.__get_packages_dict(
+            selected_packages=selected_packages,
+            package_type=package_type,
+            ignore_not_available=ignore_not_available,
+        )
 
+        self.__drop_broken_packages(
+            packages_dict=packages_dict,
+            package_type=package_type,
+            ignore_not_available=ignore_not_available,
+        )
+
+        package_details = self.package_type_overview[package_type]
         endpoint_class = package_details["import_name"]  # type: ignore
         for package_identifier, package_class in packages_dict.items():
             params = {

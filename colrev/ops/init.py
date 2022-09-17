@@ -194,6 +194,7 @@ class Initializer:
         colrev_version = colrev_version[: colrev_version.find("+")]
         settings.project.colrev_version = colrev_version
 
+        settings.project.title = self.project_name
         self.review_type = settings.project.review_type
 
         # Principle: adapt values provided by the default settings.json
