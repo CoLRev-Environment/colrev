@@ -366,7 +366,7 @@ const getScriptParameterDefinitions = async (
   packageIdentifier: string
 ): Promise<ScriptParameterDefinition[]> => {
   const response = await httpService.get(
-    `${apiEndpoint}/getScriptDetails?pakageType=${packageType}&packageIdentifier=${packageIdentifier}&endpointVersion=1.0`
+    `${apiEndpoint}/getScriptDetails?packageType=${packageType}&packageIdentifier=${packageIdentifier}&endpointVersion=1.0`
   );
 
   const scriptParameterDefinitions: ScriptParameterDefinition[] = [];

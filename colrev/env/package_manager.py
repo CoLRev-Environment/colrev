@@ -388,6 +388,8 @@ class PackageManager:
             # default value: determined from class.__dict__
             # merging_non_dup_threshold: float= 0.7
             if parameter in settings_class.__dict__:
+                if parameter not in package_details["parameters"]:
+                    package_details["parameters"][parameter] = {}
                 package_details["parameters"][parameter][
                     "default"
                 ] = settings_class.__dict__[parameter]
