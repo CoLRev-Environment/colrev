@@ -519,6 +519,11 @@ class SettingsEditor:
 
 
 def main() -> None:
+    # dev
+    se_instance = SettingsEditor()
+    se_instance.open_settings_editor()
+
+    # prod
     # review_manager = colrev.review_manager.ReviewManager()
     # se_instance = SettingsEditor(review_manager=review_manager)
     # se_instance.open_settings_editor()
