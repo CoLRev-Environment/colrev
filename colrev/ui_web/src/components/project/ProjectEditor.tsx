@@ -3,10 +3,11 @@ import Project from "../../models/project";
 import FieldsEditor from "../fields/FieldsEditor";
 import AuthorsEditor from "./AuthorsEditor";
 
-const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
-  project,
-  projectChanged,
-}) => {
+const ProjectEditor: React.FC<{
+  project: Project;
+  projectChanged: any;
+  options: any;
+}> = ({ project, projectChanged, options }) => {
   const [title, setTitle] = useState<string>();
   const [protocol, setProtocol] = useState<string | null>(null);
   const [reviewType, setReviewType] = useState<string>();
@@ -16,6 +17,9 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
     useState<boolean>(false);
   const [curationUrl, setCurationUrl] = useState<string | null>(null);
   const [curatedMasterdata, setCuratedMasterdata] = useState<boolean>(false);
+
+  const [idPatternOptions, setIdPatternOptions] = useState<string[]>([]);
+  const [shareStatReqOptions, setShareStatReqOptions] = useState<string[]>([]);
 
   useEffect(() => {
     if (project) {
@@ -27,8 +31,17 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
       setDelayAutomatedProcessing(project.delayAutomatedProcessing);
       setCurationUrl(project.curationUrl);
       setCuratedMasterdata(project.curatedMasterdata);
+
+      if (options) {
+        setIdPatternOptions(
+          options.definitions.ProjectSettings.properties.id_pattern.enum
+        );
+        setShareStatReqOptions(
+          options.definitions.ProjectSettings.properties.share_stat_req.enum
+        );
+      }
     }
-  }, [project]);
+  }, [project, options]);
 
   const titleChangedHandler = (event: any) => {
     const newValue = event.target.value;
@@ -163,23 +176,31 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
         >
           ID Pattern
         </label>
-        <input
-          className="form-control"
-          type="text"
+        <select
+          className="form-select"
+          aria-label="Select"
           id="idPattern"
           value={idPattern ?? ""}
           onChange={idPatternChangedHandler}
-        />
+        >
+          {idPatternOptions.map((idPattenOption, index) => (
+            <option key={index.toString()}>{idPattenOption}</option>
+          ))}
+        </select>
       </div>
       <div className="mb-3">
         <label htmlFor="shareStatReq">Share Stat Req</label>
-        <input
-          className="form-control"
-          type="text"
+        <select
+          className="form-select"
+          aria-label="Select"
           id="shareStatReq"
           value={shareStatReq ?? ""}
           onChange={shareStatReqChangedHandler}
-        />
+        >
+          {shareStatReqOptions.map((shareStatReqOption, index) => (
+            <option key={index.toString()}>{shareStatReqOption}</option>
+          ))}
+        </select>
       </div>
       <div className="form-check form-switch mb-3">
         <input

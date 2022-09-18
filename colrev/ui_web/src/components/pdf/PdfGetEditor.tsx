@@ -6,12 +6,16 @@ import ScriptsEditor from "../scripts/ScriptsEditor";
 const PdfGetEditor: React.FC<{
   pdfGet: PdfGet;
   pdfGetChanged: any;
-}> = ({ pdfGet, pdfGetChanged }) => {
+  options: any;
+}> = ({ pdfGet, pdfGetChanged, options }) => {
   const [
     pdfRequiredForScreenAndSynthesis,
     setPdfRequiredForScreenAndSynthesis,
   ] = useState<boolean>(true);
+
   const [renamePdfs, setRenamePdfs] = useState<boolean>(true);
+
+  const [pdfPathTypeOptions, setPdfPathTypeOptions] = useState<string[]>([]);
 
   useEffect(() => {
     if (pdfGet) {
@@ -20,7 +24,13 @@ const PdfGetEditor: React.FC<{
       );
       setRenamePdfs(pdfGet.renamePdfs);
     }
-  }, [pdfGet]);
+
+    if (options) {
+      setPdfPathTypeOptions(
+        options.definitions.PDFGetSettings.properties.pdf_path_type.enum
+      );
+    }
+  }, [pdfGet, options]);
 
   const pdfPathTypeChangedHandler = (event: any) => {
     const newPdfGet = { ...pdfGet, pdfPathType: event.target.value };
@@ -61,13 +71,17 @@ const PdfGetEditor: React.FC<{
     <div>
       <div className="mb-3">
         <label htmlFor="pdfPathType">PDF Path Type</label>
-        <input
-          className="form-control"
-          type="text"
+        <select
+          className="form-select"
+          aria-label="Select"
           id="pdfPathType"
-          value={pdfGet.pdfPathType}
+          value={pdfGet.pdfPathType ?? ""}
           onChange={pdfPathTypeChangedHandler}
-        />
+        >
+          {pdfPathTypeOptions.map((pdfPathTypeOption, index) => (
+            <option key={index.toString()}>{pdfPathTypeOption}</option>
+          ))}
+        </select>
       </div>
       <div className="form-check form-switch mb-3">
         <input

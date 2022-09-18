@@ -338,6 +338,11 @@ const dataToSettings = (data: Data): any => {
   return settingsData;
 };
 
+const getOptions = async (): Promise<any> => {
+  const response = await httpService.get(`${apiEndpoint}/getOptions`);
+  return response.data;
+};
+
 const getScriptDefinitions = async (
   packageType: string
 ): Promise<ScriptDefinition[]> => {
@@ -418,6 +423,7 @@ const getScriptParameterType = (parameterType: string): ScriptParameterType => {
 const dataService = {
   getSettings,
   saveSettings,
+  getOptions,
   getScriptDefinitions,
   getScriptParameterDefinitions,
 };

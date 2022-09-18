@@ -39,6 +39,7 @@ function App() {
   const [pdfPrep, setPdfPrep] = useState<PdfPrep>(new PdfPrep());
   const [screen, setScreen] = useState<Screen>(new Screen());
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
+  const [options, setOptions] = useState<any>();
 
   useEffect(() => {
     loadData();
@@ -58,6 +59,10 @@ function App() {
 
   const loadData = async () => {
     setIsFileSaved(false);
+
+    const options = await dataService.getOptions();
+    setOptions(options);
+
     const settings = await dataService.getSettings();
     setProject(settings.project);
     setSources(settings.sources);
@@ -168,11 +173,12 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <ProjectEditor
                   project={project}
                   projectChanged={onProjectChanged}
+                  options={options}
                 />
               </ExpanderItem>
               <ExpanderItem
@@ -208,13 +214,17 @@ function App() {
                 parentContainerId="settingsExpander"
                 show={false}
               >
-                <DedupeEditor dedupe={dedupe} dedupeChanged={onDedupeChanged} />
+                <DedupeEditor
+                  dedupe={dedupe}
+                  dedupeChanged={onDedupeChanged}
+                  options={options}
+                />
               </ExpanderItem>
               <ExpanderItem
                 name="Prescreen"
                 id="prescreen"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <PrescreenEditor
                   prescreen={prescreen}
@@ -227,7 +237,11 @@ function App() {
                 parentContainerId="settingsExpander"
                 show={false}
               >
-                <PdfGetEditor pdfGet={pdfGet} pdfGetChanged={onPdfGetChanged} />
+                <PdfGetEditor
+                  pdfGet={pdfGet}
+                  pdfGetChanged={onPdfGetChanged}
+                  options={options}
+                />
               </ExpanderItem>
               <ExpanderItem
                 name="PDF Prep"
