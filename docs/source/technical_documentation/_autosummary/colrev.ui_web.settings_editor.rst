@@ -9,6 +9,14 @@ colrev.ui\_web.settings\_editor
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      main
+
 
 
 

@@ -13,11 +13,17 @@ colrev.ops.built\_in.pdf\_get\_man
 
 
 
-   .. rubric:: Classes
 
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
 
-      CoLRevCLIPDFGetMan
+
+
+
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ops.built_in.pdf_get_man.pdf_get_man_cli

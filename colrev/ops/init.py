@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev init operation: Create a project and specify settings."""
 from __future__ import annotations
 
 import json

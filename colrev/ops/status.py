@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+"""CoLRev status operation: Display the project status."""
 from __future__ import annotations
 
 import csv

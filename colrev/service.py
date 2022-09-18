@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Service for highly automated reviews (experimental)."""
 from __future__ import annotations
 
 import asyncio

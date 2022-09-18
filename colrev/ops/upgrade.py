@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Upgrades CoLRev projects."""
 from __future__ import annotations
 
 import json

@@ -16,8 +16,17 @@ colrev.settings.SearchSource
    .. autosummary::
       :nosignatures:
 
+      ~SearchSource.all_json_schemas
+      ~SearchSource.field_mapping
+      ~SearchSource.from_dict
+      ~SearchSource.from_json
+      ~SearchSource.from_object
       ~SearchSource.get_corresponding_bib_file
+      ~SearchSource.json_schema
+      ~SearchSource.register_field_encoders
       ~SearchSource.setup_for_load
+      ~SearchSource.to_dict
+      ~SearchSource.to_json
 
 
 

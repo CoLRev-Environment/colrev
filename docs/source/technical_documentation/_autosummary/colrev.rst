@@ -36,5 +36,5 @@
    colrev.review_manager
    colrev.service
    colrev.settings
-   colrev.ui_web
    colrev.ui_cli
+   colrev.ui_web

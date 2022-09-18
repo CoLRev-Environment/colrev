@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Synchronize records into a non-CoLRev project."""
 import json
 import re
 import typing

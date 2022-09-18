@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Manages environment registry, services, and stauts"""
 from __future__ import annotations
 
 import json

@@ -17,6 +17,7 @@ colrev.settings.ScreenCriterionType
       :nosignatures:
 
       ~ScreenCriterionType.get_options
+      ~ScreenCriterionType.get_field_details
 
 
 

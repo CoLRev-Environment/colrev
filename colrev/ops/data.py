@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev data operation: extract data, analyze, and synthesize."""
 from __future__ import annotations
 
 import typing

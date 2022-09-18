@@ -28,7 +28,7 @@ colrev.ops.built\_in
 
    colrev.ops.built_in.data
    colrev.ops.built_in.database_connectors
-   colrev.ops.built_in.dedupe_built_in
+   colrev.ops.built_in.dedupe
    colrev.ops.built_in.load_conversion
    colrev.ops.built_in.pdf_get
    colrev.ops.built_in.pdf_get_man
@@ -37,5 +37,6 @@ colrev.ops.built\_in
    colrev.ops.built_in.prep
    colrev.ops.built_in.prep_man
    colrev.ops.built_in.prescreen
+   colrev.ops.built_in.review_types
    colrev.ops.built_in.screen
    colrev.ops.built_in.search_sources

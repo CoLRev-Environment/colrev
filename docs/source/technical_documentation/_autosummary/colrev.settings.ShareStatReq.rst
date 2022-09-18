@@ -17,6 +17,7 @@ colrev.settings.ShareStatReq
       :nosignatures:
 
       ~ShareStatReq.get_options
+      ~ShareStatReq.get_field_details
 
 
 

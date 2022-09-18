@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Settings of the CoLRev project."""
 import dataclasses
 import typing
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 # the settings dataclasses should be in one file (13s compared to 0.3s)
 
 # https://stackoverflow.com/questions/66807878/pretty-print-dataclasses-prettier
+
 
 # Project
 

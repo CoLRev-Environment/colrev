@@ -21,24 +21,24 @@ colrev.settings
       :nosignatures:
 
       Author
-      Configuration
-      DataConfiguration
-      DedupeConfiguration
+      DataSettings
+      DedupeSettings
       IDPattern
-      LoadConfiguration
-      PDFGetConfiguration
-      PDFPrepConfiguration
-      PrepConfiguration
+      LoadSettings
+      PDFGetSettings
+      PDFPathType
+      PDFPrepSettings
       PrepRound
-      PrescreenConfiguration
-      ProjectConfiguration
+      PrepSettings
+      PrescreenSettings
+      ProjectSettings
       Protocol
-      ReviewType
       SameSourceMergePolicy
-      ScreenConfiguration
       ScreenCriterion
       ScreenCriterionType
-      SearchConfiguration
+      ScreenSettings
+      SearchSettings
       SearchSource
       SearchType
+      Settings
       ShareStatReq

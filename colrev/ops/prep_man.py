@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev prep_man operation: Prepare metadata manually."""
 from __future__ import annotations
 
 import typing

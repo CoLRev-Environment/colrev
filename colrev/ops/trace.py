@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Traces records and changes through history."""
 from __future__ import annotations
 
 import pprint

@@ -33,6 +33,7 @@ colrev.exceptions
       FieldValueError
       GitConflictError
       ImportException
+      InvalidPDFException
       InvalidQueryException
       InvalidSettingsError
       MissingDependencyError

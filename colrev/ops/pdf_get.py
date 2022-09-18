@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""CoLRev pdf_get operation: Get PDF documents."""
 from __future__ import annotations
 
 import os

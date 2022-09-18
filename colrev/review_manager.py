@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""The CoLRev review manager (main entrypoint)."""
 from __future__ import annotations
 
 import json
@@ -31,6 +32,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process
 import colrev.record
 import colrev.settings
+
 
 PASS, FAIL = 0, 1
 

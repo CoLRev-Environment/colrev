@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Indexing and retrieving records locally."""
 from __future__ import annotations
 
 import binascii

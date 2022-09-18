@@ -16,6 +16,15 @@ colrev.settings.Author
    .. autosummary::
       :nosignatures:
 
+      ~Author.all_json_schemas
+      ~Author.field_mapping
+      ~Author.from_dict
+      ~Author.from_json
+      ~Author.from_object
+      ~Author.json_schema
+      ~Author.register_field_encoders
+      ~Author.to_dict
+      ~Author.to_json
 
 
 
@@ -25,11 +34,11 @@ colrev.settings.Author
 
    .. autosummary::
 
+      ~Author.affiliations
+      ~Author.orcid
       ~Author.name
       ~Author.initials
       ~Author.email
-      ~Author.orcid
       ~Author.contributions
-      ~Author.affiliations
       ~Author.funding
       ~Author.identifiers

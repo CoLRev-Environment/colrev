@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Create and apply record corrections in source repositories."""
 from __future__ import annotations
 
 import json

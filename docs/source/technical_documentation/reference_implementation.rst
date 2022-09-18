@@ -34,4 +34,4 @@ The available (built-in) scripts are documented here:
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.built_in
+   colrev.ops.built_in

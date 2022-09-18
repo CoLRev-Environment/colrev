@@ -17,6 +17,7 @@ colrev.settings.SearchType
       :nosignatures:
 
       ~SearchType.get_options
+      ~SearchType.get_field_details
 
 
 

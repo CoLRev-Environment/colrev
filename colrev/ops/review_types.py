@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""CoLRev review types: Initial setup."""
 from __future__ import annotations
 
 import typing

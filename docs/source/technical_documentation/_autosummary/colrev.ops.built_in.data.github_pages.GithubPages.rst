@@ -19,3 +19,13 @@ colrev.ops.built\_in.data.github\_pages.GithubPages
       ~GithubPages.get_default_setup
       ~GithubPages.update_data
       ~GithubPages.update_record_status_matrix
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~GithubPages.GH_PAGES_BRANCH_NAME

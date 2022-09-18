@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Exceptions of CoLRev."""
 from __future__ import annotations
 
 from pathlib import Path

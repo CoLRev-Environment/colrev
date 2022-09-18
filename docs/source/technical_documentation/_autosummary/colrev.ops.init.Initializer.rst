@@ -16,8 +16,6 @@ colrev.ops.init.Initializer
    .. autosummary::
       :nosignatures:
 
-      ~Initializer.check_init_precondition
-      ~Initializer.setup_initial_configuration
 
 
 

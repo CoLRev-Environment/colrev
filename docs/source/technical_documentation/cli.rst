@@ -9,99 +9,91 @@ CLI Reference
 
 This documentation provides an overview of the cli commands and the corresponding operations. The parameters for each command should be stored in the settings.json.
 
-.. click:: colrev.cli:status
+.. click:: colrev.ui_cli.cli:status
    :prog: colrev status
    :nested: full
 
-.. click:: colrev.cli:init
+.. click:: colrev.ui_cli.cli:init
    :prog: colrev init
    :nested: full
 
-.. click:: colrev.cli:search
+.. click:: colrev.ui_cli.cli:search
    :prog: colrev search
    :nested: full
 
-.. click:: colrev.cli:load
+.. click:: colrev.ui_cli.cli:load
    :prog: colrev load
    :nested: full
 
-.. click:: colrev.cli:prep
+.. click:: colrev.ui_cli.cli:prep
    :prog: colrev prep
    :nested: full
 
-.. click:: colrev.cli:prep_man
+.. click:: colrev.ui_cli.cli:prep_man
    :prog: colrev prep-man
    :nested: full
 
-.. click:: colrev.cli:dedupe
+.. click:: colrev.ui_cli.cli:dedupe
    :prog: colrev dedupe
    :nested: full
 
-.. click:: colrev.cli:prescreen
+.. click:: colrev.ui_cli.cli:prescreen
    :prog: colrev prescreen
    :nested: full
 
-.. click:: colrev.cli:screen
+.. click:: colrev.ui_cli.cli:screen
    :prog: colrev screen
    :nested: full
 
-.. click:: colrev.cli:pdf_get
+.. click:: colrev.ui_cli.cli:pdf_get
    :prog: colrev pdf-get
    :nested: full
 
-.. click:: colrev.cli:pdf_get_man
+.. click:: colrev.ui_cli.cli:pdf_get_man
    :prog: colrev pdf-get-man
    :nested: full
 
-.. click:: colrev.cli:pdf_prep
+.. click:: colrev.ui_cli.cli:pdf_prep
    :prog: colrev pdf-prep
    :nested: full
 
-.. click:: colrev.cli:pdf_prep_man
+.. click:: colrev.ui_cli.cli:pdf_prep_man
    :prog: colrev pdf-prep-man
    :nested: full
 
-.. click:: colrev.cli:data
+.. click:: colrev.ui_cli.cli:data
    :prog: colrev data
    :nested: full
 
-.. click:: colrev.cli:paper
-   :prog: colrev paper
-   :nested: full
-
-.. click:: colrev.cli:config
-   :prog: colrev config
-   :nested: full
-
-.. click:: colrev.cli:env
+.. click:: colrev.ui_cli.cli:env
    :prog: colrev env
    :nested: full
 
-.. click:: colrev.cli:clone
+.. click:: colrev.ui_cli.cli:clone
    :prog: colrev clone
    :nested: full
 
-.. click:: colrev.cli:pull
+.. click:: colrev.ui_cli.cli:pull
    :prog: colrev pull
    :nested: full
 
-.. click:: colrev.cli:push
+.. click:: colrev.ui_cli.cli:push
    :prog: colrev push
    :nested: full
 
-.. click:: colrev.cli:sync
+.. click:: colrev.ui_cli.cli:sync
    :prog: colrev sync
    :nested: full
 
-.. click:: colrev.cli:distribute
+.. click:: colrev.ui_cli.cli:distribute
    :prog: colrev distribute
    :nested: full
 
-.. click:: colrev.cli:validate
+.. click:: colrev.ui_cli.cli:validate
    :prog: colrev validate
    :nested: full
 
-.. click:: colrev.cli:trace
+.. click:: colrev.ui_cli.cli:trace
    :prog: colrev trace
    :nested: full
 

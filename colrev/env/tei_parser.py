@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Service parsing metadata from PDFs/TEIs (created by GROBID)."""
 from __future__ import annotations
 
 import re
