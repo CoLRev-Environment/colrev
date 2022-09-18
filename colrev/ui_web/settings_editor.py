@@ -518,6 +518,11 @@ class SettingsEditor:
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)
 
 
-if __name__ == "__main__":
-    se_instance = SettingsEditor()
+def main() -> None:
+    review_manager = colrev.review_manager.ReviewManager()
+    se_instance = SettingsEditor(review_manager=review_manager)
     se_instance.open_settings_editor()
+
+
+if __name__ == "__main__":
+    main()

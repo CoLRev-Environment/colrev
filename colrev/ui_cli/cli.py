@@ -1404,14 +1404,15 @@ def settings(ctx, upgrade, update_hooks, modify):
     import json
     import ast
     import glom
-
-    review_manager = colrev.review_manager.ReviewManager()
+    import colrev.review_manager
 
     if upgrade:
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         upgrad_operation = review_manager.get_upgrade()
         upgrad_operation.main()
         return
 
+    review_manager = colrev.review_manager.ReviewManager()
     if update_hooks:
 
         print("Update pre-commit hooks")
@@ -1632,6 +1633,20 @@ def show(ctx, keyword, callback=validate_show):
 
     elif "venv" == keyword:
         colrev.ui_cli.show_printer.print_venv_notes()
+
+
+@main.command(help_priority=27)
+@click.pass_context
+def web(ctx):
+    """CoLRev web interface."""
+
+    import colrev.ui_web.settings_editor
+
+    review_manager = colrev.review_manager.ReviewManager()
+    se_instance = colrev.ui_web.settings_editor.SettingsEditor(
+        review_manager=review_manager
+    )
+    se_instance.open_settings_editor()
 
 
 @main.command(hidden=True)

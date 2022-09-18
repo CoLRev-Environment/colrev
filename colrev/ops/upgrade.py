@@ -69,7 +69,7 @@ class Upgrade(colrev.process.Process):
                 "Migrating from %s to %s", migrator["from"], migrator["to"]
             )
 
-            updated = migration_script(self)
+            updated = migration_script()
             if updated:
                 self.review_manager.logger.info("Updated to: %s", last_version)
             else:
@@ -382,6 +382,25 @@ class Upgrade(colrev.process.Process):
                 "screen": settings["screen"],
                 "data": settings["data"],
             }
+
+        if "title" not in settings["project"]:
+            settings["project"]["title"] = str(Path.cwd().parents[0])
+
+        if "authors" not in settings["project"]:
+            settings["project"]["authors"] = [
+                {
+                    "name": self.review_manager.committer,
+                    "initials": "".join(
+                        part[0] for part in self.review_manager.committer.split(" ")
+                    ),
+                    "email": self.review_manager.email,
+                }
+            ]
+
+        if "keywords" not in settings["project"]:
+            settings["project"]["keywords"] = []
+        if "colrev_version" not in settings["project"]:
+            settings["project"]["colrev_version"] = "0.5.0"
 
         if "THREE_AUTHORS_YEAR" == settings["project"]["id_pattern"]:
             settings["project"]["id_pattern"] = "three_authors_year"
