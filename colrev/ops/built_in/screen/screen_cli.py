@@ -31,23 +31,15 @@ class CoLRevCLIScreen:
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def screen_cli(
-        self, screen_operation: colrev.ops.screen.Screen, split: list
-    ) -> dict:
+        self.__i = 0
+        self.__pad = 0
+        self.__stat_len = 0
+        self.screening_criteria: dict = {}
+        self.criteria_available = 0
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
-        screen_data = screen_operation.get_data()
-        stat_len = screen_data["nr_tasks"]
-
-        screen_operation.review_manager.logger.info("Start screen")
-
-        if 0 == stat_len:
-            screen_operation.review_manager.logger.info("No records to prescreen")
-
-        records = screen_operation.review_manager.dataset.load_records_dict()
-
+    def __print_screening_criteria(
+        self, *, screen_operation: colrev.ops.screen.Screen
+    ) -> None:
         print("\n\nIn the screen, the following criteria are applied:\n")
         for (
             criterion_name,
@@ -67,20 +59,130 @@ class CoLRevCLIScreen:
             if criterion_settings.comment != "":
                 print(f"   {criterion_settings.comment}")
 
-        screening_criteria = util_cli_screen.get_screening_criteria_from_user_input(
-            screen_operation=screen_operation, records=records
-        )
-        criteria_available = len(screening_criteria.keys())
+    def __screen_record(
+        self,
+        *,
+        screen_operation: colrev.ops.screen.Screen,
+        screen_record: colrev.record.ScreenRecord,
+    ) -> str:
 
-        i, quit_pressed = 0, False
+        # pylint: disable=too-many-branches
+
+        print("\n\n")
+        self.__i += 1
+        quit_pressed, skip_pressed = False, False
+        if self.criteria_available:
+            decisions = []
+
+            for criterion_name, criterion_settings in self.screening_criteria.items():
+
+                decision, ret = "NA", "NA"
+                while ret not in ["y", "n", "q", "s"]:
+                    color = colors.GREEN
+                    if (
+                        colrev.settings.ScreenCriterionType.exclusion_criterion
+                        == criterion_settings.criterion_type
+                    ):
+                        color = colors.RED
+
+                    ret = input(
+                        # is relevant / should be in the sample / should be retained
+                        f"({self.__i}/{self.__stat_len}) Record should be included according to"
+                        f" {criterion_settings.criterion_type}"
+                        f" {color}{criterion_name}{colors.END}"
+                        " [y,n,q,s]? "
+                    )
+                    if "q" == ret:
+                        quit_pressed = True
+                    elif "s" == ret:
+                        skip_pressed = True
+                        continue
+                    elif ret in ["y", "n"]:
+                        decision = ret
+
+                if quit_pressed:
+                    return "quit"
+                if skip_pressed:
+                    return "skip"
+
+                decision = decision.replace("n", "out").replace("y", "in")
+                decisions.append([criterion_name, decision])
+
+            c_field = ""
+            for criterion_name, decision in decisions:
+                c_field += f";{criterion_name}={decision}"
+            c_field = c_field.replace(" ", "").lstrip(";")
+
+            screen_inclusion = all(decision == "in" for _, decision in decisions)
+
+            screen_record.screen(
+                review_manager=screen_operation.review_manager,
+                screen_inclusion=screen_inclusion,
+                screening_criteria=c_field,
+                PAD=self.__pad,
+            )
+
+        else:
+
+            decision, ret = "NA", "NA"
+            while ret not in ["y", "n", "q", "s"]:
+                ret = input(f"({self.__i}/{self.__stat_len}) Include [y,n,q,s]? ")
+                if "q" == ret:
+                    quit_pressed = True
+                elif "s" == ret:
+                    skip_pressed = True
+                    return "skip"
+                elif ret in ["y", "n"]:
+                    decision = ret
+
+            if quit_pressed:
+                screen_operation.review_manager.logger.info("Stop screen")
+                return "quit"
+
+            if decision == "y":
+                screen_record.screen(
+                    review_manager=screen_operation.review_manager,
+                    screen_inclusion=True,
+                    screening_criteria="NA",
+                )
+            if decision == "n":
+                screen_record.screen(
+                    review_manager=screen_operation.review_manager,
+                    screen_inclusion=False,
+                    screening_criteria="NA",
+                    PAD=self.__pad,
+                )
+
+        return "screened"
+
+    def screen_cli(
+        self, screen_operation: colrev.ops.screen.Screen, split: list
+    ) -> dict:
+
+        screen_data = screen_operation.get_data()
+        self.__pad = screen_data["PAD"]
+        self.__stat_len = screen_data["nr_tasks"]
+
+        screen_operation.review_manager.logger.info("Start screen")
+
+        if 0 == self.__stat_len:
+            screen_operation.review_manager.logger.info("No records to prescreen")
+
+        records = screen_operation.review_manager.dataset.load_records_dict()
+
+        self.__print_screening_criteria(screen_operation=screen_operation)
+
+        self.screening_criteria = (
+            util_cli_screen.get_screening_criteria_from_user_input(
+                screen_operation=screen_operation, records=records
+            )
+        )
+        self.criteria_available = len(self.screening_criteria.keys())
+
         for record_dict in screen_data["items"]:
             if len(split) > 0:
                 if record_dict["ID"] not in split:
                     continue
-
-            print("\n\n")
-            i += 1
-            skip_pressed = False
 
             screen_record = colrev.record.ScreenRecord(data=record_dict)
             abstract_from_tei = False
@@ -93,106 +195,27 @@ class CoLRevCLIScreen:
                 screen_record.data["abstract"] = tei.get_abstract()
 
             print(screen_record)
+
+            ret = self.__screen_record(
+                screen_operation=screen_operation, screen_record=screen_record
+            )
+
             if abstract_from_tei:
                 del screen_record.data["abstract"]
 
-            if criteria_available:
-                decisions = []
-
-                for criterion_name, criterion_settings in screening_criteria.items():
-
-                    decision, ret = "NA", "NA"
-                    while ret not in ["y", "n", "q", "s"]:
-                        color = colors.GREEN
-                        if (
-                            colrev.settings.ScreenCriterionType.exclusion_criterion
-                            == criterion_settings.criterion_type
-                        ):
-                            color = colors.RED
-
-                        ret = input(
-                            # is relevant / should be in the sample / should be retained
-                            f"({i}/{stat_len}) Record should be included according to"
-                            f" {criterion_settings.criterion_type}"
-                            f" {color}{criterion_name}{colors.END}"
-                            " [y,n,q,s]? "
-                        )
-                        if "q" == ret:
-                            quit_pressed = True
-                        elif "s" == ret:
-                            skip_pressed = True
-                            continue
-                        elif ret in ["y", "n"]:
-                            decision = ret
-
-                    if quit_pressed or skip_pressed:
-                        break
-
-                    decision = decision.replace("n", "out").replace("y", "in")
-                    decisions.append([criterion_name, decision])
-
-                if skip_pressed:
-                    continue
-                if quit_pressed:
-                    screen_operation.review_manager.logger.info("Stop screen")
-                    break
-
-                c_field = ""
-                for criterion_name, decision in decisions:
-                    c_field += f";{criterion_name}={decision}"
-                c_field = c_field.replace(" ", "").lstrip(";")
-
-                screen_inclusion = all(decision == "in" for _, decision in decisions)
-
-                screen_record.screen(
-                    review_manager=screen_operation.review_manager,
-                    screen_inclusion=screen_inclusion,
-                    screening_criteria=c_field,
-                    PAD=screen_data["PAD"],
-                )
-
-            else:
-
-                decision, ret = "NA", "NA"
-                while ret not in ["y", "n", "q", "s"]:
-                    ret = input(f"({i}/{stat_len}) Include [y,n,q,s]? ")
-                    if "q" == ret:
-                        quit_pressed = True
-                    elif "s" == ret:
-                        skip_pressed = True
-                        continue
-                    elif ret in ["y", "n"]:
-                        decision = ret
-
-                if quit_pressed:
-                    screen_operation.review_manager.logger.info("Stop screen")
-                    break
-
-                if decision == "y":
-                    screen_record.screen(
-                        review_manager=screen_operation.review_manager,
-                        screen_inclusion=True,
-                        screening_criteria="NA",
-                    )
-                if decision == "n":
-                    screen_record.screen(
-                        review_manager=screen_operation.review_manager,
-                        screen_inclusion=False,
-                        screening_criteria="NA",
-                        PAD=screen_data["PAD"],
-                    )
-
-            if quit_pressed:
+            if "skip" == ret:
+                continue
+            if "quit" == ret:
                 screen_operation.review_manager.logger.info("Stop screen")
                 break
 
-        if stat_len == 0:
+        if self.__stat_len == 0:
             screen_operation.review_manager.logger.info("No records to screen")
             return records
 
         screen_operation.review_manager.dataset.add_record_changes()
 
-        if i < stat_len:  # if records remain for screening
+        if self.__i < self.__stat_len:  # if records remain for screening
             if "y" != input("Create commit (y/n)?"):
                 return records
 

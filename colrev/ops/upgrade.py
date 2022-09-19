@@ -329,6 +329,7 @@ class Upgrade(colrev.process.Process):
     def __migrate_0_5_0(self) -> None:
         # pylint: disable=too-many-statements
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         with open("settings.json", encoding="utf-8") as file:
             settings = json.load(file)
@@ -385,7 +386,7 @@ class Upgrade(colrev.process.Process):
             }
 
         if "title" not in settings["project"]:
-            settings["project"]["title"] = str(Path.cwd().parents[0])
+            settings["project"]["title"] = str(Path.cwd().name)
 
         if "authors" not in settings["project"]:
             settings["project"]["authors"] = [

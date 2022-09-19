@@ -260,6 +260,7 @@ class ActiveLearningDedupeTraining:
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
 
         dedupe_operation.review_manager.logger.info(
             "Note: duplicate associations available in the LocalIndex "
@@ -683,13 +684,11 @@ class ActiveLearningDedupeAutomated:
         )
         non_duplicates_df.to_excel(dedupe_operation.non_dupe_file_xlsx, index=False)
 
-    def __export_validation_excel(
-        self,
-        *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
-        clustered_dupes: list,
-        data_d: dict,
-    ) -> None:
+    def __get_collected_dupes_non_dupes_from_clusters(
+        self, *, clustered_dupes: list, data_d: dict
+    ) -> dict:
+
+        # pylint: disable=too-many-locals
 
         cluster_membership = {}
         # cluster_membership:
@@ -703,7 +702,10 @@ class ActiveLearningDedupeAutomated:
                     "confidence_score": score,
                 }
 
-        collected_duplicates, collected_non_duplicates = [], []
+        results: typing.Dict[str, list] = {
+            "collected_duplicates": [],
+            "collected_non_duplicates": [],
+        }
         for cluster_id, vals in data_d.items():
             vals.update(error="")
             if cluster_id in cluster_membership:
@@ -713,46 +715,70 @@ class ActiveLearningDedupeAutomated:
                     cur_cluster_membership["confidence_score"]
                     > self.settings.merge_threshold
                 ):
-                    collected_duplicates.append(vals)
+                    results["collected_duplicates"].append(vals)
                 else:
-                    collected_non_duplicates.append(vals)
+                    results["collected_non_duplicates"].append(vals)
 
         # Set confidence scores to average of group
-        for cluster_nr in {d["cluster_id"] for d in collected_duplicates}:
+        for cluster_nr in {d["cluster_id"] for d in results["collected_duplicates"]}:
             avg_confidence = statistics.mean(
                 [
                     d["confidence_score"]
-                    for d in collected_duplicates
+                    for d in results["collected_duplicates"]
                     if d["cluster_id"] == cluster_nr
                 ]
             )
-            for collected_duplicate in collected_duplicates:
+            for collected_duplicate in results["collected_duplicates"]:
                 if collected_duplicate["cluster_id"] == cluster_nr:
                     collected_duplicate["confidence_score"] = avg_confidence
-        for cluster_nr in {d["cluster_id"] for d in collected_non_duplicates}:
+        for cluster_nr in {
+            d["cluster_id"] for d in results["collected_non_duplicates"]
+        }:
             avg_confidence = statistics.mean(
                 [
                     d["confidence_score"]
-                    for d in collected_non_duplicates
+                    for d in results["collected_non_duplicates"]
                     if d["cluster_id"] == cluster_nr
                 ]
             )
-            for collected_non_duplicate in collected_non_duplicates:
+            for collected_non_duplicate in results["collected_non_duplicates"]:
                 if collected_non_duplicate["cluster_id"] == cluster_nr:
                     collected_non_duplicate["confidence_score"] = avg_confidence
 
+        return results
+
+    def __export_validation_excel(
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+        clustered_dupes: list,
+        data_d: dict,
+    ) -> None:
+
+        results = self.__get_collected_dupes_non_dupes_from_clusters(
+            clustered_dupes=clustered_dupes, data_d=data_d
+        )
+
         self.__export_duplicates_excel(
-            dedupe_operation=dedupe_operation, collected_duplicates=collected_duplicates
+            dedupe_operation=dedupe_operation,
+            collected_duplicates=results["collected_duplicates"],
         )
 
         self.__export_non_duplicates_excel(
             dedupe_operation=dedupe_operation,
-            collected_non_duplicates=collected_non_duplicates,
+            collected_non_duplicates=results["collected_non_duplicates"],
         )
 
     def __cluster_duplicates(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, data_d: dict
     ) -> list:
+
+        # pylint: disable=too-many-locals
+
+        dedupe_operation.review_manager.logger.info("Clustering duplicates...")
+        dedupe_operation.review_manager.logger.info(
+            f"Number of records (before): {len(data_d.items())}"
+        )
 
         # Setting in-memory mode depending on system RAM
 
@@ -762,19 +788,10 @@ class ActiveLearningDedupeAutomated:
         sample_size = len(record_state_list)
 
         ram = psutil.virtual_memory().total
-        in_memory = True
-        if sample_size * 5000000 > ram:
-            # Sample size too large
-            in_memory = False
+        in_memory = sample_size * 5000000 < ram
 
         with open(dedupe_operation.settings_file, "rb") as sett_file:
             deduper = dedupe_io.StaticDedupe(sett_file, num_cores=4)
-
-        dedupe_operation.review_manager.logger.info("Clustering duplicates...")
-
-        dedupe_operation.review_manager.logger.info(
-            f"Number of records (before): {len(data_d.items())}"
-        )
 
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.

@@ -29,6 +29,7 @@ class BibliographyExport:
     # It should have the modes incremental/replace
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    endpoint_path = Path("data/endnote")
 
     def __init__(
         self,
@@ -86,29 +87,63 @@ class BibliographyExport:
 
         return export.content
 
-    def update_data(
-        self,
-        data_operation: colrev.ops.data.Data,
-        records: dict,
-        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+    def __export_bibliography_full(
+        self, *, data_operation: colrev.ops.data.Data, records: dict
+    ) -> None:
+        data_operation.review_manager.logger.info("Export all")
+        export_filepath = self.endpoint_path / Path("export_part1.enl")
+
+        selected_records = {
+            ID: r
+            for ID, r in records.items()
+            if r["colrev_status"]
+            in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]
+        }
+
+        content = data_operation.review_manager.dataset.parse_bibtex_str(
+            recs_dict_in=selected_records
+        )
+
+        enl_data = self.__zotero_conversion(
+            data_operation=data_operation, content=content
+        )
+
+        with open(export_filepath, "w", encoding="utf-8") as export_file:
+            export_file.write(enl_data.decode("utf-8"))
+        data_operation.review_manager.dataset.add_changes(path=export_filepath)
+
+    def __export_bibliography_incremental(
+        self, *, data_operation: colrev.ops.data.Data, records: dict
     ) -> None:
 
-        endpoint_path = Path("data/endnote")
-        endpoint_path.mkdir(exist_ok=True, parents=True)
+        file_numbers, exported_ids = [], []
+        for enl_file_path in self.endpoint_path.glob("*.enl"):
+            file_numbers.append(int(re.findall(r"\d+", str(enl_file_path.name))[0]))
+            with open(enl_file_path, encoding="utf-8") as enl_file:
+                for line in enl_file:
+                    if "%F" == line[:2]:
+                        record_id = line[3:].lstrip().rstrip()
+                        exported_ids.append(record_id)
 
-        if not any(Path(endpoint_path).iterdir()):
-            data_operation.review_manager.logger.info("Export all")
-            export_filepath = endpoint_path / Path("export_part1.enl")
+        data_operation.review_manager.logger.info(
+            "IDs that have already been exported (in the other export files):"
+            f" {exported_ids}"
+        )
 
-            selected_records = {
-                ID: r
-                for ID, r in records.items()
-                if r["colrev_status"]
-                in [
-                    colrev.record.RecordState.rev_included,
-                    colrev.record.RecordState.rev_synthesized,
-                ]
-            }
+        selected_records = {
+            ID: r
+            for ID, r in records.items()
+            if r["colrev_status"]
+            in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]
+        }
+
+        if len(selected_records) > 0:
 
             content = data_operation.review_manager.dataset.parse_bibtex_str(
                 recs_dict_in=selected_records
@@ -118,61 +153,36 @@ class BibliographyExport:
                 data_operation=data_operation, content=content
             )
 
-            with open(export_filepath, "w", encoding="utf-8") as export_file:
-                export_file.write(enl_data.decode("utf-8"))
+            next_file_number = str(max(file_numbers) + 1)
+            export_filepath = self.endpoint_path / Path(
+                f"export_part{next_file_number}.enl"
+            )
+            print(export_filepath)
+            with open(export_filepath, "w", encoding="utf-8") as file:
+                file.write(enl_data.decode("utf-8"))
             data_operation.review_manager.dataset.add_changes(path=export_filepath)
 
         else:
+            data_operation.review_manager.logger.info("No additional records to export")
 
-            enl_files = endpoint_path.glob("*.enl")
-            file_numbers = []
-            exported_ids = []
-            for enl_file_path in enl_files:
-                file_numbers.append(int(re.findall(r"\d+", str(enl_file_path.name))[0]))
-                with open(enl_file_path, encoding="utf-8") as enl_file:
-                    for line in enl_file:
-                        if "%F" == line[:2]:
-                            record_id = line[3:].lstrip().rstrip()
-                            exported_ids.append(record_id)
+    def update_data(
+        self,
+        data_operation: colrev.ops.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+    ) -> None:
 
-            data_operation.review_manager.logger.info(
-                "IDs that have already been exported (in the other export files):"
-                f" {exported_ids}"
+        self.endpoint_path.mkdir(exist_ok=True, parents=True)
+
+        if not any(Path(self.endpoint_path).iterdir()):
+            self.__export_bibliography_full(
+                data_operation=data_operation, records=records
             )
 
-            selected_records = {
-                ID: r
-                for ID, r in records.items()
-                if r["colrev_status"]
-                in [
-                    colrev.record.RecordState.rev_included,
-                    colrev.record.RecordState.rev_synthesized,
-                ]
-            }
-
-            if len(selected_records) > 0:
-
-                content = data_operation.review_manager.dataset.parse_bibtex_str(
-                    recs_dict_in=selected_records
-                )
-
-                enl_data = self.__zotero_conversion(
-                    data_operation=data_operation, content=content
-                )
-
-                next_file_number = str(max(file_numbers) + 1)
-                export_filepath = endpoint_path / Path(
-                    f"export_part{next_file_number}.enl"
-                )
-                print(export_filepath)
-                with open(export_filepath, "w", encoding="utf-8") as file:
-                    file.write(enl_data.decode("utf-8"))
-                data_operation.review_manager.dataset.add_changes(path=export_filepath)
-
-            else:
-                data_operation.review_manager.logger.info(
-                    "No additional records to export"
-                )
+        else:
+            self.__export_bibliography_incremental(
+                data_operation=data_operation, records=records
+            )
 
     def update_record_status_matrix(
         self,

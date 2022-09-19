@@ -322,6 +322,9 @@ class CrossrefConnector:
 
     issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
 
+    # https://github.com/CrossRef/rest-api-doc
+    api_url = "https://api.crossref.org/works?"
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager):
 
         # pylint: disable=import-outside-toplevel
@@ -398,6 +401,7 @@ class CrossrefConnector:
     def crossref_json_to_record(cls, *, item: dict) -> dict:
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
 
         # Note: the format differst between crossref and doi.org
         record_dict: dict = {}
@@ -540,24 +544,9 @@ class CrossrefConnector:
         return record_dict
 
     @classmethod
-    def crossref_query(
-        cls,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        record_input: colrev.record.Record,
-        jour_vol_iss_list: bool = False,
-        timeout: int = 10,
-    ) -> list:
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
-        # https://github.com/CrossRef/rest-api-doc
-        api_url = "https://api.crossref.org/works?"
-
-        # Note : only returning a multiple-item list for jour_vol_iss_list
-
-        record = record_input.copy_prep_rec()
+    def __create_query_url(
+        cls, *, record: colrev.record.Record, jour_vol_iss_list: bool
+    ) -> str:
 
         if jour_vol_iss_list:
             params = {"rows": "50"}
@@ -594,11 +583,58 @@ class CrossrefConnector:
             author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
             params["query.author"] = author_string.replace("_", " ")
 
-        url = api_url + urllib.parse.urlencode(params)
-        headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
-        record_list = []
+        url = cls.api_url + urllib.parse.urlencode(params)
+        return url
+
+    @classmethod
+    def __get_similarity(
+        cls, *, record: colrev.record.Record, retrieved_record_dict
+    ) -> float:
+        title_similarity = fuzz.partial_ratio(
+            retrieved_record_dict["title"].lower(),
+            record.data.get("title", "").lower(),
+        )
+        container_similarity = fuzz.partial_ratio(
+            colrev.record.PrepRecord(data=retrieved_record_dict)
+            .get_container_title()
+            .lower(),
+            record.get_container_title().lower(),
+        )
+        weights = [0.6, 0.4]
+        similarities = [title_similarity, container_similarity]
+
+        similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
+        # logger.debug(f'record: {pp.pformat(record)}')
+        # logger.debug(f'similarities: {similarities}')
+        # logger.debug(f'similarity: {similarity}')
+        # pp.pprint(retrieved_record_dict)
+        return similarity
+
+    @classmethod
+    def crossref_query(
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        record_input: colrev.record.Record,
+        jour_vol_iss_list: bool = False,
+        timeout: int = 10,
+    ) -> list:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
+
+        # Note : only returning a multiple-item list for jour_vol_iss_list
+
         try:
 
+            record = record_input.copy_prep_rec()
+
+            url = cls.__create_query_url(
+                record=record, jour_vol_iss_list=jour_vol_iss_list
+            )
+            headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+            record_list = []
             session = review_manager.get_cached_session()
 
             review_manager.logger.debug(url)
@@ -610,36 +646,17 @@ class CrossrefConnector:
                 )
                 return []
 
+            most_similar, most_similar_record = 0.0, {}
             data = json.loads(ret.text)
-            items = data["message"]["items"]
-            most_similar = 0
-            most_similar_record = {}
-            for item in items:
+            for item in data["message"]["items"]:
                 if "title" not in item:
                     continue
 
                 retrieved_record_dict = cls.crossref_json_to_record(item=item)
 
-                title_similarity = fuzz.partial_ratio(
-                    retrieved_record_dict["title"].lower(),
-                    record.data.get("title", "").lower(),
+                similarity = cls.__get_similarity(
+                    record=record, retrieved_record_dict=retrieved_record_dict
                 )
-                container_similarity = fuzz.partial_ratio(
-                    colrev.record.PrepRecord(data=retrieved_record_dict)
-                    .get_container_title()
-                    .lower(),
-                    record.get_container_title().lower(),
-                )
-                weights = [0.6, 0.4]
-                similarities = [title_similarity, container_similarity]
-
-                similarity = sum(
-                    similarities[g] * weights[g] for g in range(len(similarities))
-                )
-                # logger.debug(f'record: {pp.pformat(record)}')
-                # logger.debug(f'similarities: {similarities}')
-                # logger.debug(f'similarity: {similarity}')
-                # pp.pprint(retrieved_record_dict)
 
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
                 if "retracted" in retrieved_record.data.get("warning", ""):
@@ -757,6 +774,9 @@ class CrossrefConnector:
 
 
 class DBLPConnector:
+    api_url = "https://dblp.org/search/publ/api?q="
+    api_url_venues = "https://dblp.org/search/venue/api?q="
+
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
 
@@ -801,8 +821,7 @@ class DBLPConnector:
         # journal name. Example:
         # https://dblp.org/db/journals/jasis/index.html
         venue = venue_string
-        api_url = "https://dblp.org/search/venue/api?q="
-        url = api_url + venue_string.replace(" ", "+") + "&format=json"
+        url = cls.api_url_venues + venue_string.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
         try:
             ret = session.request("GET", url, headers=headers, timeout=timeout)
@@ -922,12 +941,11 @@ class DBLPConnector:
 
             session = review_manager.get_cached_session()
 
-            api_url = "https://dblp.org/search/publ/api?q="
             items = []
 
             if query:
                 query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-                url = api_url + query.replace(" ", "+") + "&format=json"
+                url = cls.api_url + query.replace(" ", "+") + "&format=json"
 
             headers = {"user-agent": f"{__name__}  (mailto:{review_manager.email})"}
             review_manager.logger.debug(url)

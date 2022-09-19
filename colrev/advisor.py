@@ -493,61 +493,70 @@ class Advisor:
             pass
         return instruction
 
+    def __append_download_outlets_instruction(
+        self, environment_manager, environment_instructions: list
+    ) -> None:
+        # pylint: disable=too-many-locals
+
+        with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
+            outlets = []
+            for line in file.readlines():
+
+                if "journal" == line.lstrip()[:7]:
+                    journal = line[line.find("{") + 1 : line.rfind("}")]
+                    outlets.append(journal)
+                if "booktitle" == line.lstrip()[:9]:
+                    booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                    outlets.append(booktitle)
+
+        outlet_counter: typing.List[typing.Tuple[str, int]] = [
+            (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
+        ]
+        selected = []
+        cumulative = 0.0
+        for candidate, freq in outlet_counter:
+            selected.append((candidate, freq))
+            cumulative += freq / len(outlets)
+            if cumulative > 0.7:
+                break
+        if len(selected) > 0:
+            curated_outlets = environment_manager.get_curated_outlets()
+            selected_journals = [
+                (candidate, freq)
+                for candidate, freq in selected
+                if candidate not in curated_outlets
+            ]
+
+            journals = "\n   - " + "\n   - ".join(
+                [
+                    f"{candidate} ({round((freq/len(outlets))*100, 2)}%)"
+                    for candidate, freq in selected_journals
+                ]
+            )
+
+            if len(selected_journals) > 0:
+                instruction = {
+                    "msg": "Search and download curated metadata for your "
+                    "project (if available). \n  The most common journals in "
+                    f"your project are {journals}.\n"
+                    "  They may be available at "
+                    "https://github.com/topics/colrev-curated",
+                }
+                environment_instructions.append(instruction)
+
     def get_environment_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
 
         environment_manager = self.review_manager.get_environment_manager()
 
-        environment_instructions = []
+        environment_instructions: list[dict] = []
 
         if status_stats.currently.md_imported > 10:
-            with open(
-                self.review_manager.dataset.records_file, encoding="utf8"
-            ) as file:
-                outlets = []
-                for line in file.readlines():
-
-                    if "journal" == line.lstrip()[:7]:
-                        journal = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(journal)
-                    if "booktitle" == line.lstrip()[:9]:
-                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(booktitle)
-            outlet_counter: typing.List[typing.Tuple[str, int]] = [
-                (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
-            ]
-            selected = []
-            cumulative = 0.0
-            for candidate, freq in outlet_counter:
-                selected.append((candidate, freq))
-                cumulative += freq / len(outlets)
-                if cumulative > 0.7:
-                    break
-            if len(selected) > 0:
-                curated_outlets = environment_manager.get_curated_outlets()
-                selected_journals = [
-                    (candidate, freq)
-                    for candidate, freq in selected
-                    if candidate not in curated_outlets
-                ]
-
-                journals = "\n   - " + "\n   - ".join(
-                    [
-                        f"{candidate} ({round((freq/len(outlets))*100, 2)}%)"
-                        for candidate, freq in selected_journals
-                    ]
-                )
-
-                if len(selected_journals) > 0:
-                    instruction = {
-                        "msg": "Search and download curated metadata for your "
-                        "project (if available). \n  The most common journals in "
-                        f"your project are {journals}.\n"
-                        "  They may be available at "
-                        "https://github.com/topics/colrev-curated",
-                    }
-                    environment_instructions.append(instruction)
+            self.__append_download_outlets_instruction(
+                environment_manager=environment_manager,
+                environment_instructions=environment_instructions,
+            )
 
         local_registry = environment_manager.load_local_registry()
         registered_paths = [Path(x["repo_source_path"]) for x in local_registry]

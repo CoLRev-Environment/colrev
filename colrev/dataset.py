@@ -32,6 +32,9 @@ import colrev.settings
 if TYPE_CHECKING:
     import colrev.review_manager
 
+# pylint: disable=too-many-lines
+# pylint: disable=too-many-public-methods
+
 
 class Dataset:
 
@@ -965,9 +968,59 @@ class Dataset:
         ]
         return changed
 
+    def __get_status_transitions(
+        self,
+        *,
+        record_id: str,
+        origin: str,
+        prior: dict,
+        status: str,
+        status_data: dict,
+    ) -> dict:
+
+        # TODO : the origins of a record could be in multiple states
+        prior_status = []
+        if "colrev_status" in prior:
+            prior_status = [
+                stat
+                for (org, stat) in prior["colrev_status"]
+                if org in origin.split(";")
+            ]
+
+        status_transition = {}
+        if len(prior_status) == 0:
+            status_transition[record_id] = "load"
+        else:
+            proc_transition_list: list = [
+                x["trigger"]
+                for x in colrev.process.ProcessModel.transitions
+                if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
+            ]
+            if len(proc_transition_list) == 0 and prior_status[0] != status:
+                status_data["start_states"].append(prior_status[0])
+                if prior_status[0] not in [str(x) for x in colrev.record.RecordState]:
+                    raise colrev_exceptions.StatusFieldValueError(
+                        record_id, "colrev_status", prior_status[0]
+                    )
+                if status not in [str(x) for x in colrev.record.RecordState]:
+                    raise colrev_exceptions.StatusFieldValueError(
+                        record_id, "colrev_status", status
+                    )
+
+                status_data["invalid_state_transitions"].append(
+                    f"{record_id}: {prior_status[0]} to {status}"
+                )
+            if 0 == len(proc_transition_list):
+                status_transition[record_id] = "load"
+            else:
+                proc_transition = proc_transition_list.pop()
+                status_transition[record_id] = proc_transition
+        return status_transition
+
     def retrieve_status_data(self, *, prior: dict) -> dict:
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
 
         status_data: dict = {
             "pdf_not_exists": [],
@@ -1041,46 +1094,13 @@ class Dataset:
                     ec_case = [record_id, status, excl_crit]
                     status_data["screening_criteria_list"].append(ec_case)
 
-                # TODO : the origins of a record could be in multiple states
-                prior_status = []
-                if "colrev_status" in prior:
-                    prior_status = [
-                        stat
-                        for (org, stat) in prior["colrev_status"]
-                        if org in origin.split(";")
-                    ]
-
-                status_transition = {}
-                if len(prior_status) == 0:
-                    status_transition[record_id] = "load"
-                else:
-                    proc_transition_list: list = [
-                        x["trigger"]
-                        for x in colrev.process.ProcessModel.transitions
-                        if str(x["source"]) == prior_status[0]
-                        and str(x["dest"]) == status
-                    ]
-                    if len(proc_transition_list) == 0 and prior_status[0] != status:
-                        status_data["start_states"].append(prior_status[0])
-                        if prior_status[0] not in [
-                            str(x) for x in colrev.record.RecordState
-                        ]:
-                            raise colrev_exceptions.StatusFieldValueError(
-                                record_id, "colrev_status", prior_status[0]
-                            )
-                        if status not in [str(x) for x in colrev.record.RecordState]:
-                            raise colrev_exceptions.StatusFieldValueError(
-                                record_id, "colrev_status", status
-                            )
-
-                        status_data["invalid_state_transitions"].append(
-                            f"{record_id}: {prior_status[0]} to {status}"
-                        )
-                    if 0 == len(proc_transition_list):
-                        status_transition[record_id] = "load"
-                    else:
-                        proc_transition = proc_transition_list.pop()
-                        status_transition[record_id] = proc_transition
+                status_transition = self.__get_status_transitions(
+                    record_id=record_id,
+                    origin=origin,
+                    prior=prior,
+                    status=status,
+                    status_data=status_data,
+                )
 
                 status_data["status_transitions"].append(status_transition)
 

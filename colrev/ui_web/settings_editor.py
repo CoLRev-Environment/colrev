@@ -527,7 +527,6 @@ def main() -> None:
     # review_manager = colrev.review_manager.ReviewManager()
     # se_instance = SettingsEditor(review_manager=review_manager)
     # se_instance.open_settings_editor()
-    pass
 
 
 if __name__ == "__main__":

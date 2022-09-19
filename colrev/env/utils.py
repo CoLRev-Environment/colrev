@@ -67,5 +67,9 @@ def remove_accents(*, input_str: str) -> str:
     return wo_ac
 
 
+def percent_upper_chars(input_string: str) -> float:
+    return sum(map(str.isupper, input_string)) / len(input_string)
+
+
 if __name__ == "__main__":
     pass

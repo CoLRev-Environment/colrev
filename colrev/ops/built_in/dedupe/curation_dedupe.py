@@ -364,6 +364,9 @@ class CurationDedupe:
     def __dedupe_pdf_source(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
     ) -> list[dict]:
+
+        # pylint: disable=too-many-locals
+
         dedupe_operation.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [

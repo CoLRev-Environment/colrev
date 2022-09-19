@@ -98,6 +98,13 @@ class Initializer:
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
 
+        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        global_git_vars = environment_manager.get_name_mail_from_git()
+        if 2 != len(global_git_vars):
+            raise colrev_exceptions.CoLRevException(
+                "Global git variables (user name and email) not available."
+            )
+
     def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev-init_logger")
@@ -139,11 +146,11 @@ class Initializer:
     def __setup_files(self, *, path: Path) -> None:
 
         # Note: parse instead of copy to avoid format changes
-        filedata = colrev.env.utils.get_package_file_content(
+        settings_filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/settings.json")
         )
-        if filedata:
-            settings = json.loads(filedata.decode("utf-8"))
+        if settings_filedata:
+            settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
             with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
@@ -175,10 +182,6 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
-        review_types = self.review_manager.get_review_types(
-            review_type=self.review_type
-        )
-
         settings = self.review_manager.settings
 
         settings.project.authors = [
@@ -201,15 +204,19 @@ class Initializer:
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
 
+        review_types = self.review_manager.get_review_types(
+            review_type=self.review_type
+        )
         settings = review_types.packages[self.review_type].initialize(settings=settings)
 
         self.review_manager.save_settings()
 
-        if "review" in self.project_name.lower():
+        project_title = self.review_manager.settings.project.title
+        if "review" in project_title.lower():
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=self.project_name.rstrip(" "),
+                new_string=project_title.rstrip(" "),
             )
         else:
             r_type_suffix = (
@@ -220,14 +227,8 @@ class Initializer:
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
+                new_string=project_title.rstrip(" ") + f": A {r_type_suffix}",
             )
-
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        global_git_vars = environment_manager.get_name_mail_from_git()
-        if 2 != len(global_git_vars):
-            logging.error("Global git variables (user name and email) not available.")
-            return
 
         files_to_add = [
             "readme.md",

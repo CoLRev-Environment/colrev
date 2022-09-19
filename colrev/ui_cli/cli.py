@@ -13,6 +13,7 @@ import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
 import colrev.ui_cli.cli_status_printer
 
+# pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
@@ -1294,6 +1295,8 @@ def env(
     # pylint: disable=import-outside-toplevel
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
+
     import webbrowser
     import docker
 
@@ -1398,6 +1401,9 @@ def settings(ctx, upgrade, update_hooks, modify):
     """Settings of the CoLRev project"""
 
     # pylint: disable=import-outside-toplevel
+    # pylint: disable=reimported
+    # pylint: disable=too-many-locals
+
     from subprocess import check_call
     from subprocess import DEVNULL
     from subprocess import STDOUT
@@ -1640,6 +1646,7 @@ def show(ctx, keyword, callback=validate_show):
 def web(ctx):
     """CoLRev web interface."""
 
+    # pylint: disable=import-outside-toplevel
     import colrev.ui_web.settings_editor
 
     review_manager = colrev.review_manager.ReviewManager()

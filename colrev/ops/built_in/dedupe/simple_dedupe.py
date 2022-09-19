@@ -9,6 +9,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
 import colrev.ops.built_in.pdf_prep.metadata_valiation
 import colrev.record
@@ -184,26 +185,7 @@ class SimpleDedupe:
             }
         return ret
 
-    # TODO : add similarity function as a parameter?
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-        """Pairwise identification of duplicates based on static similarity measure
-
-        This procedure should only be used in small samples on which active learning
-        models cannot be trained.
-        """
-
-        pd.options.mode.chained_assignment = None  # default='warn'
-
-        saved_args = locals()
-
-        dedupe_operation.review_manager.logger.info("Simple duplicate identification")
-        dedupe_operation.review_manager.logger.info(
-            "Pairwise identification of duplicates based on static similarity measure"
-        )
-
-        # Note: this would also be a place to set
-        # records as "no-duplicate" by definition
-        # (e.g., for non-duplicated sources marked in the sources)
+    def __get_dedupe_data(self, *, dedupe_operation: colrev.ops.dedupe.Dedupe) -> dict:
 
         record_state_list = (
             dedupe_operation.review_manager.dataset.get_record_state_list()
@@ -232,11 +214,10 @@ class SimpleDedupe:
                     '[{"endpoint": "active_learning_training"},'
                     f'{{"endpoint": "active_learning_automated"}}]\'{colors.END}'
                 )
-                dedupe_operation.review_manager.logger.info(
+                raise colrev_exceptions.CoLRevException(
                     "To use simple duplicate identification, use\n"
                     f"{colors.ORANGE}    colrev dedupe --force{colors.END}"
                 )
-                return
 
         nr_tasks = len(ids_to_dedupe)
         dedupe_data = {
@@ -247,11 +228,11 @@ class SimpleDedupe:
         dedupe_operation.review_manager.logger.debug(
             dedupe_operation.review_manager.p_printer.pformat(dedupe_data)
         )
+        return dedupe_data
 
-        # the queue (order) matters for the incremental merging (make sure that each
-        # additional record is compared to/merged with all prior records in
-        # the queue)
-
+    def __get_record_batch(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, dedupe_data: dict
+    ) -> list:
         records = dedupe_operation.review_manager.dataset.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
@@ -276,35 +257,21 @@ class SimpleDedupe:
                     "queue": records_df.iloc[: i + 1],
                 }
             )
+        return batch_data
 
-        dedupe_batch_results = []
-        for item in batch_data:
-            dedupe_batch_results.append(
-                self.append_merges(dedupe_operation=dedupe_operation, batch_item=item)
-            )
-
-        # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
-
-        dedupe_operation.apply_merges(results=dedupe_batch_results)
-
-        dedupe_operation.review_manager.logger.info("Completed application of merges")
-
+    def __process_potential_duplicates(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, dedupe_batch_results: list
+    ) -> list:
         potential_duplicates = [
             r for r in dedupe_batch_results if "potential_duplicate" == r["decision"]
         ]
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
-
-        records_df_queue = pd.DataFrame.from_dict(records.values())
-        records = dedupe_operation.prep_records(records_df=records_df_queue)
+        records = dedupe_operation.prep_records(
+            records_df=pd.DataFrame.from_dict(records.values())
+        )
         # dedupe.review_manager.p_printer.pprint(records.values())
         records_df = pd.DataFrame(records.values())
-
-        dedupe_operation.review_manager.create_commit(
-            msg="Merge duplicate records",
-            script_call="colrev dedupe",
-            saved_args=saved_args,
-        )
 
         keys = list(records_df.columns)
         for key_to_drop in [
@@ -338,6 +305,56 @@ class SimpleDedupe:
                 potential_duplicate["decision"] = "no_duplicate"
                 n_distinct += 1
 
+        return potential_duplicates
+
+    # TODO : add similarity function as a parameter?
+    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+        """Pairwise identification of duplicates based on static similarity measure
+
+        This procedure should only be used in small samples on which active learning
+        models cannot be trained.
+        """
+
+        pd.options.mode.chained_assignment = None  # default='warn'
+
+        dedupe_operation.review_manager.logger.info("Simple duplicate identification")
+        dedupe_operation.review_manager.logger.info(
+            "Pairwise identification of duplicates based on static similarity measure"
+        )
+
+        dedupe_data = self.__get_dedupe_data(dedupe_operation=dedupe_operation)
+
+        # the queue (order) matters for the incremental merging (make sure that each
+        # additional record is compared to/merged with all prior records in
+        # the queue)
+
+        batch_data = self.__get_record_batch(
+            dedupe_operation=dedupe_operation, dedupe_data=dedupe_data
+        )
+
+        dedupe_batch_results = []
+        for item in batch_data:
+            dedupe_batch_results.append(
+                self.append_merges(dedupe_operation=dedupe_operation, batch_item=item)
+            )
+
+        # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
+
+        dedupe_operation.apply_merges(
+            results=dedupe_batch_results, complete_dedupe=True
+        )
+
+        dedupe_operation.review_manager.logger.info("Completed application of merges")
+
+        dedupe_operation.review_manager.create_commit(
+            msg="Merge duplicate records",
+            script_call="colrev dedupe",
+        )
+
+        potential_duplicates = self.__process_potential_duplicates(
+            dedupe_operation=dedupe_operation, dedupe_batch_results=dedupe_batch_results
+        )
+
         # apply:
         dedupe_operation.apply_merges(results=potential_duplicates)
 
@@ -347,7 +364,6 @@ class SimpleDedupe:
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
             script_call="colrev dedupe",
-            saved_args=saved_args,
         )
 
 

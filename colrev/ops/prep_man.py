@@ -32,7 +32,7 @@ class PrepMan(colrev.process.Process):
             process=self,
         )
 
-    def __get_crosstab_df(self):
+    def __get_crosstab_df(self) -> pd.DataFrame:
 
         # pylint: disable=too-many-branches
 
@@ -87,7 +87,6 @@ class PrepMan(colrev.process.Process):
                     for x in record_dict.get("colrev_origin", "NA").split(";")
                 ]
             )
-        crosstab_df = pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
 
         print("Entry type statistics overall:")
         self.review_manager.p_printer.pprint(overall_types["ENTRYTYPE"])
@@ -95,7 +94,7 @@ class PrepMan(colrev.process.Process):
         print("Entry type statistics (needs_manual_preparation):")
         self.review_manager.p_printer.pprint(stats["ENTRYTYPE"])
 
-        return crosstab_df
+        return pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
 
     def prep_man_stats(self) -> None:
         # pylint: disable=duplicate-code

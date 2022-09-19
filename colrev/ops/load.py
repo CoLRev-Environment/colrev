@@ -430,10 +430,7 @@ class Load(colrev.process.Process):
             record_list.append(record)
         return record_list
 
-    def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool
-    ) -> None:
-
+    def __get_search_records(self, *, source: colrev.settings.SearchSource) -> list:
         search_records = []
         if source.get_corresponding_bib_file().is_file():
             search_records = self.__getbib(file=source.get_corresponding_bib_file())
@@ -449,8 +446,7 @@ class Load(colrev.process.Process):
                 f"{colors.GREEN}No records to load{colors.END}"
             )
             print()
-
-            return
+            return search_records
 
         nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
             file_path=source.get_corresponding_bib_file()
@@ -469,6 +465,15 @@ class Load(colrev.process.Process):
                                 f"{record_id} not imported"
                             )
                     line = file.readline()
+        return search_records
+
+    def __load_source_records(
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+    ) -> None:
+
+        search_records = self.__get_search_records(source=source)
+        if len(search_records) == 0:
+            return
 
         record_list = self.__prep_records_for_import(
             source=source, search_records=search_records
