@@ -16,10 +16,7 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
    .. autosummary::
       :nosignatures:
 
-      ~ActiveLearningDedupeTraining.adapted_console_label
-      ~ActiveLearningDedupeTraining.apply_active_learning
       ~ActiveLearningDedupeTraining.run_dedupe
-      ~ActiveLearningDedupeTraining.setup_active_learning_dedupe
 
 
 

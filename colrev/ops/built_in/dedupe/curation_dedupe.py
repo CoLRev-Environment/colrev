@@ -138,43 +138,9 @@ class CurationDedupe:
         toc_items = list(map(dict, temp))  # type: ignore
         return toc_items
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
-
-        for record in records.values():
-            if "container_title" not in record:
-                record["container_title"] = (
-                    record.get("journal", "")
-                    + record.get("booktitle", "")
-                    + record.get("series", "")
-                )
-            if "title" not in record:
-                record["title"] = ""
-            if "author" not in record:
-                record["author"] = ""
-            if "year" not in record:
-                record["year"] = ""
-            if "journal" not in record:
-                record["journal"] = ""
-            if "volume" not in record:
-                record["volume"] = ""
-            if "number" not in record:
-                record["number"] = ""
-            if "pages" not in record:
-                record["pages"] = ""
-            if "booktitle" not in record:
-                record["booktitle"] = ""
-
-        # first_source should be the highest quality source
-        # (which moves to md_processed first)
-        first_source = (
-            self.settings.selected_source
-            == dedupe_operation.review_manager.settings.dedupe.scripts[0][
-                "selected_source"
-            ]
-        )
-
+    def __warn_on_missing_sources(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, first_source: bool
+    ) -> None:
         # warn if not all SOURCE.filenames are included in a dedupe script
         if first_source:
             available_sources = [
@@ -214,8 +180,13 @@ class CurationDedupe:
                             f"to dedupe.scripts{colors.END}"
                         )
 
-        # TODO : create a search/retrieval script that retrieves
-        # records based on linked attributes (see cml_assistant)
+    def __add_first_source_if_deduplicated(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
+    ) -> None:
+        dedupe_operation.review_manager.logger.info(
+            f"Starting with records from {self.settings.selected_source}"
+            " (setting to md_processed as the initial records)"
+        )
 
         source_records = [
             r
@@ -227,98 +198,297 @@ class CurationDedupe:
 
         toc_items = self.__get_toc_items(records_list=source_records)
 
-        if first_source:
+        for toc_item in toc_items:
 
-            dedupe_operation.review_manager.logger.info(
-                f"Starting with records from {self.settings.selected_source}"
-                " (setting to md_processed as the initial records)"
-            )
-
-            for toc_item in toc_items:
-
-                # Note : these would be potential errors (duplicates)
-                # because they have the same selected_source
-                processed_same_toc_same_source_records = [
-                    r
-                    for r in records.values()
-                    if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                    and r["colrev_status"]
-                    not in [
-                        colrev.record.RecordState.md_prepared,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                        colrev.record.RecordState.md_imported,
-                        colrev.record.RecordState.rev_prescreen_excluded,
-                    ]
-                    and self.settings.selected_source.replace("search/", "")
-                    in r["colrev_origin"]
+            # Note : these would be potential errors (duplicates)
+            # because they have the same selected_source
+            processed_same_toc_same_source_records = [
+                r
+                for r in records.values()
+                if all(r.get(k, "NA") == v for k, v in toc_item.items())
+                and r["colrev_status"]
+                not in [
+                    colrev.record.RecordState.md_prepared,
+                    colrev.record.RecordState.md_needs_manual_preparation,
+                    colrev.record.RecordState.md_imported,
+                    colrev.record.RecordState.rev_prescreen_excluded,
                 ]
-                if 0 == len(processed_same_toc_same_source_records):
-                    print("\n\n")
-                    print(toc_item)
+                and self.settings.selected_source.replace("search/", "")
+                in r["colrev_origin"]
+            ]
+            if 0 == len(processed_same_toc_same_source_records):
+                print("\n\n")
+                print(toc_item)
 
-                    for source_record_dict in sorted(
-                        source_records, key=lambda d: d["author"]
+                for source_record_dict in sorted(
+                    source_records, key=lambda d: d["author"]
+                ):
+                    if all(
+                        source_record_dict.get(k, "NA") == v
+                        for k, v in toc_item.items()
                     ):
+                        # Record(data=sr).print_citation_format()
+                        print(
+                            f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
+                            f"{source_record_dict.get('title', 'NO_TITLE')}"
+                        )
+
+                if "y" == input(
+                    "No existing records (md_processed*) found."
+                    "All records unique? Set to md_processed [y]? "
+                ):
+                    for source_record_dict in source_records:
                         if all(
                             source_record_dict.get(k, "NA") == v
                             for k, v in toc_item.items()
                         ):
-                            # Record(data=sr).print_citation_format()
-                            print(
-                                f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
-                                f"{source_record_dict.get('title', 'NO_TITLE')}"
-                            )
-
-                    if "y" == input(
-                        "No existing records (md_processed*) found."
-                        "All records unique? Set to md_processed [y]? "
-                    ):
-                        for source_record_dict in source_records:
-                            if all(
-                                source_record_dict.get(k, "NA") == v
-                                for k, v in toc_item.items()
-                            ):
-                                source_record_dict[
-                                    "colrev_status"
-                                ] = colrev.record.RecordState.md_processed
-                else:
-                    print(toc_item)
-                    print("Pre-imported records found for this toc_item (skipping)")
-                    # print(processed_same_toc_same_source_records)
-
-            for record in records.values():
-                record.pop("container_title")
-            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
-            dedupe_operation.review_manager.dataset.add_record_changes()
-
-            if dedupe_operation.review_manager.dataset.has_changes():
-                dedupe_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Commit changes{colors.END}"
-                )
-                dedupe_operation.review_manager.create_commit(
-                    msg=(
-                        "Merge duplicate records (set unique records from "
-                        f"{self.settings.selected_source} "
-                        "to md_processed)"
-                    ),
-                    script_call="colrev dedupe",
-                    saved_args={},
-                )
+                            source_record_dict[
+                                "colrev_status"
+                            ] = colrev.record.RecordState.md_processed
             else:
-                dedupe_operation.review_manager.logger.info(
-                    f"{colors.GREEN}No duplicates found{colors.END}"
+                print(toc_item)
+                print("Pre-imported records found for this toc_item (skipping)")
+                # print(processed_same_toc_same_source_records)
+
+        for record in records.values():
+            record.pop("container_title")
+        dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+        dedupe_operation.review_manager.dataset.add_record_changes()
+
+        if dedupe_operation.review_manager.dataset.has_changes():
+            dedupe_operation.review_manager.logger.info(
+                f"{colors.GREEN}Commit changes{colors.END}"
+            )
+            dedupe_operation.review_manager.create_commit(
+                msg=(
+                    "Merge duplicate records (set unique records from "
+                    f"{self.settings.selected_source} "
+                    "to md_processed)"
+                ),
+                script_call="colrev dedupe",
+                saved_args={},
+            )
+        else:
+            dedupe_operation.review_manager.logger.info(
+                f"{colors.GREEN}No duplicates found{colors.END}"
+            )
+
+    def __prep_records(self, *, records: dict) -> dict:
+        required_fields = [
+            "title",
+            "author",
+            "year",
+            "journal",
+            "volume",
+            "number",
+            "pages",
+            "booktitle",
+        ]
+        for record in records.values():
+            if "container_title" not in record:
+                record["container_title"] = (
+                    record.get("journal", "")
+                    + record.get("booktitle", "")
+                    + record.get("series", "")
                 )
 
-            return
+            for required_field in required_fields:
+                if required_field not in record:
+                    record[required_field] = ""
+        return records
+
+    def __dedupe_source(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
+    ) -> list[dict]:
+        dedupe_operation.review_manager.logger.info(
+            "Processing as a non-pdf source (matching exact colrev_ids)"
+        )
+
+        source_records = [
+            r
+            for r in records.values()
+            if r["colrev_status"] == colrev.record.RecordState.md_prepared
+            and self.settings.selected_source.replace("search/", "")
+            in r["colrev_origin"]
+        ]
+
+        toc_items = self.__get_toc_items(records_list=source_records)
 
         decision_list: list[dict] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
-        dedupe_operation.review_manager.logger.info(
-            "Identify duplicates between "
-            f"curated_records and {self.settings.selected_source} (within toc_items)"
+        # match based on overlapping  colrev_ids
+        for toc_item in tqdm(toc_items):
+
+            processed_same_toc_records = [
+                r
+                for r in records.values()
+                if all(r.get(k, "NA") == v for k, v in toc_item.items())
+                and r["colrev_status"]
+                not in [
+                    colrev.record.RecordState.md_imported,
+                    colrev.record.RecordState.md_needs_manual_preparation,
+                    colrev.record.RecordState.md_prepared,
+                    colrev.record.RecordState.rev_prescreen_excluded,
+                ]
+                and self.settings.selected_source.replace("search/", "")
+                not in r["colrev_origin"]
+            ]
+            new_same_toc_records = [
+                r
+                for r in source_records
+                if all(r.get(k, "NA") == v for k, v in toc_item.items())
+            ]
+            if len(new_same_toc_records) > 0:
+                # print(new_same_toc_records)
+                for new_same_toc_record in new_same_toc_records:
+                    for rec2 in processed_same_toc_records:
+                        overlapping_colrev_ids = colrev.record.Record(
+                            data=new_same_toc_record
+                        ).has_overlapping_colrev_id(
+                            record=colrev.record.Record(data=rec2)
+                        )
+                        if overlapping_colrev_ids:
+                            decision_list.append(
+                                {
+                                    "ID1": new_same_toc_record["ID"],
+                                    "ID2": rec2["ID"],
+                                    "decision": "duplicate",
+                                }
+                            )
+                            print("TODO : validate whether it merges correctly:")
+                            input(decision_list)
+
+        return decision_list
+
+    def __dedupe_pdf_source(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
+    ) -> list[dict]:
+        dedupe_operation.review_manager.logger.info("Processing as a pdf source")
+
+        source_records = [
+            r
+            for r in records.values()
+            if r["colrev_status"] == colrev.record.RecordState.md_prepared
+            and self.settings.selected_source.replace("search/", "")
+            in r["colrev_origin"]
+        ]
+
+        toc_items = self.__get_toc_items(records_list=source_records)
+
+        decision_list: list[dict] = []
+        # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
+
+        pdf_prep_operation = dedupe_operation.review_manager.get_pdf_prep_operation()
+        pdf_metadata_validation = (
+            colrev.ops.built_in.pdf_prep.metadata_valiation.PDFMetadataValidation(
+                pdf_prep_operation=pdf_prep_operation,
+                settings={"name": "dedupe_pdf_md_validation"},
+            )
         )
 
+        for toc_item in tqdm(toc_items):
+
+            processed_same_toc_records = [
+                r
+                for r in records.values()
+                if all(r.get(k, "NA") == v for k, v in toc_item.items())
+                and r["colrev_status"]
+                not in [
+                    colrev.record.RecordState.md_imported,
+                    colrev.record.RecordState.md_needs_manual_preparation,
+                    colrev.record.RecordState.md_prepared,
+                    colrev.record.RecordState.rev_prescreen_excluded,
+                ]
+                and self.settings.selected_source.replace("search/", "")
+                not in r["colrev_origin"]
+            ]
+            pdf_same_toc_records = [
+                r
+                for r in source_records
+                if all(r.get(k, "NA") == v for k, v in toc_item.items())
+            ]
+
+            references = pd.DataFrame.from_dict(
+                processed_same_toc_records + pdf_same_toc_records
+            )
+
+            nr_entries = references.shape[0]
+            if nr_entries == 0:
+                continue
+            similarity_array = np.zeros([nr_entries, nr_entries])
+
+            # Note : min_similarity only means that the PDF will be considered
+            # for validates_based_on_metadata(...), which is the acutal test!
+            min_similarity = 0.7
+            similarity_array, tuples_to_process = self.__calculate_similarities(
+                similarity_array=similarity_array,
+                references=references,
+                min_similarity=min_similarity,
+            )
+
+            curated_record_ids = [r["ID"] for r in processed_same_toc_records]
+            pdf_record_ids = [r["ID"] for r in pdf_same_toc_records]
+            for tuple_to_process in tuples_to_process:
+                rec1 = records[tuple_to_process[0]]
+                rec2 = records[tuple_to_process[1]]
+
+                # Note : Focus on merges between
+                # curated_records and pdf_same_toc_records
+                # Note : this should also ensure that pdf groups are not merged
+                # until a corresponding curated record group is available.
+                if (
+                    rec1["ID"] in curated_record_ids
+                    and rec2["ID"] in curated_record_ids
+                ):
+                    continue
+                if rec1["ID"] in pdf_record_ids and rec2["ID"] in pdf_record_ids:
+                    continue
+
+                if "file" in rec2:
+                    updated_record = rec1.copy()
+                    updated_record["file"] = rec2["file"]
+                elif "file" in rec1:
+                    updated_record = rec2.copy()
+                    updated_record["file"] = rec1["file"]
+                else:  # None of the records is curated
+                    continue
+
+                record = colrev.record.Record(data=updated_record)
+                validation_info = pdf_metadata_validation.validates_based_on_metadata(
+                    review_manager=dedupe_operation.review_manager,
+                    record=record,
+                )
+
+                overlapping_colrev_ids = colrev.record.Record(
+                    data=rec1
+                ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
+                if validation_info["validates"] or overlapping_colrev_ids:
+
+                    # Note : make sure that we merge into the CURATED record
+                    if "file" in rec1:
+                        if tuple_to_process[0] not in [x["ID1"] for x in decision_list]:
+                            decision_list.append(
+                                {
+                                    "ID1": tuple_to_process[0],
+                                    "ID2": tuple_to_process[1],
+                                    "decision": "duplicate",
+                                }
+                            )
+                    else:
+                        if tuple_to_process[1] not in [x["ID1"] for x in decision_list]:
+                            decision_list.append(
+                                {
+                                    "ID1": tuple_to_process[1],
+                                    "ID2": tuple_to_process[0],
+                                    "decision": "duplicate",
+                                }
+                            )
+        return decision_list
+
+    def __pdf_source_selected(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
+    ) -> bool:
         pdf_source = False
         relevant_source = [
             s
@@ -327,191 +497,77 @@ class CurationDedupe:
         ]
         if len(relevant_source) > 0:
             pdf_source = "pdfs_dir" == relevant_source[0].source_name
+        return pdf_source
 
-        if not pdf_source:
-            dedupe_operation.review_manager.logger.info(
-                "Processing as a non-pdf source (matching exact colrev_ids)"
+    def __first_source_selected(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
+    ) -> bool:
+        return (
+            self.settings.selected_source
+            == dedupe_operation.review_manager.settings.dedupe.scripts[0][
+                "selected_source"
+            ]
+        )
+
+    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
+        records = self.__prep_records(records=records)
+
+        # first_source should be the highest quality source
+        # (which moves to md_processed first)
+        first_source = self.__first_source_selected(dedupe_operation=dedupe_operation)
+
+        self.__warn_on_missing_sources(
+            dedupe_operation=dedupe_operation, first_source=first_source
+        )
+
+        # TODO : create a search/retrieval script that retrieves
+        # records based on linked attributes (see cml_assistant)
+
+        if first_source:
+            self.__add_first_source_if_deduplicated(
+                dedupe_operation=dedupe_operation, records=records
             )
+            return
 
-            # match based on overlapping  colrev_ids
-            for toc_item in tqdm(toc_items):
+        dedupe_operation.review_manager.logger.info(
+            "Identify duplicates between "
+            f"curated_records and {self.settings.selected_source} (within toc_items)"
+        )
 
-                processed_same_toc_records = [
-                    r
-                    for r in records.values()
-                    if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                    and r["colrev_status"]
-                    not in [
-                        colrev.record.RecordState.md_imported,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                        colrev.record.RecordState.md_prepared,
-                        colrev.record.RecordState.rev_prescreen_excluded,
-                    ]
-                    and self.settings.selected_source.replace("search/", "")
-                    not in r["colrev_origin"]
-                ]
-                new_same_toc_records = [
-                    r
-                    for r in source_records
-                    if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                ]
-                if len(new_same_toc_records) > 0:
-                    # print(new_same_toc_records)
-                    for new_same_toc_record in new_same_toc_records:
-                        for rec2 in processed_same_toc_records:
-                            overlapping_colrev_ids = colrev.record.Record(
-                                data=new_same_toc_record
-                            ).has_overlapping_colrev_id(
-                                record=colrev.record.Record(data=rec2)
-                            )
-                            if overlapping_colrev_ids:
-                                decision_list.append(
-                                    {
-                                        "ID1": new_same_toc_record["ID"],
-                                        "ID2": rec2["ID"],
-                                        "decision": "duplicate",
-                                    }
-                                )
-                                print("TODO : validate whether it merges correctly:")
-                                input(decision_list)
-
+        decision_list: list[dict] = []
+        # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
+        if self.__pdf_source_selected(dedupe_operation=dedupe_operation):
+            decision_list = self.__dedupe_pdf_source(
+                dedupe_operation=dedupe_operation, records=records
+            )
         else:
-            dedupe_operation.review_manager.logger.info("Processing as a pdf source")
-
-            pdf_prep_operation = (
-                dedupe_operation.review_manager.get_pdf_prep_operation()
+            decision_list = self.__dedupe_source(
+                dedupe_operation=dedupe_operation, records=records
             )
-            pdf_metadata_validation = (
-                colrev.ops.built_in.pdf_prep.metadata_valiation.PDFMetadataValidation(
-                    pdf_prep_operation=pdf_prep_operation,
-                    settings={"name": "dedupe_pdf_md_validation"},
-                )
-            )
-
-            for toc_item in tqdm(toc_items):
-
-                processed_same_toc_records = [
-                    r
-                    for r in records.values()
-                    if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                    and r["colrev_status"]
-                    not in [
-                        colrev.record.RecordState.md_imported,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                        colrev.record.RecordState.md_prepared,
-                        colrev.record.RecordState.rev_prescreen_excluded,
-                    ]
-                    and self.settings.selected_source.replace("search/", "")
-                    not in r["colrev_origin"]
-                ]
-                pdf_same_toc_records = [
-                    r
-                    for r in source_records
-                    if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                ]
-
-                references = pd.DataFrame.from_dict(
-                    processed_same_toc_records + pdf_same_toc_records
-                )
-
-                nr_entries = references.shape[0]
-                if nr_entries == 0:
-                    continue
-                similarity_array = np.zeros([nr_entries, nr_entries])
-
-                # Note : min_similarity only means that the PDF will be considered
-                # for validates_based_on_metadata(...), which is the acutal test!
-                min_similarity = 0.7
-                similarity_array, tuples_to_process = self.__calculate_similarities(
-                    similarity_array=similarity_array,
-                    references=references,
-                    min_similarity=min_similarity,
-                )
-
-                curated_record_ids = [r["ID"] for r in processed_same_toc_records]
-                pdf_record_ids = [r["ID"] for r in pdf_same_toc_records]
-                for tuple_to_process in tuples_to_process:
-                    rec1 = records[tuple_to_process[0]]
-                    rec2 = records[tuple_to_process[1]]
-
-                    # Note : Focus on merges between
-                    # curated_records and pdf_same_toc_records
-                    # Note : this should also ensure that pdf groups are not merged
-                    # until a corresponding curated record group is available.
-                    if (
-                        rec1["ID"] in curated_record_ids
-                        and rec2["ID"] in curated_record_ids
-                    ):
-                        continue
-                    if rec1["ID"] in pdf_record_ids and rec2["ID"] in pdf_record_ids:
-                        continue
-
-                    if "file" in rec2:
-                        updated_record = rec1.copy()
-                        updated_record["file"] = rec2["file"]
-                    elif "file" in rec1:
-                        updated_record = rec2.copy()
-                        updated_record["file"] = rec1["file"]
-                    else:  # None of the records is curated
-                        continue
-
-                    record = colrev.record.Record(data=updated_record)
-                    validation_info = (
-                        pdf_metadata_validation.validates_based_on_metadata(
-                            review_manager=dedupe_operation.review_manager,
-                            record=record,
-                        )
-                    )
-
-                    overlapping_colrev_ids = colrev.record.Record(
-                        data=rec1
-                    ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
-                    if validation_info["validates"] or overlapping_colrev_ids:
-
-                        # Note : make sure that we merge into the CURATED record
-                        if "file" in rec1:
-                            if tuple_to_process[0] not in [
-                                x["ID1"] for x in decision_list
-                            ]:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[0],
-                                        "ID2": tuple_to_process[1],
-                                        "decision": "duplicate",
-                                    }
-                                )
-                        else:
-                            if tuple_to_process[1] not in [
-                                x["ID1"] for x in decision_list
-                            ]:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[1],
-                                        "ID2": tuple_to_process[0],
-                                        "decision": "duplicate",
-                                    }
-                                )
 
         # Note : dedupe.apply_merges reloads the records and
         # thereby discards previous changes
-        if len(decision_list) > 0:
-            dedupe_operation.review_manager.logger.info(
-                f"{colors.GREEN}Duplicates identified{colors.END}"
-            )
-            print(decision_list)
-            dedupe_operation.apply_merges(results=decision_list)
-
-            dedupe_operation.review_manager.dataset.add_record_changes()
-
-            dedupe_operation.review_manager.create_commit(
-                msg="Merge duplicate records",
-                script_call="colrev dedupe",
-                saved_args={},
-            )
-        else:
+        if len(decision_list) == 0:
             dedupe_operation.review_manager.logger.info(
                 f"{colors.GREEN}No merge-candidates identified between sets{colors.END}"
             )
+            return
+
+        dedupe_operation.review_manager.logger.info(
+            f"{colors.GREEN}Duplicates identified{colors.END}"
+        )
+        print(decision_list)
+        dedupe_operation.apply_merges(results=decision_list)
+
+        dedupe_operation.review_manager.dataset.add_record_changes()
+
+        dedupe_operation.review_manager.create_commit(
+            msg="Merge duplicate records",
+            script_call="colrev dedupe",
+            saved_args={},
+        )
 
 
 if __name__ == "__main__":

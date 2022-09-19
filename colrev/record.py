@@ -92,7 +92,7 @@ class Record:
         "colrev_id",
         "colrev_data_provenance",
         "colrev_pdf_id",
-        "MOVED_DUPE",
+        "MOVED_DUPE_ID",
     ]
 
     preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
@@ -560,7 +560,7 @@ class Record:
                 "colrev_id",
                 "colrev_status",
                 "colrev_origin",
-                "MOVED_DUPE",
+                "MOVED_DUPE_ID",
             ]:
                 continue
 

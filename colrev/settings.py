@@ -240,8 +240,8 @@ class SameSourceMergePolicy(Enum):
 
     # pylint: disable=invalid-name
     prevent = "prevent"
-    apply = "apply"
     warn = "warn"
+    apply = "apply"
 
     @classmethod
     def get_options(cls) -> typing.List[str]:

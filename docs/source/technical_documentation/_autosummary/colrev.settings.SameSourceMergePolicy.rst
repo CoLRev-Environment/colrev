@@ -28,5 +28,5 @@ colrev.settings.SameSourceMergePolicy
    .. autosummary::
 
       ~SameSourceMergePolicy.prevent
-      ~SameSourceMergePolicy.apply
       ~SameSourceMergePolicy.warn
+      ~SameSourceMergePolicy.apply

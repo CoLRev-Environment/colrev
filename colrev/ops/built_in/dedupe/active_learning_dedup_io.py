@@ -2,14 +2,21 @@
 from __future__ import annotations
 
 import os
+import sqlite3
+import statistics
 import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import dedupe as dedupe_io
 import pandas as pd
+import psutil
 import zope.interface
 from dacite import from_dict
+from dedupe._typing import RecordDictPair as TrainingExample
+from dedupe._typing import TrainingData
+from dedupe.core import unique
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -20,9 +27,7 @@ import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
-    import dedupe as dedupe_io
 
-# pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
 
 
@@ -45,7 +50,7 @@ class ActiveLearningDedupeTraining:
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def setup_active_learning_dedupe(
+    def __setup_active_learning_dedupe(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
@@ -54,7 +59,6 @@ class ActiveLearningDedupeTraining:
     ) -> None:
         """Prepare data for active learning setup"""
         # pylint: disable=import-outside-toplevel
-        import dedupe as dedupe_io
         import random
         import logging
 
@@ -198,7 +202,7 @@ class ActiveLearningDedupeTraining:
             "Reading and preparation completed."
         )
 
-    def apply_active_learning(
+    def __apply_active_learning(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
@@ -206,7 +210,7 @@ class ActiveLearningDedupeTraining:
         saved_args: dict,
     ) -> None:
 
-        dedupe_operation.apply_manual_deduplication_decisions(results=results)
+        dedupe_operation.apply_merges(results=results, complete_dedupe=False)
 
         # Using the examples we just labeled, train the deduper and learn
         # blocking predicates
@@ -235,7 +239,7 @@ class ActiveLearningDedupeTraining:
         )
         # self.cleanup_training()
 
-    def adapted_console_label(
+    def __adapted_console_label(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
@@ -253,11 +257,6 @@ class ActiveLearningDedupeTraining:
         > deduper.prepare_training(data)
         > dedupe.console_label(deduper)
         """
-
-        # pylint: disable=import-outside-toplevel
-        from dedupe._typing import TrainingData
-        from dedupe._typing import RecordDictPair as TrainingExample
-        from dedupe.core import unique
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
@@ -404,7 +403,7 @@ class ActiveLearningDedupeTraining:
         #     dict_writer.writerows(manual_dedupe_decision_list)
 
         # Apply and commit
-        self.apply_active_learning(
+        self.__apply_active_learning(
             dedupe_operation=dedupe_operation,
             results=manual_dedupe_decision_list,
             saved_args=saved_args,
@@ -412,35 +411,17 @@ class ActiveLearningDedupeTraining:
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
-        # pylint: disable=import-outside-toplevel
-        import dedupe as dedupe_io
-
-        # TODO : add something?
         saved_args: dict = {}
         in_memory = True
 
-        self.setup_active_learning_dedupe(
+        self.__setup_active_learning_dedupe(
             dedupe_operation=dedupe_operation, retrain=False, in_memory=in_memory
         )
 
-        # if dedupe_operation.skip_training and dedupe_operation.settings_file.is_file():
-        #     dedupe_operation.review_manager.report_logger\
-        #       .info(f"Reading model from {dedupe_operation.settings_file.name}")
-        #     with open(dedupe_operation.settings_file, "rb") as f:
-        #         deduper = dedupe_operation.StaticDedupe(f)
-        # else:
-
-        # Active learning
-        dedupe_io.console_label = self.adapted_console_label
+        dedupe_io.console_label = self.__adapted_console_label
         dedupe_io.console_label(
             dedupe_operation=dedupe_operation, manual=True, saved_args=saved_args
         )
-
-        # Cluster remaining tuples
-        # self.cluster_tuples(
-        #     in_memory=in_memory,
-        #     saved_args=saved_args,
-        # )
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
@@ -474,17 +455,306 @@ class ActiveLearningDedupeAutomated:
         assert self.settings.partition_threshold >= 0.0
         assert self.settings.partition_threshold <= 1.0
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-        """Cluster potential duplicates, merge, and export validation spreadsheets"""
+    def __get_duplicates_from_clusters(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, clustered_dupes: list
+    ) -> list[dict]:
+        dedupe_operation.review_manager.report_logger.info(
+            f"set merge_threshold: {self.settings.merge_threshold}"
+        )
+        dedupe_operation.review_manager.logger.info(
+            f"set merge_threshold: {self.settings.merge_threshold}"
+        )
+        results = []
+        dedupe_decision_list = []
+        for cluster_id, (records, scores) in enumerate(clustered_dupes):
+            dedupe_decision_list.append(
+                {
+                    "cluster_id": cluster_id,
+                    "records": list(records),
+                    "score": statistics.mean(list(scores)),
+                }
+            )
 
-        # pylint: disable=import-outside-toplevel
-        import statistics
+        for dedupe_decision in dedupe_decision_list:
 
-        import dedupe as dedupe_io
-        import sqlite3
-        import psutil
+            if len(dedupe_decision["records"]) == 0:
+                continue
 
-        # Setting in-memory mode depending on system ram
+            if dedupe_decision["score"] < self.settings.merge_threshold:
+                continue
+
+            orig_rec = dedupe_decision["records"].pop()
+            if 0 == len(dedupe_decision["records"]):
+                results.append(
+                    {
+                        "ID1": orig_rec,
+                        "decision": "no_duplicate",
+                    }
+                )
+                continue
+
+            for dupe_rec in dedupe_decision["records"]:
+
+                orig_propagated = dedupe_operation.review_manager.dataset.propagated_id(
+                    record_id=orig_rec
+                )
+                dupe_propagated = dedupe_operation.review_manager.dataset.propagated_id(
+                    record_id=dupe_rec
+                )
+
+                if not orig_propagated and not dupe_propagated:
+
+                    # Use the record['ID'] without appended letters if possible
+                    # Set orig_propagated=True if record_a_ID should be kept
+                    if orig_rec[-1:].isnumeric() and not dupe_rec[-1:].isnumeric():
+                        orig_propagated = True
+                    else:
+                        dupe_propagated = True
+                        # This arbitrarily uses record_b_ID
+                        # if none of the IDs has a letter appended.
+
+                    if orig_propagated and dupe_propagated:
+                        # both_IDs_propagated
+                        dedupe_operation.review_manager.logger.error(
+                            f"Both IDs propagated: {orig_rec}, {dupe_rec}"
+                        )
+                        continue
+
+                    if orig_propagated:
+                        results.append(
+                            {
+                                "ID1": orig_rec,
+                                "ID2": dupe_rec,
+                                "decision": "duplicate",
+                                "score": dedupe_decision["score"],
+                            }
+                        )
+
+                    else:
+                        results.append(
+                            {
+                                "ID1": dupe_rec,
+                                "ID2": orig_rec,
+                                "decision": "duplicate",
+                                "score": dedupe_decision["score"],
+                            }
+                        )
+        return results
+
+    def __highlight_cells(self, *, input_df):
+        dataframe = input_df.copy()
+        dataframe["cluster_id"] = dataframe["cluster_id"].astype(str)
+        dataframe.loc[:, dataframe.columns != "cluster_id"] = "background-color: white"
+
+        # http://www.excelsupersite.com/what-are-the-56-colorindex-colors-in-excel/
+        available_colors = [
+            "#FFFFFF",
+            "#FFCC99",
+            "#FFFFCC",
+            "#CCFFCC",
+            "#FFFF99",
+            "#99CCFF",
+            "#FF99CC",
+        ]
+        cur_color_index = -1
+        cur_cluster = ""
+
+        prev_row = {}
+        for i, row in dataframe.iterrows():
+            if row["cluster_id"] != cur_cluster:
+                cur_color_index += 1
+                cur_cluster = row["cluster_id"]
+            # dataframe.at[i, 'cluster_id'] = ( # only the cluster_id column
+            dataframe.at[i, :] = (
+                "background-color: "
+                + available_colors[cur_color_index % len(available_colors)]
+            )
+
+        for i, row in input_df.iterrows():
+            if i in [0, 1]:
+                continue
+            if len(prev_row) != 0:
+                for j, val in row.items():
+                    # changes in these fields should not be marked
+                    if j in ["error", "confidence_score", "ID"]:
+                        continue
+                    # do not mark changes between different clusters
+                    if j == "cluster_id" and prev_row["cluster_id"] != val:
+                        break
+                    if val != prev_row[j]:
+                        dataframe.at[i, j] = dataframe.at[i, j] + "; font-weight: bold"
+
+            prev_row = row
+
+        return dataframe
+
+    def __export_duplicates_excel(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, collected_duplicates: list
+    ) -> None:
+        if len(collected_duplicates) == 0:
+            print("No duplicates found")
+            return
+
+        duplicates_df = pd.DataFrame.from_records(collected_duplicates)
+        duplicates_df.fillna("", inplace=True)
+        duplicates_df["distinct_str"] = (
+            duplicates_df["author"]
+            + duplicates_df["title"]
+            + duplicates_df["year"]
+            + duplicates_df["container_title"]
+            + duplicates_df["volume"]
+            + duplicates_df["number"]
+            + duplicates_df["pages"]
+        )
+        # Only export bibliographically distict cases
+        duplicates_df = duplicates_df.groupby("distinct_str").filter(
+            lambda x: len(x) == 1
+        )
+        duplicates_df.drop(columns=["distinct_str"], inplace=True)
+
+        duplicates_df = duplicates_df[
+            [
+                "error",
+                "confidence_score",
+                "cluster_id",
+                "ID",
+                "author",
+                "title",
+                "year",
+                "container_title",
+                "volume",
+                "number",
+                "pages",
+            ]
+        ]
+
+        duplicates_df = duplicates_df.groupby("cluster_id").filter(lambda x: len(x) > 1)
+        duplicates_df = duplicates_df.sort_values(
+            ["confidence_score", "cluster_id"], ascending=(True, False)
+        )
+        duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(4)
+        # to adjust column widths in ExcelWriter:
+        # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
+        duplicates_df = duplicates_df.style.apply(self.__highlight_cells, axis=None)
+        duplicates_df.to_excel(dedupe_operation.dupe_file, index=False)
+
+    def __export_non_duplicates_excel(
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+        collected_non_duplicates: list,
+    ) -> None:
+        if len(collected_non_duplicates) == 0:
+            print("No duplicates.")
+            return
+
+        non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
+        # To develop in jupyter:
+        # non_duplicates_df.to_csv(output_file, index=False)
+        # non_duplicates_df = pd.read_csv("duplicates_for_validation.csv")
+        non_duplicates_df = non_duplicates_df[
+            [
+                "error",
+                "cluster_id",
+                "confidence_score",
+                "ID",
+                "author",
+                "title",
+                "year",
+                "container_title",
+                "volume",
+                "number",
+                "pages",
+            ]
+        ]
+        non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
+            lambda x: len(x) > 1
+        )
+        non_duplicates_df = non_duplicates_df.sort_values(
+            ["confidence_score", "cluster_id"], ascending=(True, False)
+        )
+        non_duplicates_df["confidence_score"] = non_duplicates_df[
+            "confidence_score"
+        ].round(4)
+        # to adjust column widths in ExcelWriter:
+        # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
+        non_duplicates_df = non_duplicates_df.style.apply(
+            self.__highlight_cells, axis=None
+        )
+        non_duplicates_df.to_excel(dedupe_operation.non_dupe_file_xlsx, index=False)
+
+    def __export_validation_excel(
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+        clustered_dupes: list,
+        data_d: dict,
+    ) -> None:
+
+        cluster_membership = {}
+        # cluster_membership:
+        # {'FrolovaFrolovKayurovEtAl2021': {'Cluster ID': 352, 'confidence_score': 1.0},
+        #  'BhaskaraBawa2021': {'Cluster ID': 353, 'confidence_score': 1.0}}
+        for cluster_id, (records, scores) in enumerate(clustered_dupes):
+            for record_id, score in zip(records, scores):
+
+                cluster_membership[record_id] = {
+                    "cluster_id": cluster_id,
+                    "confidence_score": score,
+                }
+
+        collected_duplicates, collected_non_duplicates = [], []
+        for cluster_id, vals in data_d.items():
+            vals.update(error="")
+            if cluster_id in cluster_membership:
+                cur_cluster_membership = cluster_membership[cluster_id]
+                vals.update(cur_cluster_membership)
+                if (
+                    cur_cluster_membership["confidence_score"]
+                    > self.settings.merge_threshold
+                ):
+                    collected_duplicates.append(vals)
+                else:
+                    collected_non_duplicates.append(vals)
+
+        # Set confidence scores to average of group
+        for cluster_nr in {d["cluster_id"] for d in collected_duplicates}:
+            avg_confidence = statistics.mean(
+                [
+                    d["confidence_score"]
+                    for d in collected_duplicates
+                    if d["cluster_id"] == cluster_nr
+                ]
+            )
+            for collected_duplicate in collected_duplicates:
+                if collected_duplicate["cluster_id"] == cluster_nr:
+                    collected_duplicate["confidence_score"] = avg_confidence
+        for cluster_nr in {d["cluster_id"] for d in collected_non_duplicates}:
+            avg_confidence = statistics.mean(
+                [
+                    d["confidence_score"]
+                    for d in collected_non_duplicates
+                    if d["cluster_id"] == cluster_nr
+                ]
+            )
+            for collected_non_duplicate in collected_non_duplicates:
+                if collected_non_duplicate["cluster_id"] == cluster_nr:
+                    collected_non_duplicate["confidence_score"] = avg_confidence
+
+        self.__export_duplicates_excel(
+            dedupe_operation=dedupe_operation, collected_duplicates=collected_duplicates
+        )
+
+        self.__export_non_duplicates_excel(
+            dedupe_operation=dedupe_operation,
+            collected_non_duplicates=collected_non_duplicates,
+        )
+
+    def __cluster_duplicates(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, data_d: dict
+    ) -> list:
+
+        # Setting in-memory mode depending on system RAM
 
         record_state_list = (
             dedupe_operation.review_manager.dataset.get_record_state_list()
@@ -502,17 +772,12 @@ class ActiveLearningDedupeAutomated:
 
         dedupe_operation.review_manager.logger.info("Clustering duplicates...")
 
-        data_d = dedupe_operation.read_data()
         dedupe_operation.review_manager.logger.info(
             f"Number of records (before): {len(data_d.items())}"
         )
 
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
-
-        saved_args: dict = {}
-        saved_args.update(merge_threshold=str(self.settings.merge_threshold))
-        saved_args.update(partition_threshold=str(self.settings.partition_threshold))
 
         if in_memory:
             dedupe_operation.review_manager.report_logger.info(
@@ -529,7 +794,7 @@ class ActiveLearningDedupeAutomated:
             #     dedupe_operation.review_manager.logger.info(
             #         "No duplicates found (please check carefully)"
             #     )
-            #     dedupe_operation.apply_merges(results=[], remaining_non_dupe=True)
+            #     dedupe_operation.apply_merges(results=[], complete_dedupe=True)
             #     dedupe_operation.review_manager.create_commit(
             #         msg="Merge duplicate records (no duplicates detected)",
             #         script_call="colrev dedupe",
@@ -615,284 +880,32 @@ class ActiveLearningDedupeAutomated:
         dedupe_operation.review_manager.report_logger.info(
             f"Number of duplicate sets {len(clustered_dupes)}"
         )
-        # Results
-        cluster_membership = {}
-        dedupe_decision_list = []
-        for cluster_id, (records, scores) in enumerate(clustered_dupes):
-            dedupe_decision_list.append(
-                {
-                    "cluster_id": cluster_id,
-                    "records": list(records),
-                    "score": statistics.mean(list(scores)),
-                }
-            )
-            for record_id, score in zip(records, scores):
+        return clustered_dupes
 
-                cluster_membership[record_id] = {
-                    "cluster_id": cluster_id,
-                    "confidence_score": score,
-                }
+    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+        """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
-        # cluster_membership:
-        # {'FrolovaFrolovKayurovEtAl2021': {'Cluster ID': 352, 'confidence_score': 1.0},
-        #  'BhaskaraBawa2021': {'Cluster ID': 353, 'confidence_score': 1.0}}
+        saved_args: dict = {}
+        saved_args.update(merge_threshold=str(self.settings.merge_threshold))
+        saved_args.update(partition_threshold=str(self.settings.partition_threshold))
 
-        auto_dedupe = []
-        id_list = []
-        dedupe_operation.review_manager.report_logger.info(
-            f"set merge_threshold: {self.settings.merge_threshold}"
+        data_d = dedupe_operation.read_data()
+
+        clustered_dupes = self.__cluster_duplicates(
+            dedupe_operation=dedupe_operation, data_d=data_d
         )
-        dedupe_operation.review_manager.logger.info(
-            f"set merge_threshold: {self.settings.merge_threshold}"
+
+        results = self.__get_duplicates_from_clusters(
+            dedupe_operation=dedupe_operation, clustered_dupes=clustered_dupes
         )
-        for dedupe_decision in dedupe_decision_list:
 
-            if len(dedupe_decision["records"]) > 1:
-                if dedupe_decision["score"] > self.settings.merge_threshold:
-                    orig_rec = dedupe_decision["records"].pop()
-                    id_list.append(orig_rec)
-                    if 0 == len(dedupe_decision["records"]):
-                        auto_dedupe.append(
-                            {
-                                "ID1": orig_rec,
-                                "decision": "no_duplicate",
-                            }
-                        )
-                        continue
+        dedupe_operation.apply_merges(results=results, complete_dedupe=True)
 
-                    for dupe_rec in dedupe_decision["records"]:
-
-                        orig_propagated = (
-                            dedupe_operation.review_manager.dataset.propagated_id(
-                                record_id=orig_rec
-                            )
-                        )
-                        dupe_propagated = (
-                            dedupe_operation.review_manager.dataset.propagated_id(
-                                record_id=dupe_rec
-                            )
-                        )
-
-                        if not orig_propagated and not dupe_propagated:
-
-                            # Use the record['ID'] without appended letters if possible
-                            # Set orig_propagated=True if record_a_ID should be kept
-                            if (
-                                orig_rec[-1:].isnumeric()
-                                and not dupe_rec[-1:].isnumeric()
-                            ):
-                                orig_propagated = True
-                            else:
-                                dupe_propagated = True
-                                # This arbitrarily uses record_b_ID
-                                # if none of the IDs has a letter appended.
-
-                            if orig_propagated and dupe_propagated:
-                                # both_IDs_propagated
-                                dedupe_operation.review_manager.logger.error(
-                                    f"Both IDs propagated: {orig_rec}, {dupe_rec}"
-                                )
-                                continue
-
-                            if orig_propagated:
-                                auto_dedupe.append(
-                                    {
-                                        "ID1": orig_rec,
-                                        "ID2": dupe_rec,
-                                        "decision": "duplicate",
-                                        "score": dedupe_decision["score"],
-                                    }
-                                )
-
-                            else:
-                                auto_dedupe.append(
-                                    {
-                                        "ID1": dupe_rec,
-                                        "ID2": orig_rec,
-                                        "decision": "duplicate",
-                                        "score": dedupe_decision["score"],
-                                    }
-                                )
-
-        dedupe_operation.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
-
-        # Export excels for validation
-        def highlight_cells(input_df):
-            dataframe = input_df.copy()
-            dataframe["cluster_id"] = dataframe["cluster_id"].astype(str)
-            dataframe.loc[
-                :, dataframe.columns != "cluster_id"
-            ] = "background-color: white"
-
-            # http://www.excelsupersite.com/what-are-the-56-colorindex-colors-in-excel/
-            available_colors = [
-                "#FFFFFF",
-                "#FFCC99",
-                "#FFFFCC",
-                "#CCFFCC",
-                "#FFFF99",
-                "#99CCFF",
-                "#FF99CC",
-            ]
-            cur_color_index = -1
-            cur_cluster = ""
-
-            prev_row = {}
-            for i, row in dataframe.iterrows():
-                if row["cluster_id"] != cur_cluster:
-                    cur_color_index += 1
-                    cur_cluster = row["cluster_id"]
-                # dataframe.at[i, 'cluster_id'] = ( # only the cluster_id column
-                dataframe.at[i, :] = (
-                    "background-color: "
-                    + available_colors[cur_color_index % len(available_colors)]
-                )
-
-            for i, row in input_df.iterrows():
-                if i in [0, 1]:
-                    continue
-                if len(prev_row) != 0:
-                    for j, val in row.items():
-                        # changes in these fields should not be marked
-                        if j in ["error", "confidence_score", "ID"]:
-                            continue
-                        # do not mark changes between different clusters
-                        if j == "cluster_id" and prev_row["cluster_id"] != val:
-                            break
-                        if val != prev_row[j]:
-                            dataframe.at[i, j] = (
-                                dataframe.at[i, j] + "; font-weight: bold"
-                            )
-
-                prev_row = row
-
-            return dataframe
-
-        collected_duplicates, collected_non_duplicates = [], []
-        for cluster_id, vals in data_d.items():
-            vals.update(error="")
-            if cluster_id in cluster_membership:
-                cur_cluster_membership = cluster_membership[cluster_id]
-                vals.update(cur_cluster_membership)
-                if (
-                    cur_cluster_membership["confidence_score"]
-                    > self.settings.merge_threshold
-                ):
-                    collected_duplicates.append(vals)
-                else:
-                    collected_non_duplicates.append(vals)
-
-        # Set confidence scores to average of group
-        for cluster_nr in {d["cluster_id"] for d in collected_duplicates}:
-            avg_confidence = statistics.mean(
-                [
-                    d["confidence_score"]
-                    for d in collected_duplicates
-                    if d["cluster_id"] == cluster_nr
-                ]
-            )
-            for collected_duplicate in collected_duplicates:
-                if collected_duplicate["cluster_id"] == cluster_nr:
-                    collected_duplicate["confidence_score"] = avg_confidence
-        for cluster_nr in {d["cluster_id"] for d in collected_non_duplicates}:
-            avg_confidence = statistics.mean(
-                [
-                    d["confidence_score"]
-                    for d in collected_non_duplicates
-                    if d["cluster_id"] == cluster_nr
-                ]
-            )
-            for collected_non_duplicate in collected_non_duplicates:
-                if collected_non_duplicate["cluster_id"] == cluster_nr:
-                    collected_non_duplicate["confidence_score"] = avg_confidence
-
-        if len(collected_duplicates) == 0:
-            print("No duplicates found")
-        else:
-            duplicates_df = pd.DataFrame.from_records(collected_duplicates)
-            duplicates_df.fillna("", inplace=True)
-            duplicates_df["distinct_str"] = (
-                duplicates_df["author"]
-                + duplicates_df["title"]
-                + duplicates_df["year"]
-                + duplicates_df["container_title"]
-                + duplicates_df["volume"]
-                + duplicates_df["number"]
-                + duplicates_df["pages"]
-            )
-            # Only export bibliographically distict cases
-            duplicates_df = duplicates_df.groupby("distinct_str").filter(
-                lambda x: len(x) == 1
-            )
-            duplicates_df.drop(columns=["distinct_str"], inplace=True)
-
-            duplicates_df = duplicates_df[
-                [
-                    "error",
-                    "confidence_score",
-                    "cluster_id",
-                    "ID",
-                    "author",
-                    "title",
-                    "year",
-                    "container_title",
-                    "volume",
-                    "number",
-                    "pages",
-                ]
-            ]
-
-            duplicates_df = duplicates_df.groupby("cluster_id").filter(
-                lambda x: len(x) > 1
-            )
-            duplicates_df = duplicates_df.sort_values(
-                ["confidence_score", "cluster_id"], ascending=(True, False)
-            )
-            duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(
-                4
-            )
-            # to adjust column widths in ExcelWriter:
-            # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-            duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
-            duplicates_df.to_excel(dedupe_operation.dupe_file, index=False)
-
-            if len(collected_non_duplicates) > 0:
-                non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
-                # To develop in jupyter:
-                # non_duplicates_df.to_csv(output_file, index=False)
-                # non_duplicates_df = pd.read_csv("duplicates_for_validation.csv")
-                non_duplicates_df = non_duplicates_df[
-                    [
-                        "error",
-                        "cluster_id",
-                        "confidence_score",
-                        "ID",
-                        "author",
-                        "title",
-                        "year",
-                        "container_title",
-                        "volume",
-                        "number",
-                        "pages",
-                    ]
-                ]
-                non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
-                    lambda x: len(x) > 1
-                )
-                non_duplicates_df = non_duplicates_df.sort_values(
-                    ["confidence_score", "cluster_id"], ascending=(True, False)
-                )
-                non_duplicates_df["confidence_score"] = non_duplicates_df[
-                    "confidence_score"
-                ].round(4)
-                # to adjust column widths in ExcelWriter:
-                # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-                non_duplicates_df = non_duplicates_df.style.apply(
-                    highlight_cells, axis=None
-                )
-                non_duplicates_df.to_excel(
-                    dedupe_operation.non_dupe_file_xlsx, index=False
-                )
+        self.__export_validation_excel(
+            dedupe_operation=dedupe_operation,
+            clustered_dupes=clustered_dupes,
+            data_d=data_d,
+        )
 
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records (based on active-learning clusters)",
