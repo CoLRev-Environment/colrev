@@ -1,6 +1,6 @@
-import Script from "./script";
+import Package from "./package";
 
 export default class PdfPrep {
-  public scripts: Script[] = [];
-  public manPdfPrepScripts: Script[] = [];
+  public scripts: Package[] = [];
+  public manPdfPrepScripts: Package[] = [];
 }

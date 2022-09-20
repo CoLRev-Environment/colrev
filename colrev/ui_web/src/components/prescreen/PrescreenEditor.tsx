@@ -1,6 +1,6 @@
 import Prescreen from "../../models/prescreen";
-import Script from "../../models/script";
-import ScriptsEditor from "../scripts/ScriptsEditor";
+import Package from "../../models/package";
+import PackagesEditor from "../packages/PackagesEditor";
 
 const PrescreenEditor: React.FC<{
   prescreen: Prescreen;
@@ -11,7 +11,7 @@ const PrescreenEditor: React.FC<{
     prescreenChanged(newPrescreen);
   };
 
-  const prescreenScriptsChangedHandler = (scripts: Script[]) => {
+  const prescreenScriptsChangedHandler = (scripts: Package[]) => {
     const newPrescreen = { ...prescreen, scripts: scripts };
     prescreenChanged(newPrescreen);
   };
@@ -30,10 +30,11 @@ const PrescreenEditor: React.FC<{
       </div>
       <div className="mb-3">
         <label>Scripts</label>
-        <ScriptsEditor
+        <PackagesEditor
+          packageEntity="Script"
           packageType="prescreen"
-          scripts={prescreen.scripts}
-          scriptsChanged={(scripts: Script[]) =>
+          packages={prescreen.scripts}
+          packagesChanged={(scripts: Package[]) =>
             prescreenScriptsChangedHandler(scripts)
           }
         />

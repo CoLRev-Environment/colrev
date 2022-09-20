@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Dedupe from "../../models/dedupe";
-import Script from "../../models/script";
-import ScriptsEditor from "../scripts/ScriptsEditor";
+import Package from "../../models/package";
+import PackagesEditor from "../packages/PackagesEditor";
 
 const DedupeEditor: React.FC<{
   dedupe: Dedupe;
@@ -25,7 +25,7 @@ const DedupeEditor: React.FC<{
     dedupeChanged(newDedupe);
   };
 
-  const dedupeScriptsChangedHandler = (scripts: Script[]) => {
+  const dedupeScriptsChangedHandler = (scripts: Package[]) => {
     const newDedupe = { ...dedupe, scripts: scripts };
     dedupeChanged(newDedupe);
   };
@@ -48,10 +48,11 @@ const DedupeEditor: React.FC<{
       </div>
       <div className="mb-3">
         <label>Scripts</label>
-        <ScriptsEditor
+        <PackagesEditor
+          packageEntity="Script"
           packageType="dedupe"
-          scripts={dedupe.scripts}
-          scriptsChanged={(scripts: Script[]) =>
+          packages={dedupe.scripts}
+          packagesChanged={(scripts: Package[]) =>
             dedupeScriptsChangedHandler(scripts)
           }
         />

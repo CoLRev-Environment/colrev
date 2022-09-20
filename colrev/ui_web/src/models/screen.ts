@@ -1,6 +1,6 @@
-import Script from "./script";
+import Package from "./package";
 
 export default class Screen {
   public explanation: string | null = null;
-  public scripts: Script[] = [];
+  public scripts: Package[] = [];
 }

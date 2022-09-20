@@ -1,28 +1,35 @@
 import { useEffect, useState } from "react";
-import Script from "../../models/script";
-import ScriptDefinition from "../../models/scriptDefinition";
-import ScriptParameterDefinition from "../../models/scriptParameterDefinition";
-import ScriptParameterType from "../../models/scriptParameterType";
+import Package from "../../models/package";
+import PackageDefinition from "../../models/packageDefinition";
+import PackageParameterDefinition from "../../models/packageParameterDefinition";
+import PackageParameterType from "../../models/packageParameterType";
 import dataService from "../../services/dataService";
 import FiedlsEditor from "../fields/FieldsEditor";
-import ScriptTitle from "./ScriptTitle";
+import PackageTitle from "./PackageTitle";
 
-const ScriptParametersEditor: React.FC<{
+const PackageParametersEditor: React.FC<{
+  packageEntity: string;
   packageType: string;
-  scriptDefinition: ScriptDefinition;
-  script: Script;
-  scriptChanged: any;
-}> = ({ packageType, scriptDefinition, script, scriptChanged }) => {
+  packageDefinition: PackageDefinition;
+  package: Package;
+  packageChanged: any;
+}> = ({
+  packageEntity,
+  packageType,
+  packageDefinition,
+  package: currentPackage,
+  packageChanged,
+}) => {
   const [hasParameters, setHasParameters] = useState<boolean>(false);
   const [parameterDefinitions, setParameterDefinitions] = useState<
-    ScriptParameterDefinition[]
+    PackageParameterDefinition[]
   >([]);
 
   useEffect(() => {
     const init = async () => {
-      const paramDefs = await dataService.getScriptParameterDefinitions(
+      const paramDefs = await dataService.getPackageParameterDefinitions(
         packageType,
-        scriptDefinition.name
+        packageDefinition.name
       );
 
       if (paramDefs.length === 0) {
@@ -34,48 +41,48 @@ const ScriptParametersEditor: React.FC<{
       setParameterDefinitions(paramDefs);
 
       for (const pd of paramDefs) {
-        if (!script.parameters.has(pd.name)) {
+        if (!currentPackage.parameters.has(pd.name)) {
           let paramValue = undefined;
 
-          if (pd.type === ScriptParameterType.StringList) {
+          if (pd.type === PackageParameterType.StringList) {
             paramValue = [];
-          } else if (pd.type === ScriptParameterType.Boolean) {
+          } else if (pd.type === PackageParameterType.Boolean) {
             paramValue = false;
           }
 
-          script.parameters.set(pd.name, paramValue);
+          currentPackage.parameters.set(pd.name, paramValue);
         }
       }
     };
 
     init();
-  }, [packageType, scriptDefinition, script]);
+  }, [packageType, packageDefinition, currentPackage]);
 
-  const getParameterValue = (paramDef: ScriptParameterDefinition) => {
-    let paramValue = script.parameters.get(paramDef.name);
+  const getParameterValue = (paramDef: PackageParameterDefinition) => {
+    let paramValue = currentPackage.parameters.get(paramDef.name);
     return paramValue;
   };
 
   const setParameterValue = (
-    paramDef: ScriptParameterDefinition,
+    paramDef: PackageParameterDefinition,
     paramValue: any
   ) => {
-    const newScript = { ...script };
-    newScript.parameters.set(paramDef.name, paramValue);
-    scriptChanged(newScript);
+    const newPackage = { ...currentPackage };
+    newPackage.parameters.set(paramDef.name, paramValue);
+    packageChanged(newPackage);
   };
 
   return (
     <div>
-      <ScriptTitle scriptDefinition={scriptDefinition} />
+      <PackageTitle packageDefinition={packageDefinition} />
       <div style={{ marginTop: "10px" }}>
-        {!hasParameters && <p>Script has no paramaters</p>}
+        {!hasParameters && <p>{packageEntity} has no paramaters</p>}
         {hasParameters && (
           <>
-            <p>Set Script Parameters</p>
+            <p>Set {packageEntity} Parameters</p>
             {parameterDefinitions.map((parameterDefinition, index) => (
               <div key={index.toString()} className="mb-3">
-                {parameterDefinition.type === ScriptParameterType.Boolean && (
+                {parameterDefinition.type === PackageParameterType.Boolean && (
                   <div className="form-check form-switch">
                     <input
                       className="form-check-input"
@@ -93,7 +100,7 @@ const ScriptParametersEditor: React.FC<{
                     </label>
                   </div>
                 )}
-                {parameterDefinition.type === ScriptParameterType.Float && (
+                {parameterDefinition.type === PackageParameterType.Float && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <input
@@ -112,7 +119,7 @@ const ScriptParametersEditor: React.FC<{
                     />
                   </div>
                 )}
-                {parameterDefinition.type === ScriptParameterType.Int && (
+                {parameterDefinition.type === PackageParameterType.Int && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <input
@@ -131,7 +138,7 @@ const ScriptParametersEditor: React.FC<{
                     />
                   </div>
                 )}
-                {parameterDefinition.type === ScriptParameterType.String && (
+                {parameterDefinition.type === PackageParameterType.String && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <input
@@ -148,7 +155,7 @@ const ScriptParametersEditor: React.FC<{
                   </div>
                 )}
                 {parameterDefinition.type ===
-                  ScriptParameterType.StringList && (
+                  PackageParameterType.StringList && (
                   <div>
                     <FiedlsEditor
                       title={parameterDefinition.name}
@@ -168,4 +175,4 @@ const ScriptParametersEditor: React.FC<{
   );
 };
 
-export default ScriptParametersEditor;
+export default PackageParametersEditor;

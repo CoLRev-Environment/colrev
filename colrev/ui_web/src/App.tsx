@@ -173,7 +173,7 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <ProjectEditor
                   project={project}
@@ -185,7 +185,7 @@ function App() {
                 name="Sources"
                 id="sources"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <SourcesEditor
                   sources={sources}

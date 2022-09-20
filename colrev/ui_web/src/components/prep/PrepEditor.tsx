@@ -1,10 +1,10 @@
 import Prep from "../../models/prep";
 import PrepRound from "../../models/prepRound";
-import Script from "../../models/script";
+import Package from "../../models/package";
 import Expander from "../common/Expander";
 import ExpanderItem from "../common/ExpanderItem";
 import FiedlsEditor from "../fields/FieldsEditor";
-import ScriptsEditor from "../scripts/ScriptsEditor";
+import PackagesEditor from "../packages/PackagesEditor";
 
 const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
   prep,
@@ -47,7 +47,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
   };
 
   const sourcePrepScriptsChangedHandler = (
-    scripts: Script[],
+    scripts: Package[],
     prepRound: PrepRound
   ) => {
     prepRound.scripts = scripts;
@@ -55,7 +55,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
     prepChanged(newPrep);
   };
 
-  const mapPrepScriptsChangedHandler = (scripts: Script[]) => {
+  const mapPrepScriptsChangedHandler = (scripts: Package[]) => {
     const newPrep = { ...prep, manPrepScripts: scripts };
     prepChanged(newPrep);
   };
@@ -108,10 +108,11 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
               </div>
               <div className="mb-3">
                 <label>Prep Scripts</label>
-                <ScriptsEditor
+                <PackagesEditor
+                  packageEntity="Script"
                   packageType="prep"
-                  scripts={prepRound.scripts}
-                  scriptsChanged={(scripts: Script[]) =>
+                  packages={prepRound.scripts}
+                  packagesChanged={(scripts: Package[]) =>
                     sourcePrepScriptsChangedHandler(scripts, prepRound)
                   }
                 />
@@ -129,10 +130,11 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
       </div>
       <div className="mb-3">
         <label>Man Prep Scripts</label>
-        <ScriptsEditor
+        <PackagesEditor
+          packageEntity="Script"
           packageType="prep_man"
-          scripts={prep.manPrepScripts}
-          scriptsChanged={(scripts: Script[]) =>
+          packages={prep.manPrepScripts}
+          packagesChanged={(scripts: Package[]) =>
             mapPrepScriptsChangedHandler(scripts)
           }
         />

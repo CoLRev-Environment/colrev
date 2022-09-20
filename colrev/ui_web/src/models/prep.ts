@@ -1,8 +1,8 @@
 import PrepRound from "./prepRound";
-import Script from "./script";
+import Package from "./package";
 
 export default class Prep {
   public fieldsToKeep: string[] = [];
   public prepRounds: PrepRound[] = [];
-  public manPrepScripts: Script[] = [];
+  public manPrepScripts: Package[] = [];
 }

@@ -1,4 +1,4 @@
-import Script from "./script";
+import Package from "./package";
 import SearchParameters from "./searchParameters";
 
 export default class Source {
@@ -7,6 +7,6 @@ export default class Source {
   public sourceName: string = "";
   public sourceIdentifier: string = "";
   public searchParameters: SearchParameters = new SearchParameters();
-  public loadConversionScript: Script = new Script();
+  public loadConversionScript: Package = new Package();
   public comment: string = "";
 }

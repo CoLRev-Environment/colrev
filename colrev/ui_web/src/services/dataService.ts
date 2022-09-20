@@ -12,10 +12,10 @@ import PdfGet from "../models/pdfGet";
 import PdfPrep from "../models/pdfPrep";
 import Screen from "../models/screen";
 import Search from "../models/search";
-import ScriptParameterType from "../models/scriptParameterType";
-import ScriptParameterDefinition from "../models/scriptParameterDefinition";
-import Script from "../models/script";
-import ScriptDefinition from "../models/scriptDefinition";
+import PackageParameterType from "../models/packageParameterType";
+import PackageParameterDefinition from "../models/packageParameterDefinition";
+import Package from "../models/package";
+import PackageDefinition from "../models/packageDefinition";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -205,10 +205,10 @@ const prepToSettings = (prep: Prep): any => {
 };
 
 const scriptsFromSettings = (settingsScripts: any) => {
-  const scripts: Script[] = [];
+  const scripts: Package[] = [];
 
   for (const settingsScript of settingsScripts) {
-    const script = new Script();
+    const script = new Package();
     script.endpoint = settingsScript.endpoint;
 
     const paramsMap = new Map(Object.entries(settingsScript));
@@ -221,7 +221,7 @@ const scriptsFromSettings = (settingsScripts: any) => {
   return scripts;
 };
 
-const scriptsToSettings = (scripts: Script[]) => {
+const scriptsToSettings = (scripts: Package[]) => {
   const settingsScripts: any[] = [];
 
   for (const script of scripts) {
@@ -345,15 +345,15 @@ const getOptions = async (): Promise<any> => {
 
 const getScriptDefinitions = async (
   packageType: string
-): Promise<ScriptDefinition[]> => {
+): Promise<PackageDefinition[]> => {
   const response = await httpService.get(
     `${apiEndpoint}/getScripts?packageType=${packageType}`
   );
 
-  const scriptDefinitions: ScriptDefinition[] = [];
+  const scriptDefinitions: PackageDefinition[] = [];
 
   for (const property in response.data) {
-    const scriptDefinition = new ScriptDefinition();
+    const scriptDefinition = new PackageDefinition();
     scriptDefinition.name = property;
 
     const propertyValues = response.data[property];
@@ -363,23 +363,23 @@ const getScriptDefinitions = async (
     scriptDefinitions.push(scriptDefinition);
   }
 
-  return Promise.resolve<ScriptDefinition[]>(scriptDefinitions);
+  return Promise.resolve<PackageDefinition[]>(scriptDefinitions);
 };
 
 const getScriptParameterDefinitions = async (
   packageType: string,
   packageIdentifier: string
-): Promise<ScriptParameterDefinition[]> => {
+): Promise<PackageParameterDefinition[]> => {
   const response = await httpService.get(
     `${apiEndpoint}/getScriptDetails?packageType=${packageType}&packageIdentifier=${packageIdentifier}&endpointVersion=1.0`
   );
 
-  const scriptParameterDefinitions: ScriptParameterDefinition[] = [];
+  const scriptParameterDefinitions: PackageParameterDefinition[] = [];
 
   const paramsMap = new Map(Object.entries(response.data.parameters));
 
   for (const [key, value] of Array.from<any>(paramsMap)) {
-    const param = new ScriptParameterDefinition();
+    const param = new PackageParameterDefinition();
     param.name = key;
     param.required = value.required;
     param.tooltip = value.tooltip;
@@ -390,30 +390,31 @@ const getScriptParameterDefinitions = async (
     scriptParameterDefinitions.push(param);
   }
 
-  return Promise.resolve<ScriptParameterDefinition[]>(
+  return Promise.resolve<PackageParameterDefinition[]>(
     scriptParameterDefinitions
   );
 };
 
-const getScriptParameterType = (parameterType: string): ScriptParameterType => {
-  let scriptParameterType = ScriptParameterType.String;
+const getScriptParameterType = (
+  parameterType: string
+): PackageParameterType => {
+  let scriptParameterType = PackageParameterType.String;
 
   switch (parameterType) {
     case "int":
-      scriptParameterType = ScriptParameterType.Int;
+      scriptParameterType = PackageParameterType.Int;
       break;
     case "float":
-      scriptParameterType = ScriptParameterType.Float;
+      scriptParameterType = PackageParameterType.Float;
       break;
     case "bool":
-      scriptParameterType = ScriptParameterType.Boolean;
+      scriptParameterType = PackageParameterType.Boolean;
       break;
     case "str":
-      scriptParameterType = ScriptParameterType.String;
+      scriptParameterType = PackageParameterType.String;
       break;
-    case "typing.Optional[dict]":
     case "typing.Optional[list]":
-      scriptParameterType = ScriptParameterType.StringList;
+      scriptParameterType = PackageParameterType.StringList;
       break;
   }
 
@@ -424,8 +425,8 @@ const dataService = {
   getSettings,
   saveSettings,
   getOptions,
-  getScriptDefinitions,
-  getScriptParameterDefinitions,
+  getPackageDefinitions: getScriptDefinitions,
+  getPackageParameterDefinitions: getScriptParameterDefinitions,
 };
 
 export default dataService;

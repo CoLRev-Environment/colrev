@@ -1,12 +1,12 @@
 import Data from "../../models/data";
-import Script from "../../models/script";
-import ScriptsEditor from "../scripts/ScriptsEditor";
+import Package from "../../models/package";
+import PackagesEditor from "../packages/PackagesEditor";
 
 const DataEditor: React.FC<{
   data: Data;
   dataChanged: any;
 }> = ({ data, dataChanged }) => {
-  const dataScriptsChangedHandler = (scripts: Script[]) => {
+  const dataScriptsChangedHandler = (scripts: Package[]) => {
     const newData = { ...data, scripts: scripts };
     dataChanged(newData);
   };
@@ -15,10 +15,11 @@ const DataEditor: React.FC<{
     <div>
       <div className="mb-3">
         <label>Scripts</label>
-        <ScriptsEditor
+        <PackagesEditor
+          packageEntity="Script"
           packageType="data"
-          scripts={data.scripts}
-          scriptsChanged={(scripts: Script[]) =>
+          packages={data.scripts}
+          packagesChanged={(scripts: Package[]) =>
             dataScriptsChangedHandler(scripts)
           }
         />

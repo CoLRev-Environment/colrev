@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Screen from "../../models/screen";
-import Script from "../../models/script";
-import ScriptsEditor from "../scripts/ScriptsEditor";
+import Package from "../../models/package";
+import PackagesEditor from "../packages/PackagesEditor";
 
 const ScreenEditor: React.FC<{
   screen: Screen;
@@ -26,7 +26,7 @@ const ScreenEditor: React.FC<{
     screenChanged(newScreen);
   };
 
-  const screenScriptsChangedHandler = (scripts: Script[]) => {
+  const screenScriptsChangedHandler = (scripts: Package[]) => {
     const newScreen = { ...screen, scripts: scripts };
     screenChanged(newScreen);
   };
@@ -45,10 +45,11 @@ const ScreenEditor: React.FC<{
       </div>
       <div className="mb-3">
         <label>Scripts</label>
-        <ScriptsEditor
+        <PackagesEditor
+          packageEntity="Script"
           packageType="screen"
-          scripts={screen.scripts}
-          scriptsChanged={(scripts: Script[]) =>
+          packages={screen.scripts}
+          packagesChanged={(scripts: Package[]) =>
             screenScriptsChangedHandler(scripts)
           }
         />

@@ -1,5 +1,5 @@
-import Script from "./script";
+import Package from "./package";
 
 export default class Data {
-  public scripts: Script[] = [];
+  public scripts: Package[] = [];
 }
