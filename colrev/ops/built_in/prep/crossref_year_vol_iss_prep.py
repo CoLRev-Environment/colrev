@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Completion of metadata based on Crossref API as a prep operation"""
 from __future__ import annotations
 
 import sys

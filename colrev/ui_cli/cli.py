@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+"""Command-line interface for CoLRev."""
 import datetime
 import logging
 import os

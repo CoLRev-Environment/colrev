@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Simple dedupe functionality (based on similarity thresholds) for small samples"""
 from __future__ import annotations
 
 from dataclasses import dataclass

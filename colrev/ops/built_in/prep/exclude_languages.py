@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

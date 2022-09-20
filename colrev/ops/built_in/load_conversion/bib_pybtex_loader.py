@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Load conversion of bib files using pybtex"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

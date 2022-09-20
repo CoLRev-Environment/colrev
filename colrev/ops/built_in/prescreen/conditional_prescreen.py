@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Conditional prescreen"""
 from __future__ import annotations
 
 import typing

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: ACM Digital Library"""
 from pathlib import Path
 
 import zope.interface

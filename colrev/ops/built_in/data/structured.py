@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Structured data extraction as part of the data operations"""
 from __future__ import annotations
 
 import csv

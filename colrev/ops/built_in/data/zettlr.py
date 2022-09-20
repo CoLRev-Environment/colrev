@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Creation of a Zettlr database as part of the data operations"""
 from __future__ import annotations
 
 import configparser

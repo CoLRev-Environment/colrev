@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: GoogleScholar"""
 from pathlib import Path
 
 import zope.interface

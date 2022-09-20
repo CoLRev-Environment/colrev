@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: LocalIndex"""
 import typing
 from pathlib import Path
 

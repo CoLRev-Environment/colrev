@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: Unknown source (default for all other sources)"""
 from enum import Enum
 from pathlib import Path
 

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Connectors to academic databases (APIs)"""
 from __future__ import annotations
 
 import html

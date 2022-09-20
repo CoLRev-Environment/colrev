@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Conceptual review"""
 import zope.interface
 from dacite import from_dict
 

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: Scopus"""
 from pathlib import Path
 
 import zope.interface

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Consolidation of metadata based on SemanticScholar API as a prep operation"""
 from __future__ import annotations
 
 import json

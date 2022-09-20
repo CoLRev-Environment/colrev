@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: AIS electronic Library"""
 from pathlib import Path
 
 import zope.interface

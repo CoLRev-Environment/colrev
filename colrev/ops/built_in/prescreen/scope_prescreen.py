@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Prescreen based on specified scope"""
 from __future__ import annotations
 
 import typing

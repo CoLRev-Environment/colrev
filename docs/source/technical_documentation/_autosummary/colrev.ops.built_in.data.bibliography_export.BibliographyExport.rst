@@ -19,3 +19,13 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.get_default_setup
       ~BibliographyExport.update_data
       ~BibliographyExport.update_record_status_matrix
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~BibliographyExport.endpoint_path

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Metadata validation as a PDF preparation operation"""
 from __future__ import annotations
 
 import re

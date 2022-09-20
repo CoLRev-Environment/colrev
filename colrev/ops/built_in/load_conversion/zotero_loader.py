@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Load conversion based on zotero importers (ris, rdf, json, mods, ...)"""
 from __future__ import annotations
 
 import json

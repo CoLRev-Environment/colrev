@@ -18,5 +18,6 @@ colrev.env.utils
       get_package_file_content
       inplace_change
       load_jinja_template
+      percent_upper_chars
       remove_accents
       retrieve_package_file

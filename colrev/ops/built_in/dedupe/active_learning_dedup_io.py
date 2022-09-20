@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Deduplication based on active learning (dedupe-io)"""
 from __future__ import annotations
 
 import os

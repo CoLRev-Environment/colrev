@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: backward search (based on PDFs and GROBID)"""
 import typing
 from pathlib import Path
 

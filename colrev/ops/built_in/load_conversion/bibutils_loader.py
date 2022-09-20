@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Load conversion of ris, end, enl, copac, isi, med based on bibutils"""
 from __future__ import annotations
 
 from pathlib import Path

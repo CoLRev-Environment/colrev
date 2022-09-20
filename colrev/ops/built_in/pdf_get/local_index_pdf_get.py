@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Retrieval of PDFs from the LocalIndex"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

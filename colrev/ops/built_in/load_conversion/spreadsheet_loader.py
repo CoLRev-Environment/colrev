@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Load conversion of spreadsheets (xlsx, csv)"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

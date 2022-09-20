@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Consolidation of metadata based on DOI metadata as a prep operation"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

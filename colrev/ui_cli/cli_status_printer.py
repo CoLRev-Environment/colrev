@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Scripts to print the CoLRev status (cli)."""
 import logging
 from time import sleep
 

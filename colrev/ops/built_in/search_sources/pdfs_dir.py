@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: directory containing PDF files (based on GROBID)"""
 import re
 import typing
 from collections import Counter

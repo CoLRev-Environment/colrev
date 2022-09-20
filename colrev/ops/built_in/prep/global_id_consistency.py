@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Checks of consistency between global IDs a prep operation"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

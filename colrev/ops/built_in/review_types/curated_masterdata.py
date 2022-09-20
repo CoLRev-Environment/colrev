@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Curated metadata project"""
 from pathlib import Path
 
 import zope.interface

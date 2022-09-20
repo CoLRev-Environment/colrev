@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Qualitative systematic review"""
 import zope.interface
 from dacite import from_dict
 

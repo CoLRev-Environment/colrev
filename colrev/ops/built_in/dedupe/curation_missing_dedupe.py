@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Deduplication of remaining records in curated metadata repositories"""
 from __future__ import annotations
 
 import typing
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
 class CurationMissingDedupe:
-    """Endpoint for deduplicating remaining records in a curated metadata repository"""
+    """Deduplication of remaining records in a curated metadata repository"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

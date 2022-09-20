@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
 import typing

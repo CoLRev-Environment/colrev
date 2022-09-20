@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Creation of a github-page for the review as part of the data operations"""
 from __future__ import annotations
 
 from dataclasses import dataclass

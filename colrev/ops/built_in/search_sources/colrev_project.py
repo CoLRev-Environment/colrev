@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: CoLRev project"""
 from pathlib import Path
 
 import pandas as pd

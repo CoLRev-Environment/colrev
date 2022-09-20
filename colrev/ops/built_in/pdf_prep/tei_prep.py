@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Creation of TEI as a PDF preparation operation"""
 from __future__ import annotations
 
 from pathlib import Path

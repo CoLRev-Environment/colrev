@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: Transport Research International Documentation"""
 from pathlib import Path
 
 import zope.interface

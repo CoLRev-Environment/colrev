@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Web-UI editor for CoLRev project settings"""
 from __future__ import annotations
 
 import json

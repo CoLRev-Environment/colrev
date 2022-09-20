@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Removal of broken IDs as a prep operation"""
 from __future__ import annotations
 
 import re

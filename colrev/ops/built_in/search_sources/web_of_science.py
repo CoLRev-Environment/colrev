@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: Web of Science"""
 from pathlib import Path
 
 import zope.interface

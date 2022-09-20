@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""SearchSource: Wiley"""
 from pathlib import Path
 
 import zope.interface

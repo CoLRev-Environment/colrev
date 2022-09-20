@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Meta-analysis"""
 import zope.interface
 from dacite import from_dict
 

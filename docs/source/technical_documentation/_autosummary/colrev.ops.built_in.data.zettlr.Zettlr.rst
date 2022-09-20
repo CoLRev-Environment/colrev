@@ -31,3 +31,5 @@ colrev.ops.built\_in.data.zettlr.Zettlr
       ~Zettlr.NEW_RECORD_SOURCE_TAG
       ~Zettlr.ZETTLR_CONFIG_PATH_RELATIVE
       ~Zettlr.ZETTLR_PATH_RELATIVE
+      ~Zettlr.zettlr_bib_item_resource_path
+      ~Zettlr.zettlr_resource_path

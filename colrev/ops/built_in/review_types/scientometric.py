@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Scientometric study"""
 import zope.interface
 from dacite import from_dict
 

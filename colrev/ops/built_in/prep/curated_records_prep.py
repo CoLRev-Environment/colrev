@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Setting curated records to md_prepared as a prep operation"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
