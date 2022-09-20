@@ -12,6 +12,7 @@ from enum import Enum
 from pathlib import Path
 
 import zope.interface
+from dataclasses_jsonschema import JsonSchemaMixin
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -50,12 +51,9 @@ class SearchSourcePackageInterface(
 ):  # pylint: disable=inherit-non-class
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
-    source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
-    source_identifier_search = zope.interface.Attribute(
-        """Source identifier for search (corretions?)"""
+    source_identifier = zope.interface.Attribute(
+        """Source identifier for search and provenance"""
     )
-
-    search_mode = zope.interface.Attribute("""Mode""")
 
     # pylint: disable=no-self-argument
     def run_search(search_operation) -> None:
@@ -216,12 +214,16 @@ class DataPackageInterface(
 
 
 @dataclass
-class DefaultSettings:
+class DefaultSettings(JsonSchemaMixin):
+    """Endpoint settings"""
+
     name: str
 
 
 @dataclass
-class DefaultSourceSettings:
+class DefaultSourceSettings(JsonSchemaMixin):
+    """Search source settings"""
+
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-instance-attributes
     name: str
@@ -372,78 +374,68 @@ class PackageManager:
         package_class = self.load_package_endpoint(
             package_type=package_type, package_identifier=package_identifier
         )
-        package_details["description"] = package_class.__doc__
-        package_details["parameters"] = {}
+
         settings_class = getattr(package_class, "settings_class", None)
+        package_details = settings_class.json_schema()  # type: ignore
+
         if settings_class is None:
             msg = f"{package_identifier} could not be loaded"
             raise colrev_exceptions.ServiceNotAvailableException(msg)
-
-        if "DefaultSettings" == settings_class.__name__ or not settings_class:
-            return package_details
 
         for parameter in [
             i for i in settings_class.__annotations__.keys() if i[:1] != "_"
         ]:
 
-            # default value: determined from class.__dict__
-            # merging_non_dup_threshold: float= 0.7
-            if parameter in settings_class.__dict__:
-                if parameter not in package_details["parameters"]:
-                    package_details["parameters"][parameter] = {}
-                package_details["parameters"][parameter][
-                    "default"
-                ] = settings_class.__dict__[parameter]
+            # # default value: determined from class.__dict__
+            # # merging_non_dup_threshold: float= 0.7
+            # if parameter in settings_class.__dict__:
+            #     if parameter not in package_details["parameters"]:
+            #         package_details["parameters"][parameter] = {}
+            #     package_details["parameters"][parameter][
+            #         "default"
+            #     ] = settings_class.__dict__[parameter]
 
-            # not required: determined from typing annotation
-            # variable_name: typing.Optional[str]
-            package_details["parameters"][parameter] = {"required": True}
-
-            # "type":
-            # determined from typing annotation
-            if parameter in settings_class.__annotations__:
-                type_annotation = settings_class.__annotations__[parameter]
-                if "typing.Optional" in type_annotation:
-                    package_details["parameters"][parameter]["required"] = False
-
-                if "typing.Optional[int]" == type_annotation:
-                    type_annotation = "int"
-                elif "typing.Optional[float]" == type_annotation:
-                    type_annotation = "float"
-                elif "typing.Optional[bool]" == type_annotation:
-                    # TODO : required=False for boolean?!
-                    type_annotation = "bool"
-                # typing.Optional[list] : multiple_selection?
-                package_details["parameters"][parameter]["type"] = type_annotation
+            # # not required: determined from typing annotation
+            # # variable_name: typing.Optional[str]
+            # package_details["parameters"][parameter] = {"required": True}
 
             # tooltip, min, max, options: determined from settings_class._details dict
             # Note : tooltips are not in docstrings because
             # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
             # pylint: disable=protected-access
-            if parameter in settings_class._details:
-                if "tooltip" in settings_class._details[parameter]:
-                    package_details["parameters"][parameter][
-                        "tooltip"
-                    ] = settings_class._details[parameter]["tooltip"]
 
-                if "min" in settings_class._details[parameter]:
-                    package_details["parameters"][parameter][
-                        "min"
-                    ] = settings_class._details[parameter]["min"]
+            if hasattr(settings_class, "_details"):
+                if parameter in settings_class._details:
+                    if "tooltip" in settings_class._details[parameter]:
+                        package_details["parameters"][parameter][
+                            "tooltip"
+                        ] = settings_class._details[parameter]["tooltip"]
 
-                if "max" in settings_class._details[parameter]:
-                    package_details["parameters"][parameter][
-                        "max"
-                    ] = settings_class._details[parameter]["max"]
+                    if "min" in settings_class._details[parameter]:
+                        package_details["parameters"][parameter][
+                            "min"
+                        ] = settings_class._details[parameter]["min"]
 
-                if "options" in settings_class._details[parameter]:
-                    package_details["parameters"][parameter][
-                        "options"
-                    ] = settings_class._details[parameter]["options"]
+                    if "max" in settings_class._details[parameter]:
+                        package_details["parameters"][parameter][
+                            "max"
+                        ] = settings_class._details[parameter]["max"]
+
+                    if "options" in settings_class._details[parameter]:
+                        package_details["parameters"][parameter][
+                            "options"
+                        ] = settings_class._details[parameter]["options"]
 
         # TODO apply validation when parsing settings during package init (based on _details)
 
         # TODO (later) : package version?
+
+        if PackageType.search_source == package_type:
+            package_details["properties"]["filename"] = {"type": "path"}
+            package_details["properties"]["load_conversion_script"] = {
+                "type": "script_array",
+                "script_type": "load_conversion",
+            }
 
         return package_details
 

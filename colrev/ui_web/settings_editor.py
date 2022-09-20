@@ -406,36 +406,117 @@ class SettingsEditor:
             # For testing:
             # Example: script_type="load"
             # Returns:
+            # discovered_packages = {
+            #     "bibtex": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
+            #         "installed": True,
+            #         "description": "Loads BibTeX files (based on pybtex)",
+            #     },
+            #     "csv": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
+            #         "installed": True,
+            #         "description": "Loads csv files (based on pandas)",
+            #     },
+            #     "excel": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
+            #         "installed": True,
+            #         "description": "Loads Excel (xls, xlsx) files (based on pandas)",
+            #     },
+            #     "zotero_translate": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
+            #         "installed": True,
+            #         "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
+            #     },
+            #     "md_to_bib": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
+            #         "installed": True,
+            #         "description": "Loads reference strings from text (md) files (based on GROBID)",
+            #     },
+            #     "bibutils": {
+            #         "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
+            #         "installed": True,
+            #         "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
+            #     },
+            # }
+
+            # For testing:
+            # Example: script_type="search_source"
+            # Returns:
             discovered_packages = {
-                "bibtex": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
+                "unknown_source": {
+                    "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
                     "installed": True,
-                    "description": "Loads BibTeX files (based on pybtex)",
+                    "description": None,
                 },
-                "csv": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
+                "crossref": {
+                    "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSourceSearchSource",
                     "installed": True,
-                    "description": "Loads csv files (based on pandas)",
+                    "description": "Performs a search using the Crossref API",
                 },
-                "excel": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
+                "dblp": {
+                    "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
                     "installed": True,
-                    "description": "Loads Excel (xls, xlsx) files (based on pandas)",
+                    "description": None,
                 },
-                "zotero_translate": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
+                "acm_digital_library": {
+                    "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
                     "installed": True,
-                    "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
+                    "description": None,
                 },
-                "md_to_bib": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
+                "pubmed": {
+                    "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
                     "installed": True,
-                    "description": "Loads reference strings from text (md) files (based on GROBID)",
+                    "description": None,
                 },
-                "bibutils": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
+                "wiley": {
+                    "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
                     "installed": True,
-                    "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
+                    "description": None,
+                },
+                "ais_library": {
+                    "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+                    "installed": True,
+                    "description": None,
+                },
+                "google_scholar": {
+                    "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
+                    "installed": True,
+                    "description": None,
+                },
+                "web_of_science": {
+                    "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
+                    "installed": True,
+                    "description": None,
+                },
+                "scopus": {
+                    "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
+                    "installed": True,
+                    "description": None,
+                },
+                "pdfs_dir": {
+                    "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
+                    "installed": True,
+                    "description": None,
+                },
+                "pdf_backward_search": {
+                    "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
+                    "installed": True,
+                    "description": "Performs a backward search extracting references from PDFs using GROBID\n    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)\n    ",
+                },
+                "colrev_project": {
+                    "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
+                    "installed": True,
+                    "description": "Performs a search in a CoLRev project",
+                },
+                "local_index": {
+                    "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+                    "installed": True,
+                    "description": "Performs a search in the LocalIndex",
+                },
+                "transport_research_international_documentation": {
+                    "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation",
+                    "installed": True,
+                    "description": None,
                 },
             }
 
@@ -457,51 +538,92 @@ class SettingsEditor:
             # For testing:
             # Example: script_type="prescreen", script_name="scope_prescreen"
             # Returns:
+            # package_details = {
+            #     "name": "scope_prescreen",
+            #     "description": "Prescreens records based on predefined rules (scope)",
+            #     "parameters": {
+            #         "name": {"required": True, "type": "str"},
+            #         "TimeScopeFrom": {
+            #             "required": False,
+            #             "type": "int",
+            #             "tooltip": "Lower bound for the time scope",
+            #             "min": 1900,
+            #             "max": 2050,
+            #         },
+            #         "TimeScopeTo": {
+            #             "required": False,
+            #             "type": "int",
+            #             "tooltip": "Upper bound for the time scope",
+            #             "min": 1900,
+            #             "max": 2050,
+            #         },
+            #         "LanguageScope": {
+            #             "required": False,
+            #             "type": "typing.Optional[list]",
+            #             "tooltip": "Language scope",
+            #         },
+            #         "ExcludeComplementaryMaterials": {
+            #             "required": False,
+            #             "type": "bool",
+            #             "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
+            #         },
+            #         "OutletInclusionScope": {
+            #             "required": False,
+            #             "type": "typing.Optional[dict]",
+            #             "tooltip": "Particular outlets that should be included (exclusively)",
+            #         },
+            #         "OutletExclusionScope": {
+            #             "required": False,
+            #             "type": "typing.Optional[dict]",
+            #             "tooltip": "Particular outlets that should be excluded",
+            #         },
+            #         "ENTRYTYPEScope": {
+            #             "required": False,
+            #             "type": "typing.Optional[list]",
+            #             "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
+            #         },
+            #     },
+            # }
+
+            # For testing:
+            # Example: script_type="search_source", script_name="crossref"
+            # Returns:
             package_details = {
-                "name": "scope_prescreen",
-                "description": "Prescreens records based on predefined rules (scope)",
-                "parameters": {
-                    "name": {"required": True, "type": "str"},
-                    "TimeScopeFrom": {
-                        "required": False,
-                        "type": "int",
-                        "tooltip": "Lower bound for the time scope",
-                        "min": 1900,
-                        "max": 2050,
+                "type": "object",
+                "required": [
+                    "name",
+                    "filename",
+                    "search_type",
+                    "source_name",
+                    "source_identifier",
+                    "search_parameters",
+                    "load_conversion_script",
+                ],
+                "properties": {
+                    "name": {"type": "string"},
+                    "filename": {"type": "path"},
+                    "search_type": {
+                        "type": "string",
+                        "enum": [
+                            "DB",
+                            "TOC",
+                            "BACKWARD_SEARCH",
+                            "FORWARD_SEARCH",
+                            "PDFS",
+                            "OTHER",
+                        ],
                     },
-                    "TimeScopeTo": {
-                        "required": False,
-                        "type": "int",
-                        "tooltip": "Upper bound for the time scope",
-                        "min": 1900,
-                        "max": 2050,
+                    "source_name": {"type": "string"},
+                    "source_identifier": {"type": "string"},
+                    "search_parameters": {"type": "object", "additionalProperties": {}},
+                    "load_conversion_script": {
+                        "type": "script_array",
+                        "script_type": "load_conversion",
                     },
-                    "LanguageScope": {
-                        "required": False,
-                        "type": "typing.Optional[list]",
-                        "tooltip": "Language scope",
-                    },
-                    "ExcludeComplementaryMaterials": {
-                        "required": False,
-                        "type": "bool",
-                        "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
-                    },
-                    "OutletInclusionScope": {
-                        "required": False,
-                        "type": "typing.Optional[dict]",
-                        "tooltip": "Particular outlets that should be included (exclusively)",
-                    },
-                    "OutletExclusionScope": {
-                        "required": False,
-                        "type": "typing.Optional[dict]",
-                        "tooltip": "Particular outlets that should be excluded",
-                    },
-                    "ENTRYTYPEScope": {
-                        "required": False,
-                        "type": "typing.Optional[list]",
-                        "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
-                    },
+                    "comment": {"type": "string"},
                 },
+                "description": "Search source settings",
+                "$schema": "http://json-schema.org/draft-06/schema#",
             }
 
             return jsonify(package_details)

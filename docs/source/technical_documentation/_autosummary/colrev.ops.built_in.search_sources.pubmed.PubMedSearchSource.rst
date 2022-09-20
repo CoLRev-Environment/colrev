@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~PubMedSearchSource.all_json_schemas
+      ~PubMedSearchSource.field_mapping
+      ~PubMedSearchSource.from_dict
+      ~PubMedSearchSource.from_json
+      ~PubMedSearchSource.from_object
       ~PubMedSearchSource.heuristic
+      ~PubMedSearchSource.json_schema
       ~PubMedSearchSource.load_fixes
       ~PubMedSearchSource.prepare
+      ~PubMedSearchSource.register_field_encoders
       ~PubMedSearchSource.run_search
+      ~PubMedSearchSource.to_dict
+      ~PubMedSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
 
    .. autosummary::
 
-      ~PubMedSearchSource.search_mode
       ~PubMedSearchSource.source_identifier
-      ~PubMedSearchSource.source_identifier_search

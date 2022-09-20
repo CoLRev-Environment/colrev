@@ -670,7 +670,7 @@ class Load(colrev.process.Process):
                     filename=filepath,
                     search_type=search_type,
                     source_name=source_name,
-                    source_identifier=res["source_identifier"],
+                    source_identifier=endpoint.source_identifier,  # type: ignore
                     search_parameters={},
                     load_conversion_script=res["load_conversion_script"],
                     comment="",

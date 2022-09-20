@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~DBLPSearchSource.all_json_schemas
+      ~DBLPSearchSource.field_mapping
+      ~DBLPSearchSource.from_dict
+      ~DBLPSearchSource.from_json
+      ~DBLPSearchSource.from_object
       ~DBLPSearchSource.heuristic
+      ~DBLPSearchSource.json_schema
       ~DBLPSearchSource.load_fixes
       ~DBLPSearchSource.prepare
+      ~DBLPSearchSource.register_field_encoders
       ~DBLPSearchSource.run_search
+      ~DBLPSearchSource.to_dict
+      ~DBLPSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
 
    .. autosummary::
 
-      ~DBLPSearchSource.search_mode
       ~DBLPSearchSource.source_identifier
-      ~DBLPSearchSource.source_identifier_search

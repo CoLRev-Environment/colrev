@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: Crossref"""
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -18,14 +20,13 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class CrossrefSourceSearchSource:
+@dataclass
+class CrossrefSourceSearchSource(JsonSchemaMixin):
     """Performs a search using the Crossref API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{doi}}"
 
-    source_identifier_search = "https://api.crossref.org/works/{{doi}}"
-    search_mode = "all"
+    source_identifier = "https://api.crossref.org/works/{{doi}}"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         if not any(
@@ -35,6 +36,12 @@ class CrossrefSourceSearchSource:
             raise colrev_exceptions.InvalidQueryException(
                 "Crossref search_parameters/scope requires a query or journal_issn field"
             )
+
+        assert settings["search_type"] in [
+            colrev.settings.SearchType.DB,
+            colrev.settings.SearchType.TOC,
+        ]
+        assert settings["source_identifier"] == self.source_identifier
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
@@ -138,8 +145,8 @@ class CrossrefSourceSearchSource:
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        # TODO
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        # TODO : should return the source_name (not the source_identifier?!?!)
+        result = {"confidence": 0.0}
 
         return result
 

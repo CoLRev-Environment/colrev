@@ -8,6 +8,7 @@ from pathlib import Path
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -20,12 +21,10 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class DBLPSearchSource:
+@dataclass
+class DBLPSearchSource(JsonSchemaMixin):
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{biburl}}"
-
-    source_identifier_search = "{{dblp_key}}"
-    search_mode = "all"
+    source_identifier = "{{dblp_key}}"
 
     @dataclass
     class DBLPSearchSourceSettings:
@@ -195,7 +194,7 @@ class DBLPSearchSource:
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
             result["confidence"] = 1.0

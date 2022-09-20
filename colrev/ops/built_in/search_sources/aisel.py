@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: AIS electronic Library"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -31,20 +33,19 @@ def apply_field_mapping(
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class AISeLibrarySearchSource:
+@dataclass
+class AISeLibrarySearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
     source_identifier = "https://aisel.aisnet.org/"
-    source_identifier_search = "https://aisel.aisnet.org/"
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
         # TBD: aisel does not return bibtex?!
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         nr_items = data.count("\n@")

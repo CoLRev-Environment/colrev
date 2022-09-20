@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~GoogleScholarSearchSource.all_json_schemas
+      ~GoogleScholarSearchSource.field_mapping
+      ~GoogleScholarSearchSource.from_dict
+      ~GoogleScholarSearchSource.from_json
+      ~GoogleScholarSearchSource.from_object
       ~GoogleScholarSearchSource.heuristic
+      ~GoogleScholarSearchSource.json_schema
       ~GoogleScholarSearchSource.load_fixes
       ~GoogleScholarSearchSource.prepare
+      ~GoogleScholarSearchSource.register_field_encoders
       ~GoogleScholarSearchSource.run_search
+      ~GoogleScholarSearchSource.to_dict
+      ~GoogleScholarSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
 
    .. autosummary::
 
-      ~GoogleScholarSearchSource.search_mode
       ~GoogleScholarSearchSource.source_identifier
-      ~GoogleScholarSearchSource.source_identifier_search

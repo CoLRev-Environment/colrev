@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~PDFSearchSource.all_json_schemas
+      ~PDFSearchSource.field_mapping
+      ~PDFSearchSource.from_dict
+      ~PDFSearchSource.from_json
+      ~PDFSearchSource.from_object
       ~PDFSearchSource.heuristic
+      ~PDFSearchSource.json_schema
       ~PDFSearchSource.load_fixes
       ~PDFSearchSource.prepare
+      ~PDFSearchSource.register_field_encoders
       ~PDFSearchSource.run_search
+      ~PDFSearchSource.to_dict
+      ~PDFSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
 
    .. autosummary::
 
-      ~PDFSearchSource.search_mode
       ~PDFSearchSource.source_identifier
-      ~PDFSearchSource.source_identifier_search

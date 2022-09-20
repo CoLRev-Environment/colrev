@@ -3,10 +3,12 @@
 import re
 import typing
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from p_tqdm import p_map
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import resolve1
@@ -24,11 +26,10 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class PDFSearchSource:
+@dataclass
+class PDFSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
-    source_identifier_search = "{{file}}"
-    search_mode = "all"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
 
@@ -532,7 +533,7 @@ class PDFSearchSource:
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         if filename.suffix == ".pdf" and not bws.BackwardSearchSource.heuristic(
             filename=filename, data=data
