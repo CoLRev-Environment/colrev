@@ -542,50 +542,49 @@ class SettingsEditor:
                 # Example: script_type="prescreen", script_name="scope_prescreen"
                 # Returns:
                 package_details = {
-                    "name": "scope_prescreen",
-                    "description": "Prescreens records based on predefined rules (scope)",
-                    "parameters": {
-                        "name": {"required": True, "type": "str"},
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {"type": "string"},
                         "TimeScopeFrom": {
-                            "required": False,
-                            "type": "int",
+                            "type": "integer",
                             "tooltip": "Lower bound for the time scope",
                             "min": 1900,
                             "max": 2050,
                         },
                         "TimeScopeTo": {
-                            "required": False,
-                            "type": "int",
+                            "type": "integer",
                             "tooltip": "Upper bound for the time scope",
                             "min": 1900,
                             "max": 2050,
                         },
                         "LanguageScope": {
-                            "required": False,
-                            "type": "typing.Optional[list]",
+                            "type": "array",
+                            "items": {},
                             "tooltip": "Language scope",
                         },
                         "ExcludeComplementaryMaterials": {
-                            "required": False,
-                            "type": "bool",
+                            "type": "boolean",
                             "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
                         },
                         "OutletInclusionScope": {
-                            "required": False,
-                            "type": "typing.Optional[dict]",
+                            "type": "object",
+                            "additionalProperties": {},
                             "tooltip": "Particular outlets that should be included (exclusively)",
                         },
                         "OutletExclusionScope": {
-                            "required": False,
-                            "type": "typing.Optional[dict]",
+                            "type": "object",
+                            "additionalProperties": {},
                             "tooltip": "Particular outlets that should be excluded",
                         },
                         "ENTRYTYPEScope": {
-                            "required": False,
-                            "type": "typing.Optional[list]",
+                            "type": "array",
+                            "items": {},
                             "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
                         },
                     },
+                    "description": "ScopePrescreenSettings",
+                    "$schema": "http://json-schema.org/draft-06/schema#",
                 }
 
             if package_type_string == "search_source":
@@ -619,7 +618,10 @@ class SettingsEditor:
                         },
                         "source_name": {"type": "string"},
                         "source_identifier": {"type": "string"},
-                        "search_parameters": {"type": "object", "additionalProperties": {}},
+                        "search_parameters": {
+                            "type": "object",
+                            "additionalProperties": {},
+                        },
                         "load_conversion_script": {
                             "type": "script_array",
                             "script_type": "load_conversion",

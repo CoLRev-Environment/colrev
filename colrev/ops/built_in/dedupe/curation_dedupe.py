@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -26,13 +27,14 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class CurationDedupe:
+@dataclass
+class CurationDedupe(JsonSchemaMixin):
     """Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
     @dataclass
-    class CurationDedupeSettings:
+    class CurationDedupeSettings(JsonSchemaMixin):
         name: str
         selected_source: str
 

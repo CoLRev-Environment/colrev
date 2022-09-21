@@ -2,12 +2,14 @@
 """Consolidation of metadata based on DBLP API as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -22,7 +24,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class DBLPMetadataPrep:
+@dataclass
+class DBLPMetadataPrep(JsonSchemaMixin):
     """Prepares records based on dblp.org metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

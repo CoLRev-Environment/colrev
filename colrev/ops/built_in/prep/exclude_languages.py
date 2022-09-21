@@ -2,12 +2,14 @@
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pycountry
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from lingua.builder import LanguageDetectorBuilder
 
 import colrev.env.package_manager
@@ -22,7 +24,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class ExcludeLanguagesPrep:
+@dataclass
+class ExcludeLanguagesPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that are not in the languages_to_include"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

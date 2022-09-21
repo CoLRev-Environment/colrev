@@ -2,10 +2,12 @@
 """Retrieval of PDFs from the LocalIndex"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -18,7 +20,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
-class LocalIndexPDFGet:
+@dataclass
+class LocalIndexPDFGet(JsonSchemaMixin):
     """Get PDFs from LocalIndex"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

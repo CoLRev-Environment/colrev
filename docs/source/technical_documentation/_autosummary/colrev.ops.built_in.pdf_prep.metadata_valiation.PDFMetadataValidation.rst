@@ -16,5 +16,14 @@ colrev.ops.built\_in.pdf\_prep.metadata\_valiation.PDFMetadataValidation
    .. autosummary::
       :nosignatures:
 
+      ~PDFMetadataValidation.all_json_schemas
+      ~PDFMetadataValidation.field_mapping
+      ~PDFMetadataValidation.from_dict
+      ~PDFMetadataValidation.from_json
+      ~PDFMetadataValidation.from_object
+      ~PDFMetadataValidation.json_schema
       ~PDFMetadataValidation.prep_pdf
+      ~PDFMetadataValidation.register_field_encoders
+      ~PDFMetadataValidation.to_dict
+      ~PDFMetadataValidation.to_json
       ~PDFMetadataValidation.validates_based_on_metadata

@@ -16,4 +16,13 @@ colrev.ops.built\_in.pdf\_prep.tei\_prep.TEIPDFPrep
    .. autosummary::
       :nosignatures:
 
+      ~TEIPDFPrep.all_json_schemas
+      ~TEIPDFPrep.field_mapping
+      ~TEIPDFPrep.from_dict
+      ~TEIPDFPrep.from_json
+      ~TEIPDFPrep.from_object
+      ~TEIPDFPrep.json_schema
       ~TEIPDFPrep.prep_pdf
+      ~TEIPDFPrep.register_field_encoders
+      ~TEIPDFPrep.to_dict
+      ~TEIPDFPrep.to_json

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.pdf_prep.metadata_valiation
@@ -24,7 +26,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class CurationMissingDedupe:
+@dataclass
+class CurationMissingDedupe(JsonSchemaMixin):
     """Deduplication of remaining records in a curated metadata repository"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

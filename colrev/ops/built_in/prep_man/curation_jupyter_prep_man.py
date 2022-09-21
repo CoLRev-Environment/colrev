@@ -2,11 +2,13 @@
 """Jupyter notebook for prep-man operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -20,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
-class CurationJupyterNotebookManPrep:
+@dataclass
+class CurationJupyterNotebookManPrep(JsonSchemaMixin):
     """Manual preparation based on a Jupyter Notebook"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

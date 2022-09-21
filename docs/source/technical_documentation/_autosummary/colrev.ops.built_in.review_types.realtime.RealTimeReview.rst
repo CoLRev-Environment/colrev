@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.realtime.RealTimeReview
    .. autosummary::
       :nosignatures:
 
+      ~RealTimeReview.all_json_schemas
+      ~RealTimeReview.field_mapping
+      ~RealTimeReview.from_dict
+      ~RealTimeReview.from_json
+      ~RealTimeReview.from_object
       ~RealTimeReview.initialize
+      ~RealTimeReview.json_schema
+      ~RealTimeReview.register_field_encoders
+      ~RealTimeReview.to_dict
+      ~RealTimeReview.to_json

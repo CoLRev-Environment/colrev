@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 """Curated metadata project"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -16,7 +18,8 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.ReviewTypePackageInterface)
-class CuratedMasterdata:
+@dataclass
+class CuratedMasterdata(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

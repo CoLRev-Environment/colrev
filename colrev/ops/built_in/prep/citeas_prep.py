@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class CiteAsPrep:
+@dataclass
+class CiteAsPrep(JsonSchemaMixin):
     """Prepares records based on citeas.org metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

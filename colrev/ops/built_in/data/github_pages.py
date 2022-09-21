@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -20,11 +21,12 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class GithubPages:
+@dataclass
+class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
 
     @dataclass
-    class GHPagesSettings:
+    class GHPagesSettings(JsonSchemaMixin):
         name: str
         version: str
         auto_push: bool

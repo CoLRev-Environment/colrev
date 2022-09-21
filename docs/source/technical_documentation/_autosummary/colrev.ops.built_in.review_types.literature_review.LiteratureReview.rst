@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.literature\_review.LiteratureReview
    .. autosummary::
       :nosignatures:
 
+      ~LiteratureReview.all_json_schemas
+      ~LiteratureReview.field_mapping
+      ~LiteratureReview.from_dict
+      ~LiteratureReview.from_json
+      ~LiteratureReview.from_object
       ~LiteratureReview.initialize
+      ~LiteratureReview.json_schema
+      ~LiteratureReview.register_field_encoders
+      ~LiteratureReview.to_dict
+      ~LiteratureReview.to_json

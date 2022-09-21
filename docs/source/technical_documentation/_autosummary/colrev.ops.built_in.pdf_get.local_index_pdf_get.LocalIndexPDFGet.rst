@@ -16,4 +16,13 @@ colrev.ops.built\_in.pdf\_get.local\_index\_pdf\_get.LocalIndexPDFGet
    .. autosummary::
       :nosignatures:
 
+      ~LocalIndexPDFGet.all_json_schemas
+      ~LocalIndexPDFGet.field_mapping
+      ~LocalIndexPDFGet.from_dict
+      ~LocalIndexPDFGet.from_json
+      ~LocalIndexPDFGet.from_object
       ~LocalIndexPDFGet.get_pdf
+      ~LocalIndexPDFGet.json_schema
+      ~LocalIndexPDFGet.register_field_encoders
+      ~LocalIndexPDFGet.to_dict
+      ~LocalIndexPDFGet.to_json

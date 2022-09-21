@@ -16,4 +16,13 @@ colrev.ops.built\_in.prep\_man.prep\_man\_export.ExportManPrep
    .. autosummary::
       :nosignatures:
 
+      ~ExportManPrep.all_json_schemas
+      ~ExportManPrep.field_mapping
+      ~ExportManPrep.from_dict
+      ~ExportManPrep.from_json
+      ~ExportManPrep.from_object
+      ~ExportManPrep.json_schema
       ~ExportManPrep.prepare_manual
+      ~ExportManPrep.register_field_encoders
+      ~ExportManPrep.to_dict
+      ~ExportManPrep.to_json

@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets.ExcludeNonLatinAlphabet
    .. autosummary::
       :nosignatures:
 
+      ~ExcludeNonLatinAlphabetsPrep.all_json_schemas
+      ~ExcludeNonLatinAlphabetsPrep.field_mapping
+      ~ExcludeNonLatinAlphabetsPrep.from_dict
+      ~ExcludeNonLatinAlphabetsPrep.from_json
+      ~ExcludeNonLatinAlphabetsPrep.from_object
+      ~ExcludeNonLatinAlphabetsPrep.json_schema
       ~ExcludeNonLatinAlphabetsPrep.prepare
+      ~ExcludeNonLatinAlphabetsPrep.register_field_encoders
+      ~ExcludeNonLatinAlphabetsPrep.to_dict
+      ~ExcludeNonLatinAlphabetsPrep.to_json
 
 
 

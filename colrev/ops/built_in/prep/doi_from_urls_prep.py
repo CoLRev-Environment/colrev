@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import collections
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -24,7 +26,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class DOIFromURLsPrep:
+@dataclass
+class DOIFromURLsPrep(JsonSchemaMixin):
     """Prepares records by retrieving its DOI from the website (URL)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

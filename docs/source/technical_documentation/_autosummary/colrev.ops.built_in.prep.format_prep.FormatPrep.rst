@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.format\_prep.FormatPrep
    .. autosummary::
       :nosignatures:
 
+      ~FormatPrep.all_json_schemas
+      ~FormatPrep.field_mapping
+      ~FormatPrep.from_dict
+      ~FormatPrep.from_json
+      ~FormatPrep.from_object
+      ~FormatPrep.json_schema
       ~FormatPrep.prepare
+      ~FormatPrep.register_field_encoders
+      ~FormatPrep.to_dict
+      ~FormatPrep.to_json
 
 
 

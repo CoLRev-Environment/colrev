@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
    .. autosummary::
       :nosignatures:
 
+      ~OpenLibraryMetadataPrep.all_json_schemas
+      ~OpenLibraryMetadataPrep.field_mapping
+      ~OpenLibraryMetadataPrep.from_dict
+      ~OpenLibraryMetadataPrep.from_json
+      ~OpenLibraryMetadataPrep.from_object
+      ~OpenLibraryMetadataPrep.json_schema
       ~OpenLibraryMetadataPrep.prepare
+      ~OpenLibraryMetadataPrep.register_field_encoders
+      ~OpenLibraryMetadataPrep.to_dict
+      ~OpenLibraryMetadataPrep.to_json
 
 
 

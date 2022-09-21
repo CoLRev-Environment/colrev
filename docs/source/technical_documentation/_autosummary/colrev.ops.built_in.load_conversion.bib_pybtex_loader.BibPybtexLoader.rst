@@ -16,7 +16,16 @@ colrev.ops.built\_in.load\_conversion.bib\_pybtex\_loader.BibPybtexLoader
    .. autosummary::
       :nosignatures:
 
+      ~BibPybtexLoader.all_json_schemas
+      ~BibPybtexLoader.field_mapping
+      ~BibPybtexLoader.from_dict
+      ~BibPybtexLoader.from_json
+      ~BibPybtexLoader.from_object
+      ~BibPybtexLoader.json_schema
       ~BibPybtexLoader.load
+      ~BibPybtexLoader.register_field_encoders
+      ~BibPybtexLoader.to_dict
+      ~BibPybtexLoader.to_json
 
 
 

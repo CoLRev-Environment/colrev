@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.critical\_review.CriticalReview
    .. autosummary::
       :nosignatures:
 
+      ~CriticalReview.all_json_schemas
+      ~CriticalReview.field_mapping
+      ~CriticalReview.from_dict
+      ~CriticalReview.from_json
+      ~CriticalReview.from_object
       ~CriticalReview.initialize
+      ~CriticalReview.json_schema
+      ~CriticalReview.register_field_encoders
+      ~CriticalReview.to_dict
+      ~CriticalReview.to_json

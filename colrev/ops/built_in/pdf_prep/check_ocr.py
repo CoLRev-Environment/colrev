@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from lingua.builder import LanguageDetectorBuilder
 
 import colrev.env.package_manager
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class PDFCheckOCR:
+@dataclass
+class PDFCheckOCR(JsonSchemaMixin):
     """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

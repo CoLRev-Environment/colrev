@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
    .. autosummary::
       :nosignatures:
 
+      ~TheoreticalReview.all_json_schemas
+      ~TheoreticalReview.field_mapping
+      ~TheoreticalReview.from_dict
+      ~TheoreticalReview.from_json
+      ~TheoreticalReview.from_object
       ~TheoreticalReview.initialize
+      ~TheoreticalReview.json_schema
+      ~TheoreticalReview.register_field_encoders
+      ~TheoreticalReview.to_dict
+      ~TheoreticalReview.to_json

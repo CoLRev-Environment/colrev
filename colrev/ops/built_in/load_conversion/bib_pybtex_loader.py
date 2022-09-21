@@ -2,10 +2,12 @@
 """Load conversion of bib files using pybtex"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
@@ -17,7 +19,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
-class BibPybtexLoader:
+@dataclass
+class BibPybtexLoader(JsonSchemaMixin):
+
     """Loads BibTeX files (based on pybtex)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

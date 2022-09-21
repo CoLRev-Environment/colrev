@@ -2,11 +2,13 @@
 """Load conversion of spreadsheets (xlsx, csv)"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -100,7 +102,9 @@ class SpreadsheetLoadUtility:
 
 
 @zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
-class CSVLoader:
+@dataclass
+class CSVLoader(JsonSchemaMixin):
+
     """Loads csv files (based on pandas)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

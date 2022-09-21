@@ -16,5 +16,14 @@ colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
    .. autosummary::
       :nosignatures:
 
+      ~CoLRevCLIScreen.all_json_schemas
+      ~CoLRevCLIScreen.field_mapping
+      ~CoLRevCLIScreen.from_dict
+      ~CoLRevCLIScreen.from_json
+      ~CoLRevCLIScreen.from_object
+      ~CoLRevCLIScreen.json_schema
+      ~CoLRevCLIScreen.register_field_encoders
       ~CoLRevCLIScreen.run_screen
       ~CoLRevCLIScreen.screen_cli
+      ~CoLRevCLIScreen.to_dict
+      ~CoLRevCLIScreen.to_json

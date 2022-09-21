@@ -16,7 +16,16 @@ colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidatio
    .. autosummary::
       :nosignatures:
 
+      ~PDFCompletenessValidation.all_json_schemas
+      ~PDFCompletenessValidation.field_mapping
+      ~PDFCompletenessValidation.from_dict
+      ~PDFCompletenessValidation.from_json
+      ~PDFCompletenessValidation.from_object
+      ~PDFCompletenessValidation.json_schema
       ~PDFCompletenessValidation.prep_pdf
+      ~PDFCompletenessValidation.register_field_encoders
+      ~PDFCompletenessValidation.to_dict
+      ~PDFCompletenessValidation.to_json
 
 
 

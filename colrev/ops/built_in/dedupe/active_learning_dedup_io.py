@@ -15,6 +15,7 @@ import pandas as pd
 import psutil
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from dedupe._typing import RecordDictPair as TrainingExample
 from dedupe._typing import TrainingData
 from dedupe.core import unique
@@ -33,7 +34,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class ActiveLearningDedupeTraining:
+@dataclass
+class ActiveLearningDedupeTraining(JsonSchemaMixin):
     """Active learning: training phase (minimum sample size of 50 required)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -427,11 +429,12 @@ class ActiveLearningDedupeTraining:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class ActiveLearningDedupeAutomated:
+@dataclass
+class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     """Applies trained (active learning) model"""
 
     @dataclass
-    class ActiveLearningSettings:
+    class ActiveLearningSettings(JsonSchemaMixin):
         name: str
         merge_threshold: float = 0.8
         partition_threshold: float = 0.5

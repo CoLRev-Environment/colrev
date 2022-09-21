@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.correct\_record\_type\_prep.CorrectRecordTypePrep
    .. autosummary::
       :nosignatures:
 
+      ~CorrectRecordTypePrep.all_json_schemas
+      ~CorrectRecordTypePrep.field_mapping
+      ~CorrectRecordTypePrep.from_dict
+      ~CorrectRecordTypePrep.from_json
+      ~CorrectRecordTypePrep.from_object
+      ~CorrectRecordTypePrep.json_schema
       ~CorrectRecordTypePrep.prepare
+      ~CorrectRecordTypePrep.register_field_encoders
+      ~CorrectRecordTypePrep.to_dict
+      ~CorrectRecordTypePrep.to_json
 
 
 

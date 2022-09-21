@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.doi\_metadata\_prep.DOIMetadataPrep
    .. autosummary::
       :nosignatures:
 
+      ~DOIMetadataPrep.all_json_schemas
+      ~DOIMetadataPrep.field_mapping
+      ~DOIMetadataPrep.from_dict
+      ~DOIMetadataPrep.from_json
+      ~DOIMetadataPrep.from_object
+      ~DOIMetadataPrep.json_schema
       ~DOIMetadataPrep.prepare
+      ~DOIMetadataPrep.register_field_encoders
+      ~DOIMetadataPrep.to_dict
+      ~DOIMetadataPrep.to_json
 
 
 

@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.remove\_nicknames.RemoveNicknamesPrep
    .. autosummary::
       :nosignatures:
 
+      ~RemoveNicknamesPrep.all_json_schemas
+      ~RemoveNicknamesPrep.field_mapping
+      ~RemoveNicknamesPrep.from_dict
+      ~RemoveNicknamesPrep.from_json
+      ~RemoveNicknamesPrep.from_object
+      ~RemoveNicknamesPrep.json_schema
       ~RemoveNicknamesPrep.prepare
+      ~RemoveNicknamesPrep.register_field_encoders
+      ~RemoveNicknamesPrep.to_dict
+      ~RemoveNicknamesPrep.to_json
 
 
 

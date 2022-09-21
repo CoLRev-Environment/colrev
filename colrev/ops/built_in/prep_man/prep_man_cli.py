@@ -2,10 +2,12 @@
 """CLI interface for prep-man operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -19,7 +21,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
-class CoLRevCLIManPrep:
+@dataclass
+class CoLRevCLIManPrep(JsonSchemaMixin):
     """Manual preparation using the CLI (Not yet implemented)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

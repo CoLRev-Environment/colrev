@@ -407,22 +407,22 @@ class PackageManager:
             if hasattr(settings_class, "_details"):
                 if parameter in settings_class._details:
                     if "tooltip" in settings_class._details[parameter]:
-                        package_details["parameters"][parameter][
+                        package_details["properties"][parameter][
                             "tooltip"
                         ] = settings_class._details[parameter]["tooltip"]
 
                     if "min" in settings_class._details[parameter]:
-                        package_details["parameters"][parameter][
+                        package_details["properties"][parameter][
                             "min"
                         ] = settings_class._details[parameter]["min"]
 
                     if "max" in settings_class._details[parameter]:
-                        package_details["parameters"][parameter][
+                        package_details["properties"][parameter][
                             "max"
                         ] = settings_class._details[parameter]["max"]
 
                     if "options" in settings_class._details[parameter]:
-                        package_details["parameters"][parameter][
+                        package_details["properties"][parameter][
                             "options"
                         ] = settings_class._details[parameter]["options"]
 

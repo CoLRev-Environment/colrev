@@ -16,7 +16,16 @@ colrev.ops.built\_in.load\_conversion.markdown\_loader.MarkdownLoader
    .. autosummary::
       :nosignatures:
 
+      ~MarkdownLoader.all_json_schemas
+      ~MarkdownLoader.field_mapping
+      ~MarkdownLoader.from_dict
+      ~MarkdownLoader.from_json
+      ~MarkdownLoader.from_object
+      ~MarkdownLoader.json_schema
       ~MarkdownLoader.load
+      ~MarkdownLoader.register_field_encoders
+      ~MarkdownLoader.to_dict
+      ~MarkdownLoader.to_json
 
 
 

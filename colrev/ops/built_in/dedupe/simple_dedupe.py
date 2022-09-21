@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -24,11 +25,12 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class SimpleDedupe:
+@dataclass
+class SimpleDedupe(JsonSchemaMixin):
     """Simple duplicate identification (for small sample sizes)"""
 
     @dataclass
-    class SimpleDedupeSettings:
+    class SimpleDedupeSettings(JsonSchemaMixin):
         name: str
         merging_non_dup_threshold: float = 0.7
         merging_dup_threshold: float = 0.95

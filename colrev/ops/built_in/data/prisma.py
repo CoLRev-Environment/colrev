@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -20,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class PRISMA:
+@dataclass
+class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

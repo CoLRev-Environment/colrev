@@ -2,11 +2,13 @@
 """Conslidation of metadata based on LocalIndex as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from opensearchpy import NotFoundError
 from opensearchpy.exceptions import TransportError
 
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class LocalIndexPrep:
+@dataclass
+class LocalIndexPrep(JsonSchemaMixin):
     """Prepares records based on LocalIndex metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

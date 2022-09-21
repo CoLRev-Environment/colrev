@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import csv
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.screen.utils as util_cli_screen
@@ -20,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
-class SpreadsheetScreen:
+@dataclass
+class SpreadsheetScreen(JsonSchemaMixin):
     """Screen documents using spreadsheets (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

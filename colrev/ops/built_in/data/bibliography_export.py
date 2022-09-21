@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -22,7 +24,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class BibliographyExport:
+@dataclass
+class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
 
     # TODO: this should become a more general endpoint

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -25,7 +26,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class Manuscript:
+@dataclass
+class Manuscript(JsonSchemaMixin):
     """Synthesize the literature in a manuscript
 
     The manuscript (paper.md) is created automatically.
@@ -47,7 +49,7 @@ class Manuscript:
     the corresponding record will be marked as rev_synthesized."""
 
     @dataclass
-    class ManuscriptSettings:
+    class ManuscriptSettings(JsonSchemaMixin):
         name: str
         version: str
         word_template: str

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import pprint
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -20,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepManPackageInterface)
-class CoLRevCLIPDFManPrep:
+@dataclass
+class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

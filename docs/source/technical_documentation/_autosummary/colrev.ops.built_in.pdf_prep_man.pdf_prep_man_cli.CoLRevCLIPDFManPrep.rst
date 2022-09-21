@@ -16,4 +16,13 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli.CoLRevCLIPDFManPrep
    .. autosummary::
       :nosignatures:
 
+      ~CoLRevCLIPDFManPrep.all_json_schemas
+      ~CoLRevCLIPDFManPrep.field_mapping
+      ~CoLRevCLIPDFManPrep.from_dict
+      ~CoLRevCLIPDFManPrep.from_json
+      ~CoLRevCLIPDFManPrep.from_object
+      ~CoLRevCLIPDFManPrep.json_schema
       ~CoLRevCLIPDFManPrep.prep_man_pdf
+      ~CoLRevCLIPDFManPrep.register_field_encoders
+      ~CoLRevCLIPDFManPrep.to_dict
+      ~CoLRevCLIPDFManPrep.to_json

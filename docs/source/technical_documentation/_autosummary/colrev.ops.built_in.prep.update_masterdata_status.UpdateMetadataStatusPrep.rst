@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
    .. autosummary::
       :nosignatures:
 
+      ~UpdateMetadataStatusPrep.all_json_schemas
+      ~UpdateMetadataStatusPrep.field_mapping
+      ~UpdateMetadataStatusPrep.from_dict
+      ~UpdateMetadataStatusPrep.from_json
+      ~UpdateMetadataStatusPrep.from_object
+      ~UpdateMetadataStatusPrep.json_schema
       ~UpdateMetadataStatusPrep.prepare
+      ~UpdateMetadataStatusPrep.register_field_encoders
+      ~UpdateMetadataStatusPrep.to_dict
+      ~UpdateMetadataStatusPrep.to_json
 
 
 

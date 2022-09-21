@@ -5,11 +5,13 @@ from __future__ import annotations
 import csv
 import os
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -23,7 +25,9 @@ if typing.TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
-class ASReviewPrescreen:
+@dataclass
+class ASReviewPrescreen(JsonSchemaMixin):
+
     """Prescreen based on ASReview"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

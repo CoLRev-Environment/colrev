@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.drop\_fields\_prep.DropFieldsPrep
    .. autosummary::
       :nosignatures:
 
+      ~DropFieldsPrep.all_json_schemas
+      ~DropFieldsPrep.field_mapping
+      ~DropFieldsPrep.from_dict
+      ~DropFieldsPrep.from_json
+      ~DropFieldsPrep.from_object
+      ~DropFieldsPrep.json_schema
       ~DropFieldsPrep.prepare
+      ~DropFieldsPrep.register_field_encoders
+      ~DropFieldsPrep.to_dict
+      ~DropFieldsPrep.to_json
 
 
 

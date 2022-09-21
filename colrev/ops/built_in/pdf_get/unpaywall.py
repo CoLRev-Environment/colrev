@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from pdfminer.high_level import extract_text
 from pdfminer.pdftypes import PDFException
 
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
-class Unpaywall:
+@dataclass
+class Unpaywall(JsonSchemaMixin):
     """Get PDFs from unpaywall.org"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

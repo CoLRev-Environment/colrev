@@ -2,11 +2,13 @@
 """Screen based on CLI"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.screen.utils as util_cli_screen
@@ -19,7 +21,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
-class CoLRevCLIScreen:
+@dataclass
+class CoLRevCLIScreen(JsonSchemaMixin):
     """Screen documents using a CLI"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

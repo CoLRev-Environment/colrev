@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -23,11 +24,12 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class StructuredData:
+@dataclass
+class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a spreadsheet)"""
 
     @dataclass
-    class StructuredDataSettings:
+    class StructuredDataSettings(JsonSchemaMixin):
         name: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)

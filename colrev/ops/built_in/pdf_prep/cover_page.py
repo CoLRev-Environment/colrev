@@ -5,12 +5,14 @@ from __future__ import annotations
 import shutil
 import subprocess
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
@@ -24,7 +26,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class PDFCoverPage:
+@dataclass
+class PDFCoverPage(JsonSchemaMixin):
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

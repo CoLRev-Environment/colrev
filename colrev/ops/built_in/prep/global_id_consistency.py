@@ -2,11 +2,13 @@
 """Checks of consistency between global IDs a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 
 import colrev.env.package_manager
@@ -21,7 +23,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class GlobalIDConsistencyPrep:
+@dataclass
+class GlobalIDConsistencyPrep(JsonSchemaMixin):
     """Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

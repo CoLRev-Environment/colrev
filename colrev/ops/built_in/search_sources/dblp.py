@@ -27,7 +27,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     source_identifier = "{{dblp_key}}"
 
     @dataclass
-    class DBLPSearchSourceSettings:
+    class DBLPSearchSourceSettings(JsonSchemaMixin):
         # pylint: disable=duplicate-code
         # pylint: disable=too-many-instance-attributes
         name: str

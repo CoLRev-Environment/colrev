@@ -16,7 +16,16 @@ colrev.ops.built\_in.load\_conversion.bibutils\_loader.BibutilsLoader
    .. autosummary::
       :nosignatures:
 
+      ~BibutilsLoader.all_json_schemas
+      ~BibutilsLoader.field_mapping
+      ~BibutilsLoader.from_dict
+      ~BibutilsLoader.from_json
+      ~BibutilsLoader.from_object
+      ~BibutilsLoader.json_schema
       ~BibutilsLoader.load
+      ~BibutilsLoader.register_field_encoders
+      ~BibutilsLoader.to_dict
+      ~BibutilsLoader.to_json
 
 
 

@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 """Simple literature review"""
+from dataclasses import dataclass
+
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -14,7 +17,8 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.ReviewTypePackageInterface)
-class LiteratureReview:
+@dataclass
+class LiteratureReview(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

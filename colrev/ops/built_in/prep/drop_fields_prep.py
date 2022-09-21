@@ -2,10 +2,12 @@
 """Dropping fields as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -19,7 +21,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class DropFieldsPrep:
+@dataclass
+class DropFieldsPrep(JsonSchemaMixin):
     """Prepares records by dropping fields that are not needed"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

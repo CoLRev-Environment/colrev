@@ -2,10 +2,12 @@
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.pdf_get
@@ -19,7 +21,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetManPackageInterface)
-class CoLRevCLIPDFGetMan:
+@dataclass
+class CoLRevCLIPDFGetMan(JsonSchemaMixin):
+
     """Get PDFs manually based on a CLI"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

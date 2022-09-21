@@ -2,12 +2,14 @@
 """Source-specific preparation as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -21,7 +23,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class SourceSpecificPrep:
+@dataclass
+class SourceSpecificPrep(JsonSchemaMixin):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

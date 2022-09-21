@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class Zettlr:
+@dataclass
+class Zettlr(JsonSchemaMixin):
     """Export the sample into a Zettlr database"""
 
     zettlr_bib_item_resource_path = Path("template/zettlr/") / Path(
@@ -33,7 +35,7 @@ class Zettlr:
     zettlr_resource_path = Path("template/zettlr/") / Path("zettlr.md")
 
     @dataclass
-    class ZettlrSettings:
+    class ZettlrSettings(JsonSchemaMixin):
         name: str
         version: str
         config: dict

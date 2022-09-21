@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -21,7 +23,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class PDFCompletenessValidation:
+@dataclass
+class PDFCompletenessValidation(JsonSchemaMixin):
     """Prepare PDFs by validating its completeness (based on the number of pages)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
