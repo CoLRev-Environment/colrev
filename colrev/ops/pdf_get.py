@@ -143,7 +143,9 @@ class PDFGet(colrev.process.Process):
                 ): colrev.record.Record.get_colrev_pdf_id(
                     review_manager=self.review_manager, pdf_path=pdf_candidate
                 )
-                for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
+                for pdf_candidate in list(
+                    self.review_manager.pdf_directory.glob("**/*.pdf")
+                )
             }
 
             for record in records.values():

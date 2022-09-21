@@ -2,12 +2,16 @@
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
 
+import urllib.parse
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from jinja2 import Environment
+from jinja2 import FunctionLoader
 
 import colrev.env.package_manager
 import colrev.ops.pdf_get
@@ -36,77 +40,215 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def get_man_pdf(
-        self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
-    ) -> dict:
-        def get_pdf_from_google(record: colrev.record.Record) -> colrev.record.Record:
-            # pylint: disable=import-outside-toplevel
-            import urllib.parse
+        self.__get_from_downloads_folder = False
 
-            # import webbrowser
+    def __get_pdf_from_google(
+        self,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        record: colrev.record.Record,
+    ) -> colrev.record.Record:
+        # import webbrowser
 
-            title = record.data.get("title", "no title")
-            title = urllib.parse.quote_plus(title)
-            url = f"https://www.google.com/search?q={title}+filetype%3Apdf"
-            # webbrowser.open_new_tab(url)
-            print(url)
-            return record
+        title = record.data.get("title", "no title")
+        title = urllib.parse.quote_plus(title)
+        url = f"https://www.google.com/search?q={title}+filetype%3Apdf"
+        # webbrowser.open_new_tab(url)
+        print(url)
+        return record
 
-        def pdf_get_man_record_cli(
-            *,
-            pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
-            record: colrev.record.Record,
-        ) -> None:
+    def __ask_authors_for_pdf(
+        self,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        record: colrev.record.Record,
+    ) -> colrev.record.Record:
 
-            pdf_get_man_operation.review_manager.logger.debug(
-                f"called pdf_get_man_cli for {record}"
+        # TODO : get the recipient email(s) from the local author index
+        recipient = "TODO"
+        subject = "Copy of a PDF"
+
+        author_name = record.data.get("author", "").split(",")[0]
+        signed = pdf_get_man_operation.review_manager.committer
+
+        environment = Environment(
+            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
+        )
+        template = environment.get_template("template/pdf_get_man_mail.txt")
+        content = template.render(record=record, author_name=author_name, signed=signed)
+
+        print("\n\n")
+        print(recipient)
+        print(subject)
+        print("\n\n")
+        print(content)
+        print("\n\n")
+
+        # TODO : better integration with email clients
+
+        return record
+
+    def __get_filepath(
+        self,
+        *,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        record: colrev.record.Record,
+    ) -> Path:
+
+        filepath = (
+            pdf_get_man_operation.review_manager.pdf_directory
+            / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
+        )
+        if filepath.is_file():
+            return filepath
+
+        if "volume" in record.data:
+            filepath = (
+                pdf_get_man_operation.review_manager.pdf_directory
+                / f"{record.data['volume']}/{record.data['ID']}.pdf"
             )
+            if filepath.is_file():
+                return filepath
 
-            # to print only the essential information
-            print(colrev.record.PrescreenRecord(data=record.get_data()))
-
-            if (
-                colrev.record.RecordState.pdf_needs_manual_retrieval
-                != record.data["colrev_status"]
-            ):
-                return
-
-            retrieval_scripts = {
-                "get_pdf_from_google": get_pdf_from_google,
-                # 'get_pdf_from_researchgate': get_pdf_from_researchgate,
-            }
+        if "volume" in record.data and "number" in record.data:
+            filepath = (
+                pdf_get_man_operation.review_manager.pdf_directory
+                / f"{record.data['volume']}_{record.data['number']}/{record.data['ID']}.pdf"
+            )
+            if filepath.is_file():
+                return filepath
 
             filepath = (
                 pdf_get_man_operation.review_manager.pdf_directory
-                / f"{record.data['ID']}.pdf"
+                / f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
             )
+            if filepath.is_file():
+                return filepath
 
-            for script_name, retrieval_script in retrieval_scripts.items():
-                pdf_get_man_operation.review_manager.logger.debug(
-                    f'{script_name}({record.data["ID"]}) called'
+        filepath = (
+            pdf_get_man_operation.review_manager.pdf_directory
+            / f"{record.data['ID']}.pdf"
+        )
+
+        return filepath
+
+    def __retrieve_record_from_downloads_folder(
+        self,
+        *,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        record: colrev.record.Record,
+    ) -> None:
+        downloads_folder = Path.home() / Path("Downloads")
+        pdfs_in_downloads_folder = list(downloads_folder.glob("*.pdf"))
+
+        if len(pdfs_in_downloads_folder) == 0:
+            print("No PDF found in downloads_folder")
+            return
+        if len(pdfs_in_downloads_folder) > 1:
+            print("Multiple PDFs found in downloads_folder (skipping)")
+            return
+
+        pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
+
+        # simple heuristics:
+        vol_slash_nr_path = pdf_get_man_operation.review_manager.pdf_directory / Path(
+            f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
+        )
+        if vol_slash_nr_path.is_dir():
+            pdf_in_downloads_folder.rename(
+                vol_slash_nr_path / Path(f"{record.data['ID']}.pdf")
+            )
+            return
+
+        vol_underscore_nr_path = (
+            pdf_get_man_operation.review_manager.pdf_directory
+            / Path(
+                f"{record.data.get('volume', 'NA')}_{record.data.get('number', 'NA')}"
+            )
+        )
+        if vol_underscore_nr_path.is_dir():
+            pdf_in_downloads_folder.rename(
+                vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")
+            )
+            return
+
+        year_path = pdf_get_man_operation.review_manager.pdf_directory / Path(
+            f"{record.data.get('year', 'NA')}"
+        )
+        if year_path.is_dir():
+            pdf_in_downloads_folder.rename(year_path / Path(f"{record.data['ID']}.pdf"))
+            return
+
+        pdf_in_downloads_folder.rename(
+            pdf_get_man_operation.review_manager.pdf_directory
+            / Path(f"{record.data['ID']}.pdf")
+        )
+
+    def __pdf_get_man_record_cli(
+        self,
+        *,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        record: colrev.record.Record,
+    ) -> None:
+
+        pdf_get_man_operation.review_manager.logger.debug(
+            f"called pdf_get_man_cli for {record}"
+        )
+
+        # to print only the essential information
+        print(colrev.record.PrescreenRecord(data=record.get_data()))
+
+        if (
+            colrev.record.RecordState.pdf_needs_manual_retrieval
+            != record.data["colrev_status"]
+        ):
+            return
+
+        retrieval_scripts = {
+            "get_pdf_from_google": self.__get_pdf_from_google,
+            "ask_authors": self.__ask_authors_for_pdf
+            # 'get_pdf_from_researchgate': get_pdf_from_researchgate,
+        }
+
+        filepath = self.__get_filepath(
+            pdf_get_man_operation=pdf_get_man_operation, record=record
+        )
+        for script_name, retrieval_script in retrieval_scripts.items():
+            pdf_get_man_operation.review_manager.logger.debug(
+                f'{script_name}({record.data["ID"]}) called'
+            )
+            record = retrieval_script(pdf_get_man_operation, record)
+
+            if "y" == input("Retrieved (y/n)?"):
+                if self.__get_from_downloads_folder:
+                    self.__retrieve_record_from_downloads_folder(
+                        pdf_get_man_operation=pdf_get_man_operation, record=record
+                    )
+                filepath = self.__get_filepath(
+                    pdf_get_man_operation=pdf_get_man_operation, record=record
                 )
-                record = retrieval_script(record)
-
-                if "y" == input("Retrieved (y/n)?"):
-                    if not filepath.is_file():
-                        print(f'File does not exist: {record.data["ID"]}.pdf')
-                    else:
-                        filepath = (
-                            pdf_get_man_operation.review_manager.PDF_DIRECTORY_RELATIVE
-                            / f"{record.data['ID']}.pdf"
-                        )
-                        record.pdf_get_man(
-                            review_manager=pdf_get_man_operation.review_manager,
-                            filepath=filepath,
-                        )
-                        break
-
-            if not filepath.is_file():
-                if "n" == input("Is the PDF available (y/n)?"):
+                if not filepath.is_file():
+                    print(f'File does not exist: {record.data["ID"]}.pdf')
+                else:
+                    filepath = self.__get_filepath(
+                        pdf_get_man_operation=pdf_get_man_operation, record=record
+                    )
                     record.pdf_get_man(
                         review_manager=pdf_get_man_operation.review_manager,
-                        filepath=None,
+                        filepath=filepath,
                     )
+                    break
+
+        if not filepath.is_file():
+            if "n" == input("Is the PDF available (y/n)?"):
+                record.pdf_get_man(
+                    review_manager=pdf_get_man_operation.review_manager,
+                    filepath=None,
+                )
+
+        pdf_get_man_operation.review_manager.update_status_yaml()
+
+    def get_man_pdf(
+        self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
+    ) -> dict:
 
         saved_args = locals()
         pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")
@@ -114,7 +256,11 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_directory = pdf_get_man_operation.review_manager.pdf_directory
 
         records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
-        records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
+        if "y" == input("Check existing unlinked PDFs (y/n)?"):
+            records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
+
+        if "y" == input("Get PDF from Downloads folder (y/n)?"):
+            self.__get_from_downloads_folder = True
 
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
@@ -134,9 +280,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
             record = colrev.record.Record(data=records[item["ID"]])
 
-            print(stat)
+            print(f"\n\n{stat}")
 
-            pdf_get_man_record_cli(
+            self.__pdf_get_man_record_cli(
                 pdf_get_man_operation=pdf_get_man_operation, record=record
             )
 

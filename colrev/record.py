@@ -1578,7 +1578,7 @@ class Record:
 
         if filepath is not None:
             self.set_status(target_state=RecordState.pdf_imported)
-            self.data.update(file=str(filepath))
+            self.data.update(file=str(filepath.relative_to(review_manager.path)))
             review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
