@@ -171,13 +171,13 @@ class Process:
 
         elif ProcessType.pdf_get == self.type:
             self.require_clean_repo_general(
-                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
+                ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
             )
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
             self.require_clean_repo_general(
-                ignore_pattern=[self.review_manager.PDF_DIRECTORY_RELATIVE]
+                ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
             )
             self.check_process_model_precondition()
 

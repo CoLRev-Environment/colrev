@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing as mp
 import os
 import subprocess
 import typing
@@ -10,6 +11,7 @@ from pathlib import Path
 
 import timeout_decorator
 from p_tqdm import p_map
+from pathos.multiprocessing import ProcessPool
 
 import colrev.process
 import colrev.record
@@ -107,7 +109,7 @@ class PDFPrep(colrev.process.Process):
             if not self.review_manager.debug_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    for fpath in self.review_manager.pdf_directory.glob("*.pdf"):
+                    for fpath in self.review_manager.pdf_dir.glob("*.pdf"):
                         if record.data["ID"] in str(fpath) and fpath != target_fname:
                             os.remove(fpath)
 
@@ -347,7 +349,20 @@ class PDFPrep(colrev.process.Process):
                 self.review_manager.p_printer.pprint(record)
                 self.review_manager.dataset.save_record_list_by_id(record_list=[record])
         else:
-            pdf_prep_record_list = p_map(self.prepare_pdf, pdf_prep_data["items"])
+
+            script_names = [
+                s["endpoint"] for s in self.review_manager.settings.pdf_prep.scripts
+            ]
+            if "create_tei" in script_names:  # type: ignore
+                pool = ProcessPool(nodes=mp.cpu_count() // 2)
+            else:
+                pool = ProcessPool(nodes=self.cpus)
+            pdf_prep_record_list = pool.map(self.prepare_pdf, pdf_prep_data["items"])
+
+            pool.close()
+            pool.join()
+            pool.clear()
+
             self.review_manager.dataset.save_record_list_by_id(
                 record_list=pdf_prep_record_list
             )

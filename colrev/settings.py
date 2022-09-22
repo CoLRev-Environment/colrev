@@ -1,12 +1,28 @@
 #!/usr/bin/env python3
 """Settings of the CoLRev project."""
+from __future__ import annotations
+
 import dataclasses
+import json
 import typing
+from dataclasses import asdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+import dacite
+from dacite import from_dict
+from dacite.exceptions import MissingValueError
+from dacite.exceptions import WrongTypeError
 from dataclasses_jsonschema import JsonSchemaMixin
+
+import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
+
+if TYPE_CHECKING:
+    import colrev.review_manager
+
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
@@ -497,6 +513,64 @@ class Settings(JsonSchemaMixin):
         }
 
         return schema
+
+
+def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Settings:
+    # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
+    # possible extension : integrate/merge global, default settings
+    # from colrev.environment import EnvironmentManager
+    # def selective_merge(base_obj, delta_obj):
+    #     if not isinstance(base_obj, dict):
+    #         return delta_obj
+    #     common_keys = set(base_obj).intersection(delta_obj)
+    #     new_keys = set(delta_obj).difference(common_keys)
+    #     for k in common_keys:
+    #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
+    #     for k in new_keys:
+    #         base_obj[k] = delta_obj[k]
+    #     return base_obj
+    # print(selective_merge(default_settings, project_settings))
+
+    if not review_manager.settings_path.is_file():
+        filedata = colrev.env.utils.get_package_file_content(
+            file_path=Path("template/settings.json")
+        )
+        if filedata:
+            settings = json.loads(filedata.decode("utf-8"))
+            with open(review_manager.settings_path, "w", encoding="utf8") as file:
+                json.dump(settings, file, indent=4)
+
+    with open(review_manager.settings_path, encoding="utf-8") as file:
+        loaded_settings = json.load(file)
+
+    try:
+        converters = {Path: Path, Enum: Enum}
+        settings = from_dict(
+            data_class=Settings,
+            data=loaded_settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+    except (ValueError, MissingValueError, WrongTypeError) as exc:
+        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
+
+    return settings
+
+
+def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def custom_asdict_factory(data):
+        def convert_value(obj):
+            if isinstance(obj, Enum):
+                return obj.value
+            if isinstance(obj, Path):
+                return str(obj)
+            return obj
+
+        return {k: convert_value(v) for k, v in data}
+
+    exported_dict = asdict(review_manager.settings, dict_factory=custom_asdict_factory)
+    with open("settings.json", "w", encoding="utf-8") as outfile:
+        json.dump(exported_dict, outfile, indent=4)
+    review_manager.dataset.add_changes(path=Path("settings.json"))
 
 
 if __name__ == "__main__":

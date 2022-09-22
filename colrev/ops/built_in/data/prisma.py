@@ -51,7 +51,7 @@ class PRISMA(JsonSchemaMixin):
     ) -> None:
 
         prisma_resource_path = Path("template/") / Path("PRISMA.csv")
-        prisma_path = Path("data/PRISMA.csv")
+        prisma_path = Path("output/PRISMA.csv")
         prisma_path.parent.mkdir(exist_ok=True, parents=True)
 
         if prisma_path.is_file():

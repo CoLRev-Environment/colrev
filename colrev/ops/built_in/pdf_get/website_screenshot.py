@@ -43,9 +43,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
         if "online" == record.data["ENTRYTYPE"]:
             screenshot_service.start_screenshot_service()
 
-            pdf_filepath = (
-                pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE
-                / Path(f"{record.data['ID']}.pdf")
+            pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
+                f"{record.data['ID']}.pdf"
             )
             record = screenshot_service.add_screenshot(
                 record=record, pdf_filepath=pdf_filepath

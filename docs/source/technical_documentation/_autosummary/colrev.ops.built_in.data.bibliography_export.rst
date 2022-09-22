@@ -20,4 +20,5 @@ colrev.ops.built\_in.data.bibliography\_export
       :template: custom-class-template.rst
       :nosignatures:
 
+      BibFormats
       BibliographyExport

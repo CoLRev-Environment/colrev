@@ -67,9 +67,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 f" {record_dict.get('pdf_prep_hints', 'Details not available.')}"
             )
 
-            filepath = (
-                pdf_prep_man.review_manager.pdf_directory / f"{record_dict['ID']}.pdf"
-            )
+            filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
             if pdf_path.is_file() or filepath.is_file():
                 if "y" == input("Prepared? (y/n)?"):

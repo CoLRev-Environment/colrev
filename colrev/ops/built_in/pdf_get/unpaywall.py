@@ -92,7 +92,7 @@ class Unpaywall(JsonSchemaMixin):
         if "doi" not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE / Path(
+        pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
         )
         url = self.__unpaywall(

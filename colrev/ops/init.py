@@ -21,7 +21,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
 
 # from importlib.metadata import version
 
@@ -92,8 +91,8 @@ class Initializer:
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
-        if "report.log" in cur_content:
-            cur_content.remove("report.log")
+        if ".report.log" in cur_content:
+            cur_content.remove(".report.log")
 
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
@@ -271,11 +270,6 @@ class Initializer:
             self.review_manager.save_settings()
 
             self.review_manager.logger.info("Completed setup.")
-            self.review_manager.logger.info(
-                "%sOpen the settings.json and edit all fields marked with 'TODO'%s.",
-                colors.ORANGE,
-                colors.END,
-            )
 
     def __setup_git(self) -> None:
 
@@ -314,8 +308,8 @@ class Initializer:
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
-        if "report.log" in cur_content:
-            cur_content.remove("report.log")
+        if ".report.log" in cur_content:
+            cur_content.remove(".report.log")
         if "settings.json" in cur_content:
             cur_content.remove("settings.json")
 

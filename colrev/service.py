@@ -28,7 +28,7 @@ class Event(LoggingEventHandler):
     def on_modified(self, event) -> None:
         if event.is_directory:
             return
-        if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):
+        if any(x in event.src_path for x in [".git/", ".report.log", ".goutputstream"]):
             return
 
         time_since_last_change = (

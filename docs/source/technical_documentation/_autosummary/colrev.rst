@@ -27,9 +27,11 @@
    :recursive:
 
    colrev.advisor
+   colrev.checker
    colrev.dataset
    colrev.env
    colrev.exceptions
+   colrev.logger
    colrev.ops
    colrev.process
    colrev.record

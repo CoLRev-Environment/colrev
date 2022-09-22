@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -18,9 +19,14 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-
 if TYPE_CHECKING:
     import colrev.ops.data
+
+
+@dataclass
+class BibFormats(Enum):
+    # pylint: disable=invalid-name
+    endnote = "endnote"
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
@@ -32,8 +38,14 @@ class BibliographyExport(JsonSchemaMixin):
     # that exports a bibliography (Endnote/Citavi,...)
     # It should have the modes incremental/replace
 
-    settings_class = colrev.env.package_manager.DefaultSettings
-    endpoint_path = Path("data/endnote")
+    @dataclass
+    class BibliographyExportSettings(JsonSchemaMixin):
+        name: str
+        version: str
+        bib_format: BibFormats
+        endpoint_dir = Path("endnote")
+
+    settings_class = BibliographyExportSettings
 
     def __init__(
         self,
@@ -41,18 +53,28 @@ class BibliographyExport(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        if "endpoint_dir" not in settings:
+            settings["endpoint_dir"] = "endnote"
+        if "bib_format" not in settings:
+            settings["bib_format"] = "endnote"
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         data_operation.review_manager.get_zotero_translation_service(
             startup_without_waiting=True
         )
 
+        self.endpoint_path = (
+            data_operation.review_manager.output_dir / self.settings.endpoint_dir
+        )
+
+    # TODO : change to DefaultSettings structure...
     def get_default_setup(self) -> dict:
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",
             "endnote_data_endpoint_version": "0.1",
             "config": {
-                "path": "data/endnote",
+                "path": "endnote",
             },
         }
         return endnote_endpoint_details

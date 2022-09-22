@@ -317,9 +317,9 @@ class Dedupe(colrev.process.Process):
             == self.review_manager.settings.dedupe.same_source_merges
         ):
             same_source_merge_file = Path("same_source_merges.txt")
-            print(
+            self.review_manager.logger.warning(
                 f"\n{colors.ORANGE}"
-                "Warning: applying same source merge "
+                "Applying same source merge "
                 f"{colors.END} "
                 f"{main_record.data.get('colrev_origin', '')}/"
                 f"{dupe_record.data.get('colrev_origin', '')}\n"

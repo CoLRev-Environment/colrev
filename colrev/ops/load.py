@@ -516,7 +516,9 @@ class Load(colrev.process.Process):
         )
 
         if keep_ids:
-            print("Not yet fully implemented. Need to check/resolve ID duplicates.")
+            self.review_manager.logger.warning(
+                "Not yet fully implemented. Need to check/resolve ID duplicates."
+            )
         else:
             self.review_manager.logger.info("Set IDs")
             records = self.review_manager.dataset.set_ids(
@@ -654,7 +656,7 @@ class Load(colrev.process.Process):
                     # Correct the file extension if necessary
                     if re.search("%0", data) and filepath.suffix not in [".enl"]:
                         new_filename = filepath.with_suffix(".enl")
-                        print(
+                        self.review_manager.logger.info(
                             f"{colors.GREEN}Renaming to {new_filename} "
                             f"(because the format is .enl){colors.END}"
                         )
@@ -715,7 +717,7 @@ class Load(colrev.process.Process):
                     not in self.load_conversion_scripts
                 ):
                     if self.verbose:
-                        print(
+                        self.review_manager.logger.error(
                             f"Error: endpoint not available: {source.load_conversion_script}"
                         )
                     continue

@@ -9,6 +9,15 @@ colrev.settings
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      load_settings
+      save_settings
+
 
 
 

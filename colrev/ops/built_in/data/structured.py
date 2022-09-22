@@ -50,7 +50,7 @@ class StructuredData(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         # TODO : integrate filename in custom settings
         self.data_path = (
-            data_operation.review_manager.path / self.settings.data_path_relative
+            data_operation.review_manager.data_dir / self.settings.data_path_relative
         )
 
     def get_default_setup(self) -> dict:

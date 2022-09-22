@@ -67,10 +67,24 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self,
         *,
         screen_operation: colrev.ops.screen.Screen,
-        screen_record: colrev.record.ScreenRecord,
+        record_dict: dict,
     ) -> str:
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-statements
+
+        screen_record = colrev.record.ScreenRecord(data=record_dict)
+        abstract_from_tei = False
+        if "abstract" not in screen_record.data:
+            abstract_from_tei = True
+            tei = screen_operation.review_manager.get_tei(
+                pdf_path=Path(screen_record.data["file"]),
+                tei_path=screen_record.get_tei_filename(),
+            )
+            screen_record.data["abstract"] = tei.get_abstract()
+
+        print(screen_record)
 
         print("\n\n")
         self.__i += 1
@@ -119,6 +133,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
             screen_inclusion = all(decision == "in" for _, decision in decisions)
 
+            if abstract_from_tei:
+                del screen_record.data["abstract"]
+
             screen_record.screen(
                 review_manager=screen_operation.review_manager,
                 screen_inclusion=screen_inclusion,
@@ -143,6 +160,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 screen_operation.review_manager.logger.info("Stop screen")
                 return "quit"
 
+            if abstract_from_tei:
+                del screen_record.data["abstract"]
             if decision == "y":
                 screen_record.screen(
                     review_manager=screen_operation.review_manager,
@@ -188,24 +207,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 if record_dict["ID"] not in split:
                     continue
 
-            screen_record = colrev.record.ScreenRecord(data=record_dict)
-            abstract_from_tei = False
-            if "abstract" not in screen_record.data:
-                abstract_from_tei = True
-                tei = screen_operation.review_manager.get_tei(
-                    pdf_path=Path(screen_record.data["file"]),
-                    tei_path=screen_record.get_tei_filename(),
-                )
-                screen_record.data["abstract"] = tei.get_abstract()
-
-            print(screen_record)
-
             ret = self.__screen_record(
-                screen_operation=screen_operation, screen_record=screen_record
+                screen_operation=screen_operation, record_dict=record_dict
             )
-
-            if abstract_from_tei:
-                del screen_record.data["abstract"]
 
             if "skip" == ret:
                 continue

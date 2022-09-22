@@ -1636,7 +1636,7 @@ def show(ctx, keyword, callback=validate_show):
 
     elif "prisma" == keyword:
         status_operation = review_manager.get_status_operation()
-        stats_report = status_operation.get_review_status_report()
+        stats_report = status_operation.get_review_status_report(colors=colors)
         print(stats_report)
 
     elif "venv" == keyword:

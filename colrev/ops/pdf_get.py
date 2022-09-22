@@ -37,7 +37,7 @@ class PDFGet(colrev.process.Process):
         self.cpus = 4
         self.verbose = False
 
-        self.review_manager.pdf_directory.mkdir(exist_ok=True)
+        self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_packages(
@@ -67,7 +67,7 @@ class PDFGet(colrev.process.Process):
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
 
-        pdf_filepath = self.review_manager.PDF_DIRECTORY_RELATIVE / Path(
+        pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
         )
         if pdf_filepath.is_file() and str(pdf_filepath) != record.data.get(
@@ -102,7 +102,7 @@ class PDFGet(colrev.process.Process):
             if "file" in record.data:
                 self.review_manager.report_logger.info(
                     f"{endpoint.settings.name}"
-                    f'({record_dict["ID"]}): retrieved {record_dict["file"]}'
+                    f'({record_dict["ID"]}): retrieved .../{Path(record_dict["file"]).name}'
                 )
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
                 break
@@ -143,9 +143,7 @@ class PDFGet(colrev.process.Process):
                 ): colrev.record.Record.get_colrev_pdf_id(
                     review_manager=self.review_manager, pdf_path=pdf_candidate
                 )
-                for pdf_candidate in list(
-                    self.review_manager.pdf_directory.glob("**/*.pdf")
-                )
+                for pdf_candidate in list(self.review_manager.pdf_dir.glob("**/*.pdf"))
             }
 
             for record in records.values():
@@ -229,9 +227,7 @@ class PDFGet(colrev.process.Process):
             str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
         ]
 
-        pdf_files = glob(
-            str(self.review_manager.pdf_directory) + "/**.pdf", recursive=True
-        )
+        pdf_files = glob(str(self.review_manager.pdf_dir) + "/**.pdf", recursive=True)
         unlinked_pdfs = [Path(x) for x in pdf_files if x not in linked_pdfs]
 
         if len(unlinked_pdfs) == 0:
@@ -303,7 +299,7 @@ class PDFGet(colrev.process.Process):
             file = Path(record["file"])
             new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
             # Possible option: move to top (pdfs) directory:
-            # new_filename = self.review_manager.PDF_DIRECTORY_RELATIVE / Path(
+            # new_filename = self.review_manager.PDF_DIR_RELATIVE / Path(
             #     f"{record['ID']}.pdf"
             # )
             if str(file) == str(new_filename):

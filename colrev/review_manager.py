@@ -2,37 +2,23 @@
 """The CoLRev review manager (main entrypoint)."""
 from __future__ import annotations
 
-import json
 import logging
 import pprint
-import sys
-import typing
 from dataclasses import asdict
 from datetime import timedelta
-from enum import Enum
-from importlib.metadata import version
 from pathlib import Path
-from subprocess import check_call
-from subprocess import DEVNULL
-from subprocess import STDOUT
 
-import dacite
-import git
 import requests_cache
 import yaml
-from dacite import from_dict
-from dacite.exceptions import MissingValueError
-from dacite.exceptions import WrongTypeError
-from git.exc import GitCommandError
-from git.exc import InvalidGitRepositoryError
 
+import colrev.checker
 import colrev.dataset
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.logger
 import colrev.process
 import colrev.record
 import colrev.settings
-
 
 PASS, FAIL = 0, 1
 
@@ -50,14 +36,14 @@ class ReviewManager:
     will provide access to the Dataset"""
 
     SETTINGS_RELATIVE = Path("settings.json")
-    REPORT_RELATIVE = Path("report.log")
+    REPORT_RELATIVE = Path(".report.log")
     CORRECTIONS_PATH_RELATIVE = Path(".corrections")
-    PDF_DIRECTORY_RELATIVE = Path("pdfs")
+    PDF_DIR_RELATIVE = Path("pdfs")
     SEARCHDIR_RELATIVE = Path("search")
     README_RELATIVE = Path("readme.md")
     STATUS_RELATIVE = Path("status.yaml")
-
-    __COLREV_HOOKS_URL = "https://github.com/geritwagner/colrev-hooks"
+    OUTPUT_DIR_RELATIVE = Path("output")
+    DATA_DIR_RELATIVE = Path("data")
 
     dataset: colrev.dataset.Dataset
     """The review dataset object"""
@@ -81,10 +67,17 @@ class ReviewManager:
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE
         self.corrections_path = self.path / self.CORRECTIONS_PATH_RELATIVE
-        self.pdf_directory = self.path / self.PDF_DIRECTORY_RELATIVE
+        self.pdf_dir = self.path / self.PDF_DIR_RELATIVE
         self.search_dir = self.path / self.SEARCHDIR_RELATIVE
         self.readme = self.path / self.README_RELATIVE
         self.status = self.path / self.STATUS_RELATIVE
+        self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
+        self.data_dir = self.path / self.DATA_DIR_RELATIVE
+
+        self.search_dir.mkdir(exist_ok=True)
+        self.pdf_dir.mkdir(exist_ok=True)
+        self.data_dir.mkdir(exist_ok=True)
+        self.output_dir.mkdir(exist_ok=True)
 
         self.debug_mode = debug_mode
 
@@ -93,15 +86,24 @@ class ReviewManager:
 
         try:
             if self.debug_mode:
-                self.report_logger = self.__setup_report_logger(level=logging.DEBUG)
+                self.report_logger = colrev.logger.setup_report_logger(
+                    review_manager=self, level=logging.DEBUG
+                )
                 """Logger for the commit report"""
-                self.logger = self.__setup_logger(level=logging.DEBUG)
+                self.logger = colrev.logger.setup_logger(
+                    review_manager=self, level=logging.DEBUG
+                )
                 """Logger for processing information"""
             else:
-                self.report_logger = self.__setup_report_logger(level=logging.INFO)
-                self.logger = self.__setup_logger(level=logging.INFO)
+                self.report_logger = colrev.logger.setup_report_logger(
+                    review_manager=self, level=logging.INFO
+                )
+                self.logger = colrev.logger.setup_logger(
+                    review_manager=self, level=logging.INFO
+                )
 
-            self.committer, self.email = self._get_global_git_vars()
+            environment_manager = self.get_environment_manager()
+            self.committer, self.email = environment_manager.get_name_mail_from_git()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.dataset = colrev.dataset.Dataset(review_manager=self)
@@ -118,459 +120,30 @@ class ReviewManager:
             self.logger.debug("Created review manager instance")
             self.logger.debug("Settings:\n%s", self.settings)
 
-    def _get_global_git_vars(self) -> tuple:
-        environment_manager = self.get_environment_manager()
-        global_git_vars = environment_manager.get_name_mail_from_git()
-        if 2 != len(global_git_vars):
-            raise colrev_exceptions.CoLRevException(
-                "Global git variables (user name and email) not available."
-            )
-        return global_git_vars
-
     def load_settings(self) -> colrev.settings.Settings:
-
-        # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
-        # possible extension : integrate/merge global, default settings
-        # from colrev.environment import EnvironmentManager
-        # def selective_merge(base_obj, delta_obj):
-        #     if not isinstance(base_obj, dict):
-        #         return delta_obj
-        #     common_keys = set(base_obj).intersection(delta_obj)
-        #     new_keys = set(delta_obj).difference(common_keys)
-        #     for k in common_keys:
-        #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
-        #     for k in new_keys:
-        #         base_obj[k] = delta_obj[k]
-        #     return base_obj
-        # print(selective_merge(default_settings, project_settings))
-
-        if not self.settings_path.is_file():
-            filedata = colrev.env.utils.get_package_file_content(
-                file_path=Path("template/settings.json")
-            )
-            if filedata:
-                settings = json.loads(filedata.decode("utf-8"))
-                with open(self.settings_path, "w", encoding="utf8") as file:
-                    json.dump(settings, file, indent=4)
-
-        with open(self.settings_path, encoding="utf-8") as file:
-            loaded_settings = json.load(file)
-
-        try:
-            converters = {Path: Path, Enum: Enum}
-            settings = from_dict(
-                data_class=colrev.settings.Settings,
-                data=loaded_settings,
-                config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
-            )
-        except (ValueError, MissingValueError, WrongTypeError) as exc:
-            raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
-
-        return settings
+        return colrev.settings.load_settings(review_manager=self)
 
     def save_settings(self) -> None:
-        def custom_asdict_factory(data):
-            def convert_value(obj):
-                if isinstance(obj, Enum):
-                    return obj.value
-                if isinstance(obj, Path):
-                    return str(obj)
-                return obj
-
-            return {k: convert_value(v) for k, v in data}
-
-        exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
-        with open("settings.json", "w", encoding="utf-8") as outfile:
-            json.dump(exported_dict, outfile, indent=4)
-        self.dataset.add_changes(path=Path("settings.json"))
-
-    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
-        # for logger debugging:
-        # from logging_tree import printout
-        # printout()
-        logger = logging.getLogger(f"colrev{str(self.path).replace('/', '_')}")
-        logger.setLevel(level)
-
-        if logger.handlers:
-            for handler in logger.handlers:
-                logger.removeHandler(handler)
-
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
-
-        logger.addHandler(handler)
-        logger.propagate = False
-
-        return logger
-
-    def __setup_report_logger(self, *, level=logging.INFO) -> logging.Logger:
-        report_logger = logging.getLogger(
-            f"colrev_report{str(self.path).replace('/', '_')}"
-        )
-
-        if report_logger.handlers:
-            for handler in report_logger.handlers:
-                report_logger.removeHandler(handler)
-
-        report_logger.setLevel(level)
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-
-        report_file_handler = logging.FileHandler("report.log", mode="a")
-        report_file_handler.setFormatter(formatter)
-
-        report_logger.addHandler(report_file_handler)
-
-        if logging.DEBUG == level:
-            handler = logging.StreamHandler()
-            handler.setFormatter(formatter)
-            report_logger.addHandler(handler)
-        report_logger.propagate = False
-
-        return report_logger
+        colrev.settings.save_settings(review_manager=self)
 
     def reset_log(self) -> None:
-        self.report_logger.handlers[0].stream.close()  # type: ignore
-        self.report_logger.removeHandler(self.report_logger.handlers[0])
-
-        with open("report.log", "r+", encoding="utf8") as file:
-            file.truncate(0)
-
-        file_handler = logging.FileHandler("report.log")
-        file_handler.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        file_handler.setFormatter(formatter)
-        self.report_logger.addHandler(file_handler)
-
-    def get_colrev_versions(self) -> list[str]:
-        current_colrev_version = version("colrev")
-        last_colrev_version = current_colrev_version
-        last_commit_message = self.dataset.get_commit_message(commit_nr=0)
-        cmsg_lines = last_commit_message.split("\n")
-        for cmsg_line in cmsg_lines[0:100]:
-            if "colrev:" in cmsg_line and "version" in cmsg_line:
-                last_colrev_version = cmsg_line[cmsg_line.find("version ") + 8 :]
-        return [last_colrev_version, current_colrev_version]
-
-    def __check_software(self) -> None:
-        last_version, current_version = self.get_colrev_versions()
-        if last_version != current_version:
-            raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
-        if not sys.version_info > (2, 7):
-            raise colrev_exceptions.CoLRevException("CoLRev does not support Python 2.")
-        if sys.version_info < (3, 5):
-            self.logger.warning(
-                "CoLRev uses Python 3.8 features (currently, %s is installed). Please upgrade.",
-                sys.version_info,
-            )
-
-    def __lsremote(self, *, url: str) -> dict:
-        remote_refs = {}
-        git_repo = git.cmd.Git()
-        for ref in git_repo.ls_remote(url).split("\n"):
-            hash_ref_list = ref.split("\t")
-            remote_refs[hash_ref_list[1]] = hash_ref_list[0]
-        return remote_refs
-
-    def __colrev_hook_up_to_date(self) -> bool:
-
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-
-        local_hooks_version = ""
-        for repository in pre_commit_config["repos"]:
-            if repository["repo"] == self.__COLREV_HOOKS_URL:
-                local_hooks_version = repository["rev"]
-
-        refs = self.__lsremote(url=self.__COLREV_HOOKS_URL)
-        remote_sha = refs["HEAD"]
-        if remote_sha == local_hooks_version:
-            return True
-        return False
-
-    def __update_colrev_hooks(self) -> None:
-        if self.__COLREV_HOOKS_URL not in self.__get_installed_repos():
-            return
-        try:
-            if not self.__colrev_hook_up_to_date():
-                self.logger.info("Updating pre-commit hooks")
-                check_call(["pre-commit", "autoupdate"], stdout=DEVNULL, stderr=STDOUT)
-                self.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
-        except GitCommandError:
-            self.logger.warning(
-                "No Internet connection, cannot check remote "
-                "colrev-hooks repository for updates."
-            )
-        return
-
-    def check_repository_setup(self) -> None:
-
-        # 1. git repository?
-        if not self.__is_git_repo():
-            raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
-
-        # 2. colrev project?
-        if not self.__is_colrev_project():
-            raise colrev_exceptions.RepoSetupError(
-                "No colrev repository."
-                + "To retrieve a shared repository, use colrev init."
-                + "To initalize a new repository, "
-                + "execute the command in an empty directory."
-            )
-
-        # 3. Pre-commit hooks installed?
-        self.__require_colrev_hooks_installed()
-
-        # 4. Pre-commit hooks up-to-date?
-        self.__update_colrev_hooks()
-
-    def in_virtualenv(self) -> bool:
-        def get_base_prefix_compat() -> str:
-            return (
-                getattr(sys, "base_prefix", None)
-                or getattr(sys, "real_prefix", None)
-                or sys.prefix
-            )
-
-        return get_base_prefix_compat() != sys.prefix
-
-    def __check_git_conflicts(self) -> None:
-        # Note: when check is called directly from the command line.
-        # pre-commit hooks automatically notify on merge conflicts
-
-        git_repo = self.dataset.get_repo()
-        unmerged_blobs = git_repo.index.unmerged_blobs()
-
-        for path, list_of_blobs in unmerged_blobs.items():
-            for (stage, _) in list_of_blobs:
-                if stage != 0:
-                    raise colrev_exceptions.GitConflictError(path)
-
-    def __is_git_repo(self) -> bool:
-        try:
-            _ = self.dataset.get_repo().git_dir
-            return True
-        except InvalidGitRepositoryError:
-            return False
-
-    def __is_colrev_project(self) -> bool:
-        required_paths = [
-            Path(".pre-commit-config.yaml"),
-            Path(".gitignore"),
-            Path("settings.json"),
-        ]
-        if not all((self.path / x).is_file() for x in required_paths):
-            return False
-        return True
-
-    def __get_installed_hooks(self) -> list:
-        installed_hooks = []
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-        for repository in pre_commit_config["repos"]:
-            installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
-        return installed_hooks
-
-    def __get_installed_repos(self) -> list:
-        installed_repos = []
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-        for repository in pre_commit_config["repos"]:
-            installed_repos.append(repository["repo"])
-        return installed_repos
-
-    def __require_colrev_hooks_installed(self) -> bool:
-        required_hooks = [
-            "colrev-hooks-check",
-            "colrev-hooks-format",
-            "colrev-hooks-report",
-            "colrev-hooks-share",
-        ]
-        installed_hooks = self.__get_installed_hooks()
-        hooks_activated = set(required_hooks).issubset(set(installed_hooks))
-        if not hooks_activated:
-            missing_hooks = [x for x in required_hooks if x not in installed_hooks]
-            raise colrev_exceptions.RepoSetupError(
-                f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
-            )
-
-        pch_file = Path(".git/hooks/pre-commit")
-        if pch_file.is_file():
-            with open(pch_file, encoding="utf8") as file:
-                if "File generated by pre-commit" not in file.read(4096):
-                    raise colrev_exceptions.RepoSetupError(
-                        "pre-commit hooks not installed (use pre-commit install)"
-                    )
-        else:
-            raise colrev_exceptions.RepoSetupError(
-                "pre-commit hooks not installed (use pre-commit install)"
-            )
-
-        psh_file = Path(".git/hooks/pre-push")
-        if psh_file.is_file():
-            with open(psh_file, encoding="utf8") as file:
-                if "File generated by pre-commit" not in file.read(4096):
-                    raise colrev_exceptions.RepoSetupError(
-                        "pre-commit push hooks not installed "
-                        "(use pre-commit install --hook-type pre-push)"
-                    )
-        else:
-            raise colrev_exceptions.RepoSetupError(
-                "pre-commit push hooks not installed "
-                "(use pre-commit install --hook-type pre-push)"
-            )
-
-        pcmh_file = Path(".git/hooks/prepare-commit-msg")
-        if pcmh_file.is_file():
-            with open(pcmh_file, encoding="utf8") as file:
-                if "File generated by pre-commit" not in file.read(4096):
-                    raise colrev_exceptions.RepoSetupError(
-                        "pre-commit prepare-commit-msg hooks not installed "
-                        "(use pre-commit install --hook-type prepare-commit-msg)"
-                    )
-        else:
-            raise colrev_exceptions.RepoSetupError(
-                "pre-commit prepare-commit-msg hooks not installed "
-                "(use pre-commit install --hook-type prepare-commit-msg)"
-            )
-
-        return True
+        colrev.logger.reset_log(review_manager=self)
 
     def check_repo(self) -> dict:
-        """Check whether the repository is in a consistent state
-        Entrypoint for pre-commit hooks
-        """
+        checker = colrev.checker.Checker(review_manager=self)
+        return checker.check_repo()
 
-        # pylint: disable=not-a-mapping
+    def in_virtualenv(self) -> bool:
+        checker = colrev.checker.Checker(review_manager=self)
+        return checker.in_virtualenv()
 
-        self.notified_next_process = colrev.process.ProcessType.check
-        self.search_dir.mkdir(exist_ok=True)
+    def check_repository_setup(self) -> None:
+        checker = colrev.checker.Checker(review_manager=self)
+        checker.check_repository_setup()
 
-        # We work with exceptions because each issue may be raised in different checks.
-        # Currently, linting is limited for the scripts.
-
-        environment_manager = self.get_environment_manager()
-        check_scripts: list[dict[str, typing.Any]] = [
-            {
-                "script": environment_manager.check_git_installed,
-                "params": [],
-            },
-            {
-                "script": environment_manager.check_docker_installed,
-                "params": [],
-            },
-            {
-                "script": environment_manager.build_docker_images,
-                "params": [],
-            },
-            {"script": self.__check_git_conflicts, "params": []},
-            {"script": self.check_repository_setup, "params": []},
-            {"script": self.__check_software, "params": []},
-        ]
-
-        if self.dataset.records_file.is_file():
-
-            if self.dataset.records_file_in_history():
-                prior = self.dataset.retrieve_prior()
-                self.logger.debug("prior")
-                self.logger.debug(self.p_printer.pformat(prior))
-            else:  # if RECORDS_FILE not yet in git history
-                prior = {}
-
-            status_data = self.dataset.retrieve_status_data(prior=prior)
-
-            main_refs_checks = [
-                {"script": self.dataset.check_sources, "params": []},
-                {
-                    "script": self.dataset.check_main_records_duplicates,
-                    "params": {"status_data": status_data},
-                },
-            ]
-
-            if prior:  # if RECORDS_FILE in git history
-                main_refs_checks.extend(
-                    [
-                        {
-                            "script": self.dataset.check_persisted_id_changes,
-                            "params": {"prior": prior, "status_data": status_data},
-                        },
-                        {
-                            "script": self.dataset.check_main_records_origin,
-                            "params": {"status_data": status_data},
-                        },
-                        {
-                            "script": self.dataset.check_fields,
-                            "params": {"status_data": status_data},
-                        },
-                        {
-                            "script": self.dataset.check_status_transitions,
-                            "params": {"status_data": status_data},
-                        },
-                        {
-                            "script": self.dataset.check_main_records_screen,
-                            "params": {"status_data": status_data},
-                        },
-                    ]
-                )
-
-            check_scripts.extend(main_refs_checks)
-
-            data_operation = self.get_data_operation(
-                notify_state_transition_operation=False
-            )
-            data_checks = [
-                {
-                    "script": data_operation.main,
-                    "params": [],
-                },
-                {
-                    "script": self.update_status_yaml,
-                    "params": [],
-                },
-            ]
-
-            check_scripts.extend(data_checks)
-
-        failure_items = []
-        for check_script in check_scripts:
-            try:
-                if not check_script["params"]:
-                    self.logger.debug("%s() called", check_script["script"].__name__)
-                    check_script["script"]()
-                else:
-                    self.logger.debug(
-                        "%s(params) called", check_script["script"].__name__
-                    )
-                    if isinstance(check_script["params"], list):
-                        check_script["script"](*check_script["params"])
-                    else:
-                        check_script["script"](**check_script["params"])
-                self.logger.debug("%s: passed\n", check_script["script"].__name__)
-            except (
-                colrev_exceptions.MissingDependencyError,
-                colrev_exceptions.GitConflictError,
-                colrev_exceptions.PropagatedIDChange,
-                colrev_exceptions.DuplicateIDsError,
-                colrev_exceptions.OriginError,
-                colrev_exceptions.FieldValueError,
-                colrev_exceptions.StatusTransitionError,
-                colrev_exceptions.UnstagedGitChangesError,
-                colrev_exceptions.StatusFieldValueError,
-            ) as exc:
-                failure_items.append(f"{type(exc).__name__}: {exc}")
-
-        if len(failure_items) > 0:
-            return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}
-        return {"status": PASS, "msg": "Everything ok."}
+    def get_colrev_versions(self) -> list[str]:
+        checker = colrev.checker.Checker(review_manager=self)
+        return checker.get_colrev_versions()
 
     def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available

@@ -125,7 +125,7 @@ def print_project_status(status_operation) -> None:
 
     try:
         status_stats = status_operation.review_manager.get_status_stats()
-        status_report = status_operation.get_review_status_report()
+        status_report = status_operation.get_review_status_report(colors=colors)
         print(status_report)
 
         if not status_stats.completeness_condition:

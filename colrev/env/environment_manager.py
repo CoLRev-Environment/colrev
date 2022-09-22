@@ -115,6 +115,10 @@ class EnvironmentManager:
                 glob_git_conf.get("user", "name"),
                 glob_git_conf.get("user", "email"),
             )
+        if ("NA", "NA") == global_conf_details:
+            raise colrev_exceptions.CoLRevException(
+                "Global git variables (user name and email) not available."
+            )
         return global_conf_details
 
     def build_docker_images(self) -> None:

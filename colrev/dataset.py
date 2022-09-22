@@ -463,7 +463,7 @@ class Dataset:
         bibtex_str = self.parse_bibtex_str(recs_dict_in=records)
 
         with open(save_path, "w", encoding="utf-8") as out:
-            out.write(bibtex_str)
+            out.write(bibtex_str + "\n")
 
     def save_records_dict(self, *, records: dict) -> None:
         """Save the records dict in RECORDS_FILE"""
@@ -1246,15 +1246,21 @@ class Dataset:
         return missing_files
 
     def import_file(self, *, record: dict) -> dict:
-        self.review_manager.pdf_directory.mkdir(exist_ok=True)
-        new_fp = self.review_manager.pdf_directory / Path(record["ID"] + ".pdf").name
+        self.review_manager.pdf_dir.mkdir(exist_ok=True)
+        new_fp = self.review_manager.pdf_dir / Path(record["ID"] + ".pdf").name
         original_fp = Path(record["file"])
 
-        if "symlink" == self.review_manager.settings.pdf_get.pdf_path_type:
+        if (
+            colrev.settings.PDFPathType.symlink
+            == self.review_manager.settings.pdf_get.pdf_path_type
+        ):
             if not new_fp.is_file():
                 new_fp.symlink_to(original_fp)
             record["file"] = str(new_fp)
-        elif "copy" == self.review_manager.settings.pdf_get.pdf_path_type:
+        elif (
+            colrev.settings.PDFPathType.copy
+            == self.review_manager.settings.pdf_get.pdf_path_type
+        ):
             if not new_fp.is_file():
                 shutil.copyfile(original_fp, new_fp.resolve())
             record["file"] = str(new_fp)
@@ -1419,7 +1425,7 @@ class Dataset:
 
         ignore_patterns = [
             ".git",
-            "report.log",
+            ".report.log",
             ".pre-commit-config.yaml",
         ]
 

@@ -78,7 +78,9 @@ colrev.review\_manager.ReviewManager
    .. autosummary::
 
       ~ReviewManager.CORRECTIONS_PATH_RELATIVE
-      ~ReviewManager.PDF_DIRECTORY_RELATIVE
+      ~ReviewManager.DATA_DIR_RELATIVE
+      ~ReviewManager.OUTPUT_DIR_RELATIVE
+      ~ReviewManager.PDF_DIR_RELATIVE
       ~ReviewManager.README_RELATIVE
       ~ReviewManager.REPORT_RELATIVE
       ~ReviewManager.SEARCHDIR_RELATIVE

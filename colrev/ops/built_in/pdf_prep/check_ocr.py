@@ -70,7 +70,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         ocred_filename = Path(str(pdf_path).replace(".pdf", "_ocr.pdf"))
 
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_directory
+            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
         )
 
         # TODO : use variable self.cpus

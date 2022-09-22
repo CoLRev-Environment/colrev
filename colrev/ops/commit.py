@@ -17,7 +17,6 @@ from jinja2 import FunctionLoader
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -121,7 +120,7 @@ class Commit:
             loader=FunctionLoader(colrev.env.utils.load_jinja_template)
         )
         template = environment.get_template("template/commit_report_header.txt")
-        content = template.render(commit_details=self, colors=colors)
+        content = template.render(commit_details=self)
 
         return content
 
@@ -170,7 +169,7 @@ class Commit:
 
                     line = reader.readline()
 
-            with open("report.log", encoding="utf8") as file:
+            with open(self.review_manager.report_path, encoding="utf8") as file:
                 line = file.readline()
                 debug_part = False
                 while line:

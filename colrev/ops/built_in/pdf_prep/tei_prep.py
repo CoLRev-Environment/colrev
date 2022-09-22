@@ -38,7 +38,7 @@ class TEIPDFPrep(JsonSchemaMixin):
         grobid_service.start()
         Path(".tei").mkdir(exist_ok=True)
 
-    @timeout_decorator.timeout(180, use_signals=False)
+    @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
