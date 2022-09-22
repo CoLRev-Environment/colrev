@@ -2,7 +2,6 @@ import Project from "../models/project";
 import Settings from "../models/settings";
 import httpService from "./httpService";
 import config from "../config.json";
-import Source from "../models/source";
 import Prep from "../models/prep";
 import PrepRound from "../models/prepRound";
 import Dedupe from "../models/dedupe";
@@ -31,11 +30,7 @@ const getSettings = async (): Promise<Settings> => {
   settings.project = new Project();
   projectFromSettings(settings.project, settingsFile.project);
 
-  for (const s of settingsFile.sources) {
-    const source = new Source();
-    sourceFromSettings(source, s);
-    settings.sources.push(source);
-  }
+  settings.sources = packagesFromSettings(settingsFile.sources);
 
   settings.search = new Search();
   searchFromSettings(settings.search, settingsFile.search);
@@ -79,10 +74,7 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     data: dataToSettings(settings.data),
   };
 
-  for (const source of settings.sources) {
-    const settingsFileSource = sourceToSettings(source);
-    newSettingsFile.sources.push(settingsFileSource);
-  }
+  newSettingsFile.sources = packagesToSettings(settings.sources);
 
   await httpService.post(`${apiEndpoint}/saveSettings`, newSettingsFile, {
     headers: { "content-type": "application/json" },
@@ -124,39 +116,6 @@ const projectToSettings = (project: Project): any => {
   return settingsFileProject;
 };
 
-const sourceFromSettings = (source: Source, settingsSource: any) => {
-  source.filename = settingsSource.filename;
-  source.searchType = settingsSource.search_type;
-  source.sourceName = settingsSource.source_name;
-  source.sourceIdentifier = settingsSource.source_identifier;
-
-  source.searchParameters = settingsSource.search_parameters;
-
-  source.loadConversionScript.endpoint =
-    settingsSource.load_conversion_script.endpoint;
-
-  source.comment = settingsSource.comment;
-};
-
-const sourceToSettings = (source: Source): any => {
-  const settingsFileSource = {
-    filename: source.filename,
-    search_type: source.searchType,
-    source_name: source.sourceName,
-    source_identifier: source.sourceIdentifier,
-
-    search_parameters: source.searchParameters,
-
-    load_conversion_script: {
-      endpoint: source.loadConversionScript.endpoint,
-    },
-
-    comment: source.comment,
-  };
-
-  return settingsFileSource;
-};
-
 const searchFromSettings = (search: Search, settingsSearch: any) => {
   search.retrieveForthcoming = settingsSearch.retrieve_forthcoming;
 };
@@ -176,11 +135,11 @@ const prepFromSettings = (prep: Prep, settingsPrep: any) => {
     const prepRound = new PrepRound();
     prepRound.name = p.name;
     prepRound.similarity = p.similarity;
-    prepRound.scripts = scriptsFromSettings(p.scripts);
+    prepRound.scripts = packagesFromSettings(p.scripts);
     prep.prepRounds.push(prepRound);
   }
 
-  prep.manPrepScripts = scriptsFromSettings(settingsPrep.man_prep_scripts);
+  prep.manPrepScripts = packagesFromSettings(settingsPrep.man_prep_scripts);
 };
 
 const prepToSettings = (prep: Prep): any => {
@@ -188,14 +147,14 @@ const prepToSettings = (prep: Prep): any => {
     ...settingsFile.prep,
     fields_to_keep: prep.fieldsToKeep,
     prep_rounds: [],
-    man_prep_scripts: scriptsToSettings(prep.manPrepScripts),
+    man_prep_scripts: packagesToSettings(prep.manPrepScripts),
   };
 
   for (const p of prep.prepRounds) {
     const prep_round = {
       name: p.name,
       similarity: p.similarity,
-      scripts: scriptsToSettings(p.scripts),
+      scripts: packagesToSettings(p.scripts),
     };
 
     settingsFilePrep.prep_rounds.push(prep_round);
@@ -204,51 +163,88 @@ const prepToSettings = (prep: Prep): any => {
   return settingsFilePrep;
 };
 
-const scriptsFromSettings = (settingsScripts: any) => {
-  const scripts: Package[] = [];
+const packagesFromSettings = (settingsPackages: any) => {
+  const packages: Package[] = [];
 
-  for (const settingsScript of settingsScripts) {
-    const script = new Package();
-    script.endpoint = settingsScript.endpoint;
+  for (const settingsPackage of settingsPackages) {
+    const pkg = packageFromSettings(settingsPackage);
 
-    const paramsMap = new Map(Object.entries(settingsScript));
-    paramsMap.delete("endpoint");
-    script.parameters = paramsMap;
-
-    scripts.push(script);
-  }
-
-  return scripts;
-};
-
-const scriptsToSettings = (scripts: Package[]) => {
-  const settingsScripts: any[] = [];
-
-  for (const script of scripts) {
-    const paramsMap = new Map<string, any>();
-    paramsMap.set("endpoint", script.endpoint);
-
-    for (const [key, value] of Array.from(script.parameters)) {
-      paramsMap.set(key, value);
+    // inner packages
+    for (const [key, value] of Array.from(pkg.parameters)) {
+      var isPackage = value["endpoint"] !== undefined;
+      if (isPackage) {
+        // new Package() to add the clone() method
+        var innerPackage = packageFromSettings(value);
+        pkg.parameters.set(key, innerPackage);
+      }
     }
 
-    const settingsScript = Object.fromEntries(paramsMap);
-
-    settingsScripts.push(settingsScript);
+    packages.push(pkg);
   }
 
-  return settingsScripts;
+  return packages;
+};
+
+const packageFromSettings = (settingsPackage: any) => {
+  const pkg = new Package();
+  pkg.endpoint = settingsPackage.endpoint;
+
+  if (!pkg.endpoint) {
+    pkg.endpoint = "unknown";
+  }
+
+  const paramsMap = new Map(Object.entries(settingsPackage));
+  paramsMap.delete("endpoint");
+  pkg.parameters = paramsMap;
+
+  return pkg;
+};
+
+const packagesToSettings = (packages: Package[]) => {
+  const settingsPackages: any[] = [];
+
+  for (const pkg of packages) {
+    const settingsPackage = packageToSettings(pkg);
+
+    // inner packages
+    for (const [key, value] of Array.from(pkg.parameters)) {
+      if (value) {
+        var isPackage = value["endpoint"] !== undefined;
+        if (isPackage) {
+          // new Package() to add the clone() method
+          var innerPackageSettings = packageToSettings(value);
+          settingsPackage[key] = innerPackageSettings;
+        }
+      }
+    }
+
+    settingsPackages.push(settingsPackage);
+  }
+
+  return settingsPackages;
+};
+
+const packageToSettings = (pkg: Package) => {
+  const paramsMap = new Map<string, any>();
+  paramsMap.set("endpoint", pkg.endpoint);
+
+  for (const [key, value] of Array.from(pkg.parameters)) {
+    paramsMap.set(key, value);
+  }
+
+  const settingsPackage = Object.fromEntries(paramsMap);
+  return settingsPackage;
 };
 
 const dedupeFromSettings = (dedupe: Dedupe, settingsDedupe: any) => {
   dedupe.sameSourceMerges = settingsDedupe.same_source_merges;
-  dedupe.scripts = scriptsFromSettings(settingsDedupe.scripts);
+  dedupe.scripts = packagesFromSettings(settingsDedupe.scripts);
 };
 
 const dedupeToSettings = (dedupe: Dedupe): any => {
   const settingsDedupe = {
     same_source_merges: dedupe.sameSourceMerges,
-    scripts: scriptsToSettings(dedupe.scripts),
+    scripts: packagesToSettings(dedupe.scripts),
   };
 
   return settingsDedupe;
@@ -259,13 +255,13 @@ const prescreenFromSettings = (
   settingsPrescreen: any
 ) => {
   prescreen.explanation = settingsPrescreen.explanation;
-  prescreen.scripts = scriptsFromSettings(settingsPrescreen.scripts);
+  prescreen.scripts = packagesFromSettings(settingsPrescreen.scripts);
 };
 
 const prescreenToSettings = (prescreen: Prescreen): any => {
   const settingsPrescreen = {
     explanation: prescreen.explanation,
-    scripts: scriptsToSettings(prescreen.scripts),
+    scripts: packagesToSettings(prescreen.scripts),
   };
 
   return settingsPrescreen;
@@ -276,8 +272,8 @@ const pdfGetFromSettings = (pdfGet: PdfGet, settingsPdfGet: any) => {
   pdfGet.pdfRequiredForScreenAndSynthesis =
     settingsPdfGet.pdf_required_for_screen_and_synthesis;
   pdfGet.renamePdfs = settingsPdfGet.rename_pdfs;
-  pdfGet.scripts = scriptsFromSettings(settingsPdfGet.scripts);
-  pdfGet.manPdfGetScripts = scriptsFromSettings(
+  pdfGet.scripts = packagesFromSettings(settingsPdfGet.scripts);
+  pdfGet.manPdfGetScripts = packagesFromSettings(
     settingsPdfGet.man_pdf_get_scripts
   );
 };
@@ -288,24 +284,24 @@ const pdfGetToSettings = (pdfGet: PdfGet): any => {
     pdf_required_for_screen_and_synthesis:
       pdfGet.pdfRequiredForScreenAndSynthesis,
     rename_pdfs: pdfGet.renamePdfs,
-    scripts: scriptsToSettings(pdfGet.scripts),
-    man_pdf_get_scripts: scriptsToSettings(pdfGet.manPdfGetScripts),
+    scripts: packagesToSettings(pdfGet.scripts),
+    man_pdf_get_scripts: packagesToSettings(pdfGet.manPdfGetScripts),
   };
 
   return settingsPdfGet;
 };
 
 const pdfPrepFromSettings = (pdfPrep: PdfPrep, settingsPdfGet: any) => {
-  pdfPrep.scripts = scriptsFromSettings(settingsPdfGet.scripts);
-  pdfPrep.manPdfPrepScripts = scriptsFromSettings(
+  pdfPrep.scripts = packagesFromSettings(settingsPdfGet.scripts);
+  pdfPrep.manPdfPrepScripts = packagesFromSettings(
     settingsPdfGet.man_pdf_prep_scripts
   );
 };
 
 const pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
   const settingsPdfPrep = {
-    scripts: scriptsToSettings(pdfPrep.scripts),
-    man_pdf_prep_scripts: scriptsToSettings(pdfPrep.manPdfPrepScripts),
+    scripts: packagesToSettings(pdfPrep.scripts),
+    man_pdf_prep_scripts: packagesToSettings(pdfPrep.manPdfPrepScripts),
   };
 
   return settingsPdfPrep;
@@ -313,26 +309,26 @@ const pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
 
 const screenFromSettings = (screen: Screen, settingsScreen: any) => {
   screen.explanation = settingsScreen.explanation;
-  screen.scripts = scriptsFromSettings(settingsScreen.scripts);
+  screen.scripts = packagesFromSettings(settingsScreen.scripts);
 };
 
 const screenToSettings = (screen: Screen): any => {
   const settingsScreen = {
     explanation: screen.explanation,
     criteria: {},
-    scripts: scriptsToSettings(screen.scripts),
+    scripts: packagesToSettings(screen.scripts),
   };
 
   return settingsScreen;
 };
 
 const dataFromSettings = (data: Data, settingsData: any) => {
-  data.scripts = scriptsFromSettings(settingsData.scripts);
+  data.scripts = packagesFromSettings(settingsData.scripts);
 };
 
 const dataToSettings = (data: Data): any => {
   const settingsData = {
-    scripts: scriptsToSettings(data.scripts),
+    scripts: packagesToSettings(data.scripts),
   };
 
   return settingsData;
@@ -376,16 +372,24 @@ const getScriptParameterDefinitions = async (
 
   const scriptParameterDefinitions: PackageParameterDefinition[] = [];
 
-  const paramsMap = new Map(Object.entries(response.data.parameters));
+  const paramsMap = new Map(Object.entries(response.data.properties));
 
   for (const [key, value] of Array.from<any>(paramsMap)) {
     const param = new PackageParameterDefinition();
     param.name = key;
-    param.required = value.required;
     param.tooltip = value.tooltip;
-    param.type = getScriptParameterType(value.type);
+
+    if (value.enum) {
+      param.type = PackageParameterType.Options;
+      param.options = value.enum;
+    } else {
+      param.type = getScriptParameterType(value.type);
+    }
+
     param.min = value.min;
     param.max = value.max;
+
+    param.scriptType = value.script_type;
 
     scriptParameterDefinitions.push(param);
   }
@@ -398,23 +402,31 @@ const getScriptParameterDefinitions = async (
 const getScriptParameterType = (
   parameterType: string
 ): PackageParameterType => {
-  let scriptParameterType = PackageParameterType.String;
+  let scriptParameterType = PackageParameterType.Unknown;
 
   switch (parameterType) {
-    case "int":
+    case "integer":
       scriptParameterType = PackageParameterType.Int;
       break;
     case "float":
       scriptParameterType = PackageParameterType.Float;
       break;
-    case "bool":
+    case "boolean":
       scriptParameterType = PackageParameterType.Boolean;
       break;
-    case "str":
+    case "path":
+    case "string":
       scriptParameterType = PackageParameterType.String;
       break;
-    case "typing.Optional[list]":
+    case "array":
       scriptParameterType = PackageParameterType.StringList;
+      break;
+    case "script":
+      scriptParameterType = PackageParameterType.Script;
+      break;
+    case "script_array":
+      //scriptParameterType = PackageParameterType.ScriptList;
+      scriptParameterType = PackageParameterType.Script;
       break;
   }
 

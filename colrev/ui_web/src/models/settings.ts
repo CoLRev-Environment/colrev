@@ -1,5 +1,6 @@
 import Data from "./data";
 import Dedupe from "./dedupe";
+import Package from "./package";
 import PdfGet from "./pdfGet";
 import PdfPrep from "./pdfPrep";
 import Prep from "./prep";
@@ -7,11 +8,10 @@ import Prescreen from "./prescreen";
 import Project from "./project";
 import Screen from "./screen";
 import Search from "./search";
-import Source from "./source";
 
 export default class Settings {
   public project: Project = new Project();
-  public sources: Source[] = [];
+  public sources: Package[] = [];
   public search: Search = new Search();
   public prep: Prep = new Prep();
   public dedupe: Dedupe = new Dedupe();

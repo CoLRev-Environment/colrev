@@ -20,7 +20,9 @@ const PackagesEditor: React.FC<{
   const [showPackageEditor, setShowPackageEditor] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [currentPackage, setCurrentPacakge] = useState<Package>(new Package());
-  const [currentPackageCopy, setPackageCopy] = useState<Package>(new Package());
+  const [currentPackageCopy, setCurrentPackageCopy] = useState<Package>(
+    new Package()
+  );
 
   const deletePackageHandler = (pkg: Package) => {
     const newPackages = packages.filter((p) => p !== pkg);
@@ -36,7 +38,7 @@ const PackagesEditor: React.FC<{
   const editPackageHandler = (pkg: Package) => {
     setIsEdit(true);
     setCurrentPacakge(pkg);
-    setPackageCopy(pkg.clone());
+    setCurrentPackageCopy(pkg.clone());
     setShowPackageEditor(true);
   };
 
@@ -81,19 +83,17 @@ const PackagesEditor: React.FC<{
               >
                 <EditIcon />
               </div>
-              {!isSinglePackage && (
-                <div
-                  className="btn btn-danger btn-sm"
-                  onClick={() => deletePackageHandler(pkg)}
-                >
-                  <DeleteIcon />
-                </div>
-              )}
+              <div
+                className="btn btn-danger btn-sm"
+                onClick={() => deletePackageHandler(pkg)}
+              >
+                <DeleteIcon />
+              </div>
             </div>
           </li>
         ))}
       </ul>
-      {!isSinglePackage && (
+      {(!isSinglePackage || (isSinglePackage && packages.length === 0)) && (
         <div className="mb-3 mt-1">
           <button
             className="btn btn-primary"

@@ -5,6 +5,7 @@ import PackageParameterDefinition from "../../models/packageParameterDefinition"
 import PackageParameterType from "../../models/packageParameterType";
 import dataService from "../../services/dataService";
 import FiedlsEditor from "../fields/FieldsEditor";
+import PackagesEditor from "./PackagesEditor";
 import PackageTitle from "./PackageTitle";
 
 const PackageParametersEditor: React.FC<{
@@ -100,13 +101,13 @@ const PackageParametersEditor: React.FC<{
                     </label>
                   </div>
                 )}
-                {parameterDefinition.type === PackageParameterType.Float && (
+                {parameterDefinition.type === PackageParameterType.Int && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <input
                       className="form-control"
                       type="number"
-                      step={0.1}
+                      step="any"
                       min={parameterDefinition.min}
                       max={parameterDefinition.max}
                       value={getParameterValue(parameterDefinition) ?? ""}
@@ -119,13 +120,13 @@ const PackageParametersEditor: React.FC<{
                     />
                   </div>
                 )}
-                {parameterDefinition.type === PackageParameterType.Int && (
+                {parameterDefinition.type === PackageParameterType.Float && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <input
                       className="form-control"
                       type="number"
-                      step="any"
+                      step={0.1}
                       min={parameterDefinition.min}
                       max={parameterDefinition.max}
                       value={getParameterValue(parameterDefinition) ?? ""}
@@ -163,6 +164,44 @@ const PackageParametersEditor: React.FC<{
                       fieldsChanged={(newValues: string[]) =>
                         setParameterValue(parameterDefinition, newValues)
                       }
+                    />
+                  </div>
+                )}
+                {parameterDefinition.type === PackageParameterType.Options && (
+                  <div>
+                    <label>{parameterDefinition.name}</label>
+                    <select
+                      className="form-select"
+                      aria-label="Select"
+                      value={getParameterValue(parameterDefinition) ?? ""}
+                      onChange={(event) =>
+                        setParameterValue(
+                          parameterDefinition,
+                          event.target.value
+                        )
+                      }
+                    >
+                      {parameterDefinition.options.map((option, index) => (
+                        <option key={index.toString()}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {parameterDefinition.type === PackageParameterType.Script && (
+                  <div>
+                    <label>{parameterDefinition.name}</label>
+                    <PackagesEditor
+                      packageEntity="Script"
+                      packageType={parameterDefinition.scriptType}
+                      isSinglePackage={true}
+                      packages={
+                        getParameterValue(parameterDefinition)
+                          ? [getParameterValue(parameterDefinition)]
+                          : []
+                      }
+                      packagesChanged={(scripts: Package[]) => {
+                        setParameterValue(parameterDefinition, scripts[0]);
+                      }}
                     />
                   </div>
                 )}

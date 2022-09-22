@@ -7,4 +7,6 @@ export default class PackageParameterDefinition {
   public type: PackageParameterType = PackageParameterType.String;
   public min: number = 0;
   public max: number = 999;
+  public options: [] = [];
+  public scriptType: string = "";
 }

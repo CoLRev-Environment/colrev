@@ -1,9 +1,13 @@
 export enum PackageParameterType {
+  Unknown,
   Boolean,
   Int,
+  Float,
   String,
   StringList,
-  Float,
+  Options,
+  Script,
+  ScriptList,
 }
 
 export default PackageParameterType;

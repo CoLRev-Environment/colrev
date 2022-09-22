@@ -8,7 +8,6 @@ import Expander from "./components/common/Expander";
 import ExpanderItem from "./components/common/ExpanderItem";
 import { KEY_S } from "keycode-js";
 import SourcesEditor from "./components/sources/SourcesEditor";
-import Source from "./models/source";
 import PrepEditor from "./components/prep/PrepEditor";
 import Prep from "./models/prep";
 import { Tooltip } from "bootstrap";
@@ -26,10 +25,11 @@ import PdfPrepEditor from "./components/pdf/PdfPrepEditor";
 import ScreenEditor from "./components/screen/ScreenEditor";
 import Search from "./models/search";
 import SearchEditor from "./components/search/SearchEditor";
+import Package from "./models/package";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
-  const [sources, setSources] = useState<Source[]>([]);
+  const [sources, setSources] = useState<Package[]>([]);
   const [search, setSearch] = useState<Search>(new Search());
   const [prep, setPrep] = useState<Prep>(new Prep());
   const [dedupe, setDedupe] = useState<Dedupe>(new Dedupe());
@@ -81,7 +81,7 @@ function App() {
     setProject(project);
   };
 
-  const onSourcesChanged = (sources: Source[]) => {
+  const onSourcesChanged = (sources: Package[]) => {
     setIsFileSaved(false);
     setSources(sources);
   };
@@ -145,6 +145,7 @@ function App() {
       await dataService.saveSettings(settings);
       setIsFileSaved(true);
     } catch (error) {
+      console.log(error);
       alert("Error saving file.");
     }
   };
