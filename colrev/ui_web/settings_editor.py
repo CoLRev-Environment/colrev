@@ -226,7 +226,10 @@ class SettingsEditor:
                             },
                             "source_name": {"type": "string"},
                             "source_identifier": {"type": "string"},
-                            "search_parameters": {"type": "object"},
+                            "search_parameters": {
+                                "type": "object",
+                                "additionalProperties": {},
+                            },
                             "load_conversion_script": {
                                 "script_type": "load_conversion",
                                 "type": "script_item",
@@ -285,7 +288,7 @@ class SettingsEditor:
                         "properties": {
                             "same_source_merges": {
                                 "type": "string",
-                                "enum": ["prevent", "apply", "warn"],
+                                "enum": ["prevent", "warn", "apply"],
                             },
                             "scripts": {
                                 "script_type": "dedupe",
@@ -403,9 +406,43 @@ class SettingsEditor:
             #     package_type=package_type
             # )
 
-            if package_type_string != "search_source":
+            if package_type_string == "data":
+                discovered_packages = {
+                    "manuscript": {
+                        "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript",
+                        "installed": True,
+                        "description": "Synthesize the literature in a manuscript",
+                    },
+                    "structured": {
+                        "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
+                        "installed": True,
+                        "description": "Summarize the literature in a structured data extraction (a spreadsheet)",
+                    },
+                    "bibliography_export": {
+                        "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
+                        "installed": True,
+                        "description": "Export the sample references in Endpoint format",
+                    },
+                    "prisma": {
+                        "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
+                        "installed": True,
+                        "description": "Create a PRISMA diagram",
+                    },
+                    "github_pages": {
+                        "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
+                        "installed": True,
+                        "description": "Export the literature review into a Github Page",
+                    },
+                    "zettlr": {
+                        "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr",
+                        "installed": True,
+                        "description": "Export the sample into a Zettlr database",
+                    },
+                }
+
+            if package_type_string == "load_conversion":
                 # For testing:
-                # Example: script_type="load"
+                # Example: script_type="load_conversion"
                 # Returns:
                 discovered_packages = {
                     "bibtex": {
@@ -530,14 +567,40 @@ class SettingsEditor:
             package_type_string = request.args.get("packageType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
-            # package_type = colrev.env.package_manager.PackageType[package_type_string]
-            # package_details = self.package_manager.get_package_details(
-            #     package_type=package_type, package_identifier=package_identifier
-            # )
+            package_type = colrev.env.package_manager.PackageType[package_type_string]
+            package_details = self.package_manager.get_package_details(
+                package_type=package_type, package_identifier=package_identifier
+            )
 
             # TODO (GW): use endpoint_version
 
-            if package_type_string != "search_source":
+            if package_type_string == "data":
+                package_details = {
+                    "type": "object",
+                    "required": ["name", "version", "word_template", "csl_style"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "version": {"type": "string"},
+                        "word_template": {
+                            "tooltip": "Path to the word template (for Pandoc)",
+                            "type": "path",
+                        },
+                        "csl_style": {
+                            "type": "string",
+                            "tooltip": "Path to the csl file (for Pandoc)",
+                        },
+                        "paper_path": {
+                            "default": "paper.md",
+                            "tooltip": "Path for the paper (markdown source document)",
+                            "type": "path",
+                        },
+                        "paper_output": {"default": "paper.docx", "type": "path"},
+                    },
+                    "description": "Manuscript settings",
+                    "$schema": "http://json-schema.org/draft-06/schema#",
+                }
+
+            if package_type_string == "prescreen":
                 # For testing:
                 # Example: script_type="prescreen", script_name="scope_prescreen"
                 # Returns:

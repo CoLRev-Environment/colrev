@@ -51,9 +51,11 @@ class Manuscript(JsonSchemaMixin):
 
     @dataclass
     class ManuscriptSettings(JsonSchemaMixin):
+        """Manuscript settings"""
+
         name: str
         version: str
-        word_template: str
+        word_template: Path
         csl_style: str
         paper_path: Path = Path("paper.md")
         paper_output: Path = Path("paper.docx")
@@ -397,11 +399,11 @@ class Manuscript(JsonSchemaMixin):
         csl_file = self.settings.csl_style
         word_template = self.settings.word_template
 
-        if not Path(word_template).is_file():
+        if not word_template.is_file():
             self.retrieve_default_word_template()
         if not Path(csl_file).is_file():
             self.retrieve_default_csl()
-        assert Path(word_template).is_file()
+        assert word_template.is_file()
         assert Path(csl_file).is_file()
 
         uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid

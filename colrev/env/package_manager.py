@@ -2,6 +2,7 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
+import collections.abc
 import importlib
 import json
 import sys
@@ -363,6 +364,17 @@ class PackageManager:
                 except (AttributeError, ModuleNotFoundError):
                     discovered_package["installed"] = False
 
+    def __replace_path_by_str(self, *, orig_dict):
+        for k, v in orig_dict.items():
+            if isinstance(v, collections.abc.Mapping):
+                orig_dict[k] = self.__replace_path_by_str(orig_dict=v)
+            else:
+                if isinstance(v, Path):
+                    orig_dict[k] = str(v)
+                else:
+                    orig_dict[k] = v
+        return orig_dict
+
     def get_package_details(
         self, *, package_type: PackageType, package_identifier
     ) -> dict:
@@ -430,12 +442,22 @@ class PackageManager:
 
         # TODO (later) : package version?
 
+        # Note : fix because Path is not (yet) supported.
+        if "paper_path" in package_details["properties"]:
+            package_details["properties"]["paper_path"]["type"] = "path"
+        if "word_template" in package_details["properties"]:
+            package_details["properties"]["word_template"]["type"] = "path"
+        if "paper_output" in package_details["properties"]:
+            package_details["properties"]["paper_output"]["type"] = "path"
+
         if PackageType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
             package_details["properties"]["load_conversion_script"] = {
                 "type": "script",
                 "script_type": "load_conversion",
             }
+
+        package_details = self.__replace_path_by_str(orig_dict=package_details)
 
         return package_details
 
@@ -462,6 +484,10 @@ class PackageManager:
         self, *, package_type: PackageType, package_identifier: str
     ):
         package_identifier = package_identifier.lower()
+        if package_identifier not in self.packages[package_type]:
+            raise colrev_exceptions.MissingDependencyError(
+                f"{package_identifier} ({package_type}) not available"
+            )
         package_str = self.packages[package_type][package_identifier]["endpoint"]
         package_module = package_str.rsplit(".", 1)[0]
         package_class = package_str.rsplit(".", 1)[-1]
