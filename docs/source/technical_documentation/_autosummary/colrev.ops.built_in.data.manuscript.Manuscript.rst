@@ -26,7 +26,6 @@ colrev.ops.built\_in.data.manuscript.Manuscript
       ~Manuscript.get_default_setup
       ~Manuscript.json_schema
       ~Manuscript.register_field_encoders
-      ~Manuscript.retrieve_default_csl
       ~Manuscript.retrieve_default_word_template
       ~Manuscript.to_dict
       ~Manuscript.to_json
@@ -43,3 +42,4 @@ colrev.ops.built\_in.data.manuscript.Manuscript
    .. autosummary::
 
       ~Manuscript.NEW_RECORD_SOURCE_TAG
+      ~Manuscript.NON_SAMPLE_REFERENCES_RELATIVE

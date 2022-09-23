@@ -119,7 +119,7 @@ class Search(colrev.process.Process):
         # NOTE: for now, the parameters are limited to whole journals.
         add_source = colrev.settings.SearchSource(
             filename=Path(
-                f"search/{filename}",
+                f"data/search/{filename}",
             ),
             search_type=colrev.settings.SearchType(query_dict["search_type"]),
             source_name=query_dict["source_name"],

@@ -36,7 +36,7 @@ class TEIPDFPrep(JsonSchemaMixin):
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
         grobid_service.start()
-        Path(".tei").mkdir(exist_ok=True)
+        Path("data/.tei").mkdir(exist_ok=True)
 
     @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(

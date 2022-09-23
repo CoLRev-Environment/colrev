@@ -74,7 +74,7 @@ class StructuredData(JsonSchemaMixin):
         # if not data['ID'].is_unique:
         #     raise some error (data[data.duplicated(['ID'])].ID.tolist())
 
-        # # Check consistency: all IDs in data.csv in records.bib
+        # # Check consistency: all IDs in data.csv in data/records.bib
         # missing_IDs = [ID for
         #                 ID in data['ID'].tolist()
         #                 if ID not in IDs]

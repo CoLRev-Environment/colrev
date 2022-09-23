@@ -296,7 +296,7 @@ def load(ctx, keep_ids, combine_commits) -> None:
     "--reset_ids",
     is_flag=True,
     default=False,
-    help="Reset IDs that have been changed (to fix the sort order in records.bib)",
+    help="Reset IDs that have been changed (to fix the sort order in data/records.bib)",
 )
 @click.option(
     "-d",

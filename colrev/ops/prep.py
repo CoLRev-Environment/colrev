@@ -329,7 +329,7 @@ class Prep(colrev.process.Process):
         # TODO : double-check! resetting the prep does not necessarily mean
         # that wrong records were merged...
         # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
-        # retrieve the original record from the search/source file
+        # retrieve the original record from the data/search/source file
         for record_to_unmerge, record in record_reset_list:
             record_to_unmerge.update(
                 colrev_status=colrev.record.RecordState.md_needs_manual_preparation

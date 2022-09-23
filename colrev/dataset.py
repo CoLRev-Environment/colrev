@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functionality for records.bib and git repository."""
+"""Functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
 import io
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 class Dataset:
 
-    RECORDS_FILE_RELATIVE = Path("records.bib")
+    RECORDS_FILE_RELATIVE = Path("data/records.bib")
     records_file: Path
     __git_repo: git.Repo
 

@@ -38,8 +38,8 @@ class ReviewManager:
     SETTINGS_RELATIVE = Path("settings.json")
     REPORT_RELATIVE = Path(".report.log")
     CORRECTIONS_PATH_RELATIVE = Path(".corrections")
-    PDF_DIR_RELATIVE = Path("pdfs")
-    SEARCHDIR_RELATIVE = Path("search")
+    PDF_DIR_RELATIVE = Path("data/pdfs")
+    SEARCHDIR_RELATIVE = Path("data/search")
     README_RELATIVE = Path("readme.md")
     STATUS_RELATIVE = Path("status.yaml")
     OUTPUT_DIR_RELATIVE = Path("output")
@@ -74,9 +74,9 @@ class ReviewManager:
         self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
         self.data_dir = self.path / self.DATA_DIR_RELATIVE
 
+        self.data_dir.mkdir(exist_ok=True)
         self.search_dir.mkdir(exist_ok=True)
         self.pdf_dir.mkdir(exist_ok=True)
-        self.data_dir.mkdir(exist_ok=True)
         self.output_dir.mkdir(exist_ok=True)
 
         self.debug_mode = debug_mode

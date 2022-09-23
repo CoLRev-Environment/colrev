@@ -743,7 +743,7 @@ class Load(colrev.process.Process):
             # 2. resolve non-unique IDs (if any)
             self.__resolve_non_unique_ids(source=source)
 
-            # 3. load and add records to records.bib
+            # 3. load and add records to data/records.bib
             self.__load_source_records(source=source, keep_ids=keep_ids)
             if 0 == getattr(source, "to_import", 0):
                 continue

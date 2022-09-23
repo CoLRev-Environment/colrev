@@ -48,7 +48,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(source.filename).replace("search/", "")
+            str(source.filename).replace("data/search/", "")
             for source in dedupe_operation.review_manager.settings.sources
         ]
 

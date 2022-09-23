@@ -365,14 +365,14 @@ class PackageManager:
                     discovered_package["installed"] = False
 
     def __replace_path_by_str(self, *, orig_dict):
-        for k, v in orig_dict.items():
-            if isinstance(v, collections.abc.Mapping):
-                orig_dict[k] = self.__replace_path_by_str(orig_dict=v)
+        for key, value in orig_dict.items():
+            if isinstance(value, collections.abc.Mapping):
+                orig_dict[key] = self.__replace_path_by_str(orig_dict=value)
             else:
-                if isinstance(v, Path):
-                    orig_dict[k] = str(v)
+                if isinstance(value, Path):
+                    orig_dict[key] = str(value)
                 else:
-                    orig_dict[k] = v
+                    orig_dict[key] = value
         return orig_dict
 
     def get_package_details(

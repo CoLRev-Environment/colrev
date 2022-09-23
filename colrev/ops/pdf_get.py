@@ -290,7 +290,7 @@ class PDFGet(colrev.process.Process):
 
         # We may use other pdfs_search_files from the sources:
         # review_manager.settings.sources
-        pdfs_search_file = Path("search/pdfs.bib")
+        pdfs_search_file = Path("data/search/pdfs.bib")
 
         for record in records.values():
             if "file" not in record:

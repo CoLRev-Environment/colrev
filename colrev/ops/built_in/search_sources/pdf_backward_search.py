@@ -74,7 +74,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         if "file" in self.settings.search_parameters["scope"]:
             if (
                 self.settings.search_parameters["scope"]["file"] == "paper.pdf"
-            ) and "pdfs/paper.pdf" != record.get("file", ""):
+            ) and "data/pdfs/paper.pdf" != record.get("file", ""):
                 return False
 
         return True

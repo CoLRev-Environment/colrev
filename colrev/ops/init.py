@@ -154,8 +154,9 @@ class Initializer:
             with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
-        Path("search").mkdir()
-        Path("pdfs").mkdir()
+        colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE.mkdir(parents=True)
+        colrev.review_manager.ReviewManager.PDF_DIR_RELATIVE.mkdir(parents=True)
+
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)
 
@@ -215,7 +216,7 @@ class Initializer:
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=project_title.rstrip(" "),
+                new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
             r_type_suffix = (
@@ -226,7 +227,8 @@ class Initializer:
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=project_title.rstrip(" ") + f": A {r_type_suffix}",
+                new_string=project_title.rstrip(" ").capitalize()
+                + f": A {r_type_suffix}",
             )
 
         files_to_add = [
@@ -250,7 +252,7 @@ class Initializer:
             pdf_source = [
                 s
                 for s in self.review_manager.settings.sources
-                if "search/pdfs.bib" == str(s.filename)
+                if "data/search/pdfs.bib" == str(s.filename)
             ][0]
             pdf_source.search_parameters = {
                 "scope": {
@@ -263,7 +265,7 @@ class Initializer:
             crossref_source = [
                 s
                 for s in self.review_manager.settings.sources
-                if "search/CROSSREF.bib" == str(s.filename)
+                if "data/search/CROSSREF.bib" == str(s.filename)
             ][0]
             crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
 
@@ -324,11 +326,11 @@ class Initializer:
         self.logger.info("Include 30_example_records.bib")
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
-            target=Path("search/30_example_records.bib"),
+            target=Path("data/search/30_example_records.bib"),
         )
 
         git_repo = git.Repo.init()
-        git_repo.index.add(["search/30_example_records.bib"])
+        git_repo.index.add(["data/search/30_example_records.bib"])
 
     def __create_local_index(self) -> None:
 
