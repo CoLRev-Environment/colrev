@@ -21,7 +21,7 @@ const PackageParametersEditor: React.FC<{
   package: currentPackage,
   packageChanged,
 }) => {
-  const [hasParameters, setHasParameters] = useState<boolean>(false);
+  const [hasParameters, setHasParameters] = useState<boolean>(true);
   const [parameterDefinitions, setParameterDefinitions] = useState<
     PackageParameterDefinition[]
   >([]);

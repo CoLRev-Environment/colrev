@@ -30,6 +30,8 @@ const PackageEditWizard: React.FC<{
   const [stepIndex, setStepIndex] = useState<number>(0);
   const [selectedPackageDefinition, setSelectedPackageDefinition] =
     useState<PackageDefinition>(new PackageDefinition());
+  const [showPackageNotFound, setShowPackageNotFound] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const init = async () => {
@@ -41,12 +43,13 @@ const PackageEditWizard: React.FC<{
         setPackageDefinitions(packageDefs);
       } else {
         let packageDefinition = packageDefs.find(
-          (pd) => pd.endpoint === currentPackage.endpoint
+          (pd) => pd.name === currentPackage.endpoint
         );
 
-        // TODO: Show message: package not found
         if (!packageDefinition) {
-          packageDefinition = packageDefs[0];
+          setShowPackageNotFound(true);
+          setStepIndex(-1);
+          return;
         }
 
         setSelectedPackageDefinition(packageDefinition);
@@ -79,6 +82,11 @@ const PackageEditWizard: React.FC<{
       onOk={okHandler}
       onCancel={cancelHandler}
     >
+      {showPackageNotFound && (
+        <div>
+          {packageEntity} not found: {currentPackage.endpoint}
+        </div>
+      )}
       {stepIndex === 0 && (
         <div>
           <p>Select {packageEntity}</p>
@@ -103,7 +111,7 @@ const PackageEditWizard: React.FC<{
                     key={index.toString()}
                     onClick={() => {
                       setSelectedPackageDefinition(packageDefinition);
-                      newPackage.endpoint = packageDefinition.endpoint;
+                      newPackage.endpoint = packageDefinition.name;
                       next();
                     }}
                   >

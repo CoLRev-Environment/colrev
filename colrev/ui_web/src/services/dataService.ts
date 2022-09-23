@@ -424,10 +424,6 @@ const getScriptParameterType = (
     case "script":
       scriptParameterType = PackageParameterType.Script;
       break;
-    case "script_array":
-      //scriptParameterType = PackageParameterType.ScriptList;
-      scriptParameterType = PackageParameterType.Script;
-      break;
   }
 
   return scriptParameterType;

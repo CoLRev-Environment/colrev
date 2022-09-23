@@ -11,7 +11,6 @@ const PackageTitle: React.FC<{ packageDefinition: PackageDefinition }> = ({
         </div>
       )}
       {!packageDefinition.description && <div>{packageDefinition.name}</div>}
-      <div style={{ fontSize: "0.8em" }}>{packageDefinition.endpoint}</div>
     </div>
   );
 };
