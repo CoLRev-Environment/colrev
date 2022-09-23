@@ -401,6 +401,8 @@ class SettingsEditor:
         def getScripts():
             package_type_string = request.args.get("packageType")
 
+            discovered_packages = {}
+
             # package_type = colrev.env.package_manager.PackageType[package_type_string]
             # discovered_packages = self.package_manager.discover_packages(
             #     package_type=package_type
@@ -567,10 +569,13 @@ class SettingsEditor:
             package_type_string = request.args.get("packageType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
-            package_type = colrev.env.package_manager.PackageType[package_type_string]
-            package_details = self.package_manager.get_package_details(
-                package_type=package_type, package_identifier=package_identifier
-            )
+
+            package_details = {}
+
+            # package_type = colrev.env.package_manager.PackageType[package_type_string]
+            # package_details = self.package_manager.get_package_details(
+            #     package_type=package_type, package_identifier=package_identifier
+            # )
 
             # TODO (GW): use endpoint_version
 
