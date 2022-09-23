@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+"""SearchSource: ACM Digital Library"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -14,19 +17,18 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class ACMDigitalLibrarySearchSource:
+@dataclass
+class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
-    source_identifier_search = "https://dl.acm.org/doi/{{ID}}"
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:

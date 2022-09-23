@@ -38,6 +38,9 @@ import colrev.ui_cli.cli_colors as colors
 if TYPE_CHECKING:
     import colrev.review_manager
 
+# pylint: disable=too-many-lines
+# pylint: disable=too-many-public-methods
+
 
 class Record:
 
@@ -92,7 +95,7 @@ class Record:
         "colrev_id",
         "colrev_data_provenance",
         "colrev_pdf_id",
-        "MOVED_DUPE",
+        "MOVED_DUPE_ID",
     ]
 
     preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
@@ -518,6 +521,35 @@ class Record:
             return True
         return False
 
+    def __merge_origins(self, *, merging_record) -> None:
+        if "colrev_origin" in merging_record.data:
+            origins = self.data["colrev_origin"].split(";") + merging_record.data[
+                "colrev_origin"
+            ].split(";")
+            self.data["colrev_origin"] = ";".join(list(set(origins)))
+
+    def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
+        val = merging_record.data.get(key, "")
+
+        if "" == val:
+            return ""
+        if not val:
+            return ""
+
+        # do not override provenance, ID, ... fields
+        if key in [
+            "ID",
+            "colrev_masterdata_provenance",
+            "colrev_data_provenance",
+            "colrev_id",
+            "colrev_status",
+            "colrev_origin",
+            "MOVED_DUPE_ID",
+        ]:
+            return ""
+
+        return val
+
     def merge(self, *, merging_record: Record, default_source: str) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
@@ -526,11 +558,7 @@ class Record:
         Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
-        if "colrev_origin" in merging_record.data:
-            origins = self.data["colrev_origin"].split(";") + merging_record.data[
-                "colrev_origin"
-            ].split(";")
-            self.data["colrev_origin"] = ";".join(list(set(origins)))
+        self.__merge_origins(merging_record=merging_record)
 
         if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
             self.data["colrev_masterdata_provenance"] = merging_record.data[
@@ -545,23 +573,11 @@ class Record:
 
         # TODO : TBD: merge colrev_ids?
         # TODO : provenance (especially not_missing in provenance but not in keys)
-        for key in list(merging_record.data.keys()):
-            val = merging_record.data.get(key, "")
-            if "" == val:
-                continue
-            if not val:
-                continue
 
-            # do not override provenance, ID, ... fields
-            if key in [
-                "ID",
-                "colrev_masterdata_provenance",
-                "colrev_data_provenance",
-                "colrev_id",
-                "colrev_status",
-                "colrev_origin",
-                "MOVED_DUPE",
-            ]:
+        for key in list(merging_record.data.keys()):
+
+            val = self.__get_merging_val(merging_record=merging_record, key=key)
+            if "" == val:
                 continue
 
             source, note = merging_record.get_field_provenance(
@@ -604,109 +620,117 @@ class Record:
                 else:
                     self.update_field(key=key, value=str(val), source=source, note=note)
 
+    @classmethod
+    def __select_best_author(
+        cls, *, record: Record, merging_record: Record, preferred_sources: list
+    ) -> str:
+        # pylint: disable=too-many-return-statements
+        if "colrev_masterdata_provenance" not in record.data:
+            record.data["colrev_masterdata_provenance"] = {}
+        record_a_prov = record.data["colrev_masterdata_provenance"]
+
+        if "colrev_masterdata_provenance" not in merging_record.data:
+            merging_record.data["colrev_masterdata_provenance"] = {}
+        merging_record_a_prov = merging_record.data["colrev_masterdata_provenance"]
+
+        if "author" in record_a_prov and "author" not in merging_record_a_prov:
+            # Prefer non-defect version
+            if "quality_defect" in record_a_prov["author"].get("note", ""):
+                return merging_record.data["author"]
+            # Prefer complete version
+            if "incomplete" in record_a_prov["author"].get("note", ""):
+                return merging_record.data["author"]
+        elif "author" in record_a_prov and "author" in merging_record_a_prov:
+            # Prefer non-defect version
+            if "quality_defect" in record_a_prov["author"].get(
+                "note", ""
+            ) and "quality_defect" not in merging_record_a_prov["author"].get(
+                "note", ""
+            ):
+                return merging_record.data["author"]
+
+            # Prefer complete version
+            if "incomplete" in record_a_prov["author"].get(
+                "note", ""
+            ) and "incomplete" not in merging_record_a_prov["author"].get("note", ""):
+                return merging_record.data["author"]
+
+        if len(record.data["author"]) > 0 and len(merging_record.data["author"]) > 0:
+            default_mostly_upper = (
+                colrev.env.utils.percent_upper_chars(record.data["author"]) > 0.8
+            )
+            candidate_mostly_upper = (
+                colrev.env.utils.percent_upper_chars(merging_record.data["author"])
+                > 0.8
+            )
+
+            # Prefer title case (not all-caps)
+            if default_mostly_upper and not candidate_mostly_upper:
+                return merging_record.data["author"]
+
+        # Prefer sources
+        if "author" in merging_record_a_prov:
+            if any(
+                x in merging_record_a_prov["author"]["source"]
+                for x in preferred_sources
+            ):
+                return merging_record.data["author"]
+        return record.data["author"]
+
+    @classmethod
+    def __select_best_pages(cls, *, default: str, candidate: str) -> str:
+        best_pages = default
+        if "--" in candidate and "--" not in default:
+            best_pages = candidate
+        return best_pages
+
+    @classmethod
+    def __select_best_title(cls, *, default: str, candidate: str) -> str:
+        best_title = default
+
+        default_upper = colrev.env.utils.percent_upper_chars(default)
+        candidate_upper = colrev.env.utils.percent_upper_chars(candidate)
+
+        if candidate[-1] not in ["*", "1", "2"]:
+            # Relatively simple rule...
+            # catches cases when default is all upper or title case
+            if default_upper > candidate_upper:
+                best_title = candidate
+        return best_title
+
+    @classmethod
+    def __select_best_container_title(cls, *, default: str, candidate: str) -> str:
+
+        best_journal = default
+
+        default_upper = colrev.env.utils.percent_upper_chars(default)
+        candidate_upper = colrev.env.utils.percent_upper_chars(candidate)
+
+        # Simple heuristic to avoid abbreviations
+        if "." in default and "." not in candidate:
+            best_journal = candidate
+        # Relatively simple rule...
+        # catches cases when default is all upper or title case
+        if default_upper > candidate_upper:
+            best_journal = candidate
+        return best_journal
+
     def fuse_best_field(
         self, *, merging_record: Record, key: str, val, source: str, note: str
     ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
-
-        def select_best_author(record: Record, merging_record: Record) -> str:
-            # pylint: disable=too-many-return-statements
-            if "colrev_masterdata_provenance" not in record.data:
-                record.data["colrev_masterdata_provenance"] = {}
-            record_a_prov = record.data["colrev_masterdata_provenance"]
-
-            if "colrev_masterdata_provenance" not in merging_record.data:
-                merging_record.data["colrev_masterdata_provenance"] = {}
-            merging_record_a_prov = merging_record.data["colrev_masterdata_provenance"]
-
-            if "author" in record_a_prov and "author" not in merging_record_a_prov:
-                # Prefer non-defect version
-                if "quality_defect" in record_a_prov["author"].get("note", ""):
-                    return merging_record.data["author"]
-                # Prefer complete version
-                if "incomplete" in record_a_prov["author"].get("note", ""):
-                    return merging_record.data["author"]
-            elif "author" in record_a_prov and "author" in merging_record_a_prov:
-                # Prefer non-defect version
-                if "quality_defect" in record_a_prov["author"].get(
-                    "note", ""
-                ) and "quality_defect" not in merging_record_a_prov["author"].get(
-                    "note", ""
-                ):
-                    return merging_record.data["author"]
-
-                # Prefer complete version
-                if "incomplete" in record_a_prov["author"].get(
-                    "note", ""
-                ) and "incomplete" not in merging_record_a_prov["author"].get(
-                    "note", ""
-                ):
-                    return merging_record.data["author"]
-
-            if (
-                len(record.data["author"]) > 0
-                and len(merging_record.data["author"]) > 0
-            ):
-                default_mostly_upper = percent_upper_chars(record.data["author"]) > 0.8
-                candidate_mostly_upper = (
-                    percent_upper_chars(merging_record.data["author"]) > 0.8
-                )
-
-                # Prefer title case (not all-caps)
-                if default_mostly_upper and not candidate_mostly_upper:
-                    return merging_record.data["author"]
-
-            # Prefer sources
-            if "author" in merging_record_a_prov:
-                if any(
-                    x in merging_record_a_prov["author"]["source"]
-                    for x in self.preferred_sources
-                ):
-                    return merging_record.data["author"]
-            return record.data["author"]
-
-        def select_best_pages(*, default: str, candidate: str) -> str:
-            best_pages = default
-            if "--" in candidate and "--" not in default:
-                best_pages = candidate
-            return best_pages
-
-        def select_best_title(*, default: str, candidate: str) -> str:
-            best_title = default
-
-            default_upper = percent_upper_chars(default)
-            candidate_upper = percent_upper_chars(candidate)
-
-            if candidate[-1] not in ["*", "1", "2"]:
-                # Relatively simple rule...
-                # catches cases when default is all upper or title case
-                if default_upper > candidate_upper:
-                    best_title = candidate
-            return best_title
-
-        def select_best_journal(*, default: str, candidate: str) -> str:
-
-            best_journal = default
-
-            default_upper = percent_upper_chars(default)
-            candidate_upper = percent_upper_chars(candidate)
-
-            # Simple heuristic to avoid abbreviations
-            if "." in default and "." not in candidate:
-                best_journal = candidate
-            # Relatively simple rule...
-            # catches cases when default is all upper or title case
-            if default_upper > candidate_upper:
-                best_journal = candidate
-            return best_journal
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         if "author" == key:
             if "author" in self.data:
-                best_author = select_best_author(self, merging_record)
+                best_author = self.__select_best_author(
+                    record=self,
+                    merging_record=merging_record,
+                    preferred_sources=self.preferred_sources,
+                )
                 if self.data["author"] != best_author:
                     self.update_field(key="author", value=best_author, source=source)
             else:
@@ -714,7 +738,7 @@ class Record:
 
         elif "pages" == key:
             if "pages" in self.data:
-                best_pages = select_best_pages(
+                best_pages = self.__select_best_pages(
                     default=self.data["pages"], candidate=merging_record.data["pages"]
                 )
                 if self.data["pages"] != best_pages:
@@ -725,7 +749,7 @@ class Record:
 
         elif "title" == key:
             if "title" in self.data:
-                best_title = select_best_title(
+                best_title = self.__select_best_title(
                     default=self.data["title"], candidate=merging_record.data["title"]
                 )
                 self.update_field(key="title", value=best_title, source=source)
@@ -735,7 +759,7 @@ class Record:
 
         elif "journal" == key:
             if "journal" in self.data:
-                best_journal = select_best_journal(
+                best_journal = self.__select_best_container_title(
                     default=self.data["journal"],
                     candidate=merging_record.data["journal"],
                 )
@@ -745,7 +769,7 @@ class Record:
 
         elif "booktitle" == key:
             if "booktitle" in self.data:
-                best_booktitle = select_best_journal(
+                best_booktitle = self.__select_best_container_title(
                     default=self.data["booktitle"],
                     candidate=merging_record.data["booktitle"],
                 )
@@ -1090,8 +1114,6 @@ class Record:
         return list(set(incomplete_field_keys))
 
     def get_quality_defects(self) -> list:
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
 
         defect_field_keys = []
         for key in self.data.keys():
@@ -1125,7 +1147,7 @@ class Record:
                     defect_field_keys.append(key)
 
             if key in ["title", "author", "journal", "booktitle"]:
-                if percent_upper_chars(self.data[key]) > 0.8:
+                if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
                     defect_field_keys.append(key)
 
         return list(set(defect_field_keys))
@@ -1487,14 +1509,15 @@ class Record:
         self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
 
     def __set_initial_non_curated_import_provenance(self) -> None:
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
 
         if self.data["ENTRYTYPE"] in self.record_field_requirements:
             required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
             for required_field in required_fields:
                 if self.data.get(required_field, "") not in ["UNKNOWN", ""]:
-                    if percent_upper_chars(self.data[required_field]) > 0.8:
+                    if (
+                        colrev.env.utils.percent_upper_chars(self.data[required_field])
+                        > 0.8
+                    ):
                         self.add_masterdata_provenance_note(
                             key=required_field, note="quality_defect"
                         )
@@ -1555,7 +1578,7 @@ class Record:
 
         if filepath is not None:
             self.set_status(target_state=RecordState.pdf_imported)
-            self.data.update(file=str(filepath))
+            self.data.update(file=str(filepath.relative_to(review_manager.path)))
             review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
@@ -1855,15 +1878,13 @@ class PrepRecord(Record):
         return similarity
 
     def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
 
         if not re.match(r"[a-zA-Z]+", self.data[key]):
             return
 
         self.data[key] = self.data[key].replace("\n", " ")
 
-        if percent_upper_chars(self.data[key]) > 0.8:
+        if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
             if "capitalize" == case:
                 self.data[key] = self.data[key].capitalize()
             if "title" == case:

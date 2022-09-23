@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
    .. autosummary::
       :nosignatures:
 
+      ~AISeLibrarySearchSource.all_json_schemas
+      ~AISeLibrarySearchSource.field_mapping
+      ~AISeLibrarySearchSource.from_dict
+      ~AISeLibrarySearchSource.from_json
+      ~AISeLibrarySearchSource.from_object
       ~AISeLibrarySearchSource.heuristic
+      ~AISeLibrarySearchSource.json_schema
       ~AISeLibrarySearchSource.load_fixes
       ~AISeLibrarySearchSource.prepare
+      ~AISeLibrarySearchSource.register_field_encoders
       ~AISeLibrarySearchSource.run_search
+      ~AISeLibrarySearchSource.to_dict
+      ~AISeLibrarySearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
 
    .. autosummary::
 
-      ~AISeLibrarySearchSource.search_mode
       ~AISeLibrarySearchSource.source_identifier
-      ~AISeLibrarySearchSource.source_identifier_search

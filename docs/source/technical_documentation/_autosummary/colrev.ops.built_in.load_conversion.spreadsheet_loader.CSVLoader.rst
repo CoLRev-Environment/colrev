@@ -16,7 +16,16 @@ colrev.ops.built\_in.load\_conversion.spreadsheet\_loader.CSVLoader
    .. autosummary::
       :nosignatures:
 
+      ~CSVLoader.all_json_schemas
+      ~CSVLoader.field_mapping
+      ~CSVLoader.from_dict
+      ~CSVLoader.from_json
+      ~CSVLoader.from_object
+      ~CSVLoader.json_schema
       ~CSVLoader.load
+      ~CSVLoader.register_field_encoders
+      ~CSVLoader.to_dict
+      ~CSVLoader.to_json
 
 
 

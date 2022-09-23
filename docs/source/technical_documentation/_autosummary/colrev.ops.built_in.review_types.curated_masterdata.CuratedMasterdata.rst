@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.curated\_masterdata.CuratedMasterdata
    .. autosummary::
       :nosignatures:
 
+      ~CuratedMasterdata.all_json_schemas
+      ~CuratedMasterdata.field_mapping
+      ~CuratedMasterdata.from_dict
+      ~CuratedMasterdata.from_json
+      ~CuratedMasterdata.from_object
       ~CuratedMasterdata.initialize
+      ~CuratedMasterdata.json_schema
+      ~CuratedMasterdata.register_field_encoders
+      ~CuratedMasterdata.to_dict
+      ~CuratedMasterdata.to_json

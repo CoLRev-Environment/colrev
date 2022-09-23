@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+"""Load conversion of ris, end, enl, copac, isi, med based on bibutils"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import docker
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -20,7 +23,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
-class BibutilsLoader:
+@dataclass
+class BibutilsLoader(JsonSchemaMixin):
+
     """Loads bibliography files (based on bibutils)
     Supports ris, end, enl, copac, isi, med"""
 

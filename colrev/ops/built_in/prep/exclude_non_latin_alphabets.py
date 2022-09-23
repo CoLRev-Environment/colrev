@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+"""Exclude records with non-latin alphabets as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from alphabet_detector import AlphabetDetector
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -20,7 +23,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class ExcludeNonLatinAlphabetsPrep:
+@dataclass
+class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field)"""
 

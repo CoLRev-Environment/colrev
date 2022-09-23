@@ -11,6 +11,14 @@ colrev.settings.IDPattern
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~IDPattern.get_field_details
+      ~IDPattern.get_options
+
 
 
 

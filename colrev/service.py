@@ -28,7 +28,7 @@ class Event(LoggingEventHandler):
     def on_modified(self, event) -> None:
         if event.is_directory:
             return
-        if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):
+        if any(x in event.src_path for x in [".git/", ".report.log", ".goutputstream"]):
             return
 
         time_since_last_change = (
@@ -54,7 +54,7 @@ class Event(LoggingEventHandler):
                 if "priority" in instruction:
                     # Note : colrev load can always be called but we are only interested
                     # in it if data in the search directory changes.
-                    if "colrev load" == cmd and "search/" not in event.src_path:
+                    if "colrev load" == cmd and "data/search/" not in event.src_path:
                         return
                     self.service.service_queue.put(
                         {"name": cmd, "cmd": cmd, "priority": "yes"}
@@ -255,7 +255,7 @@ class Service:
             self.service_queue.task_done()
             return
         else:
-            if item["name"] not in ["git add records.bib"]:
+            if item["name"] not in ["git add data/records.bib"]:
                 input(f'Complete task: {item["name"]}')
             self.service_queue.task_done()
 

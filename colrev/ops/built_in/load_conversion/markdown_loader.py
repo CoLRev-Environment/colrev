@@ -1,11 +1,14 @@
 #! /usr/bin/env python
+"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
@@ -18,7 +21,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
-class MarkdownLoader:
+@dataclass
+class MarkdownLoader(JsonSchemaMixin):
+
     """Loads reference strings from text (md) files (based on GROBID)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

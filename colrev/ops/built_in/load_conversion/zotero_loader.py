@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+"""Load conversion based on zotero importers (ris, rdf, json, mods, ...)"""
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -20,7 +23,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
-class ZoteroTranslationLoader:
+@dataclass
+class ZoteroTranslationLoader(JsonSchemaMixin):
+
     """Loads bibliography files (based on pandas).
     Supports ris, rdf, json, mods, xml, marc, txt"""
 

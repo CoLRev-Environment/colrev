@@ -16,18 +16,9 @@ extension-pkg-whitelist=lxml.etree
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=C0116,C0115,C0114,W0511,R0914,C0302
-# R0912,R0915,R1702,R0904
+disable=C0116,C0115,W0511
 
 # W0511 TODO
 
-# R0914 too many local variables
-# R0912 too many branches
-# R0915 too many statements
-# R1702 too many nested blocks
-# C0302 too many lines in module
-# R0904 too many public methods
-
 # C0116 missing function/method docstring
 # C0115 missing class docstring
-# C0114 missing module docstring

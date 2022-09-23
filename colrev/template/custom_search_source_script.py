@@ -19,8 +19,6 @@ class CustomSearch:
 
     settings_class = colrev.env.package_manager.DefaultSettings
     source_identifier = "{{custom}}"
-    source_identifier_search = "{{custom}}"
-    search_mode = "all"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -75,7 +73,7 @@ class CustomSearch:
 
     def heuristic(self, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": self.source_identifier}
+        result = {"confidence": 0}
 
         return result
 

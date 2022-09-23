@@ -75,7 +75,7 @@ class PDFGetMan(colrev.process.Process):
 
     def get_data(self) -> dict:
 
-        self.review_manager.pdf_directory.mkdir(exist_ok=True)
+        self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
         record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(

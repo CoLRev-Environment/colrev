@@ -231,8 +231,7 @@ class Prep(colrev.process.Process):
 
         return record.get_data()
 
-    def reset(self, *, record_list: list[dict]) -> None:
-
+    def __select_record_list_for_reset(self, *, record_list: list[dict]) -> list[dict]:
         record_list = [
             rec
             for rec in record_list
@@ -258,9 +257,9 @@ class Prep(colrev.process.Process):
             )
             self.review_manager.logger.error(msg)
             self.review_manager.report_logger.error(msg)
+        return record_list
 
-        record_reset_list = [[record, deepcopy(record)] for record in record_list]
-
+    def __get_revlist_for_reset(self) -> typing.Iterator[tuple]:
         git_repo = self.review_manager.dataset.get_repo()
         revlist = (
             (
@@ -274,6 +273,14 @@ class Prep(colrev.process.Process):
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
             )
         )
+        return revlist
+
+    def reset(self, *, record_list: list[dict]) -> None:
+
+        record_list = self.__select_record_list_for_reset(record_list=record_list)
+        revlist = self.__get_revlist_for_reset()
+
+        record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
         for commit_id, cmsg, filecontents in list(revlist):
             cmsg_l1 = str(cmsg).split("\n", maxsplit=1)[0]
@@ -322,7 +329,7 @@ class Prep(colrev.process.Process):
         # TODO : double-check! resetting the prep does not necessarily mean
         # that wrong records were merged...
         # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
-        # retrieve the original record from the search/source file
+        # retrieve the original record from the data/search/source file
         for record_to_unmerge, record in record_reset_list:
             record_to_unmerge.update(
                 colrev_status=colrev.record.RecordState.md_needs_manual_preparation

@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~WebOfScienceSearchSource.all_json_schemas
+      ~WebOfScienceSearchSource.field_mapping
+      ~WebOfScienceSearchSource.from_dict
+      ~WebOfScienceSearchSource.from_json
+      ~WebOfScienceSearchSource.from_object
       ~WebOfScienceSearchSource.heuristic
+      ~WebOfScienceSearchSource.json_schema
       ~WebOfScienceSearchSource.load_fixes
       ~WebOfScienceSearchSource.prepare
+      ~WebOfScienceSearchSource.register_field_encoders
       ~WebOfScienceSearchSource.run_search
+      ~WebOfScienceSearchSource.to_dict
+      ~WebOfScienceSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
 
    .. autosummary::
 
-      ~WebOfScienceSearchSource.search_mode
       ~WebOfScienceSearchSource.source_identifier
-      ~WebOfScienceSearchSource.source_identifier_search

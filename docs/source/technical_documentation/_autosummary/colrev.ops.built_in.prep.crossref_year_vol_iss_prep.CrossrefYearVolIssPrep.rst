@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.crossref\_year\_vol\_iss\_prep.CrossrefYearVolIssPrep
    .. autosummary::
       :nosignatures:
 
+      ~CrossrefYearVolIssPrep.all_json_schemas
+      ~CrossrefYearVolIssPrep.field_mapping
+      ~CrossrefYearVolIssPrep.from_dict
+      ~CrossrefYearVolIssPrep.from_json
+      ~CrossrefYearVolIssPrep.from_object
+      ~CrossrefYearVolIssPrep.json_schema
       ~CrossrefYearVolIssPrep.prepare
+      ~CrossrefYearVolIssPrep.register_field_encoders
+      ~CrossrefYearVolIssPrep.to_dict
+      ~CrossrefYearVolIssPrep.to_json
 
 
 

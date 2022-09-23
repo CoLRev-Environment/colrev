@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~ColrevProjectSearchSource.all_json_schemas
+      ~ColrevProjectSearchSource.field_mapping
+      ~ColrevProjectSearchSource.from_dict
+      ~ColrevProjectSearchSource.from_json
+      ~ColrevProjectSearchSource.from_object
       ~ColrevProjectSearchSource.heuristic
+      ~ColrevProjectSearchSource.json_schema
       ~ColrevProjectSearchSource.load_fixes
       ~ColrevProjectSearchSource.prepare
+      ~ColrevProjectSearchSource.register_field_encoders
       ~ColrevProjectSearchSource.run_search
+      ~ColrevProjectSearchSource.to_dict
+      ~ColrevProjectSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
 
    .. autosummary::
 
-      ~ColrevProjectSearchSource.search_mode
       ~ColrevProjectSearchSource.source_identifier
-      ~ColrevProjectSearchSource.source_identifier_search

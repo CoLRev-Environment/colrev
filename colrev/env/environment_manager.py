@@ -115,6 +115,10 @@ class EnvironmentManager:
                 glob_git_conf.get("user", "name"),
                 glob_git_conf.get("user", "email"),
             )
+        if ("NA", "NA") == global_conf_details:
+            raise colrev_exceptions.CoLRevException(
+                "Global git variables (user name and email) not available."
+            )
         return global_conf_details
 
     def build_docker_images(self) -> None:
@@ -266,7 +270,9 @@ class EnvironmentManager:
                     first_line = file.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
-                with open(f"{repo_source_path}/records.bib", encoding="utf-8") as file:
+                with open(
+                    f"{repo_source_path}/data/records.bib", encoding="utf-8"
+                ) as file:
                     outlets = []
                     for line in file.readlines():
                         # Note : the second part ("journal:"/"booktitle:")

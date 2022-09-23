@@ -91,13 +91,9 @@ class Corrections:
             original_curated_record = prior_cr.copy()
         return original_curated_record
 
-    def __create_change_item(
-        self,
-        *,
-        original_curated_record: dict,
-        corrected_curated_record: dict,
+    def __prep_for_change_item_creation(
+        self, *, original_curated_record: dict, corrected_curated_record: dict
     ) -> None:
-
         original_curated_record["colrev_id"] = colrev.record.Record(
             data=original_curated_record
         ).create_colrev_id()
@@ -121,12 +117,23 @@ class Corrections:
         # if "dblp_key" in corrected_curated_record:
         #     del corrected_curated_record["dblp_key"]
 
+    def __create_change_item(
+        self,
+        *,
+        original_curated_record: dict,
+        corrected_curated_record: dict,
+    ) -> None:
+
+        self.__prep_for_change_item_creation(
+            original_curated_record=original_curated_record,
+            corrected_curated_record=corrected_curated_record,
+        )
+
         # TODO : export only essential changes?
         changes = diff(original_curated_record, corrected_curated_record)
-        change_items = list(changes)
 
         selected_change_items = []
-        for change_item in change_items:
+        for change_item in list(changes):
             change_type, key, val = change_item
             if "add" == change_type:
                 for add_item in val:
@@ -139,9 +146,7 @@ class Corrections:
                 if key not in self.keys_to_ignore:
                     selected_change_items.append(change_item)
 
-        change_items = selected_change_items
-
-        if len(change_items) == 0:
+        if len(selected_change_items) == 0:
             return
 
         if len(corrected_curated_record.get("colrev_origin", "").split(";")) > len(
@@ -155,14 +160,14 @@ class Corrections:
                     corrected_curated_record["dblp_key"]
                     != original_curated_record["dblp_key"]
                 ):
-                    change_items = {  # type: ignore
+                    selected_change_items = {  # type: ignore
                         "merge": [
                             corrected_curated_record["dblp_key"],
                             original_curated_record["dblp_key"],
                         ]
                     }
             # else:
-            #     change_items = {
+            #     selected_change_items = {
             #         "merge": [
             #             corrected_curated_record["ID"],
             #             original_curated_record["ID"],
@@ -176,7 +181,7 @@ class Corrections:
         dict_to_save = {
             "source_url": original_curated_record["colrev_masterdata_provenance"],
             "original_curated_record": original_curated_record,
-            "changes": change_items,
+            "changes": selected_change_items,
         }
         filepath = self.review_manager.corrections_path / Path(
             f"{corrected_curated_record['ID']}.json"

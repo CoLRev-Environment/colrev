@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Prescreen based on specified scope"""
 from __future__ import annotations
 
 import typing
@@ -7,6 +8,7 @@ from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -19,11 +21,13 @@ if typing.TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
-class ScopePrescreen:
+@dataclass
+class ScopePrescreen(JsonSchemaMixin):
+
     """Prescreens records based on predefined rules (scope)"""
 
     @dataclass
-    class ScopePrescreenSettings:
+    class ScopePrescreenSettings(JsonSchemaMixin):
         # pylint: disable=invalid-name
         # pylint: disable=too-many-instance-attributes
 

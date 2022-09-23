@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import typing
+from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError
 from subprocess import check_call
@@ -20,7 +21,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
 
 # from importlib.metadata import version
 
@@ -29,7 +29,7 @@ import colrev.ui_cli.cli_colors as colors
 
 class Initializer:
 
-    share_stat_req_options = ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+    share_stat_req_options = ["none", "processed", "screened", "completed"]
 
     def __init__(
         self,
@@ -40,7 +40,6 @@ class Initializer:
     ) -> None:
 
         saved_args = locals()
-
         assert not (example and local_index_repo)
 
         # TODO : adapt to  new colrev.review_types
@@ -92,11 +91,18 @@ class Initializer:
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
-        if "report.log" in cur_content:
-            cur_content.remove("report.log")
+        if ".report.log" in cur_content:
+            cur_content.remove(".report.log")
 
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
+
+        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        global_git_vars = environment_manager.get_name_mail_from_git()
+        if 2 != len(global_git_vars):
+            raise colrev_exceptions.CoLRevException(
+                "Global git variables (user name and email) not available."
+            )
 
     def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
@@ -139,17 +145,18 @@ class Initializer:
     def __setup_files(self, *, path: Path) -> None:
 
         # Note: parse instead of copy to avoid format changes
-        filedata = colrev.env.utils.get_package_file_content(
+        settings_filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/settings.json")
         )
-        if filedata:
-            settings = json.loads(filedata.decode("utf-8"))
+        if settings_filedata:
+            settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
             with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
-        Path("search").mkdir()
-        Path("pdfs").mkdir()
+        colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE.mkdir(parents=True)
+        colrev.review_manager.ReviewManager.PDF_DIR_RELATIVE.mkdir(parents=True)
+
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)
 
@@ -175,59 +182,54 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
-        review_types = self.review_manager.get_review_types(
-            review_type=self.review_type
-        )
-
         settings = self.review_manager.settings
 
-        print("TODO : reactivate (settings_editor branch)")
-        # settings.project.authors = [
-        #     colrev.settings.Author(
-        #         name=self.review_manager.committer,
-        #         initials="".join(
-        #             part[0] for part in self.review_manager.committer.split(" ")
-        #         ),
-        #         email=self.review_manager.email,
-        #     )
-        # ]
+        settings.project.authors = [
+            colrev.settings.Author(
+                name=self.review_manager.committer,
+                initials="".join(
+                    part[0] for part in self.review_manager.committer.split(" ")
+                ),
+                email=self.review_manager.email,
+            )
+        ]
+
+        colrev_version = version("colrev_core")
+        colrev_version = colrev_version[: colrev_version.find("+")]
+        settings.project.colrev_version = colrev_version
 
         settings.project.title = self.project_name
-
-        # colrev_version = version("colrev_core")
-        # colrev_version = colrev_version[: colrev_version.find("+")]
-        # settings.project.colrev_version = colrev_version
-
         self.review_type = settings.project.review_type
 
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
 
+        review_types = self.review_manager.get_review_types(
+            review_type=self.review_type
+        )
         settings = review_types.packages[self.review_type].initialize(settings=settings)
 
         self.review_manager.save_settings()
 
-        if "review" in self.project_name.lower():
+        project_title = self.review_manager.settings.project.title
+        if "review" in project_title.lower():
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=self.project_name.rstrip(" "),
+                new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            r_type_suffix = self.review_type.replace("_", " ").replace(
-                "meta analysis", "meta-analysis"
+            r_type_suffix = (
+                str(self.review_type)
+                .replace("_", " ")
+                .replace("meta analysis", "meta-analysis")
             )
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
-                new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
+                new_string=project_title.rstrip(" ").capitalize()
+                + f": A {r_type_suffix}",
             )
-
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        global_git_vars = environment_manager.get_name_mail_from_git()
-        if 2 != len(global_git_vars):
-            logging.error("Global git variables (user name and email) not available.")
-            return
 
         files_to_add = [
             "readme.md",
@@ -250,7 +252,7 @@ class Initializer:
             pdf_source = [
                 s
                 for s in self.review_manager.settings.sources
-                if "search/pdfs.bib" == str(s.filename)
+                if "data/search/pdfs.bib" == str(s.filename)
             ][0]
             pdf_source.search_parameters = {
                 "scope": {
@@ -263,18 +265,13 @@ class Initializer:
             crossref_source = [
                 s
                 for s in self.review_manager.settings.sources
-                if "search/CROSSREF.bib" == str(s.filename)
+                if "data/search/CROSSREF.bib" == str(s.filename)
             ][0]
             crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
 
             self.review_manager.save_settings()
 
             self.review_manager.logger.info("Completed setup.")
-            self.review_manager.logger.info(
-                "%sOpen the settings.json and edit all fields marked with 'TODO'%s.",
-                colors.ORANGE,
-                colors.END,
-            )
 
     def __setup_git(self) -> None:
 
@@ -308,13 +305,15 @@ class Initializer:
 
     def __require_empty_directory(self) -> None:
 
-        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
+        cur_content = [str(x.name) for x in Path.cwd().glob("**/*")]
 
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
-        if "report.log" in cur_content:
-            cur_content.remove("report.log")
+        if ".report.log" in cur_content:
+            cur_content.remove(".report.log")
+        if "settings.json" in cur_content:
+            cur_content.remove("settings.json")
 
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
@@ -327,11 +326,11 @@ class Initializer:
         self.logger.info("Include 30_example_records.bib")
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
-            target=Path("search/30_example_records.bib"),
+            target=Path("data/search/30_example_records.bib"),
         )
 
         git_repo = git.Repo.init()
-        git_repo.index.add(["search/30_example_records.bib"])
+        git_repo.index.add(["data/search/30_example_records.bib"])
 
     def __create_local_index(self) -> None:
 
@@ -344,6 +343,10 @@ class Initializer:
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_index_path)
+            # TODO : set up a settings.json with the following parameters:
+            # project_name="local_index",
+            # SHARE_STAT_REQ="PROCESSED",
+            # review_type="curated_masterdata",
             Initializer(
                 review_type="curated_masterdata",
                 local_index_repo=True,

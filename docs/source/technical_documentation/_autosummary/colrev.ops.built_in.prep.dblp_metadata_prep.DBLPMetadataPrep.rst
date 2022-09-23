@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
    .. autosummary::
       :nosignatures:
 
+      ~DBLPMetadataPrep.all_json_schemas
+      ~DBLPMetadataPrep.field_mapping
+      ~DBLPMetadataPrep.from_dict
+      ~DBLPMetadataPrep.from_json
+      ~DBLPMetadataPrep.from_object
+      ~DBLPMetadataPrep.json_schema
       ~DBLPMetadataPrep.prepare
+      ~DBLPMetadataPrep.register_field_encoders
+      ~DBLPMetadataPrep.to_dict
+      ~DBLPMetadataPrep.to_json
 
 
 

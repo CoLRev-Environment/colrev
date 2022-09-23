@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+"""Creation of TEI as a PDF preparation operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -19,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class TEIPDFPrep:
+@dataclass
+class TEIPDFPrep(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -32,9 +36,9 @@ class TEIPDFPrep:
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
         grobid_service.start()
-        Path(".tei").mkdir(exist_ok=True)
+        Path("data/.tei").mkdir(exist_ok=True)
 
-    @timeout_decorator.timeout(180, use_signals=False)
+    @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,

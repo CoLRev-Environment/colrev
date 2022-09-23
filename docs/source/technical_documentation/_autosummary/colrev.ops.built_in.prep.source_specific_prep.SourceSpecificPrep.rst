@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.source\_specific\_prep.SourceSpecificPrep
    .. autosummary::
       :nosignatures:
 
+      ~SourceSpecificPrep.all_json_schemas
+      ~SourceSpecificPrep.field_mapping
+      ~SourceSpecificPrep.from_dict
+      ~SourceSpecificPrep.from_json
+      ~SourceSpecificPrep.from_object
+      ~SourceSpecificPrep.json_schema
       ~SourceSpecificPrep.prepare
+      ~SourceSpecificPrep.register_field_encoders
+      ~SourceSpecificPrep.to_dict
+      ~SourceSpecificPrep.to_json
 
 
 

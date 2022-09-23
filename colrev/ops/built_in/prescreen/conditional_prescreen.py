@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""Conditional prescreen"""
 from __future__ import annotations
 
 import typing
+from dataclasses import dataclass
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -17,7 +20,9 @@ if typing.TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
-class ConditionalPrescreen:
+@dataclass
+class ConditionalPrescreen(JsonSchemaMixin):
+
     """Prescreen based on a condition (currently: include all)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

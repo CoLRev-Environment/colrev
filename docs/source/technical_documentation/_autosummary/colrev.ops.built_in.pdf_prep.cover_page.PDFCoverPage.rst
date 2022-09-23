@@ -16,4 +16,13 @@ colrev.ops.built\_in.pdf\_prep.cover\_page.PDFCoverPage
    .. autosummary::
       :nosignatures:
 
+      ~PDFCoverPage.all_json_schemas
+      ~PDFCoverPage.field_mapping
+      ~PDFCoverPage.from_dict
+      ~PDFCoverPage.from_json
+      ~PDFCoverPage.from_object
+      ~PDFCoverPage.json_schema
       ~PDFCoverPage.prep_pdf
+      ~PDFCoverPage.register_field_encoders
+      ~PDFCoverPage.to_dict
+      ~PDFCoverPage.to_json

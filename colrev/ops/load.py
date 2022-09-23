@@ -122,9 +122,9 @@ class Load(colrev.process.Process):
 
             # Assuming that all other search types are added by query
             # search_type_input = "NA"
-            # while search_type_input not in SearchType._member_names_:
-            #     print(f"Search type options: {SearchType._member_names_}")
-            #     cmd = "Enter search type".ljust(70, " ") + ": "
+            # while search_type_input not in SearchType.get_options():
+            #     print(f"Search type options: {SearchType.get_options()}")
+            #     cmd = "Enter search type".ljust(40, " ") + ": "
             #     search_type_input = input(cmd)
 
             heuristic_result_list = self.__apply_source_heuristics(filepath=sfp)
@@ -430,10 +430,7 @@ class Load(colrev.process.Process):
             record_list.append(record)
         return record_list
 
-    def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool
-    ) -> None:
-
+    def __get_search_records(self, *, source: colrev.settings.SearchSource) -> list:
         search_records = []
         if source.get_corresponding_bib_file().is_file():
             search_records = self.__getbib(file=source.get_corresponding_bib_file())
@@ -449,8 +446,7 @@ class Load(colrev.process.Process):
                 f"{colors.GREEN}No records to load{colors.END}"
             )
             print()
-
-            return
+            return search_records
 
         nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
             file_path=source.get_corresponding_bib_file()
@@ -469,6 +465,15 @@ class Load(colrev.process.Process):
                                 f"{record_id} not imported"
                             )
                     line = file.readline()
+        return search_records
+
+    def __load_source_records(
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+    ) -> None:
+
+        search_records = self.__get_search_records(source=source)
+        if len(search_records) == 0:
+            return
 
         record_list = self.__prep_records_for_import(
             source=source, search_records=search_records
@@ -511,7 +516,9 @@ class Load(colrev.process.Process):
         )
 
         if keep_ids:
-            print("Not yet fully implemented. Need to check/resolve ID duplicates.")
+            self.review_manager.logger.warning(
+                "Not yet fully implemented. Need to check/resolve ID duplicates."
+            )
         else:
             self.review_manager.logger.info("Set IDs")
             records = self.review_manager.dataset.set_ids(
@@ -649,7 +656,7 @@ class Load(colrev.process.Process):
                     # Correct the file extension if necessary
                     if re.search("%0", data) and filepath.suffix not in [".enl"]:
                         new_filename = filepath.with_suffix(".enl")
-                        print(
+                        self.review_manager.logger.info(
                             f"{colors.GREEN}Renaming to {new_filename} "
                             f"(because the format is .enl){colors.END}"
                         )
@@ -665,7 +672,7 @@ class Load(colrev.process.Process):
                     filename=filepath,
                     search_type=search_type,
                     source_name=source_name,
-                    source_identifier=res["source_identifier"],
+                    source_identifier=endpoint.source_identifier,  # type: ignore
                     search_parameters={},
                     load_conversion_script=res["load_conversion_script"],
                     comment="",
@@ -710,7 +717,7 @@ class Load(colrev.process.Process):
                     not in self.load_conversion_scripts
                 ):
                     if self.verbose:
-                        print(
+                        self.review_manager.logger.error(
                             f"Error: endpoint not available: {source.load_conversion_script}"
                         )
                     continue
@@ -736,7 +743,7 @@ class Load(colrev.process.Process):
             # 2. resolve non-unique IDs (if any)
             self.__resolve_non_unique_ids(source=source)
 
-            # 3. load and add records to records.bib
+            # 3. load and add records to data/records.bib
             self.__load_source_records(source=source, keep_ids=keep_ids)
             if 0 == getattr(source, "to_import", 0):
                 continue

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Creation of a markdown manuscript as part of the data operations"""
 from __future__ import annotations
 
 import os
@@ -10,9 +11,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import requests
+import dacite
+import docker
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -24,7 +27,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class Manuscript:
+@dataclass
+class Manuscript(JsonSchemaMixin):
     """Synthesize the literature in a manuscript
 
     The manuscript (paper.md) is created automatically.
@@ -45,18 +49,22 @@ class Manuscript:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
+    NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
+
     @dataclass
-    class ManuscriptSettings:
+    class ManuscriptSettings(JsonSchemaMixin):
+        """Manuscript settings"""
+
         name: str
         version: str
-        word_template: str
+        word_template: Path
         csl_style: str
         paper_path: Path = Path("paper.md")
+        paper_output: Path = Path("paper.docx")
         # TODO : output path
 
         _details = {
             "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
-            "csl_style": {"tooltip": "Path to the csl file (for Pandoc)"},
             "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
         }
 
@@ -75,13 +83,31 @@ class Manuscript:
 
         if "word_template" not in settings:
             settings["word_template"] = self.retrieve_default_word_template()
-        if "csl_style" not in settings:
-            settings["csl_style"] = (self.retrieve_default_csl(),)
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        if "paper_output" not in settings:
+            settings["paper_output"] = Path("paper.docx")
 
-        self.paper = data_operation.review_manager.path / self.settings.paper_path
+        converters = {Path: Path}
+        self.settings = from_dict(
+            data_class=self.settings_class,
+            data=settings,
+            config=dacite.Config(type_hooks=converters),
+        )
+
+        self.settings.paper_path = (
+            data_operation.review_manager.data_dir / self.settings.paper_path
+        )
+        self.settings.word_template = (
+            data_operation.review_manager.data_dir / self.settings.word_template
+        )
+
         self.data_operation = data_operation
+
+        self.settings.paper_output = (
+            data_operation.review_manager.output_dir / self.settings.paper_output
+        )
+
+        self.__create_non_sample_references_bib()
 
     def get_default_setup(self) -> dict:
 
@@ -89,49 +115,35 @@ class Manuscript:
             "endpoint": "MANUSCRIPT",
             "version": "0.1",
             "word_template": self.retrieve_default_word_template(),
-            "csl_style": self.retrieve_default_csl(),
         }
 
         return manuscript_endpoint_details
 
-    def retrieve_default_word_template(self) -> str:
-        template_name = "APA-7.docx"
+    def retrieve_default_word_template(self) -> Path:
+        template_name = self.data_operation.review_manager.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/APA-7.docx")
         )
 
         if filedata:
-            with open(Path(template_name), "wb") as file:
+            with open(template_name, "wb") as file:
                 file.write(filedata)
-        self.data_operation.review_manager.dataset.add_changes(path=Path(template_name))
-        return template_name
-
-    def retrieve_default_csl(self) -> str:
-        csl_link = (
-            "https://raw.githubusercontent.com/"
-            + "citation-style-language/styles/master/apa.csl"
-        )
-        ret = requests.get(csl_link, allow_redirects=True)
-        with open(Path(csl_link).name, "wb") as file:
-            file.write(ret.content)
-        csl = Path(csl_link).name
-
         self.data_operation.review_manager.dataset.add_changes(
-            path=Path(Path(csl_link).name)
+            path=template_name.relative_to(self.data_operation.review_manager.path)
         )
-        return csl
+        return template_name
 
     def check_new_record_source_tag(
         self,
     ) -> None:
 
-        with open(self.paper, encoding="utf-8") as file:
+        with open(self.settings.paper_path, encoding="utf-8") as file:
             for line in file:
                 if self.NEW_RECORD_SOURCE_TAG in line:
                     return
         raise ManuscriptRecordSourceTagError(
-            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.paper}"
+            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.settings.paper_path}"
         )
 
     def __authorship_heuristic(
@@ -261,32 +273,36 @@ class Manuscript:
         review_type = review_manager.settings.project.review_type
 
         r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
-        paper_resource_path = (
-            Path(f"template/review_type/{r_type_path}/") / self.settings.paper_path
+        paper_resource_path = Path(f"template/review_type/{r_type_path}/") / Path(
+            "paper.md"
         )
         try:
             colrev.env.utils.retrieve_package_file(
-                template_file=paper_resource_path, target=self.paper
+                template_file=paper_resource_path, target=self.settings.paper_path
             )
         except FileNotFoundError:
-            paper_resource_path = Path("template/") / self.settings.paper_path
+            paper_resource_path = Path("template/") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
-                template_file=paper_resource_path, target=self.paper
+                template_file=paper_resource_path, target=self.settings.paper_path
             )
 
         colrev.env.utils.inplace_change(
-            filename=self.paper,
+            filename=self.settings.paper_path,
             old_string="{{review_type}}",
             new_string=str(review_type),
         )
         colrev.env.utils.inplace_change(
-            filename=self.paper, old_string="{{project_title}}", new_string=title
+            filename=self.settings.paper_path,
+            old_string="{{project_title}}",
+            new_string=title,
         )
         colrev.env.utils.inplace_change(
-            filename=self.paper, old_string="{{author}}", new_string=author
+            filename=self.settings.paper_path,
+            old_string="{{author}}",
+            new_string=author,
         )
         review_manager.logger.info(
-            f"Please update title and authors in {self.paper.name}"
+            f"Please update title and authors in {self.settings.paper_path.name}"
         )
 
     def __add_missing_records(
@@ -298,7 +314,7 @@ class Manuscript:
         review_manager.report_logger.info("Updating manuscript")
         review_manager.logger.info("Updating manuscript")
         missing_records = self.__get_data_page_missing(
-            paper=self.paper,
+            paper=self.settings.paper_path,
             record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
@@ -308,13 +324,15 @@ class Manuscript:
 
         if 0 == len(missing_records):
             review_manager.report_logger.info(
-                f"All records included in {self.paper.name}"
+                f"All records included in {self.settings.paper_path.name}"
             )
-            review_manager.logger.info(f"All records included in {self.paper.name}")
+            review_manager.logger.info(
+                f"All records included in {self.settings.paper_path.name}"
+            )
         else:
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
-                paper_path=self.paper,
+                paper_path=self.settings.paper_path,
                 missing_records=[
                     "\n- @" + missing_record + "\n"
                     for missing_record in missing_records
@@ -322,10 +340,10 @@ class Manuscript:
             )
             nr_records_added = len(missing_records)
             review_manager.report_logger.info(
-                f"{nr_records_added} records added to {self.paper.name}"
+                f"{nr_records_added} records added to {self.settings.paper_path.name}"
             )
             review_manager.logger.info(
-                f"{nr_records_added} records added to {self.paper.name}"
+                f"{nr_records_added} records added to {self.settings.paper_path.name}"
             )
 
     def update_manuscript(
@@ -336,7 +354,7 @@ class Manuscript:
         synthesized_record_status_matrix: dict,
     ) -> typing.Dict:
 
-        if not self.paper.is_file():
+        if not self.settings.paper_path.is_file():
             self.__create_paper(review_manager=review_manager)
 
         self.__add_missing_records(
@@ -348,15 +366,24 @@ class Manuscript:
 
         return records
 
+    def __create_non_sample_references_bib(self) -> None:
+        if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
+
+            retrieval_path = Path("template/non_sample_references.bib")
+            colrev.env.utils.retrieve_package_file(
+                template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
+            )
+            self.data_operation.review_manager.dataset.add_changes(
+                path=self.NON_SAMPLE_REFERENCES_RELATIVE
+            )
+
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
-        # pylint: disable=import-outside-toplevel
-        import docker
 
         data_operation.review_manager.logger.info("Build manuscript")
 
-        if not self.paper.is_file():
+        if not self.settings.paper_path.is_file():
             data_operation.review_manager.logger.error(
-                "File %s does not exist.", self.paper
+                "File %s does not exist.", self.settings.paper_path
             )
             data_operation.review_manager.logger.info(
                 "Complete processing and use colrev data"
@@ -366,24 +393,28 @@ class Manuscript:
         environment_manager = data_operation.review_manager.get_environment_manager()
         environment_manager.build_docker_images()
 
-        csl_file = self.settings.csl_style
+        self.__create_non_sample_references_bib()
+
         word_template = self.settings.word_template
 
-        if not Path(word_template).is_file():
+        if not word_template.is_file():
             self.retrieve_default_word_template()
-        if not Path(csl_file).is_file():
-            self.retrieve_default_csl()
-        assert Path(word_template).is_file()
-        assert Path(csl_file).is_file()
+        assert word_template.is_file()
 
         uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
         gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
 
+        paper_relative_path = self.settings.paper_path.relative_to(
+            data_operation.review_manager.path
+        )
+        output_relative_path = self.settings.paper_output.relative_to(
+            data_operation.review_manager.path
+        )
+
         script = (
-            "paper.md --citeproc --bibliography records.bib "
-            + f"--csl {csl_file} "
-            + f"--reference-doc {word_template} "
-            + "--output paper.docx"
+            f"{paper_relative_path} --citeproc "
+            + f"--reference-doc {word_template.relative_to(data_operation.review_manager.path)} "
+            + f"--output {output_relative_path}"
         )
 
         client = docker.from_env()
@@ -468,7 +499,7 @@ class Manuscript:
     ):
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = self.__get_synthesized_ids_paper(
-            paper=self.paper,
+            paper=self.settings.paper_path,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
         for syn_id in synthesized_in_manuscript:

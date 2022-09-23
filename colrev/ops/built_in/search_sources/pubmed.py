@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+"""SearchSource: Pubmed"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -14,18 +17,17 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class PubMedSearchSource:
+@dataclass
+class PubMedSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
-    source_identifier_search = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         # Simple heuristic:
         if "PMID,Title,Authors,Citation,First Author,Journal/Book," in data:

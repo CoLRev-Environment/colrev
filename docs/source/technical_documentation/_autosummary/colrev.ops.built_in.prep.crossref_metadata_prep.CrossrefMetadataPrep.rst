@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
    .. autosummary::
       :nosignatures:
 
+      ~CrossrefMetadataPrep.all_json_schemas
+      ~CrossrefMetadataPrep.field_mapping
+      ~CrossrefMetadataPrep.from_dict
+      ~CrossrefMetadataPrep.from_json
+      ~CrossrefMetadataPrep.from_object
+      ~CrossrefMetadataPrep.json_schema
       ~CrossrefMetadataPrep.prepare
+      ~CrossrefMetadataPrep.register_field_encoders
+      ~CrossrefMetadataPrep.to_dict
+      ~CrossrefMetadataPrep.to_json
 
 
 

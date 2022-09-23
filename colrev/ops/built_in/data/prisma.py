@@ -1,13 +1,16 @@
 #! /usr/bin/env python
+"""Creation of a PRISMA chart as part of the data operations"""
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -19,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class PRISMA:
+@dataclass
+class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -47,7 +51,7 @@ class PRISMA:
     ) -> None:
 
         prisma_resource_path = Path("template/") / Path("PRISMA.csv")
-        prisma_path = Path("data/PRISMA.csv")
+        prisma_path = Path("output/PRISMA.csv")
         prisma_path.parent.mkdir(exist_ok=True, parents=True)
 
         if prisma_path.is_file():

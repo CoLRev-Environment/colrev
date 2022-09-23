@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.curated\_records\_prep.CuratedPrep
    .. autosummary::
       :nosignatures:
 
+      ~CuratedPrep.all_json_schemas
+      ~CuratedPrep.field_mapping
+      ~CuratedPrep.from_dict
+      ~CuratedPrep.from_json
+      ~CuratedPrep.from_object
+      ~CuratedPrep.json_schema
       ~CuratedPrep.prepare
+      ~CuratedPrep.register_field_encoders
+      ~CuratedPrep.to_dict
+      ~CuratedPrep.to_json
 
 
 

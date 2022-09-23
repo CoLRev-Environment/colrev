@@ -11,6 +11,14 @@ colrev.settings.SearchType
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~SearchType.get_options
+      ~SearchType.get_field_details
+
 
 
 

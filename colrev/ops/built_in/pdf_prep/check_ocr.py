@@ -1,13 +1,16 @@
 #! /usr/bin/env python
+"""OCR as a PDF preparation operation"""
 from __future__ import annotations
 
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from lingua.builder import LanguageDetectorBuilder
 
 import colrev.env.package_manager
@@ -22,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class PDFCheckOCR:
+@dataclass
+class PDFCheckOCR(JsonSchemaMixin):
     """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -66,7 +70,7 @@ class PDFCheckOCR:
         ocred_filename = Path(str(pdf_path).replace(".pdf", "_ocr.pdf"))
 
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_directory
+            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
         )
 
         # TODO : use variable self.cpus

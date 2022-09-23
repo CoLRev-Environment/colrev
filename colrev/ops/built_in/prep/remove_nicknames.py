@@ -1,11 +1,14 @@
 #! /usr/bin/env python
+"""Removal of nicknames as a prep operation"""
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -19,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class RemoveNicknamesPrep:
+@dataclass
+class RemoveNicknamesPrep(JsonSchemaMixin):
     """Prepares records by removing author nicknames"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

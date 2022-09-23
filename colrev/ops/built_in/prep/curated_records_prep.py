@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""Setting curated records to md_prepared as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -18,7 +21,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class CuratedPrep:
+@dataclass
+class CuratedPrep(JsonSchemaMixin):
     """Prepares records by setting records with curated masterdata to md_prepared"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

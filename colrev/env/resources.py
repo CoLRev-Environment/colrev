@@ -37,7 +37,7 @@ class Resources:
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        if (repo_dir / Path("records.bib")).is_file():
+        if (repo_dir / Path("data/records.bib")).is_file():
             environment_manager.register_repo(path_to_register=repo_dir)
         elif (repo_dir / Path("annotate.py")).is_file():
             shutil.move(str(repo_dir), str(annotator_dir))
@@ -50,7 +50,9 @@ class Resources:
                     curated_resource=line.replace("colrev env --install ", "")
                 )
         else:
-            print(f"Error: repo does not contain a records.bib/linked repos {repo_dir}")
+            print(
+                f"Error: repo does not contain a data/records.bib/linked repos {repo_dir}"
+            )
         return True
 
 

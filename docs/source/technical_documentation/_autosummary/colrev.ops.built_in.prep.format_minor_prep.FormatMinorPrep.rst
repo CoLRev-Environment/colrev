@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.format\_minor\_prep.FormatMinorPrep
    .. autosummary::
       :nosignatures:
 
+      ~FormatMinorPrep.all_json_schemas
+      ~FormatMinorPrep.field_mapping
+      ~FormatMinorPrep.from_dict
+      ~FormatMinorPrep.from_json
+      ~FormatMinorPrep.from_object
+      ~FormatMinorPrep.json_schema
       ~FormatMinorPrep.prepare
+      ~FormatMinorPrep.register_field_encoders
+      ~FormatMinorPrep.to_dict
+      ~FormatMinorPrep.to_json
 
 
 

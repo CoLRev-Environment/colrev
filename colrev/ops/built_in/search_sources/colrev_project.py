@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""SearchSource: CoLRev project"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import pandasql as ps
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from pandasql.sqldf import PandaSQLException
 from tqdm import tqdm
 
@@ -20,14 +23,13 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class ColrevProjectSearchSource:
+@dataclass
+class ColrevProjectSearchSource(JsonSchemaMixin):
     """Performs a search in a CoLRev project"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # TODO : add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "project"
-    source_identifier_search = "project"
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         if "url" not in settings["search_parameters"]:
@@ -111,7 +113,7 @@ class ColrevProjectSearchSource:
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         return result
 

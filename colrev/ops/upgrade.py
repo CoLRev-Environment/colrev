@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
+from shutil import copytree
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -32,6 +33,8 @@ class Upgrade(colrev.process.Process):
             notify_state_transition_operation=False,
         )
         self.review_manager = review_manager
+
+    def main(self) -> None:
 
         last_version, current_version = self.review_manager.get_colrev_versions()
 
@@ -68,7 +71,7 @@ class Upgrade(colrev.process.Process):
                 "Migrating from %s to %s", migrator["from"], migrator["to"]
             )
 
-            updated = migration_script(self)
+            updated = migration_script()
             if updated:
                 self.review_manager.logger.info("Updated to: %s", last_version)
             else:
@@ -327,6 +330,7 @@ class Upgrade(colrev.process.Process):
     def __migrate_0_5_0(self) -> None:
         # pylint: disable=too-many-statements
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         with open("settings.json", encoding="utf-8") as file:
             settings = json.load(file)
@@ -381,6 +385,25 @@ class Upgrade(colrev.process.Process):
                 "screen": settings["screen"],
                 "data": settings["data"],
             }
+
+        if "title" not in settings["project"]:
+            settings["project"]["title"] = str(Path.cwd().name)
+
+        if "authors" not in settings["project"]:
+            settings["project"]["authors"] = [
+                {
+                    "name": self.review_manager.committer,
+                    "initials": "".join(
+                        part[0] for part in self.review_manager.committer.split(" ")
+                    ),
+                    "email": self.review_manager.email,
+                }
+            ]
+
+        if "keywords" not in settings["project"]:
+            settings["project"]["keywords"] = []
+        if "colrev_version" not in settings["project"]:
+            settings["project"]["colrev_version"] = "0.5.0"
 
         if "THREE_AUTHORS_YEAR" == settings["project"]["id_pattern"]:
             settings["project"]["id_pattern"] = "three_authors_year"
@@ -458,6 +481,8 @@ class Upgrade(colrev.process.Process):
                         path_name = path_name.strip("'")
                         temp["scope"]["path"] = path_name  # type: ignore
                     source["search_parameters"] = temp
+            if "" == source["search_parameters"]:
+                source["search_parameters"] = {}
 
         for prep_round in settings["prep"]["prep_rounds"]:
             prep_round["scripts"] = [
@@ -563,7 +588,64 @@ class Upgrade(colrev.process.Process):
         )
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
 
-        print("Manual steps required to rename references.bib > records.bib.")
+        Path("report.log").unlink(missing_ok=True)
+
+        colrev.env.utils.inplace_change(
+            filename=Path(".gitignore"),
+            old_string="private_config.ini\n",
+            new_string="",
+        )
+        colrev.env.utils.inplace_change(
+            filename=Path(".gitignore"), old_string="data.csv\n", new_string=".tei\n"
+        )
+        colrev.env.utils.inplace_change(
+            filename=Path("settings.json"),
+            old_string='"filename": "search',
+            new_string='"filename": "data/search',
+        )
+        colrev.env.utils.inplace_change(
+            filename=Path(".gitignore"),
+            old_string="pdfs\n",
+            new_string="data/pdfs\n",
+        )
+        self.review_manager.dataset.add_changes(path=Path(".gitignore"))
+        self.review_manager.dataset.add_changes(path=Path("settings.json"))
+
+        pdf_dir_old = Path("pdfs")
+        pdf_dir_new = Path("data/pdfs")
+        if pdf_dir_old.is_dir():
+            if pdf_dir_old.is_symlink():
+                if not any(pdf_dir_new.iterdir()):
+                    pdf_dir_new.rmdir()
+                if not pdf_dir_new.is_dir():
+                    original_dir = pdf_dir_old.resolve()
+                    pdf_dir_new.symlink_to(original_dir, target_is_directory=True)
+                    pdf_dir_old.unlink()
+
+        dedupe_dir = Path("dedupe")
+        dedupe_dir_new = Path("data/dedupe")
+        if dedupe_dir.is_dir():
+            copytree(
+                dedupe_dir,
+                dedupe_dir_new,
+                dirs_exist_ok=True,
+            )
+
+        print("Manually run \n")
+        print(
+            "git branch -D backup\n"
+            "rm -d -r .git/refs/original\n"
+            "git branch backup\n"
+            "git filter-branch --tree-filter 'if [ -f records.bib ]; \\n"
+            "then mkdir -p data && mv records.bib data/records.bib; fi' HEAD\n"
+            "rm -d -r .git/refs/original\n\n\n"
+            "git branch -D backup\n"
+            "rm -d -r .git/refs/original\n"
+            "git branch backup \n"
+            "git filter-branch --tree-filter 'if [ -d search ]; \\n"
+            "then mkdir -p data/search && mv search/* data/search; fi' HEAD\n"
+            "rm -d -r .git/refs/original\n"
+        )
 
         # git branch backup
         # git filter-branch --tree-filter 'if [ -f references.bib ];

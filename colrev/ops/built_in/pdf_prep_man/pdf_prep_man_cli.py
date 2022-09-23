@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+"""CLI interface for manual preparation of PDFs"""
 from __future__ import annotations
 
 import pprint
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -19,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepManPackageInterface)
-class CoLRevCLIPDFManPrep:
+@dataclass
+class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -63,9 +67,7 @@ class CoLRevCLIPDFManPrep:
                 f" {record_dict.get('pdf_prep_hints', 'Details not available.')}"
             )
 
-            filepath = (
-                pdf_prep_man.review_manager.pdf_directory / f"{record_dict['ID']}.pdf"
-            )
+            filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
             if pdf_path.is_file() or filepath.is_file():
                 if "y" == input("Prepared? (y/n)?"):

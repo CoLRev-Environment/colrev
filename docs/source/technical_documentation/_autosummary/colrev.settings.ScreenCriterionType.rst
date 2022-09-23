@@ -11,6 +11,14 @@ colrev.settings.ScreenCriterionType
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~ScreenCriterionType.get_options
+      ~ScreenCriterionType.get_field_details
+
 
 
 

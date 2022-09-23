@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.remove\_broken\_ids.RemoveBrokenIDPrep
    .. autosummary::
       :nosignatures:
 
+      ~RemoveBrokenIDPrep.all_json_schemas
+      ~RemoveBrokenIDPrep.field_mapping
+      ~RemoveBrokenIDPrep.from_dict
+      ~RemoveBrokenIDPrep.from_json
+      ~RemoveBrokenIDPrep.from_object
+      ~RemoveBrokenIDPrep.json_schema
       ~RemoveBrokenIDPrep.prepare
+      ~RemoveBrokenIDPrep.register_field_encoders
+      ~RemoveBrokenIDPrep.to_dict
+      ~RemoveBrokenIDPrep.to_json
 
 
 

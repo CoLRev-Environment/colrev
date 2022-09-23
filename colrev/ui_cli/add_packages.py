@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Scripts to add packages using the cli."""
 from pathlib import Path
 
 import requests

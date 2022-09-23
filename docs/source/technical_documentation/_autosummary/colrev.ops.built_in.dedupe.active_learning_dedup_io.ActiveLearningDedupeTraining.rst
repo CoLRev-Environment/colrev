@@ -16,10 +16,16 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
    .. autosummary::
       :nosignatures:
 
-      ~ActiveLearningDedupeTraining.adapted_console_label
-      ~ActiveLearningDedupeTraining.apply_active_learning
+      ~ActiveLearningDedupeTraining.all_json_schemas
+      ~ActiveLearningDedupeTraining.field_mapping
+      ~ActiveLearningDedupeTraining.from_dict
+      ~ActiveLearningDedupeTraining.from_json
+      ~ActiveLearningDedupeTraining.from_object
+      ~ActiveLearningDedupeTraining.json_schema
+      ~ActiveLearningDedupeTraining.register_field_encoders
       ~ActiveLearningDedupeTraining.run_dedupe
-      ~ActiveLearningDedupeTraining.setup_active_learning_dedupe
+      ~ActiveLearningDedupeTraining.to_dict
+      ~ActiveLearningDedupeTraining.to_json
 
 
 

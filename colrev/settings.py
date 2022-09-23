@@ -1,9 +1,27 @@
 #!/usr/bin/env python3
 """Settings of the CoLRev project."""
+from __future__ import annotations
+
+import dataclasses
+import json
 import typing
+from dataclasses import asdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+import dacite
+from dacite import from_dict
+from dacite.exceptions import MissingValueError
+from dacite.exceptions import WrongTypeError
+from dataclasses_jsonschema import JsonSchemaMixin
+
+import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
+
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -16,42 +34,87 @@ from pathlib import Path
 
 
 class IDPattern(Enum):
-    # pylint: disable=C0103
+    """The pattern for generating record IDs"""
+
+    # pylint: disable=invalid-name
     first_author_year = "first_author_year"
     three_authors_year = "three_authors_year"
 
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
-# @dataclass
-# class Author:
-#     name: str
-#     initials: str
-#     email: str
-#     orcid: typing.Optional[str]
-#     contributions: typing.Optional[list]
-#     affiliations: typing.Optional[list]
-#     funding: typing.Optional[list]
-#     identifiers: typing.Optional[list]
-
-# @dataclass
-# class Protocol:
-#     url: str
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
 
 
 @dataclass
-class ProjectConfiguration:
-    # title: str
-    # authors: list[Author]
-    # keywords: list[str]
+class Author(JsonSchemaMixin):
+    """Author of the review"""
+
+    # pylint: disable=too-many-instance-attributes
+
+    name: str
+    initials: str
+    email: str
+    orcid: typing.Optional[str] = None
+    contributions: typing.List[str] = dataclasses.field(default_factory=list)
+    affiliations: typing.Optional[str] = None
+    funding: typing.List[str] = dataclasses.field(default_factory=list)
+    identifiers: typing.List[str] = dataclasses.field(default_factory=list)
+
+
+@dataclass
+class Protocol(JsonSchemaMixin):
+    """Review protocol"""
+
+    url: str
+
+
+class ShareStatReq(Enum):
+    """Record status requirements for sharing"""
+
+    # pylint: disable=invalid-name
+    none = "none"
+    processed = "processed"
+    screened = "screened"
+    completed = "completed"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
+
+@dataclass
+class ProjectSettings(JsonSchemaMixin):
+    """Project settings"""
+
+    # pylint: disable=too-many-instance-attributes
+
+    title: str
+    __doc_title__ = "The title of the review"
+    authors: typing.List[Author]
+    keywords: typing.List[str]
     # status ? (development/published?)
-    # protocol: typing.Optional[Protocol]
+    protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
     review_type: str
     id_pattern: IDPattern
-    share_stat_req: str
+    share_stat_req: ShareStatReq
     delay_automated_processing: bool
     curation_url: typing.Optional[str]
     curated_masterdata: bool
     curated_fields: typing.List[str]
+    colrev_version: str
 
     def __str__(self) -> str:
         # TODO : add more
@@ -62,6 +125,8 @@ class ProjectConfiguration:
 
 
 class SearchType(Enum):
+    """Type of search source"""
+
     DB = "DB"
     TOC = "TOC"
     BACKWARD_SEARCH = "BACKWARD_SEARCH"
@@ -69,12 +134,24 @@ class SearchType(Enum):
     PDFS = "PDFS"
     OTHER = "OTHER"
 
-    def __str__(self) -> str:
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
+    def __str__(self):
         return f"{self.name}"
 
 
 @dataclass
-class SearchSource:
+class SearchSource(JsonSchemaMixin):
+    """Search source settings"""
+
     # pylint: disable=too-many-instance-attributes
 
     filename: Path
@@ -115,17 +192,10 @@ class SearchSource:
         )
 
 
-# @dataclass
-# class SearchSources:
-
-#     sources: typing.List[SearchSource]
-
-#     def __str__(self):
-#         return " - " + "\n - ".join([str(s) for s in self.sources])
-
-
 @dataclass
-class SearchConfiguration:
+class SearchSettings(JsonSchemaMixin):
+    """Search settings"""
+
     retrieve_forthcoming: bool
 
     def __str__(self) -> str:
@@ -136,7 +206,9 @@ class SearchConfiguration:
 
 
 @dataclass
-class LoadConfiguration:
+class LoadSettings(JsonSchemaMixin):
+    """Load settings"""
+
     def __str__(self) -> str:
         return " - TODO"
 
@@ -145,10 +217,8 @@ class LoadConfiguration:
 
 
 @dataclass
-class PrepRound:
-    """The scripts are either in Prepare.prep_scripts, in a custom project script
-    (the script in settings.json must have the same name), or otherwise in a
-    python package (locally installed)."""
+class PrepRound(JsonSchemaMixin):
+    """Prep round settings"""
 
     name: str
     similarity: float
@@ -162,7 +232,9 @@ class PrepRound:
 
 
 @dataclass
-class PrepConfiguration:
+class PrepSettings(JsonSchemaMixin):
+    """Prep settings"""
+
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
 
@@ -179,9 +251,30 @@ class PrepConfiguration:
 # Dedupe
 
 
+class SameSourceMergePolicy(Enum):
+    """Policy for applying merges within the same search source"""
+
+    # pylint: disable=invalid-name
+    prevent = "prevent"
+    warn = "warn"
+    apply = "apply"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
+
 @dataclass
-class DedupeConfiguration:
-    same_source_merges: str
+class DedupeSettings(JsonSchemaMixin):
+    """Dedupe settings"""
+
+    same_source_merges: SameSourceMergePolicy
     scripts: list
 
     def __str__(self) -> str:
@@ -196,7 +289,9 @@ class DedupeConfiguration:
 
 
 @dataclass
-class PrescreenConfiguration:
+class PrescreenSettings(JsonSchemaMixin):
+    """Prescreen settings"""
+
     explanation: str
     scripts: list
 
@@ -207,9 +302,29 @@ class PrescreenConfiguration:
 # PDF get
 
 
+class PDFPathType(Enum):
+    """Policy for handling PDFs (create symlinks or copy files)"""
+
+    # pylint: disable=invalid-name
+    symlink = "symlink"
+    copy = "copy"
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
 @dataclass
-class PDFGetConfiguration:
-    pdf_path_type: str  # TODO : "symlink" or "copy"
+class PDFGetSettings(JsonSchemaMixin):
+    """PDF get settings"""
+
+    pdf_path_type: PDFPathType
     pdf_required_for_screen_and_synthesis: bool
     """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
     can be specified as mandatory (true) or optional (false) for the following steps"""
@@ -230,7 +345,9 @@ class PDFGetConfiguration:
 
 
 @dataclass
-class PDFPrepConfiguration:
+class PDFPrepSettings(JsonSchemaMixin):
+    """PDF prep settings"""
+
     scripts: list
 
     man_pdf_prep_scripts: list
@@ -243,16 +360,30 @@ class PDFPrepConfiguration:
 
 
 class ScreenCriterionType(Enum):
-    # pylint: disable=C0103
+    """Type of screening criterion"""
+
+    # pylint: disable=invalid-name
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
     def __str__(self) -> str:
         return self.name
 
 
 @dataclass
-class ScreenCriterion:
+class ScreenCriterion(JsonSchemaMixin):
+    """Screen criterion"""
+
     explanation: str
     comment: typing.Optional[str]
     criterion_type: ScreenCriterionType
@@ -262,7 +393,9 @@ class ScreenCriterion:
 
 
 @dataclass
-class ScreenConfiguration:
+class ScreenSettings(JsonSchemaMixin):
+    """Screen settings"""
+
     explanation: typing.Optional[str]
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
@@ -275,7 +408,9 @@ class ScreenConfiguration:
 
 
 @dataclass
-class DataConfiguration:
+class DataSettings(JsonSchemaMixin):
+    """Data settings"""
+
     scripts: list
 
     def __str__(self) -> str:
@@ -283,20 +418,22 @@ class DataConfiguration:
 
 
 @dataclass
-class Configuration:
+class Settings(JsonSchemaMixin):
+    """CoLRev project settings"""
+
     # pylint: disable=too-many-instance-attributes
 
-    project: ProjectConfiguration
+    project: ProjectSettings
     sources: typing.List[SearchSource]
-    search: SearchConfiguration
-    load: LoadConfiguration
-    prep: PrepConfiguration
-    dedupe: DedupeConfiguration
-    prescreen: PrescreenConfiguration
-    pdf_get: PDFGetConfiguration
-    pdf_prep: PDFPrepConfiguration
-    screen: ScreenConfiguration
-    data: DataConfiguration
+    search: SearchSettings
+    load: LoadSettings
+    prep: PrepSettings
+    dedupe: DedupeSettings
+    prescreen: PrescreenSettings
+    pdf_get: PDFGetSettings
+    pdf_prep: PDFPrepSettings
+    screen: ScreenSettings
+    data: DataSettings
 
     def __str__(self) -> str:
         return (
@@ -322,6 +459,118 @@ class Configuration:
             + "\nData\n"
             + str(self.data)
         )
+
+    @classmethod
+    def get_settings_schema(cls):
+
+        schema = cls.json_schema()
+        sdefs = schema["definitions"]
+        sdefs["SearchSource"]["properties"]["load_conversion_script"] = {  # type: ignore
+            "script_type": "load_conversion",
+            "type": "script_item",
+        }
+
+        # pylint: disable=unused-variable
+        sdefs["PrepRound"]["properties"]["scripts"] = {  # type: ignore # noqa: F841
+            "script_type": "prep",
+            "type": "script_array",
+        }
+        sdefs["PrepSettings"]["properties"]["man_prep_scripts"] = {  # type: ignore
+            "script_type": "prep_man",
+            "type": "script_array",
+        }
+        sdefs["DedupeSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "dedupe",
+            "type": "script_array",
+        }
+        sdefs["PrescreenSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "prescreen",
+            "type": "script_array",
+        }
+        sdefs["PDFGetSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "pdf_get",
+            "type": "script_array",
+        }
+        sdefs["PDFGetSettings"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
+            "script_type": "pdf_get_man",
+            "type": "script_array",
+        }
+        sdefs["PDFPrepSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "pdf_prep",
+            "type": "script_array",
+        }
+        sdefs["PDFPrepSettings"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
+            "script_type": "pdf_prep_man",
+            "type": "script_array",
+        }
+        sdefs["ScreenSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "screen",
+            "type": "script_array",
+        }
+        sdefs["DataSettings"]["properties"]["scripts"] = {  # type: ignore
+            "script_type": "data",
+            "type": "script_array",
+        }
+
+        return schema
+
+
+def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Settings:
+    # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
+    # possible extension : integrate/merge global, default settings
+    # from colrev.environment import EnvironmentManager
+    # def selective_merge(base_obj, delta_obj):
+    #     if not isinstance(base_obj, dict):
+    #         return delta_obj
+    #     common_keys = set(base_obj).intersection(delta_obj)
+    #     new_keys = set(delta_obj).difference(common_keys)
+    #     for k in common_keys:
+    #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
+    #     for k in new_keys:
+    #         base_obj[k] = delta_obj[k]
+    #     return base_obj
+    # print(selective_merge(default_settings, project_settings))
+
+    if not review_manager.settings_path.is_file():
+        filedata = colrev.env.utils.get_package_file_content(
+            file_path=Path("template/settings.json")
+        )
+        if filedata:
+            settings = json.loads(filedata.decode("utf-8"))
+            with open(review_manager.settings_path, "w", encoding="utf8") as file:
+                json.dump(settings, file, indent=4)
+
+    with open(review_manager.settings_path, encoding="utf-8") as file:
+        loaded_settings = json.load(file)
+
+    try:
+        converters = {Path: Path, Enum: Enum}
+        settings = from_dict(
+            data_class=Settings,
+            data=loaded_settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+    except (ValueError, MissingValueError, WrongTypeError) as exc:
+        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
+
+    return settings
+
+
+def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def custom_asdict_factory(data):
+        def convert_value(obj):
+            if isinstance(obj, Enum):
+                return obj.value
+            if isinstance(obj, Path):
+                return str(obj)
+            return obj
+
+        return {k: convert_value(v) for k, v in data}
+
+    exported_dict = asdict(review_manager.settings, dict_factory=custom_asdict_factory)
+    with open("settings.json", "w", encoding="utf-8") as outfile:
+        json.dump(exported_dict, outfile, indent=4)
+    review_manager.dataset.add_changes(path=Path("settings.json"))
 
 
 if __name__ == "__main__":

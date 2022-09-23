@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~LocalIndexSearchSource.all_json_schemas
+      ~LocalIndexSearchSource.field_mapping
+      ~LocalIndexSearchSource.from_dict
+      ~LocalIndexSearchSource.from_json
+      ~LocalIndexSearchSource.from_object
       ~LocalIndexSearchSource.heuristic
+      ~LocalIndexSearchSource.json_schema
       ~LocalIndexSearchSource.load_fixes
       ~LocalIndexSearchSource.prepare
+      ~LocalIndexSearchSource.register_field_encoders
       ~LocalIndexSearchSource.run_search
+      ~LocalIndexSearchSource.to_dict
+      ~LocalIndexSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
 
    .. autosummary::
 
-      ~LocalIndexSearchSource.search_mode
       ~LocalIndexSearchSource.source_identifier
-      ~LocalIndexSearchSource.source_identifier_search

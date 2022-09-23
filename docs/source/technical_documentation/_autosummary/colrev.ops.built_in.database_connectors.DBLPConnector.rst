@@ -18,3 +18,14 @@ colrev.ops.built\_in.database\_connectors.DBLPConnector
 
       ~DBLPConnector.check_status
       ~DBLPConnector.retrieve_dblp_records
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DBLPConnector.api_url
+      ~DBLPConnector.api_url_venues

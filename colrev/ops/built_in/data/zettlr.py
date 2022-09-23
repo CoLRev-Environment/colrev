@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Creation of a Zettlr database as part of the data operations"""
 from __future__ import annotations
 
 import configparser
@@ -10,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -23,11 +25,17 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class Zettlr:
+@dataclass
+class Zettlr(JsonSchemaMixin):
     """Export the sample into a Zettlr database"""
 
+    zettlr_bib_item_resource_path = Path("template/zettlr/") / Path(
+        "zettlr_bib_item.md"
+    )
+    zettlr_resource_path = Path("template/zettlr/") / Path("zettlr.md")
+
     @dataclass
-    class ZettlrSettings:
+    class ZettlrSettings(JsonSchemaMixin):
         name: str
         version: str
         config: dict
@@ -53,7 +61,7 @@ class Zettlr:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.endpoint_path = (
-            data_operation.review_manager.path / self.ZETTLR_PATH_RELATIVE
+            data_operation.review_manager.data_dir / self.ZETTLR_PATH_RELATIVE
         )
         self.zettlr_config_path = self.endpoint_path / self.ZETTLR_CONFIG_PATH_RELATIVE
 
@@ -162,9 +170,31 @@ class Zettlr:
                         f" {missing_record} added"
                     )
 
+    def __create_record_item_pages(
+        self, *, data_operation: colrev.ops.data.Data, missing_record_fields: list
+    ) -> None:
+        for missing_record_field in missing_record_fields:
+            paper_id, record_field = missing_record_field
+            print(paper_id + record_field)
+            zettlr_path = self.endpoint_path / Path(paper_id)
+
+            colrev.env.utils.retrieve_package_file(
+                template_file=self.zettlr_bib_item_resource_path, target=zettlr_path
+            )
+            colrev.env.utils.inplace_change(
+                filename=zettlr_path,
+                old_string="{{project_name}}",
+                new_string=record_field,
+            )
+            with zettlr_path.open("a") as file:
+                file.write(f"\n\n@{record_field}\n")
+
+            data_operation.review_manager.dataset.add_changes(path=zettlr_path)
+
     def __append_missing_records(
         self, *, data_operation: colrev.ops.data.Data, current_dt, zettlr_path
     ) -> None:
+
         records_dict = data_operation.review_manager.dataset.load_records_dict()
         included = data_operation.get_record_ids_for_synthesis(records_dict)
         missing_records = self.__get_zettlr_missing(
@@ -172,51 +202,37 @@ class Zettlr:
         )
         if len(missing_records) == 0:
             print("All records included. Nothing to export.")
-        else:
-            print(missing_records)
+            return
 
-            missing_records = sorted(missing_records)
-            missing_record_fields = []
-            for i, missing_record in enumerate(missing_records):
-                unique_timestamp = current_dt - datetime.timedelta(seconds=i)
-                missing_record_fields.append(
-                    [unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md", missing_record]
-                )
+        print(missing_records)
 
-            self.__add_missing_records_to_zettlr(
-                review_manager=data_operation.review_manager,
-                paper_path=zettlr_path,
-                missing_records=[
-                    "\n- [[" + i + "]] @" + r + "\n" for i, r in missing_record_fields
-                ],
+        missing_records = sorted(missing_records)
+        missing_record_fields = []
+        for i, missing_record in enumerate(missing_records):
+            unique_timestamp = current_dt - datetime.timedelta(seconds=i)
+            missing_record_fields.append(
+                [unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md", missing_record]
             )
 
-            data_operation.review_manager.dataset.add_changes(path=zettlr_path)
+        self.__add_missing_records_to_zettlr(
+            review_manager=data_operation.review_manager,
+            paper_path=zettlr_path,
+            missing_records=[
+                "\n- [[" + i + "]] @" + r + "\n" for i, r in missing_record_fields
+            ],
+        )
 
-            zettlr_resource_path = Path("template/zettlr/") / Path("zettlr_bib_item.md")
-            for missing_record_field in missing_record_fields:
-                paper_id, record_field = missing_record_field
-                print(paper_id + record_field)
-                zettlr_path = self.endpoint_path / Path(paper_id)
+        data_operation.review_manager.dataset.add_changes(path=zettlr_path)
 
-                colrev.env.utils.retrieve_package_file(
-                    template_file=zettlr_resource_path, target=zettlr_path
-                )
-                colrev.env.utils.inplace_change(
-                    filename=zettlr_path,
-                    old_string="{{project_name}}",
-                    new_string=record_field,
-                )
-                with zettlr_path.open("a") as file:
-                    file.write(f"\n\n@{record_field}\n")
+        self.__create_record_item_pages(
+            data_operation=data_operation, missing_record_fields=missing_record_fields
+        )
 
-                data_operation.review_manager.dataset.add_changes(path=zettlr_path)
+        data_operation.review_manager.create_commit(
+            msg="Setup zettlr", script_call="colrev data"
+        )
 
-            data_operation.review_manager.create_commit(
-                msg="Setup zettlr", script_call="colrev data"
-            )
-
-            print("TODO: recommend zettlr/snippest, adding tags")
+        print("TODO: recommend zettlr/snippest, adding tags")
 
     def __retrieve_setup(
         self, *, data_operation: colrev.ops.data.Data, current_dt
@@ -230,7 +246,6 @@ class Zettlr:
 
         else:
             unique_timestamp = current_dt + datetime.timedelta(seconds=3)
-            zettlr_resource_path = Path("template/zettlr/") / Path("zettlr.md")
             fname = Path(unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md")
             zettlr_path = self.endpoint_path / fname
 
@@ -244,7 +259,7 @@ class Zettlr:
             )
 
             colrev.env.utils.retrieve_package_file(
-                template_file=zettlr_resource_path, target=zettlr_path
+                template_file=self.zettlr_resource_path, target=zettlr_path
             )
             title = "PROJECT_NAME"
             if data_operation.review_manager.readme.is_file():

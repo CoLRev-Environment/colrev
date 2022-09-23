@@ -1,12 +1,17 @@
 {
     "project": {
+        "title": "",
+        "authors": [],
+        "keywords": [],
+        "protocol": null,
         "review_type": "literature_review",
         "id_pattern": "three_authors_year",
         "share_stat_req": "processed",
         "delay_automated_processing": true,
         "curation_url": null,
         "curated_masterdata": false,
-        "curated_fields": []
+        "curated_fields": [],
+        "colrev_version": "0.5.0"
     },
     "sources": [
         {

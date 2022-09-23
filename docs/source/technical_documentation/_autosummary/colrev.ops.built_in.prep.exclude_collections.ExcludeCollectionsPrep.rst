@@ -16,7 +16,16 @@ colrev.ops.built\_in.prep.exclude\_collections.ExcludeCollectionsPrep
    .. autosummary::
       :nosignatures:
 
+      ~ExcludeCollectionsPrep.all_json_schemas
+      ~ExcludeCollectionsPrep.field_mapping
+      ~ExcludeCollectionsPrep.from_dict
+      ~ExcludeCollectionsPrep.from_json
+      ~ExcludeCollectionsPrep.from_object
+      ~ExcludeCollectionsPrep.json_schema
       ~ExcludeCollectionsPrep.prepare
+      ~ExcludeCollectionsPrep.register_field_encoders
+      ~ExcludeCollectionsPrep.to_dict
+      ~ExcludeCollectionsPrep.to_json
 
 
 

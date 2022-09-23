@@ -16,4 +16,13 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
    .. autosummary::
       :nosignatures:
 
+      ~WebsiteScreenshot.all_json_schemas
+      ~WebsiteScreenshot.field_mapping
+      ~WebsiteScreenshot.from_dict
+      ~WebsiteScreenshot.from_json
+      ~WebsiteScreenshot.from_object
       ~WebsiteScreenshot.get_pdf
+      ~WebsiteScreenshot.json_schema
+      ~WebsiteScreenshot.register_field_encoders
+      ~WebsiteScreenshot.to_dict
+      ~WebsiteScreenshot.to_json

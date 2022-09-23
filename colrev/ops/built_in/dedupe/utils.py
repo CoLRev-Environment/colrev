@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Utils for deduplication"""
 import os
 import time
 

@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+"""Curated metadata project"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -15,7 +18,8 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.ReviewTypePackageInterface)
-class CuratedMasterdata:
+@dataclass
+class CuratedMasterdata(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
@@ -24,8 +28,8 @@ class CuratedMasterdata:
         self.review_manager = operation.review_manager
 
     def initialize(
-        self, settings: colrev.settings.Configuration
-    ) -> colrev.settings.Configuration:
+        self, settings: colrev.settings.Settings
+    ) -> colrev.settings.Settings:
 
         # replace readme
         colrev.env.utils.retrieve_package_file(
@@ -39,7 +43,7 @@ class CuratedMasterdata:
                 new_string=self.review_manager.settings.project.curation_url,
             )
         crossref_source = colrev.settings.SearchSource(
-            filename=Path("search/CROSSREF.bib"),
+            filename=Path("data/search/CROSSREF.bib"),
             search_type=colrev.settings.SearchType["DB"],
             source_name="crossref",
             source_identifier="https://api.crossref.org/works/{{doi}}",
@@ -77,11 +81,11 @@ class CuratedMasterdata:
         settings.dedupe.scripts = [
             {
                 "endpoint": "curation_full_outlet_dedupe",
-                "selected_source": "search/CROSSREF.bib",
+                "selected_source": "data/search/CROSSREF.bib",
             },
             {
                 "endpoint": "curation_full_outlet_dedupe",
-                "selected_source": "search/pdfs.bib",
+                "selected_source": "data/search/pdfs.bib",
             },
             {"endpoint": "curation_missing_dedupe"},
         ]

@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+"""Command-line interface for CoLRev."""
 import datetime
 import logging
 import os
@@ -13,6 +15,7 @@ import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
 import colrev.ui_cli.cli_status_printer
 
+# pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
@@ -95,7 +98,6 @@ def main(ctx):
 @click.option(
     "--type",
     type=str,
-    default="literature_review",
     help="Review type (e.g., literature_review (default), curated_masterdata, realtime)",
 )
 @click.option(
@@ -107,6 +109,9 @@ def main(ctx):
 @click.pass_context
 def init(ctx, type, example):
     """Initialize repository"""
+    # pylint: disable=import-outside-toplevel
+    import colrev.ops.init
+    import colrev.ui_web.settings_editor
 
     try:
         if type is None:
@@ -118,6 +123,12 @@ def init(ctx, type, example):
             review_type=type,
             example=example,
         )
+
+        review_manager = colrev.review_manager.ReviewManager()
+        settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
+            review_manager=review_manager
+        )
+        settings_operation.open_settings_editor()
 
     except (
         colrev_exceptions.ParameterError,
@@ -285,7 +296,7 @@ def load(ctx, keep_ids, combine_commits) -> None:
     "--reset_ids",
     is_flag=True,
     default=False,
-    help="Reset IDs that have been changed (to fix the sort order in records.bib)",
+    help="Reset IDs that have been changed (to fix the sort order in data/records.bib)",
 )
 @click.option(
     "-d",
@@ -1286,6 +1297,8 @@ def env(
     # pylint: disable=import-outside-toplevel
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
+
     import webbrowser
     import docker
 
@@ -1390,26 +1403,24 @@ def settings(ctx, upgrade, update_hooks, modify):
     """Settings of the CoLRev project"""
 
     # pylint: disable=import-outside-toplevel
+    # pylint: disable=reimported
+    # pylint: disable=too-many-locals
+
     from subprocess import check_call
     from subprocess import DEVNULL
     from subprocess import STDOUT
     import json
     import ast
     import glom
-
-    # from colrev.settings_editor import Settings
-
-    # review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-    # SETTINGS = Settings(review_manager=review_manager)
-    # SETTINGS.open_settings_editor()
-    # input("stop")
-
-    review_manager = colrev.review_manager.ReviewManager(force_mode=upgrade)
+    import colrev.review_manager
 
     if upgrade:
-        review_manager.upgrade_colrev()
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        upgrad_operation = review_manager.get_upgrade()
+        upgrad_operation.main()
         return
 
+    review_manager = colrev.review_manager.ReviewManager()
     if update_hooks:
 
         print("Update pre-commit hooks")
@@ -1463,8 +1474,13 @@ def settings(ctx, upgrade, update_hooks, modify):
         )
         return
 
-    print(f"Settings:\n{review_manager.settings}")
-    print("\n")
+    import colrev.ui_web.settings_editor
+
+    review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+    settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
+        review_manager=review_manager
+    )
+    settings_operation.open_settings_editor()
 
 
 @main.command(help_priority=21)
@@ -1620,11 +1636,26 @@ def show(ctx, keyword, callback=validate_show):
 
     elif "prisma" == keyword:
         status_operation = review_manager.get_status_operation()
-        stats_report = status_operation.get_review_status_report()
+        stats_report = status_operation.get_review_status_report(colors=colors)
         print(stats_report)
 
     elif "venv" == keyword:
         colrev.ui_cli.show_printer.print_venv_notes()
+
+
+@main.command(help_priority=27)
+@click.pass_context
+def web(ctx):
+    """CoLRev web interface."""
+
+    # pylint: disable=import-outside-toplevel
+    import colrev.ui_web.settings_editor
+
+    review_manager = colrev.review_manager.ReviewManager()
+    se_instance = colrev.ui_web.settings_editor.SettingsEditor(
+        review_manager=review_manager
+    )
+    se_instance.open_settings_editor()
 
 
 @main.command(hidden=True)

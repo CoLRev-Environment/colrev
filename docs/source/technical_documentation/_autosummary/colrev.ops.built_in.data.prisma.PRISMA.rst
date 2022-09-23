@@ -16,6 +16,15 @@ colrev.ops.built\_in.data.prisma.PRISMA
    .. autosummary::
       :nosignatures:
 
+      ~PRISMA.all_json_schemas
+      ~PRISMA.field_mapping
+      ~PRISMA.from_dict
+      ~PRISMA.from_json
+      ~PRISMA.from_object
       ~PRISMA.get_default_setup
+      ~PRISMA.json_schema
+      ~PRISMA.register_field_encoders
+      ~PRISMA.to_dict
+      ~PRISMA.to_json
       ~PRISMA.update_data
       ~PRISMA.update_record_status_matrix

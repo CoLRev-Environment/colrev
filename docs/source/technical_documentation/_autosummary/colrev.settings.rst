@@ -9,6 +9,15 @@ colrev.settings
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      load_settings
+      save_settings
+
 
 
 
@@ -20,20 +29,25 @@ colrev.settings
       :template: custom-class-template.rst
       :nosignatures:
 
-      Configuration
-      DataConfiguration
-      DedupeConfiguration
+      Author
+      DataSettings
+      DedupeSettings
       IDPattern
-      LoadConfiguration
-      PDFGetConfiguration
-      PDFPrepConfiguration
-      PrepConfiguration
+      LoadSettings
+      PDFGetSettings
+      PDFPathType
+      PDFPrepSettings
       PrepRound
-      PrescreenConfiguration
-      ProjectConfiguration
-      ScreenConfiguration
+      PrepSettings
+      PrescreenSettings
+      ProjectSettings
+      Protocol
+      SameSourceMergePolicy
       ScreenCriterion
       ScreenCriterionType
-      SearchConfiguration
+      ScreenSettings
+      SearchSettings
       SearchSource
       SearchType
+      Settings
+      ShareStatReq

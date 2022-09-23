@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""SearchSource: Unknown source (default for all other sources)"""
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
 import dacite
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -16,13 +19,12 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class UnknownSearchSource:
+@dataclass
+class UnknownSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
     source_identifier = "unknown_source"
-    source_identifier_search = "unknown_source"
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         converters = {Path: Path, Enum: Enum}
@@ -41,7 +43,7 @@ class UnknownSearchSource:
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         # TODO
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         return result
 

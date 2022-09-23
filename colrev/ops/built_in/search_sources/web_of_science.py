@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+"""SearchSource: Web of Science"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -14,17 +17,12 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class WebOfScienceSearchSource:
+@dataclass
+class WebOfScienceSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
-
-    source_identifier_search = (
-        "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
-    )
-
-    search_mode = "individual"
 
     def __init__(self, *, source_operation, settings: dict) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -32,7 +30,7 @@ class WebOfScienceSearchSource:
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
 
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
 
         if "Unique-ID = {WOS:" in data:
             result["confidence"] = 0.7

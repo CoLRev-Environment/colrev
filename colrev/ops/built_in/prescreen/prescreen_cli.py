@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""Prescreen based on CLI"""
 from __future__ import annotations
 
 import typing
+from dataclasses import dataclass
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -16,7 +19,9 @@ if typing.TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
-class CoLRevCLIPrescreen:
+@dataclass
+class CoLRevCLIPrescreen(JsonSchemaMixin):
+
     """Prescreen based on a CLI interface"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

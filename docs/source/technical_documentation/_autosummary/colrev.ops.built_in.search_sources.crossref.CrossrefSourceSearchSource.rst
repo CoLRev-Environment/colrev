@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSourceSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~CrossrefSourceSearchSource.all_json_schemas
+      ~CrossrefSourceSearchSource.field_mapping
+      ~CrossrefSourceSearchSource.from_dict
+      ~CrossrefSourceSearchSource.from_json
+      ~CrossrefSourceSearchSource.from_object
       ~CrossrefSourceSearchSource.heuristic
+      ~CrossrefSourceSearchSource.json_schema
       ~CrossrefSourceSearchSource.load_fixes
       ~CrossrefSourceSearchSource.prepare
+      ~CrossrefSourceSearchSource.register_field_encoders
       ~CrossrefSourceSearchSource.run_search
+      ~CrossrefSourceSearchSource.to_dict
+      ~CrossrefSourceSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSourceSearchSource
 
    .. autosummary::
 
-      ~CrossrefSourceSearchSource.search_mode
       ~CrossrefSourceSearchSource.source_identifier
-      ~CrossrefSourceSearchSource.source_identifier_search

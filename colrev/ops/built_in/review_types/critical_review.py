@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+"""Critical review"""
+from dataclasses import dataclass
+
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -13,7 +17,8 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.ReviewTypePackageInterface)
-class CriticalReview:
+@dataclass
+class CriticalReview(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
@@ -21,8 +26,8 @@ class CriticalReview:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def initialize(
-        self, settings: colrev.settings.Configuration
-    ) -> colrev.settings.Configuration:
+        self, settings: colrev.settings.Settings
+    ) -> colrev.settings.Settings:
 
         settings.data.scripts = [
             {

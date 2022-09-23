@@ -1,10 +1,14 @@
 #! /usr/bin/env python
+"""Dropping fields as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
+from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -18,7 +22,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class DropFieldsPrep:
+@dataclass
+class DropFieldsPrep(JsonSchemaMixin):
     """Prepares records by dropping fields that are not needed"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -34,6 +39,7 @@ class DropFieldsPrep:
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.local_index = prep_operation.review_manager.get_local_index()
 
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
@@ -53,18 +59,20 @@ class DropFieldsPrep:
         if "volume" in record.data.keys() and "number" in record.data.keys():
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
-
-            self.local_index = prep_operation.review_manager.get_local_index()
-
-            fields_to_remove = self.local_index.get_fields_to_remove(
-                record_dict=record.get_data()
-            )
-            for field_to_remove in fields_to_remove:
-                if field_to_remove in record.data:
-                    # TODO : maybe use set_masterdata_complete()?
-                    record.remove_field(
-                        key=field_to_remove, not_missing_note=True, source="local_index"
-                    )
+            try:
+                fields_to_remove = self.local_index.get_fields_to_remove(
+                    record_dict=record.get_data()
+                )
+                for field_to_remove in fields_to_remove:
+                    if field_to_remove in record.data:
+                        # TODO : maybe use set_masterdata_complete()?
+                        record.remove_field(
+                            key=field_to_remove,
+                            not_missing_note=True,
+                            source="local_index",
+                        )
+            except TransportError:
+                pass
 
         return record
 

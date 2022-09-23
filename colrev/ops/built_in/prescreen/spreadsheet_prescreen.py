@@ -1,13 +1,16 @@
 #! /usr/bin/env python
+"""Prescreen based on a spreadsheet"""
 from __future__ import annotations
 
 import csv
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -20,7 +23,9 @@ if typing.TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
-class SpreadsheetPrescreen:
+@dataclass
+class SpreadsheetPrescreen(JsonSchemaMixin):
+
     """Prescreen based on a spreadsheet (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

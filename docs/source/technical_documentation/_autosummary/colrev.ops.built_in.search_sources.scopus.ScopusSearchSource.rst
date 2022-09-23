@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~ScopusSearchSource.all_json_schemas
+      ~ScopusSearchSource.field_mapping
+      ~ScopusSearchSource.from_dict
+      ~ScopusSearchSource.from_json
+      ~ScopusSearchSource.from_object
       ~ScopusSearchSource.heuristic
+      ~ScopusSearchSource.json_schema
       ~ScopusSearchSource.load_fixes
       ~ScopusSearchSource.prepare
+      ~ScopusSearchSource.register_field_encoders
       ~ScopusSearchSource.run_search
+      ~ScopusSearchSource.to_dict
+      ~ScopusSearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 
    .. autosummary::
 
-      ~ScopusSearchSource.search_mode
       ~ScopusSearchSource.source_identifier
-      ~ScopusSearchSource.source_identifier_search

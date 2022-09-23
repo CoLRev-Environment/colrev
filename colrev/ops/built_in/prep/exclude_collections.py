@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""Exclude collections as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -18,7 +21,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class ExcludeCollectionsPrep:
+@dataclass
+class ExcludeCollectionsPrep(JsonSchemaMixin):
     """Prepares records by excluding collection entries (e.g., proceedings)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

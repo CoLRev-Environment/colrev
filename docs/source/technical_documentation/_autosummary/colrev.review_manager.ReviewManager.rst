@@ -57,6 +57,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_sync_operation
       ~ReviewManager.get_tei
       ~ReviewManager.get_trace_operation
+      ~ReviewManager.get_upgrade
       ~ReviewManager.get_validate_operation
       ~ReviewManager.get_zotero_translation_service
       ~ReviewManager.in_virtualenv
@@ -67,7 +68,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.save_settings
       ~ReviewManager.sharing
       ~ReviewManager.update_status_yaml
-      ~ReviewManager.upgrade_colrev
 
 
 
@@ -78,7 +78,9 @@ colrev.review\_manager.ReviewManager
    .. autosummary::
 
       ~ReviewManager.CORRECTIONS_PATH_RELATIVE
-      ~ReviewManager.PDF_DIRECTORY_RELATIVE
+      ~ReviewManager.DATA_DIR_RELATIVE
+      ~ReviewManager.OUTPUT_DIR_RELATIVE
+      ~ReviewManager.PDF_DIR_RELATIVE
       ~ReviewManager.README_RELATIVE
       ~ReviewManager.REPORT_RELATIVE
       ~ReviewManager.SEARCHDIR_RELATIVE

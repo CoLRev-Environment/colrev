@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
 import typing
@@ -8,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
-class ExportManPrep:
+@dataclass
+class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
     @dataclass

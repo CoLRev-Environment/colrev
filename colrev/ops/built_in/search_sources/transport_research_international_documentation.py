@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+"""SearchSource: Transport Research International Documentation"""
+from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -15,7 +18,8 @@ import colrev.record
 
 
 @zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
-class TransportResearchInternationalDocumentation:
+@dataclass
+class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{biburl}}"
 
@@ -24,7 +28,7 @@ class TransportResearchInternationalDocumentation:
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        result = {"confidence": 0, "source_identifier": cls.source_identifier}
+        result = {"confidence": 0.0}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
             result["confidence"] = 0.9

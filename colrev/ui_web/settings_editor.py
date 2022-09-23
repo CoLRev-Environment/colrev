@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+"""Web-UI editor for CoLRev project settings"""
 from __future__ import annotations
 
 import json
 import webbrowser
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import jsonify
@@ -13,10 +13,12 @@ from flask import request
 from flask import send_from_directory
 from flask_cors import CORS
 
-import colrev.settings
+# from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+# import colrev.settings
+
+# if TYPE_CHECKING:
+#     import colrev.review_manager.ReviewManager
 
 
 class SettingsEditor:
@@ -24,15 +26,15 @@ class SettingsEditor:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        # def __init__(self) -> None:
+    # def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def __init__(self) -> None:
 
-        self.review_manager = review_manager
-        self.package_manager = review_manager.get_package_manager()
-        self.settings_path: Path = self.review_manager.settings_path
+        # self.review_manager = review_manager
+        # self.package_manager = review_manager.get_package_manager()
+        # self.settings_path: Path = self.review_manager.settings_path
 
         # For testing:
-        # self.settings_path = Path.cwd() / Path("settings.json")
+        self.settings_path = Path.cwd() / Path("settings.json")
 
         # Note : no need for default values (they are already inserted before by the template setup)
 
@@ -224,7 +226,10 @@ class SettingsEditor:
                             },
                             "source_name": {"type": "string"},
                             "source_identifier": {"type": "string"},
-                            "search_parameters": {"type": "object"},
+                            "search_parameters": {
+                                "type": "object",
+                                "additionalProperties": {},
+                            },
                             "load_conversion_script": {
                                 "script_type": "load_conversion",
                                 "type": "script_item",
@@ -283,7 +288,7 @@ class SettingsEditor:
                         "properties": {
                             "same_source_merges": {
                                 "type": "string",
-                                "enum": ["prevent", "apply", "warn"],
+                                "enum": ["prevent", "warn", "apply"],
                             },
                             "scripts": {
                                 "script_type": "dedupe",
@@ -401,41 +406,158 @@ class SettingsEditor:
             #     package_type=package_type
             # )
 
-            # For testing:
-            # Example: script_type="load"
-            # Returns:
-            discovered_packages = {
-                "bibtex": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
-                    "installed": True,
-                    "description": "Loads BibTeX files (based on pybtex)",
-                },
-                "csv": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
-                    "installed": True,
-                    "description": "Loads csv files (based on pandas)",
-                },
-                "excel": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
-                    "installed": True,
-                    "description": "Loads Excel (xls, xlsx) files (based on pandas)",
-                },
-                "zotero_translate": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
-                    "installed": True,
-                    "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
-                },
-                "md_to_bib": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
-                    "installed": True,
-                    "description": "Loads reference strings from text (md) files (based on GROBID)",
-                },
-                "bibutils": {
-                    "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
-                    "installed": True,
-                    "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
-                },
-            }
+            if package_type_string == "data":
+                discovered_packages = {
+                    "manuscript": {
+                        "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript",
+                        "installed": True,
+                        "description": "Synthesize the literature in a manuscript",
+                    },
+                    "structured": {
+                        "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
+                        "installed": True,
+                        "description": "Summarize the literature in a structured data extraction (a spreadsheet)",
+                    },
+                    "bibliography_export": {
+                        "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
+                        "installed": True,
+                        "description": "Export the sample references in Endpoint format",
+                    },
+                    "prisma": {
+                        "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
+                        "installed": True,
+                        "description": "Create a PRISMA diagram",
+                    },
+                    "github_pages": {
+                        "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
+                        "installed": True,
+                        "description": "Export the literature review into a Github Page",
+                    },
+                    "zettlr": {
+                        "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr",
+                        "installed": True,
+                        "description": "Export the sample into a Zettlr database",
+                    },
+                }
+
+            if package_type_string == "load_conversion":
+                # For testing:
+                # Example: script_type="load_conversion"
+                # Returns:
+                discovered_packages = {
+                    "bibtex": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
+                        "installed": True,
+                        "description": "Loads BibTeX files (based on pybtex)",
+                    },
+                    "csv": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
+                        "installed": True,
+                        "description": "Loads csv files (based on pandas)",
+                    },
+                    "excel": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
+                        "installed": True,
+                        "description": "Loads Excel (xls, xlsx) files (based on pandas)",
+                    },
+                    "zotero_translate": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
+                        "installed": True,
+                        "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
+                    },
+                    "md_to_bib": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
+                        "installed": True,
+                        "description": "Loads reference strings from text (md) files (based on GROBID)",
+                    },
+                    "bibutils": {
+                        "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
+                        "installed": True,
+                        "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
+                    },
+                }
+
+            if package_type_string == "search_source":
+                # For testing:
+                # Example: script_type="search_source"
+                # Returns:
+                discovered_packages = {
+                    "unknown_source": {
+                        "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "crossref": {
+                        "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSourceSearchSource",
+                        "installed": True,
+                        "description": "Performs a search using the Crossref API",
+                    },
+                    "dblp": {
+                        "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "acm_digital_library": {
+                        "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "pubmed": {
+                        "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "wiley": {
+                        "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "ais_library": {
+                        "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "google_scholar": {
+                        "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "web_of_science": {
+                        "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "scopus": {
+                        "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "pdfs_dir": {
+                        "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
+                        "installed": True,
+                        "description": None,
+                    },
+                    "pdf_backward_search": {
+                        "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
+                        "installed": True,
+                        "description": "Performs a backward search extracting references from PDFs using GROBID\n    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)\n    ",
+                    },
+                    "colrev_project": {
+                        "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
+                        "installed": True,
+                        "description": "Performs a search in a CoLRev project",
+                    },
+                    "local_index": {
+                        "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+                        "installed": True,
+                        "description": "Performs a search in the LocalIndex",
+                    },
+                    "transport_research_international_documentation": {
+                        "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation",
+                        "installed": True,
+                        "description": None,
+                    },
+                }
 
             return jsonify(discovered_packages)
 
@@ -445,62 +567,133 @@ class SettingsEditor:
             package_type_string = request.args.get("packageType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
-            # package_type = colrev.env.package_manager.PackageType[package_type_string]
-            # package_details = self.package_manager.get_package_details(
-            #     package_type=package_type, package_identifier=package_identifier
-            # )
+            package_type = colrev.env.package_manager.PackageType[package_type_string]
+            package_details = self.package_manager.get_package_details(
+                package_type=package_type, package_identifier=package_identifier
+            )
 
             # TODO (GW): use endpoint_version
 
-            # For testing:
-            # Example: script_type="prescreen", script_name="scope_prescreen"
-            # Returns:
-            package_details = {
-                "name": "scope_prescreen",
-                "description": "Prescreens records based on predefined rules (scope)",
-                "parameters": {
-                    "name": {"required": True, "type": "str"},
-                    "TimeScopeFrom": {
-                        "required": False,
-                        "type": "int",
-                        "tooltip": "Lower bound for the time scope",
-                        "min": 1900,
-                        "max": 2050,
+            if package_type_string == "data":
+                package_details = {
+                    "type": "object",
+                    "required": ["name", "version", "word_template", "csl_style"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "version": {"type": "string"},
+                        "word_template": {
+                            "tooltip": "Path to the word template (for Pandoc)",
+                            "type": "path",
+                        },
+                        "csl_style": {
+                            "type": "string",
+                            "tooltip": "Path to the csl file (for Pandoc)",
+                        },
+                        "paper_path": {
+                            "default": "paper.md",
+                            "tooltip": "Path for the paper (markdown source document)",
+                            "type": "path",
+                        },
+                        "paper_output": {"default": "paper.docx", "type": "path"},
                     },
-                    "TimeScopeTo": {
-                        "required": False,
-                        "type": "int",
-                        "tooltip": "Upper bound for the time scope",
-                        "min": 1900,
-                        "max": 2050,
+                    "description": "Manuscript settings",
+                    "$schema": "http://json-schema.org/draft-06/schema#",
+                }
+
+            if package_type_string == "prescreen":
+                # For testing:
+                # Example: script_type="prescreen", script_name="scope_prescreen"
+                # Returns:
+                package_details = {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "TimeScopeFrom": {
+                            "type": "integer",
+                            "tooltip": "Lower bound for the time scope",
+                            "min": 1900,
+                            "max": 2050,
+                        },
+                        "TimeScopeTo": {
+                            "type": "integer",
+                            "tooltip": "Upper bound for the time scope",
+                            "min": 1900,
+                            "max": 2050,
+                        },
+                        "LanguageScope": {
+                            "type": "array",
+                            "items": {},
+                            "tooltip": "Language scope",
+                        },
+                        "ExcludeComplementaryMaterials": {
+                            "type": "boolean",
+                            "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
+                        },
+                        "OutletInclusionScope": {
+                            "type": "object",
+                            "additionalProperties": {},
+                            "tooltip": "Particular outlets that should be included (exclusively)",
+                        },
+                        "OutletExclusionScope": {
+                            "type": "object",
+                            "additionalProperties": {},
+                            "tooltip": "Particular outlets that should be excluded",
+                        },
+                        "ENTRYTYPEScope": {
+                            "type": "array",
+                            "items": {},
+                            "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
+                        },
                     },
-                    "LanguageScope": {
-                        "required": False,
-                        "type": "typing.Optional[list]",
-                        "tooltip": "Language scope",
+                    "description": "ScopePrescreenSettings",
+                    "$schema": "http://json-schema.org/draft-06/schema#",
+                }
+
+            if package_type_string == "search_source":
+                # For testing:
+                # Example: script_type="search_source", script_name="crossref"
+                # Returns:
+                package_details = {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "filename",
+                        "search_type",
+                        "source_name",
+                        "source_identifier",
+                        "search_parameters",
+                        "load_conversion_script",
+                    ],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "filename": {"type": "path"},
+                        "search_type": {
+                            "type": "string",
+                            "enum": [
+                                "DB",
+                                "TOC",
+                                "BACKWARD_SEARCH",
+                                "FORWARD_SEARCH",
+                                "PDFS",
+                                "OTHER",
+                            ],
+                        },
+                        "source_name": {"type": "string"},
+                        "source_identifier": {"type": "string"},
+                        "search_parameters": {
+                            "type": "object",
+                            "additionalProperties": {},
+                        },
+                        "load_conversion_script": {
+                            "type": "script",
+                            "script_type": "load_conversion",
+                        },
+                        "comment": {"type": "string"},
                     },
-                    "ExcludeComplementaryMaterials": {
-                        "required": False,
-                        "type": "bool",
-                        "tooltip": "Whether complementary materials (coverpages etc.) are excluded",
-                    },
-                    "OutletInclusionScope": {
-                        "required": False,
-                        "type": "typing.Optional[dict]",
-                        "tooltip": "Particular outlets that should be included (exclusively)",
-                    },
-                    "OutletExclusionScope": {
-                        "required": False,
-                        "type": "typing.Optional[dict]",
-                        "tooltip": "Particular outlets that should be excluded",
-                    },
-                    "ENTRYTYPEScope": {
-                        "required": False,
-                        "type": "typing.Optional[list]",
-                        "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)",
-                    },
-                },
-            }
+                    "description": "Search source settings",
+                    "$schema": "http://json-schema.org/draft-06/schema#",
+                }
 
             return jsonify(package_details)
 
@@ -517,6 +710,16 @@ class SettingsEditor:
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    # dev
     se_instance = SettingsEditor()
     se_instance.open_settings_editor()
+
+    # prod
+    # review_manager = colrev.review_manager.ReviewManager()
+    # se_instance = SettingsEditor(review_manager=review_manager)
+    # se_instance.open_settings_editor()
+
+
+if __name__ == "__main__":
+    main()

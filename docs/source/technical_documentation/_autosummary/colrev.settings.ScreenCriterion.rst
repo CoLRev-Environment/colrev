@@ -16,6 +16,15 @@ colrev.settings.ScreenCriterion
    .. autosummary::
       :nosignatures:
 
+      ~ScreenCriterion.all_json_schemas
+      ~ScreenCriterion.field_mapping
+      ~ScreenCriterion.from_dict
+      ~ScreenCriterion.from_json
+      ~ScreenCriterion.from_object
+      ~ScreenCriterion.json_schema
+      ~ScreenCriterion.register_field_encoders
+      ~ScreenCriterion.to_dict
+      ~ScreenCriterion.to_json
 
 
 

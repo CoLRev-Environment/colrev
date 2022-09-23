@@ -31,4 +31,5 @@ colrev.ops.built\_in.database\_connectors.CrossrefConnector
 
    .. autosummary::
 
+      ~CrossrefConnector.api_url
       ~CrossrefConnector.issn_regex

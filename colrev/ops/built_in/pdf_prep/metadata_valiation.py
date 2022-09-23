@@ -1,13 +1,16 @@
 #! /usr/bin/env python
+"""Metadata validation as a PDF preparation operation"""
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -22,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
-class PDFMetadataValidation:
+@dataclass
+class PDFMetadataValidation(JsonSchemaMixin):
     """Prepare PDFs by validating it against its associated metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

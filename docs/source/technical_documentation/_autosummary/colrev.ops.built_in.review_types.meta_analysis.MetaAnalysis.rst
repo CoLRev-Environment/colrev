@@ -16,4 +16,13 @@ colrev.ops.built\_in.review\_types.meta\_analysis.MetaAnalysis
    .. autosummary::
       :nosignatures:
 
+      ~MetaAnalysis.all_json_schemas
+      ~MetaAnalysis.field_mapping
+      ~MetaAnalysis.from_dict
+      ~MetaAnalysis.from_json
+      ~MetaAnalysis.from_object
       ~MetaAnalysis.initialize
+      ~MetaAnalysis.json_schema
+      ~MetaAnalysis.register_field_encoders
+      ~MetaAnalysis.to_dict
+      ~MetaAnalysis.to_json

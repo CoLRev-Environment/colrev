@@ -1,0 +1,7 @@
+Dear Dr. {{ author_name }},<br><br>
+We are currently writing a literature review.<br>
+During our search process your {{ record.data.get('year', 'TODO') }} publication "{{ record.data.get('title', 'TODO') }}" ({{ record.data.get('journal', 'TODO') }}) caught my attention.<br>
+Unfortunately, my home institution does not provide access to it. I was wondering whether you could send me a copy.<br>
+Thank you in advance.<br><br>
+Sincerely,<br><br>
+{{ signed }}<br>

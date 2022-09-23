@@ -14,7 +14,6 @@ from jinja2 import FunctionLoader
 import colrev.env.utils
 import colrev.process
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 
 class Status(colrev.process.Process):
@@ -70,7 +69,9 @@ class Status(colrev.process.Process):
 
         return analytics_dict
 
-    def get_review_status_report(self, *, commit_report: bool = False) -> str:
+    def get_review_status_report(
+        self, *, commit_report: bool = False, colors=None
+    ) -> str:
 
         status_stats = self.review_manager.get_status_stats()
 
@@ -81,16 +82,7 @@ class Status(colrev.process.Process):
         content = template.render(status_stats=status_stats, colors=colors)
 
         if commit_report:
-            content = (
-                content.replace(colors.RED, "")
-                .replace(colors.GREEN, "")
-                .replace(colors.ORANGE, "")
-                .replace(colors.BLUE, "")
-                .replace(colors.END, "")
-                .replace(" 🎉", "")
-                .replace("🎉", "")
-            )
-            # content = content.replace("Status\n\n", "Status\n")
+            content = content.replace(" 🎉", "").replace("🎉", "")
 
         return content
 

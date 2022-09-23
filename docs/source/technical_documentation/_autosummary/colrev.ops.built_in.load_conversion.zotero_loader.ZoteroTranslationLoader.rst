@@ -16,7 +16,16 @@ colrev.ops.built\_in.load\_conversion.zotero\_loader.ZoteroTranslationLoader
    .. autosummary::
       :nosignatures:
 
+      ~ZoteroTranslationLoader.all_json_schemas
+      ~ZoteroTranslationLoader.field_mapping
+      ~ZoteroTranslationLoader.from_dict
+      ~ZoteroTranslationLoader.from_json
+      ~ZoteroTranslationLoader.from_object
+      ~ZoteroTranslationLoader.json_schema
       ~ZoteroTranslationLoader.load
+      ~ZoteroTranslationLoader.register_field_encoders
+      ~ZoteroTranslationLoader.to_dict
+      ~ZoteroTranslationLoader.to_json
 
 
 

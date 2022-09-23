@@ -1,12 +1,16 @@
 #! /usr/bin/env python
+"""Deduplication of remaining records in curated metadata repositories"""
 from __future__ import annotations
 
+import typing
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.pdf_prep.metadata_valiation
@@ -22,8 +26,9 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
-class CurationMissingDedupe:
-    """Endpoint for deduplicating remaining records in a curated metadata repository"""
+@dataclass
+class CurationMissingDedupe(JsonSchemaMixin):
+    """Deduplication of remaining records in a curated metadata repository"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
@@ -43,7 +48,7 @@ class CurationMissingDedupe:
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(source.filename).replace("search/", "")
+            str(source.filename).replace("data/search/", "")
             for source in dedupe_operation.review_manager.settings.sources
         ]
 
@@ -105,31 +110,13 @@ class CurationMissingDedupe:
                 records_df.sort_values(by=keys, inplace=True)
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-
+    def __process_missing_duplicates(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
+    ) -> dict:
+        # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
 
-        # export sets of non-merged records
-        # (and merged records a different xlsx for easy sort/merge)
         records = dedupe_operation.review_manager.dataset.load_records_dict()
-
-        # Note : this script is necessary because the active learning is insufficient:
-        # the automated ML-deduplication still has a certain error rate
-        # which makes it less useful for curations
-        # the active learning labeling presents cases on both sides
-        # (likely duplicates and non-duplicates to maximize training quality)
-        # For the curation, we are only interested in the duplicate, not the classifier
-
-        print("\n\n")
-        print(
-            "In the following, "
-            "records can be added to the curated (md_processed*) records.\n"
-            "Curated records are displayed for the same table-of-content item "
-            "(i.e., same year/volume/number)"
-        )
-        print("\n\n")
-
         nr_recs_to_merge = len(
             [
                 x
@@ -138,9 +125,12 @@ class CurationMissingDedupe:
             ]
         )
         nr_recs_checked = 0
-        decision_list = []
-        add_records_to_md_processed_list = []
-        records_to_prepare = []
+        results: typing.Dict[str, list] = {
+            "decision_list": [],
+            "add_records_to_md_processed_list": [],
+            "records_to_prepare": [],
+        }
+
         for record_dict in records.values():
             if record_dict["colrev_status"] not in [
                 colrev.record.RecordState.md_prepared
@@ -208,14 +198,16 @@ class CurationMissingDedupe:
                     quit_pressed = True
                     valid_selection = True
                 elif "a" == ret:
-                    add_records_to_md_processed_list.append(record.data["ID"])
+                    results["add_records_to_md_processed_list"].append(
+                        record.data["ID"]
+                    )
                     valid_selection = True
                 elif "p" == ret:
-                    records_to_prepare.append(record.data["ID"])
+                    results["records_to_prepare"].append(record.data["ID"])
                     valid_selection = True
                 elif ret.isdigit():
                     if int(ret) - 1 <= i:
-                        decision_list.append(
+                        results["decision_list"].append(
                             {
                                 "ID1": record.data["ID"],
                                 "ID2": same_toc_recs[int(ret) - 1]["ID"],
@@ -227,16 +219,43 @@ class CurationMissingDedupe:
             nr_recs_checked += 1
             if quit_pressed:
                 break
+        return results
 
-        if len(decision_list) > 0:
+    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
+        # export sets of non-merged records
+        # (and merged records a different xlsx for easy sort/merge)
+
+        # Note : this script is necessary because the active learning is insufficient:
+        # the automated ML-deduplication still has a certain error rate
+        # which makes it less useful for curations
+        # the active learning labeling presents cases on both sides
+        # (likely duplicates and non-duplicates to maximize training quality)
+        # For the curation, we are only interested in the duplicate, not the classifier
+
+        print("\n\n")
+        print(
+            "In the following, "
+            "records can be added to the curated (md_processed*) records.\n"
+            "Curated records are displayed for the same table-of-content item "
+            "(i.e., same year/volume/number)"
+        )
+        print("\n\n")
+
+        ret = self.__process_missing_duplicates(dedupe_operation=dedupe_operation)
+
+        if len(ret["decision_list"]) > 0:
             print("Duplicates identified:")
-            print(decision_list)
-            dedupe_operation.apply_merges(results=decision_list)
+            print(ret["decision_list"])
+            dedupe_operation.apply_merges(results=ret["decision_list"])
 
-        if len(records_to_prepare) > 0:
+        if len(ret["records_to_prepare"]) > 0:
             records = dedupe_operation.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
-                if record_id in records_to_prepare:
+                if record_id in ret["records_to_prepare"]:
                     record = colrev.record.Record(data=record_dict)
                     record.set_status(
                         target_state=colrev.record.RecordState.md_needs_manual_preparation
@@ -244,7 +263,7 @@ class CurationMissingDedupe:
 
             dedupe_operation.review_manager.dataset.save_records_dict(records=records)
 
-        if len(decision_list) > 0 or len(records_to_prepare) > 0:
+        if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
 
             dedupe_operation.review_manager.dataset.add_record_changes()
 
@@ -254,10 +273,10 @@ class CurationMissingDedupe:
                 saved_args={},
             )
 
-        if len(add_records_to_md_processed_list) > 0:
+        if len(ret["add_records_to_md_processed_list"]) > 0:
             records = dedupe_operation.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
-                if record_id in add_records_to_md_processed_list:
+                if record_id in ret["add_records_to_md_processed_list"]:
                     if record_dict["colrev_status"] in [
                         colrev.record.RecordState.md_prepared,
                         colrev.record.RecordState.md_needs_manual_preparation,

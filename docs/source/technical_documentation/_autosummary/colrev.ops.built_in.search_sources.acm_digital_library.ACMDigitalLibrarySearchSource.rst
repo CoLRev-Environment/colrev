@@ -16,10 +16,19 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
    .. autosummary::
       :nosignatures:
 
+      ~ACMDigitalLibrarySearchSource.all_json_schemas
+      ~ACMDigitalLibrarySearchSource.field_mapping
+      ~ACMDigitalLibrarySearchSource.from_dict
+      ~ACMDigitalLibrarySearchSource.from_json
+      ~ACMDigitalLibrarySearchSource.from_object
       ~ACMDigitalLibrarySearchSource.heuristic
+      ~ACMDigitalLibrarySearchSource.json_schema
       ~ACMDigitalLibrarySearchSource.load_fixes
       ~ACMDigitalLibrarySearchSource.prepare
+      ~ACMDigitalLibrarySearchSource.register_field_encoders
       ~ACMDigitalLibrarySearchSource.run_search
+      ~ACMDigitalLibrarySearchSource.to_dict
+      ~ACMDigitalLibrarySearchSource.to_json
 
 
 
@@ -29,6 +38,4 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
 
    .. autosummary::
 
-      ~ACMDigitalLibrarySearchSource.search_mode
       ~ACMDigitalLibrarySearchSource.source_identifier
-      ~ACMDigitalLibrarySearchSource.source_identifier_search

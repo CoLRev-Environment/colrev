@@ -1,11 +1,14 @@
 #! /usr/bin/env python
+"""Creation of screenshots (PDFs) for online ENTRYTYPES"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
@@ -17,7 +20,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
-class WebsiteScreenshot:
+@dataclass
+class WebsiteScreenshot(JsonSchemaMixin):
     """Get PDFs from webisite screenshot (for "online" ENTRYTYPES)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -39,9 +43,8 @@ class WebsiteScreenshot:
         if "online" == record.data["ENTRYTYPE"]:
             screenshot_service.start_screenshot_service()
 
-            pdf_filepath = (
-                pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE
-                / Path(f"{record.data['ID']}.pdf")
+            pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
+                f"{record.data['ID']}.pdf"
             )
             record = screenshot_service.add_screenshot(
                 record=record, pdf_filepath=pdf_filepath

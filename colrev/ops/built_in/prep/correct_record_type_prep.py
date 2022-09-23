@@ -1,10 +1,13 @@
 #! /usr/bin/env python
+"""Correction of record ENTRYTYPE as a prep operation"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.database_connectors
@@ -16,10 +19,12 @@ if TYPE_CHECKING:
     import colrev.env.local_index
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=duplicate-code
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
-class CorrectRecordTypePrep:
+@dataclass
+class CorrectRecordTypePrep(JsonSchemaMixin):
     """Prepares records by correcting the record type (ENTRYTYPE)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Structured data extraction as part of the data operations"""
 from __future__ import annotations
 
 import csv
@@ -11,6 +12,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -22,11 +24,12 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
-class StructuredData:
+@dataclass
+class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a spreadsheet)"""
 
     @dataclass
-    class StructuredDataSettings:
+    class StructuredDataSettings(JsonSchemaMixin):
         name: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)
@@ -47,7 +50,7 @@ class StructuredData:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         # TODO : integrate filename in custom settings
         self.data_path = (
-            data_operation.review_manager.path / self.settings.data_path_relative
+            data_operation.review_manager.data_dir / self.settings.data_path_relative
         )
 
     def get_default_setup(self) -> dict:
@@ -71,7 +74,7 @@ class StructuredData:
         # if not data['ID'].is_unique:
         #     raise some error (data[data.duplicated(['ID'])].ID.tolist())
 
-        # # Check consistency: all IDs in data.csv in records.bib
+        # # Check consistency: all IDs in data.csv in data/records.bib
         # missing_IDs = [ID for
         #                 ID in data['ID'].tolist()
         #                 if ID not in IDs]

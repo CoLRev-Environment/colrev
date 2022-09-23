@@ -16,9 +16,18 @@ colrev.ops.built\_in.screen.spreadsheet\_screen.SpreadsheetScreen
    .. autosummary::
       :nosignatures:
 
+      ~SpreadsheetScreen.all_json_schemas
       ~SpreadsheetScreen.export_table
+      ~SpreadsheetScreen.field_mapping
+      ~SpreadsheetScreen.from_dict
+      ~SpreadsheetScreen.from_json
+      ~SpreadsheetScreen.from_object
       ~SpreadsheetScreen.import_table
+      ~SpreadsheetScreen.json_schema
+      ~SpreadsheetScreen.register_field_encoders
       ~SpreadsheetScreen.run_screen
+      ~SpreadsheetScreen.to_dict
+      ~SpreadsheetScreen.to_json
 
 
 

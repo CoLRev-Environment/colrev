@@ -16,7 +16,16 @@ colrev.ops.built\_in.data.github\_pages.GithubPages
    .. autosummary::
       :nosignatures:
 
+      ~GithubPages.all_json_schemas
+      ~GithubPages.field_mapping
+      ~GithubPages.from_dict
+      ~GithubPages.from_json
+      ~GithubPages.from_object
       ~GithubPages.get_default_setup
+      ~GithubPages.json_schema
+      ~GithubPages.register_field_encoders
+      ~GithubPages.to_dict
+      ~GithubPages.to_json
       ~GithubPages.update_data
       ~GithubPages.update_record_status_matrix
 

@@ -1,14 +1,17 @@
 #! /usr/bin/env python
+"""Retrieval of PDFs from the unpaywall API"""
 from __future__ import annotations
 
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
 from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 from pdfminer.high_level import extract_text
 from pdfminer.pdftypes import PDFException
 
@@ -22,7 +25,8 @@ if TYPE_CHECKING:
 
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
-class Unpaywall:
+@dataclass
+class Unpaywall(JsonSchemaMixin):
     """Get PDFs from unpaywall.org"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -88,7 +92,7 @@ class Unpaywall:
         if "doi" not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.review_manager.PDF_DIRECTORY_RELATIVE / Path(
+        pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
         )
         url = self.__unpaywall(
