@@ -433,7 +433,7 @@ class PackageManager:
         if PackageType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
             package_details["properties"]["load_conversion_script"] = {
-                "type": "script_array",
+                "type": "script",
                 "script_type": "load_conversion",
             }
 

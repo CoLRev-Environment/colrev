@@ -623,7 +623,7 @@ class SettingsEditor:
                             "additionalProperties": {},
                         },
                         "load_conversion_script": {
-                            "type": "script_array",
+                            "type": "script",
                             "script_type": "load_conversion",
                         },
                         "comment": {"type": "string"},
