@@ -692,7 +692,7 @@ class Load(colrev.process.Process):
                 source_name="unknown_source",
                 source_identifier="NA",
                 search_parameters={},
-                load_conversion_script={"endpoint": "bibtex"},
+                load_conversion_script=get_load_conversion_script(filepath=filepath),
                 comment="",
             )
             results_list.append(

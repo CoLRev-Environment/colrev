@@ -55,7 +55,7 @@ class MarkdownLoader(JsonSchemaMixin):
         ind = 0
         for ref in references:
             options = {}
-            options["consolidateCitations"] = "1"
+            options["consolidateCitations"] = "0"
             options["citations"] = ref
             ret = requests.post(
                 grobid_service.GROBID_URL + "/api/processCitation",

@@ -389,25 +389,27 @@ class Record:
     def masterdata_is_complete(self) -> bool:
         if self.masterdata_is_curated():
             return True
+
         if not any(
             v == "UNKNOWN"
             for k, v in self.data.items()
             if k in self.identifying_field_keys
         ):
-            if not any(
-                k in self.data.get("colrev_masterdata_provenance", {})
-                for k in self.identifying_field_keys
-            ):
-                return True
 
             for k in self.identifying_field_keys:
                 if k in self.data.get("colrev_masterdata_provenance", {}):
+                    if (
+                        "not_missing"
+                        in self.data["colrev_masterdata_provenance"][k]["note"]
+                    ):
+                        continue
                     if (
                         "missing"
                         in self.data["colrev_masterdata_provenance"][k]["note"]
                     ):
                         return False
             return True
+
         return False
 
     def set_masterdata_complete(self) -> None:

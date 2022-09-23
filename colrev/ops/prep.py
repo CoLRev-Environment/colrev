@@ -160,7 +160,9 @@ class Prep(colrev.process.Process):
                 input("Press Enter to continue")
                 print("\n")
         else:
-            self.review_manager.logger.debug(f"{prep_script.prepare} changed: -")
+            self.review_manager.logger.debug(
+                f"{prep_script.prepare.__name__} changed: -"
+            )
             if self.review_manager.debug_mode:
                 print("\n")
                 time.sleep(0.3)
