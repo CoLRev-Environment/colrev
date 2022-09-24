@@ -186,7 +186,7 @@ function App() {
                 name="Sources"
                 id="sources"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <SourcesEditor
                   sources={sources}
@@ -259,9 +259,13 @@ function App() {
                 name="Screen"
                 id="screen"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
-                <ScreenEditor screen={screen} screenChanged={onScreenChanged} />
+                <ScreenEditor
+                  screen={screen}
+                  screenChanged={onScreenChanged}
+                  options={options}
+                />
               </ExpanderItem>
               <ExpanderItem
                 name="Data"
