@@ -51,7 +51,7 @@ class CoLRevCLIManPrep(JsonSchemaMixin):
 
         print("Man-prep is not fully implemented (yet).\n")
         print(
-            "Edit the records.bib directly, set the colrev_status to 'md_prepared' and "
+            "Edit the data/records.bib directly, set the colrev_status to 'md_prepared' and "
             "create a commit.\n"  # call this script again to create a commit
         )
 

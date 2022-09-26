@@ -43,7 +43,7 @@ class CuratedMasterdata(JsonSchemaMixin):
                 new_string=self.review_manager.settings.project.curation_url,
             )
         crossref_source = colrev.settings.SearchSource(
-            filename=Path("search/CROSSREF.bib"),
+            filename=Path("data/search/CROSSREF.bib"),
             search_type=colrev.settings.SearchType["DB"],
             source_name="crossref",
             source_identifier="https://api.crossref.org/works/{{doi}}",
@@ -81,11 +81,11 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.dedupe.scripts = [
             {
                 "endpoint": "curation_full_outlet_dedupe",
-                "selected_source": "search/CROSSREF.bib",
+                "selected_source": "data/search/CROSSREF.bib",
             },
             {
                 "endpoint": "curation_full_outlet_dedupe",
-                "selected_source": "search/pdfs.bib",
+                "selected_source": "data/search/pdfs.bib",
             },
             {"endpoint": "curation_missing_dedupe"},
         ]

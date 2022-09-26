@@ -1,9 +1,10 @@
 ---
 title: "{{project_title}}"
 author: "{{author}}"
-bibliography: [records.bib]
+bibliography: [data/records.bib,data/non_sample_references.bib]
 figPrefix: "Figure"
 tblPrefix: "Table"
+csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl"
 ---
 
 # Abstract
@@ -13,6 +14,8 @@ tblPrefix: "Table"
 # Introduction
 
 # Methodology
+
+Data was managed with CoLRev version {{colrev_version}} [@WagnerPrester2022].
 
 ## Search
 

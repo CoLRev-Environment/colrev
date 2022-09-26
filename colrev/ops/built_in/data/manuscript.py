@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import dacite
 import docker
-import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,7 +20,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -49,6 +49,8 @@ class Manuscript(JsonSchemaMixin):
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
+    NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
+
     @dataclass
     class ManuscriptSettings(JsonSchemaMixin):
         """Manuscript settings"""
@@ -63,7 +65,6 @@ class Manuscript(JsonSchemaMixin):
 
         _details = {
             "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
-            "csl_style": {"tooltip": "Path to the csl file (for Pandoc)"},
             "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
         }
 
@@ -82,22 +83,22 @@ class Manuscript(JsonSchemaMixin):
 
         if "word_template" not in settings:
             settings["word_template"] = self.retrieve_default_word_template()
-        if "csl_style" not in settings:
-            settings["csl_style"] = (self.retrieve_default_csl(),)
 
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        converters = {Path: Path}
+        self.settings = from_dict(
+            data_class=self.settings_class,
+            data=settings,
+            config=dacite.Config(type_hooks=converters),
+        )
 
         self.settings.paper_path = (
             data_operation.review_manager.data_dir / self.settings.paper_path
         )
         self.settings.word_template = (
             data_operation.review_manager.data_dir / self.settings.word_template
-        )
-        self.settings.csl_style = (
-            data_operation.review_manager.data_dir / self.settings.csl_style
         )
 
         self.data_operation = data_operation
@@ -106,13 +107,14 @@ class Manuscript(JsonSchemaMixin):
             data_operation.review_manager.output_dir / self.settings.paper_output
         )
 
+        self.__create_non_sample_references_bib()
+
     def get_default_setup(self) -> dict:
 
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
             "version": "0.1",
             "word_template": self.retrieve_default_word_template(),
-            "csl_style": self.retrieve_default_csl(),
         }
 
         return manuscript_endpoint_details
@@ -131,22 +133,6 @@ class Manuscript(JsonSchemaMixin):
             path=template_name.relative_to(self.data_operation.review_manager.path)
         )
         return template_name
-
-    def retrieve_default_csl(self) -> str:
-        csl_link = (
-            "https://raw.githubusercontent.com/"
-            + "citation-style-language/styles/master/apa.csl"
-        )
-        csl_path = self.data_operation.review_manager.data_dir / Path(csl_link).name
-        ret = requests.get(csl_link, allow_redirects=True)
-        with open(csl_path, "wb") as file:
-            file.write(ret.content)
-        csl = Path(csl_link).name
-
-        self.data_operation.review_manager.dataset.add_changes(
-            path=csl_path.relative_to(self.data_operation.review_manager.path)
-        )
-        return csl
 
     def check_new_record_source_tag(
         self,
@@ -212,19 +198,30 @@ class Manuscript(JsonSchemaMixin):
                         writer.write(line)
                         writer.write("\n")
 
+                    paper_ids_added = []
                     for missing_record in missing_records:
-                        writer.write(missing_record)
+                        writer.write("\n- @" + missing_record + "\n")
+                        paper_ids_added.append(missing_record)
+
+                    for paper_id in paper_ids_added:
                         review_manager.report_logger.info(
                             # f" {missing_record}".ljust(self.__PAD, " ")
-                            f" {missing_record}"
+                            f" {paper_id}"
                             + f" added to {paper_path.name}"
                         )
+                    nr_records_added = len(missing_records)
+                    review_manager.report_logger.info(
+                        f"{nr_records_added} records added to {self.settings.paper_path.name}"
+                    )
 
-                        review_manager.logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ")
-                            f" {missing_record}"
-                            + f" added to {paper_path.name}"
-                        )
+                    review_manager.logger.info(
+                        "%sAdded %s records to %s%s %s",
+                        colors.GREEN,
+                        nr_records_added,
+                        paper_path.name,
+                        colors.END,
+                        ": \n- " + "\n- ".join(paper_ids_added),
+                    )
 
                     # skip empty lines between to connect lists
                     line = reader.readline()
@@ -312,6 +309,11 @@ class Manuscript(JsonSchemaMixin):
         )
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,
+            old_string="{{colrev_version}}",
+            new_string=str(review_manager.get_colrev_versions()[1]),
+        )
+        colrev.env.utils.inplace_change(
+            filename=self.settings.paper_path,
             old_string="{{author}}",
             new_string=author,
         )
@@ -347,17 +349,7 @@ class Manuscript(JsonSchemaMixin):
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 paper_path=self.settings.paper_path,
-                missing_records=[
-                    "\n- @" + missing_record + "\n"
-                    for missing_record in missing_records
-                ],
-            )
-            nr_records_added = len(missing_records)
-            review_manager.report_logger.info(
-                f"{nr_records_added} records added to {self.settings.paper_path.name}"
-            )
-            review_manager.logger.info(
-                f"{nr_records_added} records added to {self.settings.paper_path.name}"
+                missing_records=missing_records,
             )
 
     def update_manuscript(
@@ -380,6 +372,17 @@ class Manuscript(JsonSchemaMixin):
 
         return records
 
+    def __create_non_sample_references_bib(self) -> None:
+        if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
+
+            retrieval_path = Path("template/non_sample_references.bib")
+            colrev.env.utils.retrieve_package_file(
+                template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
+            )
+            self.data_operation.review_manager.dataset.add_changes(
+                path=self.NON_SAMPLE_REFERENCES_RELATIVE
+            )
+
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
 
         data_operation.review_manager.logger.info("Build manuscript")
@@ -396,15 +399,13 @@ class Manuscript(JsonSchemaMixin):
         environment_manager = data_operation.review_manager.get_environment_manager()
         environment_manager.build_docker_images()
 
-        csl_file = self.settings.csl_style
+        self.__create_non_sample_references_bib()
+
         word_template = self.settings.word_template
 
         if not word_template.is_file():
             self.retrieve_default_word_template()
-        if not Path(csl_file).is_file():
-            self.retrieve_default_csl()
         assert word_template.is_file()
-        assert Path(csl_file).is_file()
 
         uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
         gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
@@ -415,9 +416,9 @@ class Manuscript(JsonSchemaMixin):
         output_relative_path = self.settings.paper_output.relative_to(
             data_operation.review_manager.path
         )
+
         script = (
-            f"{paper_relative_path} --citeproc --bibliography records.bib "
-            + f"--csl {csl_file.relative_to(data_operation.review_manager.path)} "
+            f"{paper_relative_path} --citeproc "
             + f"--reference-doc {word_template.relative_to(data_operation.review_manager.path)} "
             + f"--output {output_relative_path}"
         )

@@ -132,8 +132,8 @@ class PDFPrepMan(colrev.process.Process):
 
     def extract_needs_pdf_prep_man(self) -> None:
 
-        prep_bib_path = self.review_manager.path / Path("prep-records.bib")
-        prep_csv_path = self.review_manager.path / Path("prep-records.csv")
+        prep_bib_path = self.review_manager.path / Path("data/prep-records.bib")
+        prep_csv_path = self.review_manager.path / Path("data/prep-records.csv")
 
         if prep_csv_path.is_file():
             print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
@@ -184,15 +184,15 @@ class PDFPrepMan(colrev.process.Process):
 
     def apply_pdf_prep_man(self) -> None:
 
-        if Path("prep-records.csv").is_file():
+        if Path("data/prep-records.csv").is_file():
             self.review_manager.logger.info("Load prep-records.csv")
-            bib_db_df = pd.read_csv("prep-records.csv")
+            bib_db_df = pd.read_csv("data/prep-records.csv")
             records_changed = bib_db_df.to_dict("records")
 
-        if Path("prep-records.bib").is_file():
+        if Path("data/prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
 
-            with open("prep-records.bib", encoding="utf8") as target_db:
+            with open("data/prep-records.bib", encoding="utf8") as target_db:
                 records_changed_dict = self.review_manager.dataset.load_records_dict(
                     load_str=target_db.read()
                 )

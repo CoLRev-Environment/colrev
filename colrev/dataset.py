@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functionality for records.bib and git repository."""
+"""Functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
 import io
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 class Dataset:
 
-    RECORDS_FILE_RELATIVE = Path("records.bib")
+    RECORDS_FILE_RELATIVE = Path("data/records.bib")
     records_file: Path
     __git_repo: git.Repo
 
@@ -68,7 +68,7 @@ class Dataset:
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
             ):
-                for origin in record_header_item["colrev_origin"].split(";"):
+                for origin in record_header_item["colrev_origin"]:
                     current_origin_states_dict[origin] = record_header_item[
                         "colrev_status"
                     ]
@@ -83,8 +83,7 @@ class Dataset:
 
     def get_currently_imported_origin_list(self) -> list:
         record_header_list = self.get_record_header_list()
-        imported_origins = [x["colrev_origin"].split(";") for x in record_header_list]
-        imported_origins = list(itertools.chain(*imported_origins))
+        imported_origins = [x["colrev_origin"] for x in record_header_list]
         return imported_origins
 
     def get_states_set(self, *, record_state_list: list = None) -> set:
@@ -135,7 +134,7 @@ class Dataset:
                 for original_record in original_records:
                     if any(
                         o in prior_record["colrev_origin"]
-                        for o in original_record["colrev_origin"].split(";")
+                        for o in original_record["colrev_origin"]
                     ):
                         prior_records.append(prior_record)
                         # only take the latest version (i.e., drop the record)
@@ -280,8 +279,11 @@ class Dataset:
                         # Cast status to Enum
                         k: colrev.record.RecordState[v] if ("colrev_status" == k)
                         # DOIs are case insensitive -> use upper case.
-                        else v.upper()
-                        if ("doi" == k)
+                        else v.upper() if ("doi" == k)
+                        # Note : the following two lines are a temporary fix
+                        # to converg colrev_origins to list items
+                        else [el.rstrip().lstrip() for el in v.split(";") if "" != el]
+                        if k == "colrev_origin"
                         else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
                         if k in colrev.record.Record.list_fields_keys
                         else Dataset.load_field_dict(value=v, field=k)
@@ -410,7 +412,7 @@ class Dataset:
 
             field_order = [
                 "colrev_origin",  # must be in second line
-                "colrev_status",  # must be in third line
+                "colrev_status",
                 "colrev_masterdata_provenance",
                 "colrev_data_provenance",
                 "colrev_id",
@@ -795,7 +797,7 @@ class Dataset:
             if crossref_origin in record_string:
                 records_dict = self.load_records_dict(load_str=record_string)
                 record_dict = list(records_dict.values())[0]
-                if record_dict["colrev_origin"] == crossref_origin:
+                if crossref_origin in record_dict["colrev_origin"]:
                     return record_dict
         return {}
 
@@ -972,19 +974,16 @@ class Dataset:
         self,
         *,
         record_id: str,
-        origin: str,
+        origin: list,
         prior: dict,
         status: str,
         status_data: dict,
     ) -> dict:
 
-        # TODO : the origins of a record could be in multiple states
         prior_status = []
         if "colrev_status" in prior:
             prior_status = [
-                stat
-                for (org, stat) in prior["colrev_status"]
-                if org in origin.split(";")
+                stat for (org, stat) in prior["colrev_status"] if org in origin
             ]
 
         status_transition = {}
@@ -1043,10 +1042,12 @@ class Dataset:
                     "NA",
                     "NA",
                     "not_set",
-                    "NA",
+                    ["NA"],
                 )
 
-                for line in record_string.split("\n"):
+                record_string_list = record_string.split("\n")
+                while len(record_string_list) > 0:
+                    line = record_string_list.pop(0)
                     if "@Comment" in line:
                         record_id = "Comment"
                         break
@@ -1059,7 +1060,14 @@ class Dataset:
                     if "screening_criteria" == line.lstrip()[:18]:
                         excl_crit = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_origin" == line.strip()[:13]:
-                        origin = line[line.find("{") + 1 : line.rfind("}")]
+                        origin = [line[line.find("{") + 1 : line.rfind(";")]]
+                        while True:
+                            if "}" not in line:
+                                origin.append(line[: line.rfind(";")].lstrip())
+                                line = record_string_list.pop(0)
+                            else:
+                                break
+
                 if "Comment" == record_id:
                     continue
                 if "NA" == record_id:
@@ -1068,22 +1076,22 @@ class Dataset:
 
                 status_data["IDs"].append(record_id)
 
-                for org in origin.split(";"):
+                for org in origin:
                     status_data["origin_list"].append([record_id, org])
 
                 post_md_processed_states = colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_processed
                 )
                 if str(status) in post_md_processed_states:
-                    for origin_part in origin.split(";"):
+                    for origin_part in origin:
                         status_data["persisted_IDs"].append([origin_part, record_id])
 
                 if file_path != "NA":
                     if not all(Path(f).is_file() for f in file_path.split(";")):
                         status_data["pdf_not_exists"].append(record_id)
 
-                if origin != "NA":
-                    for org in origin.split(";"):
+                if origin != ["NA"]:
+                    for org in origin:
                         status_data["record_links_in_bib"].append(org)
                 else:
                     status_data["entries_without_origin"].append(record_id)
@@ -1122,16 +1130,29 @@ class Dataset:
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(file_object=prior_db_str):
 
-            record_id, status, origin = "NA", "NA", "NA"
-            for line in record_string.split("\n"):
+            record_id, status, origin = "NA", "NA", ["NA"]
+            # for line in record_string.split("\n"):
+            record_string_list = record_string.split("\n")
+            while len(record_string_list) > 0:
+                line = record_string_list.pop(0)
+
                 if "@" in line[:3]:
                     record_id = line[line.find("{") + 1 : line.rfind(",")]
                 if "colrev_status" == line.lstrip()[:13]:
                     status = line[line.find("{") + 1 : line.rfind("}")]
+                # if "colrev_origin" == line.strip()[:13]:
+                #     origin = line[line.find("{") + 1 : line.rfind("}")]
                 if "colrev_origin" == line.strip()[:13]:
-                    origin = line[line.find("{") + 1 : line.rfind("}")]
+                    origin = [line[line.find("{") + 1 : line.rfind(";")]]
+                    while True:
+                        if "}" not in line:
+                            origin.append(line[: line.rfind(";")].lstrip())
+                            line = record_string_list.pop(0)
+                        else:
+                            break
+
             if "NA" != record_id:
-                for orig in origin.split(";"):
+                for orig in origin:
                     prior["colrev_status"].append([orig, status])
                     if str(colrev.record.RecordState.md_processed) == status:
                         prior["persisted_IDs"].append([orig, record_id])
@@ -1197,16 +1218,6 @@ class Dataset:
                         if origin in origin_records
                     ]
                 )
-
-            # Note : we may create origins from history for curated repositories
-            # for history_recs in self.load_from_git_history():
-            #     for hist_rec in tqdm(history_recs.values()):
-            #         for rec in recs_dict.values():
-            #             record = Record(rec)
-            #             HIST_RECORD = Record(hist_rec)
-            #             # TODO : acces hist_rec based on an origin-key record-list?
-            #             if record.shares_origins(HIST_RECORD):
-            #                 record.add_colrev_ids([HIST_RECORD.get_data()])
 
             self.save_records_dict(records=recs_dict)
             self.add_record_changes()

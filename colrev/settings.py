@@ -117,8 +117,7 @@ class ProjectSettings(JsonSchemaMixin):
     colrev_version: str
 
     def __str__(self) -> str:
-        # TODO : add more
-        return f"Review ({self.review_type})"
+        return f"Review ({self.review_type}): {self.title}"
 
 
 # Search

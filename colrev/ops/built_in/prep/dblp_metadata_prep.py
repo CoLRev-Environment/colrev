@@ -84,11 +84,12 @@ class DBLPMetadataPrep(JsonSchemaMixin):
                         f"dblp similarity: {similarity} "
                         f"(>{prep_operation.retrieval_similarity})"
                     )
+                    source = retrieved_record.data["dblp_key"]
                     record.merge(
                         merging_record=retrieved_record,
-                        default_source=retrieved_record.data["dblp_key"],
+                        default_source=source,
                     )
-                    record.set_masterdata_complete()
+                    record.set_masterdata_complete(source_identifier=source)
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
                     )

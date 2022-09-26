@@ -209,7 +209,7 @@ class DOIConnector:
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
                 retrieved_record.add_provenance_all(source=url)
                 record.merge(merging_record=retrieved_record, default_source=url)
-                record.set_masterdata_complete()
+                record.set_masterdata_complete(source_identifier=url)
                 if "colrev_status" in record.data:
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
@@ -309,7 +309,12 @@ class DOIConnector:
                         headers=requests_headers,
                         timeout=timeout,
                     )
-            record.update_field(key="url", value=str(url), source=doi_url)
+            record.update_field(
+                key="url",
+                value=str(url.rstrip("/")),
+                source=doi_url,
+                keep_source_if_equal=True,
+            )
         except (requests.exceptions.RequestException, TypeError):
             pass
         except OperationalError as exc:
@@ -408,12 +413,12 @@ class CrossrefConnector:
         record_dict: dict = {}
 
         # Note : better use the doi-link resolution
-        # if "link" in item:
-        #     fulltext_link_l = [
-        #         u["URL"] for u in item["link"] if "pdf" in u["content-type"]
-        #     ]
-        #     if len(fulltext_link_l) == 1:
-        #         record_dict["fulltext"] = fulltext_link_l.pop()
+        if "link" in item:
+            fulltext_link_l = [
+                u["URL"] for u in item["link"] if "pdf" in u["content-type"]
+            ]
+            if len(fulltext_link_l) == 1:
+                record_dict["fulltext"] = fulltext_link_l.pop()
         #     item["link"] = [u for u in item["link"] if "pdf" not in u["content-type"]]
         #     if len(item["link"]) >= 1:
         #         link = item["link"][0]["URL"]
@@ -664,11 +669,12 @@ class CrossrefConnector:
                     retrieved_record.prescreen_exclude(reason="retracted")
                     retrieved_record.remove_field(key="warning")
 
-                retrieved_record.add_provenance_all(
-                    source=f'https://api.crossref.org/works/{retrieved_record.data["doi"]}'
+                source = (
+                    f'https://api.crossref.org/works/{retrieved_record.data["doi"]}'
                 )
+                retrieved_record.add_provenance_all(source=source)
 
-                record.set_masterdata_complete()
+                record.set_masterdata_complete(source_identifier=source)
 
                 if jour_vol_iss_list:
                     record_list.append(retrieved_record)
@@ -754,7 +760,7 @@ class CrossrefConnector:
                             review_manager=prep_operation.review_manager,
                             record=record,
                         )
-                        record.set_masterdata_complete()
+                        record.set_masterdata_complete(source_identifier=source)
                         record.set_status(
                             target_state=colrev.record.RecordState.md_prepared
                         )

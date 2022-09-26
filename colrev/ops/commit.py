@@ -62,9 +62,6 @@ class Commit:
         stream = os.popen("docker --version")
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
 
-        # TODO : the "dirty" mark is no longer included (poetry setup?)
-        self.non_reproducible = "dirty" in self.colrev_version
-
         self.ext_script_name = ""
         self.ext_script_version = ""
 

@@ -119,7 +119,7 @@ class Search(colrev.process.Process):
         # NOTE: for now, the parameters are limited to whole journals.
         add_source = colrev.settings.SearchSource(
             filename=Path(
-                f"search/{filename}",
+                f"data/search/{filename}",
             ),
             search_type=colrev.settings.SearchType(query_dict["search_type"]),
             source_name=query_dict["source_name"],
@@ -156,37 +156,37 @@ class Search(colrev.process.Process):
                 records=records, save_path=source.get_corresponding_bib_file()
             )
 
+    def __get_search_sources(
+        self, *, selection_str: str = None
+    ) -> list[colrev.settings.SearchSource]:
+
+        sources_selected = self.sources
+        if selection_str:
+            if "all" != selection_str:
+                sources_selected = [
+                    f
+                    for f in self.sources
+                    if str(f.filename) in selection_str.split(",")
+                ]
+            if len(sources_selected) == 0:
+                available_options = [str(f.filename) for f in self.sources]
+                raise colrev_exceptions.ParameterError(
+                    parameter="selection_str",
+                    value=selection_str,
+                    options=available_options,
+                )
+
+        for source in sources_selected:
+            source.filename = self.review_manager.path / Path(source.filename)
+
+        return sources_selected
+
     def main(self, *, selection_str: str = None) -> None:
 
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
 
-        # TODO : when the search_file has been filled only query the last years
-
-        def get_serach_sources() -> list[colrev.settings.SearchSource]:
-
-            sources_selected = self.sources
-            if selection_str is not None:
-                if "all" != selection_str:
-                    sources_selected = [
-                        f
-                        for f in self.sources
-                        if str(f.filename) in selection_str.split(",")
-                    ]
-                if len(sources_selected) == 0:
-                    available_options = [str(f.filename) for f in self.sources]
-                    raise colrev_exceptions.ParameterError(
-                        parameter="selection_str",
-                        value=selection_str,
-                        options=available_options,
-                    )
-
-            for source in sources_selected:
-                source.filename = self.review_manager.path / Path(source.filename)
-
-            return sources_selected
-
-        for source in get_serach_sources():
+        for source in self.__get_search_sources(selection_str=selection_str):
 
             print()
             self.review_manager.logger.info(

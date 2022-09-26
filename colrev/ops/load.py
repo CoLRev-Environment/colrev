@@ -397,7 +397,9 @@ class Load(colrev.process.Process):
         record_list = []
         for record in search_records:
             record.update(
-                colrev_origin=f"{source.get_corresponding_bib_file().name}/{record['ID']}"
+                colrev_origin=[
+                    f"{source.get_corresponding_bib_file().name}/{record['ID']}"
+                ]
             )
 
             # Drop empty fields
@@ -483,7 +485,7 @@ class Load(colrev.process.Process):
             self.review_manager.dataset.get_currently_imported_origin_list()
         )
         record_list = [
-            x for x in record_list if x["colrev_origin"] not in imported_origins
+            x for x in record_list if x["colrev_origin"][0] not in imported_origins
         ]
         source.setup_for_load(
             record_list=record_list, imported_origins=imported_origins
@@ -692,7 +694,7 @@ class Load(colrev.process.Process):
                 source_name="unknown_source",
                 source_identifier="NA",
                 search_parameters={},
-                load_conversion_script={"endpoint": "bibtex"},
+                load_conversion_script=get_load_conversion_script(filepath=filepath),
                 comment="",
             )
             results_list.append(
@@ -743,7 +745,7 @@ class Load(colrev.process.Process):
             # 2. resolve non-unique IDs (if any)
             self.__resolve_non_unique_ids(source=source)
 
-            # 3. load and add records to records.bib
+            # 3. load and add records to data/records.bib
             self.__load_source_records(source=source, keep_ids=keep_ids)
             if 0 == getattr(source, "to_import", 0):
                 continue

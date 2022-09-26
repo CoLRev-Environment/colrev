@@ -267,7 +267,6 @@ class Checker:
         ]
 
         if self.review_manager.dataset.records_file.is_file():
-
             if self.review_manager.dataset.records_file_in_history():
                 prior = self.review_manager.dataset.retrieve_prior()
                 self.review_manager.logger.debug("prior")

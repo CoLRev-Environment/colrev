@@ -34,6 +34,7 @@ class Sync:
             content = paper_md.read_text(encoding="utf-8")
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
+            citation_keys.remove("fig")
             print(f"Citations in paper.md: {len(citation_keys)}")
             self.cited_papers = citation_keys
 
@@ -243,8 +244,6 @@ class Sync:
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
         self.save_to_bib(records=records_dict, save_path=references_file)
-
-        # TODO : sync creates a settings.json in the directory. This should be prevented.
 
 
 if __name__ == "__main__":

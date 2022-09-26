@@ -113,13 +113,13 @@ class StatusStats:
             if x["screening_criteria"] not in ["", "NA"]
         ]
         self.md_duplicates_removed = sum(
-            (x["colrev_origin"].count(";")) for x in self._record_header_list
+            (x["colrev_origin"].count(";") - 1) for x in self._record_header_list
         )
 
         origin_list = [x["colrev_origin"] for x in self._record_header_list]
         self.record_links = 0
         for origin in origin_list:
-            nr_record_links = origin.count(";")
+            nr_record_links = origin.count(";") - 1
             self.record_links += nr_record_links + 1
 
         criteria = list(review_manager.settings.screen.criteria.keys())

@@ -48,7 +48,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(source.filename).replace("search/", "")
+            str(source.filename).replace("data/search/", "")
             for source in dedupe_operation.review_manager.settings.sources
         ]
 
@@ -58,7 +58,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             selected_records = [
                 r
                 for r in records.values()
-                if source_origin in r["colrev_origin"]
+                if any(source_origin in co for co in r["colrev_origin"])
                 and r["colrev_status"]
                 in [
                     colrev.record.RecordState.md_prepared,

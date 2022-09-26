@@ -28,7 +28,7 @@ class Validate(colrev.process.Process):
                 load_str=bibtex_file.read()
             )
             for record in individual_bib_rd.values():
-                record["colrev_origin"] = bib_file.stem + "/" + record["ID"]
+                record["colrev_origin"] = [bib_file.stem + "/" + record["ID"]]
 
         return list(individual_bib_rd.values())
 
@@ -88,11 +88,11 @@ class Validate(colrev.process.Process):
                 continue
             del record_dict["changed_in_target_commit"]
             del record_dict["colrev_status"]
-            for cur_record_link in record_dict["colrev_origin"].split(";"):
+            for cur_record_link in record_dict["colrev_origin"]:
                 prior_records = [
                     x
                     for x in prior_records_dict.values()
-                    if cur_record_link in x["colrev_origin"].split(",")
+                    if cur_record_link in x["colrev_origin"]
                 ]
                 for prior_record_dict in prior_records:
                     similarity = colrev.record.Record.get_record_similarity(
@@ -123,18 +123,18 @@ class Validate(colrev.process.Process):
             del record["changed_in_target_commit"]
             if ";" in record["colrev_origin"]:
                 merged_records = True
-                els = record["colrev_origin"].split(";")
+                els = record["colrev_origin"]
                 duplicate_el_pairs = list(itertools.combinations(els, 2))
                 for el_1, el_2 in duplicate_el_pairs:
                     record_1 = [
                         x
                         for x in prior_records_dict.values()
-                        if el_1 == x["colrev_origin"]
+                        if any(el_1 == co for co in x["colrev_origin"])
                     ]
                     record_2 = [
                         x
                         for x in prior_records_dict.values()
-                        if el_2 == x["colrev_origin"]
+                        if any(el_2 == co for co in x["colrev_origin"])
                     ]
 
                     similarity = colrev.record.Record.get_record_similarity(

@@ -195,8 +195,10 @@ class CurationDedupe(JsonSchemaMixin):
             r
             for r in records.values()
             if r["colrev_status"] == colrev.record.RecordState.md_prepared
-            and self.settings.selected_source.replace("search/", "")
-            in r["colrev_origin"]
+            and any(
+                self.settings.selected_source.replace("data/search/", "") in co
+                for co in r["colrev_origin"]
+            )
         ]
 
         toc_items = self.__get_toc_items(records_list=source_records)
@@ -216,8 +218,10 @@ class CurationDedupe(JsonSchemaMixin):
                     colrev.record.RecordState.md_imported,
                     colrev.record.RecordState.rev_prescreen_excluded,
                 ]
-                and self.settings.selected_source.replace("search/", "")
-                in r["colrev_origin"]
+                and any(
+                    self.settings.selected_source.replace("data/search/", "") in co
+                    for co in r["colrev_origin"]
+                )
             ]
             if 0 == len(processed_same_toc_same_source_records):
                 print("\n\n")
@@ -311,8 +315,10 @@ class CurationDedupe(JsonSchemaMixin):
             r
             for r in records.values()
             if r["colrev_status"] == colrev.record.RecordState.md_prepared
-            and self.settings.selected_source.replace("search/", "")
-            in r["colrev_origin"]
+            and any(
+                self.settings.selected_source.replace("data/search/", "") in co
+                for co in r["colrev_origin"]
+            )
         ]
 
         toc_items = self.__get_toc_items(records_list=source_records)
@@ -334,8 +340,10 @@ class CurationDedupe(JsonSchemaMixin):
                     colrev.record.RecordState.md_prepared,
                     colrev.record.RecordState.rev_prescreen_excluded,
                 ]
-                and self.settings.selected_source.replace("search/", "")
-                not in r["colrev_origin"]
+                and not any(
+                    self.settings.selected_source.replace("data/search/", "") in co
+                    for co in r["colrev_origin"]
+                )
             ]
             new_same_toc_records = [
                 r
@@ -376,8 +384,10 @@ class CurationDedupe(JsonSchemaMixin):
             r
             for r in records.values()
             if r["colrev_status"] == colrev.record.RecordState.md_prepared
-            and self.settings.selected_source.replace("search/", "")
-            in r["colrev_origin"]
+            and any(
+                self.settings.selected_source.replace("data/search/", "") in co
+                for co in r["colrev_origin"]
+            )
         ]
 
         toc_items = self.__get_toc_items(records_list=source_records)
@@ -406,8 +416,10 @@ class CurationDedupe(JsonSchemaMixin):
                     colrev.record.RecordState.md_prepared,
                     colrev.record.RecordState.rev_prescreen_excluded,
                 ]
-                and self.settings.selected_source.replace("search/", "")
-                not in r["colrev_origin"]
+                and not any(
+                    self.settings.selected_source.replace("data/search/", "") in co
+                    for co in r["colrev_origin"]
+                )
             ]
             pdf_same_toc_records = [
                 r
@@ -528,7 +540,7 @@ class CurationDedupe(JsonSchemaMixin):
             dedupe_operation=dedupe_operation, first_source=first_source
         )
 
-        # TODO : create a search/retrieval script that retrieves
+        # TODO : create a data/search/retrieval script that retrieves
         # records based on linked attributes (see cml_assistant)
 
         if first_source:

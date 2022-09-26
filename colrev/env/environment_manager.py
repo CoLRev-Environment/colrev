@@ -270,7 +270,9 @@ class EnvironmentManager:
                     first_line = file.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
-                with open(f"{repo_source_path}/records.bib", encoding="utf-8") as file:
+                with open(
+                    f"{repo_source_path}/data/records.bib", encoding="utf-8"
+                ) as file:
                     outlets = []
                     for line in file.readlines():
                         # Note : the second part ("journal:"/"booktitle:")

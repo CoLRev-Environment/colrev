@@ -50,7 +50,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
             review_manager=prep_operation.review_manager
         )
 
-        origin_source = record.data["colrev_origin"].split("/")[0]
+        origin_source = record.data["colrev_origin"][0].split("/")[0]
 
         sources = [
             s.source_name

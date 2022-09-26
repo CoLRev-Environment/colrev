@@ -54,7 +54,7 @@ class Event(LoggingEventHandler):
                 if "priority" in instruction:
                     # Note : colrev load can always be called but we are only interested
                     # in it if data in the search directory changes.
-                    if "colrev load" == cmd and "search/" not in event.src_path:
+                    if "colrev load" == cmd and "data/search/" not in event.src_path:
                         return
                     self.service.service_queue.put(
                         {"name": cmd, "cmd": cmd, "priority": "yes"}
@@ -92,8 +92,6 @@ class Service:
         self.service_queue.put(
             {"name": "colrev search", "cmd": "colrev search", "priority": "yes"}
         )
-
-        # TODO : setup search feed (querying all 5-10 minutes?)
 
         # get initial review instructions and add to queue
         advisor = self.review_manager.get_advisor()
@@ -220,7 +218,7 @@ class Service:
 
         elif "colrev pdf-prep" == item["cmd"]:
 
-            # TODO : this may be solved more elegantly,
+            # this may be solved more elegantly,
             # but we need colrev to link existing pdfs (file field)
 
             self.logger.info("Running %s", item["name"])
@@ -255,7 +253,7 @@ class Service:
             self.service_queue.task_done()
             return
         else:
-            if item["name"] not in ["git add records.bib"]:
+            if item["name"] not in ["git add data/records.bib"]:
                 input(f'Complete task: {item["name"]}')
             self.service_queue.task_done()
 

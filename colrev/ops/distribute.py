@@ -57,8 +57,9 @@ class Distribute(colrev.process.Process):
         if path.is_file():
 
             if path.suffix == ".bib":
-                # TODO : append if exists
-                path.rename(target / Path("search/local_import.bib"))
+                # TODO : append records (check duplicates/duplicate IDs)
+                # if path already exists
+                path.rename(target / Path("data/search/local_import.bib"))
                 input(path)
 
             if path.suffix == ".pdf":
@@ -80,9 +81,9 @@ class Distribute(colrev.process.Process):
 
                 self.review_manager.logger.info(
                     f"append {self.review_manager.p_printer.pformat(record)} "
-                    "to search/local_import.bib"
+                    "to data/search/local_import.bib"
                 )
-                target_bib_file = target / "search/local_import.bib"
+                target_bib_file = target / Path("data/search/local_import.bib")
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
                     with open(target_bib_file, encoding="utf8") as target_bib:
