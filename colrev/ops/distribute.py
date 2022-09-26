@@ -57,7 +57,8 @@ class Distribute(colrev.process.Process):
         if path.is_file():
 
             if path.suffix == ".bib":
-                # TODO : append if exists
+                # TODO : append records (check duplicates/duplicate IDs)
+                # if path already exists
                 path.rename(target / Path("data/search/local_import.bib"))
                 input(path)
 

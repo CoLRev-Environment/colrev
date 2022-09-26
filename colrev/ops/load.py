@@ -397,7 +397,9 @@ class Load(colrev.process.Process):
         record_list = []
         for record in search_records:
             record.update(
-                colrev_origin=f"{source.get_corresponding_bib_file().name}/{record['ID']}"
+                colrev_origin=[
+                    f"{source.get_corresponding_bib_file().name}/{record['ID']}"
+                ]
             )
 
             # Drop empty fields
@@ -483,7 +485,7 @@ class Load(colrev.process.Process):
             self.review_manager.dataset.get_currently_imported_origin_list()
         )
         record_list = [
-            x for x in record_list if x["colrev_origin"] not in imported_origins
+            x for x in record_list if x["colrev_origin"][0] not in imported_origins
         ]
         source.setup_for_load(
             record_list=record_list, imported_origins=imported_origins

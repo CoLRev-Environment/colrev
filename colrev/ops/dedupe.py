@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import string
 import typing
 from collections import Counter
 from pathlib import Path
@@ -206,7 +207,7 @@ class Dedupe(colrev.process.Process):
         records = self.review_manager.dataset.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
-        # there should be no semicolons in colrev_origin!
+        # the length of colrev_origin lists should be 1!
         records_queue = [
             x
             for x in records.values()
@@ -252,7 +253,17 @@ class Dedupe(colrev.process.Process):
             if rec_1["ID"][-1].isdigit() and not rec_2["ID"][-1].isdigit():
                 main_record = rec_1
                 dupe_record = rec_2
-            # TODO : elif: check which of the appended letters is first in the alphabet
+            elif not rec_1["ID"][-1].isdigit() and not rec_2["ID"][-1].isdigit():
+                # Last characters are letters in both records
+                # Select the one that's first in the alphabet
+                pos_rec_1_suffix = string.ascii_lowercase.index(rec_1["ID"][-1])
+                pos_rec_2_suffix = string.ascii_lowercase.index(rec_2["ID"][-1])
+                if pos_rec_1_suffix < pos_rec_2_suffix:
+                    main_record = rec_1
+                    dupe_record = rec_2
+                else:
+                    dupe_record = rec_2
+                    main_record = rec_1
             else:
                 main_record = rec_2
                 dupe_record = rec_1
@@ -289,12 +300,8 @@ class Dedupe(colrev.process.Process):
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
 
-        main_rec_sources = [
-            x.split("/")[0] for x in main_record.data["colrev_origin"].split(";")
-        ]
-        dupe_rec_sources = [
-            x.split("/")[0] for x in dupe_record.data["colrev_origin"].split(";")
-        ]
+        main_rec_sources = [x.split("/")[0] for x in main_record.data["colrev_origin"]]
+        dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data["colrev_origin"]]
         same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
         if len(same_sources) > 0:
             return True
@@ -321,8 +328,8 @@ class Dedupe(colrev.process.Process):
                 f"\n{colors.ORANGE}"
                 "Applying same source merge "
                 f"{colors.END} "
-                f"{main_record.data.get('colrev_origin', '')}/"
-                f"{dupe_record.data.get('colrev_origin', '')}\n"
+                f"{main_record.data.get('colrev_origin', ['ERROR'])}/"
+                f"{dupe_record.data.get('colrev_origin', ['ERROR'])}\n"
                 f"  {main_record.format_bib_style()}\n"
                 f"  {dupe_record.format_bib_style()}"
             )
@@ -471,14 +478,14 @@ class Dedupe(colrev.process.Process):
         records = {
             k: v
             for k, v in records.items()
-            if not all(x in v["colrev_origin"] for x in source_filenames)
+            if not all(x in ";".join(v["colrev_origin"]) for x in str(source_filenames))
         }
         if len(records) == 0:
             print("No records unmatched")
             return
 
         for record in records.values():
-            origins = record["colrev_origin"].split(";")
+            origins = record["colrev_origin"]
             for source_filename in source_filenames:
                 if not any(source_filename in origin for origin in origins):
                     record[source_filename] = ""
@@ -618,7 +625,7 @@ class Dedupe(colrev.process.Process):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        origins = [record["colrev_origin"].split(";") for record in records.values()]
+        origins = [record["colrev_origin"] for record in records.values()]
         origins = [item.split("/")[0] for sublist in origins for item in sublist]
         origins = list(set(origins))
 
@@ -626,7 +633,7 @@ class Dedupe(colrev.process.Process):
 
         for record in records.values():
 
-            rec_sources = [x.split("/")[0] for x in record["colrev_origin"].split(";")]
+            rec_sources = [x.split("/")[0] for x in record["colrev_origin"]]
 
             duplicated_sources = [
                 item for item, count in Counter(rec_sources).items() if count > 1
@@ -636,7 +643,7 @@ class Dedupe(colrev.process.Process):
                 for duplicated_source in duplicated_sources:
                     cases = [
                         o.split("/")[1]
-                        for o in record["colrev_origin"].split(";")
+                        for o in record["colrev_origin"]
                         if duplicated_source in o
                     ]
                     all_cases.append(f"{duplicated_source}: {cases}")

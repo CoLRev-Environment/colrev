@@ -22,8 +22,4 @@ Software<br>
    - {{ commit_details.ext_script_name }}:                        {{ commit_details.ext_script_version }}<br>
 {% endif %}
 
-{% if commit_details.non_reproducible %}
-    * created with a modified version (not reproducible)<br>
-{% endif %}
-
 <br>

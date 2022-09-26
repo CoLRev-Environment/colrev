@@ -380,7 +380,6 @@ class PackageManager:
     ) -> dict:
         # pylint: disable=too-many-branches
 
-        # TODO : switch to cls.json_schema() (in line with settings.json)?
         package_identifier = package_identifier.lower()
         package_details = {"name": package_identifier}
         package_class = self.load_package_endpoint(

@@ -89,7 +89,7 @@ class LocalIndexPrep(JsonSchemaMixin):
         if retrieved:
             retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
-            default_source = "UNDETERMINED"
+            default_source = "LOCAL_INDEX"
             if "colrev_masterdata_provenance" in retrieved_record.data:
                 if "CURATED" in retrieved_record.data["colrev_masterdata_provenance"]:
                     default_source = retrieved_record.data[

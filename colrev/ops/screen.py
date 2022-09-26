@@ -145,6 +145,7 @@ class Screen(colrev.process.Process):
 
         # TODO : screening: if screening_criteria field is already available
         # only go through the criteria with "TODO"
+        # This would be important when screening-criteria are added
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(

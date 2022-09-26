@@ -52,8 +52,7 @@ class Initializer:
 
         self.__check_init_precondition()
 
-        # TODO : this will change to project.title
-        self.project_name = str(Path.cwd().name)
+        self.title = str(Path.cwd().name)
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
@@ -143,6 +142,7 @@ class Initializer:
         )
 
     def __setup_files(self, *, path: Path) -> None:
+        # pylint: disable=too-many-locals
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
@@ -198,7 +198,7 @@ class Initializer:
         colrev_version = colrev_version[: colrev_version.find("+")]
         settings.project.colrev_version = colrev_version
 
-        settings.project.title = self.project_name
+        settings.project.title = self.title
         self.review_type = settings.project.review_type
 
         # Principle: adapt values provided by the default settings.json
@@ -230,6 +230,12 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize()
                 + f": A {r_type_suffix}",
             )
+
+        # Note : to avoid file setup at colrev status (calls data_operation.main)
+        data_operation = self.review_manager.get_data_operation(
+            notify_state_transition_operation=False
+        )
+        data_operation.main()
 
         files_to_add = [
             "readme.md",
@@ -343,10 +349,6 @@ class Initializer:
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_index_path)
-            # TODO : set up a settings.json with the following parameters:
-            # project_name="local_index",
-            # SHARE_STAT_REQ="PROCESSED",
-            # review_type="curated_masterdata",
             Initializer(
                 review_type="curated_masterdata",
                 local_index_repo=True,

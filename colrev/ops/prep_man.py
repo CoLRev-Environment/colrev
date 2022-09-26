@@ -78,14 +78,11 @@ class PrepMan(colrev.process.Process):
                         continue
                     # Note: if something causes the needs_manual_preparation
                     # it is caused by all colrev_origins
-                    for orig in record_dict.get("colrev_origin", "NA").split(";"):
+                    for orig in record_dict.get("colrev_origin", ["NA"]):
                         crosstab.append([orig[: orig.rfind("/")], hint.lstrip()])
 
             origins.append(
-                [
-                    x[: x.rfind("/")]
-                    for x in record_dict.get("colrev_origin", "NA").split(";")
-                ]
+                [x[: x.rfind("/")] for x in record_dict.get("colrev_origin", ["NA"])]
             )
 
         print("Entry type statistics overall:")
@@ -159,7 +156,7 @@ class PrepMan(colrev.process.Process):
     def set_data(self, *, record_dict: dict) -> None:
 
         record = colrev.record.PrepRecord(data=record_dict)
-        record.set_masterdata_complete()
+        record.set_masterdata_complete(source_identifier="man_prep")
         record.set_masterdata_consistent()
         record.set_fields_complete()
         record.set_status(target_state=colrev.record.RecordState.md_prepared)

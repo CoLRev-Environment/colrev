@@ -111,8 +111,6 @@ class Advisor:
             collaboration_instructions["items"].append(item)
 
         if nr_commits_ahead > 0:
-            # TODO : suggest detailed commands
-            # (depending on the working directory/index)
             item = {
                 "title": "Local changes not yet on the server",
                 "level": "WARNING",
@@ -131,9 +129,13 @@ class Advisor:
                 # if they didn't pass, the message wouldn't be displayed
             }
 
-        # TODO : all the following: should all search results be imported?!
         if share_stat_req == "PROCESSED":
-            if 0 == status_stats.currently.non_processed:
+            if (
+                0 == status_stats.currently.md_retrieved
+                and 0 == status_stats.currently.md_imported
+                and 0 == status_stats.currently.md_needs_manual_preparation
+                and 0 == status_stats.currently.md_prepared
+            ):
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
@@ -153,9 +155,20 @@ class Advisor:
         # Note: if we use all(...) in the following,
         # we do not need to distinguish whether
         # a PRE_SCREEN or INCLUSION_SCREEN is needed
+        # pylint: disable=too-many-boolean-expressions
         if share_stat_req == "SCREENED":
-            # TODO : the following condition is probably not sufficient
-            if 0 == status_stats.currently.pdf_prepared:
+            if (
+                0 == status_stats.currently.md_retrieved
+                and 0 == status_stats.currently.md_imported
+                and 0 == status_stats.currently.md_needs_manual_preparation
+                and 0 == status_stats.currently.md_prepared
+                and 0 == status_stats.currently.md_processed
+                and 0 == status_stats.currently.rev_prescreen_included
+                and 0 == status_stats.currently.pdf_needs_manual_retrieval
+                and 0 == status_stats.currently.pdf_imported
+                and 0 == status_stats.currently.pdf_needs_manual_preparation
+                and 0 == status_stats.currently.pdf_prepared
+            ):
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",

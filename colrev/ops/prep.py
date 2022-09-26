@@ -119,8 +119,7 @@ class Prep(colrev.process.Process):
 
     def check_dbs_availability(self) -> None:
 
-        # TODO : check_status as a default method for the PreparationInterface
-        # and iterate over it?
+        # The following could become default methods for the PreparationInterface
 
         self.review_manager.logger.info("Check availability of connectors...")
         db_connectors.CrossrefConnector.check_status(prep_operation=self)
@@ -303,7 +302,7 @@ class Prep(colrev.process.Process):
 
                     if any(
                         o in prior_record["colrev_origin"]
-                        for o in record["colrev_origin"].split(";")
+                        for o in record["colrev_origin"]
                     ):
                         self.review_manager.report_logger.info(
                             f'reset({record["ID"]}) to'
@@ -328,10 +327,6 @@ class Prep(colrev.process.Process):
                 ):
                     break
 
-        # TODO : double-check! resetting the prep does not necessarily mean
-        # that wrong records were merged...
-        # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
-        # retrieve the original record from the data/search/source file
         for record_to_unmerge, record in record_reset_list:
             record_to_unmerge.update(
                 colrev_status=colrev.record.RecordState.md_needs_manual_preparation

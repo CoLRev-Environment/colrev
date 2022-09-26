@@ -156,9 +156,7 @@ class PDFGet(colrev.process.Process):
                 source_rec = {}
                 if corresponding_origin != "":
                     source_origin_l = [
-                        o
-                        for o in record["colrev_origin"].split(";")
-                        if corresponding_origin in o
+                        o for o in record["colrev_origin"] if corresponding_origin in o
                     ]
                     if len(source_origin_l) == 1:
                         source_origin = source_origin_l[0]
@@ -456,8 +454,6 @@ class PDFGet(colrev.process.Process):
     def main(self) -> None:
 
         saved_args = locals()
-
-        # TODO : download if there is a fulltext link in the record
 
         self.review_manager.report_logger.info("Get PDFs")
         self.review_manager.logger.info("Get PDFs")

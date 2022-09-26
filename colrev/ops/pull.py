@@ -84,7 +84,7 @@ class Pull(colrev.process.Process):
         for record_dict in tqdm(records.values()):
             record = colrev.record.PrepRecord(data=record_dict)
             previous_record = record.copy_prep_rec()
-            # TODO : use masterdata_is_curated() for identifying_fields_keys only?
+
             if not ("doi" in record.data and not record.masterdata_is_curated()):
                 continue
 
@@ -109,7 +109,6 @@ class Pull(colrev.process.Process):
                 )
                 record = crossref_prep.prepare(prep_operation, record)
 
-                # TODO : we may create a full list here
                 colrev_id = record.create_colrev_id(
                     also_known_as_record=record.get_data()
                 )
@@ -174,7 +173,7 @@ class Pull(colrev.process.Process):
         # Note : do not use named argument (used in multiprocessing)
         def pull_record(record_dict):
             previous_status = record_dict["colrev_status"]
-            # TODO : remove the following
+            # TBD : remove the following?
             previouscolrev_pdf_id = record_dict.get("colrev_pdf_id", "")
             prev_dblp_key = record_dict.get("dblp_key", "")
 

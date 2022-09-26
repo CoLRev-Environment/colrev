@@ -44,6 +44,7 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.AUTHOR_INDEX
       ~LocalIndex.AUTHOR_RECORD_INDEX
       ~LocalIndex.CITATIONS_INDEX
+      ~LocalIndex.OPENSEARCH_URL
       ~LocalIndex.RECORD_INDEX
       ~LocalIndex.TOC_INDEX
       ~LocalIndex.annotators_path

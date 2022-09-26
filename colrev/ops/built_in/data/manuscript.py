@@ -20,7 +20,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -198,19 +198,30 @@ class Manuscript(JsonSchemaMixin):
                         writer.write(line)
                         writer.write("\n")
 
+                    paper_ids_added = []
                     for missing_record in missing_records:
-                        writer.write(missing_record)
+                        writer.write("\n- @" + missing_record + "\n")
+                        paper_ids_added.append(missing_record)
+
+                    for paper_id in paper_ids_added:
                         review_manager.report_logger.info(
                             # f" {missing_record}".ljust(self.__PAD, " ")
-                            f" {missing_record}"
+                            f" {paper_id}"
                             + f" added to {paper_path.name}"
                         )
+                    nr_records_added = len(missing_records)
+                    review_manager.report_logger.info(
+                        f"{nr_records_added} records added to {self.settings.paper_path.name}"
+                    )
 
-                        review_manager.logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ")
-                            f" {missing_record}"
-                            + f" added to {paper_path.name}"
-                        )
+                    review_manager.logger.info(
+                        "%sAdded %s records to %s%s %s",
+                        colors.GREEN,
+                        nr_records_added,
+                        paper_path.name,
+                        colors.END,
+                        ": \n- " + "\n- ".join(paper_ids_added),
+                    )
 
                     # skip empty lines between to connect lists
                     line = reader.readline()
@@ -298,6 +309,11 @@ class Manuscript(JsonSchemaMixin):
         )
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,
+            old_string="{{colrev_version}}",
+            new_string=str(review_manager.get_colrev_versions()[1]),
+        )
+        colrev.env.utils.inplace_change(
+            filename=self.settings.paper_path,
             old_string="{{author}}",
             new_string=author,
         )
@@ -333,17 +349,7 @@ class Manuscript(JsonSchemaMixin):
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 paper_path=self.settings.paper_path,
-                missing_records=[
-                    "\n- @" + missing_record + "\n"
-                    for missing_record in missing_records
-                ],
-            )
-            nr_records_added = len(missing_records)
-            review_manager.report_logger.info(
-                f"{nr_records_added} records added to {self.settings.paper_path.name}"
-            )
-            review_manager.logger.info(
-                f"{nr_records_added} records added to {self.settings.paper_path.name}"
+                missing_records=missing_records,
             )
 
     def update_manuscript(

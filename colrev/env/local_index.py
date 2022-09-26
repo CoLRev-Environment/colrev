@@ -35,6 +35,9 @@ import colrev.record
 
 # pylint: disable=too-many-lines
 
+# TODO : change logging level temporarily and fix issues that lead to warnings
+logging.getLogger("opensearchpy").setLevel(logging.ERROR)
+
 
 class LocalIndex:
 
@@ -61,11 +64,13 @@ class LocalIndex:
     AUTHOR_RECORD_INDEX = "author_record_index"
     CITATIONS_INDEX = "citations_index"
 
+    OPENSEARCH_URL = "http://localhost:9200"
+
     # Note: we need the local_curated_metadata field for is_duplicate()
 
     def __init__(self, *, startup_without_waiting: bool = False) -> None:
 
-        self.open_search = OpenSearch("http://localhost:9200")
+        self.open_search = OpenSearch(self.OPENSEARCH_URL)
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
         try:
             self.check_opensearch_docker_available()
@@ -358,15 +363,17 @@ class LocalIndex:
     def __get_toc_key(self, *, record_dict: dict) -> str:
         toc_key = "NA"
         if "article" == record_dict["ENTRYTYPE"]:
-            toc_key = f"{record_dict.get('journal', '').lower()}"
-            if "volume" in record_dict:
-                toc_key = toc_key + f"|{record_dict['volume']}"
-            # TODO : should we append "|" if volume not in record_dict?
-            toc_key += f"|{record_dict['number']}" if ("number" in record_dict) else "|"
+            toc_key = f"{record_dict.get('journal', '-').replace(' ', '-').lower()}"
+            toc_key += (
+                f"|{record_dict['volume']}" if ("volume" in record_dict) else "|-"
+            )
+            toc_key += (
+                f"|{record_dict['number']}" if ("number" in record_dict) else "|-"
+            )
 
         elif "inproceedings" == record_dict["ENTRYTYPE"]:
             toc_key = (
-                f"{record_dict.get('booktitle', '').lower()}"
+                f"{record_dict.get('booktitle', '').replace(' ', '-').lower()}"
                 + f"|{record_dict.get('year', '')}"
             )
         return toc_key
@@ -374,41 +381,61 @@ class LocalIndex:
     def get_fields_to_remove(self, *, record_dict: dict) -> list:
         """Compares the record to available toc items and
         returns fields to remove (if any)"""
+        # pylint: disable=too-many-return-statements
+
+        fields_to_remove: typing.List[str] = []
+        if "journal" not in record_dict and "article" != record_dict["ENTRYTYPE"]:
+            return fields_to_remove
 
         internal_record_dict = deepcopy(record_dict)
-        fields_to_remove = []
         if all(x in internal_record_dict.keys() for x in ["volume", "number"]):
 
             toc_key_full = self.__get_toc_key(record_dict=internal_record_dict)
 
+            if "NA" == toc_key_full:
+                return fields_to_remove
+
+            open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
+
+            if open_search_thread_instance.exists(
+                index=self.TOC_INDEX, id=toc_key_full
+            ):
+                return fields_to_remove
+
             wo_nr = deepcopy(internal_record_dict)
             del wo_nr["number"]
             toc_key_wo_nr = self.__get_toc_key(record_dict=wo_nr)
-            if not self.open_search.exists(
-                index=self.TOC_INDEX, id=toc_key_full
-            ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_nr):
-                fields_to_remove.append("number")
-                return fields_to_remove
+            if "NA" != toc_key_wo_nr:
+                toc_key_wo_nr_exists = open_search_thread_instance.exists(
+                    index=self.TOC_INDEX, id=toc_key_wo_nr
+                )
+                if toc_key_wo_nr_exists:
+                    fields_to_remove.append("number")
+                    return fields_to_remove
 
             wo_vol = deepcopy(internal_record_dict)
             del wo_vol["volume"]
             toc_key_wo_vol = self.__get_toc_key(record_dict=wo_vol)
-            if not self.open_search.exists(
-                index=self.TOC_INDEX, id=toc_key_full
-            ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_vol):
-                fields_to_remove.append("volume")
-                return fields_to_remove
+            if "NA" != toc_key_wo_vol:
+                toc_key_wo_vol_exists = open_search_thread_instance.exists(
+                    index=self.TOC_INDEX, id=toc_key_wo_vol
+                )
+                if toc_key_wo_vol_exists:
+                    fields_to_remove.append("volume")
+                    return fields_to_remove
 
             wo_vol_nr = deepcopy(internal_record_dict)
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
             toc_key_wo_vol_nr = self.__get_toc_key(record_dict=wo_vol_nr)
-            if not self.open_search.exists(
-                index=self.TOC_INDEX, id=toc_key_full
-            ) and self.open_search.exists(index=self.TOC_INDEX, id=toc_key_wo_vol_nr):
-                fields_to_remove.append("number")
-                fields_to_remove.append("volume")
-                return fields_to_remove
+            if "NA" != toc_key_wo_vol_nr:
+                toc_key_wo_vol_nr_exists = open_search_thread_instance.exists(
+                    index=self.TOC_INDEX, id=toc_key_wo_vol_nr
+                )
+                if toc_key_wo_vol_nr_exists:
+                    fields_to_remove.append("number")
+                    fields_to_remove.append("volume")
+                    return fields_to_remove
 
         return fields_to_remove
 
@@ -867,12 +894,14 @@ class LocalIndex:
         # Note : es.update can use functions applied to each record (for the update)
 
     def get_year_from_toc(self, *, record_dict: dict) -> str:
+        open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
+
         year = "NA"
 
         toc_key = self.__get_toc_key(record_dict=record_dict)
         toc_items = []
         try:
-            if self.open_search.exists(index=self.TOC_INDEX, id=toc_key):
+            if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
         except (TransportError, SerializationError):
@@ -885,7 +914,7 @@ class LocalIndex:
                 paper_hash = hashlib.sha256(
                     toc_records_colrev_id.encode("utf-8")
                 ).hexdigest()
-                res = self.open_search.get(
+                res = open_search_thread_instance.get(
                     index=self.RECORD_INDEX,
                     id=str(paper_hash),
                 )
@@ -907,9 +936,10 @@ class LocalIndex:
     ) -> dict:
         toc_key = self.__get_toc_key(record_dict=record_dict)
 
+        open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
         # 1. get TOC
         toc_items = []
-        if self.open_search.exists(index=self.TOC_INDEX, id=toc_key):
+        if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
             try:
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
@@ -938,7 +968,7 @@ class LocalIndex:
                     paper_hash = hashlib.sha256(
                         toc_records_colrev_id.encode("utf-8")
                     ).hexdigest()
-                    res = self.open_search.get(
+                    res = open_search_thread_instance.get(
                         index=self.RECORD_INDEX,
                         id=str(paper_hash),
                     )
@@ -957,7 +987,8 @@ class LocalIndex:
 
         res = {}
         try:
-            resp = self.open_search.search(
+            open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
+            resp = open_search_thread_instance.search(
                 index=index_name,
                 body={"query": {"match_phrase": {key: value}}},
             )
@@ -1039,7 +1070,7 @@ class LocalIndex:
 
             # Ensure that we receive actual lists
             # otherwise, __retrieve_based_on_colrev_id iterates over a string and
-            # self.open_search.search returns random results
+            # open_search_thread_instance.search returns random results
             assert isinstance(record1_colrev_id, list)
             assert isinstance(record2_colrev_id, list)
 

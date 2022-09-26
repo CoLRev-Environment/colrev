@@ -149,8 +149,8 @@ class Corrections:
         if len(selected_change_items) == 0:
             return
 
-        if len(corrected_curated_record.get("colrev_origin", "").split(";")) > len(
-            original_curated_record.get("colrev_origin", "").split(";")
+        if len(corrected_curated_record.get("colrev_origin", [])) > len(
+            original_curated_record.get("colrev_origin", [])
         ):
             if (
                 "dblp_key" in corrected_curated_record
@@ -212,10 +212,7 @@ class Corrections:
             record_curated_prior = [
                 x
                 for x in record_curated_prior
-                if any(
-                    y in curated_record["colrev_origin"].split(";")
-                    for y in x["colrev_origin"].split(";")
-                )
+                if any(y in curated_record["colrev_origin"] for y in x["colrev_origin"])
             ]
 
             if len(record_curated_prior) == 0:

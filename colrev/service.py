@@ -93,8 +93,6 @@ class Service:
             {"name": "colrev search", "cmd": "colrev search", "priority": "yes"}
         )
 
-        # TODO : setup search feed (querying all 5-10 minutes?)
-
         # get initial review instructions and add to queue
         advisor = self.review_manager.get_advisor()
         instructions = advisor.get_review_instructions()
@@ -220,7 +218,7 @@ class Service:
 
         elif "colrev pdf-prep" == item["cmd"]:
 
-            # TODO : this may be solved more elegantly,
+            # this may be solved more elegantly,
             # but we need colrev to link existing pdfs (file field)
 
             self.logger.info("Running %s", item["name"])

@@ -48,11 +48,10 @@ class Unpaywall(JsonSchemaMixin):
         pdfonly: bool = True,
     ) -> str:
 
-        url = "https://api.unpaywall.org/v2/{doi}"
+        url = f"https://api.unpaywall.org/v2/{doi}"
 
         try:
             ret = requests.get(url, params={"email": review_manager.email})
-
             if ret.status_code == 500 and retry < 3:
                 return self.__unpaywall(
                     review_manager=review_manager, doi=doi, retry=retry + 1
@@ -100,13 +99,19 @@ class Unpaywall(JsonSchemaMixin):
         )
         if "NA" != url:
             if "Invalid/unknown DOI" not in url:
+
+                # TODO : download often fails...
+                # example:
+                # https://journals.sagepub.com/doi/pdf/10.1177/02683962211019406
                 res = requests.get(
                     url,
                     headers={
-                        "User-Agent": "Chrome/51.0.2704.103",
-                        "referer": "https://www.doi.org",
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
                     },
+                    stream=True,
                 )
+
                 if 200 == res.status_code:
                     with open(pdf_filepath, "wb") as file:
                         file.write(res.content)
@@ -124,8 +129,10 @@ class Unpaywall(JsonSchemaMixin):
                     else:
                         os.remove(pdf_filepath)
                 else:
+                    if "fulltext" not in record.data:
+                        record.data["fulltext"] = url
                     pdf_get_operation.review_manager.logger.info(
-                        "Unpaywall retrieval error " f"{res.status_code}/{url}"
+                        "Unpaywall retrieval error " f"{res.status_code} - {url}"
                     )
 
         return record

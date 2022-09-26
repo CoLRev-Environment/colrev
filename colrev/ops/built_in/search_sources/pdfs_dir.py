@@ -77,7 +77,7 @@ class PDFSearchSource(JsonSchemaMixin):
         c_rec_l = [
             r
             for r in records.values()
-            if f"{search_source}/{record_dict['ID']}" in r["colrev_origin"].split(";")
+            if f"{search_source}/{record_dict['ID']}" in r["colrev_origin"]
         ]
         if len(c_rec_l) == 1:
             c_rec = c_rec_l.pop()
@@ -162,10 +162,12 @@ class PDFSearchSource(JsonSchemaMixin):
             to_remove = []
             source_ids = list(search_rd.keys())
             for record in records.values():
-                if str(self.settings.filename.name) in record["colrev_origin"]:
+                if any(
+                    str(self.settings.filename.name) in co
+                    for co in record["colrev_origin"]
+                ):
                     if not any(
-                        x.split("/")[1] in source_ids
-                        for x in record["colrev_origin"].split(";")
+                        x.split("/")[1] in source_ids for x in record["colrev_origin"]
                     ):
                         print("REMOVE " + record["colrev_origin"])
                         to_remove.append(record["colrev_origin"])
