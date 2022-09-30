@@ -83,7 +83,9 @@ class Dataset:
 
     def get_currently_imported_origin_list(self) -> list:
         record_header_list = self.get_record_header_list()
-        imported_origins = [x["colrev_origin"] for x in record_header_list]
+        imported_origins = [
+            item for x in record_header_list for item in x["colrev_origin"]
+        ]
         return imported_origins
 
     def get_states_set(self, *, record_state_list: list = None) -> set:
@@ -698,6 +700,10 @@ class Dataset:
 
             key = key.lstrip().rstrip()
             value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+            if "colrev_origin" == key:
+                value_list = value.replace("\n", "").replace(" ", "").split(";")
+                value_list = [x for x in value_list if x]
+                return key, value_list
             return key, value
 
         # pylint: disable=consider-using-with

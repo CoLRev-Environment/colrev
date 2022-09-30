@@ -35,12 +35,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        converters = {Path: Path, Enum: Enum}
-        self.settings = from_dict(
-            data_class=self.settings_class,
-            data=settings,
-            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
-        )
+
         converters = {Path: Path, Enum: Enum}
         self.settings = from_dict(
             data_class=self.settings_class,

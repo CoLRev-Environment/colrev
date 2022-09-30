@@ -24,6 +24,8 @@ class Sync:
     def __get_cited_papers_citation_keys(self) -> list:
         if Path("paper.md").is_file():
             paper_md = Path("paper.md")
+        if Path("data/paper.md").is_file():
+            paper_md = Path("data/paper.md")
         elif Path("review.md"):
             paper_md = Path("review.md")
         rst_files = list(Path.cwd().rglob("*.rst"))
@@ -103,16 +105,15 @@ class Sync:
 
         pybtex.errors.set_strict_mode(False)
 
-        references_file = Path("references.bib")
-        if not references_file.is_file():
-            records = {}
-        else:
-
+        if Path("references.bib").is_file():
             parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(references_file))
+            bib_data = parser.parse_file(str(Path("references.bib")))
             records = colrev.dataset.Dataset.parse_records_dict(
                 records_dict=bib_data.entries
             )
+
+        else:
+            records = {}
 
         return list(records.keys())
 
