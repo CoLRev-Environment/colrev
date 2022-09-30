@@ -17,7 +17,7 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -40,13 +40,16 @@ class Checker:
     def get_colrev_versions(self) -> list[str]:
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
-        last_commit_message = self.review_manager.dataset.get_commit_message(
-            commit_nr=0
-        )
-        cmsg_lines = last_commit_message.split("\n")
-        for cmsg_line in cmsg_lines[0:100]:
-            if "colrev:" in cmsg_line and "version" in cmsg_line:
-                last_colrev_version = cmsg_line[cmsg_line.find("version ") + 8 :]
+        try:
+            last_commit_message = self.review_manager.dataset.get_commit_message(
+                commit_nr=0
+            )
+            cmsg_lines = last_commit_message.split("\n")
+            for cmsg_line in cmsg_lines[0:100]:
+                if "colrev:" in cmsg_line and "version" in cmsg_line:
+                    last_colrev_version = cmsg_line[cmsg_line.find("version ") + 8 :]
+        except ValueError:
+            pass
         return [last_colrev_version, current_colrev_version]
 
     def __check_software(self) -> None:
@@ -143,7 +146,7 @@ class Checker:
         for path, list_of_blobs in unmerged_blobs.items():
             for (stage, _) in list_of_blobs:
                 if stage != 0:
-                    raise colrev_exceptions.GitConflictError(path)
+                    raise colrev_exceptions.GitConflictError(Path(path))
 
     def __is_git_repo(self) -> bool:
         try:
@@ -242,7 +245,9 @@ class Checker:
 
         # pylint: disable=not-a-mapping
 
-        self.review_manager.notified_next_process = colrev.process.ProcessType.check
+        self.review_manager.notified_next_operation = (
+            colrev.operation.OperationsType.check
+        )
 
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.
@@ -314,21 +319,21 @@ class Checker:
 
             check_scripts.extend(main_refs_checks)
 
-            data_operation = self.review_manager.get_data_operation(
-                notify_state_transition_operation=False
-            )
-            data_checks = [
-                {
-                    "script": data_operation.main,
-                    "params": [],
-                },
-                {
-                    "script": self.review_manager.update_status_yaml,
-                    "params": [],
-                },
-            ]
+        data_operation = self.review_manager.get_data_operation(
+            notify_state_transition_operation=False
+        )
+        data_checks = [
+            {
+                "script": data_operation.main,
+                "params": [],
+            },
+            {
+                "script": self.review_manager.update_status_yaml,
+                "params": [],
+            },
+        ]
 
-            check_scripts.extend(data_checks)
+        check_scripts.extend(data_checks)
 
         failure_items = []
         for check_script in check_scripts:

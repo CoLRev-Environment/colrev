@@ -7,7 +7,6 @@ import itertools
 import logging
 import os
 import re
-import shutil
 import string
 import time
 import typing
@@ -20,12 +19,13 @@ import pandas as pd
 import pybtex.errors
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
+from pybtex.database import Person
 from pybtex.database.input import bibtex
 from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.settings
 
@@ -62,7 +62,7 @@ class Dataset:
 
         return record_state_list
 
-    def get_origin_state_dict(self, *, file_object=None) -> dict:
+    def get_origin_state_dict(self, *, file_object: io.StringIO = None) -> dict:
         current_origin_states_dict = {}
         if self.records_file.is_file():
             for record_header_item in self.__read_record_header_items(
@@ -249,8 +249,8 @@ class Dataset:
 
     @classmethod
     def parse_records_dict(cls, *, records_dict: dict) -> dict:
-        def format_name(person):
-            def join(name_list):
+        def format_name(person: Person) -> str:
+            def join(name_list: list) -> str:
                 return " ".join([name for name in name_list if name])
 
             first = person.get_part_as_text("first")
@@ -309,7 +309,7 @@ class Dataset:
 
         pybtex.errors.set_strict_mode(False)
 
-        if self.review_manager.notified_next_process is None:
+        if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
 
         parser = bibtex.Parser()
@@ -380,7 +380,7 @@ class Dataset:
         # Note: we need a deepcopy because the parsing modifies dicts
         recs_dict = deepcopy(recs_dict_in)
 
-        def format_field(field, value) -> str:
+        def format_field(field: str, value: str) -> str:
             padd = " " * max(0, 28 - len(field))
             return f",\n   {field} {padd} = {{{value}}}"
 
@@ -496,7 +496,9 @@ class Dataset:
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
-    def __create_temp_id(self, *, local_index, record_dict: dict) -> str:
+    def __create_temp_id(
+        self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
+    ) -> str:
 
         try:
 
@@ -683,7 +685,7 @@ class Dataset:
 
         return propagated
 
-    def __read_record_header_items(self, *, file_object=None) -> list:
+    def __read_record_header_items(self, *, file_object: typing.TextIO = None) -> list:
 
         # Note : more than 10x faster than load_records_dict()
 
@@ -742,12 +744,14 @@ class Dataset:
                 if key in record_header_item:
                     current_header_item_count += 1
                     record_header_item[key] = value
-
-        record_header_items.append(record_header_item)
+        if "NA" != record_header_item["colrev_origin"]:
+            record_header_items.append(record_header_item)
         return record_header_items
 
-    def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
-        def yield_from_file(file) -> typing.Iterator[str]:
+    def __read_next_record_str(
+        self, *, file_object: typing.TextIO = None
+    ) -> typing.Iterator[str]:
+        def yield_from_file(file: typing.TextIO) -> typing.Iterator[str]:
             data = ""
             first_entry_processed = False
             while True:
@@ -992,7 +996,7 @@ class Dataset:
         else:
             proc_transition_list: list = [
                 x["trigger"]
-                for x in colrev.process.ProcessModel.transitions
+                for x in colrev.record.RecordStateModel.transitions
                 if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
             ]
             if len(proc_transition_list) == 0 and prior_status[0] != status:
@@ -1256,29 +1260,6 @@ class Dataset:
                     missing_files.append(record_header_item["ID"])
         return missing_files
 
-    def import_file(self, *, record: dict) -> dict:
-        self.review_manager.pdf_dir.mkdir(exist_ok=True)
-        new_fp = self.review_manager.pdf_dir / Path(record["ID"] + ".pdf").name
-        original_fp = Path(record["file"])
-
-        if (
-            colrev.settings.PDFPathType.symlink
-            == self.review_manager.settings.pdf_get.pdf_path_type
-        ):
-            if not new_fp.is_file():
-                new_fp.symlink_to(original_fp)
-            record["file"] = str(new_fp)
-        elif (
-            colrev.settings.PDFPathType.copy
-            == self.review_manager.settings.pdf_get.pdf_path_type
-        ):
-            if not new_fp.is_file():
-                shutil.copyfile(original_fp, new_fp.resolve())
-            record["file"] = str(new_fp)
-        # Note : else: leave absolute paths
-
-        return record
-
     # CHECKS --------------------------------------------------------------
 
     def check_main_records_duplicates(self, *, status_data: dict) -> None:
@@ -1540,7 +1521,7 @@ class Dataset:
     def get_repo(self) -> git.Repo:
         """Get the git repository object (requires review_manager.notify(...))"""
 
-        if self.review_manager.notified_next_process is None:
+        if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
         return self.__git_repo
 

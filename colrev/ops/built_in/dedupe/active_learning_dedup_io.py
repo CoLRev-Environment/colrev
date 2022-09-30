@@ -183,8 +183,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             raise colrev_exceptions.DedupeError(
                 "Sample size too small for active learning. "
                 "Use simple_dedupe instead:\n"
-                f"{colors.ORANGE}  colrev settings -m 'dedupe.scripts="
-                f'[{{"endpoint":"simple_dedupe"}}]\'{colors.END}'
+                f"{colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
+                f'[{{"endpoint":"colrev_built_in.simple_dedupe"}}]\'{colors.END}'
             )
 
         if dedupe_operation.training_file.is_file():
@@ -435,7 +435,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
     @dataclass
     class ActiveLearningSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         merge_threshold: float = 0.8
         partition_threshold: float = 0.5
 
@@ -546,7 +546,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                         )
         return results
 
-    def __highlight_cells(self, *, input_df):
+    def __highlight_cells(self, input_df: pd.DataFrame) -> pd.DataFrame:  # type: ignore  # noqa
         dataframe = input_df.copy()
         dataframe["cluster_id"] = dataframe["cluster_id"].astype(str)
         dataframe.loc[:, dataframe.columns != "cluster_id"] = "background-color: white"
@@ -564,7 +564,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         cur_color_index = -1
         cur_cluster = ""
 
-        prev_row = {}
+        prev_row: dict = {}
         for i, row in dataframe.iterrows():
             if row["cluster_id"] != cur_cluster:
                 cur_color_index += 1
@@ -589,7 +589,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                     if val != prev_row[j]:
                         dataframe.at[i, j] = dataframe.at[i, j] + "; font-weight: bold"
 
-            prev_row = row
+            prev_row = row.to_dict()
 
         return dataframe
 
@@ -640,7 +640,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(4)
         # to adjust column widths in ExcelWriter:
         # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-        duplicates_df = duplicates_df.style.apply(self.__highlight_cells, axis=None)
+        duplicates_df.style.apply(self.__highlight_cells, axis=None)
         duplicates_df.to_excel(dedupe_operation.dupe_file, index=False)
 
     def __export_non_duplicates_excel(
@@ -683,9 +683,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         ].round(4)
         # to adjust column widths in ExcelWriter:
         # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-        non_duplicates_df = non_duplicates_df.style.apply(
-            self.__highlight_cells, axis=None
-        )
+        non_duplicates_df.style.apply(self.__highlight_cells, axis=None)
         non_duplicates_df.to_excel(dedupe_operation.non_dupe_file_xlsx, index=False)
 
     def __get_collected_dupes_non_dupes_from_clusters(
@@ -861,7 +859,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
             records_data = {r["ID"]: r for r in data_d.values()}
 
-            def record_pairs(result_set):
+            def record_pairs(result_set: list[tuple]) -> typing.Iterator[tuple]:
 
                 for row in result_set:
                     id_a, id_b = row

@@ -6,11 +6,11 @@ import typing
 
 import pandas as pd
 
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class PrepMan(colrev.process.Process):
+class PrepMan(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -19,17 +19,19 @@ class PrepMan(colrev.process.Process):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.prep_man,
+            operations_type=colrev.operation.OperationsType.prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.prep_man_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.prep_man,
-            selected_packages=review_manager.settings.prep.man_prep_scripts,
-            process=self,
+        self.prep_man_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+            selected_packages=review_manager.settings.prep.prep_man_package_endpoints,
+            operation=self,
         )
 
     def __get_crosstab_df(self) -> pd.DataFrame:
@@ -169,9 +171,13 @@ class PrepMan(colrev.process.Process):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for prep_man_script in self.review_manager.settings.prep.man_prep_scripts:
+        for (
+            prep_man_package_endpoint
+        ) in self.review_manager.settings.prep.prep_man_package_endpoints:
 
-            endpoint = self.prep_man_scripts[prep_man_script["endpoint"]]
+            endpoint = self.prep_man_package_endpoints[
+                prep_man_package_endpoint["endpoint"]
+            ]
             records = endpoint.prepare_manual(self, records)
 
 

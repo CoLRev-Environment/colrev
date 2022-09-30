@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """SearchSource: Pubmed"""
+from __future__ import annotations
+
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,7 +25,9 @@ class PubMedSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
@@ -44,7 +49,12 @@ class PubMedSearchSource(JsonSchemaMixin):
             "Automated search not (yet) supported."
         )
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

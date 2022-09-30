@@ -6,12 +6,12 @@ import math
 import typing
 from pathlib import Path
 
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.settings
 
 
-class Screen(colrev.process.Process):
+class Screen(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -20,17 +20,19 @@ class Screen(colrev.process.Process):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.screen,
+            operations_type=colrev.operation.OperationsType.screen,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.screen_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.screen,
-            selected_packages=review_manager.settings.screen.scripts,
-            process=self,
+        self.screen_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.screen,
+            selected_packages=review_manager.settings.screen.screen_package_endpoints,
+            operation=self,
         )
 
     def include_all_in_screen(
@@ -237,7 +239,7 @@ class Screen(colrev.process.Process):
 
         self.review_manager.dataset.add_changes(path=Path("custom_screen_script.py"))
 
-        self.review_manager.settings.screen.scripts.append(
+        self.review_manager.settings.screen.screen_package_endpoints.append(
             {"endpoint": "custom_screen_script"}
         )
         self.review_manager.save_settings()
@@ -252,9 +254,13 @@ class Screen(colrev.process.Process):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for screen_script in self.review_manager.settings.screen.scripts:
+        for (
+            screen_package_endpoint
+        ) in self.review_manager.settings.screen.screen_package_endpoints:
 
-            endpoint = self.screen_scripts[screen_script["endpoint"]]
+            endpoint = self.screen_package_endpoints[
+                screen_package_endpoint["endpoint"]
+            ]
             records = endpoint.run_screen(self, records, split)
 
 

@@ -9,11 +9,11 @@ import pandas as pd
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class PDFPrepMan(colrev.process.Process):
+class PDFPrepMan(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -23,19 +23,19 @@ class PDFPrepMan(colrev.process.Process):
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.pdf_prep_man,
+            operations_type=colrev.operation.OperationsType.pdf_prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_man_scripts: dict[
+        self.pdf_prep_man_package_endpoints: dict[
             str, typing.Any
         ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.pdf_prep_man,
-            selected_packages=review_manager.settings.pdf_prep.man_pdf_prep_scripts,
-            process=self,
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+            selected_packages=review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints,
+            operation=self,
         )
 
     def get_data(self) -> dict:
@@ -196,7 +196,7 @@ class PDFPrepMan(colrev.process.Process):
                 records_changed_dict = self.review_manager.dataset.load_records_dict(
                     load_str=target_db.read()
                 )
-                records_changed = records_changed_dict.values()
+                records_changed = list(records_changed_dict.values())
 
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
@@ -244,17 +244,24 @@ class PDFPrepMan(colrev.process.Process):
         records = self.review_manager.dataset.load_records_dict()
 
         for (
-            pdf_prep_man_script
-        ) in self.review_manager.settings.pdf_prep.man_pdf_prep_scripts:
+            pdf_prep_man_package_endpoint
+        ) in self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints:
 
-            if pdf_prep_man_script["endpoint"] not in self.pdf_prep_man_scripts:
+            if (
+                pdf_prep_man_package_endpoint["endpoint"]
+                not in self.pdf_prep_man_package_endpoints
+            ):
                 if self.verbose:
-                    print(f"Error: endpoint not available: {pdf_prep_man_script}")
+                    print(
+                        f"Error: endpoint not available: {pdf_prep_man_package_endpoint}"
+                    )
                 continue
 
-            endpoint_script = self.pdf_prep_man_scripts[pdf_prep_man_script["endpoint"]]
+            endpoint_dict = self.pdf_prep_man_package_endpoints[
+                pdf_prep_man_package_endpoint["endpoint"]
+            ]
 
-            endpoint = endpoint_script["endpoint"]
+            endpoint = endpoint_dict["endpoint"]
             records = endpoint.prep_man_pdf(self, records)
 
 

@@ -7,7 +7,7 @@ import timeout_decorator
 import zope.interface
 from dacite import from_dict
 
-import colrev.process
+import colrev.operation
 
 if TYPE_CHECKING:
     import colrev.ops.prep

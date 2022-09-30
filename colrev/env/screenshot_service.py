@@ -10,15 +10,15 @@ import docker
 import requests
 
 import colrev.env.environment_manager
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
 class ScreenshotService:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    # TODO : close service after the script has run
+    # TODO : close service afterwards
 
     def start_screenshot_service(self) -> None:
 

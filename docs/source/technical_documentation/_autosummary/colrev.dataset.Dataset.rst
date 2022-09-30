@@ -52,7 +52,6 @@ colrev.dataset.Dataset
       ~Dataset.get_untracked_files
       ~Dataset.has_changes
       ~Dataset.has_untracked_search_records
-      ~Dataset.import_file
       ~Dataset.load_field_dict
       ~Dataset.load_from_git_history
       ~Dataset.load_origin_records

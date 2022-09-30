@@ -8,7 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 
 if TYPE_CHECKING:
     import colrev.ops.search.Search
@@ -20,7 +20,9 @@ class CustomSearch:
     settings_class = colrev.env.package_manager.DefaultSettings
     source_identifier = "{{custom}}"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.ops.search.Search, settings: dict
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
@@ -77,7 +79,12 @@ class CustomSearch:
 
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: dict,
+    ) -> dict:
 
         return records
 

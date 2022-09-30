@@ -18,7 +18,7 @@ colrev.ops.screen.Screen
 
       ~Screen.add_criterion
       ~Screen.check_precondition
-      ~Screen.check_process_model_precondition
+      ~Screen.check_record_state_model_precondition
       ~Screen.create_screen_split
       ~Screen.delete_criterion
       ~Screen.get_data
@@ -38,3 +38,4 @@ colrev.ops.screen.Screen
    .. autosummary::
 
       ~Screen.force_mode
+      ~Screen.type

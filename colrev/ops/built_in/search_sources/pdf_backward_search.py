@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: backward search (based on PDFs and GROBID)"""
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +31,9 @@ class BackwardSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{cited_by_file}} (references)"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         if settings["search_parameters"]["scope"].get("file", "") != "paper.md":
             if (
                 settings["search_parameters"]["scope"]["colrev_status"]
@@ -102,7 +106,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         options = {"consolidateHeader": "0", "consolidateCitations": "0"}
         ret = requests.post(
             self.grobid_service.GROBID_URL + "/api/processReferences",
-            files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
+            files={str(pdf_path): open(pdf_path, "rb", encoding="utf8")},
             data=options,
             headers={"Accept": "application/x-bibtex"},
         )
@@ -163,7 +167,12 @@ class BackwardSearchSource(JsonSchemaMixin):
             return result
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

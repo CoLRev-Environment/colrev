@@ -93,7 +93,11 @@ class SemanticScholarPrep(JsonSchemaMixin):
         return record
 
     def retrieve_record_from_semantic_scholar(
-        self, *, prep_operation, url: str, record_in: colrev.record.PrepRecord
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        url: str,
+        record_in: colrev.record.PrepRecord,
     ) -> colrev.record.PrepRecord:
 
         prep_operation.review_manager.logger.debug(url)

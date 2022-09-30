@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def test_add_colrev_ids():
+def test_add_colrev_ids() -> None:
     import colrev.record
 
     v1 = {
@@ -44,7 +44,7 @@ def test_add_colrev_ids():
     ] == R1.data["colrev_id"]
 
 
-def test_provenance():
+def test_provenance() -> None:
 
     import colrev.record
 
@@ -82,7 +82,7 @@ def test_provenance():
     assert R1.data["colrev_masterdata_provenance"]["author"]["note"] == "test,check"
 
 
-def test_defects():
+def test_defects() -> None:
 
     import colrev.record
 
@@ -132,7 +132,7 @@ def test_defects():
     }
 
 
-def test_merge():
+def test_merge() -> None:
     import colrev.record
 
     R1 = colrev.record.Record(
@@ -234,7 +234,7 @@ def test_merge():
     )
 
 
-def test_parse_bib():
+def test_parse_bib() -> None:
     import colrev.record
 
     R1 = colrev.record.Record(

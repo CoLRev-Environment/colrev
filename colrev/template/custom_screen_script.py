@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
-import colrev.process
+import colrev.operation
 import colrev.record
 
 if TYPE_CHECKING:

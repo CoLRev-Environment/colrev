@@ -54,6 +54,8 @@ class Initializer:
 
         self.title = str(Path.cwd().name)
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
+        if "." not in self.review_type:
+            self.review_type = "colrev_built_in." + self.review_type
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
@@ -103,7 +105,7 @@ class Initializer:
                 "Global git variables (user name and email) not available."
             )
 
-    def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
+    def __setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev-init_logger")
 
@@ -219,16 +221,23 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            r_type_suffix = (
-                str(self.review_type)
-                .replace("_", " ")
-                .replace("meta analysis", "meta-analysis")
+            package_manager = self.review_manager.get_package_manager()
+            check_operation = colrev.operation.CheckOperation(
+                review_manager=self.review_manager
             )
+            review_type_endpoint = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+                selected_packages=[{"endpoint": self.review_type}],
+                operation=check_operation,
+                ignore_not_available=False,
+            )
+            r_type_suffix = str(review_type_endpoint[self.review_type])
+
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=project_title.rstrip(" ").capitalize()
-                + f": A {r_type_suffix}",
+                + f": A {r_type_suffix} protocol",
             )
 
         # Note : to avoid file setup at colrev status (calls data_operation.main)

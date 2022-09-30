@@ -18,7 +18,7 @@ colrev.ops.pdf\_get.PDFGet
 
       ~PDFGet.check_existing_unlinked_pdfs
       ~PDFGet.check_precondition
-      ~PDFGet.check_process_model_precondition
+      ~PDFGet.check_record_state_model_precondition
       ~PDFGet.copy_pdfs_to_repo
       ~PDFGet.get_pdf
       ~PDFGet.link_pdf
@@ -40,3 +40,4 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved
       ~PDFGet.force_mode
+      ~PDFGet.type

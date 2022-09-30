@@ -34,11 +34,10 @@ colrev.env.package\_manager.DefaultSourceSettings
 
    .. autosummary::
 
-      ~DefaultSourceSettings.name
+      ~DefaultSourceSettings.endpoint
       ~DefaultSourceSettings.filename
       ~DefaultSourceSettings.search_type
-      ~DefaultSourceSettings.source_name
       ~DefaultSourceSettings.source_identifier
       ~DefaultSourceSettings.search_parameters
-      ~DefaultSourceSettings.load_conversion_script
+      ~DefaultSourceSettings.load_conversion_package_endpoint
       ~DefaultSourceSettings.comment

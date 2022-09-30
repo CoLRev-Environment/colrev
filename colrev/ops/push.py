@@ -5,16 +5,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import colrev.operation
 import colrev.ops.correct
-import colrev.process
 import colrev.record
 
 
-class Push(colrev.process.Process):
+class Push(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.explore,
+            operations_type=colrev.operation.OperationsType.explore,
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:

@@ -36,4 +36,4 @@ colrev.settings.ScreenSettings
 
       ~ScreenSettings.explanation
       ~ScreenSettings.criteria
-      ~ScreenSettings.scripts
+      ~ScreenSettings.screen_package_endpoints

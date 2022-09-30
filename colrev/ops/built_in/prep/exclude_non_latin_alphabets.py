@@ -48,7 +48,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
-        def mostly_latin_alphabet(str_to_check) -> bool:
+        def mostly_latin_alphabet(str_to_check: str) -> bool:
             assert len(str_to_check) != 0
             nr_non_latin = 0
             for character in str_to_check:

@@ -6,13 +6,13 @@ import math
 import typing
 from pathlib import Path
 
+import colrev.operation
 import colrev.ops.built_in.prescreen.conditional_prescreen
 import colrev.ops.built_in.prescreen.spreadsheet_prescreen
-import colrev.process
 import colrev.record
 
 
-class Prescreen(colrev.process.Process):
+class Prescreen(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -21,17 +21,19 @@ class Prescreen(colrev.process.Process):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.prescreen,
+            operations_type=colrev.operation.OperationsType.prescreen,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.prescreen_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.prescreen,
-            selected_packages=review_manager.settings.prescreen.scripts,
-            process=self,
+        self.prescreen_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+            selected_packages=review_manager.settings.prescreen.prescreen_package_endpoints,
+            operation=self,
         )
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
@@ -124,7 +126,7 @@ class Prescreen(colrev.process.Process):
 
         self.review_manager.dataset.add_changes(path=Path("custom_prescreen_script.py"))
 
-        self.review_manager.settings.prescreen.scripts.append(
+        self.review_manager.settings.prescreen.prescreen_package_endpoints.append(
             {"endpoint": "custom_prescreen_script"}
         )
         self.review_manager.save_settings()
@@ -139,10 +141,16 @@ class Prescreen(colrev.process.Process):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for prescreen_script in self.review_manager.settings.prescreen.scripts:
+        for (
+            prescreen_package_endpoint
+        ) in self.review_manager.settings.prescreen.prescreen_package_endpoints:
 
-            self.review_manager.logger.info(f"Run {prescreen_script['endpoint']}")
-            endpoint = self.prescreen_scripts[prescreen_script["endpoint"]]
+            self.review_manager.logger.info(
+                f"Run {prescreen_package_endpoint['endpoint']}"
+            )
+            endpoint = self.prescreen_package_endpoints[
+                prescreen_package_endpoint["endpoint"]
+            ]
             records = endpoint.run_prescreen(self, records, split)
 
 

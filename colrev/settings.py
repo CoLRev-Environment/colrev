@@ -143,7 +143,7 @@ class SearchType(Enum):
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
 
@@ -153,12 +153,12 @@ class SearchSource(JsonSchemaMixin):
 
     # pylint: disable=too-many-instance-attributes
 
+    endpoint: str
     filename: Path
     search_type: SearchType
-    source_name: str
     source_identifier: str
     search_parameters: dict
-    load_conversion_script: dict
+    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
     def get_corresponding_bib_file(self) -> Path:
@@ -182,11 +182,12 @@ class SearchSource(JsonSchemaMixin):
 
     def __str__(self) -> str:
         return (
-            f"{self.source_name} (type: {self.search_type}, "
+            f"{self.endpoint} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
             + f"   source identifier:   {self.source_identifier}\n"
             + f"   search parameters:   {self.search_parameters}\n"
-            + f"   load_conversion_script:   {self.load_conversion_script['endpoint']}\n"
+            + "   load_conversion_package_endpoint:   "
+            + f"{self.load_conversion_package_endpoint['endpoint']}\n"
             + f"   comment:             {self.comment}"
         )
 
@@ -221,11 +222,11 @@ class PrepRound(JsonSchemaMixin):
 
     name: str
     similarity: float
-    scripts: list
+    prep_package_endpoints: list
 
     def __str__(self) -> str:
-        short_list = [script["endpoint"] for script in self.scripts][:3]
-        if len(self.scripts) > 3:
+        short_list = [script["endpoint"] for script in self.prep_package_endpoints][:3]
+        if len(self.prep_package_endpoints) > 3:
             short_list.append("...")
         return f"{self.name} (" + ",".join(short_list) + ")"
 
@@ -237,7 +238,7 @@ class PrepSettings(JsonSchemaMixin):
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
 
-    man_prep_scripts: list
+    prep_man_package_endpoints: list
 
     def __str__(self) -> str:
         return (
@@ -274,13 +275,13 @@ class DedupeSettings(JsonSchemaMixin):
     """Dedupe settings"""
 
     same_source_merges: SameSourceMergePolicy
-    scripts: list
+    dedupe_package_endpoints: list
 
     def __str__(self) -> str:
         return (
             f" - same_source_merges: {self.same_source_merges}\n"
             + " - "
-            + ",".join([s["endpoint"] for s in self.scripts])
+            + ",".join([s["endpoint"] for s in self.dedupe_package_endpoints])
         )
 
 
@@ -292,10 +293,12 @@ class PrescreenSettings(JsonSchemaMixin):
     """Prescreen settings"""
 
     explanation: str
-    scripts: list
+    prescreen_package_endpoints: list
 
     def __str__(self) -> str:
-        return "Scripts: " + ",".join([s["endpoint"] for s in self.scripts])
+        return "Prescreen package endoints: " + ",".join(
+            [s["endpoint"] for s in self.prescreen_package_endpoints]
+        )
 
 
 # PDF get
@@ -328,15 +331,15 @@ class PDFGetSettings(JsonSchemaMixin):
     """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
     can be specified as mandatory (true) or optional (false) for the following steps"""
     rename_pdfs: bool
-    scripts: list
+    pdf_get_package_endpoints: list
 
-    man_pdf_get_scripts: list
+    pdf_get_man_package_endpoints: list
 
     def __str__(self) -> str:
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
             + " - "
-            + ",".join([s["endpoint"] for s in self.scripts])
+            + ",".join([s["endpoint"] for s in self.pdf_get_package_endpoints])
         )
 
 
@@ -347,12 +350,14 @@ class PDFGetSettings(JsonSchemaMixin):
 class PDFPrepSettings(JsonSchemaMixin):
     """PDF prep settings"""
 
-    scripts: list
+    pdf_prep_package_endpoints: list
 
-    man_pdf_prep_scripts: list
+    pdf_prep_man_package_endpoints: list
 
     def __str__(self) -> str:
-        return " - " + ",".join([s["endpoint"] for s in self.scripts])
+        return " - " + ",".join(
+            [s["endpoint"] for s in self.pdf_prep_package_endpoints]
+        )
 
 
 # Screen
@@ -397,7 +402,7 @@ class ScreenSettings(JsonSchemaMixin):
 
     explanation: typing.Optional[str]
     criteria: typing.Dict[str, ScreenCriterion]
-    scripts: list
+    screen_package_endpoints: list
 
     def __str__(self) -> str:
         return " - " + "\n - ".join([str(c) for c in self.criteria])
@@ -410,10 +415,10 @@ class ScreenSettings(JsonSchemaMixin):
 class DataSettings(JsonSchemaMixin):
     """Data settings"""
 
-    scripts: list
+    data_package_endpoints: list
 
     def __str__(self) -> str:
-        return " - " + "\n- ".join([s["endpoint"] for s in self.scripts])
+        return " - " + "\n- ".join([s["endpoint"] for s in self.data_package_endpoints])
 
 
 @dataclass
@@ -460,54 +465,54 @@ class Settings(JsonSchemaMixin):
         )
 
     @classmethod
-    def get_settings_schema(cls):
+    def get_settings_schema(cls) -> dict:
 
         schema = cls.json_schema()
         sdefs = schema["definitions"]
-        sdefs["SearchSource"]["properties"]["load_conversion_script"] = {  # type: ignore
-            "script_type": "load_conversion",
+        sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
+            "package_endpoint_type": "load_conversion",
             "type": "script_item",
         }
 
         # pylint: disable=unused-variable
-        sdefs["PrepRound"]["properties"]["scripts"] = {  # type: ignore # noqa: F841
-            "script_type": "prep",
+        sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841
+            "package_endpoint_type": "prep",
             "type": "script_array",
         }
-        sdefs["PrepSettings"]["properties"]["man_prep_scripts"] = {  # type: ignore
-            "script_type": "prep_man",
+        sdefs["PrepSettings"]["properties"]["prep_man_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "prep_man",
             "type": "script_array",
         }
-        sdefs["DedupeSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "dedupe",
+        sdefs["DedupeSettings"]["properties"]["dedupe_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "dedupe",
             "type": "script_array",
         }
-        sdefs["PrescreenSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "prescreen",
+        sdefs["PrescreenSettings"]["properties"]["prescreen_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "prescreen",
             "type": "script_array",
         }
-        sdefs["PDFGetSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "pdf_get",
+        sdefs["PDFGetSettings"]["properties"]["pdf_get_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "pdf_get",
             "type": "script_array",
         }
-        sdefs["PDFGetSettings"]["properties"]["man_pdf_get_scripts"] = {  # type: ignore
-            "script_type": "pdf_get_man",
+        sdefs["PDFGetSettings"]["properties"]["pdf_get_man_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "pdf_get_man",
             "type": "script_array",
         }
-        sdefs["PDFPrepSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "pdf_prep",
+        sdefs["PDFPrepSettings"]["properties"]["pdf_prep_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "pdf_prep",
             "type": "script_array",
         }
-        sdefs["PDFPrepSettings"]["properties"]["man_pdf_prep_scripts"] = {  # type: ignore
-            "script_type": "pdf_prep_man",
+        sdefs["PDFPrepSettings"]["properties"]["pdf_prep_man_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "pdf_prep_man",
             "type": "script_array",
         }
-        sdefs["ScreenSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "screen",
+        sdefs["ScreenSettings"]["properties"]["screen_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "screen",
             "type": "script_array",
         }
-        sdefs["DataSettings"]["properties"]["scripts"] = {  # type: ignore
-            "script_type": "data",
+        sdefs["DataSettings"]["properties"]["data_package_endpoints"] = {  # type: ignore
+            "package_endpoint_type": "data",
             "type": "script_array",
         }
 
@@ -556,8 +561,8 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
-    def custom_asdict_factory(data):
-        def convert_value(obj):
+    def custom_asdict_factory(data) -> dict:  # type: ignore
+        def convert_value(obj: object) -> object:
             if isinstance(obj, Enum):
                 return obj.value
             if isinstance(obj, Path):

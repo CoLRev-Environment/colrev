@@ -13,7 +13,7 @@ import colrev.exceptions as colrev_exceptions
 
 
 class ZoteroTranslationService:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def start_zotero_translators(

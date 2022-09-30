@@ -46,14 +46,15 @@ class TEIPDFPrep(JsonSchemaMixin):
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
 
-        pdf_prep_operation.review_manager.logger.info(
-            f" creating tei: {record.data['ID']}"
-        )
         if "file" in record.data:
-            _ = pdf_prep_operation.review_manager.get_tei(
-                pdf_path=Path(record.data["file"]),
-                tei_path=record.get_tei_filename(),
-            )
+            if not record.get_tei_filename().is_file():
+                pdf_prep_operation.review_manager.logger.info(
+                    f" creating tei: {record.data['ID']}"
+                )
+                _ = pdf_prep_operation.review_manager.get_tei(
+                    pdf_path=Path(record.data["file"]),
+                    tei_path=record.get_tei_filename(),
+                )
 
         return record.data
 

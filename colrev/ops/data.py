@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class Data(colrev.process.Process):
+class Data(colrev.operation.Operation):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
 
@@ -28,15 +28,17 @@ class Data(colrev.process.Process):
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.data,
+            operations_type=colrev.operation.OperationsType.data,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         package_manager = self.review_manager.get_package_manager()
-        self.data_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.data,
-            selected_packages=review_manager.settings.data.scripts,
-            process=self,
+        self.data_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.data,
+            selected_packages=review_manager.settings.data.data_package_endpoints,
+            operation=self,
         )
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
@@ -94,11 +96,11 @@ class Data(colrev.process.Process):
 
         self.review_manager.logger.info("Create sample profile")
 
-        def prep_records(*, records) -> pd.DataFrame:
+        def prep_records(*, records: dict) -> pd.DataFrame:
             for record in records:
                 record["outlet"] = record.get("journal", record.get("booktitle", "NA"))
 
-            records_df = pd.DataFrame.from_dict(records)
+            records_df = pd.DataFrame.from_records(list(records.values()))
 
             required_cols = [
                 "ID",
@@ -114,13 +116,13 @@ class Data(colrev.process.Process):
                 "pages",
                 "doi",
             ]
-            available_cols = records_df.columns.intersection(set(required_cols))
+            available_cols = records_df.columns.intersection(list(set(required_cols)))
             cols = [x for x in required_cols if x in available_cols]
             records_df = records_df[cols]
             return records_df
 
         def prep_observations(
-            *, prepared_records_df: dict, records: dict
+            *, prepared_records_df: pd.DataFrame, records: dict
         ) -> pd.DataFrame:
 
             included_papers = [
@@ -152,7 +154,7 @@ class Data(colrev.process.Process):
         output_dir = self.review_manager.path / Path("output")
         output_dir.mkdir(exist_ok=True)
 
-        prepared_records_df = prep_records(records=records.values())
+        prepared_records_df = prep_records(records=records)  # .values()
         observations = prep_observations(
             prepared_records_df=prepared_records_df, records=records
         )
@@ -202,7 +204,7 @@ class Data(colrev.process.Process):
 
     def add_data_endpoint(self, *, data_endpoint: dict) -> None:
 
-        self.review_manager.settings.data.scripts.append(data_endpoint)
+        self.review_manager.settings.data.data_package_endpoints.append(data_endpoint)
         self.review_manager.save_settings()
 
     def setup_custom_script(self) -> None:
@@ -218,104 +220,111 @@ class Data(colrev.process.Process):
 
         new_data_endpoint = {"endpoint": "custom_data_script"}
 
-        self.review_manager.settings.data.scripts.append(new_data_endpoint)
+        self.review_manager.settings.data.data_package_endpoints.append(
+            new_data_endpoint
+        )
         self.review_manager.save_settings()
 
-    def main(self, *, pre_commit_hook=False) -> dict:
+    def main(self, *, pre_commit_hook: bool = False) -> dict:
 
         # TODO : use self.verbose in the update scripts of data endpoints
         self.verbose = not pre_commit_hook
 
-        no_endpoints_registered = 0 == len(self.review_manager.settings.data.scripts)
+        no_endpoints_registered = 0 == len(
+            self.review_manager.settings.data.data_package_endpoints
+        )
 
         records = self.review_manager.dataset.load_records_dict()
-        if 0 == len(records):
-            return {
-                "ask_to_commit": False,
-                "no_endpoints_registered": no_endpoints_registered,
-            }
+        # if 0 == len(records):
+        #     return {
+        #         "ask_to_commit": False,
+        #         "no_endpoints_registered": no_endpoints_registered,
+        #     }
 
-        self.__pad = min((max(len(ID) for ID in records.keys()) + 2), 35)
+        self.__pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-        if 0 == len(included) and self.verbose:
-            self.review_manager.report_logger.info("No records included yet")
-            self.review_manager.logger.info("No records included yet")
+        # if 0 == len(included) and self.verbose:
+        #     self.review_manager.report_logger.info("No records included yet")
+        #     self.review_manager.logger.info("No records included yet")
 
-        else:
-            # TBD: do we assume that records are not changed by the processes?
-            records = self.review_manager.dataset.load_records_dict()
+        # else:
 
-            # synthesized_record_status_matrix (paper IDs x endpoint):
-            # each endpoint sets synthesized = True/False
-            # and if a paper has synthesized=True in all fields,
-            # its overall status is set to synthesized
-            # Some endpoints may always set synthesized
-            default_row = {
-                df["endpoint"]: False
-                for df in self.review_manager.settings.data.scripts
-            }
-            synthesized_record_status_matrix = {
-                ID: default_row.copy() for ID in included
-            }
+        # TBD: do we assume that records are not changed by the processes?
+        records = self.review_manager.dataset.load_records_dict()
 
-            # if self.verbose:
-            #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
+        # synthesized_record_status_matrix (paper IDs x endpoint):
+        # each endpoint sets synthesized = True/False
+        # and if a paper has synthesized=True in all fields,
+        # its overall status is set to synthesized
+        # Some endpoints may always set synthesized
+        default_row = {
+            df["endpoint"]: False
+            for df in self.review_manager.settings.data.data_package_endpoints
+        }
+        synthesized_record_status_matrix = {ID: default_row.copy() for ID in included}
 
-            # TODO : include paper.md / data.csv as arguments of the data endpoint
-            # not the review_manager? (but: the other scripts/checks may rely
-            # on the review_manager/path variables....)
+        # if self.verbose:
+        #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
-            for data_script in self.review_manager.settings.data.scripts:
+        # TODO : include paper.md / data.csv as arguments of the data endpoint
+        # not the review_manager? (but: the other scripts/checks may rely
+        # on the review_manager/path variables....)
 
-                endpoint = self.data_scripts[data_script["endpoint"].lower()]
+        for (
+            data_package_endpoint
+        ) in self.review_manager.settings.data.data_package_endpoints:
 
-                endpoint.update_data(self, records, synthesized_record_status_matrix)
-                endpoint.update_record_status_matrix(
-                    self,
-                    synthesized_record_status_matrix,
-                    data_script["endpoint"],
+            endpoint = self.data_package_endpoints[
+                data_package_endpoint["endpoint"].lower()
+            ]
+
+            endpoint.update_data(self, records, synthesized_record_status_matrix)
+            endpoint.update_record_status_matrix(
+                self,
+                synthesized_record_status_matrix,
+                data_package_endpoint["endpoint"],
+            )
+
+            if self.verbose:
+                print(f"updated {endpoint.settings.endpoint}")
+
+        for (
+            record_id,
+            individual_status_dict,
+        ) in synthesized_record_status_matrix.items():
+            if all(x for x in individual_status_dict.values()):
+                records[record_id].update(
+                    colrev_status=colrev.record.RecordState.rev_synthesized
+                )
+                if self.verbose:
+                    self.review_manager.report_logger.info(
+                        f" {record_id}".ljust(self.__pad, " ")
+                        + "set colrev_status to synthesized"
+                    )
+                    self.review_manager.logger.info(
+                        f" {record_id}".ljust(self.__pad, " ")
+                        + "set colrev_status to synthesized"
+                    )
+            else:
+                records[record_id].update(
+                    colrev_status=colrev.record.RecordState.rev_included
                 )
 
-                if self.verbose:
-                    print(f"updated {endpoint.settings.name}")
+        # if self.verbose:
+        #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
-            for (
-                record_id,
-                individual_status_dict,
-            ) in synthesized_record_status_matrix.items():
-                if all(x for x in individual_status_dict.values()):
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_synthesized
-                    )
-                    if self.verbose:
-                        self.review_manager.report_logger.info(
-                            f" {record_id}".ljust(self.__pad, " ")
-                            + "set colrev_status to synthesized"
-                        )
-                        self.review_manager.logger.info(
-                            f" {record_id}".ljust(self.__pad, " ")
-                            + "set colrev_status to synthesized"
-                        )
-                else:
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_included
-                    )
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-            # if self.verbose:
-            #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
-
-            self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
-
-            return {
-                "ask_to_commit": True,
-                "no_endpoints_registered": no_endpoints_registered,
-            }
         return {
-            "ask_to_commit": False,
+            "ask_to_commit": True,
             "no_endpoints_registered": no_endpoints_registered,
         }
+        # return {
+        #     "ask_to_commit": False,
+        #     "no_endpoints_registered": no_endpoints_registered,
+        # }
 
 
 if __name__ == "__main__":

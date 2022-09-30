@@ -55,7 +55,7 @@ class Manuscript(JsonSchemaMixin):
     class ManuscriptSettings(JsonSchemaMixin):
         """Manuscript settings"""
 
-        name: str
+        endpoint: str
         version: str
         word_template: Path
         csl_style: str
@@ -91,7 +91,7 @@ class Manuscript(JsonSchemaMixin):
         self.settings = from_dict(
             data_class=self.settings_class,
             data=settings,
-            config=dacite.Config(type_hooks=converters),
+            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
         )
 
         self.settings.paper_path = (
@@ -150,16 +150,19 @@ class Manuscript(JsonSchemaMixin):
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> str:
         git_repo = review_manager.dataset.get_repo()
-        commits_list = list(git_repo.iter_commits())
-        commits_authors = []
-        for commit in commits_list:
-            committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
-            if "GitHub" == committer:
-                continue
-            commits_authors.append(committer)
-            # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
-            # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
-        author = ", ".join(dict(Counter(commits_authors)))
+        try:
+            commits_list = list(git_repo.iter_commits())
+            commits_authors = []
+            for commit in commits_list:
+                committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
+                if "GitHub" == committer:
+                    continue
+                commits_authors.append(committer)
+                # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
+                # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
+            author = ", ".join(dict(Counter(commits_authors)))
+        except ValueError:
+            author = review_manager.committer
         return author
 
     def __get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
@@ -178,9 +181,10 @@ class Manuscript(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         paper_path: Path,
         missing_records: list,
-    ):
+    ) -> None:
         # pylint: disable=consider-using-with
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         temp = tempfile.NamedTemporaryFile()
         paper_path.rename(temp.name)
@@ -387,6 +391,9 @@ class Manuscript(JsonSchemaMixin):
 
         data_operation.review_manager.logger.info("Build manuscript")
 
+        if not data_operation.review_manager.dataset.records_file.is_file():
+            data_operation.review_manager.dataset.records_file.touch()
+
         if not self.settings.paper_path.is_file():
             data_operation.review_manager.logger.error(
                 "File %s does not exist.", self.settings.paper_path
@@ -449,7 +456,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
-    ):
+    ) -> None:
         records = self.update_manuscript(
             review_manager=data_operation.review_manager,
             records=records,
@@ -502,7 +509,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
-    ):
+    ) -> None:
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = self.__get_synthesized_ids_paper(
             paper=self.settings.paper_path,
@@ -518,7 +525,7 @@ class Manuscript(JsonSchemaMixin):
 class ManuscriptRecordSourceTagError(Exception):
     """NEW_RECORD_SOURCE_TAG not found in paper.md"""
 
-    def __init__(self, msg):
+    def __init__(self, msg: str) -> None:
         self.message = f" {msg}"
         super().__init__(self.message)
 

@@ -29,7 +29,7 @@ from tqdm import tqdm
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
@@ -585,7 +585,11 @@ class LocalIndex:
         return record
 
     def prep_record_for_return(
-        self, *, record_dict: dict, include_file: bool = False, include_colrev_ids=False
+        self,
+        *,
+        record_dict: dict,
+        include_file: bool = False,
+        include_colrev_ids: bool = False,
     ) -> dict:
 
         record_dict = self.parse_record(record_dict=record_dict)
@@ -700,7 +704,7 @@ class LocalIndex:
 
         return record_dict
 
-    def _add_record_to_index(self, *, record_dict) -> None:
+    def _add_record_to_index(self, *, record_dict: dict) -> None:
         cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
         paper_hash = self.__get_record_hash(record_dict=record_dict)
 
@@ -796,10 +800,12 @@ class LocalIndex:
             review_manager = colrev.review_manager.ReviewManager(
                 path_str=str(repo_source_path)
             )
-            check_process = colrev.process.CheckProcess(review_manager=review_manager)
-            if not check_process.review_manager.dataset.records_file.is_file():
+            check_operation = colrev.operation.CheckOperation(
+                review_manager=review_manager
+            )
+            if not check_operation.review_manager.dataset.records_file.is_file():
                 return
-            records = check_process.review_manager.dataset.load_records_dict()
+            records = check_operation.review_manager.dataset.load_records_dict()
 
             # Add metadata_source_repository_paths : list of repositories from which
             # the record was integrated. Important for is_duplicate(...)
@@ -807,8 +813,8 @@ class LocalIndex:
                 record.update(metadata_source_repository_paths=repo_source_path)
 
             # Set masterdata_provenace to CURATED:{url}
-            curation_url = check_process.review_manager.settings.project.curation_url
-            if check_process.review_manager.settings.project.curated_masterdata:
+            curation_url = check_operation.review_manager.settings.project.curation_url
+            if check_operation.review_manager.settings.project.curated_masterdata:
                 for record in records.values():
                     record.update(
                         colrev_masterdata_provenance=f"CURATED:{curation_url};;"
@@ -817,7 +823,7 @@ class LocalIndex:
             # Add curation_url to curated fields (provenance)
             for (
                 curated_field
-            ) in check_process.review_manager.settings.project.curated_fields:
+            ) in check_operation.review_manager.settings.project.curated_fields:
 
                 for record_dict in records.values():
                     colrev.record.Record(data=record_dict).add_data_provenance(
@@ -932,7 +938,11 @@ class LocalIndex:
         return year
 
     def retrieve_from_toc(
-        self, *, record_dict: dict, similarity_threshold: float, include_file=False
+        self,
+        *,
+        record_dict: dict,
+        similarity_threshold: float,
+        include_file: bool = False,
     ) -> dict:
         toc_key = self.__get_toc_key(record_dict=record_dict)
 
@@ -1004,7 +1014,11 @@ class LocalIndex:
         return res
 
     def retrieve(
-        self, *, record_dict: dict, include_file: bool = False, include_colrev_ids=False
+        self,
+        *,
+        record_dict: dict,
+        include_file: bool = False,
+        include_colrev_ids: bool = False,
     ) -> dict:
         """
         Convenience function to retrieve the indexed record_dict metadata

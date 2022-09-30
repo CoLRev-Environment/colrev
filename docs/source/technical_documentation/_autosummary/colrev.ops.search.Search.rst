@@ -18,7 +18,7 @@ colrev.ops.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
-      ~Search.check_process_model_precondition
+      ~Search.check_record_state_model_precondition
       ~Search.main
       ~Search.require_clean_repo_general
       ~Search.save_feed_file
@@ -34,3 +34,4 @@ colrev.ops.search.Search
    .. autosummary::
 
       ~Search.force_mode
+      ~Search.type

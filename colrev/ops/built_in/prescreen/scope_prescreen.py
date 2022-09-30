@@ -31,7 +31,7 @@ class ScopePrescreen(JsonSchemaMixin):
         # pylint: disable=invalid-name
         # pylint: disable=too-many-instance-attributes
 
-        name: str
+        endpoint: str
         TimeScopeFrom: typing.Optional[int]
         TimeScopeTo: typing.Optional[int]
         LanguageScope: typing.Optional[list]

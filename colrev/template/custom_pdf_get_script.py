@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
-import colrev.process
+import colrev.operation
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_get
@@ -26,6 +26,6 @@ class CustomPDFGet:
     ) -> colrev.record.Record:
 
         record.data["file"] = "filepath"
-        pdf_get_operation.review_manager.dataset.import_file(record=record.data)
+        record.import_file(review_manager=pdf_get_operation.review_manager)
 
         return record

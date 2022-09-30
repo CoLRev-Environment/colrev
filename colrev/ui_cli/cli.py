@@ -1,8 +1,11 @@
 #! /usr/bin/env python3
 """Command-line interface for CoLRev."""
+from __future__ import annotations
+
 import datetime
 import logging
 import os
+import typing
 from pathlib import Path
 
 import click
@@ -25,7 +28,7 @@ import colrev.ui_cli.cli_status_printer
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
 
-def __custom_startswith(string, incomplete):
+def __custom_startswith(string: str, incomplete: str) -> bool:
     """A custom completion matching that supports case insensitive matching"""
     if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
         string = string.lower()
@@ -38,15 +41,15 @@ click_completion.init()
 
 
 class SpecialHelpOrder(click.Group):
-    def __init__(self, *args, **kwargs):
-        self.help_priorities = {}
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+        self.help_priorities: dict = {}
         super().__init__(*args, **kwargs)
 
-    def get_help(self, ctx):
-        self.list_commands = self.list_commands_for_help
+    def get_help(self, ctx: click.core.Context):  # type: ignore
+        self.list_commands = self.list_commands_for_help  # type: ignore  # noqa
         return super().get_help(ctx)
 
-    def list_commands_for_help(self, ctx):
+    def list_commands_for_help(self, ctx: click.core.Context) -> typing.Generator:
         """reorder the list of commands when listing the help"""
         commands = super().list_commands(ctx)
         return (
@@ -56,14 +59,14 @@ class SpecialHelpOrder(click.Group):
             )
         )
 
-    def command(self, *args, **kwargs):
+    def command(self, *args, **kwargs):  # type: ignore
         """Behaves the same as `click.Group.command()` except capture
         a priority for listing command names in help.
         """
         help_priority = kwargs.pop("help_priority", 1)
         help_priorities = self.help_priorities
 
-        def decorator(fun):
+        def decorator(fun):  # type: ignore
             # pylint: disable=super-with-arguments
             cmd = super(SpecialHelpOrder, self).command(*args, **kwargs)(fun)
             help_priorities[cmd.name] = help_priority
@@ -85,7 +88,7 @@ def get_value(msg: str, options: list) -> str:
 
 @click.group(cls=SpecialHelpOrder)
 @click.pass_context
-def main(ctx):
+def main(ctx: click.core.Context) -> None:
     """CoLRev
 
     Main commands: init | status | search, load, screen, ...
@@ -107,7 +110,7 @@ def main(ctx):
     help="Add search results example",
 )
 @click.pass_context
-def init(ctx, type, example):
+def init(ctx: click.core.Context, type: str, example: bool) -> None:
     """Initialize repository"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
@@ -146,7 +149,7 @@ def init(ctx, type, example):
     help="Print analytics",
 )
 @click.pass_context
-def status(ctx, analytics) -> None:
+def status(ctx: click.core.Context, analytics: bool) -> None:
     """Show status"""
 
     try:
@@ -203,7 +206,14 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
     help="Force mode: conduct full search again",
 )
 @click.pass_context
-def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
+def search(
+    ctx: click.core.Context,
+    add: str,
+    view: bool,
+    selected: str,
+    setup_custom_script: bool,
+    force_mode: bool,
+) -> None:
     """Retrieve search records"""
 
     try:
@@ -249,7 +259,7 @@ def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
     help="Combine load of multiple sources in one commit.",
 )
 @click.pass_context
-def load(ctx, keep_ids, combine_commits) -> None:
+def load(ctx: click.core.Context, keep_ids: bool, combine_commits: bool) -> None:
     """Import records"""
 
     try:
@@ -320,14 +330,14 @@ def load(ctx, keep_ids, combine_commits) -> None:
 @click.option("-f", "--force", is_flag=True, default=False)
 @click.pass_context
 def prep(
-    ctx,
-    keep_ids,
-    reset_records,
-    reset_ids,
-    debug,
-    debug_file,
-    setup_custom_script,
-    force,
+    ctx: click.core.Context,
+    keep_ids: bool,
+    reset_records: str,
+    reset_ids: bool,
+    debug: str,
+    debug_file: Path,
+    setup_custom_script: bool,
+    force: bool,
 ) -> None:
     """Prepare records"""
 
@@ -337,7 +347,7 @@ def prep(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, debug_mode=debug
+            force_mode=force, debug_mode=bool(debug)
         )
         prep_operation = review_manager.get_prep_operation()
 
@@ -346,8 +356,7 @@ def prep(
                 reset_records = str(reset_records)
             except ValueError:
                 pass
-            reset_records = reset_records.split(",")
-            prep_operation.reset_records(reset_ids=reset_records)
+            prep_operation.reset_records(reset_ids=reset_records.split(","))
             return
         if reset_ids:
             prep_operation.reset_ids()
@@ -386,13 +395,13 @@ def prep(
     except OperationalError as exc:
         logging.error(
             "SQLite Error: %s. "
-            "Another colrev process is accessing a shared resource. "
+            "Another colrev operation is accessing a shared resource. "
             "Please try again later.",
             exc,
         )
 
 
-def view_dedupe_details(dedupe_operation) -> None:
+def view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
     info = dedupe_operation.get_info()
 
@@ -421,19 +430,19 @@ def view_dedupe_details(dedupe_operation) -> None:
 @click.option("--force", is_flag=True, default=False)
 @click.pass_context
 def dedupe(
-    ctx,
-    fix_errors,
-    view,
-    source_comparison,
-    force,
+    ctx: click.core.Context,
+    fix_errors: bool,
+    view: bool,
+    source_comparison: bool,
+    force: bool,
 ) -> None:
     """Deduplicate records"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(force_mode=force)
-        state_transition_process = not view
+        state_transition_operation = not view
         dedupe_operation = review_manager.get_dedupe_operation(
-            notify_state_transition_operation=state_transition_process
+            notify_state_transition_operation=state_transition_operation
         )
 
         if fix_errors:
@@ -474,7 +483,7 @@ def dedupe(
     help="Print statistics of records with colrev_status md_needs_manual_preparation",
 )
 @click.pass_context
-def prep_man(ctx, stats) -> None:
+def prep_man(ctx: click.core.Context, stats: bool) -> None:
     """Manual preparation of records (not yet fully implemented)"""
 
     try:
@@ -529,13 +538,13 @@ def prep_man(ctx, stats) -> None:
 )
 @click.pass_context
 def prescreen(
-    ctx,
-    include_all,
-    export_format,
-    import_table,
-    create_split,
-    split,
-    setup_custom_script,
+    ctx: click.core.Context,
+    include_all: bool,
+    export_format: str,
+    import_table: str,
+    create_split: int,
+    split: str,
+    setup_custom_script: bool,
 ) -> None:
     """Pre-screen based on titles and abstracts"""
 
@@ -615,13 +624,13 @@ def prescreen(
 )
 @click.pass_context
 def screen(
-    ctx,
-    include_all,
-    add_criterion,
-    delete_criterion,
-    create_split,
-    split,
-    setup_custom_script,
+    ctx: click.core.Context,
+    include_all: bool,
+    add_criterion: str,
+    delete_criterion: str,
+    create_split: int,
+    split: str,
+    setup_custom_script: bool,
 ) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
 
@@ -686,7 +695,13 @@ def screen(
     help="Setup template for custom search script.",
 )
 @click.pass_context
-def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> None:
+def pdf_get(
+    ctx: click.core.Context,
+    copy_to_repo: bool,
+    rename: bool,
+    relink_files: bool,
+    setup_custom_script: bool,
+) -> None:
     """Retrieve PDFs to the default pdf directory (/pdfs)"""
 
     try:
@@ -745,7 +760,13 @@ def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> Non
     help="Setup template for custom search script.",
 )
 @click.pass_context
-def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) -> None:
+def pdf_prep(
+    ctx: click.core.Context,
+    update_colrev_pdf_ids: bool,
+    reprocess: bool,
+    debug: bool,
+    setup_custom_script: bool,
+) -> None:
     """Prepare PDFs"""
 
     try:
@@ -780,7 +801,7 @@ def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) 
     default=False,
     help="Export spreadsheet.",
 )
-def pdf_get_man(ctx, export) -> None:
+def pdf_get_man(ctx: click.core.Context, export: bool) -> None:
     """Get PDFs manually"""
 
     try:
@@ -801,7 +822,7 @@ def pdf_get_man(ctx, export) -> None:
             pdf_get_man_records_df = pd.DataFrame.from_records(pdf_get_man_records)
             pdf_get_man_records_df = pdf_get_man_records_df[
                 pdf_get_man_records_df.columns.intersection(
-                    {
+                    [
                         "ID",
                         "author",
                         "year",
@@ -812,7 +833,7 @@ def pdf_get_man(ctx, export) -> None:
                         "number",
                         "url",
                         "doi",
-                    }
+                    ]
                 )
             ]
             pdf_get_man_records_df.to_csv("pdf_get_man_records.csv", index=False)
@@ -830,7 +851,9 @@ def pdf_get_man(ctx, export) -> None:
         logging.error(exc)
 
 
-def delete_first_pages_cli(pdf_get_man_operation, record_id) -> None:
+def delete_first_pages_cli(
+    pdf_get_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
+) -> None:
 
     records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
     while True:
@@ -841,7 +864,7 @@ def delete_first_pages_cli(pdf_get_man_operation, record_id) -> None:
                 pdf_path = pdf_get_man_operation.review_manager.path / Path(
                     record["file"]
                 )
-                pdf_get_man_operation.extract_coverpage(pdf_path)
+                pdf_get_man_operation.extract_coverpage(filepath=pdf_path)
             else:
                 print("no file in record")
         if "n" == input("Extract coverpage from another PDF? (y/n)"):
@@ -875,7 +898,13 @@ def delete_first_pages_cli(pdf_get_man_operation, record_id) -> None:
     help="Apply manual preparation (from csv or bib)",
 )
 @click.pass_context
-def pdf_prep_man(ctx, delete_first_page, stats, extract, apply) -> None:
+def pdf_prep_man(
+    ctx: click.core.Context,
+    delete_first_page: str,
+    stats: bool,
+    extract: bool,
+    apply: bool,
+) -> None:
     """Prepare PDFs manually"""
 
     try:
@@ -935,11 +964,16 @@ def pdf_prep_man(ctx, delete_first_page, stats, extract, apply) -> None:
     "--force",
     is_flag=True,
     default=False,
-    help="Option to override process preconditions",
+    help="Option to override operation preconditions",
 )
 @click.pass_context
 def data(
-    ctx, profile, reading_heuristics, add_endpoint, setup_custom_script, force
+    ctx: click.core.Context,
+    profile: bool,
+    reading_heuristics: bool,
+    add_endpoint: str,
+    setup_custom_script: bool,
+    force: bool,
 ) -> None:
     """Extract data"""
 
@@ -999,7 +1033,7 @@ def data(
         logging.error(exc)
 
 
-def validate_commit(ctx, param, value):
+def validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     if value is None:
         return value
 
@@ -1023,7 +1057,7 @@ def validate_commit(ctx, param, value):
             commit.hexsha,
             datetime.datetime.fromtimestamp(commit.committed_date),
             " - ",
-            commit.message.split("\n")[0],
+            str(commit.message).split("\n")[0],
         )
     print("\n")
     raise click.BadParameter("not a git commit id")
@@ -1043,7 +1077,7 @@ def validate_commit(ctx, param, value):
     "--commit",
     help="Git commit id to validate.",
     default=None,
-    callback=validate_commit,
+    callback=validate_commit,  # type: ignore  # noqa
 )
 @click.option(
     "-t",
@@ -1052,7 +1086,9 @@ def validate_commit(ctx, param, value):
     default=None,
 )
 @click.pass_context
-def validate(ctx, scope, properties, commit, tree_hash) -> None:
+def validate(
+    ctx: click.core.Context, scope: str, properties: bool, commit: str, tree_hash: str
+) -> None:
     """Validate changes"""
 
     try:
@@ -1122,7 +1158,7 @@ def validate(ctx, scope, properties, commit, tree_hash) -> None:
     help="Record ID to trace (citation_key).",
     required=True,
 )
-def trace(ctx, id) -> None:  # pylint: disable=invalid-name
+def trace(ctx: click.core.Context, id: str) -> None:  # pylint: disable=invalid-name
     """Trace a record"""
 
     try:
@@ -1156,7 +1192,7 @@ def __select_target_repository(local_registry: list) -> Path:
     help="Path to file(s)",
 )
 @click.pass_context
-def distribute(ctx, path) -> None:
+def distribute(ctx: click.core.Context, path: Path) -> None:
     """Distribute records to other local CoLRev repositories"""
 
     try:
@@ -1168,14 +1204,16 @@ def distribute(ctx, path) -> None:
 
         # Note : add a "distribution mode" option?
         # (whole file -> add as source/load vs. records individually like a prescreen)
-        distribute_operation.main(path_str=path, target=target)
+        distribute_operation.main(path=path, target=target)
 
     except colrev_exceptions.InvalidSettingsError as exc:
         logging.error(exc)
         return
 
 
-def print_environment_status(review_manager) -> None:
+def print_environment_status(
+    review_manager: colrev.review_manager.ReviewManager,
+) -> None:
 
     environment_manager = review_manager.get_environment_manager()
     environment_details = environment_manager.get_environment_details(
@@ -1280,18 +1318,18 @@ def print_environment_status(review_manager) -> None:
 )
 @click.pass_context
 def env(
-    ctx,
-    index,
-    install,
-    analyze,
-    pull,
-    status,
-    start,
-    stop,
-    search,
-    register,
-    unregister,
-):
+    ctx: click.core.Context,
+    index: bool,
+    install: str,
+    analyze: bool,
+    pull: bool,
+    status: bool,
+    start: bool,
+    stop: bool,
+    search: bool,
+    register: bool,
+    unregister: bool,
+) -> None:
     """CoLRev environment commands"""
 
     # pylint: disable=import-outside-toplevel
@@ -1399,7 +1437,9 @@ def env(
     help="Modify the settings through the command line",
 )
 @click.pass_context
-def settings(ctx, upgrade, update_hooks, modify):
+def settings(
+    ctx: click.core.Context, upgrade: bool, update_hooks: bool, modify: str
+) -> None:
     """Settings of the CoLRev project"""
 
     # pylint: disable=import-outside-toplevel
@@ -1440,7 +1480,7 @@ def settings(ctx, upgrade, update_hooks, modify):
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
 
-        review_manager.dataset.add_changes(path=".pre-commit-config.yaml")
+        review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
         review_manager.create_commit(
             msg="Update pre-commit hooks", script_call="colrev settings --update"
         )
@@ -1454,7 +1494,8 @@ def settings(ctx, upgrade, update_hooks, modify):
         # (we could replace the (last) position element with
         # keywords like prescreen.sripts.LAST_POSITION)
         # maybe prescreen.scripts.1.REPLACE/ADD/DELETE = ....
-        # modify = 'dedupe.scripts=[{"endpoint":"simple_dedupe"}]'
+        # modify = 'dedupe.dedupe_package_endpoints='
+        # '[{"endpoint":"colrev_built_in.simple_dedupe"}]'
 
         path, value_string = modify.split("=")
         value = ast.literal_eval(value_string)
@@ -1468,7 +1509,7 @@ def settings(ctx, upgrade, update_hooks, modify):
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(path="settings.json")
+        review_manager.dataset.add_changes(path=Path("settings.json"))
         review_manager.create_commit(
             msg="Change settings", manual_author=True, saved_args=None
         )
@@ -1485,7 +1526,7 @@ def settings(ctx, upgrade, update_hooks, modify):
 
 @main.command(help_priority=21)
 @click.pass_context
-def sync(ctx):
+def sync(ctx: click.core.Context) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
     sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
@@ -1497,8 +1538,8 @@ def sync(ctx):
         for case in sync_operation.non_unique_for_import:
             for val in case.values():
                 # TODO: there may be more collisions (v3, v4)
-                v_1 = sync_operation.format_ref(reference=val[0])
-                v_2 = sync_operation.format_ref(reference=val[1])
+                v_1 = colrev.record.Record(data=val[0]).format_bib_style()
+                v_2 = colrev.record.Record(data=val[1]).format_bib_style()
                 if v_1.lower() == v_2.lower():
                     sync_operation.add_to_records_to_import(record=val[0])
                     continue
@@ -1535,7 +1576,7 @@ def sync(ctx):
     help="Push project only",
 )
 @click.pass_context
-def pull(ctx, records_only, project_only):
+def pull(ctx: click.core.Context, records_only: bool, project_only: bool) -> None:
     """Pull CoLRev project remote and record updates"""
 
     try:
@@ -1551,7 +1592,7 @@ def pull(ctx, records_only, project_only):
 @main.command(help_priority=23)
 @click.argument("git_url")
 @click.pass_context
-def clone(ctx, git_url):
+def clone(ctx: click.core.Context, git_url: str) -> None:
     """Create local clone from shared CoLRev repository with git_url"""
 
     clone_operation = colrev.review_manager.ReviewManager.get_clone_operation(
@@ -1576,7 +1617,7 @@ def clone(ctx, git_url):
     help="Push project only",
 )
 @click.pass_context
-def push(ctx, records_only, project_only):
+def push(ctx: click.core.Context, records_only: bool, project_only: bool) -> None:
     """Push CoLRev project remote and record updates"""
 
     try:
@@ -1591,7 +1632,7 @@ def push(ctx, records_only, project_only):
 
 @main.command(help_priority=25)
 @click.pass_context
-def service(ctx):
+def service(ctx: click.core.Context) -> None:
     """Service for real-time reviews"""
 
     try:
@@ -1611,7 +1652,7 @@ def service(ctx):
         print("No changes to commit")
 
 
-def validate_show(ctx, param, value):
+def validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     if value not in ["sample", "settings", "prisma", "venv"]:
         raise click.BadParameter("Invalid argument")
 
@@ -1619,11 +1660,11 @@ def validate_show(ctx, param, value):
 @main.command(help_priority=26)
 @click.argument("keyword")
 @click.pass_context
-def show(ctx, keyword, callback=validate_show):
+def show(ctx: click.core.Context, keyword: str, callback=validate_show) -> None:  # type: ignore
     """Show aspects (sample, ...)"""
 
     # pylint: disable=import-outside-toplevel
-    import colrev.process
+    import colrev.operation
     import colrev.ui_cli.show_printer
 
     review_manager = colrev.review_manager.ReviewManager()
@@ -1645,7 +1686,7 @@ def show(ctx, keyword, callback=validate_show):
 
 @main.command(help_priority=27)
 @click.pass_context
-def web(ctx):
+def web(ctx: click.core.Context) -> None:
     """CoLRev web interface."""
 
     # pylint: disable=import-outside-toplevel
@@ -1667,7 +1708,7 @@ def web(ctx):
     required=False,
     type=click_completion.DocumentedChoice(click_completion.core.shells),
 )
-def show_click(shell, case_insensitive):
+def show_click(shell, case_insensitive) -> None:  # type: ignore
     """Show the click-completion-command completion code"""
     extra_env = (
         {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
@@ -1690,7 +1731,7 @@ def show_click(shell, case_insensitive):
     type=click_completion.DocumentedChoice(click_completion.core.shells),
 )
 @click.argument("path", required=False)
-def install_click(append, case_insensitive, shell, path):
+def install_click(append, case_insensitive, shell, path) -> None:  # type: ignore
     """Install the click-completion-command completion"""
     extra_env = (
         {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}

@@ -52,6 +52,7 @@ colrev.record.Record
       ~Record.has_inconsistent_fields
       ~Record.has_overlapping_colrev_id
       ~Record.has_quality_defects
+      ~Record.import_file
       ~Record.import_provenance
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated

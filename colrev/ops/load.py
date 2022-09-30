@@ -9,57 +9,57 @@ import typing
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 
-class Load(colrev.process.Process):
+class Load(colrev.operation.Operation):
 
     # Note : PDFs should be stored in the pdfs directory
-    # They should be included through the search scripts (not the load scripts)
+    # They should be included through colrev search
 
     def __init__(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        notify_state_transition_operation=True,
+        notify_state_transition_operation: bool = True,
     ) -> None:
 
         review_manager.logger.info("Loading source heuristics...")
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.load,
+            operations_type=colrev.operation.OperationsType.load,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.load_conversion_scripts: dict[
+        self.load_conversion_package_endpoints: dict[
             str, typing.Any
         ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             selected_packages=[
-                s.load_conversion_script
+                s.load_conversion_package_endpoint
                 for s in review_manager.settings.sources
-                if "endpoint" in s.load_conversion_script
+                if "endpoint" in s.load_conversion_package_endpoint
             ],
-            process=self,
+            operation=self,
         )
 
         self.all_available_packages_names = package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             installed_only=True,
         )
 
         self.all_available_packages = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.load_conversion,
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             selected_packages=[
                 {"endpoint": p} for p in self.all_available_packages_names
             ],
-            process=self,
+            operation=self,
         )
 
         self.supported_extensions = [
@@ -136,7 +136,7 @@ class Load(colrev.process.Process):
                 for i, heuristic_source in enumerate(heuristic_result_list):
                     print(
                         f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
-                        f" {heuristic_source['source_candidate'].source_name}"
+                        f" {heuristic_source['source_candidate'].endpoint}"
                     )
 
                 while True:
@@ -147,8 +147,13 @@ class Load(colrev.process.Process):
                         heuristic_source = heuristic_result_list[int(selection) - 1]
                         break
 
-            if "unknown_source" == heuristic_source["source_candidate"].source_name:
-                self.review_manager.logger.warning("Could not detect source")
+            if (
+                "colrev_built_in.unknown_source"
+                == heuristic_source["source_candidate"].endpoint
+            ):
+                self.review_manager.logger.warning(
+                    "Could not detect source (using fallback: unknown_source)"
+                )
                 # if heuristic_source["source_candidate"].search_type ==
                 #  colrev.settings.SearchType.DB:
                 #     print("   Sources with pre-defined settings:")
@@ -174,7 +179,7 @@ class Load(colrev.process.Process):
             else:
                 print(
                     "Source name".ljust(70, " ")
-                    + f": {heuristic_source['source_candidate'].source_name}"
+                    + f": {heuristic_source['source_candidate'].endpoint}"
                 )
                 print(
                     "Source identifier".ljust(70, " ")
@@ -195,23 +200,30 @@ class Load(colrev.process.Process):
                 comment = None  # type: ignore
             heuristic_source["source_candidate"].comment = comment
 
-            if {} == heuristic_source["source_candidate"].load_conversion_script:
-                custom_load_script = input(
-                    "provide custom load_conversion_script [or NA]:"
+            if (
+                {}
+                == heuristic_source["source_candidate"].load_conversion_package_endpoint
+            ):
+                custom_load_conversion_package_endpoint = input(
+                    "provide custom load_conversion_package_endpoint [or NA]:"
                 )
-                if "NA" == custom_load_script:
-                    heuristic_source["source_candidate"].load_conversion_script = {}
+                if "NA" == custom_load_conversion_package_endpoint:
+                    heuristic_source[
+                        "source_candidate"
+                    ].load_conversion_package_endpoint = {}
                 else:
-                    heuristic_source["source_candidate"].load_conversion_script = {
-                        "endpoint": custom_load_script
+                    heuristic_source[
+                        "source_candidate"
+                    ].load_conversion_package_endpoint = {
+                        "endpoint": custom_load_conversion_package_endpoint
                     }
-                # TODO : check if custom_load_script is available?
+                # TODO : check if custom_load_conversion_package_endpoint is available?
 
             sources.append(heuristic_source["source_candidate"])
             self.review_manager.save_settings()
             self.review_manager.logger.info(
                 f"{colors.GREEN}Added new source: "
-                f"{heuristic_source['source_candidate'].source_name}{colors.END}"
+                f"{heuristic_source['source_candidate'].endpoint}{colors.END}"
             )
             print("\n")
 
@@ -620,7 +632,7 @@ class Load(colrev.process.Process):
     def __apply_source_heuristics(self, *, filepath: Path) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
-        def get_load_conversion_script(*, filepath: Path) -> dict:
+        def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
 
             filetype = filepath.suffix.replace(".", "")
 
@@ -641,18 +653,18 @@ class Load(colrev.process.Process):
 
         results_list = []
         for (
-            source_name,
             endpoint,
+            endpoint_class,
         ) in self.search_sources.all_available_packages.items():
             # pylint: disable=no-member
-            has_heuristic = getattr(endpoint, "heuristic", None)
+            has_heuristic = getattr(endpoint_class, "heuristic", None)
             if not has_heuristic:
                 continue
-            res = endpoint.heuristic(filepath, data)  # type: ignore
+            res = endpoint_class.heuristic(filepath, data)  # type: ignore
             if res["confidence"] > 0:
                 search_type = colrev.settings.SearchType("DB")
 
-                res["source_name"] = source_name
+                res["endpoint"] = endpoint
 
                 if "filename" not in res:
                     # Correct the file extension if necessary
@@ -665,18 +677,20 @@ class Load(colrev.process.Process):
                         filepath.rename(new_filename)
                         filepath = new_filename
 
-                if "load_conversion_script" not in res:
-                    res["load_conversion_script"] = get_load_conversion_script(
-                        filepath=filepath
-                    )
+                if "load_conversion_package_endpoint" not in res:
+                    res[
+                        "load_conversion_package_endpoint"
+                    ] = get_load_conversion_package_endpoint(filepath=filepath)
 
                 source_candidate = colrev.settings.SearchSource(
+                    endpoint=endpoint,
                     filename=filepath,
                     search_type=search_type,
-                    source_name=source_name,
                     source_identifier=endpoint.source_identifier,  # type: ignore
                     search_parameters={},
-                    load_conversion_script=res["load_conversion_script"],
+                    load_conversion_package_endpoint=res[
+                        "load_conversion_package_endpoint"
+                    ],
                     comment="",
                 )
 
@@ -689,12 +703,14 @@ class Load(colrev.process.Process):
 
         if 0 == len(results_list):
             source_candidate = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.unknown_source",
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
-                source_name="unknown_source",
                 source_identifier="NA",
                 search_parameters={},
-                load_conversion_script=get_load_conversion_script(filepath=filepath),
+                load_conversion_package_endpoint=get_load_conversion_package_endpoint(
+                    filepath=filepath
+                ),
                 comment="",
             )
             results_list.append(
@@ -703,7 +719,7 @@ class Load(colrev.process.Process):
 
         return results_list
 
-    def main(self, *, keep_ids: bool = False, combine_commits=False) -> None:
+    def main(self, *, keep_ids: bool = False, combine_commits: bool = False) -> None:
 
         saved_args = locals()
         if not keep_ids:
@@ -715,12 +731,13 @@ class Load(colrev.process.Process):
             sources = []
             for source in self.review_manager.settings.sources:
                 if (
-                    source.load_conversion_script["endpoint"]
-                    not in self.load_conversion_scripts
+                    source.load_conversion_package_endpoint["endpoint"]
+                    not in self.load_conversion_package_endpoints
                 ):
                     if self.verbose:
                         self.review_manager.logger.error(
-                            f"Error: endpoint not available: {source.load_conversion_script}"
+                            "Error: endpoint not available: "
+                            f"{source.load_conversion_package_endpoint}"
                         )
                     continue
                 sources.append(source)
@@ -732,11 +749,13 @@ class Load(colrev.process.Process):
             records = {}
 
             # 1. convert to bib and fix format (if necessary)
-            load_conversion_script_name = source.load_conversion_script["endpoint"]
-            load_conversion_script = self.load_conversion_scripts[
-                load_conversion_script_name
+            load_conversion_package_endpoint_name = (
+                source.load_conversion_package_endpoint["endpoint"]
+            )
+            load_conversion_package_endpoint = self.load_conversion_package_endpoints[
+                load_conversion_package_endpoint_name
             ]
-            records = load_conversion_script.load(self, source)
+            records = load_conversion_package_endpoint.load(self, source)
             self.__save_records(
                 records=records,
                 corresponding_bib_file=source.get_corresponding_bib_file(),

@@ -43,7 +43,7 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __open_library_json_to_record(
-        self, *, item: dict, url=str
+        self, *, item: dict, url: str
     ) -> colrev.record.PrepRecord:
         retrieved_record: dict = {}
 

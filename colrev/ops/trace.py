@@ -7,15 +7,15 @@ import time
 
 import dictdiffer
 
-import colrev.process
+import colrev.operation
 
 
-class Trace(colrev.process.Process):
+class Trace(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.check,
+            operations_type=colrev.operation.OperationsType.check,
         )
 
     def __lpad_multiline(self, *, s: str, lpad: int) -> str:

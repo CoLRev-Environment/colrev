@@ -239,9 +239,9 @@ class Corrections:
                     )
 
     def __apply_corrections_precondition(
-        self, *, check_process, source_url: str
+        self, *, check_operation: colrev.operation.Operation, source_url: str
     ) -> bool:
-        git_repo = check_process.review_manager.dataset.get_repo()
+        git_repo = check_operation.review_manager.dataset.get_repo()
 
         if git_repo.is_dirty():
             # TODO : raise exception
@@ -251,27 +251,31 @@ class Corrections:
             )
             return False
 
-        if check_process.review_manager.dataset.behind_remote():
+        if check_operation.review_manager.dataset.behind_remote():
             origin = git_repo.remotes.origin
             origin.pull()
-            if not check_process.review_manager.dataset.behind_remote():
+            if not check_operation.review_manager.dataset.behind_remote():
                 self.review_manager.logger.info("Pulled changes")
             else:
                 self.review_manager.logger.error(
                     "Repo behind remote. Pull first to avoid conflicts.\n"
-                    f"colrev env --update {check_process.review_manager.path}"
+                    f"colrev env --update {check_operation.review_manager.path}"
                 )
                 return False
 
         return True
 
     def __retrieve_record_for_correction(
-        self, *, check_process, records, change_item
+        self,
+        *,
+        check_operation: colrev.operation.Operation,
+        records: dict,
+        change_item: dict,
     ) -> dict:
         original_curated_record = change_item["original_curated_record"]
 
         try:
-            record_dict = check_process.review_manager.dataset.retrieve_by_colrev_id(
+            record_dict = check_operation.review_manager.dataset.retrieve_by_colrev_id(
                 indexed_record_dict=original_curated_record,
                 records=list(records.values()),
             )
@@ -315,7 +319,12 @@ class Corrections:
         return record_branch_name
 
     def __apply_record_correction(
-        self, *, check_process, records, record_dict: dict, change_item: dict
+        self,
+        *,
+        check_operation: colrev.operation.Operation,
+        records: dict,
+        record_dict: dict,
+        change_item: dict,
     ) -> None:
 
         for (edit_type, key, change) in list(change_item["changes"]):
@@ -342,9 +351,9 @@ class Corrections:
         cids = record.get_data()["colrev_id"]
         record_dict["colrev_id"] = cids
 
-        check_process.review_manager.dataset.save_records_dict(records=records)
-        check_process.review_manager.dataset.add_record_changes()
-        check_process.review_manager.create_commit(
+        check_operation.review_manager.dataset.save_records_dict(records=records)
+        check_operation.review_manager.dataset.add_record_changes()
+        check_operation.review_manager.create_commit(
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )
 
@@ -389,17 +398,23 @@ class Corrections:
             Path(change_item["file"]).unlink()
 
     def __apply_change_item_correction(
-        self, *, check_process, source_url: str, change_list: list
+        self,
+        *,
+        check_operation: colrev.operation.Operation,
+        source_url: str,
+        change_list: list,
     ) -> None:
 
-        git_repo = check_process.review_manager.dataset.get_repo()
-        records = check_process.review_manager.dataset.load_records_dict()
+        git_repo = check_operation.review_manager.dataset.get_repo()
+        records = check_operation.review_manager.dataset.load_records_dict()
 
         pull_request_msgs = []
         for change_item in change_list:
 
             record_dict = self.__retrieve_record_for_correction(
-                check_process=check_process, records=records, change_item=change_item
+                check_operation=check_operation,
+                records=records,
+                change_item=change_item,
             )
             if not record_dict:
                 continue
@@ -417,7 +432,7 @@ class Corrections:
             rec_for_reset = record_dict.copy()
 
             self.__apply_record_correction(
-                check_process=check_process,
+                check_operation=check_operation,
                 records=records,
                 record_dict=record_dict,
                 change_item=change_item,
@@ -454,10 +469,12 @@ class Corrections:
         check_review_manager = self.review_manager.get_review_manager(
             path_str=source_url
         )
-        check_process = colrev.process.CheckProcess(review_manager=check_review_manager)
+        check_operation = colrev.operation.CheckOperation(
+            review_manager=check_review_manager
+        )
 
         if not self.__apply_corrections_precondition(
-            check_process=check_process, source_url=source_url
+            check_operation=check_operation, source_url=source_url
         ):
             return
 
@@ -478,7 +495,9 @@ class Corrections:
         ]
 
         self.__apply_change_item_correction(
-            check_process=check_process, source_url=source_url, change_list=change_list
+            check_operation=check_operation,
+            source_url=source_url,
+            change_list=change_list,
         )
 
 

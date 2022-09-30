@@ -12,7 +12,7 @@ import pandas as pd
 import yaml
 
 import colrev.env.utils
-import colrev.process
+import colrev.operation
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-class Upgrade(colrev.process.Process):
+class Upgrade(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -29,7 +29,7 @@ class Upgrade(colrev.process.Process):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.check,
+            operations_type=colrev.operation.OperationsType.check,
             notify_state_transition_operation=False,
         )
         self.review_manager = review_manager
@@ -332,14 +332,14 @@ class Upgrade(colrev.process.Process):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
 
+        def prefix_colrev_built_in(settings_part: dict) -> None:
+            for endpoint in settings_part:
+                if "colrev_built_in." not in endpoint["endpoint"]:
+                    endpoint["endpoint"] = "colrev_built_in." + endpoint["endpoint"]
+
         with open("settings.json", encoding="utf-8") as file:
             settings = json.load(file)
 
-        settings["pdf_get"]["scripts"] = [
-            s
-            for s in settings["pdf_get"]["scripts"]
-            if s["endpoint"] != "website_screenshot"
-        ]
         if "sources" in settings["search"]:
             for source in settings["search"]["sources"]:
                 source["script"] = {"endpoint": "bib_pybtex"}
@@ -409,9 +409,76 @@ class Upgrade(colrev.process.Process):
             settings["project"]["id_pattern"] = "three_authors_year"
 
         for source in settings["sources"]:
-            if "PDFs" == source["source_name"]:
-                source["source_name"] = "pdfs_dir"
-            source["source_name"] = source["source_name"].lower()
+            if "source_name" in source:
+                if "PDFs" == source["source_name"]:
+                    source["source_name"] = "pdfs_dir"
+                source["source_name"] = source["source_name"].lower()
+                if "FEED" == source["search_type"]:
+                    if "CROSSREF" == source["source_name"]:
+                        source["search_type"] = "DB"
+                    elif "DBLP" == source["source_name"]:
+                        source["search_type"] = "DB"
+                    elif "pdfs" == source["source_name"].lower():
+                        source["search_type"] = "PDFS"
+                    else:
+                        source["search_type"] = "DB"
+
+                if "crossref" == source["source_name"].lower():
+                    if isinstance(source["search_parameters"], str):
+                        jissn = (
+                            source["search_parameters"]
+                            .replace("SCOPE journal_issn=", "")
+                            .strip("'")
+                        )
+                        source["search_parameters"] = {"scope": {"journal_issn": jissn}}
+                elif "dblp" == source["source_name"].lower():
+                    if isinstance(source["search_parameters"], str):
+                        venue_key, journal_abbreviated = source[
+                            "search_parameters"
+                        ].split(" AND ")
+                        venue_key = venue_key.replace("SCOPE venue_key=", "").strip("'")
+                        journal_abbreviated = journal_abbreviated.replace(
+                            "journal_abbreviated=", ""
+                        ).strip("'")
+                        source["search_parameters"] = {
+                            "scope": {
+                                "venue_key": venue_key,
+                                "journal_abbreviated": journal_abbreviated,
+                            }
+                        }
+                elif source["source_name"].lower() in ["pdfs_dir", "pdfs"]:
+                    if isinstance(source["search_parameters"], str):
+                        param_string = source["search_parameters"]
+                        temp = {"scope": {}}  # type: ignore
+                        if "sub_dir_pattern" in param_string:
+                            param_string, subdir_pattern = param_string.split(
+                                "sub_dir_pattern="
+                            )
+                            param_string = param_string.rstrip(" AND ")
+                            subdir_pattern = subdir_pattern.strip("'")
+                            temp["scope"]["subdir_pattern"] = subdir_pattern  # type: ignore
+                        if "journal" in param_string:
+                            param_string, journal = param_string.split("journal=")
+                            param_string = param_string.rstrip(" WITH ")
+                            journal = journal.strip("'")
+                            temp["scope"]["type"] = "journal"  # type: ignore
+                            temp["scope"]["journal"] = journal  # type: ignore
+                        if "conference" in param_string:
+                            param_string, conference = param_string.split("conference=")
+                            param_string = param_string.rstrip(" WITH ")
+                            conference = conference.strip("'")
+                            temp["scope"]["type"] = "conference"  # type: ignore
+                            temp["scope"]["conference"] = conference  # type: ignore
+
+                        if "path" in param_string:
+                            param_string, path_name = param_string.split("path=")
+                            path_name = path_name.strip("'")
+                            temp["scope"]["path"] = path_name  # type: ignore
+                        source["search_parameters"] = temp
+
+            if "" == source["search_parameters"]:
+                source["search_parameters"] = {}
+
             if "conversion_script" in source:
                 source["load_conversion_script"] = source["conversion_script"]
                 del source["conversion_script"]
@@ -419,75 +486,26 @@ class Upgrade(colrev.process.Process):
                 del source["search_script"]
             if "source_prep_scripts" in source:
                 del source["source_prep_scripts"]
-            if "FEED" == source["search_type"]:
-                if "CROSSREF" == source["source_name"]:
-                    source["search_type"] = "DB"
-                elif "DBLP" == source["source_name"]:
-                    source["search_type"] = "DB"
-                elif "pdfs" == source["source_name"].lower():
-                    source["search_type"] = "PDFS"
-                else:
-                    source["search_type"] = "DB"
 
-            if "crossref" == source["source_name"].lower():
-                if isinstance(source["search_parameters"], str):
-                    jissn = (
-                        source["search_parameters"]
-                        .replace("SCOPE journal_issn=", "")
-                        .strip("'")
-                    )
-                    source["search_parameters"] = {"scope": {"journal_issn": jissn}}
-            elif "dblp" == source["source_name"].lower():
-                if isinstance(source["search_parameters"], str):
-                    venue_key, journal_abbreviated = source["search_parameters"].split(
-                        " AND "
-                    )
-                    venue_key = venue_key.replace("SCOPE venue_key=", "").strip("'")
-                    journal_abbreviated = journal_abbreviated.replace(
-                        "journal_abbreviated=", ""
-                    ).strip("'")
-                    source["search_parameters"] = {
-                        "scope": {
-                            "venue_key": venue_key,
-                            "journal_abbreviated": journal_abbreviated,
-                        }
-                    }
-            elif source["source_name"].lower() in ["pdfs_dir", "pdfs"]:
-                if isinstance(source["search_parameters"], str):
-                    param_string = source["search_parameters"]
-                    temp = {"scope": {}}  # type: ignore
-                    if "sub_dir_pattern" in param_string:
-                        param_string, subdir_pattern = param_string.split(
-                            "sub_dir_pattern="
-                        )
-                        param_string = param_string.rstrip(" AND ")
-                        subdir_pattern = subdir_pattern.strip("'")
-                        temp["scope"]["subdir_pattern"] = subdir_pattern  # type: ignore
-                    if "journal" in param_string:
-                        param_string, journal = param_string.split("journal=")
-                        param_string = param_string.rstrip(" WITH ")
-                        journal = journal.strip("'")
-                        temp["scope"]["type"] = "journal"  # type: ignore
-                        temp["scope"]["journal"] = journal  # type: ignore
-                    if "conference" in param_string:
-                        param_string, conference = param_string.split("conference=")
-                        param_string = param_string.rstrip(" WITH ")
-                        conference = conference.strip("'")
-                        temp["scope"]["type"] = "conference"  # type: ignore
-                        temp["scope"]["conference"] = conference  # type: ignore
+            if "source_name" in source:
+                source["endpoint"] = "colrev_built_in." + source["source_name"]
+                del source["source_name"]
 
-                    if "path" in param_string:
-                        param_string, path_name = param_string.split("path=")
-                        path_name = path_name.strip("'")
-                        temp["scope"]["path"] = path_name  # type: ignore
-                    source["search_parameters"] = temp
-            if "" == source["search_parameters"]:
-                source["search_parameters"] = {}
+                package_endpoint = source["load_conversion_script"]["endpoint"]
+
+                source["load_conversion_package_endpoint"] = {
+                    "endpoint": "colrev_built_in." + package_endpoint
+                }
+                del source["load_conversion_script"]
 
         for prep_round in settings["prep"]["prep_rounds"]:
-            prep_round["scripts"] = [
+            if "scripts" in prep_round:
+                prep_round["prep_package_endpoints"] = prep_round["scripts"]
+                del prep_round["scripts"]
+
+            prep_round["prep_package_endpoints"] = [
                 s
-                for s in prep_round["scripts"]
+                for s in prep_round["prep_package_endpoints"]
                 if s["endpoint"]
                 not in ["get_doi_from_sem_scholar", "update_metadata_status"]
             ]
@@ -505,10 +523,22 @@ class Upgrade(colrev.process.Process):
                 settings["project"]["review_type"] = "literature_review"
 
         for prep_round in settings["prep"]["prep_rounds"]:
-            prep_round["scripts"] = [
+            prep_round["prep_package_endpoints"] = [
                 {"endpoint": s} if "endpoint" not in s and isinstance(str, s) else s
-                for s in prep_round["scripts"]
+                for s in prep_round["prep_package_endpoints"]
             ]
+            prefix_colrev_built_in(prep_round["prep_package_endpoints"])
+            # for endpoint in prep_round["prep_package_endpoints"]:
+            #     if "colrev_built_in." not in endpoint["endpoint"]:
+            #         endpoint["endpoint"] = "colrev_built_in." + endpoint["endpoint"]
+
+        if "man_prep_scripts" in settings["prep"]:
+            settings["prep"]["prep_man_package_endpoints"] = settings["prep"][
+                "man_prep_scripts"
+            ]
+            prefix_colrev_built_in(settings["prep"]["prep_man_package_endpoints"])
+            del settings["prep"]["man_prep_scripts"]
+
         if "explanation" not in settings["prescreen"]:
             settings["prescreen"]["explanation"] = ""
         if "scope" in settings["prescreen"]:
@@ -530,31 +560,75 @@ class Upgrade(colrev.process.Process):
                     for scope_key, scope_item in elements.items():
                         scope_prescreen[scope_key] = scope_item
 
+        if "scripts" in settings["prescreen"]:
+            settings["prescreen"]["prescreen_package_endpoints"] = settings[
+                "prescreen"
+            ]["scripts"]
+            prefix_colrev_built_in(settings["prescreen"]["prescreen_package_endpoints"])
+            del settings["prescreen"]["scripts"]
+
+        if "scripts" in settings["pdf_get"]:
+            settings["pdf_get"]["pdf_get_package_endpoints"] = settings["pdf_get"][
+                "scripts"
+            ]
+            prefix_colrev_built_in(settings["pdf_get"]["pdf_get_package_endpoints"])
+            del settings["pdf_get"]["scripts"]
+        settings["pdf_get"]["pdf_get_package_endpoints"] = [
+            s
+            for s in settings["pdf_get"]["pdf_get_package_endpoints"]
+            if s["endpoint"] != "website_screenshot"
+        ]
+
+        if "man_pdf_get_scripts" in settings["pdf_get"]:
+            settings["pdf_get"]["pdf_get_man_package_endpoints"] = settings["pdf_get"][
+                "man_pdf_get_scripts"
+            ]
+            prefix_colrev_built_in(settings["pdf_get"]["pdf_get_man_package_endpoints"])
+            del settings["pdf_get"]["man_pdf_get_scripts"]
+
+        if "scripts" in settings["pdf_prep"]:
+            settings["pdf_prep"]["pdf_prep_package_endpoints"] = settings["pdf_prep"][
+                "scripts"
+            ]
+            prefix_colrev_built_in(settings["pdf_prep"]["pdf_prep_package_endpoints"])
+            del settings["pdf_prep"]["scripts"]
+
+        if "man_pdf_prep_scripts" in settings["pdf_prep"]:
+            settings["pdf_prep"]["pdf_prep_man_package_endpoints"] = settings[
+                "pdf_prep"
+            ]["man_pdf_prep_scripts"]
+            prefix_colrev_built_in(
+                settings["pdf_prep"]["pdf_prep_man_package_endpoints"]
+            )
+            del settings["pdf_prep"]["man_pdf_prep_scripts"]
+
+        if "scripts" in settings["screen"]:
+            settings["screen"]["screen_package_endpoints"] = settings["screen"][
+                "scripts"
+            ]
+            prefix_colrev_built_in(settings["screen"]["screen_package_endpoints"])
+            del settings["screen"]["scripts"]
+
+        if "scripts" in settings["data"]:
+            settings["data"]["data_package_endpoints"] = settings["data"]["scripts"]
+            prefix_colrev_built_in(settings["data"]["data_package_endpoints"])
+            del settings["data"]["scripts"]
+
         if settings["screen"]["criteria"] == []:
             settings["screen"]["criteria"] = {}
 
-        if "scripts" not in settings["dedupe"]:
-            settings["dedupe"]["scripts"] = [
-                {"endpoint": "active_learning_training"},
-                {
-                    "endpoint": "active_learning_automated",
-                    "merge_threshold": 0.8,
-                    "partition_threshold": 0.5,
-                },
+        if "scripts" in settings["dedupe"]:
+            settings["dedupe"]["dedupe_package_endpoints"] = settings["dedupe"][
+                "scripts"
             ]
+            prefix_colrev_built_in(settings["dedupe"]["dedupe_package_endpoints"])
+            del settings["dedupe"]["scripts"]
 
         if "rename_pdfs" not in settings["pdf_get"]:
             settings["pdf_get"]["rename_pdfs"] = True
 
-        settings["pdf_get"]["man_pdf_get_scripts"] = [
-            {"endpoint": "colrev_cli_pdf_get_man"}
-        ]
         if "pdf_required_for_screen_and_synthesis" not in settings["pdf_get"]:
             settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = True
-
-        settings["pdf_prep"]["man_pdf_prep_scripts"] = [
-            {"endpoint": "colrev_cli_pdf_prep_man"}
-        ]
 
         if "data_format" in settings["data"]:
             data_scripts = settings["data"]["data_format"]

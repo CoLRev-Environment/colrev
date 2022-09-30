@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Collection of utility functions"""
 import pkgutil
+import typing
 import unicodedata
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def retrieve_package_file(*, template_file: Path, target: Path) -> None:
     raise colrev_exceptions.RepoSetupError(f"{template_file} not available")
 
 
-def get_package_file_content(*, file_path: Path):
+def get_package_file_content(*, file_path: Path) -> typing.Union[bytes, None]:
     return pkgutil.get_data("colrev", str(file_path))
 
 
@@ -30,7 +31,7 @@ def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
         file.write(content)
 
 
-def load_jinja_template(template_path) -> str:
+def load_jinja_template(template_path: str) -> str:
     filedata_b = pkgutil.get_data("colrev", template_path)
     if filedata_b:
         filedata = filedata_b.decode("utf-8")

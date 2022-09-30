@@ -35,8 +35,8 @@ class Unpaywall(JsonSchemaMixin):
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
-        settings,
-    ):
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __unpaywall(
@@ -122,10 +122,17 @@ class Unpaywall(JsonSchemaMixin):
                         pdf_get_operation.review_manager.logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
-                        record.data.update(file=str(pdf_filepath))
-                        record.data.update(
-                            colrev_status=colrev.record.RecordState.rev_prescreen_included
+                        source = (
+                            f"https://api.unpaywall.org/v2/{record.data['doi']}"
+                            + f"?email={pdf_get_operation.review_manager.email}"
                         )
+                        record.update_field(
+                            key="file", value=str(pdf_filepath), source=source
+                        )
+                        record.import_file(
+                            review_manager=pdf_get_operation.review_manager
+                        )
+
                     else:
                         os.remove(pdf_filepath)
                 else:

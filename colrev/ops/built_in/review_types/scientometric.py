@@ -22,16 +22,21 @@ class ScientometricReview(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
-    def __init__(self, *, operation, settings: dict) -> None:
+    def __init__(
+        self, *, operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+
+    def __str__(self) -> str:
+        return "scientometric study"
 
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
 
-        settings.data.scripts = [
+        settings.data.data_package_endpoints = [
             {
-                "endpoint": "manuscript",
+                "endpoint": "colrev_built_in.manuscript",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
                 "csl_style": "apa.csl",

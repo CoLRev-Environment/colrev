@@ -31,7 +31,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
     @dataclass
     class SimpleDedupeSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         merging_non_dup_threshold: float = 0.7
         merging_dup_threshold: float = 0.95
 
@@ -64,13 +64,13 @@ class SimpleDedupe(JsonSchemaMixin):
 
     def __calculate_similarities_record(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records_df: pd.DataFrame
-    ) -> list:
+    ) -> pd.DataFrame:
 
         # Note: per definition, similarities are needed relative to the last row.
         records_df["similarity"] = 0
         records_df["details"] = 0
-        sim_col = records_df.columns.get_loc("similarity")
-        details_col = records_df.columns.get_loc("details")
+        sim_col = records_df.columns.get_loc("similarity")  # type: ignore
+        details_col = records_df.columns.get_loc("details")  # type: ignore
         for base_record_i in range(0, records_df.shape[0]):
             sim_details = colrev.record.Record.get_similarity_detailed(
                 df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
@@ -84,9 +84,9 @@ class SimpleDedupe(JsonSchemaMixin):
             records_df.iloc[base_record_i, details_col] = sim_details["details"]
         # Note: return all other records (not the comparison record/first row)
         # and restrict it to the ID, similarity and details
-        id_col = records_df.columns.get_loc("ID")
-        sim_col = records_df.columns.get_loc("similarity")
-        details_col = records_df.columns.get_loc("details")
+        id_col = records_df.columns.get_loc("ID")  # type: ignore
+        sim_col = records_df.columns.get_loc("similarity")  # type: ignore
+        details_col = records_df.columns.get_loc("details")  # type: ignore
         return records_df.iloc[:, [id_col, sim_col, details_col]]
 
     def append_merges(
@@ -246,7 +246,7 @@ class SimpleDedupe(JsonSchemaMixin):
             if ID in dedupe_data["queue"]  # type: ignore
         ]
 
-        records_df_queue = pd.DataFrame.from_dict(records_queue)
+        records_df_queue = pd.DataFrame.from_records(records_queue)
         records = dedupe_operation.prep_records(records_df=records_df_queue)
         # dedupe.review_manager.p_printer.pprint(records.values())
         records_df = pd.DataFrame(records.values())
@@ -271,7 +271,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
         records = dedupe_operation.prep_records(
-            records_df=pd.DataFrame.from_dict(records.values())
+            records_df=pd.DataFrame.from_records(list(records.values()))
         )
         # dedupe.review_manager.p_printer.pprint(records.values())
         records_df = pd.DataFrame(records.values())
@@ -318,7 +318,8 @@ class SimpleDedupe(JsonSchemaMixin):
         models cannot be trained.
         """
 
-        pd.options.mode.chained_assignment = None  # default='warn'
+        # default='warn'
+        pd.options.mode.chained_assignment = None  # type: ignore  # noqa
 
         dedupe_operation.review_manager.logger.info("Simple duplicate identification")
         dedupe_operation.review_manager.logger.info(

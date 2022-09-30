@@ -8,9 +8,9 @@ from multiprocessing import Value
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
+import colrev.operation
 import colrev.ops.built_in.prep.crossref_metadata_prep as built_in_crossref_prep
 import colrev.ops.built_in.prep.local_index_prep as built_in_local_index_prep
-import colrev.process
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -18,11 +18,11 @@ import colrev.ui_cli.cli_colors as colors
 CHANGE_COUNTER = None
 
 
-class Pull(colrev.process.Process):
+class Pull(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.explore,
+            operations_type=colrev.operation.OperationsType.explore,
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
@@ -171,7 +171,7 @@ class Pull(colrev.process.Process):
         )
 
         # Note : do not use named argument (used in multiprocessing)
-        def pull_record(record_dict):
+        def pull_record(record_dict: dict) -> dict:
             previous_status = record_dict["colrev_status"]
             # TBD : remove the following?
             previouscolrev_pdf_id = record_dict.get("colrev_pdf_id", "")
@@ -192,8 +192,8 @@ class Pull(colrev.process.Process):
             if previous_record != record:
                 # pylint: disable=global-variable-not-assigned
                 global CHANGE_COUNTER
-                with CHANGE_COUNTER.get_lock():
-                    CHANGE_COUNTER.value += 1
+                with CHANGE_COUNTER.get_lock():  # type: ignore  # noqa
+                    CHANGE_COUNTER.value += 1  # type: ignore  # noqa
 
             record_dict = record.get_data()
             record_dict["colrev_status"] = previous_status

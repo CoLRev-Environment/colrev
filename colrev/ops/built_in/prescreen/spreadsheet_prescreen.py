@@ -44,7 +44,7 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
-        export_table_format="csv",
+        export_table_format: str = "csv",
     ) -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting

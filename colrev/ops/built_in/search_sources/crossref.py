@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Crossref"""
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,7 +30,9 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         if not any(
             x in settings["search_parameters"]["scope"]
             for x in ["query", "journal_issn"]
@@ -87,7 +91,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
             review_manager=search_operation.review_manager
         )
 
-        def get_crossref_query_return(params) -> typing.Iterator[dict]:
+        def get_crossref_query_return(params: dict) -> typing.Iterator[dict]:
             if "selection_clause" in params:
                 crossref_query = {"bibliographic": params["selection_clause"]}
                 # TODO : add the container_title:
@@ -145,12 +149,16 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        # TODO : should return the source_name (not the source_identifier?!?!)
         result = {"confidence": 0.0}
 
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

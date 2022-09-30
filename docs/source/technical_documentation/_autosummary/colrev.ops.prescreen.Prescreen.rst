@@ -17,7 +17,7 @@ colrev.ops.prescreen.Prescreen
       :nosignatures:
 
       ~Prescreen.check_precondition
-      ~Prescreen.check_process_model_precondition
+      ~Prescreen.check_record_state_model_precondition
       ~Prescreen.create_prescreen_split
       ~Prescreen.export_table
       ~Prescreen.get_data
@@ -36,3 +36,4 @@ colrev.ops.prescreen.Prescreen
    .. autosummary::
 
       ~Prescreen.force_mode
+      ~Prescreen.type

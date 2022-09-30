@@ -7,11 +7,17 @@ import requests
 import colrev.env.package_manager
 
 
-def add_data(*, data_operation, review_manager, add_endpoint, force) -> None:
+def add_data(
+    *,
+    data_operation: colrev.ops.data.Data,
+    review_manager: colrev.review_manager.ReviewManager,
+    add_endpoint: str,
+    force: bool
+) -> None:
 
     package_manager = review_manager.get_package_manager()
     available_data_endpoins = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageType.data
+        package_type=colrev.env.package_manager.PackageEndpointType.data
     )
 
     if add_endpoint in available_data_endpoins:
@@ -67,8 +73,8 @@ def add_data(*, data_operation, review_manager, add_endpoint, force) -> None:
     else:
         print("Data format not available")
 
-    ret = data_operation.main()
-    if ret["ask_to_commit"]:
+    data_ret = data_operation.main()
+    if data_ret["ask_to_commit"]:
         if "y" == input("Create commit (y/n)?"):
             review_manager.create_commit(msg="Data and synthesis", manual_author=True)
 

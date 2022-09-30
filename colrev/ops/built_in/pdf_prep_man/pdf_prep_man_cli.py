@@ -45,8 +45,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         def man_pdf_prep(
             pdf_prep_man: colrev.ops.pdf_prep_man.PDFPrepMan,
             records: dict,
-            item,
-            stat,
+            item: dict,
+            stat: str,
         ) -> dict:
 
             pdf_prep_man_operation.review_manager.logger.debug(

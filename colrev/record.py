@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import difflib
 import io
+import logging
 import pprint
 import re
+import shutil
 import textwrap
 from copy import deepcopy
 from difflib import SequenceMatcher
@@ -30,6 +32,7 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
+from transitions import Machine
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -143,7 +146,7 @@ class Record:
 
         return ret_str
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
 
     def copy(self) -> Record:
@@ -227,7 +230,7 @@ class Record:
 
         return data_copy
 
-    def get_data(self, *, stringify=False) -> dict:
+    def get_data(self, *, stringify: bool = False) -> dict:
 
         if not isinstance(self.data.get("colrev_id", []), list):
             print(self.data)
@@ -280,7 +283,7 @@ class Record:
     def shares_origins(self, *, other_record: Record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
 
-    def get_value(self, *, key: str, default=None):
+    def get_value(self, *, key: str, default: str = None) -> str:
         if default is not None:
             try:
                 ret = self.data[key]
@@ -313,14 +316,14 @@ class Record:
         self,
         *,
         key: str,
-        value,
+        value: str,
         source: str,
         note: str = "",
         keep_source_if_equal: bool = False,
     ) -> None:
         if keep_source_if_equal:
             if key in self.data:
-                if self.data[key] == str(value):
+                if self.data[key] == value:
                     return
         self.data[key] = value
         if key in self.identifying_field_keys:
@@ -346,7 +349,7 @@ class Record:
         self.__apply_fields_keys_requirements()
 
     def remove_field(
-        self, *, key: str, not_missing_note: bool = False, source=""
+        self, *, key: str, not_missing_note: bool = False, source: str = ""
     ) -> None:
         if key in self.data:
             del self.data[key]
@@ -536,7 +539,7 @@ class Record:
             return True
         return False
 
-    def __merge_origins(self, *, merging_record) -> None:
+    def __merge_origins(self, *, merging_record: Record) -> None:
         if "colrev_origin" in merging_record.data:
             origins = self.data["colrev_origin"] + merging_record.data[
                 "colrev_origin"
@@ -615,7 +618,7 @@ class Record:
                     self.fuse_best_field(
                         merging_record=merging_record,
                         key=key,
-                        val=val,
+                        val=str(val),
                         source=source,
                         note=note,
                     )
@@ -726,7 +729,7 @@ class Record:
         return best_journal
 
     def fuse_best_field(
-        self, *, merging_record: Record, key: str, val, source: str, note: str
+        self, *, merging_record: Record, key: str, val: str, source: str, note: str
     ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
@@ -735,72 +738,74 @@ class Record:
         # pylint: disable=too-many-statements
 
         if "author" == key:
-            if "author" in self.data:
+            if key in self.data:
                 best_author = self.__select_best_author(
                     record=self,
                     merging_record=merging_record,
                     preferred_sources=self.preferred_sources,
                 )
-                if self.data["author"] != best_author:
-                    self.update_field(key="author", value=best_author, source=source)
+                if self.data[key] != best_author:
+                    self.update_field(key=key, value=best_author, source=source)
             else:
-                self.update_field(key="author", value=str(val), source=source)
+                self.update_field(key=key, value=val, source=source)
 
         elif "pages" == key:
-            if "pages" in self.data:
+            if key in self.data:
                 best_pages = self.__select_best_pages(
-                    default=self.data["pages"], candidate=merging_record.data["pages"]
+                    default=self.data[key], candidate=merging_record.data[key]
                 )
-                if self.data["pages"] != best_pages:
-                    self.update_field(key="pages", value=best_pages, source=source)
+                if self.data[key] != best_pages:
+                    self.update_field(key=key, value=best_pages, source=source)
 
             else:
-                self.update_field(key="pages", value=str(val), source=source)
+                self.update_field(key=key, value=val, source=source)
 
         elif "title" == key:
-            if "title" in self.data:
+            if key in self.data:
                 best_title = self.__select_best_title(
-                    default=self.data["title"], candidate=merging_record.data["title"]
+                    default=self.data[key], candidate=merging_record.data[key]
                 )
-                if self.data["title"] != best_title:
-                    self.update_field(key="title", value=best_title, source=source)
+                if self.data[key] != best_title:
+                    self.update_field(key=key, value=best_title, source=source)
 
             else:
-                self.update_field(key="title", value=str(val), source=source)
+                self.update_field(key=key, value=val, source=source)
 
         elif "journal" == key:
-            if "journal" in self.data:
+            if key in self.data:
                 best_journal = self.__select_best_container_title(
-                    default=self.data["journal"],
-                    candidate=merging_record.data["journal"],
+                    default=self.data[key],
+                    candidate=merging_record.data[key],
                 )
-                if self.data["journal"] != best_journal:
-                    self.update_field(key="journal", value=best_journal, source=source)
+                if self.data[key] != best_journal:
+                    self.update_field(key=key, value=best_journal, source=source)
             else:
-                self.update_field(key="journal", value=str(val), source=source)
+                self.update_field(key=key, value=val, source=source)
 
         elif "booktitle" == key:
-            if "booktitle" in self.data:
+            if key in self.data:
                 best_booktitle = self.__select_best_container_title(
-                    default=self.data["booktitle"],
-                    candidate=merging_record.data["booktitle"],
+                    default=self.data[key],
+                    candidate=merging_record.data[key],
                 )
-                if self.data["booktitle"] != best_booktitle:
+                if self.data[key] != best_booktitle:
                     # TBD: custom select_best_booktitle?
-                    self.update_field(
-                        key="booktitle", value=best_booktitle, source=source
-                    )
+                    self.update_field(key=key, value=best_booktitle, source=source)
 
             else:
-                self.update_field(key="booktitle", value=str(val), source=source)
+                self.update_field(key=key, value=val, source=source)
 
         elif "file" == key:
-            if "file" in self.data:
-                self.data["file"] = (
-                    self.data["file"] + ";" + merging_record.data.get("file", "")
-                )
+            if key in self.data:
+                self.data[key] = self.data[key] + ";" + merging_record.data.get(key, "")
             else:
-                self.data["file"] = merging_record.data["file"]
+                self.data[key] = merging_record.data[key]
+        elif key in ["url", "link"]:
+            if key in self.data:
+                if self.data[key].rstrip("/") != merging_record.data[key].rstrip("/"):
+                    if "https" not in self.data[key]:
+                        self.update_field(key=key, value=val, source=source)
+
         elif "UNKNOWN" == self.data.get(
             key, ""
         ) and "UNKNOWN" != merging_record.data.get(key, ""):
@@ -819,14 +824,14 @@ class Record:
                     ]
             except KeyError:
                 pass
-            if str(val) != str(merging_record.data[key]):
+            if val != str(merging_record.data[key]):
                 self.update_field(
                     key=key,
                     value=str(merging_record.data[key]),
                     source=source,
                     note=note,
                 )
-            # self.update_field(key=key, value=str(val), source=source, note=note)
+            # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
     def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
@@ -863,18 +868,18 @@ class Record:
                 + record_b_dict.get("series", "")
             )
 
-        df_a = pd.DataFrame.from_dict([record_a_dict])
-        df_b = pd.DataFrame.from_dict([record_b_dict])
+        df_a = pd.DataFrame.from_dict([record_a_dict])  # type: ignore
+        df_b = pd.DataFrame.from_dict([record_b_dict])  # type: ignore
 
         return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
 
     @classmethod
-    def get_similarity(cls, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
+    def get_similarity(cls, *, df_a: pd.Series, df_b: pd.Series) -> float:
         details = Record.get_similarity_detailed(df_a=df_a, df_b=df_b)
         return details["score"]
 
     @classmethod
-    def get_similarity_detailed(cls, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
+    def get_similarity_detailed(cls, *, df_a: pd.Series, df_b: pd.Series) -> dict:
 
         try:
             author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
@@ -1200,7 +1205,7 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, *, also_known_as_record: dict = None, assume_complete=False
+        self, *, also_known_as_record: dict = None, assume_complete: bool = False
     ) -> str:
         """Returns the colrev_id of the Record.
         If a also_known_as_record is provided, it returns the colrev_id of the
@@ -1458,7 +1463,7 @@ class Record:
     ) -> None:
 
         pdf_path = project_path / Path(self.data["file"])
-        pdf_reader = PdfFileReader(pdf_path, strict=False)
+        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
         writer = PdfFileWriter()
         for i in range(0, pdf_reader.getNumPages()):
             if i in pages:
@@ -1731,6 +1736,30 @@ class Record:
             del self.data["text_from_pdf"]
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
+
+    def import_file(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
+
+        review_manager.pdf_dir.mkdir(exist_ok=True)
+        new_fp = review_manager.PDF_DIR_RELATIVE / Path(self.data["ID"] + ".pdf").name
+        original_fp = Path(self.data["file"])
+
+        if (
+            colrev.settings.PDFPathType.symlink
+            == review_manager.settings.pdf_get.pdf_path_type
+        ):
+            if not new_fp.is_file():
+                new_fp.symlink_to(original_fp)
+            self.data["file"] = str(new_fp)
+        elif (
+            colrev.settings.PDFPathType.copy
+            == review_manager.settings.pdf_get.pdf_path_type
+        ):
+            if not new_fp.is_file():
+                shutil.copyfile(original_fp, new_fp.resolve())
+            self.data["file"] = str(new_fp)
+        # Note : else: leave absolute paths
 
 
 class PrepRecord(Record):
@@ -2303,6 +2332,198 @@ class RecordState(Enum):
         raise colrev_exceptions.ParameterError(
             parameter="state", value="state", options=cls._member_names_
         )
+
+
+non_processing_transitions = [
+    [
+        {
+            "trigger": "format",
+            "source": state,
+            "dest": state,
+        },
+        {
+            "trigger": "explore",
+            "source": state,
+            "dest": state,
+        },
+        {
+            "trigger": "check",
+            "source": state,
+            "dest": state,
+        },
+    ]
+    for state in list(RecordState)
+]
+
+
+class RecordStateModel:
+
+    transitions = transitions = [
+        {
+            "trigger": "load",
+            "source": RecordState.md_retrieved,
+            "dest": RecordState.md_imported,
+        },
+        {
+            "trigger": "prep",
+            "source": RecordState.md_imported,
+            "dest": RecordState.md_needs_manual_preparation,
+        },
+        {
+            "trigger": "prep",
+            "source": RecordState.md_imported,
+            "dest": RecordState.md_prepared,
+        },
+        {
+            "trigger": "prep_man",
+            "source": RecordState.md_needs_manual_preparation,
+            "dest": RecordState.md_prepared,
+        },
+        {
+            "trigger": "dedupe",
+            "source": RecordState.md_prepared,
+            "dest": RecordState.md_processed,
+        },
+        {
+            "trigger": "prescreen",
+            "source": RecordState.md_processed,
+            "dest": RecordState.rev_prescreen_excluded,
+        },
+        {
+            "trigger": "prescreen",
+            "source": RecordState.md_processed,
+            "dest": RecordState.rev_prescreen_included,
+        },
+        {
+            "trigger": "pdf_get",
+            "source": RecordState.rev_prescreen_included,
+            "dest": RecordState.pdf_imported,
+        },
+        {
+            "trigger": "pdf_get",
+            "source": RecordState.rev_prescreen_included,
+            "dest": RecordState.pdf_needs_manual_retrieval,
+        },
+        {
+            "trigger": "pdf_get_man",
+            "source": RecordState.pdf_needs_manual_retrieval,
+            "dest": RecordState.pdf_not_available,
+        },
+        {
+            "trigger": "pdf_get_man",
+            "source": RecordState.pdf_needs_manual_retrieval,
+            "dest": RecordState.pdf_imported,
+        },
+        {
+            "trigger": "pdf_prep",
+            "source": RecordState.pdf_imported,
+            "dest": RecordState.pdf_needs_manual_preparation,
+        },
+        {
+            "trigger": "pdf_prep",
+            "source": RecordState.pdf_imported,
+            "dest": RecordState.pdf_prepared,
+        },
+        {
+            "trigger": "pdf_prep_man",
+            "source": RecordState.pdf_needs_manual_preparation,
+            "dest": RecordState.pdf_prepared,
+        },
+        {
+            "trigger": "screen",
+            "source": RecordState.pdf_prepared,
+            "dest": RecordState.rev_excluded,
+        },
+        {
+            "trigger": "screen",
+            "source": RecordState.pdf_prepared,
+            "dest": RecordState.rev_included,
+        },
+        {
+            "trigger": "data",
+            "source": RecordState.rev_included,
+            "dest": RecordState.rev_synthesized,
+        },
+    ]
+
+    transitions_non_processing = [
+        item for sublist in non_processing_transitions for item in sublist
+    ]
+
+    def __init__(
+        self,
+        *,
+        state: RecordState = None,
+        operation: colrev.operation.OperationsType = None,
+        review_manager: colrev.review_manager.ReviewManager = None,
+    ) -> None:
+
+        if operation:
+            start_states: list[str] = [
+                str(x["source"])
+                for x in self.transitions
+                if str(operation) == x["trigger"]
+            ]
+            self.state = RecordState[start_states[0]]
+        elif state:
+            self.state = state
+        else:
+            print("ERROR: no operation or state provided")
+
+        if review_manager:
+            self.review_manager = review_manager
+
+        logging.getLogger("transitions").setLevel(logging.WARNING)
+
+        self.machine = Machine(
+            model=self,
+            states=RecordState,
+            transitions=self.transitions + self.transitions_non_processing,
+            initial=self.state,
+        )
+
+    def get_valid_transitions(self) -> list:
+        return list(
+            {x["trigger"] for x in self.transitions if x["source"] == self.state}
+        )
+
+    def get_preceding_states(self, *, state: RecordState) -> set:
+        preceding_states: set[RecordState] = set()
+        added = True
+        while added:
+            preceding_states_size = len(preceding_states)
+            for transition in RecordStateModel.transitions:
+                if (
+                    transition["dest"] in preceding_states
+                    or state == transition["dest"]
+                ):
+                    preceding_states.add(transition["source"])  # type: ignore
+            if preceding_states_size == len(preceding_states):
+                added = False
+        return preceding_states
+
+    def check_operation_precondition(
+        self, *, operation: colrev.operation.Operation
+    ) -> None:
+
+        if "True" == self.review_manager.settings.project.delay_automated_processing:
+            cur_state_list = self.review_manager.dataset.get_states_set()
+            self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
+            self.review_manager.logger.debug(f"precondition: {self.state}")
+            required_absent = {
+                str(x) for x in self.get_preceding_states(state=self.state)
+            }
+            self.review_manager.logger.debug(f"required_absent: {required_absent}")
+            intersection = cur_state_list.intersection(required_absent)
+            if (
+                len(cur_state_list) == 0
+                and not operation.type.name == "load"  # type: ignore
+            ):
+                raise colrev_exceptions.NoRecordsError()
+            if len(intersection) != 0:
+                raise colrev_exceptions.ProcessOrderViolation(
+                    operation.type.name, str(self.state), list(intersection)
+                )
 
 
 if __name__ == "__main__":

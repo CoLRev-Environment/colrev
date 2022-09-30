@@ -86,7 +86,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.SEARCHDIR_RELATIVE
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE
-      ~ReviewManager.notified_next_process
+      ~ReviewManager.notified_next_operation
       ~ReviewManager.dataset
       ~ReviewManager.path
       ~ReviewManager.force_mode

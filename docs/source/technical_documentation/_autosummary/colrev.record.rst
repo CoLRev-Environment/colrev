@@ -24,4 +24,5 @@ colrev.record
       PrescreenRecord
       Record
       RecordState
+      RecordStateModel
       ScreenRecord

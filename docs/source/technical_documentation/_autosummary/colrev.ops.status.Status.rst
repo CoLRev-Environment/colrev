@@ -17,7 +17,7 @@ colrev.ops.status.Status
       :nosignatures:
 
       ~Status.check_precondition
-      ~Status.check_process_model_precondition
+      ~Status.check_record_state_model_precondition
       ~Status.get_analytics
       ~Status.get_review_status_report
       ~Status.require_clean_repo_general
@@ -31,3 +31,4 @@ colrev.ops.status.Status
    .. autosummary::
 
       ~Status.force_mode
+      ~Status.type

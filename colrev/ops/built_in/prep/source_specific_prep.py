@@ -53,7 +53,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
         origin_source = record.data["colrev_origin"][0].split("/")[0]
 
         sources = [
-            s.source_name
+            s.endpoint
             for s in prep_operation.review_manager.settings.sources
             if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
         ]

@@ -17,7 +17,7 @@ colrev.ops.validate.Validate
       :nosignatures:
 
       ~Validate.check_precondition
-      ~Validate.check_process_model_precondition
+      ~Validate.check_record_state_model_precondition
       ~Validate.get_commit_from_tree_hash
       ~Validate.get_search_records
       ~Validate.load_records
@@ -37,3 +37,4 @@ colrev.ops.validate.Validate
    .. autosummary::
 
       ~Validate.force_mode
+      ~Validate.type

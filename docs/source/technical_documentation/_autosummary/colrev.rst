@@ -32,8 +32,8 @@
    colrev.env
    colrev.exceptions
    colrev.logger
+   colrev.operation
    colrev.ops
-   colrev.process
    colrev.record
    colrev.review_manager
    colrev.service

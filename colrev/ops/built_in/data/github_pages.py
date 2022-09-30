@@ -27,7 +27,7 @@ class GithubPages(JsonSchemaMixin):
 
     @dataclass
     class GHPagesSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         version: str
         auto_push: bool
 

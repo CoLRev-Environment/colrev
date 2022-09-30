@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from xml.etree.ElementTree import Element
 
 import requests
 from lxml import etree
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
+
+# xpath alternative:
+# tree.xpath("//tei:sourceDesc/tei:biblStruct/tei:monogr/tei:idno",
+# namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
+# abstract_node =tree.xpath("//tei:profileDesc/tei:abstract",
+# namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
+# etree.tostring(abstract_node[0]).decode("utf-8")
 
 
 class TEIParser:
@@ -58,9 +66,9 @@ class TEIParser:
             self.create_tei()
 
         elif tei_path is not None:
-            self.root = self.read_from_tei()
+            self.root = self.read_from_tei()  # type: ignore
 
-    def read_from_tei(self):
+    def read_from_tei(self):  # type: ignore
         with open(self.tei_path, "rb") as data:
             xslt_content = data.read()
 
@@ -243,7 +251,7 @@ class TEIParser:
                             year = re.sub(r".*([1-2][0-9]{3}).*", r"\1", year)
         return year
 
-    def __parse_author_dict(self, *, author_pers_node):
+    def __parse_author_dict(self, *, author_pers_node: Element) -> dict:
         author_dict = {}
         surname_node = author_pers_node.find(self.ns["tei"] + "surname")
         if surname_node is not None:
@@ -278,7 +286,7 @@ class TEIParser:
 
         return author_dict
 
-    def get_author_name_from_node(self, *, author_node) -> str:
+    def get_author_name_from_node(self, *, author_node: Element) -> str:
         authorname = ""
 
         author_pers_node = author_node.find(self.ns["tei"] + "persName")
@@ -358,7 +366,7 @@ class TEIParser:
 
         html_tag_regex = re.compile("<.*?>")
 
-        def cleanhtml(raw_html):
+        def cleanhtml(raw_html: str) -> str:
             cleantext = re.sub(html_tag_regex, "", raw_html)
             return cleantext
 
@@ -440,27 +448,28 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def __get_reference_bibliography_id(self, *, reference) -> str:
+    def __get_reference_bibliography_id(self, *, reference: Element) -> str:
         if "ID" in reference.attrib:
             return reference.attrib["ID"]
         return ""
 
-    def __get_reference_bibliography_tei_id(self, *, reference) -> str:
+    def __get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
-    def __get_reference_author_string(self, *, reference) -> str:
+    def __get_reference_author_string(self, *, reference: Element) -> str:
         author_list = []
         if reference.find(self.ns["tei"] + "analytic") is not None:
             authors_node = reference.find(self.ns["tei"] + "analytic")
         elif reference.find(self.ns["tei"] + "monogr") is not None:
             authors_node = reference.find(self.ns["tei"] + "monogr")
 
-        for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
+        if authors_node is not None:
+            for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
 
-            authorname = self.get_author_name_from_node(author_node=author_node)
+                authorname = self.get_author_name_from_node(author_node=author_node)
 
-            if authorname not in [", ", ""]:
-                author_list.append(authorname)
+                if authorname not in [", ", ""]:
+                    author_list.append(authorname)
 
         author_string = " and ".join(author_list)
 
@@ -485,35 +494,37 @@ class TEIParser:
             author_string = "NA"
         return author_string
 
-    def __get_reference_title_string(self, *, reference) -> str:
+    def __get_reference_title_string(self, *, reference: Element) -> str:
         title_string = ""
         if reference.find(self.ns["tei"] + "analytic") is not None:
-            title = reference.find(self.ns["tei"] + "analytic").find(
-                self.ns["tei"] + "title"
-            )
+            analytic_node = reference.find(self.ns["tei"] + "analytic")
+            if analytic_node:
+                title = analytic_node.find(self.ns["tei"] + "title")
         elif reference.find(self.ns["tei"] + "monogr") is not None:
-            title = reference.find(self.ns["tei"] + "monogr").find(
-                self.ns["tei"] + "title"
-            )
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                title = monogr_node.find(self.ns["tei"] + "title")
 
-        title_string = title.text if (title is not None) else "NA"
+        if title is not None:
+            if title.text is not None:
+                title_string = title.text
 
         return title_string
 
-    def __get_reference_year_string(self, *, reference) -> str:
+    def __get_reference_year_string(self, *, reference: Element) -> str:
         year_string = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
-            year = (
-                reference.find(self.ns["tei"] + "monogr")
-                .find(self.ns["tei"] + "imprint")
-                .find(self.ns["tei"] + "date")
-            )
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    year = imprint_node.find(self.ns["tei"] + "date")
         elif reference.find(self.ns["tei"] + "analytic") is not None:
-            year = (
-                reference.find(self.ns["tei"] + "analytic")
-                .find(self.ns["tei"] + "imprint")
-                .find(self.ns["tei"] + "date")
-            )
+            analytic_node = reference.find(self.ns["tei"] + "analytic")
+            if analytic_node:
+                imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    year = imprint_node.find(self.ns["tei"] + "date")
 
         if year is not None:
             for name, value in sorted(year.items()):
@@ -522,21 +533,25 @@ class TEIParser:
             year_string = "NA"
         return year_string
 
-    def __get_reference_page_string(self, *, reference) -> str:
+    def __get_reference_page_string(self, *, reference: Element) -> str:
         page_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
-            page_list = (
-                reference.find(self.ns["tei"] + "monogr")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='page']")
-            )
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
+                if imprint_node is not None:
+                    page_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='page']"
+                    )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
-            page_list = (
-                reference.find(self.ns["tei"] + "analytic")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='page']")
-            )
+            analytic_node = reference.find(self.ns["tei"] + "analytic")
+            if analytic_node:
+                imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    page_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='page']"
+                    )
 
         for page in page_list:
             if page is not None:
@@ -550,73 +565,84 @@ class TEIParser:
 
         return page_string
 
-    def __get_reference_number_string(self, *, reference) -> str:
+    def __get_reference_number_string(self, *, reference: Element) -> str:
         number_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
-            number_list = (
-                reference.find(self.ns["tei"] + "monogr")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='issue']")
-            )
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    number_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='issue']"
+                    )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
-            number_list = (
-                reference.find(self.ns["tei"] + "analytic")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='issue']")
-            )
+            analytic_node = reference.find(self.ns["tei"] + "analytic")
+            if analytic_node:
+                imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    number_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='issue']"
+                    )
 
         for number in number_list:
-            number_string = number.text if (number is not None) else "NA"
+            if number.text is not None:
+                number_string = number.text
 
         return number_string
 
-    def __get_reference_volume_string(self, *, reference) -> str:
+    def __get_reference_volume_string(self, *, reference: Element) -> str:
         volume_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
-            volume_list = (
-                reference.find(self.ns["tei"] + "monogr")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='volume']")
-            )
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    volume_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='volume']"
+                    )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
-            volume_list = (
-                reference.find(self.ns["tei"] + "analytic")
-                .find(self.ns["tei"] + "imprint")
-                .findall(self.ns["tei"] + "biblScope[@unit='volume']")
-            )
+            analytic_node = reference.find(self.ns["tei"] + "analytic")
+            if analytic_node:
+                imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
+                if imprint_node:
+                    volume_list = imprint_node.findall(
+                        self.ns["tei"] + "biblScope[@unit='volume']"
+                    )
 
         for volume in volume_list:
-            volume_string = volume.text if (volume is not None) else "NA"
+            if volume.text is not None:
+                volume_string = volume.text
 
         return volume_string
 
-    def __get_reference_journal_string(self, *, reference) -> str:
+    def __get_reference_journal_string(self, *, reference: Element) -> str:
         journal_title = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
-            journal_title = (
-                reference.find(self.ns["tei"] + "monogr")
-                .find(self.ns["tei"] + "title")
-                .text
-            )
-        if journal_title is None:
-            journal_title = ""
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            if monogr_node:
+                monogr_title = monogr_node.find(self.ns["tei"] + "title")
+                if monogr_title:
+                    if monogr_title.text is not None:
+                        journal_title = monogr_title.text
+
         return journal_title
 
-    def __get_entrytype(self, *, reference) -> str:
+    def __get_entrytype(self, *, reference: Element) -> str:
         entrytype = "misc"
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            title_node = monogr_node.find(self.ns["tei"] + "title")
-            if title_node is not None:
-                if "j" == title_node.get("level", "NA"):
-                    entrytype = "article"
-                else:
-                    entrytype = "book"
+            if monogr_node:
+                title_node = monogr_node.find(self.ns["tei"] + "title")
+                if title_node is not None:
+                    if "j" == title_node.get("level", "NA"):
+                        entrytype = "article"
+                    else:
+                        entrytype = "book"
         return entrytype
 
-    def get_bibliography(self):
+    def get_bibliography(self) -> list:
 
         bibliographies = self.root.iter(self.ns["tei"] + "listBibl")
         tei_bib_db = []
@@ -717,7 +743,7 @@ class TEIParser:
                 section_citations[section_name.lower()] = citations
         return section_citations
 
-    def mark_references(self, *, records):
+    def mark_references(self, *, records: list):  # type: ignore
 
         tei_records = self.get_bibliography()
         for record_dict in tei_records:

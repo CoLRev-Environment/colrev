@@ -7,8 +7,8 @@ import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
 
-def print_sample(review_manager) -> None:
-    colrev.process.CheckProcess(review_manager=review_manager)
+def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
+    colrev.operation.CheckOperation(review_manager=review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
         r

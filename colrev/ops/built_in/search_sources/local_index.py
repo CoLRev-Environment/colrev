@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: LocalIndex"""
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,7 +33,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     # TODO : add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "index"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         if "selection_clause" not in settings["search_parameters"]:
             raise colrev_exceptions.InvalidQueryException(
                 "selection_clause required in search_parameters"
@@ -55,7 +59,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_index = search_operation.review_manager.get_local_index()
 
-        def retrieve_from_index(params) -> typing.List[dict]:
+        def retrieve_from_index(params: dict) -> typing.List[dict]:
 
             # Note: we retrieve colrev_ids and full records afterwards
             # because the os.sql.query throws errors when selecting
@@ -199,7 +203,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

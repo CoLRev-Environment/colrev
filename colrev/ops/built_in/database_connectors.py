@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-lines
 
 
 class OpenLibraryConnector:
@@ -261,8 +262,8 @@ class DOIConnector:
         # ret = s.get(url, headers=headers)
         # print(ret)
 
-        def meta_redirect(*, content: str) -> str:
-            if "<!DOCTYPE HTML PUBLIC" not in content:
+        def meta_redirect(*, content: bytes) -> str:
+            if "<!DOCTYPE HTML PUBLIC" not in str(content):
                 raise TypeError
             soup = BeautifulSoup(content, "lxml")
             result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
@@ -378,7 +379,7 @@ class CrossrefConnector:
                     "CROSSREF"
                 ) from exc
 
-    def get_bibliographic_query_return(self, **kwargs) -> typing.Iterator[dict]:
+    def get_bibliographic_query_return(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Works
 
@@ -444,6 +445,8 @@ class CrossrefConnector:
             elif isinstance(item["container-title"], str):
                 container_title = item["container-title"]
 
+        container_title = container_title.replace("\n", " ")
+        container_title = re.sub(r"\s+", " ", container_title)
         if "type" in item:
             if "journal-article" == item.get("type", "NA"):
                 record_dict.update(ENTRYTYPE="article")
@@ -594,7 +597,7 @@ class CrossrefConnector:
 
     @classmethod
     def __get_similarity(
-        cls, *, record: colrev.record.Record, retrieved_record_dict
+        cls, *, record: colrev.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record_dict["title"].lower(),
@@ -703,7 +706,7 @@ class CrossrefConnector:
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         timeout: int = 10,
-    ):
+    ) -> colrev.record.Record:
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
@@ -821,7 +824,13 @@ class DBLPConnector:
 
     @classmethod
     def __get_dblp_venue(
-        cls, *, session, review_manager, timeout, venue_string: str, venue_type: str
+        cls,
+        *,
+        session: requests.Session,
+        review_manager: colrev.review_manager.ReviewManager,
+        timeout: int,
+        venue_string: str,
+        venue_type: str,
     ) -> str:
         # Note : venue_string should be like "behaviourIT"
         # Note : journals that have been renamed seem to return the latest
@@ -851,7 +860,12 @@ class DBLPConnector:
 
     @classmethod
     def __dblp_json_to_dict(
-        cls, *, review_manager, session, item: dict, timeout
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        session: requests.Session,
+        item: dict,
+        timeout: int,
     ) -> dict:
         # pylint: disable=too-many-branches
 
@@ -943,11 +957,8 @@ class DBLPConnector:
     ) -> list:
 
         try:
-
             assert query is not None or url is not None
-
             session = review_manager.get_cached_session()
-
             items = []
 
             if query:

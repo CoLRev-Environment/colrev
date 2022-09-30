@@ -18,7 +18,7 @@ colrev.ops.prep.Prep
 
       ~Prep.check_dbs_availability
       ~Prep.check_precondition
-      ~Prep.check_process_model_precondition
+      ~Prep.check_record_state_model_precondition
       ~Prep.main
       ~Prep.prepare
       ~Prep.require_clean_repo_general
@@ -43,5 +43,6 @@ colrev.ops.prep.Prep
       ~Prep.first_round
       ~Prep.last_round
       ~Prep.pad
-      ~Prep.prep_scripts
+      ~Prep.prep_package_endpoints
       ~Prep.force_mode
+      ~Prep.type

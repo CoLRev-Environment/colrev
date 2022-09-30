@@ -36,4 +36,4 @@ colrev.settings.PrepRound
 
       ~PrepRound.name
       ~PrepRound.similarity
-      ~PrepRound.scripts
+      ~PrepRound.prep_package_endpoints

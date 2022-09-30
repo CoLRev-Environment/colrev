@@ -81,7 +81,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
                 records_df = records_df[
                     records_df.columns.intersection(
-                        {
+                        [
                             "ID",
                             "colrev_status",
                             "journal",
@@ -91,11 +91,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
                             "number",
                             "title",
                             "author",
-                        }
+                        ]
                     )
                 ]
                 keys = list(
-                    records_df.columns.intersection({"year", "volume", "number"})
+                    records_df.columns.intersection(["year", "volume", "number"])
                 )
                 if "year" in keys:
                     records_df.year = pd.to_numeric(records_df.year, errors="coerce")

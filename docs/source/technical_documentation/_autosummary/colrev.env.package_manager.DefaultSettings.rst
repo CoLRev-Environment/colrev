@@ -34,4 +34,4 @@ colrev.env.package\_manager.DefaultSettings
 
    .. autosummary::
 
-      ~DefaultSettings.name
+      ~DefaultSettings.endpoint

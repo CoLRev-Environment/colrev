@@ -18,7 +18,7 @@ colrev.ops.data.Data
 
       ~Data.add_data_endpoint
       ~Data.check_precondition
-      ~Data.check_process_model_precondition
+      ~Data.check_record_state_model_precondition
       ~Data.get_record_ids_for_synthesis
       ~Data.main
       ~Data.profile
@@ -36,3 +36,4 @@ colrev.ops.data.Data
 
       ~Data.verbose
       ~Data.force_mode
+      ~Data.type

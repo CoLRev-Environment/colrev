@@ -11,18 +11,18 @@ from typing import TYPE_CHECKING
 import pandas as pd
 from yaml import safe_load
 
-import colrev.process
+import colrev.operation
 import colrev.settings
 
 if TYPE_CHECKING:
     import colrev.review_manager
 
 
-class Distribute(colrev.process.Process):
+class Distribute(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.check,
+            operations_type=colrev.operation.OperationsType.check,
             notify_state_transition_operation=False,
         )
 
@@ -37,13 +37,13 @@ class Distribute(colrev.process.Process):
             local_registry_df = pd.json_normalize(safe_load(file))
             local_registry_dict = local_registry_df.to_dict("records")
             local_registry = [
-                x
+                x["repo_source_path"]
                 for x in local_registry_dict
                 if "curated_metadata/" not in x["repo_source_path"]
             ]
         return local_registry
 
-    def main(self, *, path_str: str, target: Path) -> None:
+    def main(self, *, path: Path, target: Path) -> None:
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path
@@ -52,7 +52,7 @@ class Distribute(colrev.process.Process):
         # file: copy or move?
 
         os.chdir(target)
-        path = Path.cwd() / Path(path_str)
+        path = Path.cwd() / Path(path)
 
         if path.is_file():
 
@@ -97,12 +97,12 @@ class Distribute(colrev.process.Process):
                     import_records = []
 
                     new_source = colrev.settings.SearchSource(
+                        endpoint="colrev_built_in.unknown_source",
                         filename=Path("search") / target_bib_file.name,
                         search_type=colrev.settings.SearchType.OTHER,
-                        source_name="locally_distributed_references",
                         source_identifier="",
                         search_parameters={},
-                        load_conversion_script={},
+                        load_conversion_package_endpoint={},
                         comment="",
                     )
 

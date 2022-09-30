@@ -17,7 +17,7 @@ colrev.ops.pull.Pull
       :nosignatures:
 
       ~Pull.check_precondition
-      ~Pull.check_process_model_precondition
+      ~Pull.check_record_state_model_precondition
       ~Pull.main
       ~Pull.pull_project
       ~Pull.pull_records_from_crossref
@@ -33,3 +33,4 @@ colrev.ops.pull.Pull
    .. autosummary::
 
       ~Pull.force_mode
+      ~Pull.type

@@ -283,7 +283,7 @@ class Advisor:
                             "priority": "yes",
                         }
                     )
-                if "invalid_transition" == transitioned_record["process_type"]:
+                if "invalid_transition" == transitioned_record["operations_type"]:
                     msg = (
                         f"Resolve invalid transition ({transitioned_record['ID']}): "
                         + f"{transitioned_record['source']} to "
@@ -507,7 +507,9 @@ class Advisor:
         return instruction
 
     def __append_download_outlets_instruction(
-        self, environment_manager, environment_instructions: list
+        self,
+        environment_manager: colrev.env.environment_manager.EnvironmentManager,
+        environment_instructions: list,
     ) -> None:
         # pylint: disable=too-many-locals
 

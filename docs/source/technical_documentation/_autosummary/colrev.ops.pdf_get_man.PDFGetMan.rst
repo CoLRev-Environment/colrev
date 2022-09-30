@@ -17,7 +17,7 @@ colrev.ops.pdf\_get\_man.PDFGetMan
       :nosignatures:
 
       ~PDFGetMan.check_precondition
-      ~PDFGetMan.check_process_model_precondition
+      ~PDFGetMan.check_record_state_model_precondition
       ~PDFGetMan.export_retrieval_table
       ~PDFGetMan.get_data
       ~PDFGetMan.get_pdf_get_man
@@ -34,3 +34,4 @@ colrev.ops.pdf\_get\_man.PDFGetMan
    .. autosummary::
 
       ~PDFGetMan.force_mode
+      ~PDFGetMan.type

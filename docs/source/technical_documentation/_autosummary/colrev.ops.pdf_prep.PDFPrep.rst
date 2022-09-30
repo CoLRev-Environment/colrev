@@ -17,7 +17,7 @@ colrev.ops.pdf\_prep.PDFPrep
       :nosignatures:
 
       ~PDFPrep.check_precondition
-      ~PDFPrep.check_process_model_precondition
+      ~PDFPrep.check_record_state_model_precondition
       ~PDFPrep.main
       ~PDFPrep.prepare_pdf
       ~PDFPrep.require_clean_repo_general
@@ -36,3 +36,4 @@ colrev.ops.pdf\_prep.PDFPrep
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared
       ~PDFPrep.force_mode
+      ~PDFPrep.type

@@ -58,8 +58,8 @@ class ASReviewPrescreen(JsonSchemaMixin):
     def export_for_asreview(
         self,
         prescreen: colrev.ops.prescreen.Prescreen,
-        records,
-        split,  # pylint: disable=unused-argument
+        records: dict,
+        split: list,  # pylint: disable=unused-argument
     ) -> None:
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
@@ -67,14 +67,14 @@ class ASReviewPrescreen(JsonSchemaMixin):
         prescreen.review_manager.logger.info("Export: asreview")
 
         # TODO : tbd. whether the selection is necessary
-        records = [
-            r
+        records = {
+            ID: r
             for ID, r in records.items()
             if r["colrev_status"] in [colrev.record.RecordState.md_processed]
-        ]
+        }
         # Casting to string (in particular the RecordState Enum)
-        records = [
-            {
+        records = {
+            ID: {
                 k: str(v)
                 for k, v in r.items()
                 if k
@@ -86,8 +86,8 @@ class ASReviewPrescreen(JsonSchemaMixin):
                     "colrev_data_provenance",
                 ]
             }
-            for r in records
-        ]
+            for ID, r in records.items()
+        }
 
         to_screen_df = pd.DataFrame.from_dict(records)
         to_screen_df.to_csv(self.export_filepath, quoting=csv.QUOTE_NONNUMERIC)
@@ -95,7 +95,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
     def import_from_asreview(
         self, prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict
     ) -> None:
-        def get_last_modified(input_paths) -> Path:
+        def get_last_modified(input_paths: list[str]) -> Path:
 
             latest_file = max(input_paths, key=os.path.getmtime)
             return Path(latest_file)

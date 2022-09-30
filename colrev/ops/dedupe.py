@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import colrev.review_manager
 
 
-class Dedupe(colrev.process.Process):
+class Dedupe(colrev.operation.Operation):
 
     SIMPLE_SIMILARITY_BASED_DEDUPE = "simple_similarity_based_dedupe"
     ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"
@@ -36,12 +36,12 @@ class Dedupe(colrev.process.Process):
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        notify_state_transition_operation=True,
+        notify_state_transition_operation: bool = True,
     ) -> None:
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.dedupe,
+            operations_type=colrev.operation.OperationsType.dedupe,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
@@ -63,7 +63,7 @@ class Dedupe(colrev.process.Process):
         self.review_manager.report_logger.info("Dedupe")
         self.review_manager.logger.info("Dedupe")
 
-    def __pre_process(self, *, key, value):
+    def __pre_process(self, *, key: str, value: str) -> str:
         if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
             return value
 
@@ -72,7 +72,7 @@ class Dedupe(colrev.process.Process):
             value == x
             for x in ["no issue", "no volume", "no pages", "no author", "nan"]
         ):
-            value = None
+            value = ""
             return value
 
         # Note unidecode may be an alternative to rmdiacritics/remove_accents.
@@ -84,7 +84,7 @@ class Dedupe(colrev.process.Process):
         value = value.strip().strip('"').strip("'").lower().strip()
         # If data is missing, indicate that by setting the value to `None`
         if not value:
-            value = None
+            value = ""
         return value
 
     def prep_records(self, *, records_df: pd.DataFrame) -> dict:
@@ -152,28 +152,30 @@ class Dedupe(colrev.process.Process):
         # return records_df
         # Copy to notebook:
         # from colrev.review_manager import ReviewManager
-        # from colrev.process import Process, ProcessType
+        # from colrev.operation import Operation, OperationsType
         # review_manager = ReviewManager()
         # df = self.read_data(review_manager)
         # EDITS
         # df.to_csv('export.csv', index=False)
 
         records_df.drop(
-            labels=records_df.columns.difference(
-                [
-                    "ID",
-                    "author",
-                    "title",
-                    "year",
-                    "journal",
-                    "container_title",
-                    "volume",
-                    "number",
-                    "pages",
-                    "colrev_id",
-                    "colrev_origin",
-                    "colrev_status",
-                ]
+            labels=list(
+                records_df.columns.difference(
+                    [
+                        "ID",
+                        "author",
+                        "title",
+                        "year",
+                        "journal",
+                        "container_title",
+                        "volume",
+                        "number",
+                        "pages",
+                        "colrev_id",
+                        "colrev_origin",
+                        "colrev_status",
+                    ]
+                )
             ),
             axis=1,
             inplace=True,
@@ -196,7 +198,7 @@ class Dedupe(colrev.process.Process):
             # It is ignored in the field-definitions by the deduper!
             # clean_row = [(k, self.__pre_process(k, v)) for (k, v) in row.items() if k != "ID"]
             clean_row = [
-                (k, self.__pre_process(key=k, value=v)) for (k, v) in row.items()
+                (k, self.__pre_process(key=str(k), value=v)) for (k, v) in row.items()
             ]
             records[row["ID"]] = dict(clean_row)
 
@@ -237,7 +239,7 @@ class Dedupe(colrev.process.Process):
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 record_dict["colrev_id"] = "NA"
 
-        records_df = pd.DataFrame.from_dict(records_queue)
+        records_df = pd.DataFrame.from_records(records_queue)
         records = self.prep_records(records_df=records_df)
 
         return records
@@ -356,7 +358,7 @@ class Dedupe(colrev.process.Process):
         # TODO: book vs. inbook?
         return cross_level_merge_attempt
 
-    def apply_merges(self, *, results: list, complete_dedupe=False) -> None:
+    def apply_merges(self, *, results: list, complete_dedupe: bool = False) -> None:
         """Apply automated deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -656,18 +658,20 @@ class Dedupe(colrev.process.Process):
 
     def main(self) -> None:
 
-        for dedupe_script in self.review_manager.settings.dedupe.scripts:
+        for (
+            dedupe_package_endpoint
+        ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
 
             # Note : load package/script at this point because the same script
             # may run with different parameters
             package_manager = self.review_manager.get_package_manager()
-            endpoint_script = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageType.dedupe,
-                selected_packages=[dedupe_script],
-                process=self,
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+                selected_packages=[dedupe_package_endpoint],
+                operation=self,
             )
 
-            endpoint = endpoint_script[dedupe_script["endpoint"]]
+            endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 
             endpoint.run_dedupe(self)  # type: ignore
             print()

@@ -57,7 +57,7 @@ class PDFCoverPage(JsonSchemaMixin):
             # pdf_reader.getPage(0).extractText()
             coverpages: typing.List[int] = []
 
-            pdf_reader = PdfFileReader(pdf, strict=False)
+            pdf_reader = PdfFileReader(str(pdf), strict=False)
             if pdf_reader.getNumPages() == 1:
                 return coverpages
 

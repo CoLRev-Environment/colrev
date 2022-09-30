@@ -17,7 +17,7 @@ colrev.ops.prep\_man.PrepMan
       :nosignatures:
 
       ~PrepMan.check_precondition
-      ~PrepMan.check_process_model_precondition
+      ~PrepMan.check_record_state_model_precondition
       ~PrepMan.get_data
       ~PrepMan.main
       ~PrepMan.prep_man_stats
@@ -33,3 +33,4 @@ colrev.ops.prep\_man.PrepMan
    .. autosummary::
 
       ~PrepMan.force_mode
+      ~PrepMan.type

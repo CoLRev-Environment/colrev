@@ -36,10 +36,10 @@ colrev.settings.SearchSource
 
    .. autosummary::
 
+      ~SearchSource.endpoint
       ~SearchSource.filename
       ~SearchSource.search_type
-      ~SearchSource.source_name
       ~SearchSource.source_identifier
       ~SearchSource.search_parameters
-      ~SearchSource.load_conversion_script
+      ~SearchSource.load_conversion_package_endpoint
       ~SearchSource.comment

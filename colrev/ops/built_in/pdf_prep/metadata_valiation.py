@@ -124,7 +124,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad=40,  # pylint: disable=unused-argument
+        pad: int = 40,  # pylint: disable=unused-argument
     ) -> dict:
 
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:

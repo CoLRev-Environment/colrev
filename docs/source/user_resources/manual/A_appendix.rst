@@ -44,7 +44,7 @@ Python
 
     import logging
     from colrev.review_manager import ReviewManager
-    from colrev.process import PrepProcess
+    from colrev.operations import PrepProcess
 
     # Initialize the ReviewManager
     REVIEW_MANAGER = ReviewManager()

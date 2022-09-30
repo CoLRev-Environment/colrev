@@ -16,10 +16,10 @@ class GrobidService:
 
     GROBID_URL = "http://localhost:8070"
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def check_grobid_availability(self, *, wait=True) -> bool:
+    def check_grobid_availability(self, *, wait: bool = True) -> bool:
         i = 0
         while True:
             i += 1

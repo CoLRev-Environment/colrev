@@ -18,7 +18,7 @@ colrev.ops.dedupe.Dedupe
 
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
-      ~Dedupe.check_process_model_precondition
+      ~Dedupe.check_record_state_model_precondition
       ~Dedupe.fix_errors
       ~Dedupe.get_info
       ~Dedupe.main
@@ -43,3 +43,4 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.non_dupe_file_xlsx
       ~Dedupe.dupe_file
       ~Dedupe.force_mode
+      ~Dedupe.type

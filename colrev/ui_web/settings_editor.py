@@ -6,19 +6,19 @@ import json
 import webbrowser
 from pathlib import Path
 from threading import Timer
+from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import jsonify
 from flask import request
+from flask import Response
 from flask import send_from_directory
 from flask_cors import CORS
 
-# from typing import TYPE_CHECKING
+import colrev.settings
 
-# import colrev.settings
-
-# if TYPE_CHECKING:
-#     import colrev.review_manager.ReviewManager
+if TYPE_CHECKING:
+    import colrev.review_manager.ReviewManager
 
 
 class SettingsEditor:
@@ -26,8 +26,8 @@ class SettingsEditor:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
-    # def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-    def __init__(self) -> None:
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+        # def __init__(self) -> None:
 
         # self.review_manager = review_manager
         # self.package_manager = review_manager.get_package_manager()
@@ -45,7 +45,7 @@ class SettingsEditor:
         Timer(1, lambda: webbrowser.open_new(url)).start()
         print(f"Open at {url}")
 
-    def open_settings_editor(self):
+    def open_settings_editor(self) -> None:
 
         app = Flask(__name__, static_url_path="", static_folder="build")
         CORS(app)
@@ -55,15 +55,16 @@ class SettingsEditor:
         # print("Settings File Path: ", app.config["path"])
 
         @app.route("/", defaults={"path": ""})
-        def serve(path):  # pylint: disable=unused-argument
-            return send_from_directory(app.static_folder, "index.html")
+        def serve(path: str) -> Response:  # pylint: disable=unused-argument
+            assert app.static_folder
+            return send_from_directory(Path(app.static_folder), "index.html")
 
         @app.route("/<path:filename>")
-        def base_static(filename):
+        def base_static(filename: str) -> Response:
             return send_from_directory(app.root_path + "/", filename)
 
         @app.route("/api/getSettings")
-        def getSettings():
+        def getSettings() -> Response:
 
             with open(self.settings_path, encoding="utf-8") as file:
                 json__content = file.read()
@@ -75,7 +76,7 @@ class SettingsEditor:
             return response
 
         @app.route("/api/saveSettings", methods=["POST"])
-        def saveSettings(create_commit: bool = False):
+        def saveSettings(create_commit: bool = False) -> str:
 
             with open(self.settings_path, "w", encoding="utf-8") as outfile:
                 json_string = json.dumps(request.json, indent=4)
@@ -85,7 +86,7 @@ class SettingsEditor:
             return "ok"
 
         @app.route("/api/getOptions")
-        def getOptions():
+        def getOptions() -> Response:
 
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
@@ -398,7 +399,7 @@ class SettingsEditor:
             return jsonify(options)
 
         @app.route("/api/getScripts")
-        def getScripts():
+        def getScripts() -> Response:
             package_type_string = request.args.get("packageType")
 
             discovered_packages = {}
@@ -565,7 +566,7 @@ class SettingsEditor:
 
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
-        def getScriptDetails():
+        def getScriptDetails() -> Response:
             package_type_string = request.args.get("packageType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
@@ -703,7 +704,7 @@ class SettingsEditor:
             return jsonify(package_details)
 
         @app.get("/shutdown")
-        def shutdown():
+        def shutdown() -> str:
             # TODO : when the user clicks on the "Create project" button,
             # the settings should be saved,
             # the webbrowser/window should be closed
@@ -712,18 +713,18 @@ class SettingsEditor:
             return "Server shutting down..."
 
         self._open_browser()
-        app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)
+        app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
 
 
 def main() -> None:
     # dev
-    se_instance = SettingsEditor()
-    se_instance.open_settings_editor()
+    # se_instance = SettingsEditor()
+    # se_instance.open_settings_editor()
 
     # prod
-    # review_manager = colrev.review_manager.ReviewManager()
-    # se_instance = SettingsEditor(review_manager=review_manager)
-    # se_instance.open_settings_editor()
+    review_manager = colrev.review_manager.ReviewManager()
+    se_instance = SettingsEditor(review_manager=review_manager)
+    se_instance.open_settings_editor()
 
 
 if __name__ == "__main__":

@@ -13,12 +13,12 @@ import timeout_decorator
 from p_tqdm import p_map
 from pathos.multiprocessing import ProcessPool
 
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
 
-class PDFPrep(colrev.process.Process):
+class PDFPrep(colrev.operation.Operation):
 
     to_prepare: int
     pdf_prepared: int
@@ -35,7 +35,7 @@ class PDFPrep(colrev.process.Process):
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.pdf_prep,
+            operations_type=colrev.operation.OperationsType.pdf_prep,
             notify_state_transition_operation=notify_state_transition_operation,
             debug=debug,
         )
@@ -48,10 +48,12 @@ class PDFPrep(colrev.process.Process):
         self.cpus = 8
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.pdf_prep,
-            selected_packages=review_manager.settings.pdf_prep.scripts,
-            process=self,
+        self.pdf_prep_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            selected_packages=review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
+            operation=self,
         )
 
     def __complete_successful_pdf_prep(
@@ -141,16 +143,20 @@ class PDFPrep(colrev.process.Process):
         # Note: if there are problems
         # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
-        for pdf_prep_script in self.review_manager.settings.pdf_prep.scripts:
+        for (
+            pdf_prep_package_endpoint
+        ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
 
             try:
-                endpoint = self.pdf_prep_scripts[pdf_prep_script["endpoint"]]
+                endpoint = self.pdf_prep_package_endpoints[
+                    pdf_prep_package_endpoint["endpoint"]
+                ]
                 self.review_manager.logger.debug(
-                    f"{endpoint.settings.name}(...) called"
+                    f"{endpoint.settings.endpoint}(...) called"
                 )
 
                 self.review_manager.report_logger.info(
-                    f'{endpoint.settings.name}({record.data["ID"]}) called'
+                    f'{endpoint.settings.endpoint}({record.data["ID"]}) called'
                 )
 
                 record.data = endpoint.prep_pdf(self, record, pad)
@@ -161,31 +167,32 @@ class PDFPrep(colrev.process.Process):
             ) as err:
                 self.review_manager.logger.error(
                     f'Error for {record.data["ID"]} '
-                    f"(in {endpoint.settings.name} : {err})"
+                    f"(in {endpoint.settings.endpoint} : {err})"
                 )
                 record.data[
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
 
-            except Exception as exc:  # pylint: disable=broad-except
-                print(exc)
-                record.data[
-                    "colrev_status"
-                ] = colrev.record.RecordState.pdf_needs_manual_preparation
-                record.add_data_provenance_note(key="file", note=str(exc))
+            # except Exception as exc:  # pylint: disable=broad-except
+            #     print(exc)
+            #     record.data[
+            #         "colrev_status"
+            #     ] = colrev.record.RecordState.pdf_needs_manual_preparation
+            #     record.add_data_provenance_note(key="file", note=str(exc))
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 == record.data["colrev_status"]
             )
             msg = (
-                f'{endpoint.settings.name}({record.data["ID"]}):'.ljust(pad, " ") + " "
+                f'{endpoint.settings.endpoint}({record.data["ID"]}):'.ljust(pad, " ")
+                + " "
             )
             msg += "fail" if failed else "pass"
             self.review_manager.report_logger.info(msg)
             if failed:
                 break
 
-        # Each prep_scripts can create a new file
+        # Each pdf_prep_package_endpoint can create a new file
         # previous/temporary pdfs are deleted when the process is successful
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
@@ -317,7 +324,7 @@ class PDFPrep(colrev.process.Process):
 
         self.review_manager.dataset.add_changes(path=Path("custom_pdf_prep_script.py"))
 
-        self.review_manager.settings.pdf_prep.scripts.append(
+        self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints.append(
             {"endpoint": "custom_pdf_prep_script"}
         )
 
@@ -350,10 +357,11 @@ class PDFPrep(colrev.process.Process):
                 self.review_manager.dataset.save_record_list_by_id(record_list=[record])
         else:
 
-            script_names = [
-                s["endpoint"] for s in self.review_manager.settings.pdf_prep.scripts
+            endpoint_names = [
+                s["endpoint"]
+                for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
-            if "create_tei" in script_names:  # type: ignore
+            if "colrev_built_in.create_tei" in endpoint_names:  # type: ignore
                 pool = ProcessPool(nodes=mp.cpu_count() // 2)
             else:
                 pool = ProcessPool(nodes=self.cpus)

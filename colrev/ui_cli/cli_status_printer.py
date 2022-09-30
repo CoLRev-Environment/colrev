@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Scripts to print the CoLRev status (cli)."""
+from __future__ import annotations
+
 import logging
 from time import sleep
+from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
+
+
+if TYPE_CHECKING:
+    import colrev.ops.status
 
 
 def print_review_instructions(review_instructions: dict) -> None:
@@ -97,7 +104,7 @@ def print_environment_instructions(environment_instructions: dict) -> None:
         print()
 
 
-def print_progress(*, total_atomic_steps, completed_steps) -> None:
+def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
     # Prints the percentage of atomic processing tasks that have been completed
     # possible extension: estimate the number of manual tasks (making assumptions on
     # frequencies of man-prep, ...)?
@@ -121,7 +128,7 @@ def print_progress(*, total_atomic_steps, completed_steps) -> None:
             break
 
 
-def print_project_status(status_operation) -> None:
+def print_project_status(status_operation: colrev.ops.status.Status) -> None:
 
     try:
         status_stats = status_operation.review_manager.get_status_stats()

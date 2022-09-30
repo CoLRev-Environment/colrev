@@ -35,4 +35,4 @@ colrev.settings.PrescreenSettings
    .. autosummary::
 
       ~PrescreenSettings.explanation
-      ~PrescreenSettings.scripts
+      ~PrescreenSettings.prescreen_package_endpoints

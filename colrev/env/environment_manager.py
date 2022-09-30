@@ -19,7 +19,7 @@ from opensearchpy.exceptions import NotFoundError
 from yaml import safe_load
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
@@ -231,7 +231,7 @@ class EnvironmentManager:
                 cp_review_manager = colrev.review_manager.ReviewManager(
                     path_str=repo["repo_source_path"]
                 )
-                check_process = colrev.process.CheckProcess(
+                check_operation = colrev.operation.CheckOperation(
                     review_manager=cp_review_manager
                 )
                 repo_stat = self._get_status(review_manager=cp_review_manager)
@@ -245,13 +245,13 @@ class EnvironmentManager:
                     repo["progress"] = -1
 
                 repo["remote"] = False
-                git_repo = check_process.review_manager.dataset.get_repo()
+                git_repo = check_operation.review_manager.dataset.get_repo()
                 for remote in git_repo.remotes:
                     if remote.url:
                         repo["remote"] = True
                 repo[
                     "behind_remote"
-                ] = check_process.review_manager.dataset.behind_remote()
+                ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):

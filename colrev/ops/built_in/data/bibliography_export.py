@@ -40,7 +40,7 @@ class BibliographyExport(JsonSchemaMixin):
 
     @dataclass
     class BibliographyExportSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         version: str
         bib_format: BibFormats
         endpoint_dir = Path("endnote")
@@ -79,7 +79,9 @@ class BibliographyExport(JsonSchemaMixin):
         }
         return endnote_endpoint_details
 
-    def __zotero_conversion(self, *, data_operation, content: str) -> bytes:
+    def __zotero_conversion(
+        self, *, data_operation: colrev.ops.data.Data, content: str
+    ) -> bytes:
 
         zotero_translation_service = (
             data_operation.review_manager.get_zotero_translation_service()

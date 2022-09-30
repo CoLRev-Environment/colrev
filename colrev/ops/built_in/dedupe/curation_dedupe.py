@@ -35,7 +35,7 @@ class CurationDedupe(JsonSchemaMixin):
 
     @dataclass
     class CurationDedupeSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         selected_source: str
 
         _details = {
@@ -56,7 +56,7 @@ class CurationDedupe(JsonSchemaMixin):
         # TODO : validate whether selected_source is in SOURCES.filenames
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def __get_similarity(self, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
+    def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
 
         author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
@@ -81,7 +81,11 @@ class CurationDedupe(JsonSchemaMixin):
         return similarity_score
 
     def __calculate_similarities(
-        self, *, similarity_array, references: pd.DataFrame, min_similarity: float
+        self,
+        *,
+        similarity_array: np.ndarray,
+        references: pd.DataFrame,
+        min_similarity: float,
     ) -> tuple:
 
         # Fill out the similarity matrix first
@@ -152,7 +156,7 @@ class CurationDedupe(JsonSchemaMixin):
             ]
             dedupe_sources = [
                 s["selected_source"]
-                for s in dedupe_operation.review_manager.settings.dedupe.scripts
+                for s in dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints
                 if "curation_full_outlet_dedupe" == s["endpoint"]
             ]
             sources_missing_in_dedupe = [
@@ -166,15 +170,15 @@ class CurationDedupe(JsonSchemaMixin):
                 )
                 if "y" == input("Add sources [y,n]?"):
                     for source_missing_in_dedupe in sources_missing_in_dedupe:
-                        penultimate_position = (
-                            len(dedupe_operation.review_manager.settings.dedupe.scripts)
-                            - 1
+                        dedupe_package_endpoints = (
+                            dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints
                         )
+                        penultimate_position = len(dedupe_package_endpoints) - 1
                         dedupe_script_to_add = {
                             "endpoint": "curation_full_outlet_dedupe",
                             "selected_source": source_missing_in_dedupe,
                         }
-                        dedupe_operation.review_manager.settings.dedupe.scripts.insert(
+                        dedupe_package_endpoints.insert(
                             penultimate_position, dedupe_script_to_add
                         )
                         dedupe_operation.review_manager.save_settings()
@@ -427,7 +431,7 @@ class CurationDedupe(JsonSchemaMixin):
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
             ]
 
-            references = pd.DataFrame.from_dict(
+            references = pd.DataFrame.from_records(
                 processed_same_toc_records + pdf_same_toc_records
             )
 
@@ -514,7 +518,7 @@ class CurationDedupe(JsonSchemaMixin):
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "pdfs_dir" == relevant_source[0].source_name
+            pdf_source = "pdfs_dir" == relevant_source[0].endpoint
         return pdf_source
 
     def __first_source_selected(
@@ -522,9 +526,9 @@ class CurationDedupe(JsonSchemaMixin):
     ) -> bool:
         return (
             self.settings.selected_source
-            == dedupe_operation.review_manager.settings.dedupe.scripts[0][
-                "selected_source"
-            ]
+            == dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints[
+                0
+            ]["selected_source"]
         )
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:

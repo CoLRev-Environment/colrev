@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """SearchSource: ACM Digital Library"""
+from __future__ import annotations
+
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,7 +26,9 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
@@ -42,7 +47,12 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             "Automated search not (yet) supported."
         )
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

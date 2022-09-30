@@ -12,7 +12,7 @@ def console_duplicate_instance_label(
     record_pair: list,
     keys: list,
     manual: bool,
-    index_dupe_info,
+    index_dupe_info: str,
     n_match: int,
     n_distinct: int,
     examples_buffer: list,

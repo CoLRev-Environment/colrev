@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: DBLP"""
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from datetime import datetime
@@ -30,13 +32,12 @@ class DBLPSearchSource(JsonSchemaMixin):
     class DBLPSearchSourceSettings(JsonSchemaMixin):
         # pylint: disable=duplicate-code
         # pylint: disable=too-many-instance-attributes
-        name: str
+        endpoint: str
         filename: Path
         search_type: colrev.settings.SearchType
-        source_name: str
         source_identifier: str
         search_parameters: dict
-        load_conversion_script: dict
+        load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
 
         _details = {
@@ -51,7 +52,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation,
+        source_operation: colrev.operation.CheckOperation,
         settings: dict,
     ) -> None:
         # maybe : validate/assert that the venue_key is available
@@ -201,7 +202,12 @@ class DBLPSearchSource(JsonSchemaMixin):
             return result
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

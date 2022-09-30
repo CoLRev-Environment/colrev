@@ -40,7 +40,7 @@ class CoLRevUpgradeError(CoLRevException):
 
 class ReviewManagerNotNofiedError(CoLRevException):
     """
-    The ReviewManager was not notified about the process.
+    The ReviewManager was not notified about the operation.
     """
 
     def __init__(self) -> None:
@@ -132,12 +132,12 @@ class ProcessOrderViolation(CoLRevException):
 
     def __init__(
         self,
-        process_type: str,
+        operations_type: str,
         required_state: str,
         violating_records: list,
     ) -> None:
         self.message = (
-            f" {process_type}() requires all records to have at least "
+            f" {operations_type}() requires all records to have at least "
             + f"'{required_state}', but there are records with {violating_records}."
         )
         super().__init__(self.message)
@@ -288,7 +288,7 @@ class DedupeError(Exception):
 class NoPaperEndpointRegistered(CoLRevException):
     """No paper endpoint registered in settings.json"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.message = "No paper endpoint registered in settings.json"
         super().__init__(self.message)
 

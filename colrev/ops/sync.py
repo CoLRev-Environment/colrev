@@ -128,7 +128,7 @@ class Sync:
         # pylint: disable=duplicate-code
 
         def parse_bibtex_str(*, recs_dict_in: dict) -> str:
-            def format_field(field, value) -> str:
+            def format_field(field: str, value: str) -> str:
                 padd = " " * max(0, 28 - len(field))
                 return f",\n   {field} {padd} = {{{value}}}"
 

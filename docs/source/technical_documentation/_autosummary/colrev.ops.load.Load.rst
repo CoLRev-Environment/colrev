@@ -17,7 +17,7 @@ colrev.ops.load.Load
       :nosignatures:
 
       ~Load.check_precondition
-      ~Load.check_process_model_precondition
+      ~Load.check_record_state_model_precondition
       ~Load.check_update_sources
       ~Load.main
       ~Load.require_clean_repo_general
@@ -31,3 +31,4 @@ colrev.ops.load.Load
    .. autosummary::
 
       ~Load.force_mode
+      ~Load.type

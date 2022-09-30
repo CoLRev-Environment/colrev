@@ -31,7 +31,7 @@ class ExportManPrep(JsonSchemaMixin):
 
     @dataclass
     class ExportManPrepSettings:
-        name: str
+        endpoint: str
         pdf_handling_mode: str = "symlink"
 
         _details = {
@@ -57,7 +57,7 @@ class ExportManPrep(JsonSchemaMixin):
         self.prep_man_path.mkdir(exist_ok=True)
         self.export_path = self.prep_man_path / Path("records_prep_man.bib")
 
-    def __copy_files_for_man_prep(self, *, records):
+    def __copy_files_for_man_prep(self, *, records: dict) -> None:
 
         prep_man_path_pdfs = self.prep_man_path / Path("pdfs")
         prep_man_path_pdfs.mkdir(exist_ok=True)
@@ -72,7 +72,7 @@ class ExportManPrep(JsonSchemaMixin):
                     target_path.symlink_to(Path(record["file"]).resolve())
 
                 if "copy_first_page" == self.settings.pdf_handling_mode:
-                    pdf_reader = PdfFileReader(record["file"], strict=False)
+                    pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if pdf_reader.getNumPages() >= 1:
 
                         writer = PdfFileWriter()

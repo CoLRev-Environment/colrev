@@ -7,16 +7,16 @@ from itertools import chain
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class Validate(colrev.process.Process):
+class Validate(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.check,
+            operations_type=colrev.operation.OperationsType.check,
         )
 
         self.cpus = 4
@@ -75,7 +75,7 @@ class Validate(colrev.process.Process):
         return prior_records_dict
 
     def validate_preparation_changes(
-        self, *, records: list[dict], target_commit
+        self, *, records: list[dict], target_commit: str
     ) -> list:
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)

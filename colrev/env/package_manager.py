@@ -17,11 +17,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class PackageType(Enum):
+class PackageEndpointType(Enum):
     # pylint: disable=C0103
     review_type = "review_type"
     load_conversion = "load_conversion"
@@ -43,7 +43,7 @@ class ReviewTypePackageInterface(
 ):  # pylint: disable=inherit-non-class
 
     # pylint: disable=no-self-argument
-    def initialize(settings: dict) -> dict:
+    def initialize(settings: dict) -> dict:  # type: ignore
         return settings
 
 
@@ -57,17 +57,21 @@ class SearchSourcePackageInterface(
     )
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation) -> None:
+    def run_search(search_operation: colrev.ops.search.Search) -> None:  # type: ignore
         pass
 
     # pylint: disable=no-self-argument
-    def heuristic(filename, data):
+    def heuristic(filename: Path, data: str):  # type: ignore
         pass
 
-    def load_fixes(load_operation, source, records):
+    def load_fixes(  # type: ignore
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: dict,
+    ) -> None:
         """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
 
-    def prepare(record):
+    def prepare(record: dict) -> None:  # type: ignore
         pass
 
 
@@ -80,7 +84,9 @@ class LoadConversionPackageInterface(
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
     # pylint: disable=no-self-argument
-    def load(load_operation, source):
+    def load(  # type: ignore
+        load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
+    ) -> None:
         pass
 
 
@@ -99,7 +105,7 @@ class PrepPackageInterface(
     )
 
     # pylint: disable=no-self-argument
-    def prepare(prep_operation, prep_record):
+    def prepare(prep_operation: colrev.ops.prep.Prep, prep_record: dict) -> dict:  # type: ignore
         pass
 
 
@@ -110,7 +116,9 @@ class PrepManPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def prepare_manual(prep_man_operation, records):
+    def prepare_manual(  # type: ignore
+        prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
+    ) -> dict:
         pass
 
 
@@ -121,7 +129,7 @@ class DedupePackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_dedupe(dedupe_operation):
+    def run_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:  # type: ignore
         pass
 
 
@@ -132,7 +140,9 @@ class PrescreenPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_prescreen(prescreen_operation, records: dict, split: list) -> dict:
+    def run_prescreen(  # type: ignore
+        prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict, split: list
+    ) -> dict:
         pass
 
 
@@ -143,7 +153,7 @@ class PDFGetPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def get_pdf(pdf_get_operation, record):
+    def get_pdf(pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: dict) -> dict:  # type: ignore
         return record
 
 
@@ -154,7 +164,9 @@ class PDFGetManPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def get_man_pdf(pdf_get_man_operation, records):
+    def get_man_pdf(  # type: ignore
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
+    ) -> dict:
         return records
 
 
@@ -166,7 +178,11 @@ class PDFPrepPackageInterface(
 
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
-    def prep_pdf(pdf_prep_operation, record, pad) -> dict:
+    def prep_pdf(  # type: ignore
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
+        record: colrev.record.PrepRecord,
+        pad: int,
+    ) -> dict:
         return record.data
 
 
@@ -177,7 +193,9 @@ class PDFPrepManPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def prep_man_pdf(pdf_prep_man_operation, records):
+    def prep_man_pdf(  # type: ignore
+        pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
+    ) -> dict:
         return records
 
 
@@ -188,7 +206,9 @@ class ScreenPackageInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_screen(screen_operation, records: dict, split: list) -> dict:
+    def run_screen(  # type: ignore
+        screen_operation: colrev.ops.screen.Screen, records: dict, split: list
+    ) -> dict:
         pass
 
 
@@ -203,13 +223,17 @@ class DataPackageInterface(
     def get_default_setup() -> dict:  # type: ignore
         return {}
 
-    def update_data(
-        data_operation, records: dict, synthesized_record_status_matrix: dict
+    def update_data(  # type: ignore
+        data_operation: colrev.ops.data.Data,
+        records: dict,
+        synthesized_record_status_matrix: dict,
     ) -> None:
         pass
 
-    def update_record_status_matrix(
-        data_operation, synthesized_record_status_matrix, endpoint_identifier
+    def update_record_status_matrix(  # type: ignore
+        data_operation: colrev.ops.data.Data,
+        synthesized_record_status_matrix: dict,
+        endpoint_identifier: str,
     ) -> None:
         pass
 
@@ -218,7 +242,7 @@ class DataPackageInterface(
 class DefaultSettings(JsonSchemaMixin):
     """Endpoint settings"""
 
-    name: str
+    endpoint: str
 
 
 @dataclass
@@ -227,80 +251,79 @@ class DefaultSourceSettings(JsonSchemaMixin):
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-instance-attributes
-    name: str
+    endpoint: str
     filename: Path
     search_type: colrev.settings.SearchType
-    source_name: str
     source_identifier: str
     search_parameters: dict
-    load_conversion_script: dict
+    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
 
 class PackageManager:
 
     package_type_overview = {
-        PackageType.review_type: {
+        PackageEndpointType.review_type: {
             "import_name": ReviewTypePackageInterface,
             "custom_class": "CustomReviewType",
             "operation_name": "operation",
         },
-        PackageType.load_conversion: {
+        PackageEndpointType.load_conversion: {
             "import_name": LoadConversionPackageInterface,
             "custom_class": "CustomLoad",
             "operation_name": "load_operation",
         },
-        PackageType.search_source: {
+        PackageEndpointType.search_source: {
             "import_name": SearchSourcePackageInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
         },
-        PackageType.prep: {
+        PackageEndpointType.prep: {
             "import_name": PrepPackageInterface,
             "custom_class": "CustomPrep",
             "operation_name": "prep_operation",
         },
-        PackageType.prep_man: {
+        PackageEndpointType.prep_man: {
             "import_name": PrepManPackageInterface,
             "custom_class": "CustomPrepMan",
             "operation_name": "prep_man_operation",
         },
-        PackageType.dedupe: {
+        PackageEndpointType.dedupe: {
             "import_name": DedupePackageInterface,
             "custom_class": "CustomDedupe",
             "operation_name": "dedupe_operation",
         },
-        PackageType.prescreen: {
+        PackageEndpointType.prescreen: {
             "import_name": PrescreenPackageInterface,
             "custom_class": "CustomPrescreen",
             "operation_name": "prescreen_operation",
         },
-        PackageType.pdf_get: {
+        PackageEndpointType.pdf_get: {
             "import_name": PDFGetPackageInterface,
             "custom_class": "CustomPDFGet",
             "operation_name": "pdf_get_operation",
         },
-        PackageType.pdf_get_man: {
+        PackageEndpointType.pdf_get_man: {
             "import_name": PDFGetManPackageInterface,
             "custom_class": "CustomPDFGetMan",
             "operation_name": "pdf_get_man_operation",
         },
-        PackageType.pdf_prep: {
+        PackageEndpointType.pdf_prep: {
             "import_name": PDFPrepPackageInterface,
             "custom_class": "CustomPDFPrep",
             "operation_name": "pdf_prep_operation",
         },
-        PackageType.pdf_prep_man: {
+        PackageEndpointType.pdf_prep_man: {
             "import_name": PDFPrepManPackageInterface,
             "custom_class": "CustomPDFPrepMan",
             "operation_name": "pdf_prep_man_operation",
         },
-        PackageType.screen: {
+        PackageEndpointType.screen: {
             "import_name": ScreenPackageInterface,
             "custom_class": "CustomScreen",
             "operation_name": "screen_operation",
         },
-        PackageType.data: {
+        PackageEndpointType.data: {
             "import_name": DataPackageInterface,
             "custom_class": "CustomData",
             "operation_name": "data_operation",
@@ -313,10 +336,10 @@ class PackageManager:
         self,
     ) -> None:
 
-        self.packages = self.load_package_index()
+        self.packages = self.load_package_endpoints_index()
         self.__flag_installed_packages()
 
-    def load_package_index(self):
+    def load_package_endpoints_index(self) -> dict:
 
         # TODO : the list of packages should be curated
         # (like CRAN: packages that meet *minimum* requirements)
@@ -327,18 +350,18 @@ class PackageManager:
         # At some point, we may decide to move it to a separate repo/index.
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/packages.json")
+            file_path=Path("template/package_endpoints.json")
         )
         if not filedata:
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/packages.json)"
+                "Package index not available (colrev/template/package_endpoints.json)"
             )
 
         package_dict = json.loads(filedata.decode("utf-8"))
 
         packages = {}
         for key, value in package_dict.items():
-            packages[PackageType[key]] = value
+            packages[PackageEndpointType[key]] = value
             for package_identifier, package_path in value.items():
                 assert " " not in package_identifier
                 assert " " not in package_path
@@ -364,7 +387,7 @@ class PackageManager:
                 except (AttributeError, ModuleNotFoundError):
                     discovered_package["installed"] = False
 
-    def __replace_path_by_str(self, *, orig_dict):
+    def __replace_path_by_str(self, *, orig_dict):  # type: ignore
         for key, value in orig_dict.items():
             if isinstance(value, collections.abc.Mapping):
                 orig_dict[key] = self.__replace_path_by_str(orig_dict=value)
@@ -376,18 +399,18 @@ class PackageManager:
         return orig_dict
 
     def get_package_details(
-        self, *, package_type: PackageType, package_identifier
+        self, *, package_type: PackageEndpointType, package_identifier: str
     ) -> dict:
         # pylint: disable=too-many-branches
 
         package_identifier = package_identifier.lower()
-        package_details = {"name": package_identifier}
+        # package_details = {"endpoint": package_identifier}
         package_class = self.load_package_endpoint(
             package_type=package_type, package_identifier=package_identifier
         )
 
         settings_class = getattr(package_class, "settings_class", None)
-        package_details = settings_class.json_schema()  # type: ignore
+        package_details = dict(settings_class.json_schema())  # type: ignore
 
         if settings_class is None:
             msg = f"{package_identifier} could not be loaded"
@@ -449,19 +472,19 @@ class PackageManager:
         if "paper_output" in package_details["properties"]:
             package_details["properties"]["paper_output"]["type"] = "path"
 
-        if PackageType.search_source == package_type:
+        if PackageEndpointType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
-            package_details["properties"]["load_conversion_script"] = {
+            package_details["properties"]["load_conversion_package_endpoint"] = {
                 "type": "script",
-                "script_type": "load_conversion",
+                "package_endpoint_type": "load_conversion",
             }
 
-        package_details = self.__replace_path_by_str(orig_dict=package_details)
+        package_details = self.__replace_path_by_str(orig_dict=package_details)  # type: ignore
 
         return package_details
 
     def discover_packages(
-        self, *, package_type: PackageType, installed_only: bool = False
+        self, *, package_type: PackageEndpointType, installed_only: bool = False
     ) -> typing.Dict:
 
         discovered_packages = self.packages[package_type]
@@ -479,8 +502,8 @@ class PackageManager:
 
         return discovered_packages
 
-    def load_package_endpoint(
-        self, *, package_type: PackageType, package_identifier: str
+    def load_package_endpoint(  # type: ignore
+        self, *, package_type: PackageEndpointType, package_identifier: str
     ):
         package_identifier = package_identifier.lower()
         if package_identifier not in self.packages[package_type]:
@@ -498,7 +521,7 @@ class PackageManager:
         self,
         *,
         packages_dict: dict,
-        package_type: PackageType,
+        package_type: PackageEndpointType,
         ignore_not_available: bool,
     ) -> None:
         package_details = self.package_type_overview[package_type]
@@ -525,7 +548,7 @@ class PackageManager:
         self,
         *,
         selected_packages: list,
-        package_type: PackageType,
+        package_type: PackageEndpointType,
         ignore_not_available: bool,
     ) -> typing.Dict:
         # avoid changes in the config
@@ -533,16 +556,12 @@ class PackageManager:
         packages_dict: typing.Dict = {}
         for selected_package in selected_packages:
 
-            # quick fix:
-            if "endpoint" not in selected_package:
-                selected_package["endpoint"] = selected_package["source_name"]
-
             package_identifier = selected_package["endpoint"].lower()
             packages_dict[package_identifier] = {}
 
             packages_dict[package_identifier]["settings"] = selected_package
             # 1. Load built-in packages
-            # if package_identifier in cls.packages[process.type]
+            # if package_identifier in cls.packages[package_type]
             if package_identifier in self.packages[package_type]:
                 if not self.packages[package_type][package_identifier]["installed"]:
                     print(f"Cannot load {package_identifier} (not installed)")
@@ -589,29 +608,24 @@ class PackageManager:
                 print(f"Could not load {selected_package}")
                 continue
 
-            packages_dict[package_identifier]["settings"]["name"] = packages_dict[
-                package_identifier
-            ]["settings"]["endpoint"]
-            del packages_dict[package_identifier]["settings"]["endpoint"]
-
         return packages_dict
 
     def load_packages(
         self,
         *,
-        package_type: PackageType,
+        package_type: PackageEndpointType,
         selected_packages: list,
-        process: colrev.process.Process,
+        operation: colrev.operation.Operation,
         ignore_not_available: bool = False,
-        instantiate_objects=True,
+        instantiate_objects: bool = True,
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=unnecessary-dict-index-lookup
         # Note : when iterating over packages_dict.items(),
         # changes to the values (or del k) would not persist
 
-        # TODO : generally change from process.type to package_type
-        # (each process can involve different endpoints)
+        # TODO : generally change from operation.type to package_type
+        # (each operation can involve different endpoints)
 
         if package_type not in self.package_type_overview:
             raise colrev_exceptions.MissingDependencyError(
@@ -634,7 +648,7 @@ class PackageManager:
         endpoint_class = package_details["import_name"]  # type: ignore
         for package_identifier, package_class in packages_dict.items():
             params = {
-                package_details["operation_name"]: process,
+                package_details["operation_name"]: operation,
                 "settings": package_class["settings"],
             }
             if "search_source" == package_type:

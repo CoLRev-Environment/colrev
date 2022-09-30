@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class PDFGetMan(colrev.process.Process):
+class PDFGetMan(colrev.operation.Operation):
     def __init__(
         self,
         *,
@@ -22,17 +22,19 @@ class PDFGetMan(colrev.process.Process):
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.pdf_get_man,
+            operations_type=colrev.operation.OperationsType.pdf_get_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_get_man_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.pdf_get_man,
-            selected_packages=review_manager.settings.pdf_get.man_pdf_get_scripts,
-            process=self,
+        self.pdf_get_man_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+            selected_packages=review_manager.settings.pdf_get.pdf_get_man_package_endpoints,
+            operation=self,
         )
 
     def get_pdf_get_man(self, *, records: dict) -> list:
@@ -106,10 +108,12 @@ class PDFGetMan(colrev.process.Process):
         records = self.review_manager.dataset.load_records_dict()
 
         for (
-            man_pdf_get_script
-        ) in self.review_manager.settings.pdf_get.man_pdf_get_scripts:
+            pdf_get_man_package_endpoint
+        ) in self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints:
 
-            endpoint = self.pdf_get_man_scripts[man_pdf_get_script["endpoint"]]
+            endpoint = self.pdf_get_man_package_endpoints[
+                pdf_get_man_package_endpoint["endpoint"]
+            ]
 
             records = endpoint.get_man_pdf(self, records)
 

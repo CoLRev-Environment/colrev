@@ -37,8 +37,8 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self,
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
-        settings,
-    ):
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.__get_from_downloads_folder = False

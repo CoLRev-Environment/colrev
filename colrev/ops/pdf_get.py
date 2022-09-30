@@ -10,12 +10,12 @@ from pathlib import Path
 
 from p_tqdm import p_map
 
-import colrev.process
+import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
 
-class PDFGet(colrev.process.Process):
+class PDFGet(colrev.operation.Operation):
 
     to_retrieve: int
     retrieved: int
@@ -30,7 +30,7 @@ class PDFGet(colrev.process.Process):
 
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.pdf_get,
+            operations_type=colrev.operation.OperationsType.pdf_get,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
@@ -40,10 +40,12 @@ class PDFGet(colrev.process.Process):
         self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_get_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.pdf_get,
-            selected_packages=review_manager.settings.pdf_get.scripts,
-            process=self,
+        self.pdf_get_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+            selected_packages=review_manager.settings.pdf_get.pdf_get_package_endpoints,
+            operation=self,
         )
 
     def copy_pdfs_to_repo(self) -> None:
@@ -91,17 +93,21 @@ class PDFGet(colrev.process.Process):
 
         record = self.link_pdf(record=record)
 
-        for pdf_get_script in self.review_manager.settings.pdf_get.scripts:
+        for (
+            pdf_get_package_endpoint
+        ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
 
-            endpoint = self.pdf_get_scripts[pdf_get_script["endpoint"]]
+            endpoint = self.pdf_get_package_endpoints[
+                pdf_get_package_endpoint["endpoint"]
+            ]
             self.review_manager.report_logger.info(
-                f'{endpoint.settings.name}({record_dict["ID"]}) called'
+                f'{endpoint.settings.endpoint}({record_dict["ID"]}) called'
             )
             endpoint.get_pdf(self, record)
 
             if "file" in record.data:
                 self.review_manager.report_logger.info(
-                    f"{endpoint.settings.name}"
+                    f"{endpoint.settings.endpoint}"
                     f'({record_dict["ID"]}): retrieved .../{Path(record_dict["file"]).name}'
                 )
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
@@ -445,7 +451,7 @@ class PDFGet(colrev.process.Process):
 
         self.review_manager.dataset.add_changes(path=Path("custom_pdf_get_script.py"))
 
-        self.review_manager.settings.pdf_get.scripts.append(
+        self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints.append(
             {"endpoint": "custom_pdf_get_script"}
         )
 

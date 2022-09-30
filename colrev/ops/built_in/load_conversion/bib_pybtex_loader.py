@@ -33,16 +33,16 @@ class BibPybtexLoader(JsonSchemaMixin):
         *,
         load_operation: colrev.ops.load.Load,
         settings: dict,
-    ):
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def __general_load_fixes(self, records):
+    def __general_load_fixes(self, records: dict) -> dict:
 
         return records
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ):
+    ) -> dict:
         records = {}
         # TODO : implement set_incremental_ids() and fix_keys() (text-file replacements)
         # here (pybtex does not load records with identical IDs /
@@ -53,16 +53,16 @@ class BibPybtexLoader(JsonSchemaMixin):
                     load_str=bibtex_file.read()
                 )
         records = self.__general_load_fixes(records)
-        if source.source_name in load_operation.search_sources.packages:
+        if source.endpoint in load_operation.search_sources.packages:
             search_source_package = load_operation.search_sources.packages[
-                source.source_name
+                source.endpoint
             ]
             records = search_source_package.load_fixes(
                 self, source=source, records=records
             )
         else:
             load_operation.review_manager.logger.info(
-                "No custom source load_fixes for %s", source.source_name
+                "No custom source load_fixes for %s", source.endpoint
             )
 
         return records

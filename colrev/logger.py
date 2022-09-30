@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 def setup_logger(
-    *, review_manager: colrev.review_manager.ReviewManager, level=logging.INFO
+    *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
 ) -> logging.Logger:
     # for logger debugging:
     # from logging_tree import printout
@@ -37,7 +37,7 @@ def setup_logger(
 
 
 def setup_report_logger(
-    *, review_manager: colrev.review_manager.ReviewManager, level=logging.INFO
+    *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
 ) -> logging.Logger:
     report_logger = logging.getLogger(
         f"colrev_report{str(review_manager.path).replace('/', '_')}"

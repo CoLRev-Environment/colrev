@@ -34,4 +34,4 @@ colrev.settings.DataSettings
 
    .. autosummary::
 
-      ~DataSettings.scripts
+      ~DataSettings.data_package_endpoints

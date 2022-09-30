@@ -10,6 +10,7 @@ import threading
 import time
 from collections import deque
 
+from watchdog.events import FileSystemEvent
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
@@ -25,7 +26,7 @@ class Event(LoggingEventHandler):
         self.service = service
         self.logger: logging.Logger = logging.getLogger()
 
-    def on_modified(self, event) -> None:
+    def on_modified(self, event: FileSystemEvent) -> None:
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", ".report.log", ".goutputstream"]):
@@ -117,12 +118,12 @@ class Service:
         self.service_queue.join()
 
     def start_services(self) -> None:
-        async def _start_grobid():
-            grobid_service = self.review_manager.get_grobid_serivce()
+        async def _start_grobid() -> None:
+            grobid_service = self.review_manager.get_grobid_service()
 
             grobid_service.start()
 
-        async def _start_index():
+        async def _start_index() -> None:
             _ = self.review_manager.get_local_index()
 
         asyncio.ensure_future(_start_grobid())
@@ -130,7 +131,7 @@ class Service:
 
     # function to add commands to queue?
 
-    def __setup_service_logger(self, *, level=logging.INFO) -> logging.Logger:
+    def __setup_service_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         service_logger = logging.getLogger("colrev_service")
 
         service_logger.setLevel(level)

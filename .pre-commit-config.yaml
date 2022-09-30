@@ -37,3 +37,4 @@ repos:
     rev: 'v0.971'  # Use the sha / tag you want to point at
     hooks:
     -   id: mypy
+        args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]

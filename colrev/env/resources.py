@@ -8,7 +8,7 @@ from pathlib import Path
 import git
 
 import colrev.env.environment_manager
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
@@ -18,7 +18,7 @@ class Resources:
     curations_path = Path.home().joinpath("colrev/curated_metadata")
     annotators_path = Path.home().joinpath("colrev/annotators")
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def install_curated_resource(self, *, curated_resource: str) -> bool:

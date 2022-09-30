@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: directory containing PDF files (based on GROBID)"""
+from __future__ import annotations
+
 import re
 import typing
 from collections import Counter
@@ -31,7 +33,9 @@ class PDFSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
 
         if "sub_dir_pattern" in settings["search_parameters"]:
             if settings["search_parameters"]["sub_dir_pattern"] != [
@@ -403,7 +407,7 @@ class PDFSearchSource(JsonSchemaMixin):
         search_operation: colrev.ops.search.Search,
         pdfs_to_index: typing.List[Path],
     ) -> typing.List[Path]:
-        def get_pdf_cpid_path(path) -> typing.List[str]:
+        def get_pdf_cpid_path(path: Path) -> typing.List[str]:
             try:
                 cpid = colrev.record.Record.get_colrev_pdf_id(
                     review_manager=search_operation.review_manager, pdf_path=path
@@ -545,7 +549,12 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

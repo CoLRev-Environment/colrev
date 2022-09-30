@@ -36,7 +36,7 @@ class Zettlr(JsonSchemaMixin):
 
     @dataclass
     class ZettlrSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         version: str
         config: dict
 
@@ -73,7 +73,7 @@ class Zettlr(JsonSchemaMixin):
         }
         return zettlr_endpoint_details
 
-    def __get_zettlr_missing(self, *, endpoint_path, included) -> list:
+    def __get_zettlr_missing(self, *, endpoint_path: Path, included: list) -> list:
         in_zettelkasten = []
 
         for md_file in endpoint_path.glob("*.md"):
@@ -192,7 +192,11 @@ class Zettlr(JsonSchemaMixin):
             data_operation.review_manager.dataset.add_changes(path=zettlr_path)
 
     def __append_missing_records(
-        self, *, data_operation: colrev.ops.data.Data, current_dt, zettlr_path
+        self,
+        *,
+        data_operation: colrev.ops.data.Data,
+        current_dt: datetime.datetime,
+        zettlr_path: Path,
     ) -> None:
 
         records_dict = data_operation.review_manager.dataset.load_records_dict()
@@ -235,7 +239,7 @@ class Zettlr(JsonSchemaMixin):
         print("TODO: recommend zettlr/snippest, adding tags")
 
     def __retrieve_setup(
-        self, *, data_operation: colrev.ops.data.Data, current_dt
+        self, *, data_operation: colrev.ops.data.Data, current_dt: datetime.datetime
     ) -> Path:
         if self.zettlr_config_path.is_file():
             zettlr_config = configparser.ConfigParser()

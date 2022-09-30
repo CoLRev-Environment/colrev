@@ -13,8 +13,8 @@ import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
 import colrev.env.utils
+import colrev.operation
 import colrev.ops.built_in.database_connectors as db_connectors
-import colrev.process
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -24,7 +24,7 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 
-class Prep(colrev.process.Process):
+class Prep(colrev.operation.Operation):
 
     # pylint: disable=too-many-instance-attributes
 
@@ -38,7 +38,7 @@ class Prep(colrev.process.Process):
 
     pad: int
 
-    prep_scripts: dict[str, typing.Any]
+    prep_package_endpoints: dict[str, typing.Any]
 
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -106,7 +106,7 @@ class Prep(colrev.process.Process):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.prep,
+            operations_type=colrev.operation.OperationsType.prep,
             notify_state_transition_operation=notify_state_transition_operation,
             debug=(debug != "NA"),
         )
@@ -136,32 +136,30 @@ class Prep(colrev.process.Process):
         *,
         prior: colrev.record.PrepRecord,
         preparation_record: colrev.record.PrepRecord,
-        prep_script: colrev.env.package_manager.PrepPackageInterface,
+        prep_package_endpoint: colrev.env.package_manager.PrepPackageInterface,
     ) -> None:
         diffs = prior.get_diff(other_record=preparation_record)
         if diffs:
             change_report = (
-                f"{prep_script}"
+                f"{prep_package_endpoint}"
                 f'({preparation_record.data["ID"]})'
                 f" changed:\n{self.review_manager.p_printer.pformat(diffs)}\n"
             )
             if self.review_manager.debug_mode:
                 self.review_manager.logger.info(change_report)
                 self.review_manager.logger.info(
-                    "To correct errors in the script,"
+                    "To correct errors in the endpoint,"
                     " open an issue at "
                     "https://github.com/geritwagner/colrev/issues"
                 )
                 self.review_manager.logger.info(
                     "To correct potential errors at source,"
-                    f" {prep_script.source_correction_hint}"
+                    f" {prep_package_endpoint.source_correction_hint}"
                 )
                 input("Press Enter to continue")
                 print("\n")
         else:
-            self.review_manager.logger.debug(
-                f"{prep_script.prepare.__name__} changed: -"
-            )
+            self.review_manager.logger.debug(f"{prep_package_endpoint} changed: -")
             if self.review_manager.debug_mode:
                 print("\n")
                 time.sleep(0.3)
@@ -176,34 +174,38 @@ class Prep(colrev.process.Process):
 
         self.review_manager.logger.info(" prep " + record.data["ID"])
 
-        # preparation_record changes with each script and
+        # preparation_record changes with each endpoint and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
 
         # unprepared_record will not change (for diffs)
         unprepared_record = record.copy_prep_rec()
 
-        for prep_round_script in deepcopy(item["prep_round_scripts"]):
+        for prep_round_package_endpoint in deepcopy(
+            item["prep_round_package_endpoints"]
+        ):
 
             try:
-                prep_script = self.prep_scripts[prep_round_script["endpoint"].lower()]
+                endpoint = self.prep_package_endpoints[
+                    prep_round_package_endpoint["endpoint"].lower()
+                ]
 
                 if self.review_manager.debug_mode:
                     self.review_manager.logger.info(
-                        f"{prep_script.settings.name}(...) called"
+                        f"{endpoint.settings.endpoint}(...) called"
                     )
 
                 prior = preparation_record.copy_prep_rec()
 
-                preparation_record = prep_script.prepare(self, preparation_record)
+                preparation_record = endpoint.prepare(self, preparation_record)
 
                 self.__print_diffs_for_debug(
                     prior=prior,
                     preparation_record=preparation_record,
-                    prep_script=prep_script,
+                    prep_package_endpoint=endpoint,
                 )
 
-                if prep_script.always_apply_changes:
+                if endpoint.always_apply_changes:
                     record.update_by_record(update_record=preparation_record)
 
                 if preparation_record.preparation_save_condition():
@@ -218,7 +220,7 @@ class Prep(colrev.process.Process):
                     break
             except timeout_decorator.timeout_decorator.TimeoutError:
                 self.review_manager.logger.error(
-                    f"{colors.RED}{prep_script.settings.name}(...) timed out{colors.END}"
+                    f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
                 )
 
         if self.last_round:
@@ -394,10 +396,10 @@ class Prep(colrev.process.Process):
         self.review_manager.dataset.add_changes(path=Path("custom_prep_script.py"))
 
         prep_round = self.review_manager.settings.prep.prep_rounds[-1]
-        prep_round.scripts.append({"endpoint": "custom_prep_script"})
+        prep_round.prep_package_endpoints.append({"endpoint": "custom_prep_script"})
         self.review_manager.save_settings()
 
-    def __load_prep_data(self):
+    def __load_prep_data(self) -> dict:
 
         record_state_list = self.review_manager.dataset.get_record_state_list()
         nr_tasks = len(
@@ -474,10 +476,10 @@ class Prep(colrev.process.Process):
             prep_data.append(
                 {
                     "record": colrev.record.PrepRecord(data=item),
-                    # Note : we cannot load scripts here
+                    # Note : we cannot load endpoints here
                     # because pathos/multiprocessing
                     # does not support functions as parameters
-                    "prep_round_scripts": prep_round.scripts,
+                    "prep_round_package_endpoints": prep_round.prep_package_endpoints,
                     "prep_round": prep_round.name,
                 }
             )
@@ -487,7 +489,7 @@ class Prep(colrev.process.Process):
         self, *, debug_ids: str, debug_file: Path = None
     ) -> dict:
 
-        self.review_manager.logger.info("Data passed to the scripts")
+        self.review_manager.logger.info("Data passed to the endpoints")
 
         if debug_file:
             with open(debug_file, encoding="utf8") as target_db:
@@ -535,7 +537,9 @@ class Prep(colrev.process.Process):
             }
         return prep_data
 
-    def __setup_prep_round(self, *, i, prep_round) -> None:
+    def __setup_prep_round(
+        self, *, i: int, prep_round: colrev.settings.PrepRound
+    ) -> None:
 
         self.first_round = bool(i == 0)
 
@@ -543,10 +547,12 @@ class Prep(colrev.process.Process):
             i == len(self.review_manager.settings.prep.prep_rounds) - 1
         )
 
-        # Note : we add the script automatically (not as part of the settings.json)
+        # Note : we add the endpoint automatically (not as part of the settings.json)
         # because it must always be executed at the end
         if prep_round.name not in ["source_specific_prep", "exclusion"]:
-            prep_round.scripts.append({"endpoint": "update_metadata_status"})
+            prep_round.prep_package_endpoints.append(
+                {"endpoint": "colrev_built_in.update_metadata_status"}
+            )
 
         self.review_manager.logger.info(f"Prepare ({prep_round.name})")
 
@@ -555,15 +561,19 @@ class Prep(colrev.process.Process):
             f"Set retrieval_similarity={self.retrieval_similarity}"
         )
 
-        required_prep_scripts = list(prep_round.scripts)
+        required_prep_package_endpoints = list(prep_round.prep_package_endpoints)
 
-        required_prep_scripts.append({"endpoint": "update_metadata_status"})
+        required_prep_package_endpoints.append(
+            {"endpoint": "colrev_built_in.update_metadata_status"}
+        )
 
         package_manager = self.review_manager.get_package_manager()
-        self.prep_scripts: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageType.prep,
-            selected_packages=required_prep_scripts,
-            process=self,
+        self.prep_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            selected_packages=required_prep_package_endpoints,
+            operation=self,
         )
 
     def __log_details(self, *, prepared_records: list) -> None:
@@ -635,7 +645,7 @@ class Prep(colrev.process.Process):
             print("\n\n\n")
             self.review_manager.logger.info("Start debug prep\n")
             self.review_manager.logger.info(
-                "The script will replay the preparation procedures"
+                "The debugger will replay the preparation procedures"
                 " step-by-step, allow you to identify potential errors, trace them to "
                 "their colrev_origin and correct them."
             )
@@ -673,8 +683,10 @@ class Prep(colrev.process.Process):
                 # from p_tqdm import p_map
                 # preparation_data = p_map(self.prepare, preparation_data)
 
-                script_names = [r["endpoint"] for r in prep_round.scripts]
-                if "exclude_languages" in script_names:  # type: ignore
+                prep_pe_names = [
+                    r["endpoint"] for r in prep_round.prep_package_endpoints
+                ]
+                if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
                     self.review_manager.logger.info(
                         f"{colors.ORANGE}The language detector may take "
                         f"longer and require RAM{colors.END}"

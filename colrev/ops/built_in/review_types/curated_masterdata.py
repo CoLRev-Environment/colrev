@@ -23,9 +23,14 @@ class CuratedMasterdata(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
-    def __init__(self, *, operation, settings: dict) -> None:
+    def __init__(
+        self, *, operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = operation.review_manager
+
+    def __str__(self) -> str:
+        return "curated masterdata repository"
 
     def initialize(
         self, settings: colrev.settings.Settings
@@ -43,12 +48,12 @@ class CuratedMasterdata(JsonSchemaMixin):
                 new_string=self.review_manager.settings.project.curation_url,
             )
         crossref_source = colrev.settings.SearchSource(
+            endpoint="crossref",
             filename=Path("data/search/CROSSREF.bib"),
             search_type=colrev.settings.SearchType["DB"],
-            source_name="crossref",
             source_identifier="https://api.crossref.org/works/{{doi}}",
             search_parameters={},
-            load_conversion_script={"endpoint": "bibtex"},
+            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",
         )
         settings.sources.insert(0, crossref_source)
@@ -56,9 +61,9 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         # TODO : exclude complementary materials in prep scripts
         # TODO : exclude get_masterdata_from_citeas etc. from prep
-        settings.prep.man_prep_scripts = [
-            {"endpoint": "prep_man_curation_jupyter"},
-            {"endpoint": "export_man_prep"},
+        settings.prep.prep_man_package_endpoints = [
+            {"endpoint": "colrev_built_in.prep_man_curation_jupyter"},
+            {"endpoint": "colrev_built_in.export_man_prep"},
         ]
         settings.prescreen.explanation = (
             "All records are automatically prescreen included."
@@ -69,25 +74,30 @@ class CuratedMasterdata(JsonSchemaMixin):
         )
 
         settings.project.curated_masterdata = True
-        settings.prescreen.scripts = [
-            {"endpoint": "scope_prescreen", "ExcludeComplementaryMaterials": True},
-            {"endpoint": "conditional_prescreen"},
+        settings.prescreen.prescreen_package_endpoints = [
+            {
+                "endpoint": "colrev_built_in.scope_prescreen",
+                "ExcludeComplementaryMaterials": True,
+            },
+            {"endpoint": "colrev_built_in.conditional_prescreen"},
         ]
-        settings.screen.scripts = [{"endpoint": "conditional_screen"}]
-        settings.pdf_get.scripts = []
+        settings.screen.screen_package_endpoints = [
+            {"endpoint": "colrev_built_in.conditional_screen"}
+        ]
+        settings.pdf_get.pdf_get_package_endpoints = []
         # TODO : Deactivate languages, ...
         #  exclusion and add a complementary exclusion built-in script
 
-        settings.dedupe.scripts = [
+        settings.dedupe.dedupe_package_endpoints = [
             {
-                "endpoint": "curation_full_outlet_dedupe",
+                "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
                 "selected_source": "data/search/CROSSREF.bib",
             },
             {
-                "endpoint": "curation_full_outlet_dedupe",
+                "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
                 "selected_source": "data/search/pdfs.bib",
             },
-            {"endpoint": "curation_missing_dedupe"},
+            {"endpoint": "colrev_built_in.curation_missing_dedupe"},
         ]
 
         # curated repo: automatically prescreen/screen-include papers

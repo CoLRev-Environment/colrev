@@ -59,6 +59,7 @@ colrev.record.PrepRecord
       ~PrepRecord.has_inconsistent_fields
       ~PrepRecord.has_overlapping_colrev_id
       ~PrepRecord.has_quality_defects
+      ~PrepRecord.import_file
       ~PrepRecord.import_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated

@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """SearchSource: Unknown source (default for all other sources)"""
+from __future__ import annotations
+
+import typing
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -14,6 +17,7 @@ import colrev.ops.built_in.database_connectors
 import colrev.ops.search
 import colrev.record
 
+
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
@@ -24,9 +28,11 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
-    source_identifier = "unknown_source"
+    source_identifier = "colrev_built_in.unknown_source"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         converters = {Path: Path, Enum: Enum}
         self.settings = from_dict(
             data_class=self.settings_class,
@@ -52,7 +58,12 @@ class UnknownSearchSource(JsonSchemaMixin):
             "Automated search not (yet) supported."
         )
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

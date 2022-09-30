@@ -30,8 +30,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
-        settings,
-    ):
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_pdf(
@@ -51,7 +51,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
             )
 
             if "file" in record.data:
-                pdf_get_operation.review_manager.dataset.import_file(record=record.data)
+                record.import_file(review_manager=pdf_get_operation.review_manager)
 
         return record
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
-import colrev.process
+import colrev.operation
 
 
 if TYPE_CHECKING:
@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
 class CustomData:
-    def __init__(self, *, data_operation, settings: dict) -> None:
+    def __init__(self, *, data_operation: colrev.ops.data.Data, settings: dict) -> None:
         self.settings = from_dict(
             data_class=colrev.env.package_manager.DefaultSettings, data=settings
         )
 
-    def get_default_setup(self):
+    def get_default_setup(self) -> dict:
         custom_endpoint_details = {
             "endpoint": "CustomDataFormat",
             "custom_data_format_version": "0.1",

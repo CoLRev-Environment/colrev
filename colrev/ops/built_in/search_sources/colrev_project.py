@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """SearchSource: CoLRev project"""
+from __future__ import annotations
+
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,7 +34,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     # TODO : add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "project"
 
-    def __init__(self, *, source_operation, settings: dict) -> None:
+    def __init__(
+        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+    ) -> None:
         if "url" not in settings["search_parameters"]:
             raise colrev_exceptions.InvalidQueryException(
                 "url field required in search_parameters"
@@ -86,7 +91,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
                 if len(res) == 0:
                     continue
-            search_operation.review_manager.dataset.import_file(record=record_to_import)
+
+            colrev.record.Record(data=record_to_import).import_file(
+                review_manager=search_operation.review_manager
+            )
 
             records = records + [record_to_import]
 
@@ -117,7 +125,12 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         return result
 
-    def load_fixes(self, load_operation, source, records):
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
 
         return records
 

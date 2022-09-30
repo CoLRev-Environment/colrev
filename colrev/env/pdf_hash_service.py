@@ -11,7 +11,7 @@ import colrev.exceptions as colrev_exceptions
 
 class PDFHashService:
     # pylint: disable=too-few-public-methods
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:

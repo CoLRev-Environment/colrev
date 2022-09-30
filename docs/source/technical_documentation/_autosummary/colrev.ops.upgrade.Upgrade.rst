@@ -17,7 +17,7 @@ colrev.ops.upgrade.Upgrade
       :nosignatures:
 
       ~Upgrade.check_precondition
-      ~Upgrade.check_process_model_precondition
+      ~Upgrade.check_record_state_model_precondition
       ~Upgrade.main
       ~Upgrade.require_clean_repo_general
 
@@ -30,3 +30,4 @@ colrev.ops.upgrade.Upgrade
    .. autosummary::
 
       ~Upgrade.force_mode
+      ~Upgrade.type

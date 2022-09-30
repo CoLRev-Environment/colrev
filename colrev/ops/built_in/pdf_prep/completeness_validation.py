@@ -104,7 +104,7 @@ class PDFCompletenessValidation(JsonSchemaMixin):
                     i += 1
             return num
 
-        def __get_nr_pages_in_metadata(*, pages_metadata) -> int:
+        def __get_nr_pages_in_metadata(*, pages_metadata: str) -> int:
             if "--" in pages_metadata:
                 nr_pages_metadata = (
                     int(pages_metadata.split("--")[1])

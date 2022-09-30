@@ -232,7 +232,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         )
         return records
 
-    def run_screen(self, screen_operation, records: dict, split: list) -> dict:
+    def run_screen(
+        self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
+    ) -> dict:
 
         records = self.screen_cli(screen_operation, split)
 

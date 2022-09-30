@@ -52,6 +52,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.has_inconsistent_fields
       ~ScreenRecord.has_overlapping_colrev_id
       ~ScreenRecord.has_quality_defects
+      ~ScreenRecord.import_file
       ~ScreenRecord.import_provenance
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated

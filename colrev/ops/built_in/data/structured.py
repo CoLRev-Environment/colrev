@@ -30,7 +30,7 @@ class StructuredData(JsonSchemaMixin):
 
     @dataclass
     class StructuredDataSettings(JsonSchemaMixin):
-        name: str
+        endpoint: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)
         data_path_relative: Path = Path("data.csv")

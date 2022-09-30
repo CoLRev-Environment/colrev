@@ -43,7 +43,7 @@ class BibutilsLoader(JsonSchemaMixin):
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ):
+    ) -> dict:
         def bibutils_convert(script: str, data: str) -> str:
 
             if "xml2bib" == script:
@@ -99,16 +99,16 @@ class BibutilsLoader(JsonSchemaMixin):
 
         records = load_operation.review_manager.dataset.load_records_dict(load_str=data)
 
-        if source.source_name in load_operation.search_sources.packages:
+        if source.endpoint in load_operation.search_sources.packages:
             search_source_package = load_operation.search_sources.packages[
-                source.source_name
+                source.endpoint
             ]
             records = search_source_package.load_fixes(
                 self, source=source, records=records
             )
         else:
             load_operation.review_manager.logger.info(
-                "No custom source load_fixes for %s", source.source_name
+                "No custom source load_fixes for %s", source.endpoint
             )
         return records
 

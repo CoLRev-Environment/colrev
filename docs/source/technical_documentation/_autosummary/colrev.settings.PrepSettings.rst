@@ -36,4 +36,4 @@ colrev.settings.PrepSettings
 
       ~PrepSettings.fields_to_keep
       ~PrepSettings.prep_rounds
-      ~PrepSettings.man_prep_scripts
+      ~PrepSettings.prep_man_package_endpoints

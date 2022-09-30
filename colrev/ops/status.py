@@ -6,21 +6,22 @@ import csv
 import io
 import typing
 from dataclasses import dataclass
+from pathlib import Path
 
 import yaml
 from jinja2 import Environment
 from jinja2 import FunctionLoader
 
 import colrev.env.utils
-import colrev.process
+import colrev.operation
 import colrev.record
 
 
-class Status(colrev.process.Process):
+class Status(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            process_type=colrev.process.ProcessType.explore,
+            operations_type=colrev.operation.OperationsType.explore,
         )
 
     def get_analytics(self) -> dict:
@@ -70,7 +71,7 @@ class Status(colrev.process.Process):
         return analytics_dict
 
     def get_review_status_report(
-        self, *, commit_report: bool = False, colors=None
+        self, *, commit_report: bool = False, colors: object = None
     ) -> str:
 
         status_stats = self.review_manager.get_status_stats()
@@ -222,7 +223,7 @@ class StatusStats:
             while predecessors:
                 predecessors = [
                     t
-                    for t in colrev.process.ProcessModel.transitions
+                    for t in colrev.record.RecordStateModel.transitions
                     if t["source"] in states_to_consider
                     and t["dest"] not in visited_states
                 ]
@@ -253,7 +254,7 @@ class StatusStats:
             # Note : the following does not consider multiple parallel steps.
             for trans_for_completeness in [
                 t
-                for t in colrev.process.ProcessModel.transitions
+                for t in colrev.record.RecordStateModel.transitions
                 if current_state == t["dest"]
             ]:
                 self.nr_incomplete += getattr(
@@ -262,7 +263,7 @@ class StatusStats:
 
             t_list = [
                 t
-                for t in colrev.process.ProcessModel.transitions
+                for t in colrev.record.RecordStateModel.transitions
                 if current_state == t["dest"]
             ]
             transition: dict = t_list.pop()
@@ -322,20 +323,20 @@ class StatusStats:
                 ),
             }
 
-            process_type = [
+            operations_type = [
                 x["trigger"]
-                for x in colrev.process.ProcessModel.transitions
+                for x in colrev.record.RecordStateModel.transitions
                 if str(x["source"]) == transitioned_record["source"]
                 and str(x["dest"]) == transitioned_record["dest"]
             ]
             if (
-                len(process_type) == 0
+                len(operations_type) == 0
                 and transitioned_record["source"] != transitioned_record["dest"]
             ):
-                transitioned_record["process_type"] = "invalid_transition"
+                transitioned_record["operations_type"] = "invalid_transition"
 
-            if len(process_type) > 0:
-                transitioned_record["process_type"] = process_type[0]
+            if len(operations_type) > 0:
+                transitioned_record["operations_type"] = operations_type[0]
                 transitioned_records.append(transitioned_record)
 
         return transitioned_records
@@ -357,7 +358,7 @@ class StatusStats:
                 ]
             search_states = [
                 str(x["source"])
-                for x in colrev.process.ProcessModel.transitions
+                for x in colrev.record.RecordStateModel.transitions
                 if str(x["dest"]) in search_states
             ]
             if [] == search_states:
@@ -367,7 +368,7 @@ class StatusStats:
         # next: get the priority transition for the earliest states
         priority_transitions = [
             x["trigger"]
-            for x in colrev.process.ProcessModel.transitions
+            for x in colrev.record.RecordStateModel.transitions
             if str(x["source"]) in earliest_state
         ]
         # print(f'priority_transitions: {priority_transitions}')
@@ -385,7 +386,7 @@ class StatusStats:
 
         active_processing_functions = []
         for state in current_origin_states_dict.values():
-            srec = colrev.process.ProcessModel(state=state)
+            srec = colrev.record.RecordStateModel(state=state)
             valid_transitions = srec.get_valid_transitions()
             active_processing_functions.extend(valid_transitions)
 
@@ -394,8 +395,10 @@ class StatusStats:
         )
         return active_processing_functions
 
-    def get_processes_in_progress(self, *, transitioned_records) -> list:
-        in_progress_processes = list({x["process_type"] for x in transitioned_records})
+    def get_processes_in_progress(self, *, transitioned_records: list) -> list:
+        in_progress_processes = list(
+            {x["operations_type"] for x in transitioned_records}
+        )
         self.review_manager.logger.debug(
             f"in_progress_processes: {in_progress_processes}"
         )
@@ -507,7 +510,7 @@ class StatusStats:
                 search_dir=self.status_stats.review_manager.search_dir
             )
 
-        def get_nr_search(self, *, search_dir) -> int:
+        def get_nr_search(self, *, search_dir: Path) -> int:
 
             if not search_dir.is_dir():
                 return 0

@@ -52,15 +52,15 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # Language formats: ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
+        prescreen_package_endpoints = (
+            prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
+        )
         # TODO : set as settings parameter?
         languages_to_include = ["eng"]
-        if "scope_prescreen" in [
-            s["endpoint"]
-            for s in prep_operation.review_manager.settings.prescreen.scripts
-        ]:
+        if "scope_prescreen" in [s["endpoint"] for s in prescreen_package_endpoints]:
             for scope_prescreen in [
                 s
-                for s in prep_operation.review_manager.settings.prescreen.scripts
+                for s in prescreen_package_endpoints
                 if "scope_prescreen" == s["endpoint"]
             ]:
                 languages_to_include.extend(

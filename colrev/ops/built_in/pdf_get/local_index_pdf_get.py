@@ -30,8 +30,8 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
-        settings,
-    ):
+        settings: dict,
+    ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_pdf(
@@ -44,13 +44,14 @@ class LocalIndexPDFGet(JsonSchemaMixin):
             retrieved_record = local_index.retrieve(
                 record_dict=record.data, include_file=True
             )
-            # print(Record(retrieved_record))
         except colrev_exceptions.RecordNotInIndexException:
             return record
 
         if "file" in retrieved_record:
-            record.data["file"] = retrieved_record["file"]
-            pdf_get_operation.review_manager.dataset.import_file(record=record.data)
+            record.update_field(
+                key="file", value=str(retrieved_record["file"]), source="local_index"
+            )
+            record.import_file(review_manager=pdf_get_operation.review_manager)
 
         return record
 
