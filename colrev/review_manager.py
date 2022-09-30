@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import pprint
 from dataclasses import asdict
 from datetime import timedelta
@@ -62,6 +63,7 @@ class ReviewManager:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
 
+        self.__move_to_parents_if_necessary()
         self.path = Path(path_str) if path_str is not None else Path.cwd()
 
         self.settings_path = self.path / self.SETTINGS_RELATIVE
@@ -119,6 +121,13 @@ class ReviewManager:
             print("\n\n")
             self.logger.debug("Created review manager instance")
             self.logger.debug("Settings:\n%s", self.settings)
+
+    def __move_to_parents_if_necessary(self) -> None:
+
+        while ".git" not in [f.name for f in Path.cwd().iterdir() if f.is_dir()]:
+            os.chdir("..")
+            if Path("/") == Path.cwd():
+                break
 
     def load_settings(self) -> colrev.settings.Settings:
         return colrev.settings.load_settings(review_manager=self)
