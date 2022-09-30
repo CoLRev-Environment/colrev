@@ -82,12 +82,14 @@ class SettingsEditor:
 
         @app.route("/api/saveSettings", methods=["POST"])
         def saveSettings(create_commit: bool = False) -> str:
+            commit_selected = request.args.get("commitSelected")
 
             with open(self.settings_path, "w", encoding="utf-8") as outfile:
                 json_string = json.dumps(request.json, indent=4)
                 outfile.write(json_string)
-            # if create_commit:
-            #     self.review_manager.create_commit(msg="Update settings")
+            if commit_selected:
+                self.review_manager.create_commit(msg="Update settings")
+
             return "ok"
 
         @app.route("/api/getOptions")
@@ -725,11 +727,10 @@ class SettingsEditor:
 
         @app.get("/shutdown")
         def shutdown() -> str:
-            # TODO : when the user clicks on the "Create project" button,
-            # the settings should be saved,
-            # the webbrowser/window should be closed
-            # and flask should be stopped:
-            # https://stackoverflow.com/questions/15562446/how-to-stop-flask-application-without-using-ctrl-c
+            func = request.environ.get("werkzeug.server.shutdown")
+            if func is None:
+                raise RuntimeError("Not running with the Werkzeug Server")
+            func()
             return "Server shutting down..."
 
         self._open_browser()
