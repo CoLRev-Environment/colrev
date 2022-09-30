@@ -15,6 +15,7 @@ from flask import Response
 from flask import send_from_directory
 from flask_cors import CORS
 
+import colrev.env.package_manager
 import colrev.settings
 
 if TYPE_CHECKING:
@@ -26,15 +27,19 @@ class SettingsEditor:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
+    # dev
+    # def __init__(self) -> None:
+
+    # prod
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        # def __init__(self) -> None:
 
-        # self.review_manager = review_manager
-        # self.package_manager = review_manager.get_package_manager()
-        # self.settings_path: Path = self.review_manager.settings_path
+        # dev
+        # self.settings_path = Path.cwd() / Path("settings.json")
 
-        # For testing:
-        self.settings_path = Path.cwd() / Path("settings.json")
+        # prod
+        self.review_manager = review_manager
+        self.package_manager = review_manager.get_package_manager()
+        self.settings_path: Path = self.review_manager.settings_path
 
         # Note : no need for default values (they are already inserted before by the template setup)
 
@@ -91,8 +96,7 @@ class SettingsEditor:
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
 
-            # options = colrev.settings.Settings.get_settings_schema()
-
+            # dev
             options = {
                 "type": "object",
                 "required": [
@@ -205,14 +209,15 @@ class SettingsEditor:
                     "SearchSource": {
                         "type": "object",
                         "required": [
+                            "endpoint",
                             "filename",
                             "search_type",
-                            "source_name",
                             "source_identifier",
                             "search_parameters",
-                            "load_conversion_script",
+                            "load_conversion_package_endpoint",
                         ],
                         "properties": {
+                            "endpoint": {"type": "string"},
                             "filename": {},
                             "search_type": {
                                 "type": "string",
@@ -225,14 +230,13 @@ class SettingsEditor:
                                     "OTHER",
                                 ],
                             },
-                            "source_name": {"type": "string"},
                             "source_identifier": {"type": "string"},
                             "search_parameters": {
                                 "type": "object",
                                 "additionalProperties": {},
                             },
-                            "load_conversion_script": {
-                                "script_type": "load_conversion",
+                            "load_conversion_package_endpoint": {
+                                "package_endpoint_type": "load_conversion",
                                 "type": "script_item",
                             },
                             "comment": {"type": "string"},
@@ -255,7 +259,7 @@ class SettingsEditor:
                         "required": [
                             "fields_to_keep",
                             "prep_rounds",
-                            "man_prep_scripts",
+                            "prep_man_package_endpoints",
                         ],
                         "properties": {
                             "fields_to_keep": {
@@ -266,8 +270,8 @@ class SettingsEditor:
                                 "type": "array",
                                 "items": {"$ref": "#/definitions/PrepRound"},
                             },
-                            "man_prep_scripts": {
-                                "script_type": "prep_man",
+                            "prep_man_package_endpoints": {
+                                "package_endpoint_type": "prep_man",
                                 "type": "script_array",
                             },
                         },
@@ -275,24 +279,27 @@ class SettingsEditor:
                     },
                     "PrepRound": {
                         "type": "object",
-                        "required": ["name", "similarity", "scripts"],
+                        "required": ["name", "similarity", "prep_package_endpoints"],
                         "properties": {
                             "name": {"type": "string"},
                             "similarity": {"type": "number"},
-                            "scripts": {"script_type": "prep", "type": "script_array"},
+                            "prep_package_endpoints": {
+                                "package_endpoint_type": "prep",
+                                "type": "script_array",
+                            },
                         },
                         "description": "Prep round settings",
                     },
                     "DedupeSettings": {
                         "type": "object",
-                        "required": ["same_source_merges", "scripts"],
+                        "required": ["same_source_merges", "dedupe_package_endpoints"],
                         "properties": {
                             "same_source_merges": {
                                 "type": "string",
                                 "enum": ["prevent", "warn", "apply"],
                             },
-                            "scripts": {
-                                "script_type": "dedupe",
+                            "dedupe_package_endpoints": {
+                                "package_endpoint_type": "dedupe",
                                 "type": "script_array",
                             },
                         },
@@ -300,11 +307,11 @@ class SettingsEditor:
                     },
                     "PrescreenSettings": {
                         "type": "object",
-                        "required": ["explanation", "scripts"],
+                        "required": ["explanation", "prescreen_package_endpoints"],
                         "properties": {
                             "explanation": {"type": "string"},
-                            "scripts": {
-                                "script_type": "prescreen",
+                            "prescreen_package_endpoints": {
+                                "package_endpoint_type": "prescreen",
                                 "type": "script_array",
                             },
                         },
@@ -316,8 +323,8 @@ class SettingsEditor:
                             "pdf_path_type",
                             "pdf_required_for_screen_and_synthesis",
                             "rename_pdfs",
-                            "scripts",
-                            "man_pdf_get_scripts",
+                            "pdf_get_package_endpoints",
+                            "pdf_get_man_package_endpoints",
                         ],
                         "properties": {
                             "pdf_path_type": {
@@ -328,12 +335,12 @@ class SettingsEditor:
                                 "type": "boolean"
                             },
                             "rename_pdfs": {"type": "boolean"},
-                            "scripts": {
-                                "script_type": "pdf_get",
+                            "pdf_get_package_endpoints": {
+                                "package_endpoint_type": "pdf_get",
                                 "type": "script_array",
                             },
-                            "man_pdf_get_scripts": {
-                                "script_type": "pdf_get_man",
+                            "pdf_get_man_package_endpoints": {
+                                "package_endpoint_type": "pdf_get_man",
                                 "type": "script_array",
                             },
                         },
@@ -341,14 +348,17 @@ class SettingsEditor:
                     },
                     "PDFPrepSettings": {
                         "type": "object",
-                        "required": ["scripts", "man_pdf_prep_scripts"],
+                        "required": [
+                            "pdf_prep_package_endpoints",
+                            "pdf_prep_man_package_endpoints",
+                        ],
                         "properties": {
-                            "scripts": {
-                                "script_type": "pdf_prep",
+                            "pdf_prep_package_endpoints": {
+                                "package_endpoint_type": "pdf_prep",
                                 "type": "script_array",
                             },
-                            "man_pdf_prep_scripts": {
-                                "script_type": "pdf_prep_man",
+                            "pdf_prep_man_package_endpoints": {
+                                "package_endpoint_type": "pdf_prep_man",
                                 "type": "script_array",
                             },
                         },
@@ -356,7 +366,7 @@ class SettingsEditor:
                     },
                     "ScreenSettings": {
                         "type": "object",
-                        "required": ["criteria", "scripts"],
+                        "required": ["criteria", "screen_package_endpoints"],
                         "properties": {
                             "explanation": {"type": "string"},
                             "criteria": {
@@ -365,8 +375,8 @@ class SettingsEditor:
                                     "$ref": "#/definitions/ScreenCriterion"
                                 },
                             },
-                            "scripts": {
-                                "script_type": "screen",
+                            "screen_package_endpoints": {
+                                "package_endpoint_type": "screen",
                                 "type": "script_array",
                             },
                         },
@@ -387,56 +397,58 @@ class SettingsEditor:
                     },
                     "DataSettings": {
                         "type": "object",
-                        "required": ["scripts"],
+                        "required": ["data_package_endpoints"],
                         "properties": {
-                            "scripts": {"script_type": "data", "type": "script_array"}
+                            "data_package_endpoints": {
+                                "package_endpoint_type": "data",
+                                "type": "script_array",
+                            }
                         },
                         "description": "Data settings",
                     },
                 },
             }
 
+            # prod
+            # options = colrev.settings.Settings.get_settings_schema()
+
             return jsonify(options)
 
         @app.route("/api/getScripts")
         def getScripts() -> Response:
-            package_type_string = request.args.get("packageType")
+            package_type_string = request.args.get("PackageEndpointType")
 
             discovered_packages = {}
 
-            # package_type = colrev.env.package_manager.PackageType[package_type_string]
-            # discovered_packages = self.package_manager.discover_packages(
-            #     package_type=package_type
-            # )
-
+            # dev
             if package_type_string == "data":
                 discovered_packages = {
-                    "manuscript": {
+                    "colrev_built_in.manuscript": {
                         "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript",
                         "installed": True,
-                        "description": "Synthesize the literature in a manuscript",
+                        "description": "Synthesize the literature in a manuscript\n\n    The manuscript (paper.md) is created automatically.\n    Records are added for synthesis after the <!-- NEW_RECORD_SOURCE -->\n    Once records are moved to other parts of the manuscript (cited or in comments)\n    they are assumed to be synthesized in the manuscript.\n    Once they are synthesized in all data endpoints,\n    CoLRev sets their status to rev_synthesized.\n    The data operation also builds the manuscript (using pandoc, csl and a template).\n    ",
                     },
-                    "structured": {
+                    "colrev_built_in.structured": {
                         "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
                         "installed": True,
                         "description": "Summarize the literature in a structured data extraction (a spreadsheet)",
                     },
-                    "bibliography_export": {
+                    "colrev_built_in.bibliography_export": {
                         "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
                         "installed": True,
                         "description": "Export the sample references in Endpoint format",
                     },
-                    "prisma": {
+                    "colrev_built_in.prisma": {
                         "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
                         "installed": True,
                         "description": "Create a PRISMA diagram",
                     },
-                    "github_pages": {
+                    "colrev_built_in.github_pages": {
                         "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
                         "installed": True,
                         "description": "Export the literature review into a Github Page",
                     },
-                    "zettlr": {
+                    "colrev_built_in.zettlr": {
                         "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr",
                         "installed": True,
                         "description": "Export the sample into a Zettlr database",
@@ -448,32 +460,32 @@ class SettingsEditor:
                 # Example: script_type="load_conversion"
                 # Returns:
                 discovered_packages = {
-                    "bibtex": {
+                    "colrev_built_in.bibtex": {
                         "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
                         "installed": True,
                         "description": "Loads BibTeX files (based on pybtex)",
                     },
-                    "csv": {
+                    "colrev_built_in.csv": {
                         "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
                         "installed": True,
                         "description": "Loads csv files (based on pandas)",
                     },
-                    "excel": {
+                    "colrev_built_in.excel": {
                         "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
                         "installed": True,
                         "description": "Loads Excel (xls, xlsx) files (based on pandas)",
                     },
-                    "zotero_translate": {
+                    "colrev_built_in.zotero_translate": {
                         "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
                         "installed": True,
                         "description": "Loads bibliography files (based on pandas).\n    Supports ris, rdf, json, mods, xml, marc, txt",
                     },
-                    "md_to_bib": {
+                    "colrev_built_in.md_to_bib": {
                         "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
                         "installed": True,
                         "description": "Loads reference strings from text (md) files (based on GROBID)",
                     },
-                    "bibutils": {
+                    "colrev_built_in.bibutils": {
                         "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
                         "installed": True,
                         "description": "Loads bibliography files (based on bibutils)\n    Supports ris, end, enl, copac, isi, med",
@@ -485,116 +497,118 @@ class SettingsEditor:
                 # Example: script_type="search_source"
                 # Returns:
                 discovered_packages = {
-                    "unknown_source": {
+                    "colrev_built_in.unknown_source": {
                         "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "UnknownSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "crossref": {
+                    "colrev_built_in.crossref": {
                         "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSourceSearchSource",
                         "installed": True,
                         "description": "Performs a search using the Crossref API",
                     },
-                    "dblp": {
+                    "colrev_built_in.dblp": {
                         "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "DBLPSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "acm_digital_library": {
+                    "colrev_built_in.acm_digital_library": {
                         "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "ACMDigitalLibrarySearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "pubmed": {
+                    "colrev_built_in.pubmed": {
                         "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "PubMedSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "wiley": {
+                    "colrev_built_in.wiley": {
                         "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "WileyOnlineLibrarySearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "ais_library": {
+                    "colrev_built_in.ais_library": {
                         "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "AISeLibrarySearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "google_scholar": {
+                    "colrev_built_in.google_scholar": {
                         "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "GoogleScholarSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "web_of_science": {
+                    "colrev_built_in.web_of_science": {
                         "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "WebOfScienceSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "scopus": {
+                    "colrev_built_in.scopus": {
                         "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "ScopusSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "pdfs_dir": {
+                    "colrev_built_in.pdfs_dir": {
                         "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
                         "installed": True,
-                        "description": None,
+                        "description": "PDFSearchSource(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
-                    "pdf_backward_search": {
+                    "colrev_built_in.pdf_backward_search": {
                         "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
                         "installed": True,
                         "description": "Performs a backward search extracting references from PDFs using GROBID\n    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)\n    ",
                     },
-                    "colrev_project": {
+                    "colrev_built_in.colrev_project": {
                         "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
                         "installed": True,
                         "description": "Performs a search in a CoLRev project",
                     },
-                    "local_index": {
+                    "colrev_built_in.local_index": {
                         "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
                         "installed": True,
                         "description": "Performs a search in the LocalIndex",
                     },
-                    "transport_research_international_documentation": {
+                    "colrev_built_in.transport_research_international_documentation": {
                         "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation",
                         "installed": True,
-                        "description": None,
+                        "description": "TransportResearchInternationalDocumentation(*, source_operation: 'colrev.operation.CheckOperation', settings: 'dict') -> 'None'",
                     },
                 }
+
+            # prod
+            # package_type = colrev.env.package_manager.PackageEndpointType[
+            #     package_type_string
+            # ]
+            # discovered_packages = self.package_manager.discover_packages(
+            #     package_type=package_type
+            # )
 
             return jsonify(discovered_packages)
 
         # pylint: disable=unused-argument
         @app.route("/api/getScriptDetails")
         def getScriptDetails() -> Response:
-            package_type_string = request.args.get("packageType")
+            package_type_string = request.args.get("PackageEndpointType")
             package_identifier = request.args.get("packageIdentifier")
             endpoint_version = request.args.get("endpointVersion")
 
             package_details = {}
 
-            # package_type = colrev.env.package_manager.PackageType[package_type_string]
-            # package_details = self.package_manager.get_package_details(
-            #     package_type=package_type, package_identifier=package_identifier
-            # )
-
             # TODO (GW): use endpoint_version
 
+            # dev
             if package_type_string == "data":
+                # Example: script_type="data", script_name="colrev_built_in.manuscript"
                 package_details = {
                     "type": "object",
-                    "required": ["name", "version", "word_template", "csl_style"],
+                    "required": ["endpoint", "version", "word_template", "csl_style"],
                     "properties": {
-                        "name": {"type": "string"},
+                        "endpoint": {"type": "string"},
                         "version": {"type": "string"},
                         "word_template": {
                             "tooltip": "Path to the word template (for Pandoc)",
                             "type": "path",
                         },
-                        "csl_style": {
-                            "type": "string",
-                            "tooltip": "Path to the csl file (for Pandoc)",
-                        },
+                        "csl_style": {"type": "string"},
                         "paper_path": {
                             "default": "paper.md",
                             "tooltip": "Path for the paper (markdown source document)",
@@ -608,13 +622,13 @@ class SettingsEditor:
 
             if package_type_string == "prescreen":
                 # For testing:
-                # Example: script_type="prescreen", script_name="scope_prescreen"
+                # Example: script_type="prescreen", script_name="colrev_built_in.scope_prescreen"
                 # Returns:
                 package_details = {
                     "type": "object",
-                    "required": ["name"],
+                    "required": ["endpoint"],
                     "properties": {
-                        "name": {"type": "string"},
+                        "endpoint": {"type": "string"},
                         "TimeScopeFrom": {
                             "type": "integer",
                             "tooltip": "Lower bound for the time scope",
@@ -658,21 +672,20 @@ class SettingsEditor:
 
             if package_type_string == "search_source":
                 # For testing:
-                # Example: script_type="search_source", script_name="crossref"
+                # Example: script_type="search_source", script_name="colrev_built_in.crossref"
                 # Returns:
                 package_details = {
                     "type": "object",
                     "required": [
-                        "name",
+                        "endpoint",
                         "filename",
                         "search_type",
-                        "source_name",
                         "source_identifier",
                         "search_parameters",
-                        "load_conversion_script",
+                        "load_conversion_package_endpoint",
                     ],
                     "properties": {
-                        "name": {"type": "string"},
+                        "endpoint": {"type": "string"},
                         "filename": {"type": "path"},
                         "search_type": {
                             "type": "string",
@@ -685,21 +698,28 @@ class SettingsEditor:
                                 "OTHER",
                             ],
                         },
-                        "source_name": {"type": "string"},
                         "source_identifier": {"type": "string"},
                         "search_parameters": {
                             "type": "object",
                             "additionalProperties": {},
                         },
-                        "load_conversion_script": {
+                        "load_conversion_package_endpoint": {
                             "type": "script",
-                            "script_type": "load_conversion",
+                            "package_endpoint_type": "load_conversion",
                         },
                         "comment": {"type": "string"},
                     },
                     "description": "Search source settings",
                     "$schema": "http://json-schema.org/draft-06/schema#",
                 }
+
+            # prod
+            # package_type = colrev.env.package_manager.PackageEndpointType[
+            #     package_type_string
+            # ]
+            # package_details = self.package_manager.get_package_details(
+            #     package_type=package_type, package_identifier=package_identifier
+            # )
 
             return jsonify(package_details)
 
