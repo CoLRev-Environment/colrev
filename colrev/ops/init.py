@@ -196,7 +196,7 @@ class Initializer:
             )
         ]
 
-        colrev_version = version("colrev_core")
+        colrev_version = version("colrev")
         colrev_version = colrev_version[: colrev_version.find("+")]
         settings.project.colrev_version = colrev_version
 
