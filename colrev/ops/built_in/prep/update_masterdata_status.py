@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class UpdateMetadataStatusPrep(JsonSchemaMixin):
     """Prepares records by updating the metadata status"""

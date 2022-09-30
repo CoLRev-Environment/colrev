@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that have a non-latin alphabet

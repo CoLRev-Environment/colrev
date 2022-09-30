@@ -20,7 +20,9 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.LoadConversionPackageEndpointInterface
+)
 @dataclass
 class MarkdownLoader(JsonSchemaMixin):
 

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
 class PDFMetadataValidation(JsonSchemaMixin):
     """Prepare PDFs by validating it against its associated metadata"""

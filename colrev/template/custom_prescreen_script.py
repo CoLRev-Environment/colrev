@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     import colrev.ops.prescreen
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.PrescreenPackageEndpointInterface
+)
 class CustomPrescreen:
     def __init__(
         self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, settings: dict

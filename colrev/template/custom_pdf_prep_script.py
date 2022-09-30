@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     import colrev.ops.pdf_prep
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 class CustomPDFPrep:
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict

@@ -101,7 +101,9 @@ class SpreadsheetLoadUtility:
         return records_dict
 
 
-@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.LoadConversionPackageEndpointInterface
+)
 @dataclass
 class CSVLoader(JsonSchemaMixin):
 
@@ -155,7 +157,9 @@ class CSVLoader(JsonSchemaMixin):
         return records
 
 
-@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.LoadConversionPackageEndpointInterface
+)
 class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 

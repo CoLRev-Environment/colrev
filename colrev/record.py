@@ -595,9 +595,11 @@ class Record:
             if "" == val:
                 continue
 
-            source, note = merging_record.get_field_provenance(
+            field_provenance = merging_record.get_field_provenance(
                 key=key, default_source=default_source
             )
+            source = field_provenance["source"]
+            note = field_provenance["note"]
 
             # Part 1: identifying fields
             if key in Record.identifying_field_keys:
@@ -989,7 +991,7 @@ class Record:
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
-    ) -> list:
+    ) -> dict:
         default_note = ""
         note = default_note
         source = default_source
@@ -1010,7 +1012,7 @@ class Record:
                     if "note" in self.data["colrev_data_provenance"][key]:
                         note = self.data["colrev_data_provenance"][key]["note"]
 
-        return [source, note]
+        return {"source": source, "note": note}
 
     def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         if "colrev_masterdata_provenance" not in self.data:
@@ -2524,6 +2526,59 @@ class RecordStateModel:
                 raise colrev_exceptions.ProcessOrderViolation(
                     operation.type.name, str(self.state), list(intersection)
                 )
+
+
+class PDFPrepManRecord(Record):
+    def __str__(self) -> str:
+        ret_str = ""
+        if "file" in self.data:
+            ret_str += f"\nfile: {colors.ORANGE}{self.data['file']}{colors.END}\n\n"
+
+        pdf_prep_note = self.get_field_provenance(key="file")
+
+        if "author_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += (
+                f"{colors.RED}{self.data.get('author', 'no-author')}{colors.END}\n"
+            )
+            ret_str += " - author not found in first pages - "
+        else:
+            ret_str += (
+                f"{colors.GREEN}{self.data.get('author', 'no-author')}{colors.END}\n"
+            )
+
+        if "title_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += f"{colors.RED}{self.data.get('title', 'no title')}{colors.END}\n"
+            ret_str += " - title not found in first pages - "
+        else:
+            ret_str += (
+                f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
+            )
+
+        if "article" == self.data["ENTRYTYPE"]:
+            ret_str += (
+                f"{self.data.get('journal', 'no-journal')} "
+                f"({self.data.get('year', 'no-year')}) "
+                f"{self.data.get('volume', 'no-volume')}"
+                f"({self.data.get('number', '')})"
+            )
+            if "pages" in self.data:
+                if "nr_pages_not_matching" in pdf_prep_note["note"]:
+                    ret_str += f", {colors.RED}pp.{self.data['pages']}{colors.END}\n"
+                else:
+                    ret_str += f", pp.{colors.GREEN}{self.data['pages']}{colors.END}\n"
+            else:
+                ret_str += "\n"
+        elif "inproceedings" == self.data["ENTRYTYPE"]:
+            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
+        if "abstract" in self.data:
+            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+            ret_str += f"\nAbstract: {lines.pop(0)}\n"
+            ret_str += "\n".join(lines) + "\n"
+
+        if "url" in self.data:
+            ret_str += f"\nurl: {self.data['url']}\n"
+
+        return ret_str
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
 @dataclass
 class WebsiteScreenshot(JsonSchemaMixin):
     """Get PDFs from webisite screenshot (for "online" ENTRYTYPES)"""

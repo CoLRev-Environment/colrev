@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep_man
@@ -21,7 +22,9 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepManPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.PDFPrepManPackageEndpointInterface
+)
 @dataclass
 class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
@@ -53,7 +56,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 f"called man_pdf_prep for {_pp.pformat(item)}"
             )
             print(stat)
-            _pp.pprint(item)
+            record = colrev.record.PDFPrepManRecord(data=item)
+            print(record)
 
             record_dict = records[item["ID"]]
             if (
@@ -62,17 +66,33 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             ):
                 return record_dict
 
+            file_provenance = record.get_field_provenance(key="file")
             print(
                 "Manual preparation needed:"
-                f" {record_dict.get('pdf_prep_hints', 'Details not available.')}"
+                f" {colors.RED}{file_provenance['note']}{colors.END}"
             )
 
             filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
             if pdf_path.is_file() or filepath.is_file():
-                if "y" == input("Prepared? (y/n)?"):
-                    record = colrev.record.Record(data=record_dict)
-                    record.pdf_man_prep(review_manager=pdf_prep_man.review_manager)
+                user_selection = ""
+                valid_selections = ["y", "n", "d"]
+                while user_selection not in valid_selections:
+                    user_selection = input("Prepared? ( (y)es, (n)o, (d)elete file)?")
+                    if "y" == user_selection:
+                        record = colrev.record.PDFPrepManRecord(data=record_dict)
+                        record.pdf_man_prep(review_manager=pdf_prep_man.review_manager)
+                    if "d" == user_selection:
+                        record = colrev.record.PDFPrepManRecord(data=record_dict)
+                        record.remove_field(key="file")
+                        record.set_status(
+                            target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
+                        )
+                        if pdf_path.is_file():
+                            pdf_path.unlink()
+                        if filepath.is_file():
+                            filepath.unlink()
+                # TODO : save to file
 
             else:
                 print(f'File does not exist ({record.data["ID"]})')

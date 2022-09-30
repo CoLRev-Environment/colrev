@@ -35,7 +35,9 @@ def apply_field_mapping(
     return record
 
 
-@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
 @dataclass
 class AISeLibrarySearchSource(JsonSchemaMixin):
 

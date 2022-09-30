@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import colrev.ops.prep
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 class CustomPrep:
 
     source_correction_hint = "check with the developer"

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class Zettlr(JsonSchemaMixin):
     """Export the sample into a Zettlr database"""

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class CrossrefMetadataPrep(JsonSchemaMixin):
     """Prepares records based on crossref.org metadata"""

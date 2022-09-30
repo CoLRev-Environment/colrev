@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
 @dataclass
 class ActiveLearningDedupeTraining(JsonSchemaMixin):
     """Active learning: training phase (minimum sample size of 50 required)"""
@@ -428,7 +428,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         )
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
 @dataclass
 class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     """Applies trained (active learning) model"""

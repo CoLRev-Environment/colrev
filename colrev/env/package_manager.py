@@ -38,7 +38,7 @@ class PackageEndpointType(Enum):
     data = "data"
 
 
-class ReviewTypePackageInterface(
+class ReviewTypePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -47,7 +47,7 @@ class ReviewTypePackageInterface(
         return settings
 
 
-class SearchSourcePackageInterface(
+class SearchSourcePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -75,7 +75,7 @@ class SearchSourcePackageInterface(
         pass
 
 
-class LoadConversionPackageInterface(
+class LoadConversionPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """Interface for packages that load records from different filetypes"""
@@ -90,7 +90,7 @@ class LoadConversionPackageInterface(
         pass
 
 
-class PrepPackageInterface(
+class PrepPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -109,7 +109,7 @@ class PrepPackageInterface(
         pass
 
 
-class PrepManPackageInterface(
+class PrepManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -122,7 +122,7 @@ class PrepManPackageInterface(
         pass
 
 
-class DedupePackageInterface(
+class DedupePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -133,7 +133,7 @@ class DedupePackageInterface(
         pass
 
 
-class PrescreenPackageInterface(
+class PrescreenPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -146,7 +146,7 @@ class PrescreenPackageInterface(
         pass
 
 
-class PDFGetPackageInterface(
+class PDFGetPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -157,7 +157,7 @@ class PDFGetPackageInterface(
         return record
 
 
-class PDFGetManPackageInterface(
+class PDFGetManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -170,7 +170,7 @@ class PDFGetManPackageInterface(
         return records
 
 
-class PDFPrepPackageInterface(
+class PDFPrepPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -186,7 +186,7 @@ class PDFPrepPackageInterface(
         return record.data
 
 
-class PDFPrepManPackageInterface(
+class PDFPrepManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -199,7 +199,7 @@ class PDFPrepManPackageInterface(
         return records
 
 
-class ScreenPackageInterface(
+class ScreenPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -212,7 +212,7 @@ class ScreenPackageInterface(
         pass
 
 
-class DataPackageInterface(
+class DataPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
 
@@ -264,67 +264,67 @@ class PackageManager:
 
     package_type_overview = {
         PackageEndpointType.review_type: {
-            "import_name": ReviewTypePackageInterface,
+            "import_name": ReviewTypePackageEndpointInterface,
             "custom_class": "CustomReviewType",
             "operation_name": "operation",
         },
         PackageEndpointType.load_conversion: {
-            "import_name": LoadConversionPackageInterface,
+            "import_name": LoadConversionPackageEndpointInterface,
             "custom_class": "CustomLoad",
             "operation_name": "load_operation",
         },
         PackageEndpointType.search_source: {
-            "import_name": SearchSourcePackageInterface,
+            "import_name": SearchSourcePackageEndpointInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
         },
         PackageEndpointType.prep: {
-            "import_name": PrepPackageInterface,
+            "import_name": PrepPackageEndpointInterface,
             "custom_class": "CustomPrep",
             "operation_name": "prep_operation",
         },
         PackageEndpointType.prep_man: {
-            "import_name": PrepManPackageInterface,
+            "import_name": PrepManPackageEndpointInterface,
             "custom_class": "CustomPrepMan",
             "operation_name": "prep_man_operation",
         },
         PackageEndpointType.dedupe: {
-            "import_name": DedupePackageInterface,
+            "import_name": DedupePackageEndpointInterface,
             "custom_class": "CustomDedupe",
             "operation_name": "dedupe_operation",
         },
         PackageEndpointType.prescreen: {
-            "import_name": PrescreenPackageInterface,
+            "import_name": PrescreenPackageEndpointInterface,
             "custom_class": "CustomPrescreen",
             "operation_name": "prescreen_operation",
         },
         PackageEndpointType.pdf_get: {
-            "import_name": PDFGetPackageInterface,
+            "import_name": PDFGetPackageEndpointInterface,
             "custom_class": "CustomPDFGet",
             "operation_name": "pdf_get_operation",
         },
         PackageEndpointType.pdf_get_man: {
-            "import_name": PDFGetManPackageInterface,
+            "import_name": PDFGetManPackageEndpointInterface,
             "custom_class": "CustomPDFGetMan",
             "operation_name": "pdf_get_man_operation",
         },
         PackageEndpointType.pdf_prep: {
-            "import_name": PDFPrepPackageInterface,
+            "import_name": PDFPrepPackageEndpointInterface,
             "custom_class": "CustomPDFPrep",
             "operation_name": "pdf_prep_operation",
         },
         PackageEndpointType.pdf_prep_man: {
-            "import_name": PDFPrepManPackageInterface,
+            "import_name": PDFPrepManPackageEndpointInterface,
             "custom_class": "CustomPDFPrepMan",
             "operation_name": "pdf_prep_man_operation",
         },
         PackageEndpointType.screen: {
-            "import_name": ScreenPackageInterface,
+            "import_name": ScreenPackageEndpointInterface,
             "custom_class": "CustomScreen",
             "operation_name": "screen_operation",
         },
         PackageEndpointType.data: {
-            "import_name": DataPackageInterface,
+            "import_name": DataPackageEndpointInterface,
             "custom_class": "CustomData",
             "operation_name": "data_operation",
         },

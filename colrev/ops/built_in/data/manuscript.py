@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class Manuscript(JsonSchemaMixin):
     """Synthesize the literature in a manuscript

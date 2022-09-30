@@ -40,7 +40,7 @@ class Prescreen(colrev.operation.Operation):
 
         endpoint = (
             colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
-                prescreen_operation=self, settings={"name": "export_table"}
+                prescreen_operation=self, settings={"endpoint": "export_table"}
             )
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -55,7 +55,7 @@ class Prescreen(colrev.operation.Operation):
 
         endpoint = (
             colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
-                prescreen_operation=self, settings={"name": "import_table"}
+                prescreen_operation=self, settings={"endpoint": "import_table"}
             )
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -69,7 +69,7 @@ class Prescreen(colrev.operation.Operation):
 
         endpoint = (
             colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
-                prescreen_operation=self, settings={"name": "include_all"}
+                prescreen_operation=self, settings={"endpoint": "include_all"}
             )
         )
         records = self.review_manager.dataset.load_records_dict()

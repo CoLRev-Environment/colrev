@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class LocalIndexPrep(JsonSchemaMixin):
     """Prepares records based on LocalIndex metadata"""

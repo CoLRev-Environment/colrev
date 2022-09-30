@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
 @dataclass
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""

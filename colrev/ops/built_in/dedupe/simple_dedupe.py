@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
 @dataclass
 class SimpleDedupe(JsonSchemaMixin):
     """Simple duplicate identification (for small sample sizes)"""

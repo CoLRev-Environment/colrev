@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import colrev.ops.screen
 
 
-@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 @dataclass
 class SpreadsheetScreen(JsonSchemaMixin):
     """Screen documents using spreadsheets (exported and imported)"""

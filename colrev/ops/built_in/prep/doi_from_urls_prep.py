@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class DOIFromURLsPrep(JsonSchemaMixin):
     """Prepares records by retrieving its DOI from the website (URL)"""

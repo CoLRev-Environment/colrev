@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""

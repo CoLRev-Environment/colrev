@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     import colrev.screen.Screen
 
 
-@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 class CustomScreen:
     def __init__(
         self, *, screen_operation: colrev.screen.Screen, settings: dict

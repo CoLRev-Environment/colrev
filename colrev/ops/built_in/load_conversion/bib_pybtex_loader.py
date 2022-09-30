@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.env.package_manager.LoadConversionPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.LoadConversionPackageEndpointInterface
+)
 @dataclass
 class BibPybtexLoader(JsonSchemaMixin):
 

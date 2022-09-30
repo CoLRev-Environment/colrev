@@ -20,7 +20,9 @@ if typing.TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.PrescreenPackageEndpointInterface
+)
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
 

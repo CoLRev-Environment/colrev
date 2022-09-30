@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     import colrev.ops.screen
 
 
-@zope.interface.implementer(colrev.env.package_manager.ScreenPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 @dataclass
 class CoLRevCLIScreen(JsonSchemaMixin):
     """Screen documents using a CLI"""

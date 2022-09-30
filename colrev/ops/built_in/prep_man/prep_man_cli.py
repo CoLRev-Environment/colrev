@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepManPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
 @dataclass
 class CoLRevCLIManPrep(JsonSchemaMixin):
     """Manual preparation using the CLI (Not yet implemented)"""

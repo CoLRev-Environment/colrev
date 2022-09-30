@@ -257,11 +257,10 @@ class PDFPrepMan(colrev.operation.Operation):
                     )
                 continue
 
-            endpoint_dict = self.pdf_prep_man_package_endpoints[
+            endpoint = self.pdf_prep_man_package_endpoints[
                 pdf_prep_man_package_endpoint["endpoint"]
             ]
 
-            endpoint = endpoint_dict["endpoint"]
             records = endpoint.prep_man_pdf(self, records)
 
 

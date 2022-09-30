@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
 class TEIPDFPrep(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""

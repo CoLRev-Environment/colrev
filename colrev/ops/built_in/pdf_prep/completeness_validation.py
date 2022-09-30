@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
 class PDFCompletenessValidation(JsonSchemaMixin):
     """Prepare PDFs by validating its completeness (based on the number of pages)"""

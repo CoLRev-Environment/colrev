@@ -18,7 +18,9 @@ if typing.TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrescreenPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.PrescreenPackageEndpointInterface
+)
 @dataclass
 class CoLRevCLIPrescreen(JsonSchemaMixin):
 

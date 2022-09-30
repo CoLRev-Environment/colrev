@@ -29,7 +29,7 @@ class BibFormats(Enum):
     endnote = "endnote"
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""

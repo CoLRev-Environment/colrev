@@ -21,7 +21,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
 @dataclass
 class CrossrefSourceSearchSource(JsonSchemaMixin):
     """Performs a search using the Crossref API"""

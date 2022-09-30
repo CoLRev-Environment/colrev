@@ -16,7 +16,9 @@ import colrev.record
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.ReviewTypePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.ReviewTypePackageEndpointInterface
+)
 @dataclass
 class NarrativeReview(JsonSchemaMixin):
 

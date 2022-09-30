@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
 class PDFCoverPage(JsonSchemaMixin):
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""

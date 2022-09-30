@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 class CustomData:
     def __init__(self, *, data_operation: colrev.ops.data.Data, settings: dict) -> None:
         self.settings = from_dict(

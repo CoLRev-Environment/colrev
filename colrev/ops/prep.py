@@ -136,7 +136,7 @@ class Prep(colrev.operation.Operation):
         *,
         prior: colrev.record.PrepRecord,
         preparation_record: colrev.record.PrepRecord,
-        prep_package_endpoint: colrev.env.package_manager.PrepPackageInterface,
+        prep_package_endpoint: colrev.env.package_manager.PrepPackageEndpointInterface,
     ) -> None:
         diffs = prior.get_diff(other_record=preparation_record)
         if diffs:

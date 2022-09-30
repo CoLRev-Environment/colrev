@@ -20,7 +20,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
 @dataclass
 class GoogleScholarSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings

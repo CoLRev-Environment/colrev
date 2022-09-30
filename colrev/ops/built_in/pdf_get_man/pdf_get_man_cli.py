@@ -25,7 +25,9 @@ if TYPE_CHECKING:
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetManPackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.PDFGetManPackageEndpointInterface
+)
 @dataclass
 class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 

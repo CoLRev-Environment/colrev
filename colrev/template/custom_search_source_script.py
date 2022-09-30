@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     import colrev.ops.search.Search
 
 
-@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
 class CustomSearch:
 
     settings_class = colrev.env.package_manager.DefaultSettings

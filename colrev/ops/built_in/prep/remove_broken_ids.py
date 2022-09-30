@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class RemoveBrokenIDPrep(JsonSchemaMixin):
     """Prepares records by removing invalid IDs DOIs/ISBNs"""

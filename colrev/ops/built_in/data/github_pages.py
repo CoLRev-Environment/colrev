@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     import git
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
 @dataclass
 class CurationDedupe(JsonSchemaMixin):
     """Deduplication endpoint for curations with full journals/proceedings

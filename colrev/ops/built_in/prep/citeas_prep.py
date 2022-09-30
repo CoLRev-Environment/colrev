@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class CiteAsPrep(JsonSchemaMixin):
     """Prepares records based on citeas.org metadata"""

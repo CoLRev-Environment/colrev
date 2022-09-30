@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     import colrev.ops.pdf_get
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageInterface)
+@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
 class CustomPDFGet:
     def __init__(
         self, *, pdf_get_operation: colrev.ops.pdf_get.PDFGet, settings: dict

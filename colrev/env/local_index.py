@@ -318,7 +318,7 @@ class LocalIndex:
 
                 # source_info = colrev.record.Record(data=record_dict).
                 # get_provenance_field_source(key=k)
-                source_info, _ = colrev.record.Record(
+                field_provenance = colrev.record.Record(
                     data=record_dict
                 ).get_field_provenance(
                     key=key,
@@ -327,7 +327,9 @@ class LocalIndex:
                     ),
                 )
 
-                saved_record.update_field(key=key, value=value, source=source_info)
+                saved_record.update_field(
+                    key=key, value=value, source=field_provenance["source_info"]
+                )
 
             if "file" in record_dict and "fulltext" not in saved_record.data:
                 try:

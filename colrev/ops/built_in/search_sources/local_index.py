@@ -24,7 +24,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.SearchSourcePackageInterface)
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
 @dataclass
 class LocalIndexSearchSource(JsonSchemaMixin):
     """Performs a search in the LocalIndex"""
