@@ -148,8 +148,10 @@ class StatusStats:
 
         self.currently.md_retrieved = self.overall.md_retrieved - self.record_links
 
-        self.completeness_condition = (0 == self.nr_incomplete) and (
-            0 == self.currently.md_retrieved
+        self.completeness_condition = (
+            (0 == self.nr_incomplete)
+            and (0 == self.currently.md_retrieved)
+            and self.overall.md_retrieved > 0
         )
 
         self.currently.exclusion = self.screening_statistics
