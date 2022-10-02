@@ -46,17 +46,17 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
     prepChanged(newPrep);
   };
 
-  const sourcePrepScriptsChangedHandler = (
-    scripts: Package[],
+  const sourcePrepPackagesChangedHandler = (
+    packages: Package[],
     prepRound: PrepRound
   ) => {
-    prepRound.scripts = scripts;
+    prepRound.packages = packages;
     const newPrep = { ...prep };
     prepChanged(newPrep);
   };
 
-  const mapPrepScriptsChangedHandler = (scripts: Package[]) => {
-    const newPrep = { ...prep, manPrepScripts: scripts };
+  const manPrepPackagesChangedHandler = (packages: Package[]) => {
+    const newPrep = { ...prep, manPrepPackages: packages };
     prepChanged(newPrep);
   };
 
@@ -107,13 +107,13 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
                 />
               </div>
               <div className="mb-3">
-                <label>Prep Scripts</label>
+                <label>Prep Packages</label>
                 <PackagesEditor
-                  packageEntity="Script"
+                  packageEntity="Package"
                   packageType="prep"
-                  packages={prepRound.scripts}
-                  packagesChanged={(scripts: Package[]) =>
-                    sourcePrepScriptsChangedHandler(scripts, prepRound)
+                  packages={prepRound.packages}
+                  packagesChanged={(packages: Package[]) =>
+                    sourcePrepPackagesChangedHandler(packages, prepRound)
                   }
                 />
               </div>
@@ -129,13 +129,13 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
         </button>
       </div>
       <div className="mb-3">
-        <label>Man Prep Scripts</label>
+        <label>Man Prep Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="prep_man"
-          packages={prep.manPrepScripts}
-          packagesChanged={(scripts: Package[]) =>
-            mapPrepScriptsChangedHandler(scripts)
+          packages={prep.manPrepPackages}
+          packagesChanged={(packages: Package[]) =>
+            manPrepPackagesChangedHandler(packages)
           }
         />
       </div>

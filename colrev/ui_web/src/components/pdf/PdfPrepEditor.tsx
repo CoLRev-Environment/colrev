@@ -6,37 +6,37 @@ const PdfPrepEditor: React.FC<{
   pdfPrep: PdfPrep;
   pdfPrepChanged: any;
 }> = ({ pdfPrep, pdfPrepChanged }) => {
-  const pdfPrepScriptsChangedHandler = (scripts: Package[]) => {
-    const newPdfPrep = { ...pdfPrep, scripts: scripts };
+  const pdfPrepPackagesChangedHandler = (packages: Package[]) => {
+    const newPdfPrep = { ...pdfPrep, packages: packages };
     pdfPrepChanged(newPdfPrep);
   };
 
-  const manPdfPrepScriptsChangedHandler = (scripts: Package[]) => {
-    const newPdfPrep = { ...pdfPrep, manPdfPrepScripts: scripts };
+  const manPdfPrepPackagesChangedHandler = (packages: Package[]) => {
+    const newPdfPrep = { ...pdfPrep, manPdfPrepPackages: packages };
     pdfPrepChanged(newPdfPrep);
   };
 
   return (
     <div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="pdf_prep"
-          packages={pdfPrep.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            pdfPrepScriptsChangedHandler(scripts)
+          packages={pdfPrep.packages}
+          packagesChanged={(packages: Package[]) =>
+            pdfPrepPackagesChangedHandler(packages)
           }
         />
       </div>
       <div className="mb-3">
-        <label>Man PDF Prep Scripts</label>
+        <label>Man PDF Prep Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="pdf_prep_man"
-          packages={pdfPrep.manPdfPrepScripts}
-          packagesChanged={(scripts: Package[]) =>
-            manPdfPrepScriptsChangedHandler(scripts)
+          packages={pdfPrep.manPdfPrepPackages}
+          packagesChanged={(packages: Package[]) =>
+            manPdfPrepPackagesChangedHandler(packages)
           }
         />
       </div>

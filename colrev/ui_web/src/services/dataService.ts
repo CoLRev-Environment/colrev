@@ -3,7 +3,6 @@ import Settings from "../models/settings";
 import httpService from "./httpService";
 import config from "../config.json";
 import Prep from "../models/prep";
-import PrepRound from "../models/prepRound";
 import Dedupe from "../models/dedupe";
 import Prescreen from "../models/prescreen";
 import Data from "../models/data";
@@ -13,7 +12,6 @@ import Screen from "../models/screen";
 import Search from "../models/search";
 import PackageParameterType from "../models/packageParameterType";
 import PackageParameterDefinition from "../models/packageParameterDefinition";
-import Package from "../models/package";
 import PackageDefinition from "../models/packageDefinition";
 import ProjectDataService from "./projectDataService";
 import SearchDataService from "./searchDataService";
@@ -86,7 +84,10 @@ const getSettings = async (): Promise<Settings> => {
   return Promise.resolve<Settings>(settings);
 };
 
-const saveSettings = async (settings: Settings): Promise<void> => {
+const saveSettings = async (
+  settings: Settings,
+  commit?: boolean
+): Promise<void> => {
   const packageDataService = new PackageDataService();
   const projectDataService = new ProjectDataService();
   const searchDataService = new SearchDataService();
@@ -118,7 +119,13 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     settings.sources
   );
 
-  await httpService.post(`${apiEndpoint}/saveSettings`, newSettingsFile, {
+  let saveSettingsUrl = `${apiEndpoint}/saveSettings`;
+
+  if (commit) {
+    saveSettingsUrl += `?commitSelected=${commit}`;
+  }
+
+  await httpService.post(saveSettingsUrl, newSettingsFile, {
     headers: { "content-type": "application/json" },
   });
 
@@ -134,23 +141,23 @@ const getPackageDefinitions = async (
   packageType: string
 ): Promise<PackageDefinition[]> => {
   const response = await httpService.get(
-    `${apiEndpoint}/getScripts?packageType=${packageType}`
+    `${apiEndpoint}/getScripts?PackageEndpointType=${packageType}`
   );
 
-  const scriptDefinitions: PackageDefinition[] = [];
+  const packageDefinitions: PackageDefinition[] = [];
 
   for (const property in response.data) {
-    const scriptDefinition = new PackageDefinition();
-    scriptDefinition.name = property;
+    const packageDefinition = new PackageDefinition();
+    packageDefinition.name = property;
 
     const propertyValues = response.data[property];
-    scriptDefinition.description = propertyValues.description;
-    scriptDefinition.endpoint = propertyValues.endpoint;
+    packageDefinition.description = propertyValues.description;
+    packageDefinition.endpoint = propertyValues.endpoint;
 
-    scriptDefinitions.push(scriptDefinition);
+    packageDefinitions.push(packageDefinition);
   }
 
-  return Promise.resolve<PackageDefinition[]>(scriptDefinitions);
+  return Promise.resolve<PackageDefinition[]>(packageDefinitions);
 };
 
 const getPackageParameterDefinitions = async (
@@ -158,14 +165,23 @@ const getPackageParameterDefinitions = async (
   packageIdentifier: string
 ): Promise<PackageParameterDefinition[]> => {
   const response = await httpService.get(
-    `${apiEndpoint}/getScriptDetails?packageType=${packageType}&packageIdentifier=${packageIdentifier}&endpointVersion=1.0`
+    `${apiEndpoint}/getScriptDetails?PackageEndpointType=${packageType}&PackageIdentifier=${packageIdentifier}&EndpointVersion=1.0`
   );
 
-  const scriptParameterDefinitions: PackageParameterDefinition[] = [];
+  const packageParameterDefinitions: PackageParameterDefinition[] = [];
+
+  if (!response.data.properties)
+    return Promise.resolve<PackageParameterDefinition[]>(
+      packageParameterDefinitions
+    );
 
   const paramsMap = new Map(Object.entries(response.data.properties));
 
   for (const [key, value] of Array.from<any>(paramsMap)) {
+    if (key === "endpoint") {
+      continue;
+    }
+
     const param = new PackageParameterDefinition();
     param.name = key;
     param.tooltip = value.tooltip;
@@ -174,50 +190,55 @@ const getPackageParameterDefinitions = async (
       param.type = PackageParameterType.Options;
       param.options = value.enum;
     } else {
-      param.type = getScriptParameterType(value.type);
+      param.type = getPackageParameterType(value.type);
     }
 
     param.min = value.min;
     param.max = value.max;
 
-    param.scriptType = value.script_type;
+    param.packageType = value.package_endpoint_type;
 
-    scriptParameterDefinitions.push(param);
+    packageParameterDefinitions.push(param);
   }
 
   return Promise.resolve<PackageParameterDefinition[]>(
-    scriptParameterDefinitions
+    packageParameterDefinitions
   );
 };
 
-const getScriptParameterType = (
+const getPackageParameterType = (
   parameterType: string
 ): PackageParameterType => {
-  let scriptParameterType = PackageParameterType.Unknown;
+  let packageParameterType = PackageParameterType.Unknown;
 
   switch (parameterType) {
     case "integer":
-      scriptParameterType = PackageParameterType.Int;
+      packageParameterType = PackageParameterType.Int;
       break;
     case "float":
-      scriptParameterType = PackageParameterType.Float;
+      packageParameterType = PackageParameterType.Float;
       break;
     case "boolean":
-      scriptParameterType = PackageParameterType.Boolean;
+      packageParameterType = PackageParameterType.Boolean;
       break;
     case "path":
     case "string":
-      scriptParameterType = PackageParameterType.String;
+      packageParameterType = PackageParameterType.String;
       break;
     case "array":
-      scriptParameterType = PackageParameterType.StringList;
+      packageParameterType = PackageParameterType.StringList;
       break;
     case "script":
-      scriptParameterType = PackageParameterType.Script;
+      packageParameterType = PackageParameterType.Script;
       break;
   }
 
-  return scriptParameterType;
+  return packageParameterType;
+};
+
+const shutdown = async (): Promise<any> => {
+  const response = await httpService.get(`${apiEndpoint}/shutdown`);
+  return Promise.resolve(response.data);
 };
 
 const dataService = {
@@ -226,6 +247,7 @@ const dataService = {
   getOptions,
   getPackageDefinitions,
   getPackageParameterDefinitions,
+  shutdown,
 };
 
 export default dataService;

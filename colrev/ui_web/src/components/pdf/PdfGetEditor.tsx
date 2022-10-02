@@ -57,13 +57,13 @@ const PdfGetEditor: React.FC<{
     pdfGetChanged(newPdfGet);
   };
 
-  const pdfGetScriptsChangedHandler = (scripts: Package[]) => {
-    const newPdfGet = { ...pdfGet, scripts: scripts };
+  const pdfGetPackagesChangedHandler = (packages: Package[]) => {
+    const newPdfGet = { ...pdfGet, packages: packages };
     pdfGetChanged(newPdfGet);
   };
 
-  const manPdfGetScriptsChangedHandler = (scripts: Package[]) => {
-    const newPdfGet = { ...pdfGet, manPdfGetScripts: scripts };
+  const manPdfGetPackagesChangedHandler = (packages: Package[]) => {
+    const newPdfGet = { ...pdfGet, manPdfGetPackages: packages };
     pdfGetChanged(newPdfGet);
   };
 
@@ -111,24 +111,24 @@ const PdfGetEditor: React.FC<{
         </label>
       </div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="pdf_get"
-          packages={pdfGet.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            pdfGetScriptsChangedHandler(scripts)
+          packages={pdfGet.packages}
+          packagesChanged={(packages: Package[]) =>
+            pdfGetPackagesChangedHandler(packages)
           }
         />
       </div>
       <div className="mb-3">
-        <label>Man PDF Get Scripts</label>
+        <label>Man PDF Get Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="pdf_get_man"
-          packages={pdfGet.manPdfGetScripts}
-          packagesChanged={(scripts: Package[]) =>
-            manPdfGetScriptsChangedHandler(scripts)
+          packages={pdfGet.manPdfGetPackages}
+          packagesChanged={(packages: Package[]) =>
+            manPdfGetPackagesChangedHandler(packages)
           }
         />
       </div>

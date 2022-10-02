@@ -126,7 +126,7 @@ function App() {
     setData(data);
   };
 
-  const onSave = async () => {
+  const onSave = async (commit?: boolean) => {
     const settings = new Settings();
     settings.project = project;
     settings.sources = sources;
@@ -142,7 +142,7 @@ function App() {
     setIsFileSaved(false);
 
     try {
-      await dataService.saveSettings(settings);
+      await dataService.saveSettings(settings, commit);
       setIsFileSaved(true);
     } catch (error) {
       console.log(error);
@@ -154,6 +154,13 @@ function App() {
     if (e.ctrlKey && e.which === KEY_S) {
       e.preventDefault();
       onSave();
+    }
+  };
+
+  const onClose = async () => {
+    const response = await dataService.shutdown();
+    if (response.error) {
+      alert("Error: " + response.error);
     }
   };
 
@@ -174,7 +181,7 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <ProjectEditor
                   project={project}
@@ -259,7 +266,7 @@ function App() {
                 name="Screen"
                 id="screen"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <ScreenEditor
                   screen={screen}
@@ -282,12 +289,49 @@ function App() {
             <div className="mb-3"></div>
             <div className="mb-3"></div>
             <div className="mb-3">
-              <button
+              {/* <button
                 className="btn btn-primary"
                 type="button"
                 onClick={onSave}
               >
                 Save Settings
+              </button> */}
+              <div
+                className="btn-group"
+                role="group"
+                aria-label="Button group with nested dropdown"
+              >
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={() => onSave()}
+                >
+                  Save Settings
+                </button>
+                <div className="btn-group" role="group">
+                  <button
+                    className="btn btn-primary dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  ></button>
+                  <ul className="dropdown-menu">
+                    <li>
+                      <button
+                        className="dropdown-item"
+                        onClick={() => onSave(true)}
+                      >
+                        Save and commit
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <button
+                className="btn btn-primary ms-2"
+                type="button"
+                onClick={onClose}
+              >
+                Close
               </button>
             </div>
             {isFileSaved && (

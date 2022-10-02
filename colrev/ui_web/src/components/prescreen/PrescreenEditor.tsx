@@ -11,8 +11,8 @@ const PrescreenEditor: React.FC<{
     prescreenChanged(newPrescreen);
   };
 
-  const prescreenScriptsChangedHandler = (scripts: Package[]) => {
-    const newPrescreen = { ...prescreen, scripts: scripts };
+  const prescreenPackagesChangedHandler = (packages: Package[]) => {
+    const newPrescreen = { ...prescreen, packages: packages };
     prescreenChanged(newPrescreen);
   };
 
@@ -29,13 +29,13 @@ const PrescreenEditor: React.FC<{
         />
       </div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="prescreen"
-          packages={prescreen.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            prescreenScriptsChangedHandler(scripts)
+          packages={prescreen.packages}
+          packagesChanged={(packages: Package[]) =>
+            prescreenPackagesChangedHandler(packages)
           }
         />
       </div>

@@ -191,16 +191,16 @@ const PackageParametersEditor: React.FC<{
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <PackagesEditor
-                      packageEntity="Script"
-                      packageType={parameterDefinition.scriptType}
+                      packageEntity="Package"
+                      packageType={parameterDefinition.packageType}
                       isSinglePackage={true}
                       packages={
                         getParameterValue(parameterDefinition)
                           ? [getParameterValue(parameterDefinition)]
                           : []
                       }
-                      packagesChanged={(scripts: Package[]) => {
-                        setParameterValue(parameterDefinition, scripts[0]);
+                      packagesChanged={(packages: Package[]) => {
+                        setParameterValue(parameterDefinition, packages[0]);
                       }}
                     />
                   </div>

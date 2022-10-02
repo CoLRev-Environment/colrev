@@ -20,8 +20,8 @@ export default class ScreenDataService {
       screen.criteria.push(screenCriteria);
     }
 
-    screen.scripts = this.packageDataService.packagesFromSettings(
-      settingsScreen.scripts
+    screen.packages = this.packageDataService.packagesFromSettings(
+      settingsScreen.screen_package_endpoints
     );
   };
 
@@ -29,7 +29,9 @@ export default class ScreenDataService {
     const settingsScreen = {
       explanation: screen.explanation,
       criteria: {},
-      scripts: this.packageDataService.packagesToSettings(screen.scripts),
+      screen_package_endpoints: this.packageDataService.packagesToSettings(
+        screen.packages
+      ),
     };
 
     const paramsMap = new Map<string, any>();

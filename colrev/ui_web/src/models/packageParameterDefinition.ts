@@ -8,5 +8,5 @@ export default class PackageParameterDefinition {
   public min: number = 0;
   public max: number = 999;
   public options: [] = [];
-  public scriptType: string = "";
+  public packageType: string = "";
 }

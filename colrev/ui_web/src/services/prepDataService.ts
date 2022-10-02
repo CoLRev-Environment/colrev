@@ -12,14 +12,14 @@ export default class PrepDataService {
       const prepRound = new PrepRound();
       prepRound.name = p.name;
       prepRound.similarity = p.similarity;
-      prepRound.scripts = this.packageDataService.packagesFromSettings(
-        p.scripts
+      prepRound.packages = this.packageDataService.packagesFromSettings(
+        p.prep_package_endpoints
       );
       prep.prepRounds.push(prepRound);
     }
 
-    prep.manPrepScripts = this.packageDataService.packagesFromSettings(
-      settingsPrep.man_prep_scripts
+    prep.manPrepPackages = this.packageDataService.packagesFromSettings(
+      settingsPrep.prep_man_package_endpoints
     );
   };
 
@@ -28,8 +28,8 @@ export default class PrepDataService {
       ...settingsFile.prep,
       fields_to_keep: prep.fieldsToKeep,
       prep_rounds: [],
-      man_prep_scripts: this.packageDataService.packagesToSettings(
-        prep.manPrepScripts
+      prep_man_package_endpoints: this.packageDataService.packagesToSettings(
+        prep.manPrepPackages
       ),
     };
 
@@ -37,7 +37,9 @@ export default class PrepDataService {
       const prep_round = {
         name: p.name,
         similarity: p.similarity,
-        scripts: this.packageDataService.packagesToSettings(p.scripts),
+        prep_package_endpoints: this.packageDataService.packagesToSettings(
+          p.packages
+        ),
       };
 
       settingsFilePrep.prep_rounds.push(prep_round);

@@ -6,15 +6,17 @@ export default class DedupeDataService {
 
   public dedupeFromSettings = (dedupe: Dedupe, settingsDedupe: any) => {
     dedupe.sameSourceMerges = settingsDedupe.same_source_merges;
-    dedupe.scripts = this.packageDataService.packagesFromSettings(
-      settingsDedupe.scripts
+    dedupe.packages = this.packageDataService.packagesFromSettings(
+      settingsDedupe.dedupe_package_endpoints
     );
   };
 
   public dedupeToSettings = (dedupe: Dedupe): any => {
     const settingsDedupe = {
       same_source_merges: dedupe.sameSourceMerges,
-      scripts: this.packageDataService.packagesToSettings(dedupe.scripts),
+      dedupe_package_endpoints: this.packageDataService.packagesToSettings(
+        dedupe.packages
+      ),
     };
 
     return settingsDedupe;

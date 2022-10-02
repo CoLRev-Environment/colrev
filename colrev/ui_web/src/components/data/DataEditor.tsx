@@ -6,21 +6,21 @@ const DataEditor: React.FC<{
   data: Data;
   dataChanged: any;
 }> = ({ data, dataChanged }) => {
-  const dataScriptsChangedHandler = (scripts: Package[]) => {
-    const newData = { ...data, scripts: scripts };
+  const dataPackagesChangedHandler = (packages: Package[]) => {
+    const newData = { ...data, packages: packages };
     dataChanged(newData);
   };
 
   return (
     <div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="data"
-          packages={data.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            dataScriptsChangedHandler(scripts)
+          packages={data.packages}
+          packagesChanged={(packages: Package[]) =>
+            dataPackagesChangedHandler(packages)
           }
         />
       </div>

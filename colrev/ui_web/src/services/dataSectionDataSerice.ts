@@ -5,14 +5,16 @@ export default class DataSectionDataService {
   private packageDataService: PackageDataService = new PackageDataService();
 
   public dataFromSettings = (data: Data, settingsData: any) => {
-    data.scripts = this.packageDataService.packagesFromSettings(
-      settingsData.scripts
+    data.packages = this.packageDataService.packagesFromSettings(
+      settingsData.data_package_endpoints
     );
   };
 
   public dataToSettings = (data: Data): any => {
     const settingsData = {
-      scripts: this.packageDataService.packagesToSettings(data.scripts),
+      data_package_endpoints: this.packageDataService.packagesToSettings(
+        data.packages
+      ),
     };
 
     return settingsData;

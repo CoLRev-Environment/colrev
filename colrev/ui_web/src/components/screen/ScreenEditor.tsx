@@ -84,8 +84,8 @@ const ScreenEditor: React.FC<{
     screenChanged(newScreen);
   };
 
-  const screenScriptsChangedHandler = (scripts: Package[]) => {
-    const newScreen = { ...screen, scripts: scripts };
+  const screenPackagesChangedHandler = (packages: Package[]) => {
+    const newScreen = { ...screen, packages: packages };
     screenChanged(newScreen);
   };
 
@@ -174,13 +174,13 @@ const ScreenEditor: React.FC<{
         </button>
       </div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="screen"
-          packages={screen.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            screenScriptsChangedHandler(scripts)
+          packages={screen.packages}
+          packagesChanged={(packages: Package[]) =>
+            screenPackagesChangedHandler(packages)
           }
         />
       </div>

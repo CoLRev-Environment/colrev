@@ -10,11 +10,11 @@ export default class PdfDataService {
     pdfGet.pdfRequiredForScreenAndSynthesis =
       settingsPdfGet.pdf_required_for_screen_and_synthesis;
     pdfGet.renamePdfs = settingsPdfGet.rename_pdfs;
-    pdfGet.scripts = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.scripts
+    pdfGet.packages = this.packageDataService.packagesFromSettings(
+      settingsPdfGet.pdf_get_package_endpoints
     );
-    pdfGet.manPdfGetScripts = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.man_pdf_get_scripts
+    pdfGet.manPdfGetPackages = this.packageDataService.packagesFromSettings(
+      settingsPdfGet.pdf_get_man_package_endpoints
     );
   };
 
@@ -24,9 +24,11 @@ export default class PdfDataService {
       pdf_required_for_screen_and_synthesis:
         pdfGet.pdfRequiredForScreenAndSynthesis,
       rename_pdfs: pdfGet.renamePdfs,
-      scripts: this.packageDataService.packagesToSettings(pdfGet.scripts),
-      man_pdf_get_scripts: this.packageDataService.packagesToSettings(
-        pdfGet.manPdfGetScripts
+      pdf_get_package_endpoints: this.packageDataService.packagesToSettings(
+        pdfGet.packages
+      ),
+      pdf_get_man_package_endpoints: this.packageDataService.packagesToSettings(
+        pdfGet.manPdfGetPackages
       ),
     };
 
@@ -34,20 +36,21 @@ export default class PdfDataService {
   };
 
   public pdfPrepFromSettings = (pdfPrep: PdfPrep, settingsPdfGet: any) => {
-    pdfPrep.scripts = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.scripts
+    pdfPrep.packages = this.packageDataService.packagesFromSettings(
+      settingsPdfGet.pdf_prep_package_endpoints
     );
-    pdfPrep.manPdfPrepScripts = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.man_pdf_prep_scripts
+    pdfPrep.manPdfPrepPackages = this.packageDataService.packagesFromSettings(
+      settingsPdfGet.pdf_prep_man_package_endpoints
     );
   };
 
   public pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
     const settingsPdfPrep = {
-      scripts: this.packageDataService.packagesToSettings(pdfPrep.scripts),
-      man_pdf_prep_scripts: this.packageDataService.packagesToSettings(
-        pdfPrep.manPdfPrepScripts
+      pdf_prep_package_endpoints: this.packageDataService.packagesToSettings(
+        pdfPrep.packages
       ),
+      pdf_prep_man_package_endpoints:
+        this.packageDataService.packagesToSettings(pdfPrep.manPdfPrepPackages),
     };
 
     return settingsPdfPrep;

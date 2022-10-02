@@ -25,8 +25,8 @@ const DedupeEditor: React.FC<{
     dedupeChanged(newDedupe);
   };
 
-  const dedupeScriptsChangedHandler = (scripts: Package[]) => {
-    const newDedupe = { ...dedupe, scripts: scripts };
+  const dedupePackagesChangedHandler = (packages: Package[]) => {
+    const newDedupe = { ...dedupe, packages: packages };
     dedupeChanged(newDedupe);
   };
 
@@ -47,13 +47,13 @@ const DedupeEditor: React.FC<{
         </select>
       </div>
       <div className="mb-3">
-        <label>Scripts</label>
+        <label>Packages</label>
         <PackagesEditor
-          packageEntity="Script"
+          packageEntity="Package"
           packageType="dedupe"
-          packages={dedupe.scripts}
-          packagesChanged={(scripts: Package[]) =>
-            dedupeScriptsChangedHandler(scripts)
+          packages={dedupe.packages}
+          packagesChanged={(packages: Package[]) =>
+            dedupePackagesChangedHandler(packages)
           }
         />
       </div>

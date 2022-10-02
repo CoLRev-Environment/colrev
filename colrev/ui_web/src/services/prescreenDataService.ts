@@ -9,15 +9,17 @@ export default class PrescreenDataService {
     settingsPrescreen: any
   ) => {
     prescreen.explanation = settingsPrescreen.explanation;
-    prescreen.scripts = this.packageDataService.packagesFromSettings(
-      settingsPrescreen.scripts
+    prescreen.packages = this.packageDataService.packagesFromSettings(
+      settingsPrescreen.prescreen_package_endpoints
     );
   };
 
   public prescreenToSettings = (prescreen: Prescreen): any => {
     const settingsPrescreen = {
       explanation: prescreen.explanation,
-      scripts: this.packageDataService.packagesToSettings(prescreen.scripts),
+      prescreen_package_endpoints: this.packageDataService.packagesToSettings(
+        prescreen.packages
+      ),
     };
 
     return settingsPrescreen;
