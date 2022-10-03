@@ -76,16 +76,19 @@ class Prescreen(colrev.operation.Operation):
         endpoint.run_prescreen(self, records, [])
 
     def get_data(self) -> dict:
-
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+        # pylint: disable=duplicate-code
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.md_processed) == x["colrev_status"]
+                for x in record_header_list
+                if colrev.record.RecordState.md_processed == x["colrev_status"]
             ]
         )
-        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
+        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
             conditions=[{"colrev_status": colrev.record.RecordState.md_processed}]
         )

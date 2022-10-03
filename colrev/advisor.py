@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 import git
 from git.exc import NoSuchPathError
 
+import colrev.record
+
 if TYPE_CHECKING:
     import colrev.review_manager.ReviewManager
 
@@ -83,23 +85,13 @@ class Advisor:
         *,
         collaboration_instructions: dict,
         status_stats: colrev.ops.status.StatusStats,
-        git_repo: git.Repo,
     ) -> None:
         # pylint: disable=too-many-branches
-
-        nr_commits_behind, nr_commits_ahead = 0, 0
-        if len(git_repo.remotes) >= 0:
-            origin = git_repo.remotes.origin
-            if origin.exists():
-                (
-                    nr_commits_behind,
-                    nr_commits_ahead,
-                ) = self.review_manager.dataset.get_remote_commit_differences()
 
         share_stat_req = self.review_manager.settings.project.share_stat_req
         collaboration_instructions["SHARE_STAT_REQ"] = share_stat_req
 
-        if nr_commits_behind > 0:
+        if self.review_manager.dataset.behind_remote():
             item = {
                 "title": "Remote changes available on the server",
                 "level": "WARNING",
@@ -110,7 +102,7 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-        if nr_commits_ahead > 0:
+        if self.review_manager.dataset.remote_ahead():
             item = {
                 "title": "Local changes not yet on the server",
                 "level": "WARNING",
@@ -219,6 +211,15 @@ class Advisor:
             collaboration_instructions[
                 "title"
             ] = "Versioning (not connected to shared repository)"
+            item = {
+                "title": "Project not yet shared",
+                "level": "WARNING",
+                "msg": "Please visit  https://github.com/new\n  "
+                + "create an empty repository called  "
+                + f"<USERNAME>/{self.review_manager.settings.project.title}\n  "
+                + "and run git remote add origin  <REMOTE_URL>\n  git push origin main",
+            }
+            collaboration_instructions["items"].append(item)
 
         self.__append_merge_conflict_warning(
             collaboration_instructions=collaboration_instructions, git_repo=git_repo
@@ -236,7 +237,6 @@ class Advisor:
             self.__add_sharing_notifications(
                 collaboration_instructions=collaboration_instructions,
                 status_stats=status_stats,
-                git_repo=git_repo,
             )
 
         if 0 == len(collaboration_instructions["items"]):
@@ -364,10 +364,33 @@ class Advisor:
                 ]:
                     review_instructions.append(instruction)
 
+    def __get_missing_files(self) -> list:
+
+        # excluding pdf_not_available
+        file_required_status = [
+            colrev.record.RecordState.pdf_imported,
+            colrev.record.RecordState.pdf_needs_manual_preparation,
+            colrev.record.RecordState.pdf_prepared,
+            colrev.record.RecordState.rev_excluded,
+            colrev.record.RecordState.rev_included,
+            colrev.record.RecordState.rev_synthesized,
+        ]
+        missing_files = []
+        for record_dict in self.review_manager.dataset.load_records_dict(
+            header_only=True
+        ).values():
+            if (
+                record_dict["colrev_status"] in file_required_status
+                and "NA" == record_dict["file"]
+            ):
+                missing_files.append(record_dict["ID"])
+                # TODO : check if file exists/was deleted
+        return missing_files
+
     def __append_pdf_issue_instructions(self, *, review_instructions: list) -> None:
 
         # Check pdf files
-        missing_files = self.review_manager.dataset.get_missing_files()
+        missing_files = self.__get_missing_files()
         if len(missing_files) > 0:
             review_instructions.append(
                 {

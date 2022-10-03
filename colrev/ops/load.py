@@ -104,6 +104,16 @@ class Load(colrev.operation.Operation):
 
         return sorted(list(set(files)))
 
+    def __get_currently_imported_origin_list(self) -> list:
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
+        imported_origins = [
+            item for x in record_header_list for item in x["colrev_origin"]
+        ]
+        return imported_origins
+
     def check_update_sources(self) -> None:
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
@@ -421,7 +431,7 @@ class Load(colrev.operation.Operation):
                 state=colrev.record.RecordState.md_processed
             )
 
-            if str(record.get("colrev_status", "")) in post_md_processed_states:
+            if record.get("colrev_status", "") in post_md_processed_states:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
@@ -493,9 +503,7 @@ class Load(colrev.operation.Operation):
             source=source, search_records=search_records
         )
 
-        imported_origins = (
-            self.review_manager.dataset.get_currently_imported_origin_list()
-        )
+        imported_origins = self.__get_currently_imported_origin_list()
         record_list = [
             x for x in record_list if x["colrev_origin"][0] not in imported_origins
         ]
@@ -549,9 +557,7 @@ class Load(colrev.operation.Operation):
 
     def __validate_load(self, *, source: colrev.settings.SearchSource) -> None:
 
-        imported_origins = (
-            self.review_manager.dataset.get_currently_imported_origin_list()
-        )
+        imported_origins = self.__get_currently_imported_origin_list()
         len_after = len(imported_origins)
         imported = len_after - source.len_before
 
@@ -727,7 +733,8 @@ class Load(colrev.operation.Operation):
             del saved_args["keep_ids"]
 
         def load_active_sources() -> list:
-            self.review_manager.dataset.check_sources()
+            checker = self.review_manager.get_checker()
+            checker.check_sources()
             sources = []
             for source in self.review_manager.settings.sources:
                 if (

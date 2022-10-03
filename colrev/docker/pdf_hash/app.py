@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Utility app to generate imagehash values for PDFs"""
 import sys
 
 import imagehash

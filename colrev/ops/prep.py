@@ -401,19 +401,23 @@ class Prep(colrev.operation.Operation):
 
     def __load_prep_data(self) -> dict:
 
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
+
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.md_imported) == x["colrev_status"]
+                for x in record_header_list
+                if colrev.record.RecordState.md_imported == x["colrev_status"]
             ]
         )
 
         pad = (
             35
-            if (0 == len(record_state_list))
-            else min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            if (0 == len(record_header_list))
+            else min((max(len(x["ID"]) for x in record_header_list) + 2), 35)
         )
 
         r_states_to_prepare = [
@@ -427,8 +431,8 @@ class Prep(colrev.operation.Operation):
 
         prior_ids = [
             x["ID"]
-            for x in record_state_list
-            if str(colrev.record.RecordState.md_imported) == x["colrev_status"]
+            for x in record_header_list
+            if colrev.record.RecordState.md_imported == x["colrev_status"]
         ]
 
         prep_data = {
@@ -485,6 +489,36 @@ class Prep(colrev.operation.Operation):
             )
         return prep_data
 
+    def __retrieve_records_from_history(
+        self,
+        *,
+        original_records: list[dict],
+        condition_state: colrev.record.RecordState,
+    ) -> list:
+
+        retrieved, prior_records = [], []
+        for prior_records_dict in self.review_manager.dataset.load_from_git_history():
+            for prior_record in prior_records_dict.values():
+                if prior_record.get("colrev_status", "NA") != condition_state:
+                    continue
+                for original_record in original_records:
+                    if any(
+                        o in prior_record["colrev_origin"]
+                        for o in original_record["colrev_origin"]
+                    ):
+                        prior_records.append(prior_record)
+                        # only take the latest version (i.e., drop the record)
+                        # Note: only append the first one if origins were in
+                        # different records (after deduplication)
+                        retrieved.append(original_record["ID"])
+                original_records = [
+                    orec for orec in original_records if orec["ID"] not in retrieved
+                ]
+            if len(original_records) == 0:
+                break
+
+        return prior_records
+
     def __load_prep_data_for_debug(
         self, *, debug_ids: str, debug_file: Path = None
     ) -> dict:
@@ -517,7 +551,7 @@ class Prep(colrev.operation.Operation):
             )
             # self.review_manager.logger.info("Current record")
             # self.review_manager.p_printer.pprint(original_records)
-            records = self.review_manager.dataset.retrieve_records_from_history(
+            records = self.__retrieve_records_from_history(
                 original_records=original_records,
                 condition_state=colrev.record.RecordState.md_imported,
             )
@@ -701,9 +735,8 @@ class Prep(colrev.operation.Operation):
                 pool.clear()
 
             if not self.review_manager.debug_mode:
-                # prepared_records = [x.get_data() for x in prepared_records]
-                self.review_manager.dataset.save_record_list_by_id(
-                    record_list=prepared_records
+                self.review_manager.dataset.save_records_dict(
+                    records={r["ID"]: r for r in prepared_records}, partial=True
                 )
 
                 self.__log_details(prepared_records=prepared_records)

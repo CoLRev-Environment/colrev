@@ -579,7 +579,6 @@ class PackageManager:
                 )
 
             # 2. Load module packages
-            # TODO : test the module prep_scripts
             elif not Path(package_identifier + ".py").is_file():
                 try:
                     packages_dict[package_identifier]["settings"] = selected_package
@@ -623,9 +622,6 @@ class PackageManager:
         # pylint: disable=unnecessary-dict-index-lookup
         # Note : when iterating over packages_dict.items(),
         # changes to the values (or del k) would not persist
-
-        # TODO : generally change from operation.type to package_type
-        # (each operation can involve different endpoints)
 
         if package_type not in self.package_type_overview:
             raise colrev_exceptions.MissingDependencyError(

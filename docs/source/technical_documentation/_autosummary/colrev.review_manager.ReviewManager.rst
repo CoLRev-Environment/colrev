@@ -22,6 +22,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.format_records_file
       ~ReviewManager.get_advisor
       ~ReviewManager.get_cached_session
+      ~ReviewManager.get_checker
       ~ReviewManager.get_clone_operation
       ~ReviewManager.get_colrev_versions
       ~ReviewManager.get_completeness_condition

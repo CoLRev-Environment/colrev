@@ -347,12 +347,17 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
     def __get_data(self) -> dict:
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+        # pylint: disable=duplicate-code
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
+
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.rev_prescreen_included)
+                for x in record_header_list
+                if colrev.record.RecordState.rev_prescreen_included
                 == x["colrev_status"]
             ]
         )
@@ -474,8 +479,8 @@ class PDFGet(colrev.operation.Operation):
 
             retrieved_record_list = p_map(self.get_pdf, pdf_get_data["items"])
 
-            self.review_manager.dataset.save_record_list_by_id(
-                record_list=retrieved_record_list
+            self.review_manager.dataset.save_records_dict(
+                records={r["ID"]: r for r in retrieved_record_list}, partial=True
             )
 
             # Note: rename should be after copy.

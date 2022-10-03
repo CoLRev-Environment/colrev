@@ -294,18 +294,22 @@ class Data(colrev.operation.Operation):
             individual_status_dict,
         ) in synthesized_record_status_matrix.items():
             if all(x for x in individual_status_dict.values()):
+                if (
+                    records[record_id]["colrev_status"]
+                    != colrev.record.RecordState.rev_synthesized
+                ):
+                    if self.verbose:
+                        self.review_manager.report_logger.info(
+                            f" {record_id}".ljust(self.__pad, " ")
+                            + "set colrev_status to synthesized"
+                        )
+                        self.review_manager.logger.info(
+                            f" {record_id}".ljust(self.__pad, " ")
+                            + "set colrev_status to synthesized"
+                        )
                 records[record_id].update(
                     colrev_status=colrev.record.RecordState.rev_synthesized
                 )
-                if self.verbose:
-                    self.review_manager.report_logger.info(
-                        f" {record_id}".ljust(self.__pad, " ")
-                        + "set colrev_status to synthesized"
-                    )
-                    self.review_manager.logger.info(
-                        f" {record_id}".ljust(self.__pad, " ")
-                        + "set colrev_status to synthesized"
-                    )
             else:
                 records[record_id].update(
                     colrev_status=colrev.record.RecordState.rev_included

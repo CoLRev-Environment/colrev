@@ -75,20 +75,39 @@ class PDFGetMan(colrev.operation.Operation):
                 "Created missing_pdf_files.csv with paper details"
             )
 
+    def discard_missing(self) -> None:
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if (
+                record["colrev_status"]
+                == colrev.record.RecordState.pdf_needs_manual_retrieval
+            ):
+                record["colrev_status"] = colrev.record.RecordState.pdf_not_available
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
+            msg="Discard missing PDFs", manual_author=True
+        )
+
     def get_data(self) -> dict:
+        # pylint: disable=duplicate-code
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.pdf_needs_manual_retrieval)
+                for x in record_header_list
+                if colrev.record.RecordState.pdf_needs_manual_retrieval
                 == x["colrev_status"]
             ]
         )
-        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
+        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
             conditions=[
                 {"colrev_status": colrev.record.RecordState.pdf_needs_manual_retrieval}

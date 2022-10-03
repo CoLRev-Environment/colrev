@@ -105,7 +105,10 @@ class StatusStats:
     ) -> None:
 
         self.review_manager = review_manager
-        self._record_header_list = self.review_manager.dataset.get_record_header_list()
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        self._record_header_list = list(records_headers.values())
 
         self.status_list = [x["colrev_status"] for x in self._record_header_list]
         self.screening_criteria = [
@@ -113,15 +116,15 @@ class StatusStats:
             for x in self._record_header_list
             if x["screening_criteria"] not in ["", "NA"]
         ]
+
         self.md_duplicates_removed = sum(
-            (x["colrev_origin"].count(";") - 1) for x in self._record_header_list
+            (len(x["colrev_origin"]) - 1) for x in self._record_header_list
         )
 
         origin_list = [x["colrev_origin"] for x in self._record_header_list]
         self.record_links = 0
         for origin in origin_list:
-            nr_record_links = origin.count(";") - 1
-            self.record_links += nr_record_links + 1
+            self.record_links += len(origin)
 
         criteria = list(review_manager.settings.screen.criteria.keys())
         self.screening_statistics = {crit: 0 for crit in criteria}
@@ -309,7 +312,7 @@ class StatusStats:
     ) -> list[typing.Dict]:
 
         committed_origin_states_dict = (
-            self.review_manager.dataset.get_committed_origin_states_dict()
+            self.review_manager.dataset.get_committed_origin_state_dict()
         )
         transitioned_records = []
         for (
@@ -328,8 +331,8 @@ class StatusStats:
             operations_type = [
                 x["trigger"]
                 for x in colrev.record.RecordStateModel.transitions
-                if str(x["source"]) == transitioned_record["source"]
-                and str(x["dest"]) == transitioned_record["dest"]
+                if x["source"] == transitioned_record["source"]
+                and x["dest"] == transitioned_record["dest"]
             ]
             if (
                 len(operations_type) == 0
@@ -347,7 +350,7 @@ class StatusStats:
 
         # get "earliest" states (going backward)
         earliest_state = []
-        search_states = ["rev_synthesized"]
+        search_states = [colrev.record.RecordState.rev_synthesized]
         while True:
             if any(
                 search_state in current_origin_states_dict.values()
@@ -359,9 +362,9 @@ class StatusStats:
                     if search_state in current_origin_states_dict.values()
                 ]
             search_states = [
-                str(x["source"])
+                x["source"]  # type: ignore
                 for x in colrev.record.RecordStateModel.transitions
-                if str(x["dest"]) in search_states
+                if x["dest"] in search_states
             ]
             if [] == search_states:
                 break
@@ -371,7 +374,7 @@ class StatusStats:
         priority_transitions = [
             x["trigger"]
             for x in colrev.record.RecordStateModel.transitions
-            if str(x["source"]) in earliest_state
+            if x["source"] in earliest_state
         ]
         # print(f'priority_transitions: {priority_transitions}')
 
@@ -417,31 +420,39 @@ class StatusStats:
         ) -> None:
             self.status_stats = status_stats
 
-            self.md_retrieved = self.get_freq("md_retrieved")
+            self.md_retrieved = self.get_freq(colrev.record.RecordState.md_retrieved)
 
-            self.md_imported = self.get_freq("md_imported")
+            self.md_imported = self.get_freq(colrev.record.RecordState.md_imported)
             self.md_needs_manual_preparation = self.get_freq(
-                "md_needs_manual_preparation"
+                colrev.record.RecordState.md_needs_manual_preparation
             )
-            self.md_prepared = self.get_freq("md_prepared")
-            self.md_processed = self.get_freq("md_processed")
-            self.rev_prescreen_excluded = self.get_freq("rev_prescreen_excluded")
-            self.rev_prescreen_included = self.get_freq("rev_prescreen_included")
+            self.md_prepared = self.get_freq(colrev.record.RecordState.md_prepared)
+            self.md_processed = self.get_freq(colrev.record.RecordState.md_processed)
+            self.rev_prescreen_excluded = self.get_freq(
+                colrev.record.RecordState.rev_prescreen_excluded
+            )
+            self.rev_prescreen_included = self.get_freq(
+                colrev.record.RecordState.rev_prescreen_included
+            )
             self.pdf_needs_manual_retrieval = self.get_freq(
-                "pdf_needs_manual_retrieval"
+                colrev.record.RecordState.pdf_needs_manual_retrieval
             )
-            self.pdf_imported = self.get_freq("pdf_imported")
-            self.pdf_not_available = self.get_freq("pdf_not_available")
+            self.pdf_imported = self.get_freq(colrev.record.RecordState.pdf_imported)
+            self.pdf_not_available = self.get_freq(
+                colrev.record.RecordState.pdf_not_available
+            )
             self.pdf_needs_manual_preparation = self.get_freq(
-                "pdf_needs_manual_preparation"
+                colrev.record.RecordState.pdf_needs_manual_preparation
             )
-            self.pdf_prepared = self.get_freq("pdf_prepared")
-            self.rev_excluded = self.get_freq("rev_excluded")
-            self.rev_included = self.get_freq("rev_included")
-            self.rev_synthesized = self.get_freq("rev_synthesized")
+            self.pdf_prepared = self.get_freq(colrev.record.RecordState.pdf_prepared)
+            self.rev_excluded = self.get_freq(colrev.record.RecordState.rev_excluded)
+            self.rev_included = self.get_freq(colrev.record.RecordState.rev_included)
+            self.rev_synthesized = self.get_freq(
+                colrev.record.RecordState.rev_synthesized
+            )
             self.md_duplicates_removed = self.status_stats.md_duplicates_removed
 
-        def get_freq(self, colrev_status: str) -> int:
+        def get_freq(self, colrev_status: colrev.record.RecordState) -> int:
             return len([x for x in self.status_stats.status_list if colrev_status == x])
 
     @dataclass

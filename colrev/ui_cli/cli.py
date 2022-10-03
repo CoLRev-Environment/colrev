@@ -801,7 +801,13 @@ def pdf_prep(
     default=False,
     help="Export spreadsheet.",
 )
-def pdf_get_man(ctx: click.core.Context, export: bool) -> None:
+@click.option(
+    "--discard_missing",
+    is_flag=True,
+    default=False,
+    help="Discard all missing PDFs as not_available",
+)
+def pdf_get_man(ctx: click.core.Context, export: bool, discard_missing: bool) -> None:
     """Get PDFs manually"""
 
     try:
@@ -840,6 +846,9 @@ def pdf_get_man(ctx: click.core.Context, export: bool) -> None:
             pdf_get_man_operation.review_manager.logger.info(
                 "Created pdf_get_man_records.csv"
             )
+            return
+        if discard_missing:
+            pdf_get_man_operation.discard_missing()
             return
 
         pdf_get_man_operation.main()
@@ -1057,7 +1066,7 @@ def validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
             commit.hexsha,
             datetime.datetime.fromtimestamp(commit.committed_date),
             " - ",
-            str(commit.message).split("\n")[0],
+            str(commit.message).split("\n", maxsplit=1)[0],
         )
     print("\n")
     raise click.BadParameter("not a git commit id")

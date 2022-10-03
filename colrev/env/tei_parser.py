@@ -441,7 +441,7 @@ class TEIParser:
                         if orcid_node is not None:
                             orcid = orcid_node.text
                             author_dict["ORCID"] = orcid
-                        # TODO : affiliation, ...
+
                         author_details.append(author_dict)
 
         return author_details

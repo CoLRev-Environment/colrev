@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Scripts to add packages using the cli."""
+from __future__ import annotations
+
 from pathlib import Path
 
 import requests
@@ -12,7 +14,7 @@ def add_data(
     data_operation: colrev.ops.data.Data,
     review_manager: colrev.review_manager.ReviewManager,
     add_endpoint: str,
-    force: bool
+    force: bool,
 ) -> None:
 
     package_manager = review_manager.get_package_manager()

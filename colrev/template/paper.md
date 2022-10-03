@@ -25,6 +25,20 @@ Data was managed with CoLRev version {{colrev_version}} [@WagnerPrester2022].
 
 # Conclusion
 
+<!--
+# Appendix
+
+## Declarations
+
+## List of contributors
+
+## Project timeline
+
+## Software tools
+
+## Publication plan
+ -->
+
 # Coding and synthesis
 
 <!-- NEW_RECORD_SOURCE -->

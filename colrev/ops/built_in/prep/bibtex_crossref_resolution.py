@@ -40,12 +40,29 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+    def __get_crossref_record(
+        self, *, prep_operation: colrev.ops.prep.Prep, record_dict: dict
+    ) -> dict:
+        """Get the record linked through the BiBTex crossref field"""
+
+        # Note : the ID of the crossrefed record_dict may have changed.
+        # we need to trace based on the colrev_origin
+        crossref_origin = record_dict["colrev_origin"]
+        crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
+        crossref_origin = crossref_origin + "/" + record_dict["crossref"]
+        for (
+            candidate_record_dict
+        ) in prep_operation.review_manager.dataset.read_next_record():
+            if crossref_origin in candidate_record_dict["colrev_origin"]:
+                return candidate_record_dict
+        return {}
+
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         if "crossref" in record.data:
-            crossref_record = prep_operation.review_manager.dataset.get_crossref_record(
-                record_dict=record.data
+            crossref_record = self.__get_crossref_record(
+                prep_operation=prep_operation, record_dict=record.data
             )
             if 0 != len(crossref_record):
                 for key, value in crossref_record.items():

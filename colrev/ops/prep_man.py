@@ -37,6 +37,7 @@ class PrepMan(colrev.operation.Operation):
     def __get_crosstab_df(self) -> pd.DataFrame:
 
         # pylint: disable=too-many-branches
+        # pylint: disable=duplicate-code
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -124,19 +125,23 @@ class PrepMan(colrev.operation.Operation):
 
     def get_data(self) -> dict:
         # pylint: disable=duplicate-code
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.md_needs_manual_preparation)
+                for x in record_header_list
+                if colrev.record.RecordState.md_needs_manual_preparation
                 == x["colrev_status"]
             ]
         )
 
-        all_ids = [x["ID"] for x in record_state_list]
+        all_ids = [x["ID"] for x in record_header_list]
 
-        pad = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 35)
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[
@@ -164,7 +169,9 @@ class PrepMan(colrev.operation.Operation):
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
         record_dict = record.get_data()
 
-        self.review_manager.dataset.update_record_by_id(new_record=record_dict)
+        self.review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
         self.review_manager.dataset.add_record_changes()
 
     def main(self) -> None:

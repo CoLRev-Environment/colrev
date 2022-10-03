@@ -16,7 +16,15 @@ colrev.checker.Checker
    .. autosummary::
       :nosignatures:
 
+      ~Checker.check_fields
+      ~Checker.check_main_records_duplicates
+      ~Checker.check_main_records_origin
+      ~Checker.check_main_records_screen
+      ~Checker.check_persisted_id_changes
+      ~Checker.check_propagated_id
       ~Checker.check_repo
       ~Checker.check_repository_setup
+      ~Checker.check_sources
+      ~Checker.check_status_transitions
       ~Checker.get_colrev_versions
       ~Checker.in_virtualenv

@@ -193,6 +193,29 @@ class Corrections:
 
         # TODO : combine merge-record corrections
 
+    def __get_records_curated_prior_from_history(
+        self,
+    ) -> list:
+
+        prior_records_dict = next(self.review_manager.dataset.load_from_git_history())
+        prior_curated_records = []
+        for prior_record in prior_records_dict.values():
+            if colrev.record.Record(data=prior_record).masterdata_is_curated():
+                prior_curated_records.append(prior_record)
+
+        return prior_curated_records
+
+    def __get_records_curated_current(
+        self,
+    ) -> list:
+        records_dict = self.review_manager.dataset.load_records_dict()
+        curated_records = []
+        for record_dict in records_dict.values():
+            if colrev.record.Record(data=record_dict).masterdata_is_curated():
+                curated_records.append(record_dict)
+
+        return curated_records
+
     def check_corrections_of_curated_records(self) -> None:
 
         dataset = self.review_manager.dataset
@@ -200,8 +223,8 @@ class Corrections:
         if not dataset.records_file.is_file():
             return
 
-        record_curated_current = dataset.get_records_curated_currentl()
-        record_curated_prior = dataset.get_records_curated_prior_from_history()
+        record_curated_current = self.__get_records_curated_current()
+        record_curated_prior = self.__get_records_curated_prior_from_history()
 
         # TODO : The following code should be much simpler...
         for curated_record in record_curated_current:
@@ -265,17 +288,39 @@ class Corrections:
 
         return True
 
+    def __retrieve_by_colrev_id(
+        self, *, indexed_record_dict: dict, records: list[dict]
+    ) -> dict:
+
+        indexed_record = colrev.record.Record(data=indexed_record_dict)
+
+        if "colrev_id" in indexed_record.data:
+            cid_to_retrieve = indexed_record.get_colrev_id()
+        else:
+            cid_to_retrieve = [indexed_record.create_colrev_id()]
+
+        record_l = [
+            x
+            for x in records
+            if any(
+                cid in colrev.record.Record(data=x).get_colrev_id()
+                for cid in cid_to_retrieve
+            )
+        ]
+        if len(record_l) != 1:
+            raise colrev_exceptions.RecordNotInRepoException
+        return record_l[0]
+
     def __retrieve_record_for_correction(
         self,
         *,
-        check_operation: colrev.operation.Operation,
         records: dict,
         change_item: dict,
     ) -> dict:
         original_curated_record = change_item["original_curated_record"]
 
         try:
-            record_dict = check_operation.review_manager.dataset.retrieve_by_colrev_id(
+            record_dict = self.__retrieve_by_colrev_id(
                 indexed_record_dict=original_curated_record,
                 records=list(records.values()),
             )
@@ -412,7 +457,6 @@ class Corrections:
         for change_item in change_list:
 
             record_dict = self.__retrieve_record_for_correction(
-                check_operation=check_operation,
                 records=records,
                 change_item=change_item,
             )

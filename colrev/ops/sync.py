@@ -26,7 +26,7 @@ class Sync:
             paper_md = Path("paper.md")
         if Path("data/paper.md").is_file():
             paper_md = Path("data/paper.md")
-        elif Path("review.md"):
+        elif Path("review.md").is_file():
             paper_md = Path("review.md")
         rst_files = list(Path.cwd().rglob("*.rst"))
 

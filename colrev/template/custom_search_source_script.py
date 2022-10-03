@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Template for a custom SearchSource PackageEndpoint"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,12 +24,18 @@ class CustomSearch:
     source_identifier = "{{custom}}"
 
     def __init__(
-        self, *, source_operation: colrev.ops.search.Search, settings: dict
+        self,
+        *,
+        source_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(
-        slef, search_operation: colrev.ops.search.Search, params: dict, feed_file: Path
+        self,
+        search_operation: colrev.ops.search.Search,
+        params: dict,  # pylint: disable=unused-argument
+        feed_file: Path,
     ) -> None:
 
         max_id = 1
@@ -59,7 +66,6 @@ class CustomSearch:
         search_operation.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=feed_file
         )
-        return
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:
@@ -73,9 +79,10 @@ class CustomSearch:
             raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a journal_issn field in the SCOPE section"
             )
-        pass
 
-    def heuristic(self, filename: Path, data: str) -> dict:
+    def heuristic(
+        self, filename: Path, data: str  # pylint: disable=unused-argument
+    ) -> dict:
         # TODO
         result = {"confidence": 0}
 
@@ -83,8 +90,8 @@ class CustomSearch:
 
     def load_fixes(
         self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
+        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
+        source: colrev.settings.SearchSource,  # pylint: disable=unused-argument
         records: dict,
     ) -> dict:
 

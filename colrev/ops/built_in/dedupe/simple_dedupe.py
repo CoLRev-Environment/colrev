@@ -190,22 +190,24 @@ class SimpleDedupe(JsonSchemaMixin):
 
     def __get_dedupe_data(self, *, dedupe_operation: colrev.ops.dedupe.Dedupe) -> dict:
 
-        record_state_list = (
-            dedupe_operation.review_manager.dataset.get_record_state_list()
+        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+            header_only=True
         )
+        record_header_list = list(records_headers.values())
+
         ids_to_dedupe = [
             x["ID"]
-            for x in record_state_list
-            if x["colrev_status"] == str(colrev.record.RecordState.md_prepared)
+            for x in record_header_list
+            if x["colrev_status"] == colrev.record.RecordState.md_prepared
         ]
         processed_ids = [
             x["ID"]
-            for x in record_state_list
+            for x in record_header_list
             if x["colrev_status"]
             not in [
-                str(colrev.record.RecordState.md_imported),
-                str(colrev.record.RecordState.md_prepared),
-                str(colrev.record.RecordState.md_needs_manual_preparation),
+                colrev.record.RecordState.md_imported,
+                colrev.record.RecordState.md_prepared,
+                colrev.record.RecordState.md_needs_manual_preparation,
             ]
         ]
         if len(ids_to_dedupe) > 20:

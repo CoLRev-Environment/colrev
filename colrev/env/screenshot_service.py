@@ -18,8 +18,6 @@ class ScreenshotService:
     def __init__(self) -> None:
         pass
 
-    # TODO : close service afterwards
-
     def start_screenshot_service(self) -> None:
 
         if self.screenshot_service_available():

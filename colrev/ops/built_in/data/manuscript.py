@@ -9,6 +9,7 @@ import typing
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Timer
 from typing import TYPE_CHECKING
 
 import dacite
@@ -19,6 +20,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -387,6 +389,39 @@ class Manuscript(JsonSchemaMixin):
                 path=self.NON_SAMPLE_REFERENCES_RELATIVE
             )
 
+    def __call_docker_build_process(
+        self, *, data_operation: colrev.ops.data.Data, script: str
+    ) -> None:
+
+        uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
+        gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
+        user = f"{uid}:{gid}"
+
+        client = docker.from_env()
+        try:
+            environment_manager = (
+                data_operation.review_manager.get_environment_manager()
+            )
+
+            pandoc_img = environment_manager.docker_images["pandoc/ubuntu-latex"]
+            msg = "Running docker container created from " f"image {pandoc_img}"
+            data_operation.review_manager.report_logger.info(msg)
+            data_operation.review_manager.logger.debug(msg)
+            client.containers.run(
+                image=pandoc_img,
+                command=script,
+                user=user,
+                volumes=[os.getcwd() + ":/data"],
+            )
+        except docker.errors.ImageNotFound:
+            data_operation.review_manager.logger.error("Docker image not found")
+        except docker.errors.ContainerError as exc:
+            if "Temporary failure in name resolution" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "pandoc service failed (tried to fetch csl without Internet connection)"
+                ) from exc
+            raise exc
+
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
 
         data_operation.review_manager.logger.info("Build manuscript")
@@ -414,9 +449,6 @@ class Manuscript(JsonSchemaMixin):
             self.retrieve_default_word_template()
         assert word_template.is_file()
 
-        uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
-        gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
-
         paper_relative_path = self.settings.paper_path.relative_to(
             data_operation.review_manager.path
         )
@@ -430,24 +462,12 @@ class Manuscript(JsonSchemaMixin):
             + f"--output {output_relative_path}"
         )
 
-        client = docker.from_env()
-        try:
-            environment_manager = (
-                data_operation.review_manager.get_environment_manager()
-            )
-
-            pandoc_img = environment_manager.docker_images["pandoc/ubuntu-latex"]
-            msg = "Running docker container created from " f"image {pandoc_img}"
-            data_operation.review_manager.report_logger.info(msg)
-            data_operation.review_manager.logger.info(msg)
-            client.containers.run(
-                image=pandoc_img,
-                command=script,
-                user=f"{uid}:{gid}",
-                volumes=[os.getcwd() + ":/data"],
-            )
-        except docker.errors.ImageNotFound:
-            data_operation.review_manager.logger.error("Docker image not found")
+        Timer(
+            1,
+            lambda: self.__call_docker_build_process(
+                data_operation=data_operation, script=script
+            ),
+        ).start()
 
         return
 

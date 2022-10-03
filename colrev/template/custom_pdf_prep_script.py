@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Template for a custom PDFPrep PackageEndpoint"""
 from __future__ import annotations
 
 import random
@@ -13,11 +14,16 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 class CustomPDFPrep:
     def __init__(
-        self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
+        self,
+        *,
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.env.package_manager.DefaultSettings, data=settings
@@ -25,9 +31,9 @@ class CustomPDFPrep:
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         record: colrev.record.Record,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
 
         if random.random() < 0.8:

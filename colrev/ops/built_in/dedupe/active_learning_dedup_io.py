@@ -784,10 +784,11 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
         # Setting in-memory mode depending on system RAM
 
-        record_state_list = (
-            dedupe_operation.review_manager.dataset.get_record_state_list()
+        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+            header_only=True
         )
-        sample_size = len(record_state_list)
+        record_header_list = list(records_headers.values())
+        sample_size = len(record_header_list)
 
         ram = psutil.virtual_memory().total
         in_memory = sample_size * 5000000 < ram

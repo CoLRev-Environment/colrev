@@ -211,12 +211,15 @@ class PDFPrep(colrev.operation.Operation):
 
     def __get_data(self) -> dict:
 
-        record_state_list = self.review_manager.dataset.get_record_state_list()
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        record_header_list = list(records_headers.values())
         nr_tasks = len(
             [
                 x
-                for x in record_state_list
-                if str(colrev.record.RecordState.pdf_imported) == x["colrev_status"]
+                for x in record_header_list
+                if colrev.record.RecordState.pdf_imported == x["colrev_status"]
             ]
         )
 
@@ -354,7 +357,10 @@ class PDFPrep(colrev.operation.Operation):
                 print(record["ID"])
                 record = self.prepare_pdf(item)
                 self.review_manager.p_printer.pprint(record)
-                self.review_manager.dataset.save_record_list_by_id(record_list=[record])
+                self.review_manager.dataset.save_records_dict(
+                    records={record["ID"]: record}, partial=True
+                )
+
         else:
 
             endpoint_names = [
@@ -371,8 +377,8 @@ class PDFPrep(colrev.operation.Operation):
             pool.join()
             pool.clear()
 
-            self.review_manager.dataset.save_record_list_by_id(
-                record_list=pdf_prep_record_list
+            self.review_manager.dataset.save_records_dict(
+                records={r["ID"]: r for r in pdf_prep_record_list}, partial=True
             )
 
         self._print_stats(pdf_prep_record_list=pdf_prep_record_list)

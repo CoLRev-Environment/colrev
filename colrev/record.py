@@ -9,6 +9,7 @@ import pprint
 import re
 import shutil
 import textwrap
+import typing
 from copy import deepcopy
 from difflib import SequenceMatcher
 from enum import auto
@@ -1634,7 +1635,10 @@ class Record:
                     + "recorded as not_available (and moved to screen)"
                 )
 
-        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        record_dict = self.get_data()
+        review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
         review_manager.dataset.add_record_changes()
 
     def pdf_man_prep(
@@ -1651,7 +1655,10 @@ class Record:
             )
         )
 
-        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        record_dict = self.get_data()
+        review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
         review_manager.dataset.add_changes(
             path=review_manager.dataset.RECORDS_FILE_RELATIVE
         )
@@ -2204,19 +2211,18 @@ class PrescreenRecord(Record):
             review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
-            review_manager.dataset.replace_field(
-                ids=[self.data["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_included),
+            self.set_status(target_state=RecordState.rev_prescreen_included)
+            review_manager.dataset.save_records_dict(
+                records={self.data["ID"]: self.get_data()}, partial=True
             )
+
         else:
             review_manager.report_logger.info(
                 f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
-            review_manager.dataset.replace_field(
-                ids=[self.data["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_excluded),
+            self.set_status(target_state=RecordState.rev_prescreen_excluded)
+            review_manager.dataset.save_records_dict(
+                records={self.data["ID"]: self.get_data()}, partial=True
             )
 
         review_manager.dataset.add_record_changes()
@@ -2251,7 +2257,10 @@ class ScreenRecord(PrescreenRecord):
                 f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
             )
 
-        review_manager.dataset.update_record_by_id(new_record=self.get_data())
+        record_dict = self.get_data()
+        review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
         review_manager.dataset.add_record_changes()
 
 
@@ -2306,7 +2315,7 @@ class RecordState(Enum):
         ]
 
     @classmethod
-    def get_post_x_states(cls, *, state: RecordState) -> list:
+    def get_post_x_states(cls, *, state: RecordState) -> typing.List[RecordState]:
 
         if state == RecordState.pdf_prepared:
             return [
@@ -2317,17 +2326,17 @@ class RecordState(Enum):
             ]
         if state == RecordState.md_processed:
             return [
-                str(RecordState.md_processed),
-                str(RecordState.rev_prescreen_included),
-                str(RecordState.rev_prescreen_excluded),
-                str(RecordState.pdf_needs_manual_retrieval),
-                str(RecordState.pdf_imported),
-                str(RecordState.pdf_not_available),
-                str(RecordState.pdf_needs_manual_preparation),
-                str(RecordState.pdf_prepared),
-                str(RecordState.rev_excluded),
-                str(RecordState.rev_included),
-                str(RecordState.rev_synthesized),
+                RecordState.md_processed,
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
 
         # pylint: disable=no-member
@@ -2360,7 +2369,7 @@ non_processing_transitions = [
 
 class RecordStateModel:
 
-    transitions = transitions = [
+    transitions = [
         {
             "trigger": "load",
             "source": RecordState.md_retrieved,
@@ -2507,14 +2516,21 @@ class RecordStateModel:
     def check_operation_precondition(
         self, *, operation: colrev.operation.Operation
     ) -> None:
+        def get_states_set() -> set:
+            if not self.review_manager.dataset.records_file.is_file():
+                return set()
+            records_headers = self.review_manager.dataset.load_records_dict(
+                header_only=True
+            )
+            record_header_list = list(records_headers.values())
+
+            return {el["colrev_status"] for el in record_header_list}
 
         if "True" == self.review_manager.settings.project.delay_automated_processing:
-            cur_state_list = self.review_manager.dataset.get_states_set()
+            cur_state_list = get_states_set()
             self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
             self.review_manager.logger.debug(f"precondition: {self.state}")
-            required_absent = {
-                str(x) for x in self.get_preceding_states(state=self.state)
-            }
+            required_absent = self.get_preceding_states(state=self.state)
             self.review_manager.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (
@@ -2530,6 +2546,7 @@ class RecordStateModel:
 
 class PDFPrepManRecord(Record):
     def __str__(self) -> str:
+        # pylint: disable=too-many-branches
         ret_str = ""
         if "file" in self.data:
             ret_str += f"\nfile: {colors.ORANGE}{self.data['file']}{colors.END}\n\n"

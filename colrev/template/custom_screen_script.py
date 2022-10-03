@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Template for a custom Screen PackageEndpoint"""
 from __future__ import annotations
 
 import random
@@ -13,11 +14,16 @@ import colrev.record
 if TYPE_CHECKING:
     import colrev.screen.Screen
 
+# pylint: disable=too-few-public-methods
+
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 class CustomScreen:
     def __init__(
-        self, *, screen_operation: colrev.screen.Screen, settings: dict
+        self,
+        *,
+        screen_operation: colrev.screen.Screen,  # pylint: disable=unused-argument
+        settings: dict,
     ) -> None:
         self.settings = from_dict(
             data_class=colrev.env.package_manager.DefaultSettings, data=settings
@@ -30,10 +36,7 @@ class CustomScreen:
         screen_data = screen_operation.get_data()
         screening_criteria = screen_operation.review_manager.settings.screen.criteria
 
-        if screening_criteria:
-            screening_criteria_available = True
-        else:
-            screening_criteria_available = False
+        screening_criteria_available = bool(screening_criteria)
 
         for record_dict in screen_data["items"]:
             if len(split) > 0:

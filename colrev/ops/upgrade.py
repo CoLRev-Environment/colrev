@@ -10,8 +10,10 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 import yaml
+from tqdm import tqdm
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
 if TYPE_CHECKING:
@@ -117,6 +119,52 @@ class Upgrade(colrev.operation.Operation):
                     active = False
                 if active:
                     print(line)
+
+    def __load_origin_records(self) -> dict:
+
+        origin_records: dict[str, typing.Any] = {}
+        sources = [x.filename for x in self.review_manager.settings.sources]
+        for source in sources:
+            source_file = self.review_manager.SEARCHDIR_RELATIVE / Path(source)
+            if source_file.is_file():
+                with open(source_file, encoding="utf8") as target_db:
+
+                    source_record_dict = self.review_manager.dataset.load_records_dict(
+                        load_str=target_db.read()
+                    )
+
+                    records_dict = {
+                        f"{source}/{r['ID']}": {r.items()}
+                        for r in source_record_dict.values()
+                    }
+                    origin_records = {**origin_records, **records_dict}
+
+        return origin_records
+
+    def __update_colrev_ids(self) -> None:
+
+        self.review_manager.logger.info("Create colrev_id list from origins")
+        recs_dict = self.review_manager.dataset.load_records_dict()
+        if len(recs_dict) > 0:
+            origin_records = self.__load_origin_records()
+            for rec in tqdm(recs_dict.values()):
+                record = colrev.record.Record(data=rec)
+                try:
+                    colrev_id = record.create_colrev_id()
+                    record.data["colrev_id"] = [colrev_id]
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
+                    continue
+                origins = record.get_origins()
+                record.add_colrev_ids(
+                    records=[
+                        origin_records[origin]
+                        for origin in set(origins)
+                        if origin in origin_records
+                    ]
+                )
+
+            self.review_manager.dataset.save_records_dict(records=recs_dict)
+            self.review_manager.dataset.add_record_changes()
 
     def __migrate_0_4_0(self) -> bool:
         # pylint: disable=too-many-statements
@@ -323,7 +371,7 @@ class Upgrade(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
         # Note: the order is important in this case.
-        self.review_manager.dataset.update_colrev_ids()
+        self.__update_colrev_ids()
 
         return True
 

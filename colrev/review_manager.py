@@ -276,6 +276,9 @@ class ReviewManager:
 
         return colrev.advisor.Advisor(review_manager=self)
 
+    def get_checker(self, **kwargs) -> colrev.checker.Checker:  # type: ignore
+        return colrev.checker.Checker(review_manager=self, **kwargs)
+
     def get_status_stats(self) -> colrev.ops.status.StatusStats:
         import colrev.ops.status
 
@@ -292,13 +295,17 @@ class ReviewManager:
         return colrev.env.local_index.LocalIndex(**kwargs)
 
     @classmethod
-    def get_package_manager(cls, **kwargs) -> colrev.env.package_manager.PackageManager:  # type: ignore
+    def get_package_manager(  # type: ignore
+        cls, **kwargs
+    ) -> colrev.env.package_manager.PackageManager:
         import colrev.env.package_manager
 
         return colrev.env.package_manager.PackageManager(**kwargs)
 
     @classmethod
-    def get_grobid_service(cls, **kwargs) -> colrev.env.grobid_service.GrobidService:  # type: ignore
+    def get_grobid_service(  # type: ignore
+        cls, **kwargs
+    ) -> colrev.env.grobid_service.GrobidService:
         import colrev.env.grobid_service
 
         return colrev.env.grobid_service.GrobidService(**kwargs)
@@ -408,7 +415,9 @@ class ReviewManager:
 
         return colrev.ops.pdf_get.PDFGet(review_manager=self, **kwargs)
 
-    def get_pdf_get_man_operation(self, **kwargs) -> colrev.ops.pdf_get_man.PDFGetMan:  # type: ignore
+    def get_pdf_get_man_operation(  # type: ignore
+        self, **kwargs
+    ) -> colrev.ops.pdf_get_man.PDFGetMan:
         import colrev.ops.pdf_get_man
 
         return colrev.ops.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
@@ -450,7 +459,9 @@ class ReviewManager:
 
         return colrev.ops.trace.Trace(review_manager=self, **kwargs)
 
-    def get_distribute_operation(self, **kwargs) -> colrev.ops.distribute.Distribute:  # type: ignore
+    def get_distribute_operation(  # type: ignore
+        self, **kwargs
+    ) -> colrev.ops.distribute.Distribute:
         import colrev.ops.distribute
 
         return colrev.ops.distribute.Distribute(review_manager=self, **kwargs)
@@ -470,7 +481,9 @@ class ReviewManager:
 
         return colrev.service.Service(review_manager=self, **kwargs)
 
-    def get_search_sources(self, **kwargs) -> colrev.ops.search_sources.SearchSources:  # type: ignore
+    def get_search_sources(  # type: ignore
+        self, **kwargs
+    ) -> colrev.ops.search_sources.SearchSources:
         import colrev.ops.search_sources
 
         return colrev.ops.search_sources.SearchSources(review_manager=self, **kwargs)

@@ -18,6 +18,7 @@ colrev.ops.pdf\_get\_man.PDFGetMan
 
       ~PDFGetMan.check_precondition
       ~PDFGetMan.check_record_state_model_precondition
+      ~PDFGetMan.discard_missing
       ~PDFGetMan.export_retrieval_table
       ~PDFGetMan.get_data
       ~PDFGetMan.get_pdf_get_man
