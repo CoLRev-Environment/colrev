@@ -81,7 +81,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                     user_selection = input("Prepared? ( (y)es, (n)o, (d)elete file)?")
                     if "y" == user_selection:
                         record = colrev.record.PDFPrepManRecord(data=record_dict)
-                        record.pdf_man_prep(review_manager=pdf_prep_man.review_manager)
+                        record.set_pdf_man_prepared(
+                            review_manager=pdf_prep_man.review_manager
+                        )
                     if "d" == user_selection:
                         record = colrev.record.PDFPrepManRecord(data=record_dict)
                         record.remove_field(key="file")

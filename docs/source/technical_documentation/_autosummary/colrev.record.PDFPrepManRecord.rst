@@ -31,7 +31,6 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.extract_pages
       ~PDFPrepManRecord.extract_text_by_page
       ~PDFPrepManRecord.format_bib_style
-      ~PDFPrepManRecord.fuse_best_field
       ~PDFPrepManRecord.get_colrev_id
       ~PDFPrepManRecord.get_colrev_pdf_id
       ~PDFPrepManRecord.get_container_title
@@ -40,7 +39,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.get_field_provenance
       ~PDFPrepManRecord.get_incomplete_fields
       ~PDFPrepManRecord.get_inconsistencies
-      ~PDFPrepManRecord.get_origins
+      ~PDFPrepManRecord.get_missing_fields
       ~PDFPrepManRecord.get_quality_defects
       ~PDFPrepManRecord.get_record_similarity
       ~PDFPrepManRecord.get_similarity
@@ -57,9 +56,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.masterdata_is_complete
       ~PDFPrepManRecord.masterdata_is_curated
       ~PDFPrepManRecord.merge
-      ~PDFPrepManRecord.missing_fields
       ~PDFPrepManRecord.pdf_get_man
-      ~PDFPrepManRecord.pdf_man_prep
       ~PDFPrepManRecord.prescreen_exclude
       ~PDFPrepManRecord.print_citation_format
       ~PDFPrepManRecord.print_diff_pair
@@ -71,6 +68,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.set_masterdata_complete
       ~PDFPrepManRecord.set_masterdata_consistent
       ~PDFPrepManRecord.set_pages_in_pdf
+      ~PDFPrepManRecord.set_pdf_man_prepared
       ~PDFPrepManRecord.set_status
       ~PDFPrepManRecord.set_text_from_pdf
       ~PDFPrepManRecord.shares_origins

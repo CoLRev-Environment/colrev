@@ -10,7 +10,7 @@ import git
 from dictdiffer import diff
 
 import colrev.exceptions as colrev_exceptions
-
+import colrev.record
 
 if TYPE_CHECKING:
     import colrev.review_manager

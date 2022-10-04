@@ -105,6 +105,7 @@ class StatusStats:
     ) -> None:
 
         self.review_manager = review_manager
+        colrev.operation.CheckOperation(review_manager=review_manager)
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )

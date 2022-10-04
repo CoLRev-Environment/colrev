@@ -36,7 +36,6 @@ colrev.record.PrepRecord
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.format_if_mostly_upper
-      ~PrepRecord.fuse_best_field
       ~PrepRecord.get_abbrev_container_min_len
       ~PrepRecord.get_colrev_id
       ~PrepRecord.get_colrev_pdf_id
@@ -46,7 +45,7 @@ colrev.record.PrepRecord
       ~PrepRecord.get_field_provenance
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
-      ~PrepRecord.get_origins
+      ~PrepRecord.get_missing_fields
       ~PrepRecord.get_quality_defects
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
@@ -64,9 +63,7 @@ colrev.record.PrepRecord
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
-      ~PrepRecord.missing_fields
       ~PrepRecord.pdf_get_man
-      ~PrepRecord.pdf_man_prep
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
@@ -80,6 +77,7 @@ colrev.record.PrepRecord
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_pages_in_pdf
+      ~PrepRecord.set_pdf_man_prepared
       ~PrepRecord.set_status
       ~PrepRecord.set_text_from_pdf
       ~PrepRecord.shares_origins

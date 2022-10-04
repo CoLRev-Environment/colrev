@@ -159,7 +159,10 @@ class SettingsEditor:
                                     "type": "array",
                                     "items": {"$ref": "#/definitions/Author"},
                                 },
-                                "keywords": {"type": "array", "items": {"type": "string"}},
+                                "keywords": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
                                 "protocol": {"$ref": "#/definitions/Protocol"},
                                 "review_type": {"type": "string"},
                                 "id_pattern": {
@@ -168,7 +171,12 @@ class SettingsEditor:
                                 },
                                 "share_stat_req": {
                                     "type": "string",
-                                    "enum": ["none", "processed", "screened", "completed"],
+                                    "enum": [
+                                        "none",
+                                        "processed",
+                                        "screened",
+                                        "completed",
+                                    ],
                                 },
                                 "delay_automated_processing": {"type": "boolean"},
                                 "curation_url": {"type": "string"},
@@ -287,7 +295,11 @@ class SettingsEditor:
                         },
                         "PrepRound": {
                             "type": "object",
-                            "required": ["name", "similarity", "prep_package_endpoints"],
+                            "required": [
+                                "name",
+                                "similarity",
+                                "prep_package_endpoints",
+                            ],
                             "properties": {
                                 "name": {"type": "string"},
                                 "similarity": {"type": "number"},
@@ -300,7 +312,10 @@ class SettingsEditor:
                         },
                         "DedupeSettings": {
                             "type": "object",
-                            "required": ["same_source_merges", "dedupe_package_endpoints"],
+                            "required": [
+                                "same_source_merges",
+                                "dedupe_package_endpoints",
+                            ],
                             "properties": {
                                 "same_source_merges": {
                                     "type": "string",
@@ -398,7 +413,10 @@ class SettingsEditor:
                                 "comment": {"type": "string"},
                                 "criterion_type": {
                                     "type": "string",
-                                    "enum": ["inclusion_criterion", "exclusion_criterion"],
+                                    "enum": [
+                                        "inclusion_criterion",
+                                        "exclusion_criterion",
+                                    ],
                                 },
                             },
                             "description": "Screen criterion",
@@ -606,7 +624,12 @@ class SettingsEditor:
                     # Example: script_type="data", script_name="colrev_built_in.manuscript"
                     package_details = {
                         "type": "object",
-                        "required": ["endpoint", "version", "word_template", "csl_style"],
+                        "required": [
+                            "endpoint",
+                            "version",
+                            "word_template",
+                            "csl_style",
+                        ],
                         "properties": {
                             "endpoint": {"type": "string"},
                             "version": {"type": "string"},
@@ -733,10 +756,8 @@ class SettingsEditor:
         def shutdown() -> str:
             func = request.environ.get("werkzeug.server.shutdown")
             if func is None:
-                #raise RuntimeError("Not running with the Werkzeug Server")
-                return {
-                    "error": "Not running with the Werkzeug Server"
-                }
+                # raise RuntimeError("Not running with the Werkzeug Server")
+                return {"error": "Not running with the Werkzeug Server"}
             func()
             return "Server shutting down..."
 

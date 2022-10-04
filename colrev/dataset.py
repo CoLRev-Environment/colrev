@@ -29,6 +29,8 @@ import colrev.settings
 if TYPE_CHECKING:
     import colrev.review_manager
 
+# pylint: disable=too-many-public-methods
+
 
 class Dataset:
 

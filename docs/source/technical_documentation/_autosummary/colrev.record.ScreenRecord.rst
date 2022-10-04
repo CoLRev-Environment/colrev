@@ -31,7 +31,6 @@ colrev.record.ScreenRecord
       ~ScreenRecord.extract_pages
       ~ScreenRecord.extract_text_by_page
       ~ScreenRecord.format_bib_style
-      ~ScreenRecord.fuse_best_field
       ~ScreenRecord.get_colrev_id
       ~ScreenRecord.get_colrev_pdf_id
       ~ScreenRecord.get_container_title
@@ -40,7 +39,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.get_field_provenance
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
-      ~ScreenRecord.get_origins
+      ~ScreenRecord.get_missing_fields
       ~ScreenRecord.get_quality_defects
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
@@ -57,9 +56,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
-      ~ScreenRecord.missing_fields
       ~ScreenRecord.pdf_get_man
-      ~ScreenRecord.pdf_man_prep
       ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.print_citation_format
@@ -73,6 +70,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.set_masterdata_complete
       ~ScreenRecord.set_masterdata_consistent
       ~ScreenRecord.set_pages_in_pdf
+      ~ScreenRecord.set_pdf_man_prepared
       ~ScreenRecord.set_status
       ~ScreenRecord.set_text_from_pdf
       ~ScreenRecord.shares_origins

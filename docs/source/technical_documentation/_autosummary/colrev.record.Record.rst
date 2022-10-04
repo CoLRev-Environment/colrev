@@ -31,7 +31,6 @@ colrev.record.Record
       ~Record.extract_pages
       ~Record.extract_text_by_page
       ~Record.format_bib_style
-      ~Record.fuse_best_field
       ~Record.get_colrev_id
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title
@@ -40,7 +39,7 @@ colrev.record.Record
       ~Record.get_field_provenance
       ~Record.get_incomplete_fields
       ~Record.get_inconsistencies
-      ~Record.get_origins
+      ~Record.get_missing_fields
       ~Record.get_quality_defects
       ~Record.get_record_similarity
       ~Record.get_similarity
@@ -57,9 +56,7 @@ colrev.record.Record
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated
       ~Record.merge
-      ~Record.missing_fields
       ~Record.pdf_get_man
-      ~Record.pdf_man_prep
       ~Record.prescreen_exclude
       ~Record.print_citation_format
       ~Record.print_diff_pair
@@ -71,6 +68,7 @@ colrev.record.Record
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
       ~Record.set_pages_in_pdf
+      ~Record.set_pdf_man_prepared
       ~Record.set_status
       ~Record.set_text_from_pdf
       ~Record.shares_origins

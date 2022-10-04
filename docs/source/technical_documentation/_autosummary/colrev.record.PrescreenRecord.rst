@@ -31,7 +31,6 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.extract_pages
       ~PrescreenRecord.extract_text_by_page
       ~PrescreenRecord.format_bib_style
-      ~PrescreenRecord.fuse_best_field
       ~PrescreenRecord.get_colrev_id
       ~PrescreenRecord.get_colrev_pdf_id
       ~PrescreenRecord.get_container_title
@@ -40,7 +39,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.get_field_provenance
       ~PrescreenRecord.get_incomplete_fields
       ~PrescreenRecord.get_inconsistencies
-      ~PrescreenRecord.get_origins
+      ~PrescreenRecord.get_missing_fields
       ~PrescreenRecord.get_quality_defects
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
@@ -57,9 +56,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.masterdata_is_complete
       ~PrescreenRecord.masterdata_is_curated
       ~PrescreenRecord.merge
-      ~PrescreenRecord.missing_fields
       ~PrescreenRecord.pdf_get_man
-      ~PrescreenRecord.pdf_man_prep
       ~PrescreenRecord.prescreen
       ~PrescreenRecord.prescreen_exclude
       ~PrescreenRecord.print_citation_format
@@ -72,6 +69,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.set_masterdata_complete
       ~PrescreenRecord.set_masterdata_consistent
       ~PrescreenRecord.set_pages_in_pdf
+      ~PrescreenRecord.set_pdf_man_prepared
       ~PrescreenRecord.set_status
       ~PrescreenRecord.set_text_from_pdf
       ~PrescreenRecord.shares_origins

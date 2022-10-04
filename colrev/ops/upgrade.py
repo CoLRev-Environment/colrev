@@ -154,7 +154,7 @@ class Upgrade(colrev.operation.Operation):
                     record.data["colrev_id"] = [colrev_id]
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
                     continue
-                origins = record.get_origins()
+                origins = record.data.get("colrev_origins", [])
                 record.add_colrev_ids(
                     records=[
                         origin_records[origin]
@@ -693,6 +693,10 @@ class Upgrade(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         if len(records.values()) > 0:
             for record in records.values():
+                if "file" in record:
+                    if "pdfs" == record["file"][:4]:
+                        record["file"] = "data/" + record["file"]
+
                 if "exclusion_criteria" in record:
                     record["screening_criteria"] = (
                         record["exclusion_criteria"]
@@ -703,6 +707,10 @@ class Upgrade(colrev.operation.Operation):
 
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
+
+        for bib_file in self.review_manager.search_dir.glob('*.bib'):
+            colrev.env.utils.inplace_change(filename=bib_file, old_string="{pdfs/", new_string="{data/pdfs/")
+            self.review_manager.dataset.add_changes(path=bib_file.relative_to(self.review_manager.path))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/.pre-commit-config.yaml"),
@@ -725,10 +733,16 @@ class Upgrade(colrev.operation.Operation):
             old_string='"filename": "search',
             new_string='"filename": "data/search',
         )
+        for i in range(0,5):
+            colrev.env.utils.inplace_change(
+                filename=Path(".gitignore"),
+                old_string="data/data/pdfs\n",
+                new_string="data/pdfs\n",
+            )
         colrev.env.utils.inplace_change(
             filename=Path(".gitignore"),
-            old_string="pdfs\n",
-            new_string="data/pdfs\n",
+            old_string="\npdfs\n",
+            new_string="\ndata/pdfs\n",
         )
         self.review_manager.dataset.add_changes(path=Path(".gitignore"))
         self.review_manager.dataset.add_changes(path=Path("settings.json"))

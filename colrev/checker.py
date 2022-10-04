@@ -320,11 +320,12 @@ class Checker:
         # TODO : we may apply less restrictive criteria to identify
         # invalid_state_transitions
         # E.g., setting a record from rev_synthesized to rev_included should be ok.
-        if len(set(status_data["invalid_state_transitions"])) > 0:
-            raise colrev_exceptions.StatusTransitionError(
-                "invalid state transitions: \n    "
-                + "\n    ".join(status_data["invalid_state_transitions"])
-            )
+        # if len(set(status_data["invalid_state_transitions"])) > 0:
+        #     raise colrev_exceptions.StatusTransitionError(
+        #         "invalid state transitions: \n    "
+        #         + "\n    ".join(status_data["invalid_state_transitions"])
+        #     )
+        pass
 
     def __get_screening_criteria(self, *, ec_string: str) -> list:
         excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]

@@ -67,7 +67,9 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         )
         self.skip_duplicates = True
-        self.pdfs_path = Path(self.settings.search_parameters["scope"]["path"])
+        # TODO : remove path parameter? -> should be /pdfs per default.
+        # self.pdfs_path = Path(self.settings.search_parameters["scope"]["path"])
+        self.pdfs_path = source_operation.review_manager.pdf_dir
 
     def __update_if_pdf_renamed(
         self,
@@ -175,7 +177,7 @@ class PDFSearchSource(JsonSchemaMixin):
                     if not any(
                         x.split("/")[1] in source_ids for x in record["colrev_origin"]
                     ):
-                        print("REMOVE " + record["colrev_origin"])
+                        print("REMOVE " + ",".join(record["colrev_origin"]))
                         to_remove.append(record["colrev_origin"])
 
             for record_dict in to_remove:
@@ -412,7 +414,8 @@ class PDFSearchSource(JsonSchemaMixin):
         def get_pdf_cpid_path(path: Path) -> typing.List[str]:
             try:
                 cpid = colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=search_operation.review_manager, pdf_path=path
+                    review_manager=search_operation.review_manager,
+                    pdf_path=search_operation.review_manager.path / path,
                 )
             except colrev_exceptions.InvalidPDFException:
                 cpid = "Exception"
@@ -472,7 +475,11 @@ class PDFSearchSource(JsonSchemaMixin):
         self.__remove_records_if_pdf_no_longer_exists(search_operation=search_operation)
 
         indexed_pdf_paths = self.__get_pdf_links(bib_file=self.settings.filename)
-        overall_pdfs = self.pdfs_path.glob("**/*.pdf")
+        overall_pdfs = [
+            x.relative_to(search_operation.review_manager.path)
+            for x in self.pdfs_path.glob("**/*.pdf")
+        ]
+
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
         print(len(pdfs_to_index))
@@ -504,7 +511,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 bib_file=self.settings.filename
             )
         )
-        input(len(list(overall_pdfs)))
+
         for pdf_batch in pdf_batches:
 
             new_records = []
