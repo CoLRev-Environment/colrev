@@ -37,6 +37,7 @@ import colrev.record
 
 # TODO : change logging level temporarily and fix issues that lead to warnings
 logging.getLogger("opensearchpy").setLevel(logging.ERROR)
+logging.getLogger("lxml").setLevel(logging.ERROR)
 
 
 class LocalIndex:
@@ -362,24 +363,6 @@ class LocalIndex:
         except (NotFoundError, KeyError):
             pass
 
-    def __get_toc_key(self, *, record_dict: dict) -> str:
-        toc_key = "NA"
-        if "article" == record_dict["ENTRYTYPE"]:
-            toc_key = f"{record_dict.get('journal', '-').replace(' ', '-').lower()}"
-            toc_key += (
-                f"|{record_dict['volume']}" if ("volume" in record_dict) else "|-"
-            )
-            toc_key += (
-                f"|{record_dict['number']}" if ("number" in record_dict) else "|-"
-            )
-
-        elif "inproceedings" == record_dict["ENTRYTYPE"]:
-            toc_key = (
-                f"{record_dict.get('booktitle', '').replace(' ', '-').lower()}"
-                + f"|{record_dict.get('year', '')}"
-            )
-        return toc_key
-
     def get_fields_to_remove(self, *, record_dict: dict) -> list:
         """Compares the record to available toc items and
         returns fields to remove (if any)"""
@@ -392,7 +375,7 @@ class LocalIndex:
         internal_record_dict = deepcopy(record_dict)
         if all(x in internal_record_dict.keys() for x in ["volume", "number"]):
 
-            toc_key_full = self.__get_toc_key(record_dict=internal_record_dict)
+            toc_key_full = colrev.record.Record(data=internal_record_dict).get_toc_key()
 
             if "NA" == toc_key_full:
                 return fields_to_remove
@@ -406,7 +389,7 @@ class LocalIndex:
 
             wo_nr = deepcopy(internal_record_dict)
             del wo_nr["number"]
-            toc_key_wo_nr = self.__get_toc_key(record_dict=wo_nr)
+            toc_key_wo_nr = colrev.record.Record(data=wo_nr).get_toc_key()
             if "NA" != toc_key_wo_nr:
                 toc_key_wo_nr_exists = open_search_thread_instance.exists(
                     index=self.TOC_INDEX, id=toc_key_wo_nr
@@ -417,7 +400,7 @@ class LocalIndex:
 
             wo_vol = deepcopy(internal_record_dict)
             del wo_vol["volume"]
-            toc_key_wo_vol = self.__get_toc_key(record_dict=wo_vol)
+            toc_key_wo_vol = colrev.record.Record(data=wo_vol).get_toc_key()
             if "NA" != toc_key_wo_vol:
                 toc_key_wo_vol_exists = open_search_thread_instance.exists(
                     index=self.TOC_INDEX, id=toc_key_wo_vol
@@ -429,7 +412,7 @@ class LocalIndex:
             wo_vol_nr = deepcopy(internal_record_dict)
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
-            toc_key_wo_vol_nr = self.__get_toc_key(record_dict=wo_vol_nr)
+            toc_key_wo_vol_nr = colrev.record.Record(data=wo_vol_nr).get_toc_key()
             if "NA" != toc_key_wo_vol_nr:
                 toc_key_wo_vol_nr_exists = open_search_thread_instance.exists(
                     index=self.TOC_INDEX, id=toc_key_wo_vol_nr
@@ -448,7 +431,7 @@ class LocalIndex:
         if record_dict.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
             # Note : records are md_prepared, i.e., complete
 
-            toc_key = self.__get_toc_key(record_dict=record_dict)
+            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
             if "NA" == toc_key:
                 return
 
@@ -906,7 +889,7 @@ class LocalIndex:
 
         year = "NA"
 
-        toc_key = self.__get_toc_key(record_dict=record_dict)
+        toc_key = colrev.record.Record(data=record_dict).get_toc_key()
         toc_items = []
         try:
             if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
@@ -946,7 +929,7 @@ class LocalIndex:
         similarity_threshold: float,
         include_file: bool = False,
     ) -> dict:
-        toc_key = self.__get_toc_key(record_dict=record_dict)
+        toc_key = colrev.record.Record(data=record_dict).get_toc_key()
 
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
         # 1. get TOC

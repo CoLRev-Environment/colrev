@@ -708,9 +708,13 @@ class Upgrade(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
 
-        for bib_file in self.review_manager.search_dir.glob('*.bib'):
-            colrev.env.utils.inplace_change(filename=bib_file, old_string="{pdfs/", new_string="{data/pdfs/")
-            self.review_manager.dataset.add_changes(path=bib_file.relative_to(self.review_manager.path))
+        for bib_file in self.review_manager.search_dir.glob("*.bib"):
+            colrev.env.utils.inplace_change(
+                filename=bib_file, old_string="{pdfs/", new_string="{data/pdfs/"
+            )
+            self.review_manager.dataset.add_changes(
+                path=bib_file.relative_to(self.review_manager.path)
+            )
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/.pre-commit-config.yaml"),
@@ -733,7 +737,7 @@ class Upgrade(colrev.operation.Operation):
             old_string='"filename": "search',
             new_string='"filename": "data/search',
         )
-        for i in range(0,5):
+        for _ in range(0, 5):
             colrev.env.utils.inplace_change(
                 filename=Path(".gitignore"),
                 old_string="data/data/pdfs\n",

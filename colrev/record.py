@@ -1703,20 +1703,19 @@ class Record:
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
-        toc_key = ""
+
+        toc_key = "NA"
         if "article" == self.data["ENTRYTYPE"]:
-            if "journal" in self.data:
-                toc_key += self.data["journal"]
-            if "volume" in self.data:
-                toc_key += self.data["volume"]
-            if "number" in self.data:
-                toc_key += self.data["number"]
+            toc_key = f"{self.data.get('journal', '-').replace(' ', '-').lower()}"
+            toc_key += f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
+            toc_key += f"|{self.data['number']}" if ("number" in self.data) else "|-"
 
-        if "inproceedings" == self.data["ENTRYTYPE"]:
-            if "booktitle" in self.data:
-                toc_key += self.data["booktitle"]
-                toc_key += self.data["year"]
-
+        elif "inproceedings" == self.data["ENTRYTYPE"]:
+            toc_key = (
+                f"{self.data.get('booktitle', '').replace(' ', '-').lower()}"
+                + f"|{self.data.get('year', '')}"
+            )
+        # TODO : tbd: else?
         return toc_key
 
     def print_citation_format(self) -> None:
