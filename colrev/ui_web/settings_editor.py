@@ -92,6 +92,7 @@ class SettingsEditor:
                 if DEV:
                     print("save with commit")
                 else:
+                    self.review_manager.dataset.add_changes(path=self.settings_path)
                     self.review_manager.create_commit(msg="Update settings")
 
             return "ok"
@@ -253,7 +254,7 @@ class SettingsEditor:
                                 },
                                 "load_conversion_package_endpoint": {
                                     "package_endpoint_type": "load_conversion",
-                                    "type": "script_item",
+                                    "type": "package_endpoint_array_item",
                                 },
                                 "comment": {"type": "string"},
                             },
@@ -288,7 +289,7 @@ class SettingsEditor:
                                 },
                                 "prep_man_package_endpoints": {
                                     "package_endpoint_type": "prep_man",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "Prep settings",
@@ -305,7 +306,7 @@ class SettingsEditor:
                                 "similarity": {"type": "number"},
                                 "prep_package_endpoints": {
                                     "package_endpoint_type": "prep",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "Prep round settings",
@@ -323,7 +324,7 @@ class SettingsEditor:
                                 },
                                 "dedupe_package_endpoints": {
                                     "package_endpoint_type": "dedupe",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "Dedupe settings",
@@ -335,7 +336,7 @@ class SettingsEditor:
                                 "explanation": {"type": "string"},
                                 "prescreen_package_endpoints": {
                                     "package_endpoint_type": "prescreen",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "Prescreen settings",
@@ -360,11 +361,11 @@ class SettingsEditor:
                                 "rename_pdfs": {"type": "boolean"},
                                 "pdf_get_package_endpoints": {
                                     "package_endpoint_type": "pdf_get",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                                 "pdf_get_man_package_endpoints": {
                                     "package_endpoint_type": "pdf_get_man",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "PDF get settings",
@@ -378,11 +379,11 @@ class SettingsEditor:
                             "properties": {
                                 "pdf_prep_package_endpoints": {
                                     "package_endpoint_type": "pdf_prep",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                                 "pdf_prep_man_package_endpoints": {
                                     "package_endpoint_type": "pdf_prep_man",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "PDF prep settings",
@@ -400,7 +401,7 @@ class SettingsEditor:
                                 },
                                 "screen_package_endpoints": {
                                     "package_endpoint_type": "screen",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 },
                             },
                             "description": "Screen settings",
@@ -427,7 +428,7 @@ class SettingsEditor:
                             "properties": {
                                 "data_package_endpoints": {
                                     "package_endpoint_type": "data",
-                                    "type": "script_array",
+                                    "type": "package_endpoint_array_array",
                                 }
                             },
                             "description": "Data settings",
@@ -439,8 +440,8 @@ class SettingsEditor:
 
             return jsonify(options)
 
-        @app.route("/api/getScripts")
-        def getScripts() -> Response:
+        @app.route("/api/getPackages")
+        def getPackages() -> Response:
             package_type_string = request.args.get("PackageEndpointType")
 
             discovered_packages = {}
@@ -481,9 +482,6 @@ class SettingsEditor:
                     }
 
                 if package_type_string == "load_conversion":
-                    # For testing:
-                    # Example: script_type="load_conversion"
-                    # Returns:
                     discovered_packages = {
                         "colrev_built_in.bibtex": {
                             "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
@@ -518,9 +516,6 @@ class SettingsEditor:
                     }
 
                 if package_type_string == "search_source":
-                    # For testing:
-                    # Example: script_type="search_source"
-                    # Returns:
                     discovered_packages = {
                         "colrev_built_in.unknown_source": {
                             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
@@ -609,8 +604,8 @@ class SettingsEditor:
             return jsonify(discovered_packages)
 
         # pylint: disable=unused-argument
-        @app.route("/api/getScriptDetails")
-        def getScriptDetails() -> Response:
+        @app.route("/api/getPackageDetails")
+        def getPackageDetails() -> Response:
             package_type_string = request.args.get("PackageEndpointType")
             package_identifier = request.args.get("PackageIdentifier")
             endpoint_version = request.args.get("EndpointVersion")
@@ -621,7 +616,7 @@ class SettingsEditor:
 
             if DEV:
                 if package_type_string == "data":
-                    # Example: script_type="data", script_name="colrev_built_in.manuscript"
+                    # Example: package_identifier="colrev_built_in.manuscript"
                     package_details = {
                         "type": "object",
                         "required": [
@@ -650,9 +645,7 @@ class SettingsEditor:
                     }
 
                 if package_type_string == "prescreen":
-                    # For testing:
-                    # Example: script_type="prescreen", script_name="colrev_built_in.scope_prescreen"
-                    # Returns:
+                    # Example: package_identifier="colrev_built_in.scope_prescreen"
                     package_details = {
                         "type": "object",
                         "required": ["endpoint"],
@@ -700,9 +693,6 @@ class SettingsEditor:
                     }
 
                 if package_type_string == "search_source":
-                    # For testing:
-                    # Example: script_type="search_source", script_name="colrev_built_in.crossref"
-                    # Returns:
                     package_details = {
                         "type": "object",
                         "required": [
@@ -733,7 +723,7 @@ class SettingsEditor:
                                 "additionalProperties": {},
                             },
                             "load_conversion_package_endpoint": {
-                                "type": "script",
+                                "type": "package_endpoint",
                                 "package_endpoint_type": "load_conversion",
                             },
                             "comment": {"type": "string"},
@@ -756,7 +746,6 @@ class SettingsEditor:
         def shutdown() -> str:
             func = request.environ.get("werkzeug.server.shutdown")
             if func is None:
-                # raise RuntimeError("Not running with the Werkzeug Server")
                 return {"error": "Not running with the Werkzeug Server"}
             func()
             return "Server shutting down..."

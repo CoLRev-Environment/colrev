@@ -471,49 +471,49 @@ class Settings(JsonSchemaMixin):
         sdefs = schema["definitions"]
         sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
             "package_endpoint_type": "load_conversion",
-            "type": "script_item",
+            "type": "package_endpoint",
         }
 
         # pylint: disable=unused-variable
         sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841
             "package_endpoint_type": "prep",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PrepSettings"]["properties"]["prep_man_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "prep_man",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["DedupeSettings"]["properties"]["dedupe_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "dedupe",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PrescreenSettings"]["properties"]["prescreen_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "prescreen",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PDFGetSettings"]["properties"]["pdf_get_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "pdf_get",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PDFGetSettings"]["properties"]["pdf_get_man_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "pdf_get_man",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PDFPrepSettings"]["properties"]["pdf_prep_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "pdf_prep",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["PDFPrepSettings"]["properties"]["pdf_prep_man_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "pdf_prep_man",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["ScreenSettings"]["properties"]["screen_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "screen",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
         sdefs["DataSettings"]["properties"]["data_package_endpoints"] = {  # type: ignore
             "package_endpoint_type": "data",
-            "type": "script_array",
+            "type": "package_endpoint_array",
         }
 
         return schema

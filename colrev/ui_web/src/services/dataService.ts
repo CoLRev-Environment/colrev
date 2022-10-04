@@ -141,7 +141,7 @@ const getPackageDefinitions = async (
   packageType: string
 ): Promise<PackageDefinition[]> => {
   const response = await httpService.get(
-    `${apiEndpoint}/getScripts?PackageEndpointType=${packageType}`
+    `${apiEndpoint}/getPackages?PackageEndpointType=${packageType}`
   );
 
   const packageDefinitions: PackageDefinition[] = [];
@@ -165,7 +165,7 @@ const getPackageParameterDefinitions = async (
   packageIdentifier: string
 ): Promise<PackageParameterDefinition[]> => {
   const response = await httpService.get(
-    `${apiEndpoint}/getScriptDetails?PackageEndpointType=${packageType}&PackageIdentifier=${packageIdentifier}&EndpointVersion=1.0`
+    `${apiEndpoint}/getPackageDetails?PackageEndpointType=${packageType}&PackageIdentifier=${packageIdentifier}&EndpointVersion=1.0`
   );
 
   const packageParameterDefinitions: PackageParameterDefinition[] = [];
