@@ -104,15 +104,10 @@ Before you submit a pull request, check that it meets these guidelines:
    https://travis-ci.com/geritwagner/colrev/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
-## Tips
+## Coding standards
 
-Named parameters are preferred over positional parameters to avoid ambiguity and facilitate code refactoring.
-
-To run a subset of tests:
-
-```
-pytest tests.test_colrev
-```
+- Named parameters are preferred over positional parameters to avoid ambiguity and facilitate code refactoring.
+- Variable names should help to avoid ambiguities and indicate their type if necessary (e.g., record for colrev.record.Record and record_dict for dicts).
 
 ## Deploying
 

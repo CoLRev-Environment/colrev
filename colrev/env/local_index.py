@@ -38,6 +38,7 @@ import colrev.record
 # TODO : change logging level temporarily and fix issues that lead to warnings
 logging.getLogger("opensearchpy").setLevel(logging.ERROR)
 logging.getLogger("lxml").setLevel(logging.ERROR)
+logging.getLogger("xml").setLevel(logging.ERROR)
 
 
 class LocalIndex:

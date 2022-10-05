@@ -566,9 +566,7 @@ class Record:
         """Merge the origins with those of the merging_record"""
 
         if "colrev_origin" in merging_record.data:
-            origins = self.data["colrev_origin"] + merging_record.data[
-                "colrev_origin"
-            ].split(";")
+            origins = self.data["colrev_origin"] + merging_record.data["colrev_origin"]
             self.data["colrev_origin"] = list(set(origins))
 
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
