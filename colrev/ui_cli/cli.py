@@ -1180,16 +1180,16 @@ def trace(ctx: click.core.Context, id: str) -> None:  # pylint: disable=invalid-
         return
 
 
-def __select_target_repository(local_registry: list) -> Path:
+def __select_target_repository(environment_registry: list) -> Path:
     while True:
-        for i, local_source in enumerate(local_registry):
+        for i, local_source in enumerate(environment_registry):
             print(
                 f"{i+1} - {local_source['repo_name']} ({local_source['repo_source_path']})"
             )
         sel_str = input("Select target repository: ")
         sel = int(sel_str) - 1
-        if sel in range(0, len(local_registry)):
-            target = Path(local_registry[sel]["repo_source_path"])
+        if sel in range(0, len(environment_registry)):
+            target = Path(environment_registry[sel]["repo_source_path"])
             return target
 
 
@@ -1205,12 +1205,13 @@ def distribute(ctx: click.core.Context, path: Path) -> None:
     """Distribute records to other local CoLRev repositories"""
 
     try:
+        if not path:
+            path = Path.cwd()
         review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         distribute_operation = review_manager.get_distribute_operation()
-        local_registry = distribute_operation.get_local_registry()
+        environment_registry = distribute_operation.get_environment_registry()
 
-        target = __select_target_repository(local_registry=local_registry)
-
+        target = __select_target_repository(environment_registry=environment_registry)
         # Note : add a "distribution mode" option?
         # (whole file -> add as source/load vs. records individually like a prescreen)
         distribute_operation.main(path=path, target=target)
@@ -1361,7 +1362,7 @@ def env(
 
     if pull:
         environment_manager = review_manager.get_environment_manager()
-        for curated_resource in environment_manager.load_local_registry():
+        for curated_resource in environment_manager.load_environment_registry():
             curated_resource_path = curated_resource["source_url"]
             if "/curated_metadata/" not in curated_resource_path:
                 continue
@@ -1395,14 +1396,16 @@ def env(
     if unregister is not None:
         environment_manager = review_manager.get_environment_manager()
 
-        local_registry = environment_manager.load_local_registry()
-        if str(unregister) not in [x["source_url"] for x in local_registry]:
+        environment_registry = environment_manager.load_environment_registry()
+        if str(unregister) not in [x["source_url"] for x in environment_registry]:
             logging.error("Not in local registry (cannot remove): %s", unregister)
         else:
-            local_registry = [
-                x for x in local_registry if x["source_url"] != str(unregister)
+            environment_registry = [
+                x for x in environment_registry if x["source_url"] != str(unregister)
             ]
-            environment_manager.save_local_registry(updated_registry=local_registry)
+            environment_manager.save_environment_registry(
+                updated_registry=environment_registry
+            )
             logging.info("Removed from local registry: %s", unregister)
         return
 

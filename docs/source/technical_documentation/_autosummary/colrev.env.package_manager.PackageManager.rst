@@ -19,7 +19,6 @@ colrev.env.package\_manager.PackageManager
       ~PackageManager.discover_packages
       ~PackageManager.get_package_details
       ~PackageManager.load_package_endpoint
-      ~PackageManager.load_package_endpoints_index
       ~PackageManager.load_packages
 
 

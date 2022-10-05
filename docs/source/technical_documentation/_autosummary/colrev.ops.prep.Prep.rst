@@ -18,11 +18,8 @@ colrev.ops.prep.Prep
 
       ~Prep.check_dbs_availability
       ~Prep.check_precondition
-      ~Prep.check_record_state_model_precondition
       ~Prep.main
       ~Prep.prepare
-      ~Prep.require_clean_repo_general
-      ~Prep.reset
       ~Prep.reset_ids
       ~Prep.reset_records
       ~Prep.setup_custom_script

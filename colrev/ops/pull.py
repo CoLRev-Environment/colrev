@@ -14,6 +14,7 @@ import colrev.ops.built_in.prep.local_index_prep as built_in_local_index_prep
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=too-few-public-methods
 
 CHANGE_COUNTER = None
 
@@ -26,18 +27,19 @@ class Pull(colrev.operation.Operation):
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
+        """Pull the CoLRev project and records (main entrypoint)"""
 
         if project_only:
-            self.pull_project()
+            self.__pull_project()
         elif records_only:
-            self.pull_records_from_index()
-            self.pull_records_from_crossref()
+            self.__pull_records_from_index()
+            self.__pull_records_from_crossref()
         else:
-            self.pull_project()
-            self.pull_records_from_index()
-            self.pull_records_from_crossref()
+            self.__pull_project()
+            self.__pull_records_from_index()
+            self.__pull_records_from_crossref()
 
-    def pull_project(self) -> None:
+    def __pull_project(self) -> None:
         try:
             git_repo = self.review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin
@@ -65,7 +67,7 @@ class Pull(colrev.operation.Operation):
             )
         print()
 
-    def pull_records_from_crossref(self) -> None:
+    def __pull_records_from_crossref(self) -> None:
 
         prep_operation = self.review_manager.get_prep_operation(
             notify_state_transition_operation=False
@@ -158,7 +160,7 @@ class Pull(colrev.operation.Operation):
 
         print()
 
-    def pull_records_from_index(self) -> None:
+    def __pull_records_from_index(self) -> None:
 
         self.review_manager.logger.info("Pull records from LocalIndex")
 

@@ -16,8 +16,8 @@ colrev.settings.IDPattern
    .. autosummary::
       :nosignatures:
 
-      ~IDPattern.get_field_details
       ~IDPattern.get_options
+      ~IDPattern.get_field_details
 
 
 

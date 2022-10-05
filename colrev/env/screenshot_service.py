@@ -19,6 +19,7 @@ class ScreenshotService:
         pass
 
     def start_screenshot_service(self) -> None:
+        """Start the screenshot service"""
 
         if self.screenshot_service_available():
             return
@@ -54,6 +55,7 @@ class ScreenshotService:
         return
 
     def screenshot_service_available(self) -> bool:
+        """Check if the screenshot service is available"""
 
         content_type_header = {"Content-type": "text/plain"}
 
@@ -75,6 +77,8 @@ class ScreenshotService:
     def add_screenshot(
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> colrev.record.Record:
+        """Add a PDF screenshot to the record"""
+
         if "url" not in record.data:
             return record
 

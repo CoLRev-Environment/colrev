@@ -38,6 +38,7 @@ class PDFGetMan(colrev.operation.Operation):
         )
 
     def get_pdf_get_man(self, *, records: dict) -> list:
+        """Get the records that are missing a PDF"""
         missing_records = []
         for record in records.values():
             if (
@@ -48,6 +49,8 @@ class PDFGetMan(colrev.operation.Operation):
         return missing_records
 
     def export_retrieval_table(self, *, records: dict) -> None:
+        """Export a spreadsheet table for manual PDF retrieval"""
+
         missing_records = self.get_pdf_get_man(records=records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
@@ -76,6 +79,7 @@ class PDFGetMan(colrev.operation.Operation):
             )
 
     def discard_missing(self) -> None:
+        """Discard missing PDFs (set to pdf_not_available)"""
 
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
@@ -91,6 +95,7 @@ class PDFGetMan(colrev.operation.Operation):
         )
 
     def get_data(self) -> dict:
+        """Get the data for pdf-get-man"""
         # pylint: disable=duplicate-code
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True)
@@ -120,9 +125,11 @@ class PDFGetMan(colrev.operation.Operation):
         return pdf_get_man_data
 
     def pdfs_retrieved_manually(self) -> bool:
+        """Check whether PDFs were retrieved manually"""
         return self.review_manager.dataset.has_changes()
 
     def main(self) -> None:
+        """Get PDFs manually (main entrypoint)"""
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -134,7 +141,7 @@ class PDFGetMan(colrev.operation.Operation):
                 pdf_get_man_package_endpoint["endpoint"]
             ]
 
-            records = endpoint.get_man_pdf(self, records)
+            records = endpoint.pdf_get_man(self, records)
 
 
 if __name__ == "__main__":

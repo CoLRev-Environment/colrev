@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import os
 import shutil
-import typing
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-import pandas as pd
-from yaml import safe_load
 
 import colrev.operation
 import colrev.settings
@@ -25,25 +21,20 @@ class Distribute(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.check,
             notify_state_transition_operation=False,
         )
+        self.review_manager = review_manager
 
-    def get_local_registry(self) -> list:
-        local_registry_path = Path.home().joinpath("colrev/registry.yaml")
-        local_registry: typing.List[str] = []
-        if not os.path.exists(local_registry_path):
-            print("no local repositories registered")
-            return local_registry
-
-        with open(local_registry_path, encoding="utf-8") as file:
-            local_registry_df = pd.json_normalize(safe_load(file))
-            local_registry_dict = local_registry_df.to_dict("records")
-            local_registry = [
-                x["repo_source_path"]
-                for x in local_registry_dict
-                if "curated_metadata/" not in x["repo_source_path"]
-            ]
-        return local_registry
+    def get_environment_registry(self) -> list:
+        """Get the environment registry (excluding curated_metadata)"""
+        environment_manager = self.review_manager.get_environment_manager()
+        environment_registry = environment_manager.load_environment_registry()
+        return [
+            x
+            for x in environment_registry
+            if "curated_metadata/" not in x["repo_source_path"]
+        ]
 
     def main(self, *, path: Path, target: Path) -> None:
+        """Distribute records to other CoLRev repositories (main entrypoint)"""
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path

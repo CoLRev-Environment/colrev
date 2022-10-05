@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 def setup_logger(
     *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
 ) -> logging.Logger:
+    """Setup the CoLRev logger"""
+
     # for logger debugging:
     # from logging_tree import printout
     # printout()
@@ -39,6 +41,8 @@ def setup_logger(
 def setup_report_logger(
     *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
 ) -> logging.Logger:
+    """Setup the report logger (used for git commit report)"""
+
     report_logger = logging.getLogger(
         f"colrev_report{str(review_manager.path).replace('/', '_')}"
     )
@@ -67,7 +71,9 @@ def setup_report_logger(
     return report_logger
 
 
-def reset_log(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Reset the report log file (used for the git commit report)"""
+
     review_manager.report_logger.handlers[0].stream.close()  # type: ignore
     review_manager.report_logger.removeHandler(review_manager.report_logger.handlers[0])
 

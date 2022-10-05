@@ -42,6 +42,7 @@ class Checker:
         self.review_manager = review_manager
 
     def get_colrev_versions(self) -> list[str]:
+        """Get the colrev version as a list: (last-version, current-version)"""
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
         try:
@@ -110,6 +111,7 @@ class Checker:
         return
 
     def check_repository_setup(self) -> None:
+        """Check the repository setup"""
 
         # 1. git repository?
         if not self.__is_git_repo():
@@ -131,6 +133,8 @@ class Checker:
         self.__update_colrev_hooks()
 
     def in_virtualenv(self) -> bool:
+        """Check whether CoLRev operates in a virtual environment"""
+
         def get_base_prefix_compat() -> str:
             return (
                 getattr(sys, "base_prefix", None)
@@ -242,22 +246,6 @@ class Checker:
 
         return True
 
-    def check_main_records_duplicates(self, *, status_data: dict) -> None:
-        # Note : duplicate record IDs are prevented by pybtex...
-
-        if not len(status_data["IDs"]) == len(set(status_data["IDs"])):
-            duplicates = [
-                ID for ID in status_data["IDs"] if status_data["IDs"].count(ID) > 1
-            ]
-            if len(duplicates) > 20:
-                raise colrev_exceptions.DuplicateIDsError(
-                    "Duplicates in RECORDS_FILE: "
-                    f"({','.join(duplicates[0:20])}, ...)"
-                )
-            raise colrev_exceptions.DuplicateIDsError(
-                f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
-            )
-
     def __retrieve_ids_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         record_ids = []
@@ -270,7 +258,8 @@ class Checker:
                 line = file.readline()
         return record_ids
 
-    def check_main_records_origin(self, *, status_data: dict) -> None:
+    def __check_colrev_origins(self, *, status_data: dict) -> None:
+        """Check colrev_origins"""
 
         # Check whether each record has an origin
         if not len(status_data["entries_without_origin"]) == 0:
@@ -302,6 +291,8 @@ class Checker:
                     )
 
     def check_fields(self, *, status_data: dict) -> None:
+        """Check field values"""
+
         # Check status fields
         status_schema = colrev.record.RecordState
         stat_diff = set(status_data["status_fields"]).difference(status_schema)
@@ -311,6 +302,8 @@ class Checker:
             )
 
     def check_status_transitions(self, *, status_data: dict) -> None:
+        """Check for invalid state transitions"""
+
         # TODO / TBD: we may allow most multiple transitions
         # if len(set(status_data["start_states"])) > 1:
         #     raise colrev_exceptions.StatusTransitionError(
@@ -325,15 +318,17 @@ class Checker:
         #         "invalid state transitions: \n    "
         #         + "\n    ".join(status_data["invalid_state_transitions"])
         #     )
-        pass
 
-    def __get_screening_criteria(self, *, ec_string: str) -> list:
-        excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
-        if [""] == excl_criteria:
-            excl_criteria = []
-        return excl_criteria
+    def __get_screening_criteria(self, *, criteria_string: str) -> list:
+        screening_criteria = [
+            ec.split("=")[0] for ec in criteria_string.split(";") if ec != "NA"
+        ]
+        if [""] == screening_criteria:
+            screening_criteria = []
+        return screening_criteria
 
-    def check_main_records_screen(self, *, status_data: dict) -> None:
+    def __check_records_screen(self, *, status_data: dict) -> None:
+        """Check consistency of screening criteria and status"""
 
         # pylint: disable=too-many-branches
 
@@ -345,46 +340,45 @@ class Checker:
         field_errors = []
 
         if status_data["screening_criteria_list"]:
-            screening_criteria = status_data["screening_criteria_list"][0][2]
-            if screening_criteria != "NA":
-                criteria = self.__get_screening_criteria(ec_string=screening_criteria)
-                settings_criteria = list(
-                    self.review_manager.settings.screen.criteria.keys()
-                )
-                if not set(criteria) == set(settings_criteria):
-                    field_errors.append(
-                        "Mismatch in screening criteria: records:"
-                        f" {criteria} vs. settings: {settings_criteria}"
-                    )
-                pattern = "=(in|out);".join(criteria) + "=(in|out)"
-                pattern_inclusion = "=in;".join(criteria) + "=in"
-            else:
+            screening_criteria = self.review_manager.settings.screen.criteria
+            if not screening_criteria:
                 criteria = ["NA"]
                 pattern = "^NA$"
                 pattern_inclusion = "^NA$"
-            for [record_id, status, excl_crit] in status_data[
+            else:
+                pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
+                pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
+
+            for [record_id, status, screen_crit] in status_data[
                 "screening_criteria_list"
             ]:
-                # print([record_id, status, excl_crit])
-                if not re.match(pattern, excl_crit):
+
+                if status not in colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.rev_included
+                ):
+                    assert "NA" == screen_crit
+                    continue
+
+                # print([record_id, status, screen_crit])
+                if not re.match(pattern, screen_crit):
                     # Note: this should also catch cases of missing
                     # screening criteria
                     field_errors.append(
                         "Screening criteria field not matching "
-                        f"pattern: {excl_crit} ({record_id}; criteria: {criteria})"
+                        f"pattern: {screen_crit} ({record_id}; criteria: {criteria})"
                     )
 
                 elif str(colrev.record.RecordState.rev_excluded) == status:
                     if ["NA"] == criteria:
-                        if "NA" == excl_crit:
+                        if "NA" == screen_crit:
                             continue
-                        field_errors.append(f"excl_crit field not NA: {excl_crit}")
+                        field_errors.append(f"screen_crit field not NA: {screen_crit}")
 
-                    if "=out" not in excl_crit:
+                    if "=out" not in screen_crit:
                         logging.error("criteria: %s", criteria)
                         field_errors.append(
                             "Excluded record with no screening_criterion violated: "
-                            f"{record_id}, {status}, {excl_crit}"
+                            f"{record_id}, {status}, {screen_crit}"
                         )
 
                 # Note: we don't have to consider the cases of
@@ -394,13 +388,15 @@ class Checker:
                     str(colrev.record.RecordState.rev_included),
                     str(colrev.record.RecordState.rev_synthesized),
                 ]:
-                    if not re.match(pattern_inclusion, excl_crit):
+                    if not re.match(pattern_inclusion, screen_crit):
                         field_errors.append(
                             "Included record with screening_criterion satisfied: "
-                            f"{record_id}, {status}, {excl_crit}"
+                            f"{record_id}, {status}, {screen_crit}"
                         )
                 else:
-                    if not re.match(pattern_inclusion, excl_crit):
+                    if status == colrev.record.RecordState.rev_excluded:
+                        continue
+                    if not re.match(pattern_inclusion, screen_crit):
                         field_errors.append(
                             "Record with screening_criterion but before "
                             f"screen: {record_id}, {status}"
@@ -413,6 +409,7 @@ class Checker:
     def check_propagated_id(
         self, *, prior_id: str, new_id: str = "TBD", project_context: Path
     ) -> list:
+        """Check whether propagated IDs were changed"""
         # pylint: disable=too-many-branches
 
         ignore_patterns = [
@@ -475,6 +472,8 @@ class Checker:
         return notifications
 
     def check_persisted_id_changes(self, *, prior: dict, status_data: dict) -> None:
+        """Check for changes in persisted IDs"""
+
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
@@ -496,12 +495,16 @@ class Checker:
                         raise colrev_exceptions.PropagatedIDChange(notifications)
 
     def check_sources(self) -> None:
-
+        """Check the sources"""
         for source in self.review_manager.settings.sources:
 
             if not source.filename.is_file():
                 self.review_manager.logger.debug(
                     f"Search details without file: {source.filename}"
+                )
+            if not str(source.filename)[:12].startswith("data/search/"):
+                self.review_manager.logger.debug(
+                    f"Source filename does not start with 'data/search/: {source.filename}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"
@@ -690,11 +693,8 @@ class Checker:
 
             main_refs_checks = [
                 {"script": self.check_sources, "params": []},
-                {
-                    "script": self.check_main_records_duplicates,
-                    "params": {"status_data": status_data},
-                },
             ]
+            # Note : duplicate record IDs are already prevented by pybtex...
 
             if prior:  # if RECORDS_FILE in git history
                 main_refs_checks.extend(
@@ -704,7 +704,7 @@ class Checker:
                             "params": {"prior": prior, "status_data": status_data},
                         },
                         {
-                            "script": self.check_main_records_origin,
+                            "script": self.__check_colrev_origins,
                             "params": {"status_data": status_data},
                         },
                         {
@@ -716,7 +716,7 @@ class Checker:
                             "params": {"status_data": status_data},
                         },
                         {
-                            "script": self.check_main_records_screen,
+                            "script": self.__check_records_screen,
                             "params": {"status_data": status_data},
                         },
                     ]

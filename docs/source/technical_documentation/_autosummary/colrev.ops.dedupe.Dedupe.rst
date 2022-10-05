@@ -18,13 +18,11 @@ colrev.ops.dedupe.Dedupe
 
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
-      ~Dedupe.check_record_state_model_precondition
       ~Dedupe.fix_errors
       ~Dedupe.get_info
       ~Dedupe.main
       ~Dedupe.prep_records
       ~Dedupe.read_data
-      ~Dedupe.require_clean_repo_general
       ~Dedupe.source_comparison
 
 

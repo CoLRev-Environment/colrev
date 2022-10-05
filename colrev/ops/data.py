@@ -42,6 +42,7 @@ class Data(colrev.operation.Operation):
         )
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
+        """Get the IDs of records for the synthesis"""
         return [
             ID
             for ID, record in records.items()
@@ -53,6 +54,7 @@ class Data(colrev.operation.Operation):
         ]
 
     def reading_heuristics(self) -> list:
+        """Determine heuristics for the reading process"""
 
         enlit_list = []
         records = self.review_manager.dataset.load_records_dict()
@@ -93,6 +95,7 @@ class Data(colrev.operation.Operation):
         return enlit_list
 
     def profile(self) -> None:
+        """Create a profile of the sample"""
 
         self.review_manager.logger.info("Create sample profile")
 
@@ -203,11 +206,13 @@ class Data(colrev.operation.Operation):
         self.review_manager.logger.info(f"Files are available in {output_dir.name}")
 
     def add_data_endpoint(self, *, data_endpoint: dict) -> None:
+        """Add a data endpoint"""
 
         self.review_manager.settings.data.data_package_endpoints.append(data_endpoint)
         self.review_manager.save_settings()
 
     def setup_custom_script(self) -> None:
+        """Setup a custom data script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_data_script.py")
@@ -226,6 +231,7 @@ class Data(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def main(self, *, pre_commit_hook: bool = False) -> dict:
+        """Data operation (main entrypoint)"""
 
         # TODO : use self.verbose in the update scripts of data endpoints
         self.verbose = not pre_commit_hook
@@ -325,10 +331,6 @@ class Data(colrev.operation.Operation):
             "ask_to_commit": True,
             "no_endpoints_registered": no_endpoints_registered,
         }
-        # return {
-        #     "ask_to_commit": False,
-        #     "no_endpoints_registered": no_endpoints_registered,
-        # }
 
 
 if __name__ == "__main__":

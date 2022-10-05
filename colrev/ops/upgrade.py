@@ -37,6 +37,7 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager = review_manager
 
     def main(self) -> None:
+        """Upgrade a CoLRev project (main entrypoint)"""
 
         last_version, current_version = self.review_manager.get_colrev_versions()
 

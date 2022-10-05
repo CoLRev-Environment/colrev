@@ -16,8 +16,8 @@ colrev.settings.SameSourceMergePolicy
    .. autosummary::
       :nosignatures:
 
-      ~SameSourceMergePolicy.get_options
       ~SameSourceMergePolicy.get_field_details
+      ~SameSourceMergePolicy.get_options
 
 
 

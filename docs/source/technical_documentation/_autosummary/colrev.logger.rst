@@ -15,6 +15,6 @@ colrev.logger
       :toctree:
       :nosignatures:
 
-      reset_log
+      reset_report_logger
       setup_logger
       setup_report_logger

@@ -23,6 +23,7 @@ colrev.dataset.Dataset
       ~Dataset.create_commit
       ~Dataset.file_in_history
       ~Dataset.format_records_file
+      ~Dataset.get_changed_records
       ~Dataset.get_commit_message
       ~Dataset.get_committed_origin_state_dict
       ~Dataset.get_last_commit_sha

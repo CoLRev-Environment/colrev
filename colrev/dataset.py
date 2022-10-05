@@ -105,6 +105,43 @@ class Dataset:
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
             yield records_dict
 
+    def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
+        """Get the records that changed in a selected commit"""
+
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
+            )
+            for commit in self.__git_repo.iter_commits(
+                paths=str(self.RECORDS_FILE_RELATIVE)
+            )
+        )
+        found = False
+        for commit, filecontents in list(revlist):
+            if found:  # load the records_file_relative in the following commit
+                prior_records_dict = self.review_manager.dataset.load_records_dict(
+                    load_str=filecontents.decode("utf-8")
+                )
+                break
+            if commit == target_commit:
+                records_dict = self.review_manager.dataset.load_records_dict(
+                    load_str=filecontents.decode("utf-8")
+                )
+                found = True
+
+        # determine which records have been changed (prepared or merged)
+        # in the target_commit
+        for record in records_dict.values():
+            prior_record = [
+                rec for id, rec in prior_records_dict.items() if id == record["ID"]
+            ][0]
+            # Note: the following is an exact comparison of all fields
+            if record != prior_record:
+                record.update(changed_in_target_commit="True")
+
+        return list(records_dict.values())
+
     @classmethod
     def __load_field_dict(cls, *, value: str, field: str) -> dict:
         # pylint: disable=too-many-branches
@@ -874,7 +911,7 @@ class Dataset:
     def reset_log_if_no_changes(self) -> None:
         """Reset the report log file if there are not changes"""
         if not self.__git_repo.is_dirty():
-            self.review_manager.reset_log()
+            self.review_manager.reset_report_logger()
 
     def get_last_commit_sha(self) -> str:
         """Get the last commit sha"""

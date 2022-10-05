@@ -46,21 +46,21 @@ class EnvironmentManager:
     }
 
     def __init__(self) -> None:
-        self.local_registry = self.load_local_registry()
+        self.environment_registry = self.load_environment_registry()
 
-    def load_local_registry(self) -> list:
+    def load_environment_registry(self) -> list:
+        """Load the local registry"""
+        environment_registry_path = self.registry
+        environment_registry = []
+        if environment_registry_path.is_file():
+            with open(environment_registry_path, encoding="utf8") as file:
+                environment_registry_df = pd.json_normalize(safe_load(file))
+                environment_registry = environment_registry_df.to_dict("records")
 
-        local_registry_path = self.registry
-        local_registry = []
-        if local_registry_path.is_file():
-            with open(local_registry_path, encoding="utf8") as file:
-                local_registry_df = pd.json_normalize(safe_load(file))
-                local_registry = local_registry_df.to_dict("records")
+        return environment_registry
 
-        return local_registry
-
-    def save_local_registry(self, *, updated_registry: list) -> None:
-
+    def save_environment_registry(self, *, updated_registry: list) -> None:
+        """Save the local registry"""
         updated_registry_df = pd.DataFrame(updated_registry)
         ordered_cols = [
             "repo_name",
@@ -82,9 +82,9 @@ class EnvironmentManager:
             )
 
     def register_repo(self, *, path_to_register: Path) -> None:
-
-        local_registry = self.load_local_registry()
-        registered_paths = [x["repo_source_path"] for x in local_registry]
+        """Register a repository"""
+        environment_registry = self.load_environment_registry()
+        registered_paths = [x["repo_source_path"] for x in environment_registry]
 
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
@@ -101,12 +101,12 @@ class EnvironmentManager:
         for remote in git_repo.remotes:
             if remote.url:
                 new_record["repo_source_url"] = remote.url
-        local_registry.append(new_record)
-        self.save_local_registry(updated_registry=local_registry)
+        environment_registry.append(new_record)
+        self.save_environment_registry(updated_registry=environment_registry)
         print(f"Registered path ({path_to_register})")
 
     def get_name_mail_from_git(self) -> typing.Tuple[str, str]:
-
+        """Get the committer name and email from git (globals)"""
         ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = ("NA", "NA")
         if ggit_conf_path.is_file():
@@ -122,7 +122,7 @@ class EnvironmentManager:
         return global_conf_details
 
     def build_docker_images(self) -> None:
-
+        """Build the docker images"""
         client = docker.from_env()
 
         repo_tags = [image.tags for image in client.images.list()]
@@ -151,6 +151,7 @@ class EnvironmentManager:
                     client.images.pull(img_version)
 
     def check_git_installed(self) -> None:
+        """Check whether git is installed"""
         # pylint: disable=consider-using-with
 
         try:
@@ -160,6 +161,7 @@ class EnvironmentManager:
             raise colrev_exceptions.MissingDependencyError("git") from exc
 
     def check_docker_installed(self) -> None:
+        """Check whether Docker is installed"""
         # pylint: disable=consider-using-with
 
         try:
@@ -182,6 +184,8 @@ class EnvironmentManager:
     def get_environment_details(
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> dict:
+        """Get the environment details"""
+
         def get_last_modified() -> str:
 
             list_of_files = local_index.opensearch_index.glob(
@@ -223,7 +227,8 @@ class EnvironmentManager:
         return environment_details
 
     def get_environment_stats(self) -> dict:
-        local_repos = self.load_local_registry()
+        """Get the environment stats"""
+        local_repos = self.load_environment_registry()
         repos = []
         broken_links = []
         for repo in local_repos:
@@ -259,10 +264,11 @@ class EnvironmentManager:
         return {"repos": repos, "broken_links": broken_links}
 
     def get_curated_outlets(self) -> list:
+        """Get the curated outlets"""
         curated_outlets: typing.List[str] = []
         for repo_source_path in [
             x["repo_source_path"]
-            for x in self.load_local_registry()
+            for x in self.load_environment_registry()
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:

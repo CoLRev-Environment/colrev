@@ -27,8 +27,9 @@ def print_review_instructions(review_instructions: dict) -> None:
     priority_item_set = "priority" in keys
 
     for review_instruction in review_instructions:
-        if priority_item_set and "priority" not in review_instruction.keys():
-            continue
+        # TODO : prioritize based on the order of instructions (most important first)
+        # if priority_item_set and "priority" not in review_instruction.keys():
+        #     continue
         if "info" in review_instruction:
             print("  " + review_instruction["info"])
         if "msg" in review_instruction:

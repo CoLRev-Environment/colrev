@@ -67,10 +67,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # because the os.sql.query throws errors when selecting
             # complex fields like lists of alsoKnownAs fields
 
-            query = (
-                f"SELECT colrev_id FROM {local_index.RECORD_INDEX} "
-                f"WHERE {params['selection_clause']}"
-            )
+            # query = (
+            #     f"SELECT colrev_id FROM {local_index.RECORD_INDEX} "
+            #     f"WHERE {params['selection_clause']}"
+            # )
             # TODO : update to opensearch standard (DSL?)
             # or use opensearch-sql plugin
             # https://github.com/opensearch-project/opensearch-py/issues/98
@@ -106,70 +106,30 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if "abstract" in params["selection_clause"]:
                 selected_fields.append("abstract")
 
-            # TODO : size is set to maximum.
-            # We may iterate (using the from=... parameter)
-            # pylint: disable=unexpected-keyword-arg
-            # Note : search(...) accepts the size keyword (tested & works)
-            # https://opensearch-project.github.io/opensearch-py/
-            # api-ref/client.html#opensearchpy.OpenSearch.search
-            resp = local_index.open_search.search(
-                index=local_index.RECORD_INDEX,
-                size=10000,
-                body={
-                    "query": {
-                        "simple_query_string": {
-                            "query": quick_fix_query,
-                            "fields": selected_fields,
-                        },
-                    }
-                },
-            )
+            query = {
+                "query": {
+                    "simple_query_string": {
+                        "query": quick_fix_query,
+                        "fields": selected_fields,
+                    },
+                }
+            }
 
-            # TODO : extract the following into a convenience function of search
-            # (maybe even run in parallel/based on whole list and
-            # select based on ?colrev_ids?)
+            returned_records = local_index.search(query=query, size=10000)
 
             records_to_import = []
-            for hit in tqdm(resp["hits"]["hits"]):
-                record = hit["_source"]
-                if "fulltext" in record:
-                    del record["fulltext"]
-
+            for returned_record in tqdm(returned_records):
                 # pylint: disable=possibly-unused-variable
-                rec_df = pd.DataFrame.from_records([record])
+                rec_df = pd.DataFrame.from_records([returned_record])
                 try:
-                    query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-                    res = ps.sqldf(query, locals())
+                    query_str = (
+                        f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+                    )
+                    res = ps.sqldf(query_str, locals())
                 except PandaSQLException:
                     continue
                 if len(res) > 0:
-                    records_to_import.append(record)
-
-            # IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
-
-            # records_to_import = []
-            # for ID_to_retrieve in IDs_to_retrieve:
-
-            #     hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-            #     res = local_index.open_search.get(index=local_index.RECORD_INDEX, id=hash)
-            #     record_to_import = res["_source"]
-            #     record_to_import = {k: str(v) for k, v in record_to_import.items()}
-            #     record_to_import = {
-            #         k: v for k, v in record_to_import.items() if "None" != v
-            #     }
-            #     record_to_import = local_index.prep_record_for_return(
-            #         record=record_to_import, include_file=False
-            #     )
-
-            #     if "" == params['selection_clause']:
-            #         records_to_import.append(record_to_import)
-            #     else:
-            #         rec_df = pd.DataFrame.from_records([record_to_import])
-            #         query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-            #         res = ps.sqldf(query, locals())
-            #         input(res)
-            #         # if res...: append
-            #         records_to_import.append(record_to_import)
+                    records_to_import.append(returned_record)
 
             return records_to_import
 

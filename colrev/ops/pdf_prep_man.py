@@ -39,6 +39,7 @@ class PDFPrepMan(colrev.operation.Operation):
         )
 
     def get_data(self) -> dict:
+        """Get the data for PDF prep man"""
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -69,9 +70,11 @@ class PDFPrepMan(colrev.operation.Operation):
         return pdf_prep_man_data
 
     def pdfs_prepared_manually(self) -> bool:
+        """Check whether PDFs were prepared manually"""
         return self.review_manager.dataset.has_changes()
 
     def pdf_prep_man_stats(self) -> None:
+        """Determine PDF prep man statistics"""
         # pylint: disable=duplicate-code
 
         self.review_manager.logger.info(
@@ -135,9 +138,10 @@ class PDFPrepMan(colrev.operation.Operation):
             tabulated.to_csv("manual_pdf_preparation_statistics.csv")
 
     def extract_needs_pdf_prep_man(self) -> None:
+        """Apply PDF prep man to csv/bib"""
 
-        prep_bib_path = self.review_manager.path / Path("data/prep-records.bib")
-        prep_csv_path = self.review_manager.path / Path("data/prep-records.csv")
+        prep_bib_path = self.review_manager.path / Path("data/pdf-prep-records.bib")
+        prep_csv_path = self.review_manager.path / Path("data/pdf-prep-records.csv")
 
         if prep_csv_path.is_file():
             print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
@@ -187,16 +191,17 @@ class PDFPrepMan(colrev.operation.Operation):
         self.review_manager.logger.info(f"Created {prep_csv_path.name}")
 
     def apply_pdf_prep_man(self) -> None:
+        """Apply PDF prep man from csv/bib"""
 
-        if Path("data/prep-records.csv").is_file():
+        if Path("data/pdf-prep-records.csv").is_file():
             self.review_manager.logger.info("Load prep-records.csv")
-            bib_db_df = pd.read_csv("data/prep-records.csv")
+            bib_db_df = pd.read_csv("data/pdf-prep-records.csv")
             records_changed = bib_db_df.to_dict("records")
 
-        if Path("data/prep-records.bib").is_file():
+        if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
 
-            with open("data/prep-records.bib", encoding="utf8") as target_db:
+            with open("data/pdf-prep-records.bib", encoding="utf8") as target_db:
                 records_changed_dict = self.review_manager.dataset.load_records_dict(
                     load_str=target_db.read()
                 )
@@ -227,6 +232,7 @@ class PDFPrepMan(colrev.operation.Operation):
         self.review_manager.check_repo()
 
     def extract_coverpage(self, *, filepath: Path) -> None:
+        """Extract coverpage from PDF"""
 
         local_index = self.review_manager.get_local_index()
         cp_path = local_index.local_environment_path / Path(".coverpages")
@@ -244,6 +250,7 @@ class PDFPrepMan(colrev.operation.Operation):
             writer_cp.write(outfile)
 
     def main(self) -> None:
+        """Prepare PDFs manually (main entrypoint)"""
 
         records = self.review_manager.dataset.load_records_dict()
 

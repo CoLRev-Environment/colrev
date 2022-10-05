@@ -18,14 +18,15 @@ class Push(colrev.operation.Operation):
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
+        """Push a CoLRev project and records (main entrypoint)"""
 
         if project_only:
-            self.push_project()
+            self.__push_project()
 
         if records_only:
-            self.push_record_corrections()
+            self.__push_record_corrections()
 
-    def push_project(self) -> None:
+    def __push_project(self) -> None:
         git_repo = self.review_manager.dataset.get_repo()
         origin = git_repo.remotes.origin
         self.review_manager.logger.info(f"Push changes to {git_repo.remotes.origin}")
@@ -52,7 +53,9 @@ class Push(colrev.operation.Operation):
 
         return change_sets
 
-    def push_record_corrections(self) -> None:
+    def __push_record_corrections(self) -> None:
+        """Push corrections of records"""
+
         # pylint: disable=too-many-branches
 
         change_sets = self.__get_change_sets()

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import itertools
-from itertools import chain
-from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -20,30 +18,6 @@ class Validate(colrev.operation.Operation):
         )
 
         self.cpus = 4
-
-    def load_search_records(self, *, bib_file: Path) -> list:
-
-        with open(bib_file, encoding="utf8") as bibtex_file:
-            individual_bib_rd = self.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
-            for record in individual_bib_rd.values():
-                record["colrev_origin"] = [bib_file.stem + "/" + record["ID"]]
-
-        return list(individual_bib_rd.values())
-
-    def get_search_records(self) -> list:
-
-        search_dir = self.review_manager.search_dir
-
-        records = []
-        # records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
-        for search_file in search_dir.glob("*.bib"):
-            records.append(self.load_search_records(bib_file=search_file))
-
-        records = list(chain(*records))
-
-        return records
 
     def __load_prior_records_dict(self, *, target_commit: str) -> dict:
 
@@ -77,7 +51,7 @@ class Validate(colrev.operation.Operation):
     def validate_preparation_changes(
         self, *, records: list[dict], target_commit: str
     ) -> list:
-
+        """Validate preparation changes"""
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
         self.review_manager.logger.debug("Calculating preparation differences...")
@@ -112,6 +86,7 @@ class Validate(colrev.operation.Operation):
     def validate_merging_changes(
         self, *, records: list[dict], target_commit: str
     ) -> list:
+        """Validate merging changes"""
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
@@ -156,8 +131,8 @@ class Validate(colrev.operation.Operation):
 
         return change_diff
 
-    def load_records(self, *, target_commit: str = None) -> list[dict]:
-
+    def load_changed_records(self, *, target_commit: str = None) -> list[dict]:
+        """Load the records that were changed in the target commit"""
         if target_commit is None:
             self.review_manager.logger.info("Loading data...")
             records = self.review_manager.dataset.load_records_dict()
@@ -166,43 +141,14 @@ class Validate(colrev.operation.Operation):
             return list(records.values())
 
         self.review_manager.logger.info("Loading data from history...")
-        git_repo = self.review_manager.dataset.get_repo()
+        dataset = self.review_manager.dataset
+        changed_records = dataset.get_changed_records(target_commit=target_commit)
 
-        records_file_relative = self.review_manager.dataset.RECORDS_FILE_RELATIVE
-
-        revlist = (
-            (
-                commit.hexsha,
-                (commit.tree / str(records_file_relative)).data_stream.read(),
-            )
-            for commit in git_repo.iter_commits(paths=str(records_file_relative))
-        )
-        found = False
-        for commit, filecontents in list(revlist):
-            if found:  # load the records_file_relative in the following commit
-                prior_records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=filecontents.decode("utf-8")
-                )
-                break
-            if commit == target_commit:
-                records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=filecontents.decode("utf-8")
-                )
-                found = True
-
-        # determine which records have been changed (prepared or merged)
-        # in the target_commit
-        for record in records_dict.values():
-            prior_record = [
-                rec for id, rec in prior_records_dict.items() if id == record["ID"]
-            ][0]
-            # Note: the following is an exact comparison of all fields
-            if record != prior_record:
-                record.update(changed_in_target_commit="True")
-
-        return list(records_dict.values())
+        return changed_records
 
     def validate_properties(self, *, target_commit: str = None) -> None:
+        """Validate properties"""
+
         # option: --history: check all preceding commits (create a list...)
 
         git_repo = self.review_manager.dataset.get_repo()
@@ -256,6 +202,7 @@ class Validate(colrev.operation.Operation):
         git_repo.git.checkout(cur_branch, force=True)
 
     def get_commit_from_tree_hash(self, tree_hash: str) -> str:
+        """Get the commit sha from a tree hash"""
         valid_options = []
         for commit in self.review_manager.dataset.get_repo().iter_commits():
             if str(commit.tree) == tree_hash:
@@ -291,13 +238,13 @@ class Validate(colrev.operation.Operation):
     def main(
         self, *, scope: str, properties: bool = False, target_commit: str = ""
     ) -> list:
-
+        """Validate a commit (main entrypoint)"""
         if properties:
             self.validate_properties(target_commit=target_commit)
             return []
 
         # extension: filter for changes of contributor (git author)
-        records = self.load_records(target_commit=target_commit)
+        records = self.load_changed_records(target_commit=target_commit)
 
         if target_commit == "" and "unspecified" == scope:
             scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)

@@ -197,6 +197,7 @@ class Advisor:
     def get_collaboration_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> dict:
+        """Get instructions related to collaboration"""
 
         if status_stats is None:
             status_stats = self.review_manager.get_status_stats()
@@ -297,7 +298,7 @@ class Advisor:
                             }
                         )
 
-            in_progress_processes = status_stats.get_processes_in_progress(
+            in_progress_processes = status_stats.get_operation_in_progress(
                 transitioned_records=transitioned_records
             )
 
@@ -338,11 +339,11 @@ class Advisor:
             review_instructions.append(instruction)
 
         else:
-            active_processing_functions = status_stats.get_active_processing_functions(
+            active_processing_functions = status_stats.get_active_operations(
                 current_origin_states_dict=current_origin_states_dict
             )
 
-            priority_processing_functions = status_stats.get_priority_transition(
+            priority_processing_functions = status_stats.get_priority_operations(
                 current_origin_states_dict=current_origin_states_dict
             )
             for active_processing_function in active_processing_functions:
@@ -381,10 +382,10 @@ class Advisor:
         ).values():
             if (
                 record_dict["colrev_status"] in file_required_status
-                and "NA" == record_dict["file"]
+                and record_dict.get("file", "NA") == "NA"
             ):
                 missing_files.append(record_dict["ID"])
-                # TODO : check if file exists/was deleted
+
         return missing_files
 
     def __append_pdf_issue_instructions(self, *, review_instructions: list) -> None:
@@ -411,6 +412,18 @@ class Advisor:
                 }
             )
 
+        for record_dict in self.review_manager.dataset.load_records_dict(
+            header_only=True
+        ).values():
+            if record_dict.get("file", "NA") != "NA":
+                if not (self.review_manager.path / Path(record_dict["file"])).is_file():
+                    review_instructions.append(
+                        {
+                            "level": "WARNING",
+                            "msg": f"PDF no longer available: {record_dict['file']}",
+                        }
+                    )
+
     def __append_iteration_completed_instructions(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
     ) -> None:
@@ -436,6 +449,7 @@ class Advisor:
     def get_review_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> list:
+        """Get instructions related to the review (operations)"""
 
         if status_stats is None:
             status_stats = self.review_manager.get_status_stats()
@@ -466,7 +480,7 @@ class Advisor:
         return review_instructions
 
     # Note : no named arguments for multiprocessing
-    def append_registered_repo_instructions(self, registered_path: Path) -> dict:
+    def __append_registered_repo_instructions(self, registered_path: Path) -> dict:
 
         instruction = {}
 
@@ -534,6 +548,8 @@ class Advisor:
         environment_manager: colrev.env.environment_manager.EnvironmentManager,
         environment_instructions: list,
     ) -> None:
+        """Get instructions related to downloading outlets (resources)"""
+
         # pylint: disable=too-many-locals
 
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
@@ -585,6 +601,7 @@ class Advisor:
     def get_environment_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
+        """Get instructions related to the CoLRev environment"""
 
         environment_manager = self.review_manager.get_environment_manager()
 
@@ -596,14 +613,14 @@ class Advisor:
                 environment_instructions=environment_instructions,
             )
 
-        local_registry = environment_manager.load_local_registry()
-        registered_paths = [Path(x["repo_source_path"]) for x in local_registry]
+        environment_registry = environment_manager.load_environment_registry()
+        registered_paths = [Path(x["repo_source_path"]) for x in environment_registry]
         # Note : we can use many parallel processes
-        # because append_registered_repo_instructions mainly waits for the network
+        # because __append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
         pool = ThreadPool(50)
         add_instructions = pool.map(
-            self.append_registered_repo_instructions, registered_paths
+            self.__append_registered_repo_instructions, registered_paths
         )
 
         environment_instructions += list(filter(None, add_instructions))
@@ -620,6 +637,7 @@ class Advisor:
     def get_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> dict:
+        """Get all instructions on the project"""
 
         if status_stats is None:
             status_stats = self.review_manager.get_status_stats()
@@ -635,13 +653,13 @@ class Advisor:
                 status_stats=status_stats
             ),
         }
-
         self.review_manager.logger.debug(
             f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
         )
         return instructions
 
     def get_sharing_instructions(self) -> dict:
+        """Get instructions related to sharing the project"""
 
         collaboration_instructions = self.get_collaboration_instructions()
 

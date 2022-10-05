@@ -25,6 +25,8 @@ class Status(colrev.operation.Operation):
         )
 
     def get_analytics(self) -> dict:
+        """Get status analytics"""
+        # TODO : this functionality needs to be developed further
 
         analytics_dict = {}
         git_repo = self.review_manager.dataset.get_repo()
@@ -73,6 +75,7 @@ class Status(colrev.operation.Operation):
     def get_review_status_report(
         self, *, commit_report: bool = False, colors: object = None
     ) -> str:
+        """Get the review status report"""
 
         status_stats = self.review_manager.get_status_stats()
 
@@ -141,7 +144,7 @@ class StatusStats:
         self.completed_atomic_steps = 0
         self.nr_incomplete = 0
 
-        self.overall_stats_backward_calculation()
+        self.__overall_stats_backward_calculation()
 
         self.currently.non_processed = (
             self.currently.md_imported
@@ -196,7 +199,8 @@ class StatusStats:
         if denominator > 0:
             self.perc_curated = int((self.nr_curated_records / (denominator)) * 100)
 
-    def overall_stats_backward_calculation(self) -> None:
+    def __overall_stats_backward_calculation(self) -> None:
+        """Calculate the state_x overall stats (based on backward calculation)"""
         self.review_manager.logger.debug(
             "Set overall colrev_status statistics (going backwards)"
         )
@@ -279,6 +283,7 @@ class StatusStats:
             self.currently.non_completed += getattr(self.currently, str(current_state))
 
     def get_active_metadata_operation_info(self) -> str:
+        """Get active metadata operation info (convenience function for status printing)"""
         infos = []
         if self.currently.md_retrieved > 0:
             infos.append(f"{self.currently.md_retrieved} to load")
@@ -293,6 +298,7 @@ class StatusStats:
         return ", ".join(infos)
 
     def get_active_pdf_operation_info(self) -> str:
+        """Get active PDF operation info (convenience function for status printing)"""
         infos = []
         if self.currently.rev_prescreen_included > 0:
             infos.append(f"{self.currently.rev_prescreen_included} to retrieve")
@@ -311,6 +317,7 @@ class StatusStats:
     def get_transitioned_records(
         self, current_origin_states_dict: dict
     ) -> list[typing.Dict]:
+        """Get the transitioned records"""
 
         committed_origin_states_dict = (
             self.review_manager.dataset.get_committed_origin_state_dict()
@@ -347,7 +354,8 @@ class StatusStats:
 
         return transitioned_records
 
-    def get_priority_transition(self, *, current_origin_states_dict: dict) -> list:
+    def get_priority_operations(self, *, current_origin_states_dict: dict) -> list:
+        """Get the priority operations"""
 
         # get "earliest" states (going backward)
         earliest_state = []
@@ -377,38 +385,34 @@ class StatusStats:
             for x in colrev.record.RecordStateModel.transitions
             if x["source"] in earliest_state
         ]
-        # print(f'priority_transitions: {priority_transitions}')
 
-        priority_transitions = list(set(priority_transitions))
+        priority_operations = list(set(priority_transitions))
 
-        self.review_manager.logger.debug(
-            f"priority_processing_function: {priority_transitions}"
-        )
-        return priority_transitions
+        self.review_manager.logger.debug(f"priority_operations: {priority_operations}")
+        return priority_operations
 
-    def get_active_processing_functions(
-        self, *, current_origin_states_dict: dict
-    ) -> list:
+    def get_active_operations(self, *, current_origin_states_dict: dict) -> list:
+        """Get the active processing functions"""
 
-        active_processing_functions = []
+        active_operations = []
         for state in current_origin_states_dict.values():
             srec = colrev.record.RecordStateModel(state=state)
             valid_transitions = srec.get_valid_transitions()
-            active_processing_functions.extend(valid_transitions)
+            active_operations.extend(valid_transitions)
 
-        self.review_manager.logger.debug(
-            f"active_processing_functions: {active_processing_functions}"
-        )
-        return active_processing_functions
+        self.review_manager.logger.debug(f"active_operations: {active_operations}")
+        return active_operations
 
-    def get_processes_in_progress(self, *, transitioned_records: list) -> list:
-        in_progress_processes = list(
+    def get_operation_in_progress(self, *, transitioned_records: list) -> list:
+        """Get the operation currently in progress"""
+
+        in_progress_operation = list(
             {x["operations_type"] for x in transitioned_records}
         )
         self.review_manager.logger.debug(
-            f"in_progress_processes: {in_progress_processes}"
+            f"in_progress_operation: {in_progress_operation}"
         )
-        return in_progress_processes
+        return in_progress_operation
 
     @dataclass
     class StatusStatsParent:
@@ -421,39 +425,39 @@ class StatusStats:
         ) -> None:
             self.status_stats = status_stats
 
-            self.md_retrieved = self.get_freq(colrev.record.RecordState.md_retrieved)
+            self.md_retrieved = self.__get_freq(colrev.record.RecordState.md_retrieved)
 
-            self.md_imported = self.get_freq(colrev.record.RecordState.md_imported)
-            self.md_needs_manual_preparation = self.get_freq(
+            self.md_imported = self.__get_freq(colrev.record.RecordState.md_imported)
+            self.md_needs_manual_preparation = self.__get_freq(
                 colrev.record.RecordState.md_needs_manual_preparation
             )
-            self.md_prepared = self.get_freq(colrev.record.RecordState.md_prepared)
-            self.md_processed = self.get_freq(colrev.record.RecordState.md_processed)
-            self.rev_prescreen_excluded = self.get_freq(
+            self.md_prepared = self.__get_freq(colrev.record.RecordState.md_prepared)
+            self.md_processed = self.__get_freq(colrev.record.RecordState.md_processed)
+            self.rev_prescreen_excluded = self.__get_freq(
                 colrev.record.RecordState.rev_prescreen_excluded
             )
-            self.rev_prescreen_included = self.get_freq(
+            self.rev_prescreen_included = self.__get_freq(
                 colrev.record.RecordState.rev_prescreen_included
             )
-            self.pdf_needs_manual_retrieval = self.get_freq(
+            self.pdf_needs_manual_retrieval = self.__get_freq(
                 colrev.record.RecordState.pdf_needs_manual_retrieval
             )
-            self.pdf_imported = self.get_freq(colrev.record.RecordState.pdf_imported)
-            self.pdf_not_available = self.get_freq(
+            self.pdf_imported = self.__get_freq(colrev.record.RecordState.pdf_imported)
+            self.pdf_not_available = self.__get_freq(
                 colrev.record.RecordState.pdf_not_available
             )
-            self.pdf_needs_manual_preparation = self.get_freq(
+            self.pdf_needs_manual_preparation = self.__get_freq(
                 colrev.record.RecordState.pdf_needs_manual_preparation
             )
-            self.pdf_prepared = self.get_freq(colrev.record.RecordState.pdf_prepared)
-            self.rev_excluded = self.get_freq(colrev.record.RecordState.rev_excluded)
-            self.rev_included = self.get_freq(colrev.record.RecordState.rev_included)
-            self.rev_synthesized = self.get_freq(
+            self.pdf_prepared = self.__get_freq(colrev.record.RecordState.pdf_prepared)
+            self.rev_excluded = self.__get_freq(colrev.record.RecordState.rev_excluded)
+            self.rev_included = self.__get_freq(colrev.record.RecordState.rev_included)
+            self.rev_synthesized = self.__get_freq(
                 colrev.record.RecordState.rev_synthesized
             )
             self.md_duplicates_removed = self.status_stats.md_duplicates_removed
 
-        def get_freq(self, colrev_status: colrev.record.RecordState) -> int:
+        def __get_freq(self, colrev_status: colrev.record.RecordState) -> int:
             return len([x for x in self.status_stats.status_list if colrev_status == x])
 
     @dataclass
@@ -520,11 +524,11 @@ class StatusStats:
             self.rev_screen = 0
             self.rev_prescreen = 0
             super().__init__(status_stats=status_stats)
-            self.md_retrieved = self.get_nr_search(
+            self.md_retrieved = self.__get_nr_search(
                 search_dir=self.status_stats.review_manager.search_dir
             )
 
-        def get_nr_search(self, *, search_dir: Path) -> int:
+        def __get_nr_search(self, *, search_dir: Path) -> int:
 
             if not search_dir.is_dir():
                 return 0

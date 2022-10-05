@@ -17,7 +17,6 @@ colrev.service.Service
       :nosignatures:
 
       ~Service.start_services
-      ~Service.worker
 
 
 

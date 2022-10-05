@@ -17,11 +17,9 @@ colrev.ops.prep\_man.PrepMan
       :nosignatures:
 
       ~PrepMan.check_precondition
-      ~PrepMan.check_record_state_model_precondition
       ~PrepMan.get_data
       ~PrepMan.main
       ~PrepMan.prep_man_stats
-      ~PrepMan.require_clean_repo_general
       ~PrepMan.set_data
 
 

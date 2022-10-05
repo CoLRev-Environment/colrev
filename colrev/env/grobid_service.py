@@ -20,6 +20,7 @@ class GrobidService:
         pass
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
+        """Check whether the GROBID service is available"""
         i = 0
         while True:
             i += 1
@@ -39,6 +40,7 @@ class GrobidService:
         return True
 
     def start(self) -> None:
+        """Start the GROBID service"""
         # pylint: disable=consider-using-with
 
         try:

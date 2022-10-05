@@ -37,6 +37,7 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
+        """Export a spreadsheet table with records to prescreen"""
 
         endpoint = (
             colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
@@ -52,6 +53,7 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def import_table(self, *, import_table_path: str) -> None:
+        """Import a spreadsheet table with prescreened records"""
 
         endpoint = (
             colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
@@ -66,6 +68,7 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def include_all_in_prescreen(self) -> None:
+        """Include all records in the prescreen"""
 
         endpoint = (
             colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
@@ -76,6 +79,7 @@ class Prescreen(colrev.operation.Operation):
         endpoint.run_prescreen(self, records, [])
 
     def get_data(self) -> dict:
+        """Get the data for prescreen"""
         # pylint: disable=duplicate-code
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
@@ -99,6 +103,7 @@ class Prescreen(colrev.operation.Operation):
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:
+        """Split the prescreen between researchers"""
 
         prescreen_splits = []
 
@@ -118,6 +123,7 @@ class Prescreen(colrev.operation.Operation):
         return prescreen_splits
 
     def setup_custom_script(self) -> None:
+        """Setup a custom prescreen script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_prescreen_script.py")
@@ -135,6 +141,7 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def main(self, *, split_str: str) -> None:
+        """Prescreen records (main entrypoint)"""
 
         # pylint: disable=duplicate-code
         split = []

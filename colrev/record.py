@@ -1813,6 +1813,8 @@ class Record:
 class PrepRecord(Record):
     @classmethod
     def format_author_field(cls, *, input_string: str) -> str:
+        """Format the author field (recognizing first/last names based on HumanName parser)"""
+
         def mostly_upper_case(input_string: str) -> bool:
             if not re.match(r"[a-zA-Z]+", input_string):
                 return False
@@ -1907,24 +1909,6 @@ class PrepRecord(Record):
         # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
         return False
 
-    def abbreviate_container(self, *, min_len: int) -> None:
-        if "journal" in self.data:
-            self.data["journal"] = " ".join(
-                [x[:min_len] for x in self.data["journal"].split(" ")]
-            )
-
-    def get_abbrev_container_min_len(self) -> int:
-        min_len = -1
-        if "journal" in self.data:
-            min_len = min(
-                len(x) for x in self.data["journal"].replace(".", "").split(" ")
-            )
-        if "booktitle" in self.data:
-            min_len = min(
-                len(x) for x in self.data["booktitle"].replace(".", "").split(" ")
-            )
-        return min_len
-
     @classmethod
     def get_retrieval_similarity(
         cls,
@@ -1936,6 +1920,24 @@ class PrepRecord(Record):
         """Get the retrieval similarity between the record and a retrieved record"""
         # pylint: disable=too-many-branches
 
+        def abbreviate_container(*, record: colrev.record.Record, min_len: int) -> None:
+            if "journal" in record.data:
+                record.data["journal"] = " ".join(
+                    [x[:min_len] for x in record.data["journal"].split(" ")]
+                )
+
+        def get_abbrev_container_min_len(*, record: colrev.record.Record) -> int:
+            min_len = -1
+            if "journal" in record.data:
+                min_len = min(
+                    len(x) for x in record.data["journal"].replace(".", "").split(" ")
+                )
+            if "booktitle" in record.data:
+                min_len = min(
+                    len(x) for x in record.data["booktitle"].replace(".", "").split(" ")
+                )
+            return min_len
+
         if same_record_type_required:
             if record_original.data.get(
                 "ENTRYTYPE", "a"
@@ -1946,13 +1948,13 @@ class PrepRecord(Record):
         retrieved_record = retrieved_record_original.copy_prep_rec()
 
         if record.container_is_abbreviated():
-            min_len = record.get_abbrev_container_min_len()
-            retrieved_record.abbreviate_container(min_len=min_len)
-            record.abbreviate_container(min_len=min_len)
+            min_len = get_abbrev_container_min_len(record=record)
+            abbreviate_container(record=retrieved_record, min_len=min_len)
+            abbreviate_container(record=record, min_len=min_len)
         if retrieved_record.container_is_abbreviated():
-            min_len = retrieved_record.get_abbrev_container_min_len()
-            record.abbreviate_container(min_len=min_len)
-            retrieved_record.abbreviate_container(min_len=min_len)
+            min_len = get_abbrev_container_min_len(record=retrieved_record)
+            abbreviate_container(record=record, min_len=min_len)
+            abbreviate_container(record=retrieved_record, min_len=min_len)
 
         if "title" in record.data:
             record.data["title"] = record.data["title"][:90]
@@ -2388,6 +2390,12 @@ class RecordState(Enum):
                 RecordState.rev_synthesized,
             ]
 
+        if state == RecordState.rev_included:
+            return [
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]
         # pylint: disable=no-member
         raise colrev_exceptions.ParameterError(
             parameter="state", value="state", options=cls._member_names_
@@ -2610,7 +2618,6 @@ class PDFPrepManRecord(Record):
             ret_str += (
                 f"{colors.RED}{self.data.get('author', 'no-author')}{colors.END}\n"
             )
-            ret_str += " - author not found in first pages - "
         else:
             ret_str += (
                 f"{colors.GREEN}{self.data.get('author', 'no-author')}{colors.END}\n"
@@ -2618,7 +2625,6 @@ class PDFPrepManRecord(Record):
 
         if "title_not_in_first_pages" in pdf_prep_note["note"]:
             ret_str += f"{colors.RED}{self.data.get('title', 'no title')}{colors.END}\n"
-            ret_str += " - title not found in first pages - "
         else:
             ret_str += (
                 f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"

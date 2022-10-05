@@ -16,8 +16,8 @@ colrev.settings.SearchType
    .. autosummary::
       :nosignatures:
 
-      ~SearchType.get_options
       ~SearchType.get_field_details
+      ~SearchType.get_options
 
 
 

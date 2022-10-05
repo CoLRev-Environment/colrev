@@ -23,9 +23,9 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.get_environment_details
       ~EnvironmentManager.get_environment_stats
       ~EnvironmentManager.get_name_mail_from_git
-      ~EnvironmentManager.load_local_registry
+      ~EnvironmentManager.load_environment_registry
       ~EnvironmentManager.register_repo
-      ~EnvironmentManager.save_local_registry
+      ~EnvironmentManager.save_environment_registry
 
 
 

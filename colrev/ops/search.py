@@ -38,6 +38,8 @@ class Search(colrev.operation.Operation):
         )
 
     def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
+        """Save the feed file"""
+
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
             str(r["ID"]).replace(" ", ""): {
@@ -80,9 +82,9 @@ class Search(colrev.operation.Operation):
         }
 
     def add_source(self, *, query: str) -> None:
+        """Add a new source"""
 
         saved_args = {"add": f'"{query}"'}
-
         query_dict = json.loads(query)
 
         assert "endpoint" in query_dict
@@ -188,6 +190,7 @@ class Search(colrev.operation.Operation):
         return sources_selected
 
     def main(self, *, selection_str: str = None) -> None:
+        """Search for records (main entrypoint)"""
 
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
@@ -214,6 +217,7 @@ class Search(colrev.operation.Operation):
                 )
 
     def setup_custom_script(self) -> None:
+        """Setup a custom search script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_search_script.py")
@@ -239,6 +243,7 @@ class Search(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def view_sources(self) -> None:
+        """View the sources info"""
 
         for source in self.sources:
             self.review_manager.p_printer.pprint(source)

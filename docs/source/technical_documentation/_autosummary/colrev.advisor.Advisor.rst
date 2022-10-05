@@ -16,7 +16,6 @@ colrev.advisor.Advisor
    .. autosummary::
       :nosignatures:
 
-      ~Advisor.append_registered_repo_instructions
       ~Advisor.get_collaboration_instructions
       ~Advisor.get_environment_instructions
       ~Advisor.get_instructions

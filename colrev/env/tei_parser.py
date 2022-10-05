@@ -63,12 +63,13 @@ class TEIParser:
                 load_from_tei = True
 
         if pdf_path is not None and not load_from_tei:
-            self.create_tei()
+            self.__create_tei()
 
         elif tei_path is not None:
-            self.root = self.read_from_tei()  # type: ignore
+            self.root = self.__read_from_tei()  # type: ignore
 
-    def read_from_tei(self):  # type: ignore
+    def __read_from_tei(self):  # type: ignore
+        """Read a TEI from file"""
         with open(self.tei_path, "rb") as data:
             xslt_content = data.read()
 
@@ -77,7 +78,8 @@ class TEIParser:
 
         return etree.XML(xslt_content)
 
-    def create_tei(self) -> None:
+    def __create_tei(self) -> None:
+        """Create the TEI (based on GROBID)"""
         grobid_service = colrev.env.grobid_service.GrobidService()
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
@@ -132,6 +134,8 @@ class TEIParser:
             print(str(self.pdf_path))
 
     def get_tei_str(self) -> str:
+        """Get the TEI string"""
+
         return etree.tostring(self.root).decode("utf-8")
 
     def __get_paper_title(self) -> str:
@@ -286,7 +290,8 @@ class TEIParser:
 
         return author_dict
 
-    def get_author_name_from_node(self, *, author_node: Element) -> str:
+    def __get_author_name_from_node(self, *, author_node: Element) -> str:
+
         authorname = ""
 
         author_pers_node = author_node.find(self.ns["tei"] + "persName")
@@ -332,7 +337,7 @@ class TEIParser:
                         self.ns["tei"] + "author"
                     ):
 
-                        authorname = self.get_author_name_from_node(
+                        authorname = self.__get_author_name_from_node(
                             author_node=author_node
                         )
                         if authorname in ["Paper, Short"]:
@@ -363,6 +368,7 @@ class TEIParser:
         return doi
 
     def get_abstract(self) -> str:
+        """Get the abstract"""
 
         html_tag_regex = re.compile("<.*?>")
 
@@ -381,6 +387,7 @@ class TEIParser:
         return abstract_text
 
     def get_metadata(self) -> dict:
+        """Get the metadata of the PDF (title, author, ...) as a dict"""
 
         record = {
             "ENTRYTYPE": "article",
@@ -403,6 +410,7 @@ class TEIParser:
         return record
 
     def get_paper_keywords(self) -> list:
+        """Get hte keywords"""
         keywords = []
         for keyword_list in self.root.iter(self.ns["tei"] + "keywords"):
             for keyword in keyword_list.iter(self.ns["tei"] + "term"):
@@ -410,6 +418,7 @@ class TEIParser:
         return keywords
 
     def get_author_details(self) -> list:
+        """Get the author details"""
         author_details = []
 
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
@@ -466,7 +475,7 @@ class TEIParser:
         if authors_node is not None:
             for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
 
-                authorname = self.get_author_name_from_node(author_node=author_node)
+                authorname = self.__get_author_name_from_node(author_node=author_node)
 
                 if authorname not in [", ", ""]:
                     author_list.append(authorname)
@@ -643,6 +652,7 @@ class TEIParser:
         return entrytype
 
     def get_bibliography(self) -> list:
+        """Get the bibliography (references section) as a list of record dicts"""
 
         bibliographies = self.root.iter(self.ns["tei"] + "listBibl")
         tei_bib_db = []
@@ -726,6 +736,7 @@ class TEIParser:
         return tei_bib_db
 
     def get_citations_per_section(self) -> dict:
+        """Get a dict of section-names and list-of-citations"""
         section_citations = {}
         sections = self.root.iter(self.ns["tei"] + "head")
         for section in sections:
@@ -744,6 +755,7 @@ class TEIParser:
         return section_citations
 
     def mark_references(self, *, records: list):  # type: ignore
+        """Mark references with the additional record ID"""
 
         tei_records = self.get_bibliography()
         for record_dict in tei_records:

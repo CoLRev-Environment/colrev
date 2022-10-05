@@ -217,6 +217,7 @@ class Corrections:
         return curated_records
 
     def check_corrections_of_curated_records(self) -> None:
+        """Check for corrections of curated records"""
 
         dataset = self.review_manager.dataset
 
@@ -507,6 +508,7 @@ class Corrections:
         # TODO : handle cases where update branch already exists
 
     def apply_correction(self, *, source_url: str, change_list: list) -> None:
+        """Apply a (list of) corrections"""
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)

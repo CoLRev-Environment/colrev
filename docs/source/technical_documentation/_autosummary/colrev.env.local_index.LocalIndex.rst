@@ -16,20 +16,16 @@ colrev.env.local\_index.LocalIndex
    .. autosummary::
       :nosignatures:
 
-      ~LocalIndex.analyze
       ~LocalIndex.check_opensearch_docker_available
       ~LocalIndex.get_fields_to_remove
-      ~LocalIndex.get_from_index_exact_match
       ~LocalIndex.get_year_from_toc
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_record
       ~LocalIndex.is_duplicate
-      ~LocalIndex.outlets_duplicated
-      ~LocalIndex.parse_record
-      ~LocalIndex.prep_record_for_return
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_from_toc
+      ~LocalIndex.search
       ~LocalIndex.start_opensearch_docker
       ~LocalIndex.start_opensearch_docker_dashboards
 

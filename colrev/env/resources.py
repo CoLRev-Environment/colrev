@@ -22,6 +22,7 @@ class Resources:
         pass
 
     def install_curated_resource(self, *, curated_resource: str) -> bool:
+        """Install a curated resource"""
 
         # check if url else return False
         # validators.url(curated_resource)

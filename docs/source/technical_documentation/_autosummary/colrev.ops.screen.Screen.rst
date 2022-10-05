@@ -18,14 +18,12 @@ colrev.ops.screen.Screen
 
       ~Screen.add_criterion
       ~Screen.check_precondition
-      ~Screen.check_record_state_model_precondition
       ~Screen.create_screen_split
       ~Screen.delete_criterion
       ~Screen.get_data
       ~Screen.get_screening_criteria
       ~Screen.include_all_in_screen
       ~Screen.main
-      ~Screen.require_clean_repo_general
       ~Screen.set_screening_criteria
       ~Screen.setup_custom_script
 

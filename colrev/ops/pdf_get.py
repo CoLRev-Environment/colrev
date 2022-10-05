@@ -49,6 +49,7 @@ class PDFGet(colrev.operation.Operation):
         )
 
     def copy_pdfs_to_repo(self) -> None:
+        """Copy the PDFs to the repository"""
         self.review_manager.logger.info("Copy PDFs to dir")
         records = self.review_manager.dataset.load_records_dict()
 
@@ -68,6 +69,7 @@ class PDFGet(colrev.operation.Operation):
                     )
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
+        """Link the PDF in its record (should be {ID}.pdf)"""
 
         pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
@@ -81,6 +83,7 @@ class PDFGet(colrev.operation.Operation):
 
     # Note : no named arguments (multiprocessing)
     def get_pdf(self, item: dict) -> dict:
+        """Get PDFs (based on the package endpoints in the settings)"""
 
         record_dict = item["record"]
 
@@ -207,6 +210,7 @@ class PDFGet(colrev.operation.Operation):
         return records
 
     def relink_files(self) -> None:
+        """Relink record files to the corresponding PDFs (if available)"""
 
         self.review_manager.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
@@ -226,6 +230,7 @@ class PDFGet(colrev.operation.Operation):
         *,
         records: dict,
     ) -> dict:
+        """Check for PDFs that are in the pdfs directory but not linked in the record file"""
 
         linked_pdfs = [
             str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
@@ -288,6 +293,8 @@ class PDFGet(colrev.operation.Operation):
         return records
 
     def rename_pdfs(self) -> None:
+        """Rename the PDFs"""
+
         self.review_manager.logger.info("Rename PDFs")
 
         records = self.review_manager.dataset.load_records_dict()
@@ -446,6 +453,7 @@ class PDFGet(colrev.operation.Operation):
         return records
 
     def setup_custom_script(self) -> None:
+        """Setup a custom pfd-get script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_pdf_get_script.py")
@@ -463,6 +471,7 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def main(self) -> None:
+        """Get PDFs (main entrypoint)"""
 
         saved_args = locals()
 

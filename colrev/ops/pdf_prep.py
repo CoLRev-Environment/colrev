@@ -117,6 +117,8 @@ class PDFPrep(colrev.operation.Operation):
 
     # Note : no named arguments (multiprocessing)
     def prepare_pdf(self, item: dict) -> dict:
+        """Prepare a PDF (based on package_endpoints in the settings)"""
+
         record_dict = item["record"]
 
         if (
@@ -264,6 +266,7 @@ class PDFPrep(colrev.operation.Operation):
         return record_dict
 
     def update_colrev_pdf_ids(self) -> None:
+        """Update the colrev-pdf-ids"""
         self.review_manager.logger.info("Update colrev_pdf_ids")
         records = self.review_manager.dataset.load_records_dict()
         records_list = p_map(self.__update_colrev_pdf_ids, records.values())
@@ -316,6 +319,7 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.logger.info(not_prepared_string)
 
     def setup_custom_script(self) -> None:
+        """Setup a custom pdf-prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_pdf_prep_script.py")
@@ -338,6 +342,7 @@ class PDFPrep(colrev.operation.Operation):
         *,
         reprocess: bool = False,
     ) -> None:
+        """Prepare PDFs (main entrypoint)"""
 
         saved_args = locals()
 

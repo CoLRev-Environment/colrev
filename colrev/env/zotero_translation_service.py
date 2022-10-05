@@ -19,6 +19,7 @@ class ZoteroTranslationService:
     def start_zotero_translators(
         self, *, startup_without_waiting: bool = False
     ) -> None:
+        """Start the zotero translation service"""
 
         if self.zotero_service_available():
             return
@@ -56,6 +57,7 @@ class ZoteroTranslationService:
         )
 
     def zotero_service_available(self) -> bool:
+        """Check whether the zotero translation service is available"""
 
         url = "https://www.sciencedirect.com/science/article/abs/pii/S096386872100041X"
         content_type_header = {"Content-type": "text/plain"}

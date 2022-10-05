@@ -97,6 +97,7 @@ class PrepMan(colrev.operation.Operation):
         return pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
 
     def prep_man_stats(self) -> None:
+        """Print statistics on prep_man"""
         # pylint: disable=duplicate-code
 
         crosstab_df = self.__get_crosstab_df()
@@ -124,6 +125,7 @@ class PrepMan(colrev.operation.Operation):
             tabulated.to_csv("manual_preparation_statistics.csv")
 
     def get_data(self) -> dict:
+        """Get the data for prep-man"""
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -161,9 +163,10 @@ class PrepMan(colrev.operation.Operation):
         return md_prep_man_data
 
     def set_data(self, *, record_dict: dict) -> None:
+        """Set data in the prep_man operation"""
 
         record = colrev.record.PrepRecord(data=record_dict)
-        record.set_masterdata_complete(source_identifier="man_prep")
+        record.set_masterdata_complete(source_identifier="prep_man")
         record.set_masterdata_consistent()
         record.set_fields_complete()
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
@@ -175,6 +178,7 @@ class PrepMan(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
     def main(self) -> None:
+        """Manually prepare records (main entrypoint)"""
 
         records = self.review_manager.dataset.load_records_dict()
 

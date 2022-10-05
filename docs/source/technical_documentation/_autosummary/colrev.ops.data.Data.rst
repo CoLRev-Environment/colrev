@@ -18,12 +18,10 @@ colrev.ops.data.Data
 
       ~Data.add_data_endpoint
       ~Data.check_precondition
-      ~Data.check_record_state_model_precondition
       ~Data.get_record_ids_for_synthesis
       ~Data.main
       ~Data.profile
       ~Data.reading_heuristics
-      ~Data.require_clean_repo_general
       ~Data.setup_custom_script
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import binascii
 import collections
 import hashlib
+import json
 import logging
 import os
 import time
@@ -88,6 +89,7 @@ class LocalIndex:
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
     def start_opensearch_docker_dashboards(self) -> None:
+        """Start the local_index dashboard (opensearch dashboard Docker container)"""
 
         self.start_opensearch_docker()
         os_dashboard_image = (
@@ -122,6 +124,7 @@ class LocalIndex:
                 print(exc)
 
     def start_opensearch_docker(self, *, startup_without_waiting: bool = False) -> None:
+        """Start the local_index (opensearch Docker container)"""
 
         os_image = colrev.env.environment_manager.EnvironmentManager.docker_images[
             "opensearchproject/opensearch"
@@ -200,6 +203,7 @@ class LocalIndex:
         logging.getLogger("opensearch").setLevel(logging.WARNING)
 
     def check_opensearch_docker_available(self) -> None:
+        """Check whether the local_index (opensearch Docker container) is available"""
         # If not available after 120s: raise error
         logging.getLogger("opensearch").setLevel(logging.ERROR)
         self.open_search.info()
@@ -298,7 +302,7 @@ class LocalIndex:
             )
             saved_record_dict = saved_record_response["_source"]
 
-            parsed_record_dict = self.parse_record(record_dict=saved_record_dict)
+            parsed_record_dict = self.__parse_record(record_dict=saved_record_dict)
             saved_record = colrev.record.Record(data=parsed_record_dict)
             record = colrev.record.Record(data=record_dict)
 
@@ -539,7 +543,7 @@ class LocalIndex:
             raise colrev_exceptions.RecordNotInIndexException
         return retrieved_record
 
-    def parse_record(self, *, record_dict: dict) -> dict:
+    def __parse_record(self, *, record_dict: dict) -> dict:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.dataset
@@ -570,15 +574,16 @@ class LocalIndex:
 
         return record
 
-    def prep_record_for_return(
+    def __prep_record_for_return(
         self,
         *,
         record_dict: dict,
         include_file: bool = False,
         include_colrev_ids: bool = False,
     ) -> dict:
+        """Prepare a record for return (from local index)"""
 
-        record_dict = self.parse_record(record_dict=record_dict)
+        record_dict = self.__parse_record(record_dict=record_dict)
 
         keys_to_remove = (
             "fulltext",
@@ -615,7 +620,37 @@ class LocalIndex:
 
         return record_dict
 
-    def outlets_duplicated(self) -> bool:
+    def search(self, *, query: dict, size: int = 10000) -> list[colrev.record.Record]:
+        """Run a search for records"""
+
+        query_string = json.dumps(query)
+
+        # Note : size is set to maximum.
+        # We may iterate (using the from=... parameter)
+        # Note : search(...) accepts the size keyword (tested & works)
+        # https://opensearch-project.github.io/opensearch-py/
+        # api-ref/client.html#opensearchpy.OpenSearch.search
+        # pylint: disable=unexpected-keyword-arg
+        res = self.open_search.search(
+            index=self.RECORD_INDEX, body=query_string, size=size
+        )
+        records_to_return = []
+
+        for item in res["hits"]["hits"]:
+            record_to_import = item["_source"]  # type: ignore
+
+            record_to_import = {k: str(v) for k, v in record_to_import.items()}
+            record_to_import = {
+                k: v for k, v in record_to_import.items() if "None" != v
+            }
+            record_to_import = self.__prep_record_for_return(
+                record_dict=record_to_import, include_file=False
+            )
+            records_to_return.append(record_to_import)
+
+        return records_to_return
+
+    def __outlets_duplicated(self) -> bool:
 
         print("Validate curated metadata")
 
@@ -745,6 +780,7 @@ class LocalIndex:
             paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
     def index_record(self, *, record_dict: dict) -> None:
+        """Index a record"""
         # Note : may raise NotEnoughDataToIdentifyException
 
         def is_curated_metadata(*, copy_for_toc_index: dict) -> bool:
@@ -771,6 +807,8 @@ class LocalIndex:
             self.__toc_index(record_dict=copy_for_toc_index)
 
     def index_colrev_project(self, *, repo_source_path: Path) -> None:
+        """Index a CoLRev project"""
+
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         # pylint: disable=cyclic-import
@@ -831,6 +869,7 @@ class LocalIndex:
             print(exc)
 
     def index(self) -> None:
+        """Index all registered CoLRev projects"""
         # import shutil
 
         # Note : this task takes long and does not need to run often
@@ -845,7 +884,7 @@ class LocalIndex:
 
         print("Start LocalIndex")
 
-        if self.outlets_duplicated():
+        if self.__outlets_duplicated():
             return
 
         print(f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}")
@@ -872,7 +911,7 @@ class LocalIndex:
 
         repo_source_paths = [
             x["repo_source_path"]
-            for x in self.environment_manager.load_local_registry()
+            for x in self.environment_manager.load_environment_registry()
         ]
         for repo_source_path in repo_source_paths:
             self.index_colrev_project(repo_source_path=repo_source_path)
@@ -886,6 +925,7 @@ class LocalIndex:
         # Note : es.update can use functions applied to each record (for the update)
 
     def get_year_from_toc(self, *, record_dict: dict) -> str:
+        """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
 
         year = "NA"
@@ -930,6 +970,7 @@ class LocalIndex:
         similarity_threshold: float,
         include_file: bool = False,
     ) -> dict:
+        """Retrieve a record from the toc (table-of-contents)"""
         toc_key = colrev.record.Record(data=record_dict).get_toc_key()
 
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
@@ -969,7 +1010,7 @@ class LocalIndex:
                         id=str(paper_hash),
                     )
                     record_dict = res["_source"]  # type: ignore
-                    return self.prep_record_for_return(
+                    return self.__prep_record_for_return(
                         record_dict=record_dict, include_file=include_file
                     )
             except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
@@ -977,7 +1018,7 @@ class LocalIndex:
 
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def get_from_index_exact_match(
+    def __get_from_index_exact_match(
         self, *, index_name: str, key: str, value: str
     ) -> dict:
 
@@ -1027,7 +1068,7 @@ class LocalIndex:
         ):
             pass
         if retrieved_record_dict:
-            return self.prep_record_for_return(
+            return self.__prep_record_for_return(
                 record_dict=retrieved_record_dict,
                 include_file=include_file,
                 include_colrev_ids=include_colrev_ids,
@@ -1039,7 +1080,7 @@ class LocalIndex:
                 if key not in self.global_keys or "ID" == key:
                     continue
                 try:
-                    retrieved_record_dict = self.get_from_index_exact_match(
+                    retrieved_record_dict = self.__get_from_index_exact_match(
                         index_name=self.RECORD_INDEX, key=key, value=value
                     )
                     break
@@ -1057,7 +1098,7 @@ class LocalIndex:
                 record_dict.get("ID", "no-key")
             )
 
-        return self.prep_record_for_return(
+        return self.__prep_record_for_return(
             record_dict=retrieved_record_dict,
             include_file=include_file,
             include_colrev_ids=include_colrev_ids,
@@ -1139,7 +1180,7 @@ class LocalIndex:
 
             # Curated metadata repositories do not curate outlets redundantly,
             # i.e., there are no duplicates between curated repositories.
-            # see outlets_duplicated(...)
+            # see __outlets_duplicated(...)
 
             different_curated_repositories = (
                 "CURATED:" in r1_index.get("colrev_masterdata_provenance", "")
@@ -1161,52 +1202,6 @@ class LocalIndex:
             pass
 
         return "unknown"
-
-    def analyze(self) -> None:
-
-        # TODO : update analyze() functionality based on es index
-        # add to method signature:
-        # (... , *, threshold: float = 0.95, ...)
-
-        # changes = []
-        # for d_file in self.dind_path.rglob("*.txt"):
-        #     str1, str2 = d_file.read_text().split("\n")
-        #     similarity = fuzz.ratio(str1, str2) / 100
-        #     if similarity < threshold:
-        #         changes.append(
-        #             {"similarity": similarity, "str": str1, "fname": str(d_file)}
-        #         )
-        #         changes.append(
-        #             {"similarity": similarity, "str": str2, "fname": str(d_file)}
-        #         )
-
-        # df = pd.DataFrame(changes)
-        # df = df.sort_values(by=["similarity", "fname"])
-        # df.to_csv("changes.csv", index=False)
-        # print("Exported changes.csv")
-
-        # colrev_pdf_ids = []
-        # https://bit.ly/3tbypkd
-        # for r_file in self.rind_path.rglob("*.bib"):
-
-        #     with open(r_file, encoding="utf8") as f:
-        #         while True:
-        #             line = f.readline()
-        #             if not line:
-        #                 break
-        #             if "colrev_pdf_id" in line[:9]:
-        #                 val = line[line.find("{") + 1 : line.rfind("}")]
-        #                 colrev_pdf_ids.append(val)
-
-        # colrev_pdf_ids_dupes = [
-        #     item for item, count in
-        #       collections.Counter(colrev_pdf_ids).items() if count > 1
-        # ]
-
-        # with open("non-unique-cpids.txt", "w", encoding="utf8") as o:
-        #     o.write("\n".join(colrev_pdf_ids_dupes))
-        # print("Export non-unique-cpids.txt")
-        return
 
 
 if __name__ == "__main__":

@@ -199,6 +199,7 @@ class Commit:
         return report
 
     def create(self) -> bool:
+        """Create a commit (including the commit message and details)"""
 
         if (
             "realtime" == self.review_manager.settings.project.review_type
@@ -218,7 +219,9 @@ class Commit:
                     self.review_manager.committer, self.review_manager.email
                 )
             else:
-                git_author = git.Actor(f"script:{self.script_name}", "")
+                git_author = git.Actor(
+                    f"script:{self.script_name}", self.review_manager.email
+                )
 
             # Note : this should run as the last command before creating the commit
             # to ensure that the git tree_hash is up-to-date.
@@ -239,7 +242,7 @@ class Commit:
             )
 
             self.review_manager.logger.info("Created commit")
-            self.review_manager.reset_log()
+            self.review_manager.reset_report_logger()
             if self.review_manager.dataset.has_changes():
                 raise colrev_exceptions.DirtyRepoAfterProcessingError(
                     "A clean repository is expected."
@@ -249,6 +252,7 @@ class Commit:
         return True
 
     def update_report(self, *, msg_file: Path) -> None:
+        """Update the report"""
         report = self.__get_commit_report()
         with open(msg_file, "a", encoding="utf8") as file:
             file.write(report)

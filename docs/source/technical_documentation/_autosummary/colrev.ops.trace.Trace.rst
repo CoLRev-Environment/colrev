@@ -17,9 +17,7 @@ colrev.ops.trace.Trace
       :nosignatures:
 
       ~Trace.check_precondition
-      ~Trace.check_record_state_model_precondition
       ~Trace.main
-      ~Trace.require_clean_repo_general
 
 
 

@@ -23,6 +23,7 @@ class Trace(colrev.operation.Operation):
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
     def main(self, *, record_id: str) -> None:
+        """Trace a record (main entrypoint)"""
 
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
 

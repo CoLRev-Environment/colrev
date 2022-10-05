@@ -15,6 +15,7 @@ class PDFHashService:
         pass
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
+        """Get the PDF hash"""
 
         assert isinstance(page_nr, int)
         assert isinstance(hash_size, int)

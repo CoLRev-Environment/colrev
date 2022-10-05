@@ -17,12 +17,11 @@ colrev.ops.status.StatusStats
       :nosignatures:
 
       ~StatusStats.get_active_metadata_operation_info
+      ~StatusStats.get_active_operations
       ~StatusStats.get_active_pdf_operation_info
-      ~StatusStats.get_active_processing_functions
-      ~StatusStats.get_priority_transition
-      ~StatusStats.get_processes_in_progress
+      ~StatusStats.get_operation_in_progress
+      ~StatusStats.get_priority_operations
       ~StatusStats.get_transitioned_records
-      ~StatusStats.overall_stats_backward_calculation
 
 
 

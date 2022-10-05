@@ -17,8 +17,6 @@ colrev.operation.CheckOperation
       :nosignatures:
 
       ~CheckOperation.check_precondition
-      ~CheckOperation.check_record_state_model_precondition
-      ~CheckOperation.require_clean_repo_general
 
 
 

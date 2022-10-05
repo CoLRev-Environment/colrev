@@ -16,17 +16,14 @@ colrev.env.tei\_parser.TEIParser
    .. autosummary::
       :nosignatures:
 
-      ~TEIParser.create_tei
       ~TEIParser.get_abstract
       ~TEIParser.get_author_details
-      ~TEIParser.get_author_name_from_node
       ~TEIParser.get_bibliography
       ~TEIParser.get_citations_per_section
       ~TEIParser.get_metadata
       ~TEIParser.get_paper_keywords
       ~TEIParser.get_tei_str
       ~TEIParser.mark_references
-      ~TEIParser.read_from_tei
 
 
 

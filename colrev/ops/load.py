@@ -115,6 +115,7 @@ class Load(colrev.operation.Operation):
         return imported_origins
 
     def check_update_sources(self) -> None:
+        """Check the SearchSources and update if necessary"""
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
 
@@ -726,6 +727,7 @@ class Load(colrev.operation.Operation):
         return results_list
 
     def main(self, *, keep_ids: bool = False, combine_commits: bool = False) -> None:
+        """Load records (main entrypoint)"""
 
         saved_args = locals()
         if not keep_ids:

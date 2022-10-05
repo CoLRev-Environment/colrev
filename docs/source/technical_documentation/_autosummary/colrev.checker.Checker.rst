@@ -17,9 +17,6 @@ colrev.checker.Checker
       :nosignatures:
 
       ~Checker.check_fields
-      ~Checker.check_main_records_duplicates
-      ~Checker.check_main_records_origin
-      ~Checker.check_main_records_screen
       ~Checker.check_persisted_id_changes
       ~Checker.check_propagated_id
       ~Checker.check_repo

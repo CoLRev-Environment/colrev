@@ -17,8 +17,6 @@ colrev.operation.FormatOperation
       :nosignatures:
 
       ~FormatOperation.check_precondition
-      ~FormatOperation.check_record_state_model_precondition
-      ~FormatOperation.require_clean_repo_general
 
 
 

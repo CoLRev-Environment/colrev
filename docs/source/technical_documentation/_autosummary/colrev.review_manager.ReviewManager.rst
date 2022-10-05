@@ -65,7 +65,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.load_settings
       ~ReviewManager.notify
       ~ReviewManager.report
-      ~ReviewManager.reset_log
+      ~ReviewManager.reset_report_logger
       ~ReviewManager.save_settings
       ~ReviewManager.sharing
       ~ReviewManager.update_status_yaml

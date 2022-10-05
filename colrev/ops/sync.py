@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 """Synchronize records into a non-CoLRev project."""
-import json
 import re
 import typing
 from pathlib import Path
@@ -57,12 +56,14 @@ class Sync:
         return citation_keys
 
     def get_cited_papers(self) -> None:
+        """Get the cited papers"""
 
         citation_keys = self.__get_cited_papers_citation_keys()
 
         ids_in_bib = self.__get_ids_in_paper()
         print(f"References in bib: {len(ids_in_bib)}")
 
+        local_index = colrev.env.local_index.LocalIndex()
         for citation_key in citation_keys:
             if citation_key in ids_in_bib:
                 continue
@@ -71,34 +72,22 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            local_index = colrev.env.local_index.LocalIndex()
-
-            query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
-            res = local_index.open_search.search(
-                index=local_index.RECORD_INDEX, body=query
+            returned_records = local_index.search(
+                query={"query": {"match_phrase": {"ID": citation_key}}}
             )
 
-            nr_hits = len(res["hits"]["hits"])  # type: ignore
-            if 0 == nr_hits:
+            if 0 == len(returned_records):
                 print(f"Not found: {citation_key}")
-            elif 1 == nr_hits:
-                record_to_import = res["hits"]["hits"][0]["_source"]  # type: ignore
-                if record_to_import["ID"] in [r["ID"] for r in self.records_to_import]:
+            elif 1 == len(returned_records):
+                if returned_records[0].data["ID"] in [
+                    r["ID"] for r in self.records_to_import
+                ]:
                     continue
-                record_to_import = {k: str(v) for k, v in record_to_import.items()}
-                record_to_import = {
-                    k: v for k, v in record_to_import.items() if "None" != v
-                }
-                record_to_import = local_index.prep_record_for_return(
-                    record_dict=record_to_import, include_file=False
-                )
-
-                self.records_to_import.append(record_to_import)
+                self.records_to_import.append(returned_records[0].get_data())
             else:
-                # print(f'Multiple hits for {citation_key}')
                 listed_item: typing.Dict[str, typing.List] = {citation_key: []}
-                for item in res["hits"]["hits"]:  # type: ignore
-                    listed_item[citation_key].append(item["_source"])
+                for returned_record in returned_records:  # type: ignore
+                    listed_item[citation_key].append(returned_record)
                 self.non_unique_for_import.append(listed_item)
 
     def __get_ids_in_paper(self) -> typing.List:
@@ -117,14 +106,12 @@ class Sync:
 
         return list(records.keys())
 
-    def get_non_unique(self) -> list:
-        return self.non_unique_for_import
-
     def add_to_records_to_import(self, *, record: dict) -> None:
+        """Add a record to the records_to_import list"""
         if record["ID"] not in [r["ID"] for r in self.records_to_import]:
             self.records_to_import.append(record)
 
-    def save_to_bib(self, *, records: dict, save_path: Path) -> None:
+    def __save_to_bib(self, *, records: dict, save_path: Path) -> None:
 
         # pylint: disable=duplicate-code
 
@@ -187,6 +174,7 @@ class Sync:
             out.write(bibtex_str)
 
     def add_to_bib(self) -> None:
+        """Add records to the bibliography"""
 
         pybtex.errors.set_strict_mode(False)
 
@@ -244,7 +232,7 @@ class Sync:
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        self.save_to_bib(records=records_dict, save_path=references_file)
+        self.__save_to_bib(records=records_dict, save_path=references_file)
 
 
 if __name__ == "__main__":

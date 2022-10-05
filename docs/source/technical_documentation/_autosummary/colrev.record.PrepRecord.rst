@@ -16,7 +16,6 @@ colrev.record.PrepRecord
    .. autosummary::
       :nosignatures:
 
-      ~PrepRecord.abbreviate_container
       ~PrepRecord.add_colrev_ids
       ~PrepRecord.add_data_provenance
       ~PrepRecord.add_data_provenance_note
@@ -36,7 +35,6 @@ colrev.record.PrepRecord
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.format_if_mostly_upper
-      ~PrepRecord.get_abbrev_container_min_len
       ~PrepRecord.get_colrev_id
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title

@@ -17,12 +17,7 @@ colrev.ops.pull.Pull
       :nosignatures:
 
       ~Pull.check_precondition
-      ~Pull.check_record_state_model_precondition
       ~Pull.main
-      ~Pull.pull_project
-      ~Pull.pull_records_from_crossref
-      ~Pull.pull_records_from_index
-      ~Pull.require_clean_repo_general
 
 
 

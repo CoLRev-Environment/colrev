@@ -118,6 +118,7 @@ class Prep(colrev.operation.Operation):
         self.pad = 0
 
     def check_dbs_availability(self) -> None:
+        """Check the availability of required databases"""
 
         # The following could become default methods for the PreparationInterface
 
@@ -166,6 +167,7 @@ class Prep(colrev.operation.Operation):
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
+        """Prepare a record (based on package_endpoints in the settings)"""
 
         record: colrev.record.PrepRecord = item["record"]
 
@@ -278,7 +280,7 @@ class Prep(colrev.operation.Operation):
         )
         return revlist
 
-    def reset(self, *, record_list: list[dict]) -> None:
+    def __reset(self, *, record_list: list[dict]) -> None:
 
         record_list = self.__select_record_list_for_reset(record_list=record_list)
         revlist = self.__get_revlist_for_reset()
@@ -335,6 +337,7 @@ class Prep(colrev.operation.Operation):
             )
 
     def reset_records(self, *, reset_ids: list) -> None:
+        """Reset records based on IDs"""
         # Note: entrypoint for CLI
 
         records = self.review_manager.dataset.load_records_dict()
@@ -345,7 +348,7 @@ class Prep(colrev.operation.Operation):
             else:
                 print(f"Error: record not found (ID={reset_id})")
 
-        self.reset(record_list=records_to_reset)
+        self.__reset(record_list=records_to_reset)
 
         saved_args = {"reset_records": ",".join(reset_ids)}
         self.review_manager.dataset.save_records_dict(records=records)
@@ -357,20 +360,12 @@ class Prep(colrev.operation.Operation):
         )
 
     def reset_ids(self) -> None:
+        """Reset the IDs of records"""
         # Note: entrypoint for CLI
 
         records = self.review_manager.dataset.load_records_dict()
 
-        git_repo = self.review_manager.dataset.get_repo()
-        records_file_relative = self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        revlist = (
-            ((commit.tree / str(records_file_relative)).data_stream.read())
-            for commit in git_repo.iter_commits(paths=str(records_file_relative))
-        )
-        filecontents = next(revlist)  # noqa
-        prior_records_dict = self.review_manager.dataset.load_records_dict(
-            load_str=filecontents.decode("utf-8")
-        )
+        prior_records_dict = next(self.review_manager.dataset.load_from_git_history())
         for record in records.values():
             prior_record_l = [
                 x
@@ -385,6 +380,7 @@ class Prep(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
 
     def setup_custom_script(self) -> None:
+        """Setup a custom prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_prep_script.py")
@@ -669,7 +665,7 @@ class Prep(colrev.operation.Operation):
         debug_ids: str = "NA",
         debug_file: Path = None,
     ) -> None:
-        """Preparation of records"""
+        """Preparation of records (main entrypoint)"""
 
         saved_args = locals()
 
@@ -746,7 +742,7 @@ class Prep(colrev.operation.Operation):
                     script_call="colrev prep",
                     saved_args=saved_args,
                 )
-                self.review_manager.reset_log()
+                self.review_manager.reset_report_logger()
                 print()
 
         if not keep_ids and not self.review_manager.debug_mode:

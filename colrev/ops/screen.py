@@ -78,6 +78,7 @@ class Screen(colrev.operation.Operation):
     def set_screening_criteria(
         self, *, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
     ) -> None:
+        """Set the screening criteria in the settings"""
         self.review_manager.settings.screen.criteria = screening_criteria
         self.review_manager.save_settings()
 
@@ -214,6 +215,7 @@ class Screen(colrev.operation.Operation):
         )
 
     def create_screen_split(self, *, create_split: int) -> list:
+        """Split the screen between researchers"""
 
         screen_splits = []
 
@@ -232,6 +234,7 @@ class Screen(colrev.operation.Operation):
         return screen_splits
 
     def setup_custom_script(self) -> None:
+        """Setup a custom screen script"""
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/custom_screen_script.py")
@@ -249,6 +252,7 @@ class Screen(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def main(self, *, split_str: str) -> None:
+        """Screen records for inclusion (main entrypoint)"""
 
         # pylint: disable=duplicate-code
         split = []

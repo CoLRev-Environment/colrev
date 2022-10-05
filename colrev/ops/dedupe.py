@@ -88,6 +88,7 @@ class Dedupe(colrev.operation.Operation):
         return value
 
     def prep_records(self, *, records_df: pd.DataFrame) -> dict:
+        """Prepare records for dedupe"""
 
         required_fields = [
             "journal",
@@ -205,6 +206,7 @@ class Dedupe(colrev.operation.Operation):
         return records
 
     def read_data(self) -> dict:
+        """Read the data for dedupe"""
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -657,6 +659,7 @@ class Dedupe(colrev.operation.Operation):
         return info
 
     def main(self) -> None:
+        """Dedupe records (main entrypoint)"""
 
         for (
             dedupe_package_endpoint

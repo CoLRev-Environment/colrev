@@ -245,7 +245,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         pdf_get_man_operation.review_manager.update_status_yaml()
 
-    def get_man_pdf(
+    def pdf_get_man(
         self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
     ) -> dict:
 

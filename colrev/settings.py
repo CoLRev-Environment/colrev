@@ -41,14 +41,16 @@ class IDPattern(Enum):
     three_authors_year = "three_authors_year"
 
     @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
-
-    @classmethod
     def get_options(cls) -> typing.List[str]:
+        """Get the options"""
         # pylint: disable=no-member
         return cls._member_names_
+
+    @classmethod
+    def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
+        # pylint: disable=no-member
+        return {"options": cls._member_names_, "type": "selection"}
 
 
 @dataclass
@@ -84,14 +86,16 @@ class ShareStatReq(Enum):
     completed = "completed"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    @classmethod
     def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
 
 
 @dataclass
@@ -134,14 +138,16 @@ class SearchType(Enum):
     OTHER = "OTHER"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    @classmethod
     def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -162,6 +168,8 @@ class SearchSource(JsonSchemaMixin):
     comment: typing.Optional[str]
 
     def get_corresponding_bib_file(self) -> Path:
+        """Get the corresponding bib file"""
+
         return self.filename.with_suffix(".bib")
 
     def setup_for_load(
@@ -170,6 +178,7 @@ class SearchSource(JsonSchemaMixin):
         record_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
+        """Set the SearchSource up for the load process (initialize statistics)"""
         # pylint: disable=attribute-defined-outside-init
         # Note : define outside init because the following
         # attributes are temporary. They should not be
@@ -260,14 +269,16 @@ class SameSourceMergePolicy(Enum):
     apply = "apply"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    @classmethod
     def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
 
 
 @dataclass
@@ -313,11 +324,13 @@ class PDFPathType(Enum):
 
     @classmethod
     def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
+        """Get the options"""
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -371,14 +384,16 @@ class ScreenCriterionType(Enum):
     exclusion_criterion = "exclusion_criterion"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    @classmethod
     def get_field_details(cls) -> typing.Dict:
+        """Get the field details"""
         # pylint: disable=no-member
         return {"options": cls._member_names_, "type": "selection"}
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
 
     def __str__(self) -> str:
         return self.name
@@ -466,6 +481,7 @@ class Settings(JsonSchemaMixin):
 
     @classmethod
     def get_settings_schema(cls) -> dict:
+        """Get the json-schema for the settings"""
 
         schema = cls.json_schema()
         sdefs = schema["definitions"]
@@ -520,6 +536,8 @@ class Settings(JsonSchemaMixin):
 
 
 def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Settings:
+    """Load the settings from file"""
+
     # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
     # possible extension : integrate/merge global, default settings
     # from colrev.environment import EnvironmentManager
@@ -561,6 +579,8 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Save the settings"""
+
     def custom_asdict_factory(data) -> dict:  # type: ignore
         def convert_value(obj: object) -> object:
             if isinstance(obj, Enum):

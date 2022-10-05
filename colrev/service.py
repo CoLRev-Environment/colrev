@@ -17,6 +17,8 @@ from watchdog.observers import Observer
 import colrev.ops.status
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=too-few-public-methods
+
 
 class Event(LoggingEventHandler):
     service: Service
@@ -86,7 +88,7 @@ class Service:
         # setup queue
         self.service_queue: queue.Queue = queue.Queue()
         # Turn-on the worker thread.
-        threading.Thread(target=self.worker, daemon=True).start()
+        threading.Thread(target=self.__worker, daemon=True).start()
 
         self.logger.info("Service alive")
 
@@ -118,6 +120,8 @@ class Service:
         self.service_queue.join()
 
     def start_services(self) -> None:
+        """Start the services"""
+
         async def _start_grobid() -> None:
             grobid_service = self.review_manager.get_grobid_service()
 
@@ -262,7 +266,7 @@ class Service:
 
         self.logger.info("%sCompleted %s%s", colors.GREEN, item["name"], colors.END)
 
-    def worker(self) -> None:
+    def __worker(self) -> None:
         try:
             while True:
 

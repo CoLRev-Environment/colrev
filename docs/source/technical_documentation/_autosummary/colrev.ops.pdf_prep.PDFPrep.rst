@@ -17,10 +17,8 @@ colrev.ops.pdf\_prep.PDFPrep
       :nosignatures:
 
       ~PDFPrep.check_precondition
-      ~PDFPrep.check_record_state_model_precondition
       ~PDFPrep.main
       ~PDFPrep.prepare_pdf
-      ~PDFPrep.require_clean_repo_general
       ~PDFPrep.setup_custom_script
       ~PDFPrep.update_colrev_pdf_ids
 
