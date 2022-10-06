@@ -42,6 +42,8 @@ class FormatPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by formatting fields"""
+
         # pylint: disable=too-many-branches
         if "author" in record.data and "UNKNOWN" != record.data.get(
             "author", "UNKNOWN"

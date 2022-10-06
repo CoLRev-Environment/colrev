@@ -45,6 +45,7 @@ class TEIPDFPrep(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
 
         if "file" in record.data:
             if not record.get_tei_filename().is_file():

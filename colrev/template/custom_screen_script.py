@@ -32,6 +32,7 @@ class CustomScreen:
     def run_screen(
         self, screen_operation: colrev.screen.Screen, records: dict, split: list
     ) -> dict:
+        """Screen a record"""
 
         screen_data = screen_operation.get_data()
         screening_criteria = screen_operation.review_manager.settings.screen.criteria

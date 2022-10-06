@@ -45,6 +45,7 @@ class RemoveRedundantFieldPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
+        """Prepare the record by removing redundant fields"""
 
         if "article" == record.data["ENTRYTYPE"]:
             if "journal" in record.data and "booktitle" in record.data:

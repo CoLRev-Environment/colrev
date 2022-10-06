@@ -43,6 +43,7 @@ class CorrectRecordTypePrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
 
         if (
             not record.has_inconsistent_fields()

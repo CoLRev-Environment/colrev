@@ -34,6 +34,8 @@ class ScopusSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Scopus"""
+
         result = {"confidence": 0.0}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
@@ -41,6 +43,8 @@ class ScopusSearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Scopus"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -51,10 +55,12 @@ class ScopusSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Scopus"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Scopus"""
 
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":

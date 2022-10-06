@@ -272,7 +272,7 @@ class PDFPrepMan(colrev.operation.Operation):
                 pdf_prep_man_package_endpoint["endpoint"]
             ]
 
-            records = endpoint.prep_man_pdf(self, records)
+            records = endpoint.pdf_prep_man(self, records)
 
 
 if __name__ == "__main__":

@@ -60,6 +60,8 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by resolving BiBTex crossref links (proceedings)"""
+
         if "crossref" in record.data:
             crossref_record = self.__get_crossref_record(
                 prep_operation=prep_operation, record_dict=record.data

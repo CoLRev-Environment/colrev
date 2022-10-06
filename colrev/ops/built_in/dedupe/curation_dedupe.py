@@ -532,6 +532,7 @@ class CurationDedupe(JsonSchemaMixin):
         )
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+        """Run the curation dedupe procedure"""
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
         records = self.__prep_records(records=records)

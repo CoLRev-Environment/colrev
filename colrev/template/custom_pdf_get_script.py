@@ -33,6 +33,7 @@ class CustomPDFGet:
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         record: colrev.record.Record,
     ) -> colrev.record.Record:
+        """Get the PDF"""
 
         record.data["file"] = "filepath"
         record.import_file(review_manager=pdf_get_operation.review_manager)

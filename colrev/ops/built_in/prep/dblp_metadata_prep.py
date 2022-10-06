@@ -48,6 +48,8 @@ class DBLPMetadataPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare a record by retrieving its metadata from DBLP"""
+
         if "dblp_key" in record.data:
             return record
 

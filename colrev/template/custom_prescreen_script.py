@@ -37,6 +37,7 @@ class CustomPrescreen:
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prescreen the record"""
 
         for record in records.values():
             if random.random() < 0.5:

@@ -248,6 +248,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     def pdf_get_man(
         self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
     ) -> dict:
+        """Get the PDF manually based on a cli"""
 
         saved_args = locals()
         pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")

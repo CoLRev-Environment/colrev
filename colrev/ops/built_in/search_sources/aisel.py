@@ -52,6 +52,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for AIS electronic Library (AISeL)"""
+
         result = {"confidence": 0.0}
         # TBD: aisel does not return bibtex?!
         nr_ais_links = data.count("https://aisel.aisnet.org/")
@@ -62,6 +64,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of the AIS electronic Library (AISeL)"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -72,10 +76,13 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for AIS electronic Library (AISeL)"""
 
         return records
 
     def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+        """Source-specific preparation for the AIS electronic Library (AISeL)"""
+
         # pylint: disable=too-many-branches
         ais_mapping: dict = {}
         record = apply_field_mapping(record=record, mapping=ais_mapping)

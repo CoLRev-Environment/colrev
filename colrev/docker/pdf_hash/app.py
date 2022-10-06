@@ -7,6 +7,7 @@ from pdf2image import convert_from_path
 
 
 def main() -> None:
+    """Main entrypoint for the PDF hash service"""
     pdf_path = sys.argv[1]
     page_nr = sys.argv[2]
     hash_size = sys.argv[3]

@@ -87,6 +87,7 @@ class Unpaywall(JsonSchemaMixin):
     def get_pdf(
         self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
     ) -> colrev.record.Record:
+        """Get PDFs from unpaywall"""
 
         if "doi" not in record.data:
             return record

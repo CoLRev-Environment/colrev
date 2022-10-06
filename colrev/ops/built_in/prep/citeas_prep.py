@@ -46,6 +46,8 @@ class CiteAsPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record based on citeas"""
+
         def cite_as_json_to_record(*, data: dict, url: str) -> colrev.record.PrepRecord:
             retrieved_record: dict = {}
 

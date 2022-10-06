@@ -57,6 +57,7 @@ class GithubPages(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
         github_pages_endpoint_details = {
             "endpoint": "GITHUB_PAGES",
             "version": "0.1",
@@ -165,6 +166,7 @@ class GithubPages(JsonSchemaMixin):
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
+        """Update the data/github pages"""
 
         if data_operation.review_manager.dataset.has_changes():
             data_operation.review_manager.logger.error(
@@ -195,6 +197,8 @@ class GithubPages(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
+
         # Note : automatically set all to True / synthesized
         for syn_id in synthesized_record_status_matrix:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True

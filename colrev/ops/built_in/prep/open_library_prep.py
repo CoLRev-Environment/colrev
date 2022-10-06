@@ -79,6 +79,8 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record metadata based on OpenLibrary"""
+
         # pylint: disable=too-many-branches
 
         if record.data.get("ENTRYTYPE", "NA") != "book":

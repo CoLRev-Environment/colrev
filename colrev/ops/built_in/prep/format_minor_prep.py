@@ -45,6 +45,7 @@ class FormatMinorPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
+        """Prepare the record by applying minor formatting changes"""
 
         for field in list(record.data.keys()):
             # Note : some dois (and their provenance) contain html entities

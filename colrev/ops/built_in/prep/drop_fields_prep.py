@@ -44,6 +44,7 @@ class DropFieldsPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by dropping fields that are not required"""
 
         for key in list(record.data.keys()):
             if key not in prep_operation.fields_to_keep:

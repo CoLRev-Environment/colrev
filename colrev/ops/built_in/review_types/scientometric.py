@@ -35,6 +35,7 @@ class ScientometricReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a scientometric study"""
 
         settings.data.data_package_endpoints = [
             {

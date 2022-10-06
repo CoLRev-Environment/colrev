@@ -38,6 +38,7 @@ class CoLRevCLIManPrep(JsonSchemaMixin):
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
+        """Prepare records manually based on cli"""
 
         # saved_args = locals()
 

@@ -49,6 +49,7 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
         prep_man_operation: colrev.ops.prep_man.PrepMan,  # pylint: disable=unused-argument
         records: dict,
     ) -> dict:
+        """Prepare records manually based on  a Jupyter notebeook"""
 
         input(
             "Navigate to the jupyter notebook available at\n"

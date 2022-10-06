@@ -43,6 +43,8 @@ class CuratedPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
+        """Prepare a record by setting curated ones to md_prepared"""
+
         if record.masterdata_is_curated():
             if colrev.record.RecordState.md_imported == record.data["colrev_status"]:
                 record.data["colrev_status"] = colrev.record.RecordState.md_prepared

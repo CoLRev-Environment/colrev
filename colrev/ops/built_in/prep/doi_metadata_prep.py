@@ -48,6 +48,8 @@ class DOIMetadataPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by retrieving its metadata from doi.org"""
+
         if "doi" not in record.data:
             return record
         colrev.ops.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(

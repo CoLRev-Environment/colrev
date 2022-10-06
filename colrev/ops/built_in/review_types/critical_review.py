@@ -35,6 +35,7 @@ class CriticalReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a critical review"""
 
         settings.data.data_package_endpoints = [
             {

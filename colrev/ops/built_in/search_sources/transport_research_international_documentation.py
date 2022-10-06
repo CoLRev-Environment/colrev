@@ -33,8 +33,17 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Transport Research International Documentation"""
+
+        search_operation.review_manager.logger.info(
+            "Automated search not (yet) supported."
+        )
+
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Transport Research International Documentation"""
+
         result = {"confidence": 0.0}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
@@ -48,10 +57,13 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Transport Research International Documentation"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Transport Research International Documentation"""
+
         # TODO (if any)
         return record
 

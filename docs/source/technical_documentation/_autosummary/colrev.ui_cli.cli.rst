@@ -9,19 +9,6 @@ colrev.ui\_cli.cli
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      delete_first_pages_cli
-      get_value
-      print_environment_status
-      validate_commit
-      validate_show
-      view_dedupe_details
-
 
 
 

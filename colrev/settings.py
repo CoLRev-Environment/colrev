@@ -189,6 +189,22 @@ class SearchSource(JsonSchemaMixin):
         self.len_before = len(imported_origins)
         self.source_records_list: typing.List[typing.Dict] = record_list
 
+    def get_dict(self) -> dict:
+        """Get the dict of SearchSources (for endpoint initalization)"""
+
+        def custom_asdict_factory(data) -> dict:  # type: ignore
+            def convert_value(obj: object) -> object:
+                if isinstance(obj, Enum):
+                    return obj.value
+                if isinstance(obj, Path):
+                    return str(obj)
+                return obj
+
+            return {k: convert_value(v) for k, v in data}
+
+        exported_dict = asdict(self, dict_factory=custom_asdict_factory)
+        return exported_dict
+
     def __str__(self) -> str:
         return (
             f"{self.endpoint} (type: {self.search_type}, "

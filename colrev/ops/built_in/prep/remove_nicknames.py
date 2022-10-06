@@ -44,6 +44,8 @@ class RemoveNicknamesPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
+        """Prepare the record by removing nicknames from the author field"""
+
         if "author" in record.data:
             # Replace nicknames in parentheses
             record.data["author"] = re.sub(r"\([^)]*\)", "", record.data["author"])

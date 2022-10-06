@@ -35,6 +35,7 @@ class LiteratureReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a literature review"""
 
         settings.data.data_package_endpoints = [
             {

@@ -45,6 +45,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of local-index"""
+
         params = self.settings.search_parameters
         feed_file = self.settings.filename
 
@@ -160,6 +162,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for local-index"""
+
         # TODO
         result = {"confidence": 0.0}
 
@@ -171,10 +175,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for local-index"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for local-index"""
 
         return record
 

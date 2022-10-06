@@ -99,6 +99,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         url: str,
         record_in: colrev.record.PrepRecord,
     ) -> colrev.record.PrepRecord:
+        """Prepare the record metadata based on SemanticScholar"""
 
         prep_operation.review_manager.logger.debug(url)
         ret = self.session.request(
@@ -134,6 +135,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare a record based on metadata from SemanticScholar"""
 
         same_record_type_required = (
             prep_operation.review_manager.settings.project.curated_masterdata

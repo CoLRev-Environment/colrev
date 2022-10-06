@@ -105,6 +105,8 @@ class PDFCheckOCR(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int,
     ) -> dict:
+        """Prepare the PDF by checking/applying OCR"""
+
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
             return record.data
 

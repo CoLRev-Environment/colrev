@@ -16,6 +16,7 @@ def add_data(
     add_endpoint: str,
     force: bool,
 ) -> None:
+    """Add a data package_endpoint"""
 
     package_manager = review_manager.get_package_manager()
     available_data_endpoins = package_manager.discover_packages(

@@ -45,6 +45,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
     ) -> dict:
+        """Validates the PDF based on the metadata (record)"""
 
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
 
@@ -126,6 +127,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int = 40,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prepare the PDF by validating it against the metadata (record)"""
 
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
             return record.data

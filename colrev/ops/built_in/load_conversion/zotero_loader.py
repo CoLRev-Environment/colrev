@@ -49,6 +49,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
 
         self.zotero_translation_service.start_zotero_translators()
         # pylint: disable=consider-using-with

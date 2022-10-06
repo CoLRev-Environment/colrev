@@ -46,6 +46,8 @@ class BibutilsLoader(JsonSchemaMixin):
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
+
         def bibutils_convert(script: str, data: str) -> str:
 
             if "xml2bib" == script:

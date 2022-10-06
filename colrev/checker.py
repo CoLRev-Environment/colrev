@@ -319,14 +319,6 @@ class Checker:
         #         + "\n    ".join(status_data["invalid_state_transitions"])
         #     )
 
-    def __get_screening_criteria(self, *, criteria_string: str) -> list:
-        screening_criteria = [
-            ec.split("=")[0] for ec in criteria_string.split(";") if ec != "NA"
-        ]
-        if [""] == screening_criteria:
-            screening_criteria = []
-        return screening_criteria
-
     def __check_records_screen(self, *, status_data: dict) -> None:
         """Check consistency of screening criteria and status"""
 

@@ -75,17 +75,6 @@ class SpecialHelpOrder(click.Group):
         return decorator
 
 
-def get_value(msg: str, options: list) -> str:
-    valid_response = False
-    user_input = ""
-    while not valid_response:
-        print(f" {msg} (" + "|".join(options) + ")")
-        user_input = input()
-        if user_input in options:
-            valid_response = True
-    return user_input
-
-
 @click.group(cls=SpecialHelpOrder)
 @click.pass_context
 def main(ctx: click.core.Context) -> None:
@@ -401,7 +390,7 @@ def prep(
         )
 
 
-def view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
     info = dedupe_operation.get_info()
 
@@ -454,7 +443,7 @@ def dedupe(
             return
 
         if view:
-            view_dedupe_details(dedupe_operation)
+            __view_dedupe_details(dedupe_operation)
             return
 
         if source_comparison:
@@ -860,7 +849,7 @@ def pdf_get_man(ctx: click.core.Context, export: bool, discard_missing: bool) ->
         logging.error(exc)
 
 
-def delete_first_pages_cli(
+def __delete_first_pages_cli(
     pdf_get_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
 ) -> None:
 
@@ -921,7 +910,7 @@ def pdf_prep_man(
         pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
         if delete_first_page:
-            delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
+            __delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
             return
         if stats:
             pdf_prep_man_operation.pdf_prep_man_stats()
@@ -1042,7 +1031,7 @@ def data(
         logging.error(exc)
 
 
-def validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
+def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     if value is None:
         return value
 
@@ -1086,7 +1075,7 @@ def validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     "--commit",
     help="Git commit id to validate.",
     default=None,
-    callback=validate_commit,  # type: ignore  # noqa
+    callback=__validate_commit,  # type: ignore  # noqa
 )
 @click.option(
     "-t",
@@ -1221,7 +1210,7 @@ def distribute(ctx: click.core.Context, path: Path) -> None:
         return
 
 
-def print_environment_status(
+def __print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
 
@@ -1294,13 +1283,6 @@ def print_environment_status(
     help="Install a new resource providing its url "
     + "(e.g., a curated metadata repository)",
 )
-@click.option(
-    "-a",
-    "--analyze",
-    is_flag=True,
-    default=False,
-    help="Analyze the LocalIndex for potential problems",
-)
 @click.option("--pull", is_flag=True, default=False, help="Pull curated metadata")
 @click.option(
     "-s", "--status", is_flag=True, default=False, help="Print environment status"
@@ -1331,7 +1313,6 @@ def env(
     ctx: click.core.Context,
     index: bool,
     install: str,
-    analyze: bool,
     pull: bool,
     status: bool,
     start: bool,
@@ -1374,7 +1355,7 @@ def env(
         return
 
     if status:
-        print_environment_status(review_manager)
+        __print_environment_status(review_manager)
         return
 
     if stop:
@@ -1420,9 +1401,6 @@ def env(
 
     elif start:
         print("Started.")
-
-    elif analyze:
-        local_index.analyze()
 
 
 @main.command(help_priority=20)
@@ -1664,7 +1642,7 @@ def service(ctx: click.core.Context) -> None:
         print("No changes to commit")
 
 
-def validate_show(ctx: click.core.Context, param: str, value: str) -> None:
+def __validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     if value not in ["sample", "settings", "prisma", "venv"]:
         raise click.BadParameter("Invalid argument")
 
@@ -1672,7 +1650,7 @@ def validate_show(ctx: click.core.Context, param: str, value: str) -> None:
 @main.command(help_priority=26)
 @click.argument("keyword")
 @click.pass_context
-def show(ctx: click.core.Context, keyword: str, callback=validate_show) -> None:  # type: ignore
+def show(ctx: click.core.Context, keyword: str, callback=__validate_show) -> None:  # type: ignore
     """Show aspects (sample, ...)"""
 
     # pylint: disable=import-outside-toplevel

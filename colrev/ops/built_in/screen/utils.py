@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 def get_screening_criteria_from_user_input(
     *, screen_operation: colrev.ops.screen.Screen, records: dict
 ) -> dict:
+    """Get the screening criteria from user input (initial setup)"""
 
     screening_criteria = screen_operation.review_manager.settings.screen.criteria
     if len(screening_criteria) == 0 and 0 == len(

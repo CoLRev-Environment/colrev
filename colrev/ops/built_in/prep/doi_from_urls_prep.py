@@ -50,6 +50,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by retrieving its DOI from the website (url) if available"""
 
         same_record_type_required = (
             prep_operation.review_manager.settings.project.curated_masterdata

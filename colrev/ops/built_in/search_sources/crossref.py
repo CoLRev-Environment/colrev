@@ -43,6 +43,8 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 "Crossref search_parameters/scope requires a query or journal_issn field"
             )
 
+        settings["search_type"] = colrev.settings.SearchType[settings["search_type"]]
+        settings["filename"] = Path(settings["filename"])
         assert settings["search_type"] in [
             colrev.settings.SearchType.DB,
             colrev.settings.SearchType.TOC,
@@ -52,6 +54,8 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Crossref"""
+
         params = self.settings.search_parameters
         feed_file = self.settings.filename
         # pylint: disable=import-outside-toplevel
@@ -101,14 +105,12 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 #     container_title=
                 #       "Journal of the Association for Information Systems"
                 # )
-                yield from crossref_connector.get_bibliographic_query_return(
-                    **crossref_query
-                )
+                yield from crossref_connector.bibliographic_query(**crossref_query)
 
             if "journal_issn" in params.get("scope", {}):
 
                 for journal_issn in params["scope"]["journal_issn"].split("|"):
-                    yield from crossref_connector.get_journal_query_return(
+                    yield from crossref_connector.journal_query(
                         journal_issn=journal_issn
                     )
 
@@ -151,6 +153,8 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Crossref"""
+
         result = {"confidence": 0.0}
 
         return result
@@ -161,10 +165,12 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Crossref"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Crossref"""
 
         return record
 

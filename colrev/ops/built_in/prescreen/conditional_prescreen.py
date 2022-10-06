@@ -43,6 +43,8 @@ class ConditionalPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prescreen records based on predefined conditions (rules)"""
+
         # TODO : conditions as a settings/parameter
         saved_args = locals()
         saved_args["include_all"] = ""

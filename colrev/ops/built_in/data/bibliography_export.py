@@ -70,6 +70,7 @@ class BibliographyExport(JsonSchemaMixin):
 
     # TODO : change to DefaultSettings structure...
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",
             "endnote_data_endpoint_version": "0.1",
@@ -199,6 +200,7 @@ class BibliographyExport(JsonSchemaMixin):
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
+        """Update the data/bibliography"""
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 
@@ -218,6 +220,7 @@ class BibliographyExport(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True

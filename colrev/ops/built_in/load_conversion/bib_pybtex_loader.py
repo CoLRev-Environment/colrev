@@ -45,6 +45,7 @@ class BibPybtexLoader(JsonSchemaMixin):
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
         records = {}
         # TODO : implement set_incremental_ids() and fix_keys() (text-file replacements)
         # here (pybtex does not load records with identical IDs /

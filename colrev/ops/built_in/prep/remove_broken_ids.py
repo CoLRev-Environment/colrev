@@ -45,6 +45,7 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
 
         if "doi" in record.data:
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/

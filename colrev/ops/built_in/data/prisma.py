@@ -37,6 +37,7 @@ class PRISMA(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
         prisma_endpoint_details = {
             "endpoint": "PRISMA",
             "prisma_data_endpoint_version": "0.1",
@@ -49,6 +50,7 @@ class PRISMA(JsonSchemaMixin):
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
+        """Update the data/prisma diagram"""
 
         prisma_resource_path = Path("template/") / Path("PRISMA.csv")
         prisma_path = Path("output/PRISMA.csv")
@@ -103,6 +105,7 @@ class PRISMA(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
 
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):

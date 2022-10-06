@@ -35,6 +35,7 @@ class DescriptiveReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a descriptive review"""
 
         settings.data.data_package_endpoints = [
             {

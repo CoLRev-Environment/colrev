@@ -45,12 +45,16 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for unknown sources"""
+
         # TODO
         result = {"confidence": 0.0}
 
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of an unknown source"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -61,10 +65,12 @@ class UnknownSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for unknown sources"""
 
         return records
 
     def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+        """Source-specific preparation for unknown sources"""
 
         return record
 

@@ -37,6 +37,7 @@ class CustomSearch:
         params: dict,  # pylint: disable=unused-argument
         feed_file: Path,
     ) -> None:
+        """Run the search"""
 
         max_id = 1
         if not feed_file.is_file():
@@ -69,6 +70,8 @@ class CustomSearch:
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:
+        """Validate the search parameters"""
+
         if " SCOPE " not in query:
             raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a SCOPE section"
@@ -83,6 +86,8 @@ class CustomSearch:
     def heuristic(
         self, filename: Path, data: str  # pylint: disable=unused-argument
     ) -> dict:
+        """Heuristic to identify the custom source"""
+
         # TODO
         result = {"confidence": 0}
 
@@ -94,9 +99,11 @@ class CustomSearch:
         source: colrev.settings.SearchSource,  # pylint: disable=unused-argument
         records: dict,
     ) -> dict:
+        """Load fixes for the custom source"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for the custom source"""
 
         return record

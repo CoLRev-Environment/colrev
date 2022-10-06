@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 class Distribute(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+        # pylint: disable=duplicate-code
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.check,

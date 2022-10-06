@@ -22,7 +22,7 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli.CoLRevCLIPDFManPrep
       ~CoLRevCLIPDFManPrep.from_json
       ~CoLRevCLIPDFManPrep.from_object
       ~CoLRevCLIPDFManPrep.json_schema
-      ~CoLRevCLIPDFManPrep.prep_man_pdf
+      ~CoLRevCLIPDFManPrep.pdf_prep_man
       ~CoLRevCLIPDFManPrep.register_field_encoders
       ~CoLRevCLIPDFManPrep.to_dict
       ~CoLRevCLIPDFManPrep.to_json

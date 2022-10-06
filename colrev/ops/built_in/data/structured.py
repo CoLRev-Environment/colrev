@@ -54,6 +54,7 @@ class StructuredData(JsonSchemaMixin):
         )
 
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
         structured_endpoint_details = {
             "endpoint": "STRUCTURED",
             "version": "0.1",
@@ -68,6 +69,7 @@ class StructuredData(JsonSchemaMixin):
         return structured_endpoint_details
 
     def validate_structured_data(self) -> None:
+        """Validate the extracted data"""
 
         # TODO : implement the following:
         # # Check whether there are duplicate IDs in data.csv
@@ -100,6 +102,8 @@ class StructuredData(JsonSchemaMixin):
         records: dict,
         synthesized_record_status_matrix: dict,
     ) -> None:
+        """Update the data/structured data extraction"""
+
         def update_structured_data(
             *,
             review_manager: colrev.review_manager.ReviewManager,
@@ -176,6 +180,8 @@ class StructuredData(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
+
         def get_data_extracted(
             data_path: Path, records_for_data_extraction: list
         ) -> list:

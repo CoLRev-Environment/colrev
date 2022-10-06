@@ -128,6 +128,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return feed_file_records
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of PDFs (backward search based on GROBID)"""
 
         if not search_operation.review_manager.dataset.records_file.is_file():
             print("No records imported. Cannot run backward search yet.")
@@ -163,6 +164,8 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for PDF backward searches (GROBID)"""
+
         result = {"confidence": 0.0}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0
@@ -175,10 +178,12 @@ class BackwardSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for PDF backward searches (GROBID)"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for PDF backward searches (GROBID)"""
 
         return record
 

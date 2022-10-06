@@ -17,12 +17,10 @@ colrev.ops.built\_in.prescreen.asreview.ASReviewPrescreen
       :nosignatures:
 
       ~ASReviewPrescreen.all_json_schemas
-      ~ASReviewPrescreen.export_for_asreview
       ~ASReviewPrescreen.field_mapping
       ~ASReviewPrescreen.from_dict
       ~ASReviewPrescreen.from_json
       ~ASReviewPrescreen.from_object
-      ~ASReviewPrescreen.import_from_asreview
       ~ASReviewPrescreen.json_schema
       ~ASReviewPrescreen.register_field_encoders
       ~ASReviewPrescreen.run_prescreen

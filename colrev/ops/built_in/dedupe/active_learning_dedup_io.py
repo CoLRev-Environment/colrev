@@ -414,6 +414,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         )
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+        """Run the console labeling to train the active learning model"""
 
         saved_args: dict = {}
         in_memory = True

@@ -50,6 +50,9 @@ class SettingsEditor:
         print(f"Open at {url}")
 
     def open_settings_editor(self) -> None:
+        """Open the settings editor"""
+
+        # pylint: disable=too-many-statements
 
         app = Flask(__name__, static_url_path="", static_folder="build")
         CORS(app)
@@ -80,7 +83,7 @@ class SettingsEditor:
             return response
 
         @app.route("/api/saveSettings", methods=["POST"])
-        def saveSettings(create_commit: bool = False) -> str:
+        def saveSettings() -> str:
             commit_selected = request.args.get("commitSelected")
 
             # print("saveSettings.commit_selected", commit_selected)
@@ -755,6 +758,7 @@ class SettingsEditor:
 
 
 def main() -> None:
+    """Main entrypoint for the settings editor"""
 
     if DEV:
         se_instance = SettingsEditor()

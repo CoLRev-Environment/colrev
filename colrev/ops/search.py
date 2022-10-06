@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import typing
-from dataclasses import asdict
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -28,14 +26,7 @@ class Search(colrev.operation.Operation):
 
         self.sources = review_manager.settings.sources
 
-        package_manager = self.review_manager.get_package_manager()
-        self.search_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[asdict(s) for s in self.sources],
-            operation=self,
-        )
+        self.package_manager = self.review_manager.get_package_manager()
 
     def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
         """Save the feed file"""
@@ -186,7 +177,6 @@ class Search(colrev.operation.Operation):
 
         for source in sources_selected:
             source.filename = self.review_manager.path / Path(source.filename)
-
         return sources_selected
 
     def main(self, *, selection_str: str = None) -> None:
@@ -202,8 +192,14 @@ class Search(colrev.operation.Operation):
                 f"Retrieve from {source.endpoint} ({source.filename.name})"
             )
 
-            endpoint = self.search_package_endpoints[source.endpoint.lower()]
-            endpoint.run_search(
+            endpoint_dict = self.package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                selected_packages=[source.get_dict()],
+                operation=self,
+            )
+
+            endpoint = endpoint_dict[source.endpoint.lower()]
+            endpoint.run_search(  # type: ignore
                 search_operation=self,
             )
 
@@ -247,10 +243,6 @@ class Search(colrev.operation.Operation):
 
         for source in self.sources:
             self.review_manager.p_printer.pprint(source)
-
-        print("\nOptions:")
-        options = ", ".join(list(self.search_package_endpoints.keys()))
-        print(f"- endpoints: {options}")
 
 
 if __name__ == "__main__":

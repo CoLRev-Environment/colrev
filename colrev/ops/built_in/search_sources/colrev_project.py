@@ -46,6 +46,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of a CoLRev project"""
 
         if not self.settings.filename.is_file():
             records = []
@@ -122,6 +123,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for CoLRev projects"""
+
         # TODO
         result = {"confidence": 0.0}
 
@@ -133,10 +136,12 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for CoLRev projects"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for CoLRev projects"""
 
         return record
 

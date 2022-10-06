@@ -16,12 +16,12 @@ colrev.ops.built\_in.database\_connectors.CrossrefConnector
    .. autosummary::
       :nosignatures:
 
+      ~CrossrefConnector.bibliographic_query
       ~CrossrefConnector.check_status
       ~CrossrefConnector.crossref_json_to_record
       ~CrossrefConnector.crossref_query
-      ~CrossrefConnector.get_bibliographic_query_return
-      ~CrossrefConnector.get_journal_query_return
       ~CrossrefConnector.get_masterdata_from_crossref
+      ~CrossrefConnector.journal_query
 
 
 

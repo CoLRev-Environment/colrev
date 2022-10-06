@@ -37,6 +37,7 @@ class CuratedMasterdata(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a curated masterdata repository"""
 
         # replace readme
         colrev.env.utils.retrieve_package_file(

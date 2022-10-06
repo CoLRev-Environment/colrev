@@ -47,6 +47,7 @@ class LocalIndexPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record metadtaa based on local-index"""
 
         # TODO: how to distinguish masterdata and complementary CURATED sources?
 

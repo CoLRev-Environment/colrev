@@ -36,6 +36,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Web of Science"""
 
         result = {"confidence": 0.0}
 
@@ -52,6 +53,8 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Web of Science"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -62,10 +65,12 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Web of Science"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Web of Science"""
 
         return record
 

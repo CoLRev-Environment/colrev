@@ -43,6 +43,7 @@ class MarkdownLoader(JsonSchemaMixin):
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
 
         grobid_service = load_operation.review_manager.get_grobid_service()
 

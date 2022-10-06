@@ -39,9 +39,10 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def prep_man_pdf(
+    def pdf_prep_man(
         self, pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, records: dict
     ) -> dict:
+        """Prepare PDF manually based on a cli"""
 
         _pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 

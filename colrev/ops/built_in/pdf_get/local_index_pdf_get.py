@@ -37,6 +37,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
     def get_pdf(
         self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
     ) -> colrev.record.Record:
+        """Get PDFs from the local-index"""
 
         local_index = pdf_get_operation.review_manager.get_local_index()
 

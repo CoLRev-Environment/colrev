@@ -27,6 +27,8 @@ class CustomData:
         )
 
     def get_default_setup(self) -> dict:
+        """Get the default setup for the custom data script"""
+
         custom_endpoint_details = {
             "endpoint": "CustomDataFormat",
             "custom_data_format_version": "0.1",
@@ -40,7 +42,7 @@ class CustomData:
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
-        pass
+        """Update the data"""
 
     def update_record_status_matrix(
         self,
@@ -48,6 +50,8 @@ class CustomData:
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status matrix"""
+
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True

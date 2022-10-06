@@ -24,6 +24,5 @@ colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
       ~CoLRevCLIScreen.json_schema
       ~CoLRevCLIScreen.register_field_encoders
       ~CoLRevCLIScreen.run_screen
-      ~CoLRevCLIScreen.screen_cli
       ~CoLRevCLIScreen.to_dict
       ~CoLRevCLIScreen.to_json

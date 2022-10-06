@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 class SpreadsheetLoadUtility:
     @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
+        """Preprocess records imported from a spreadsheet"""
+
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 
@@ -124,6 +126,7 @@ class CSVLoader(JsonSchemaMixin):
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
 
         try:
             data = pd.read_csv(source.filename)
@@ -178,6 +181,7 @@ class ExcelLoader:
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
+        """Load records from the source"""
 
         try:
             data = pd.read_excel(

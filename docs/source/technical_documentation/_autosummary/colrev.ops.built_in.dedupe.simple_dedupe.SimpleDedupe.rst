@@ -17,7 +17,6 @@ colrev.ops.built\_in.dedupe.simple\_dedupe.SimpleDedupe
       :nosignatures:
 
       ~SimpleDedupe.all_json_schemas
-      ~SimpleDedupe.append_merges
       ~SimpleDedupe.field_mapping
       ~SimpleDedupe.from_dict
       ~SimpleDedupe.from_json

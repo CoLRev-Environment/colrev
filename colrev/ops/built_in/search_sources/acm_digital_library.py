@@ -35,6 +35,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for ACM dDigital Library"""
+
         result = {"confidence": 0.0}
 
         # Simple heuristic:
@@ -45,6 +47,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of ACM Digital Library"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -55,10 +59,13 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for ACM Digital Library"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for ACM Digital Library"""
+
         # TODO (if any)
         return record
 

@@ -35,6 +35,8 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for GoogleScholar"""
+
         result = {"confidence": 0.0}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
@@ -42,6 +44,8 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of GoogleScholar"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -52,10 +56,12 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for GoogleScholar"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for GoogleScholar"""
 
         return record
 

@@ -114,6 +114,8 @@ class SpreadsheetScreen(JsonSchemaMixin):
         split: list,
         export_table_format: str = "csv",
     ) -> None:
+        """Export a screening table"""
+
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
@@ -154,6 +156,7 @@ class SpreadsheetScreen(JsonSchemaMixin):
         records: dict,
         import_table_path: Path = None,
     ) -> None:
+        """Import a screening table"""
 
         # pylint: disable=duplicate-code
         if import_table_path is None:
@@ -207,6 +210,7 @@ class SpreadsheetScreen(JsonSchemaMixin):
     def run_screen(
         self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
     ) -> dict:
+        """Screen records based on screening tables"""
 
         if "y" == input("create screen spreadsheet [y,n]?"):
             self.export_table(screen_operation, records, split)

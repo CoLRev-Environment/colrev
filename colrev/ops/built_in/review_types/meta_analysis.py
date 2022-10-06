@@ -35,6 +35,7 @@ class MetaAnalysis(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a meta-analysis"""
 
         settings.data.data_package_endpoints = [
             {

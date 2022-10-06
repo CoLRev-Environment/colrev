@@ -222,6 +222,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         return results
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+        """Run the dedupe procedure for remaining records in curations"""
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements

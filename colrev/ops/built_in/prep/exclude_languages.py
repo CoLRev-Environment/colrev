@@ -79,6 +79,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by excluding records whose metadata is not in English"""
 
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges

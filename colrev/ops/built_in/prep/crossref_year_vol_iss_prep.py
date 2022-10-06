@@ -50,6 +50,7 @@ class CrossrefYearVolIssPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare a record by adding missing years based on journal/volume/number from Crossref"""
 
         # The year depends on journal x volume x issue
         if (

@@ -84,7 +84,7 @@ class Manuscript(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         if "word_template" not in settings:
-            settings["word_template"] = self.retrieve_default_word_template()
+            settings["word_template"] = self.__retrieve_default_word_template()
 
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
@@ -112,16 +112,17 @@ class Manuscript(JsonSchemaMixin):
         self.__create_non_sample_references_bib()
 
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
 
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
             "version": "0.1",
-            "word_template": self.retrieve_default_word_template(),
+            "word_template": self.__retrieve_default_word_template(),
         }
 
         return manuscript_endpoint_details
 
-    def retrieve_default_word_template(self) -> Path:
+    def __retrieve_default_word_template(self) -> Path:
         template_name = self.data_operation.review_manager.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
@@ -136,7 +137,7 @@ class Manuscript(JsonSchemaMixin):
         )
         return template_name
 
-    def check_new_record_source_tag(
+    def __check_new_record_source_tag(
         self,
     ) -> None:
 
@@ -342,7 +343,7 @@ class Manuscript(JsonSchemaMixin):
         missing_records = sorted(missing_records)
         review_manager.logger.debug(f"missing_records: {missing_records}")
 
-        self.check_new_record_source_tag()
+        self.__check_new_record_source_tag()
 
         if 0 == len(missing_records):
             review_manager.report_logger.info(
@@ -365,6 +366,7 @@ class Manuscript(JsonSchemaMixin):
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
     ) -> typing.Dict:
+        """Update the manuscript (add new records after the NEW_RECORD_SOURCE_TAG)"""
 
         if not self.settings.paper_path.is_file():
             self.__create_paper(review_manager=review_manager)
@@ -423,6 +425,7 @@ class Manuscript(JsonSchemaMixin):
             raise exc
 
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
+        """Build the manuscript (based on pandoc)"""
 
         data_operation.review_manager.logger.info("Build manuscript")
 
@@ -446,7 +449,7 @@ class Manuscript(JsonSchemaMixin):
         word_template = self.settings.word_template
 
         if not word_template.is_file():
-            self.retrieve_default_word_template()
+            self.__retrieve_default_word_template()
         assert word_template.is_file()
 
         paper_relative_path = self.settings.paper_path.relative_to(
@@ -477,6 +480,8 @@ class Manuscript(JsonSchemaMixin):
         records: dict,
         synthesized_record_status_matrix: dict,
     ) -> None:
+        """Update the data/manuscript"""
+
         records = self.update_manuscript(
             review_manager=data_operation.review_manager,
             records=records,
@@ -530,6 +535,7 @@ class Manuscript(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = self.__get_synthesized_ids_paper(
             paper=self.settings.paper_path,

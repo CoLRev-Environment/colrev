@@ -44,7 +44,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
-        """When metadata provided by DOI/crossref or on the website (url) differs from
+        """Prepare records by removing IDs (DOIs/URLs) that do not match with the metadata
+
+        When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
         # pylint: disable=too-many-branches

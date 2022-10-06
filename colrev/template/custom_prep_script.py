@@ -38,6 +38,7 @@ class CustomPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.Record,
     ) -> colrev.record.Record:
+        """Update record (metadata)"""
 
         if "journal" in record.data:
             if "MISQ" == record.data["journal"]:

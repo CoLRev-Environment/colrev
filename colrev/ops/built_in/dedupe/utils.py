@@ -17,6 +17,7 @@ def console_duplicate_instance_label(
     n_distinct: int,
     examples_buffer: list,
 ) -> str:
+    """Convenience function for console duplicate labeling"""
 
     if manual:
         os.system("cls" if os.name == "nt" else "clear")

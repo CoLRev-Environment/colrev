@@ -35,6 +35,7 @@ class CustomPDFPrep:
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
+        """Prepare the PDF"""
 
         if random.random() < 0.8:
             record.add_data_provenance_note(key="file", note="custom_issue_detected")

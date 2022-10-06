@@ -8,6 +8,8 @@ import colrev.ui_cli.cli_colors as colors
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Print the sample on cli"""
+
     colrev.operation.CheckOperation(review_manager=review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
@@ -28,6 +30,7 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
 
 
 def print_venv_notes() -> None:
+    """Print the virtual environment details on cli"""
 
     # TODO : test installation of colrev in venv
 

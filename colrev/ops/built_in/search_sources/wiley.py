@@ -33,12 +33,16 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Wiley"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Wiley"""
+
         result = {"confidence": 0.0}
 
         # Simple heuristic:
@@ -54,10 +58,13 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Wiley"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Wiley"""
+
         # TODO (if any)
         return record
 

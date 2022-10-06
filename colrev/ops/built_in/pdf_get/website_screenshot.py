@@ -37,6 +37,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
     def get_pdf(
         self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
     ) -> colrev.record.Record:
+        """Get a PDF of the website (screenshot)"""
 
         screenshot_service = pdf_get_operation.review_manager.get_screenshot_service()
 

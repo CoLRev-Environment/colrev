@@ -66,6 +66,7 @@ class Zettlr(JsonSchemaMixin):
         self.zettlr_config_path = self.endpoint_path / self.ZETTLR_CONFIG_PATH_RELATIVE
 
     def get_default_setup(self) -> dict:
+        """Get the default setup"""
         zettlr_endpoint_details = {
             "endpoint": "ZETTLR",
             "version": "0.1",
@@ -288,6 +289,7 @@ class Zettlr(JsonSchemaMixin):
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
+        """Update the data/zettlr notes"""
 
         data_operation.review_manager.logger.info("Export to zettlr endpoint")
 
@@ -308,6 +310,8 @@ class Zettlr(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
+        """Update the record_status_matrix"""
+
         # TODO : not yet implemented!
         # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.
 

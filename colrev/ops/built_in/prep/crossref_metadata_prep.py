@@ -48,6 +48,8 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare a record based on Crossref metadata"""
+
         colrev.ops.built_in.database_connectors.CrossrefConnector.get_masterdata_from_crossref(
             prep_operation=prep_operation, record=record
         )

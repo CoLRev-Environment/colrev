@@ -22,6 +22,7 @@ colrev.settings.SearchSource
       ~SearchSource.from_json
       ~SearchSource.from_object
       ~SearchSource.get_corresponding_bib_file
+      ~SearchSource.get_dict
       ~SearchSource.json_schema
       ~SearchSource.register_field_encoders
       ~SearchSource.setup_for_load

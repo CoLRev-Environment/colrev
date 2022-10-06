@@ -41,6 +41,7 @@ class UpdateMetadataStatusPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
+        """Prepare the record by updating its metadata status"""
 
         record.update_metadata_status(review_manager=prep_operation.review_manager)
         return record

@@ -216,6 +216,7 @@ class ScopePrescreen(JsonSchemaMixin):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prescreen records based on the scope parameters"""
 
         saved_args = locals()
 

@@ -17,14 +17,15 @@ if TYPE_CHECKING:
 
 
 def print_review_instructions(review_instructions: dict) -> None:
+    """Print the review instructions on cli"""
 
     print("Review project\n")
 
     verbose = False
 
-    key_list = [list(x.keys()) for x in review_instructions]
-    keys = [item for sublist in key_list for item in sublist]
-    priority_item_set = "priority" in keys
+    # key_list = [list(x.keys()) for x in review_instructions]
+    # keys = [item for sublist in key_list for item in sublist]
+    # priority_item_set = "priority" in keys
 
     for review_instruction in review_instructions:
         # TODO : prioritize based on the order of instructions (most important first)
@@ -45,6 +46,7 @@ def print_review_instructions(review_instructions: dict) -> None:
 
 
 def print_collaboration_instructions(collaboration_instructions: dict) -> None:
+    """Print the collaboration instructions on cli"""
 
     # pylint: disable=too-many-branches
 
@@ -80,6 +82,8 @@ def print_collaboration_instructions(collaboration_instructions: dict) -> None:
 
 
 def print_environment_instructions(environment_instructions: dict) -> None:
+    """Print the environment instructions on cli"""
+
     if len(environment_instructions) == 0:
         return
 
@@ -106,6 +110,8 @@ def print_environment_instructions(environment_instructions: dict) -> None:
 
 
 def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
+    """Print the progress bar on cli"""
+
     # Prints the percentage of atomic processing tasks that have been completed
     # possible extension: estimate the number of manual tasks (making assumptions on
     # frequencies of man-prep, ...)?
@@ -130,6 +136,7 @@ def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
 
 
 def print_project_status(status_operation: colrev.ops.status.Status) -> None:
+    """Print the project status on cli"""
 
     try:
         status_stats = status_operation.review_manager.get_status_stats()

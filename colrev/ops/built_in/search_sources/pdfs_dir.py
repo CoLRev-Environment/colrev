@@ -467,6 +467,7 @@ class PDFSearchSource(JsonSchemaMixin):
         return pdfs_to_index
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of a PDF directory (based on GROBID)"""
 
         records = self.__load_records(search_operation=search_operation)
 
@@ -548,6 +549,8 @@ class PDFSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for PDF directories (GROBID)"""
+
         result = {"confidence": 0.0}
 
         if filename.suffix == ".pdf" and not bws.BackwardSearchSource.heuristic(
@@ -564,10 +567,12 @@ class PDFSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for PDF directories (GROBID)"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for PDF directories (GROBID)"""
 
         return record
 

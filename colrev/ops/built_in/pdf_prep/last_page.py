@@ -47,6 +47,7 @@ class PDFLastPage(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
+        """Prepare the PDF by removing additional materials (if any)"""
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
         lp_path = local_index.local_environment_path / Path(".lastpages")

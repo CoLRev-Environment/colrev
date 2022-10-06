@@ -35,6 +35,7 @@ class QualitativeSystematicReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a qualitative systematic review"""
 
         settings.data.data_package_endpoints = [
             {

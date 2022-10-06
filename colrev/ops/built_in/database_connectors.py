@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 class OpenLibraryConnector:
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
+        """Check the status (availability) of the OpenLibrary API"""
 
         test_rec = {
             "ENTRYTYPE": "book",
@@ -126,6 +127,7 @@ class URLConnector:
     def retrieve_md_from_url(
         cls, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
     ) -> None:
+        """Retrieve the metadata the associated website (url) based on Zotero"""
 
         zotero_translation_service = (
             prep_operation.review_manager.get_zotero_translation_service()
@@ -178,6 +180,8 @@ class DOIConnector:
         record: colrev.record.PrepRecord,
         timeout: int = 10,
     ) -> colrev.record.Record:
+        """Retrieve the metadata from DOI.org based on a record (similarity)"""
+
         if "doi" not in record.data:
             return record
 
@@ -248,6 +252,7 @@ class DOIConnector:
         record: colrev.record.Record,
         timeout: int = 10,
     ) -> None:
+        """Get the website link from DOI resolution API"""
 
         doi_url = f"https://www.doi.org/{record.data['doi']}"
 
@@ -347,6 +352,7 @@ class CrossrefConnector:
 
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
+        """Check status (availability) of the Crossref API"""
 
         try:
             test_rec = {
@@ -379,7 +385,9 @@ class CrossrefConnector:
                     "CROSSREF"
                 ) from exc
 
-    def get_bibliographic_query_return(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
+    def bibliographic_query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
+        """Get records from Crossref based on a bibliographic query"""
+
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Works
 
@@ -393,7 +401,9 @@ class CrossrefConnector:
         for item in crossref_query_return:
             yield self.crossref_json_to_record(item=item)
 
-    def get_journal_query_return(self, *, journal_issn: str) -> typing.Iterator[dict]:
+    def journal_query(self, *, journal_issn: str) -> typing.Iterator[dict]:
+        """Get records of a selected journal from Crossref"""
+
         # pylint: disable=import-outside-toplevel
         from crossref.restful import Journals
 
@@ -406,6 +416,8 @@ class CrossrefConnector:
 
     @classmethod
     def crossref_json_to_record(cls, *, item: dict) -> dict:
+        """Convert a crossref item to a record dict"""
+
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
         # pylint: disable=too-many-locals
@@ -628,6 +640,7 @@ class CrossrefConnector:
         jour_vol_iss_list: bool = False,
         timeout: int = 10,
     ) -> list:
+        """Retrieve records from Crossref based on a query"""
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
@@ -707,6 +720,8 @@ class CrossrefConnector:
         record: colrev.record.Record,
         timeout: int = 10,
     ) -> colrev.record.Record:
+        """Retrieve masterdata from Crossref based on similarity with the record provided"""
+
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
@@ -789,6 +804,7 @@ class DBLPConnector:
 
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
+        """Check status (availability) of DBLP API"""
 
         try:
             test_rec = {
@@ -955,6 +971,7 @@ class DBLPConnector:
         url: str = None,
         timeout: int = 10,
     ) -> list:
+        """Retrieve records from DBLP based on a query"""
 
         try:
             assert query is not None or url is not None

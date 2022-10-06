@@ -198,7 +198,7 @@ class PDFPrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def prep_man_pdf(  # type: ignore
+    def pdf_prep_man(  # type: ignore
         pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
         """Run the prep-man operation"""

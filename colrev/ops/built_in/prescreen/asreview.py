@@ -57,7 +57,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
                 "Please install it\n  pip install asreview"
             ) from exc
 
-    def export_for_asreview(
+    def __export_for_asreview(
         self,
         prescreen: colrev.ops.prescreen.Prescreen,
         records: dict,
@@ -94,7 +94,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
         to_screen_df = pd.DataFrame.from_dict(records)
         to_screen_df.to_csv(self.export_filepath, quoting=csv.QUOTE_NONNUMERIC)
 
-    def import_from_asreview(
+    def __import_from_asreview(
         self, prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict
     ) -> None:
         def get_last_modified(input_paths: list[str]) -> Path:
@@ -210,13 +210,14 @@ class ASReviewPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,
     ) -> dict:
+        """Prescreen records based on ASReview"""
 
         # there may be an optional setting to change the endpoint_path
 
         endpoint_path_empty = not any(Path(self.endpoint_path).iterdir())
 
         # Note : we always update/overwrite the to_screen csv
-        self.export_for_asreview(prescreen_operation, records, split)
+        self.__export_for_asreview(prescreen_operation, records, split)
 
         if endpoint_path_empty:
             start_screen_selected = True
@@ -250,7 +251,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
                 print("\n\n\nCompleted prescreen. ")
 
         if "y" == input("Import prescreen from asreview [y,n]?"):
-            self.import_from_asreview(prescreen_operation, records)
+            self.__import_from_asreview(prescreen_operation, records)
 
             if prescreen_operation.review_manager.dataset.has_changes():
                 if "y" == input("create commit [y,n]?"):

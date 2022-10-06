@@ -89,12 +89,12 @@ class SimpleDedupe(JsonSchemaMixin):
         details_col = records_df.columns.get_loc("details")  # type: ignore
         return records_df.iloc[:, [id_col, sim_col, details_col]]
 
-    def append_merges(
+    def __append_merges(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
     ) -> dict:
 
         dedupe_operation.review_manager.logger.debug(
-            f'append_merges {batch_item["record"]}'
+            f'__append_merges {batch_item["record"]}'
         )
 
         records_df = batch_item["queue"]
@@ -341,7 +341,7 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_batch_results = []
         for item in batch_data:
             dedupe_batch_results.append(
-                self.append_merges(dedupe_operation=dedupe_operation, batch_item=item)
+                self.__append_merges(dedupe_operation=dedupe_operation, batch_item=item)
             )
 
         # dedupe_batch[-1]['queue'].to_csv('last_records.csv')

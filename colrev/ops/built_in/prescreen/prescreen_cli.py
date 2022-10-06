@@ -99,6 +99,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,
     ) -> dict:
+        """Prescreen records based on a cli"""
 
         if not split:
             split = []

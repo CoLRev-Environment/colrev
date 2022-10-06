@@ -34,6 +34,8 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Pubmed"""
+
         result = {"confidence": 0.0}
 
         # Simple heuristic:
@@ -47,6 +49,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+        """Run a search of Pubmed"""
+
         search_operation.review_manager.logger.info(
             "Automated search not (yet) supported."
         )
@@ -57,10 +61,12 @@ class PubMedSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
+        """Load fixes for Pubmed"""
 
         return records
 
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Source-specific preparation for Pubmed"""
 
         if "first_author" in record.data:
             record.remove_field(key="first_author")

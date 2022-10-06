@@ -35,6 +35,7 @@ class ConceptualReview(JsonSchemaMixin):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
+        """Initialize a conceptual review"""
 
         settings.data.data_package_endpoints = [
             {

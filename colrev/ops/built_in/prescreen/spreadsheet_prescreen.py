@@ -48,6 +48,8 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
         split: list,
         export_table_format: str = "csv",
     ) -> None:
+        """Export a prescreen table"""
+
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
@@ -120,6 +122,8 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
         records: dict,
         import_table_path: str = "prescreen.csv",
     ) -> None:
+        """Import a prescreen table"""
+
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
             prescreen_operation.review_manager.logger.error(
@@ -154,6 +158,7 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,
     ) -> dict:
+        """Prescreen records based on screening tables"""
 
         if "y" == input("create prescreen spreadsheet [y,n]?"):
             self.export_table(
