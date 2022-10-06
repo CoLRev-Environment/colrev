@@ -27,7 +27,7 @@ class Load(colrev.operation.Operation):
         notify_state_transition_operation: bool = True,
     ) -> None:
 
-        review_manager.logger.info("Loading source heuristics...")
+        review_manager.logger.info("Loading source package endpoints...")
 
         super().__init__(
             review_manager=review_manager,
@@ -36,10 +36,10 @@ class Load(colrev.operation.Operation):
         )
         self.verbose = True
 
-        package_manager = self.review_manager.get_package_manager()
+        self.package_manager = self.review_manager.get_package_manager()
         self.load_conversion_package_endpoints: dict[
             str, typing.Any
-        ] = package_manager.load_packages(
+        ] = self.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             selected_packages=[
                 s.load_conversion_package_endpoint
@@ -48,28 +48,6 @@ class Load(colrev.operation.Operation):
             ],
             operation=self,
         )
-
-        self.all_available_packages_names = package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            installed_only=True,
-        )
-
-        self.all_available_packages = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            selected_packages=[
-                {"endpoint": p} for p in self.all_available_packages_names
-            ],
-            operation=self,
-        )
-
-        self.supported_extensions = [
-            item
-            for sublist in [
-                e.supported_extensions  # type: ignore
-                for _, e in self.all_available_packages.items()
-            ]
-            for item in sublist
-        ]
 
         self.search_sources = self.review_manager.get_search_sources()
 
@@ -114,10 +92,124 @@ class Load(colrev.operation.Operation):
         ]
         return imported_origins
 
+    def __apply_source_heuristics(
+        self, *, filepath: Path, all_available_packages: dict
+    ) -> list[typing.Dict]:
+        """Apply heuristics to identify source"""
+
+        def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
+
+            filetype = filepath.suffix.replace(".", "")
+
+            for (
+                package_identifier,
+                selected_package,
+            ) in all_available_packages.items():
+                if filetype in selected_package.supported_extensions:  # type: ignore
+                    return {"endpoint": package_identifier}
+
+            raise colrev_exceptions.UnsupportedImportFormatError(filepath)
+
+        data = ""
+        try:
+            data = filepath.read_text()
+        except UnicodeDecodeError:
+            pass
+
+        results_list = []
+        for (
+            endpoint,
+            endpoint_class,
+        ) in all_available_packages.items():
+            # pylint: disable=no-member
+            has_heuristic = getattr(endpoint_class, "heuristic", None)
+            if not has_heuristic:
+                continue
+            res = endpoint_class.heuristic(filepath, data)  # type: ignore
+            if res["confidence"] > 0:
+                search_type = colrev.settings.SearchType("DB")
+
+                res["endpoint"] = endpoint
+
+                if "filename" not in res:
+                    # Correct the file extension if necessary
+                    if re.search("%0", data) and filepath.suffix not in [".enl"]:
+                        new_filename = filepath.with_suffix(".enl")
+                        self.review_manager.logger.info(
+                            f"{colors.GREEN}Renaming to {new_filename} "
+                            f"(because the format is .enl){colors.END}"
+                        )
+                        filepath.rename(new_filename)
+                        filepath = new_filename
+
+                if "load_conversion_package_endpoint" not in res:
+                    res[
+                        "load_conversion_package_endpoint"
+                    ] = get_load_conversion_package_endpoint(filepath=filepath)
+
+                source_candidate = colrev.settings.SearchSource(
+                    endpoint=endpoint,
+                    filename=filepath,
+                    search_type=search_type,
+                    source_identifier=endpoint.source_identifier,  # type: ignore
+                    search_parameters={},
+                    load_conversion_package_endpoint=res[
+                        "load_conversion_package_endpoint"
+                    ],
+                    comment="",
+                )
+
+                results_list.append(
+                    {
+                        "source_candidate": source_candidate,
+                        "confidence": res["confidence"],
+                    }
+                )
+
+        if 0 == len(results_list):
+            source_candidate = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.unknown_source",
+                filename=Path(filepath),
+                search_type=colrev.settings.SearchType("DB"),
+                source_identifier="NA",
+                search_parameters={},
+                load_conversion_package_endpoint=get_load_conversion_package_endpoint(
+                    filepath=filepath
+                ),
+                comment="",
+            )
+            results_list.append(
+                {"source_candidate": source_candidate, "confidence": res["confidence"]}
+            )
+
+        return results_list
+
     def check_update_sources(self) -> None:
         """Check the SearchSources and update if necessary"""
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
+
+        self.review_manager.logger.info("Loading source pheuristics...")
+
+        all_available_packages_names = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            installed_only=True,
+        )
+
+        all_available_packages = self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            selected_packages=[{"endpoint": p} for p in all_available_packages_names],
+            operation=self,
+        )
+
+        self.supported_extensions = [
+            item
+            for sublist in [
+                e.supported_extensions  # type: ignore
+                for _, e in all_available_packages.items()
+            ]
+            for item in sublist
+        ]
 
         sources = self.review_manager.settings.sources
 
@@ -138,7 +230,9 @@ class Load(colrev.operation.Operation):
             #     cmd = "Enter search type".ljust(40, " ") + ": "
             #     search_type_input = input(cmd)
 
-            heuristic_result_list = self.__apply_source_heuristics(filepath=sfp)
+            heuristic_result_list = self.__apply_source_heuristics(
+                filepath=sfp, all_available_packages=all_available_packages
+            )
 
             if 1 == len(heuristic_result_list):
                 heuristic_source = heuristic_result_list[0]
@@ -174,18 +268,22 @@ class Load(colrev.operation.Operation):
                 #     print("    - " + cl_scripts)
                 #     print("   See colrev/custom_source_load.py for details")
 
-                while heuristic_source["source_candidate"].source_identifier in [
+                if heuristic_source["source_candidate"].source_identifier in [
                     "",
                     "NA",
                 ]:
-                    cmd = "\nEnter source identifier (e.g., {{url}} or a short description)"
-                    cmd = cmd.ljust(70, " ") + ": "
-                    heuristic_source["source_candidate"].source_identifier = input(cmd)
+                    heuristic_source["source_candidate"].source_identifier = str(
+                        sfp_name.name
+                    )
 
                 cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
-                heuristic_source["source_candidate"].search_parameters = {
-                    "query": input(cmd)
-                }
+                query_input = input(cmd)
+                if query_input not in ["", "NA"]:
+                    heuristic_source["source_candidate"].search_parameters = {
+                        "query": query_input
+                    }
+                else:
+                    heuristic_source["source_candidate"].search_parameters = {}
 
             else:
                 print(
@@ -635,96 +733,6 @@ class Load(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=corresponding_bib_file
         )
-
-    def __apply_source_heuristics(self, *, filepath: Path) -> list[typing.Dict]:
-        """Apply heuristics to identify source"""
-
-        def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
-
-            filetype = filepath.suffix.replace(".", "")
-
-            for (
-                package_identifier,
-                selected_package,
-            ) in self.all_available_packages.items():
-                if filetype in selected_package.supported_extensions:  # type: ignore
-                    return {"endpoint": package_identifier}
-
-            raise colrev_exceptions.UnsupportedImportFormatError(filepath)
-
-        data = ""
-        try:
-            data = filepath.read_text()
-        except UnicodeDecodeError:
-            pass
-
-        results_list = []
-        for (
-            endpoint,
-            endpoint_class,
-        ) in self.search_sources.all_available_packages.items():
-            # pylint: disable=no-member
-            has_heuristic = getattr(endpoint_class, "heuristic", None)
-            if not has_heuristic:
-                continue
-            res = endpoint_class.heuristic(filepath, data)  # type: ignore
-            if res["confidence"] > 0:
-                search_type = colrev.settings.SearchType("DB")
-
-                res["endpoint"] = endpoint
-
-                if "filename" not in res:
-                    # Correct the file extension if necessary
-                    if re.search("%0", data) and filepath.suffix not in [".enl"]:
-                        new_filename = filepath.with_suffix(".enl")
-                        self.review_manager.logger.info(
-                            f"{colors.GREEN}Renaming to {new_filename} "
-                            f"(because the format is .enl){colors.END}"
-                        )
-                        filepath.rename(new_filename)
-                        filepath = new_filename
-
-                if "load_conversion_package_endpoint" not in res:
-                    res[
-                        "load_conversion_package_endpoint"
-                    ] = get_load_conversion_package_endpoint(filepath=filepath)
-
-                source_candidate = colrev.settings.SearchSource(
-                    endpoint=endpoint,
-                    filename=filepath,
-                    search_type=search_type,
-                    source_identifier=endpoint.source_identifier,  # type: ignore
-                    search_parameters={},
-                    load_conversion_package_endpoint=res[
-                        "load_conversion_package_endpoint"
-                    ],
-                    comment="",
-                )
-
-                results_list.append(
-                    {
-                        "source_candidate": source_candidate,
-                        "confidence": res["confidence"],
-                    }
-                )
-
-        if 0 == len(results_list):
-            source_candidate = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.unknown_source",
-                filename=Path(filepath),
-                search_type=colrev.settings.SearchType("DB"),
-                source_identifier="NA",
-                search_parameters={},
-                load_conversion_package_endpoint=get_load_conversion_package_endpoint(
-                    filepath=filepath
-                ),
-                comment="",
-            )
-            results_list.append(
-                {"source_candidate": source_candidate, "confidence": res["confidence"]}
-            )
-
-        return results_list
 
     def main(self, *, keep_ids: bool = False, combine_commits: bool = False) -> None:
         """Load records (main entrypoint)"""
