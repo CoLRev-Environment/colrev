@@ -11,14 +11,10 @@ const ProjectEditor: React.FC<{
   const [title, setTitle] = useState<string>();
   const [protocol, setProtocol] = useState<string | null>(null);
   const [reviewType, setReviewType] = useState<string>();
-  const [idPattern, setIdPattern] = useState<string>();
   const [shareStatReq, setShareStatReq] = useState<string>();
   const [delayAutomatedProcessing, setDelayAutomatedProcessing] =
     useState<boolean>(false);
-  const [curationUrl, setCurationUrl] = useState<string | null>(null);
-  const [curatedMasterdata, setCuratedMasterdata] = useState<boolean>(false);
 
-  const [idPatternOptions, setIdPatternOptions] = useState<string[]>([]);
   const [shareStatReqOptions, setShareStatReqOptions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -26,16 +22,10 @@ const ProjectEditor: React.FC<{
       setTitle(project.title);
       setProtocol(project.protocol);
       setReviewType(project.reviewType);
-      setIdPattern(project.idPattern);
       setShareStatReq(project.shareStatReq);
       setDelayAutomatedProcessing(project.delayAutomatedProcessing);
-      setCurationUrl(project.curationUrl);
-      setCuratedMasterdata(project.curatedMasterdata);
 
       if (options) {
-        setIdPatternOptions(
-          options.definitions.ProjectSettings.properties.id_pattern.enum
-        );
         setShareStatReqOptions(
           options.definitions.ProjectSettings.properties.share_stat_req.enum
         );
@@ -72,13 +62,7 @@ const ProjectEditor: React.FC<{
 
   const reviewTypeChangedHandler = (event: any) => {
     const newValue = event.target.value;
-    //setReviewType(newValue);
     const newProject = { ...project, reviewType: newValue };
-    projectChanged(newProject);
-  };
-
-  const idPatternChangedHandler = (event: any) => {
-    const newProject = { ...project, idPattern: event.target.value };
     projectChanged(newProject);
   };
 
@@ -94,32 +78,6 @@ const ProjectEditor: React.FC<{
       ...project,
       delayAutomatedProcessing: newValue,
     };
-    projectChanged(newProject);
-  };
-
-  const curationUrlChangedHandler = (event: any) => {
-    let newValue = event.target.value;
-
-    if (!newValue) {
-      newValue = null;
-    }
-
-    const newProject = { ...project, curationUrl: newValue };
-    projectChanged(newProject);
-  };
-
-  const curatedMasterdataChangedHandler = () => {
-    const newValue = !curatedMasterdata;
-    setCuratedMasterdata(newValue);
-    const newProject = {
-      ...project,
-      curatedMasterdata: newValue,
-    };
-    projectChanged(newProject);
-  };
-
-  const updateProjectCuratedFields = (newCuratedFields: string[]) => {
-    const newProject = { ...project, curatedFields: newCuratedFields };
     projectChanged(newProject);
   };
 
@@ -169,26 +127,6 @@ const ProjectEditor: React.FC<{
         />
       </div>
       <div className="mb-3">
-        <label
-          htmlFor="idPattern"
-          data-bs-toggle="tooltip"
-          title="Specify the format of record identifiers (BibTex citation keys)."
-        >
-          ID Pattern
-        </label>
-        <select
-          className="form-select"
-          aria-label="Select"
-          id="idPattern"
-          value={idPattern ?? ""}
-          onChange={idPatternChangedHandler}
-        >
-          {idPatternOptions.map((idPattenOption, index) => (
-            <option key={index.toString()}>{idPattenOption}</option>
-          ))}
-        </select>
-      </div>
-      <div className="mb-3">
         <label htmlFor="shareStatReq">Share Stat Req</label>
         <select
           className="form-select"
@@ -213,35 +151,6 @@ const ProjectEditor: React.FC<{
         <label className="form-check-label" htmlFor="delayAutomatedProcessing">
           Delay Automated Processing
         </label>
-      </div>
-      <div className="mb-3">
-        <label htmlFor="curationUrl">Curation Url</label>
-        <input
-          className="form-control"
-          type="text"
-          id="curationUrl"
-          value={curationUrl ?? ""}
-          onChange={curationUrlChangedHandler}
-        />
-      </div>
-      <div className="form-check form-switch mb-3">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id="curatedMasterdata"
-          checked={curatedMasterdata}
-          onChange={curatedMasterdataChangedHandler}
-        />
-        <label className="form-check-label" htmlFor="curatedMasterdata">
-          Curated Masterdata
-        </label>
-      </div>
-      <div className="mb-3">
-        <FieldsEditor
-          title="Curated Fields"
-          fields={project.curatedFields}
-          fieldsChanged={updateProjectCuratedFields}
-        />
       </div>
     </div>
   );

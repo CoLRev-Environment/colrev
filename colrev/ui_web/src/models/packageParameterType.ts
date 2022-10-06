@@ -6,7 +6,7 @@ export enum PackageParameterType {
   String,
   StringList,
   Options,
-  Script,
+  Package,
   ScriptList,
 }
 

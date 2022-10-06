@@ -2,7 +2,7 @@ import axios from "axios";
 
 axios.interceptors.response.use(undefined, (error) => {
   console.log("An unexpected error occured", error);
-  alert(`An unexpected error occured.`);
+  // alert(`An unexpected error occured.`);
 
   return Promise.reject(error); // return control to the catch blocks
 });

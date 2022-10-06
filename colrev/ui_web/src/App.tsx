@@ -28,6 +28,10 @@ import SearchEditor from "./components/search/SearchEditor";
 import Package from "./models/package";
 
 function App() {
+  const [isAppClosed, setIsAppClosed] = useState<boolean>(false);
+  const [isAppError, setIsAppError] = useState<boolean>(false);
+  const [isAppLoading, setIsAppLoading] = useState<boolean>(true);
+
   const [project, setProject] = useState<Project>(new Project());
   const [sources, setSources] = useState<Package[]>([]);
   const [search, setSearch] = useState<Search>(new Search());
@@ -60,20 +64,27 @@ function App() {
   const loadData = async () => {
     setIsFileSaved(false);
 
-    const options = await dataService.getOptions();
-    setOptions(options);
+    try {
+      const options = await dataService.getOptions();
+      setOptions(options);
 
-    const settings = await dataService.getSettings();
-    setProject(settings.project);
-    setSources(settings.sources);
-    setSearch(settings.search);
-    setPrep(settings.prep);
-    setDedupe(settings.dedupe);
-    setPrescreen(settings.prescreen);
-    setPdfGet(settings.pdfGet);
-    setPdfPrep(settings.pdfPrep);
-    setScreen(settings.screen);
-    setData(settings.data);
+      const settings = await dataService.getSettings();
+      setProject(settings.project);
+      setSources(settings.sources);
+      setSearch(settings.search);
+      setPrep(settings.prep);
+      setDedupe(settings.dedupe);
+      setPrescreen(settings.prescreen);
+      setPdfGet(settings.pdfGet);
+      setPdfPrep(settings.pdfPrep);
+      setScreen(settings.screen);
+      setData(settings.data);
+    } catch (error) {
+      setIsAppError(true);
+      return;
+    }
+
+    setIsAppLoading(false);
   };
 
   const onProjectChanged = (project: Project) => {
@@ -158,11 +169,25 @@ function App() {
   };
 
   const onClose = async () => {
-    const response = await dataService.shutdown();
-    if (response.error) {
-      alert("Error: " + response.error);
-    }
+    await dataService.shutdown();
+    setIsAppClosed(true);
   };
+
+  if (isAppClosed) {
+    return (
+      <div style={{ padding: "10px" }}>
+        Application closed. You can now close this window.
+      </div>
+    );
+  }
+
+  if (isAppError) {
+    return <div style={{ padding: "10px" }}>Application error.</div>;
+  }
+
+  if (isAppLoading) {
+    return <div style={{ padding: "10px" }}>Loading...</div>;
+  }
 
   return (
     <>
@@ -304,9 +329,9 @@ function App() {
                 <button
                   className="btn btn-primary"
                   type="button"
-                  onClick={() => onSave()}
+                  onClick={() => onSave(true)}
                 >
-                  Save Settings
+                  Save and Commit Settings
                 </button>
                 <div className="btn-group" role="group">
                   <button
@@ -318,9 +343,9 @@ function App() {
                     <li>
                       <button
                         className="dropdown-item"
-                        onClick={() => onSave(true)}
+                        onClick={() => onSave()}
                       >
-                        Save and commit
+                        Save Settings
                       </button>
                     </li>
                   </ul>

@@ -187,7 +187,7 @@ const PackageParametersEditor: React.FC<{
                     </select>
                   </div>
                 )}
-                {parameterDefinition.type === PackageParameterType.Script && (
+                {parameterDefinition.type === PackageParameterType.Package && (
                   <div>
                     <label>{parameterDefinition.name}</label>
                     <PackagesEditor

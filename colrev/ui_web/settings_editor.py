@@ -15,7 +15,10 @@ from flask import Response
 from flask import send_from_directory
 from flask_cors import CORS
 
-DEV = False
+import os
+import signal
+
+DEV = True
 
 if not DEV:
     import colrev.env.package_manager
@@ -747,11 +750,19 @@ class SettingsEditor:
 
         @app.get("/api/shutdown")
         def shutdown() -> str:
-            func = request.environ.get("werkzeug.server.shutdown")
-            if func is None:
-                return {"error": "Not running with the Werkzeug Server"}
-            func()
-            return "Server shutting down..."
+            # func = request.environ.get("werkzeug.server.shutdown")
+            # if func is None:
+            #     return {"error": "Not running with the Werkzeug Server"}
+            # func()
+            # return "Server shutting down..."
+
+            timer = Timer(3.0, terminate_process)
+            timer.start()  # after 3 seconds
+            return "ok"
+
+        def terminate_process() -> None:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGTERM)
 
         self._open_browser()
         app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

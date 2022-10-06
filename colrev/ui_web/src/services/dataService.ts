@@ -228,8 +228,8 @@ const getPackageParameterType = (
     case "array":
       packageParameterType = PackageParameterType.StringList;
       break;
-    case "script":
-      packageParameterType = PackageParameterType.Script;
+    case "package_endpoint":
+      packageParameterType = PackageParameterType.Package;
       break;
   }
 
