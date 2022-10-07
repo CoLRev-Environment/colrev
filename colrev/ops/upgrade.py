@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 
 
 class Upgrade(colrev.operation.Operation):
+    """Upgrade a CoLRev project"""
+
     def __init__(
         self,
         *,

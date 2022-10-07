@@ -13,6 +13,7 @@ import colrev.env.environment_manager
 
 
 class GrobidService:
+    """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
 

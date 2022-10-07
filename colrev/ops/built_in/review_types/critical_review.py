@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class CriticalReview(JsonSchemaMixin):
+    """Critical review"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

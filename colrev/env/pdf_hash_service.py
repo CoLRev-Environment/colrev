@@ -10,6 +10,8 @@ import colrev.exceptions as colrev_exceptions
 
 
 class PDFHashService:
+    """The PDFHashService calculates hashes to identify PDFs (based on image/layout)"""
+
     # pylint: disable=too-few-public-methods
     def __init__(self) -> None:
         pass

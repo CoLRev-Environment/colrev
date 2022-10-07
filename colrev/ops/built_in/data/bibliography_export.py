@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class BibFormats(Enum):
+    """Enum of available bibliography formats"""
+
     # pylint: disable=invalid-name
     endnote = "endnote"
 
@@ -40,6 +42,8 @@ class BibliographyExport(JsonSchemaMixin):
 
     @dataclass
     class BibliographyExportSettings(JsonSchemaMixin):
+        """Settings for BibliographyExport"""
+
         endpoint: str
         version: str
         bib_format: BibFormats

@@ -24,6 +24,8 @@ import colrev.record
 )
 @dataclass
 class ScopusSearchSource(JsonSchemaMixin):
+    """SearchSource for scopus"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{url}}"
 

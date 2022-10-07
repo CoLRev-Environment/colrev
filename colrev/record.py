@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
 
 class Record:
+    """The Record class provides a range of basic convenience functions"""
 
     identifying_field_keys = [
         "title",
@@ -1811,6 +1812,8 @@ class Record:
 
 
 class PrepRecord(Record):
+    """The PrepRecord class provides a range of convenience functions for record preparation"""
+
     @classmethod
     def format_author_field(cls, *, input_string: str) -> str:
         """Format the author field (recognizing first/last names based on HumanName parser)"""
@@ -2220,6 +2223,8 @@ class PrepRecord(Record):
 
 
 class PrescreenRecord(Record):
+    """The PrescreenRecord class provides convenience functions for record prescreen"""
+
     def __str__(self) -> str:
 
         ret_str = (
@@ -2280,6 +2285,7 @@ class PrescreenRecord(Record):
 
 
 class ScreenRecord(PrescreenRecord):
+    """The PrescreenRecord class provides convenience functions for record screening"""
 
     # Note : currently still identical with PrescreenRecord
 
@@ -2315,6 +2321,9 @@ class ScreenRecord(PrescreenRecord):
 
 
 class RecordState(Enum):
+    """The possible RecordStates stored in the colrev_status field
+    (corresponding to the RecordStateModel)"""
+
     # pylint: disable=invalid-name
 
     # without the md_retrieved state, we could not display the load transition
@@ -2425,6 +2434,7 @@ non_processing_transitions = [
 
 
 class RecordStateModel:
+    """The RecordStateModel describes transitions between RecordStates"""
 
     transitions = [
         {
@@ -2606,6 +2616,8 @@ class RecordStateModel:
 
 
 class PDFPrepManRecord(Record):
+    """The PrescreenRecord class provides convenience functions for record pdf-prep-man"""
+
     def __str__(self) -> str:
         # pylint: disable=too-many-branches
         ret_str = ""

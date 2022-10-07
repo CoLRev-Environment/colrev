@@ -13,6 +13,8 @@ import colrev.record
 
 
 class Prescreen(colrev.operation.Operation):
+    """Prescreen records (based on metadata)"""
+
     def __init__(
         self,
         *,

@@ -10,6 +10,8 @@ import colrev.record
 
 
 class Validate(colrev.operation.Operation):
+    """Validate changes"""
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(

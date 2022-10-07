@@ -22,6 +22,7 @@ import colrev.record
 )
 @dataclass
 class CuratedMasterdata(JsonSchemaMixin):
+    """Curated masterdata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

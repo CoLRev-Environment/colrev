@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class QualitativeSystematicReview(JsonSchemaMixin):
+    """Qualitative systematic review type"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

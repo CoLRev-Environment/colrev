@@ -24,6 +24,8 @@ import colrev.record
 )
 @dataclass
 class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
+    """SearchSource for Wiley"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{url}}"
 

@@ -13,6 +13,8 @@ import colrev.record
 
 
 class PDFGetMan(colrev.operation.Operation):
+    """Get PDFs manually"""
+
     def __init__(
         self,
         *,

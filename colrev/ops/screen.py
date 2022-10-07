@@ -12,6 +12,8 @@ import colrev.settings
 
 
 class Screen(colrev.operation.Operation):
+    """Screen records (based on PDFs)"""
+
     def __init__(
         self,
         *,

@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
 class CustomPDFGet:
+    """Class for custom pdf-get scripts"""
+
     def __init__(
         self,
         *,

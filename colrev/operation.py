@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class OperationsType(Enum):
+    """Operation types correspond to the main state transitions (see RecordStateModel)"""
+
     # pylint: disable=invalid-name
 
     search = auto()
@@ -32,7 +34,6 @@ class OperationsType(Enum):
     data = auto()
 
     format = auto()
-    explore = auto()
     check = auto()
 
     def __str__(self) -> str:
@@ -40,6 +41,8 @@ class OperationsType(Enum):
 
 
 class Operation:
+    """Operations correspond to the work steps in a CoLRev project"""
+
     # pylint: disable=too-few-public-methods
 
     force_mode: bool
@@ -200,6 +203,8 @@ class Operation:
 
 
 class FormatOperation(Operation):
+    """A dummy operation that is expected to introduce formatting changes only"""
+
     # pylint: disable=too-few-public-methods
 
     def __init__(
@@ -216,6 +221,8 @@ class FormatOperation(Operation):
 
 
 class CheckOperation(Operation):
+    """A dummy operation that is not expected to introduce changes"""
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:

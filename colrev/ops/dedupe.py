@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 
 class Dedupe(colrev.operation.Operation):
+    """Deduplicate records (entity resolution)"""
 
     SIMPLE_SIMILARITY_BASED_DEDUPE = "simple_similarity_based_dedupe"
     ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"

@@ -24,6 +24,8 @@ import colrev.record
 )
 @dataclass
 class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
+    """SearchSource for the ACM digital Library"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"

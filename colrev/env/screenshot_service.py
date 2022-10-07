@@ -15,6 +15,8 @@ import colrev.record
 
 
 class ScreenshotService:
+    """Environment service for website screenshots"""
+
     def __init__(self) -> None:
         pass
 

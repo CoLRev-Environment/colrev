@@ -31,6 +31,8 @@ class ExportManPrep(JsonSchemaMixin):
 
     @dataclass
     class ExportManPrepSettings:
+        """Settings for ExportManPrep"""
+
         endpoint: str
         pdf_handling_mode: str = "symlink"
 

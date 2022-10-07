@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
+from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 import colrev.record
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 
 
 class Advisor:
+    """The CoLRev advisor guides users through the review process"""
 
     _next_step_description = {
         "load": "Next step: Import search results",
@@ -539,7 +541,7 @@ class Advisor:
                         "cmd": f"cd '{registered_path}' && git pull --rebase",
                     }
 
-        except (AttributeError, NoSuchPathError):
+        except (AttributeError, NoSuchPathError, InvalidGitRepositoryError):
             pass
         return instruction
 

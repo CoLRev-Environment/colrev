@@ -30,6 +30,8 @@ class ScopePrescreen(JsonSchemaMixin):
 
     @dataclass
     class ScopePrescreenSettings(JsonSchemaMixin):
+        """Settings for ScopePrescreen"""
+
         # pylint: disable=invalid-name
         # pylint: disable=too-many-instance-attributes
 

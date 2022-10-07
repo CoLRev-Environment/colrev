@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class Distribute(colrev.operation.Operation):
+    """Distribute records to other local CoLRev projects"""
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         # pylint: disable=duplicate-code
         super().__init__(

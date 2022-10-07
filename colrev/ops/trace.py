@@ -11,6 +11,8 @@ import colrev.operation
 
 
 class Trace(colrev.operation.Operation):
+    """Trace a record through history"""
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         super().__init__(

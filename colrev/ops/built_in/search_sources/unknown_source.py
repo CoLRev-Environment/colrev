@@ -27,6 +27,7 @@ import colrev.record
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
+    """SearchSource for unknown search results"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 

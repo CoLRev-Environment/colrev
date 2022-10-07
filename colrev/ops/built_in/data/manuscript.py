@@ -290,8 +290,17 @@ class Manuscript(JsonSchemaMixin):
 
         review_type = review_manager.settings.project.review_type
 
-        r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
-        paper_resource_path = Path(f"template/review_type/{r_type_path}/") / Path(
+        package_manager = review_manager.get_package_manager()
+        check_operation = colrev.operation.CheckOperation(review_manager=review_manager)
+
+        review_type_endpoint = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            selected_packages=[{"endpoint": review_type}],
+            operation=check_operation,
+            ignore_not_available=False,
+        )
+        r_type_suffix = str(review_type_endpoint[review_type])
+        paper_resource_path = Path(f"template/review_type/{r_type_suffix}/") / Path(
             "paper.md"
         )
         try:
@@ -307,7 +316,7 @@ class Manuscript(JsonSchemaMixin):
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,
             old_string="{{review_type}}",
-            new_string=str(review_type),
+            new_string=r_type_suffix,
         )
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,

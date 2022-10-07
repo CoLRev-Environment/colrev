@@ -16,8 +16,6 @@ extension-pkg-whitelist=lxml.etree
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=C0115,W0511
+disable=W0511
 
 # W0511 TODO
-
-# C0115 missing class docstring

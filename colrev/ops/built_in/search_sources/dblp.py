@@ -27,11 +27,15 @@ import colrev.record
 )
 @dataclass
 class DBLPSearchSource(JsonSchemaMixin):
+    """SearchSource for DBLP"""
+
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{dblp_key}}"
 
     @dataclass
     class DBLPSearchSourceSettings(JsonSchemaMixin):
+        """Settings for DBLPSearchSource"""
+
         # pylint: disable=duplicate-code
         # pylint: disable=too-many-instance-attributes
         endpoint: str

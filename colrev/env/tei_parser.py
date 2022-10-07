@@ -23,6 +23,8 @@ import colrev.record
 
 
 class TEIParser:
+    """Environment service for TEI parsing"""
+
     ns = {
         "tei": "{http://www.tei-c.org/ns/1.0}",
         "w3": "{http://www.w3.org/XML/1998/namespace}",

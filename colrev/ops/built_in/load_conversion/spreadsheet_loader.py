@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 
 class SpreadsheetLoadUtility:
+    """Utility for spreadsheet loading"""
+
     @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
         """Preprocess records imported from a spreadsheet"""

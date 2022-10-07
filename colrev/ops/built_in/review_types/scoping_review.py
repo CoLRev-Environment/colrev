@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class ScopingReview(JsonSchemaMixin):
+    """Scoping review"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

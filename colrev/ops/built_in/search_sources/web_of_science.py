@@ -24,6 +24,8 @@ import colrev.record
 )
 @dataclass
 class WebOfScienceSearchSource(JsonSchemaMixin):
+    """SearchSource for Web of Science"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"

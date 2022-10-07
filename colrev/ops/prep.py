@@ -25,6 +25,7 @@ logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 
 class Prep(colrev.operation.Operation):
+    """Prepare records (metadata)"""
 
     # pylint: disable=too-many-instance-attributes
 

@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class MetaAnalysis(JsonSchemaMixin):
+    """Meta-analysis (review type)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

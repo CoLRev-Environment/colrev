@@ -25,6 +25,8 @@ import colrev.record
 )
 @dataclass
 class GoogleScholarSearchSource(JsonSchemaMixin):
+    """SearchSource for GoogleScholar"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://scholar.google.com/"
 

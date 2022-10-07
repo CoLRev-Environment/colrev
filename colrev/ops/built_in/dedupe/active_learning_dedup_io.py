@@ -436,6 +436,8 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
     @dataclass
     class ActiveLearningSettings(JsonSchemaMixin):
+        """Settings for ActiveLearning"""
+
         endpoint: str
         merge_threshold: float = 0.8
         partition_threshold: float = 0.5

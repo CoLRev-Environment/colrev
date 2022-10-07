@@ -16,9 +16,12 @@ import colrev.ui_cli.cli_colors as colors
 
 
 class Load(colrev.operation.Operation):
+    """Load the records"""
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through colrev search
+
+    supported_extensions: typing.List[str]
 
     def __init__(
         self,
@@ -179,15 +182,17 @@ class Load(colrev.operation.Operation):
                 comment="",
             )
             results_list.append(
-                {"source_candidate": source_candidate, "confidence": res["confidence"]}
+                {"source_candidate": source_candidate, "confidence": 1.0}
             )
 
         return results_list
 
     def check_update_sources(self) -> None:
         """Check the SearchSources and update if necessary"""
+
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         self.review_manager.logger.info("Loading source pheuristics...")
 
@@ -259,15 +264,6 @@ class Load(colrev.operation.Operation):
                 self.review_manager.logger.warning(
                     "Could not detect source (using fallback: unknown_source)"
                 )
-                # if heuristic_source["source_candidate"].search_type ==
-                #  colrev.settings.SearchType.DB:
-                #     print("   Sources with pre-defined settings:")
-                #     cl_scripts = "\n    - ".join(
-                #         self.search_sources.all_available_packages
-                #     )
-                #     print("    - " + cl_scripts)
-                #     print("   See colrev/custom_source_load.py for details")
-
                 if heuristic_source["source_candidate"].source_identifier in [
                     "",
                     "NA",

@@ -11,6 +11,8 @@ import colrev.settings
 
 
 class Search(colrev.operation.Operation):
+    """Search for new records"""
+
     def __init__(
         self,
         *,

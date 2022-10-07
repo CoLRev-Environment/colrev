@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 class CustomPrep:
+    """Class for custom prep scripts"""
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

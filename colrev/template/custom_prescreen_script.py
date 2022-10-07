@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     colrev.env.package_manager.PrescreenPackageEndpointInterface
 )
 class CustomPrescreen:
+    """Class for custom prescreen scripts"""
+
     def __init__(
         self,
         *,

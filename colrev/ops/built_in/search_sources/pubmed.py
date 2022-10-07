@@ -24,6 +24,8 @@ import colrev.record
 )
 @dataclass
 class PubMedSearchSource(JsonSchemaMixin):
+    """SearchSource for Pubmed"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 

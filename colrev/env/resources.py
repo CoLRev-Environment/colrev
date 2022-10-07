@@ -13,6 +13,7 @@ import colrev.record
 
 
 class Resources:
+    """Class for curated CoLRev resourcs (metadata repositories, annotators)"""
 
     # pylint: disable=too-few-public-methods
     curations_path = Path.home().joinpath("colrev/curated_metadata")

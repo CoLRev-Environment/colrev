@@ -31,6 +31,8 @@ class SimpleDedupe(JsonSchemaMixin):
 
     @dataclass
     class SimpleDedupeSettings(JsonSchemaMixin):
+        """Settings for SimpleDedupe"""
+
         endpoint: str
         merging_non_dup_threshold: float = 0.7
         merging_dup_threshold: float = 0.95

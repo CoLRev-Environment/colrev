@@ -11,10 +11,12 @@ import colrev.record
 
 
 class Push(colrev.operation.Operation):
+    """Push the project and record corrections"""
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.explore,
+            operations_type=colrev.operation.OperationsType.check,
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:

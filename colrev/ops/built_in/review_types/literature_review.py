@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class LiteratureReview(JsonSchemaMixin):
+    """Literature review (simple)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

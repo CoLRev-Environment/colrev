@@ -21,6 +21,8 @@ import colrev.ui_cli.cli_colors as colors
 
 
 class Event(LoggingEventHandler):
+    """Service event for changed files"""
+
     service: Service
 
     def __init__(self, *, service: Service):
@@ -65,6 +67,8 @@ class Event(LoggingEventHandler):
 
 
 class Service:
+    """The CoLRev service"""
+
     review_manager: colrev.review_manager.ReviewManager
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:

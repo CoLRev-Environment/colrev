@@ -24,6 +24,7 @@ import colrev.record
 
 
 class EnvironmentManager:
+    """The EnvironmentManager manages environment resources and services"""
 
     colrev_path = Path.home().joinpath("colrev")
     cache_path = colrev_path / Path("prep_requests_cache")

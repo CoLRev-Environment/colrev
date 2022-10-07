@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class NarrativeReview(JsonSchemaMixin):
+    """Narrative review"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

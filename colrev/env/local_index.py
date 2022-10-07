@@ -43,6 +43,7 @@ logging.getLogger("xml").setLevel(logging.ERROR)
 
 
 class LocalIndex:
+    """The LocalIndex implements indexing and retrieval of records across projects"""
 
     global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url"]
     max_len_sha256 = 2**256

@@ -11,6 +11,8 @@ import colrev.record
 
 
 class PrepMan(colrev.operation.Operation):
+    """Prepare records manually (metadata)"""
+
     def __init__(
         self,
         *,

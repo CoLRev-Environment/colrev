@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class ScientometricReview(JsonSchemaMixin):
+    """Scientometric study"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

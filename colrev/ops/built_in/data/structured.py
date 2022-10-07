@@ -30,6 +30,8 @@ class StructuredData(JsonSchemaMixin):
 
     @dataclass
     class StructuredDataSettings(JsonSchemaMixin):
+        """Settings for StructuredData"""
+
         endpoint: str
         version: str
         fields: dict  # TODO : Field dataclass (name, explanation, data_type)

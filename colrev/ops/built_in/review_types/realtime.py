@@ -21,6 +21,8 @@ import colrev.record
 )
 @dataclass
 class RealTimeReview(JsonSchemaMixin):
+    """Realtime review"""
+
     settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(

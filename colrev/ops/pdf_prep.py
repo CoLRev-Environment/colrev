@@ -19,6 +19,7 @@ import colrev.ui_cli.cli_colors as colors
 
 
 class PDFPrep(colrev.operation.Operation):
+    """Prepare PDFs"""
 
     to_prepare: int
     pdf_prepared: int

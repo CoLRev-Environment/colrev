@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
 
 class Dataset:
+    """The CoLRev dataset (records and their history in git)"""
 
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
     records_file: Path

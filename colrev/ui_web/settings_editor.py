@@ -30,6 +30,8 @@ if not DEV:
 
 
 class SettingsEditor:
+    """A web-based editor for CoLRev settings"""
+
     # pylint: disable=invalid-name
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods

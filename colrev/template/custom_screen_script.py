@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 class CustomScreen:
+    """Class for custom screen scripts"""
+
     def __init__(
         self,
         *,

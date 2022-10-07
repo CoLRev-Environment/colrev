@@ -40,6 +40,7 @@ def apply_field_mapping(
 )
 @dataclass
 class AISeLibrarySearchSource(JsonSchemaMixin):
+    """SearchSource for the AIS electronic Library (AISeL)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 

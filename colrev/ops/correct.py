@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 class Corrections:
+    """Handling corrections of metadata"""
 
     # pylint: disable=duplicate-code
     essential_md_keys = [

@@ -14,6 +14,8 @@ import colrev.record
 
 
 class PDFPrepMan(colrev.operation.Operation):
+    """Prepare PDFs manually"""
+
     def __init__(
         self,
         *,

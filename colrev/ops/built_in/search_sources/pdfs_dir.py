@@ -32,6 +32,8 @@ import colrev.record
 )
 @dataclass
 class PDFSearchSource(JsonSchemaMixin):
+    """SearchSource for PDF directories (based on GROBID)"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
 

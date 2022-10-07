@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 
 
 class OpenLibraryConnector:
+    """Connector for the OpenLibrary API"""
+
     @classmethod
     def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
         """Check the status (availability) of the OpenLibrary API"""
@@ -59,6 +61,8 @@ class OpenLibraryConnector:
 
 
 class URLConnector:
+    """Connector for the Zotero translator for websites"""
+
     @classmethod
     def __update_record(
         cls,
@@ -172,6 +176,8 @@ class URLConnector:
 
 
 class DOIConnector:
+    """Connector for the DOI.org API"""
+
     @classmethod
     def retrieve_doi_metadata(
         cls,
@@ -331,6 +337,7 @@ class DOIConnector:
 
 
 class CrossrefConnector:
+    """Connector for the Crossref API"""
 
     issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
 
@@ -799,6 +806,8 @@ class CrossrefConnector:
 
 
 class DBLPConnector:
+    """Connector for the DBLP API"""
+
     api_url = "https://dblp.org/search/publ/api?q="
     api_url_venues = "https://dblp.org/search/venue/api?q="
 

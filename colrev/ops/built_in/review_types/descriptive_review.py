@@ -21,6 +21,7 @@ import colrev.record
 )
 @dataclass
 class DescriptiveReview(JsonSchemaMixin):
+    """Descriptive review"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

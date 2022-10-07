@@ -22,6 +22,8 @@ import colrev.record
 
 
 class PackageEndpointType(Enum):
+    """An enum for the types of PackageEndpoints"""
+
     # pylint: disable=C0103
     review_type = "review_type"
     load_conversion = "load_conversion"
@@ -41,6 +43,7 @@ class PackageEndpointType(Enum):
 class ReviewTypePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for ReviewTypes"""
 
     # pylint: disable=no-self-argument
     def initialize(settings: dict) -> dict:  # type: ignore
@@ -51,6 +54,7 @@ class ReviewTypePackageEndpointInterface(
 class SearchSourcePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for SearchSources"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute(
@@ -79,7 +83,7 @@ class SearchSourcePackageEndpointInterface(
 class LoadConversionPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
-    """Interface for packages that load records from different filetypes"""
+    """The PackageEndpoint interface for loading (different filetypes)"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
@@ -94,6 +98,7 @@ class LoadConversionPackageEndpointInterface(
 class PrepPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for prep operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_correction_hint = zope.interface.Attribute(
@@ -113,6 +118,7 @@ class PrepPackageEndpointInterface(
 class PrepManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for prep-man operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -126,6 +132,7 @@ class PrepManPackageEndpointInterface(
 class DedupePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for dedupe operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -137,6 +144,7 @@ class DedupePackageEndpointInterface(
 class PrescreenPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for prescreen operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -150,6 +158,7 @@ class PrescreenPackageEndpointInterface(
 class PDFGetPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for pdf-get operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -163,6 +172,7 @@ class PDFGetPackageEndpointInterface(
 class PDFGetManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for pdf-get-man operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -177,6 +187,7 @@ class PDFGetManPackageEndpointInterface(
 class PDFPrepPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for pdf-prep operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -194,6 +205,7 @@ class PDFPrepPackageEndpointInterface(
 class PDFPrepManPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for pdf-prep-man operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -208,6 +220,7 @@ class PDFPrepManPackageEndpointInterface(
 class ScreenPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for screen operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -221,6 +234,7 @@ class ScreenPackageEndpointInterface(
 class DataPackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for data operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
@@ -269,6 +283,7 @@ class DefaultSourceSettings(JsonSchemaMixin):
 
 
 class PackageManager:
+    """The PackageManager provides functionality for package lookup and discovery"""
 
     package_type_overview = {
         PackageEndpointType.review_type: {

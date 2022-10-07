@@ -25,6 +25,8 @@ import colrev.record
 )
 @dataclass
 class TransportResearchInternationalDocumentation(JsonSchemaMixin):
+    """SearchSource for Transport Research International Documentation"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{biburl}}"
 

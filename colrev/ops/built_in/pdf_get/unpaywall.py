@@ -98,50 +98,53 @@ class Unpaywall(JsonSchemaMixin):
         url = self.__unpaywall(
             review_manager=pdf_get_operation.review_manager, doi=record.data["doi"]
         )
-        if "NA" != url:
-            if "Invalid/unknown DOI" not in url:
+        if "NA" == url:
+            return record
+        if "Invalid/unknown DOI" in url:
+            return record
 
-                # TODO : download often fails...
-                # example:
-                # https://journals.sagepub.com/doi/pdf/10.1177/02683962211019406
-                res = requests.get(
-                    url,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-                    },
-                    stream=True,
-                )
+        try:
+            # TODO : download often fails...
+            # example:
+            # https://journals.sagepub.com/doi/pdf/10.1177/02683962211019406
+            res = requests.get(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+                },
+                stream=True,
+            )
 
-                if 200 == res.status_code:
-                    with open(pdf_filepath, "wb") as file:
-                        file.write(res.content)
-                    if self.__is_pdf(path_to_file=pdf_filepath):
-                        pdf_get_operation.review_manager.report_logger.info(
-                            "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
-                        )
-                        pdf_get_operation.review_manager.logger.info(
-                            "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
-                        )
-                        source = (
-                            f"https://api.unpaywall.org/v2/{record.data['doi']}"
-                            + f"?email={pdf_get_operation.review_manager.email}"
-                        )
-                        record.update_field(
-                            key="file", value=str(pdf_filepath), source=source
-                        )
-                        record.import_file(
-                            review_manager=pdf_get_operation.review_manager
-                        )
-
-                    else:
-                        os.remove(pdf_filepath)
-                else:
-                    if "fulltext" not in record.data:
-                        record.data["fulltext"] = url
-                    pdf_get_operation.review_manager.logger.info(
-                        "Unpaywall retrieval error " f"{res.status_code} - {url}"
+            if 200 == res.status_code:
+                with open(pdf_filepath, "wb") as file:
+                    file.write(res.content)
+                if self.__is_pdf(path_to_file=pdf_filepath):
+                    pdf_get_operation.review_manager.report_logger.info(
+                        "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
+                    pdf_get_operation.review_manager.logger.info(
+                        "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
+                    )
+                    source = (
+                        f"https://api.unpaywall.org/v2/{record.data['doi']}"
+                        + f"?email={pdf_get_operation.review_manager.email}"
+                    )
+                    record.update_field(
+                        key="file", value=str(pdf_filepath), source=source
+                    )
+                    record.import_file(review_manager=pdf_get_operation.review_manager)
+
+                else:
+                    os.remove(pdf_filepath)
+            else:
+                if "fulltext" not in record.data:
+                    record.data["fulltext"] = url
+                pdf_get_operation.review_manager.logger.info(
+                    "Unpaywall retrieval error " f"{res.status_code} - {url}"
+                )
+        except requests.exceptions.SSLError:
+            pass
 
         return record
 

@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 class CustomPDFPrep:
+    """Class for custom pdf-prep scripts"""
+
     def __init__(
         self,
         *,

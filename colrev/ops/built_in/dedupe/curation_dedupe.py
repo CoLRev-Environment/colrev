@@ -35,6 +35,8 @@ class CurationDedupe(JsonSchemaMixin):
 
     @dataclass
     class CurationDedupeSettings(JsonSchemaMixin):
+        """Settings for CurationDedupe"""
+
         endpoint: str
         selected_source: str
 

@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 class CustomData:
+    """Class for custom data scripts"""
+
     def __init__(
         self,
         *,

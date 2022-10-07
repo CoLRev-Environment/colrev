@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 
 class Commit:
+    """Create commits"""
+
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 

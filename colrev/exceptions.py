@@ -277,6 +277,8 @@ class BibFileFormatError(CoLRevException):
 
 
 class DedupeError(Exception):
+    """An exception in the dedupe operation"""
+
     def __init__(self, message: str) -> None:
         self.message = message
         super().__init__(self.message)
@@ -338,11 +340,11 @@ class ServiceNotAvailableException(CoLRevException):
 
 
 class TEITimeoutException(CoLRevException):
-    pass
+    """A timeout occurred during TEI generation"""
 
 
 class TEIException(CoLRevException):
-    pass
+    """An exception related to the TEI format"""
 
 
 class RecordNotInIndexException(CoLRevException):

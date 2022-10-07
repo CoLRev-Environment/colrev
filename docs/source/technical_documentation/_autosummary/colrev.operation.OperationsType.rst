@@ -32,5 +32,4 @@ colrev.operation.OperationsType
       ~OperationsType.screen
       ~OperationsType.data
       ~OperationsType.format
-      ~OperationsType.explore
       ~OperationsType.check

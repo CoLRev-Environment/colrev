@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 class CustomSearch:
+    """Class for custom search scripts"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
     source_identifier = "{{custom}}"

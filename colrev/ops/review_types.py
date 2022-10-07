@@ -10,6 +10,8 @@ import colrev.operation
 
 
 class ReviewTypes:
+    """ReviewTypes"""
+
     def __init__(
         self,
         *,

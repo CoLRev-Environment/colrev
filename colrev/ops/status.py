@@ -18,10 +18,12 @@ import colrev.record
 
 
 class Status(colrev.operation.Operation):
+    """Determine the status of the project"""
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.explore,
+            operations_type=colrev.operation.OperationsType.check,
         )
 
     def get_analytics(self) -> dict:
@@ -93,6 +95,8 @@ class Status(colrev.operation.Operation):
 
 @dataclass
 class StatusStats:
+    """Data class for status statistics"""
+
     # pylint: disable=too-many-instance-attributes
     atomic_steps: int
     nr_curated_records: int
@@ -416,6 +420,8 @@ class StatusStats:
 
     @dataclass
     class StatusStatsParent:
+        """Parent class for StatusStatsCurrently and StatusStatsOverall"""
+
         # pylint: disable=too-many-instance-attributes
         # Note : StatusStatsCurrently and StatusStatsOverall start with the same frequencies
         def __init__(
@@ -462,6 +468,8 @@ class StatusStats:
 
     @dataclass
     class StatusStatsCurrently(StatusStatsParent):
+        """The current status statistics"""
+
         # pylint: disable=too-many-instance-attributes
         md_retrieved: int
         md_imported: int
@@ -497,6 +505,8 @@ class StatusStats:
 
     @dataclass
     class StatusStatsOverall(StatusStatsParent):
+        """The overall-status statistics (records currently/previously in each state)"""
+
         # pylint: disable=too-many-instance-attributes
         md_retrieved: int
         md_imported: int

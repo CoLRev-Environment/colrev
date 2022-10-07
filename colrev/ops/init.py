@@ -28,6 +28,7 @@ import colrev.settings
 
 
 class Initializer:
+    """Initialize a CoLRev project"""
 
     share_stat_req_options = ["none", "processed", "screened", "completed"]
 

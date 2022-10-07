@@ -36,6 +36,8 @@ class Zettlr(JsonSchemaMixin):
 
     @dataclass
     class ZettlrSettings(JsonSchemaMixin):
+        """Settings for Zettlr"""
+
         endpoint: str
         version: str
         config: dict

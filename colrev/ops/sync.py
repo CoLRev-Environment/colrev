@@ -13,6 +13,7 @@ import colrev.record
 
 
 class Sync:
+    """Synchronize records into a non-CoLRev repository"""
 
     cited_papers: list
 
