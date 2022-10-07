@@ -9,13 +9,13 @@ colrev.ops.built\_in.load\_conversion.table\_loader.CSVLoader
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~CSVLoader.all_json_schemas
       ~CSVLoader.field_mapping
       ~CSVLoader.from_dict
@@ -26,15 +26,13 @@ colrev.ops.built\_in.load\_conversion.table\_loader.CSVLoader
       ~CSVLoader.register_field_encoders
       ~CSVLoader.to_dict
       ~CSVLoader.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~CSVLoader.supported_extensions
-   
-   

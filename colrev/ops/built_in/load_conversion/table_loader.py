@@ -142,9 +142,7 @@ class CSVLoader(JsonSchemaMixin):
         data.columns = data.columns.str.lower()
         records_value_list = data.to_dict("records")
 
-        records_dict = TableLoadUtility.preprocess_records(
-            records=records_value_list
-        )
+        records_dict = TableLoadUtility.preprocess_records(records=records_value_list)
         records = {r["ID"]: r for r in records_dict}
 
         if source.endpoint in load_operation.search_sources.packages:
@@ -199,9 +197,7 @@ class ExcelLoader:
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
         record_value_list = data.to_dict("records")
-        records_dicts = TableLoadUtility.preprocess_records(
-            records=record_value_list
-        )
+        records_dicts = TableLoadUtility.preprocess_records(records=record_value_list)
         records = {r["ID"]: r for r in records_dicts}
 
         if source.endpoint in load_operation.search_sources.packages:

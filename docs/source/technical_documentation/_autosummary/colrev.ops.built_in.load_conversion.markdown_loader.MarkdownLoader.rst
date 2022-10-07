@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.load\_conversion.markdown\_loader.MarkdownLoader
+colrev.ops.built\_in.load\_conversion.markdown\_loader.MarkdownLoader
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.load_conversion.markdown_loader

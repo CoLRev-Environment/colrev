@@ -1,4 +1,4 @@
-﻿colrev.env.package\_manager.DefaultSourceSettings
+colrev.env.package\_manager.DefaultSourceSettings
 =================================================
 
 .. currentmodule:: colrev.env.package_manager

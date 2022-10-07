@@ -9,17 +9,11 @@ colrev.ops.built\_in.load\_conversion.table\_loader.TableLoadUtility
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~TableLoadUtility.preprocess_records
-   
-   
 
-   
-   
-   
+      ~TableLoadUtility.preprocess_records

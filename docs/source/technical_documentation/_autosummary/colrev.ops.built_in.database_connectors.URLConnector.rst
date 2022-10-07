@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.database\_connectors.URLConnector
+colrev.ops.built\_in.database\_connectors.URLConnector
 ======================================================
 
 .. currentmodule:: colrev.ops.built_in.database_connectors

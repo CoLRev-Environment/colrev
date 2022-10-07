@@ -1,4 +1,4 @@
-﻿colrev.env.utils.load\_jinja\_template
+colrev.env.utils.load\_jinja\_template
 ======================================
 
 .. currentmodule:: colrev.env.utils

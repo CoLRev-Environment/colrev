@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
+colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
 =================================================================
 
 .. currentmodule:: colrev.ops.built_in.data.bibliography_export

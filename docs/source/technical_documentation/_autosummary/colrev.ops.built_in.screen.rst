@@ -27,5 +27,5 @@ colrev.ops.built\_in.screen
    :recursive:
 
    colrev.ops.built_in.screen.screen_cli
-   colrev.ops.built_in.screen.spreadsheet_screen
+   colrev.ops.built_in.screen.screen_table
    colrev.ops.built_in.screen.utils

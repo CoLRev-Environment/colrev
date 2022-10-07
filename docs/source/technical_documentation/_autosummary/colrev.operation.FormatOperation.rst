@@ -1,4 +1,4 @@
-﻿colrev.operation.FormatOperation
+colrev.operation.FormatOperation
 ================================
 
 .. currentmodule:: colrev.operation

@@ -1,4 +1,4 @@
-﻿colrev.exceptions.CuratedOutletNotUnique
+colrev.exceptions.CuratedOutletNotUnique
 ========================================
 
 .. currentmodule:: colrev.exceptions

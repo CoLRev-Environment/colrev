@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.database\_connectors.DOIConnector
+colrev.ops.built\_in.database\_connectors.DOIConnector
 ======================================================
 
 .. currentmodule:: colrev.ops.built_in.database_connectors

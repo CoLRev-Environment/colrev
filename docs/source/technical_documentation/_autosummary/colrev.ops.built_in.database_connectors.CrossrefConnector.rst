@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.database\_connectors.CrossrefConnector
+colrev.ops.built\_in.database\_connectors.CrossrefConnector
 ===========================================================
 
 .. currentmodule:: colrev.ops.built_in.database_connectors
