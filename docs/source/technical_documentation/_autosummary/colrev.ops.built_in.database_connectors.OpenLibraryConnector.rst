@@ -1,4 +1,4 @@
-colrev.ops.built\_in.database\_connectors.OpenLibraryConnector
+﻿colrev.ops.built\_in.database\_connectors.OpenLibraryConnector
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.database_connectors

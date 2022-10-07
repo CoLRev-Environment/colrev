@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Screen based on a spreadsheet"""
+"""Screen based on a table"""
 from __future__ import annotations
 
 import csv
@@ -23,12 +23,12 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
 @dataclass
-class SpreadsheetScreen(JsonSchemaMixin):
-    """Screen documents using spreadsheets (exported and imported)"""
+class TableScreen(JsonSchemaMixin):
+    """Screen documents using tables (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
-    spreadsheet_path = Path("screen/screen.csv")
+    screen_table_path = Path("screen/screen.csv")
 
     def __init__(
         self,
@@ -116,11 +116,11 @@ class SpreadsheetScreen(JsonSchemaMixin):
     ) -> None:
         """Export a screening table"""
 
-        # TODO : add delta (records not yet in the spreadsheet)
+        # TODO : add delta (records not yet in the table)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
 
-        if self.spreadsheet_path.is_file():
+        if self.screen_table_path.is_file():
             print("File already exists. Please rename it.")
             return
 
@@ -128,24 +128,24 @@ class SpreadsheetScreen(JsonSchemaMixin):
             screen_operation=screen_operation, records=records, split=split
         )
 
-        self.spreadsheet_path.parents[0].mkdir(parents=True, exist_ok=True)
+        self.screen_table_path.parents[0].mkdir(parents=True, exist_ok=True)
 
         if "csv" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
-            screen_df.to_csv(self.spreadsheet_path, index=False, quoting=csv.QUOTE_ALL)
+            screen_df.to_csv(self.screen_table_path, index=False, quoting=csv.QUOTE_ALL)
             screen_operation.review_manager.logger.info(
-                f"Created {self.spreadsheet_path}"
+                f"Created {self.screen_table_path}"
             )
 
         if "xlsx" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel(
-                self.spreadsheet_path.with_suffix(".xlsx"),
+                self.screen_table_path.with_suffix(".xlsx"),
                 index=False,
                 sheet_name="screen",
             )
             screen_operation.review_manager.logger.info(
-                f"Created {self.spreadsheet_path.with_suffix('.xlsx')}"
+                f"Created {self.screen_table_path.with_suffix('.xlsx')}"
             )
 
         return
@@ -160,7 +160,7 @@ class SpreadsheetScreen(JsonSchemaMixin):
 
         # pylint: disable=duplicate-code
         if import_table_path is None:
-            import_table_path = self.spreadsheet_path
+            import_table_path = self.screen_table_path
 
         if not Path(import_table_path).is_file():
             screen_operation.review_manager.logger.error(
@@ -212,10 +212,10 @@ class SpreadsheetScreen(JsonSchemaMixin):
     ) -> dict:
         """Screen records based on screening tables"""
 
-        if "y" == input("create screen spreadsheet [y,n]?"):
+        if "y" == input("create screen table [y,n]?"):
             self.export_table(screen_operation, records, split)
 
-        if "y" == input("import screen spreadsheet [y,n]?"):
+        if "y" == input("import screen table [y,n]?"):
             self.import_table(screen_operation, records)
 
         if screen_operation.review_manager.dataset.has_changes():

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.manuscript
+﻿colrev.ops.built\_in.data.manuscript
 ====================================
 
 .. automodule:: colrev.ops.built_in.data.manuscript

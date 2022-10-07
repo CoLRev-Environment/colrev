@@ -906,7 +906,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         return clustered_dupes
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-        """Cluster potential duplicates, merge, and export validation spreadsheets"""
+        """Cluster potential duplicates, merge, and export validation tables"""
 
         saved_args: dict = {}
         saved_args.update(merge_threshold=str(self.settings.merge_threshold))

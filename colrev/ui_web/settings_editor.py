@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import webbrowser
 from pathlib import Path
 from threading import Timer
@@ -14,9 +16,6 @@ from flask import request
 from flask import Response
 from flask import send_from_directory
 from flask_cors import CORS
-
-import os
-import signal
 
 DEV = True
 
@@ -465,7 +464,7 @@ class SettingsEditor:
                         "colrev_built_in.structured": {
                             "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
                             "installed": True,
-                            "description": "Summarize the literature in a structured data extraction (a spreadsheet)",
+                            "description": "Summarize the literature in a structured data extraction (a table)",
                         },
                         "colrev_built_in.bibliography_export": {
                             "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
@@ -497,12 +496,12 @@ class SettingsEditor:
                             "description": "Loads BibTeX files (based on pybtex)",
                         },
                         "colrev_built_in.csv": {
-                            "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.CSVLoader",
+                            "endpoint": "colrev.ops.built_in.load_conversion.table_loader.CSVLoader",
                             "installed": True,
                             "description": "Loads csv files (based on pandas)",
                         },
                         "colrev_built_in.excel": {
-                            "endpoint": "colrev.ops.built_in.load_conversion.spreadsheet_loader.ExcelLoader",
+                            "endpoint": "colrev.ops.built_in.load_conversion.table_loader.ExcelLoader",
                             "installed": True,
                             "description": "Loads Excel (xls, xlsx) files (based on pandas)",
                         },

@@ -1,4 +1,4 @@
-colrev.env.screenshot\_service.ScreenshotService
+﻿colrev.env.screenshot\_service.ScreenshotService
 ================================================
 
 .. currentmodule:: colrev.env.screenshot_service

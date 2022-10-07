@@ -473,7 +473,7 @@ class Dedupe(colrev.operation.Operation):
             yield (main_record, dupe_record, dupe)
 
     def source_comparison(self) -> None:
-        """Exports a spreadsheet to support analyses of records that are not
+        """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
 
         source_filenames = [x.filename for x in self.review_manager.settings.sources]

@@ -1,4 +1,4 @@
-colrev.exceptions.ReviewManagerNotNofiedError
+﻿colrev.exceptions.ReviewManagerNotNofiedError
 =============================================
 
 .. currentmodule:: colrev.exceptions

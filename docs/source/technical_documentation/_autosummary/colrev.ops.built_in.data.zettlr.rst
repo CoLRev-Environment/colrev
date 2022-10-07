@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.zettlr
+﻿colrev.ops.built\_in.data.zettlr
 ================================
 
 .. automodule:: colrev.ops.built_in.data.zettlr

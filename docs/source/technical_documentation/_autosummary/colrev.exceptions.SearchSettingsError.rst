@@ -1,4 +1,4 @@
-colrev.exceptions.SearchSettingsError
+﻿colrev.exceptions.SearchSettingsError
 =====================================
 
 .. currentmodule:: colrev.exceptions

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.database\_connectors
+﻿colrev.ops.built\_in.database\_connectors
 =========================================
 
 .. automodule:: colrev.ops.built_in.database_connectors

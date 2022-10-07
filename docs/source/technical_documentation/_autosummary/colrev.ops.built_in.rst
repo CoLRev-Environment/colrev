@@ -1,4 +1,4 @@
-colrev.ops.built\_in
+﻿colrev.ops.built\_in
 ====================
 
 .. automodule:: colrev.ops.built_in

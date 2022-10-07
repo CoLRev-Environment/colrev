@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.prisma.PRISMA
+﻿colrev.ops.built\_in.data.prisma.PRISMA
 =======================================
 
 .. currentmodule:: colrev.ops.built_in.data.prisma

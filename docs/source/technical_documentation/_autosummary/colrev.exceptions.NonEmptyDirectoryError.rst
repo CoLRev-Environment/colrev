@@ -1,4 +1,4 @@
-colrev.exceptions.NonEmptyDirectoryError
+﻿colrev.exceptions.NonEmptyDirectoryError
 ========================================
 
 .. currentmodule:: colrev.exceptions

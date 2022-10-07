@@ -1,4 +1,4 @@
-colrev.env.utils.get\_package\_file\_content
+﻿colrev.env.utils.get\_package\_file\_content
 ============================================
 
 .. currentmodule:: colrev.env.utils

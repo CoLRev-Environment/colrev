@@ -1,4 +1,4 @@
-colrev.exceptions.InvalidPDFException
+﻿colrev.exceptions.InvalidPDFException
 =====================================
 
 .. currentmodule:: colrev.exceptions

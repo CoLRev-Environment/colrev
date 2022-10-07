@@ -256,7 +256,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
             if prescreen_operation.review_manager.dataset.has_changes():
                 if "y" == input("create commit [y,n]?"):
                     prescreen_operation.review_manager.create_commit(
-                        msg="Pre-screen (spreadsheets)",
+                        msg="Pre-screen (asreview)",
                         manual_author=True,
                         script_call="colrev prescreen",
                     )

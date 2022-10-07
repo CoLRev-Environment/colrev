@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.manuscript.Manuscript
+﻿colrev.ops.built\_in.data.manuscript.Manuscript
 ===============================================
 
 .. currentmodule:: colrev.ops.built_in.data.manuscript

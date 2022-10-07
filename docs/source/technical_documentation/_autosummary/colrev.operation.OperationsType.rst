@@ -1,4 +1,4 @@
-colrev.operation.OperationsType
+﻿colrev.operation.OperationsType
 ===============================
 
 .. currentmodule:: colrev.operation

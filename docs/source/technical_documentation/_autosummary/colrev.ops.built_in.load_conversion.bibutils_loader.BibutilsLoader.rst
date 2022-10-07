@@ -1,4 +1,4 @@
-colrev.ops.built\_in.load\_conversion.bibutils\_loader.BibutilsLoader
+﻿colrev.ops.built\_in.load\_conversion.bibutils\_loader.BibutilsLoader
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.load_conversion.bibutils_loader

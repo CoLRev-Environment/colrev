@@ -1,4 +1,4 @@
-colrev.advisor.Advisor
+﻿colrev.advisor.Advisor
 ======================
 
 .. currentmodule:: colrev.advisor
@@ -16,8 +16,6 @@ colrev.advisor.Advisor
    .. autosummary::
       :nosignatures:
 
-      ~Advisor.get_collaboration_instructions
-      ~Advisor.get_environment_instructions
       ~Advisor.get_instructions
       ~Advisor.get_review_instructions
       ~Advisor.get_sharing_instructions

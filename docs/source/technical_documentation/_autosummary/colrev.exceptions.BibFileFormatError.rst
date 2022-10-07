@@ -1,4 +1,4 @@
-colrev.exceptions.BibFileFormatError
+﻿colrev.exceptions.BibFileFormatError
 ====================================
 
 .. currentmodule:: colrev.exceptions

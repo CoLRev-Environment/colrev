@@ -8,7 +8,7 @@ from pathlib import Path
 
 import colrev.operation
 import colrev.ops.built_in.prescreen.conditional_prescreen
-import colrev.ops.built_in.prescreen.spreadsheet_prescreen
+import colrev.ops.built_in.prescreen.prescreen_table
 import colrev.record
 
 
@@ -39,12 +39,10 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
-        """Export a spreadsheet table with records to prescreen"""
+        """Export a table with records to prescreen"""
 
-        endpoint = (
-            colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
-                prescreen_operation=self, settings={"endpoint": "export_table"}
-            )
+        endpoint = colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen(
+            prescreen_operation=self, settings={"endpoint": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.export_table(
@@ -55,12 +53,10 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def import_table(self, *, import_table_path: str) -> None:
-        """Import a spreadsheet table with prescreened records"""
+        """Import a table with prescreened records"""
 
-        endpoint = (
-            colrev.ops.built_in.prescreen.spreadsheet_prescreen.SpreadsheetPrescreen(
-                prescreen_operation=self, settings={"endpoint": "import_table"}
-            )
+        endpoint = colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen(
+            prescreen_operation=self, settings={"endpoint": "import_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.import_table(

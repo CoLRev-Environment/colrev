@@ -416,7 +416,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     "--source_comparison",
     is_flag=True,
     default=False,
-    help="Export a spreadsheet for (non-matched) source comparison",
+    help="Export a table for (non-matched) source comparison",
 )
 @click.option("--force", is_flag=True, default=False)
 @click.pass_context
@@ -790,7 +790,7 @@ def pdf_prep(
     "--export",
     is_flag=True,
     default=False,
-    help="Export spreadsheet.",
+    help="Export a table.",
 )
 @click.option(
     "--discard_missing",

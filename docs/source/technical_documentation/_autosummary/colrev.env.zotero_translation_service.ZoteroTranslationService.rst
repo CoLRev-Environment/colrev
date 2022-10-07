@@ -1,4 +1,4 @@
-colrev.env.zotero\_translation\_service.ZoteroTranslationService
+﻿colrev.env.zotero\_translation\_service.ZoteroTranslationService
 ================================================================
 
 .. currentmodule:: colrev.env.zotero_translation_service

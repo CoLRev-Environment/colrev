@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class StructuredData(JsonSchemaMixin):
-    """Summarize the literature in a structured data extraction (a spreadsheet)"""
+    """Summarize the literature in a structured data extraction (a table)"""
 
     @dataclass
     class StructuredDataSettings(JsonSchemaMixin):

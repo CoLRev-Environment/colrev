@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on a spreadsheet"""
+"""Prescreen based on a table"""
 from __future__ import annotations
 
 import csv
@@ -26,9 +26,9 @@ if typing.TYPE_CHECKING:
     colrev.env.package_manager.PrescreenPackageEndpointInterface
 )
 @dataclass
-class SpreadsheetPrescreen(JsonSchemaMixin):
+class TablePrescreen(JsonSchemaMixin):
 
-    """Prescreen based on a spreadsheet (exported and imported)"""
+    """Prescreen based on a table (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
@@ -50,7 +50,7 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
     ) -> None:
         """Export a prescreen table"""
 
-        # TODO : add delta (records not yet in the spreadsheet)
+        # TODO : add delta (records not yet in the table)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
 
@@ -160,18 +160,18 @@ class SpreadsheetPrescreen(JsonSchemaMixin):
     ) -> dict:
         """Prescreen records based on screening tables"""
 
-        if "y" == input("create prescreen spreadsheet [y,n]?"):
+        if "y" == input("create prescreen table [y,n]?"):
             self.export_table(
                 prescreen_operation=prescreen_operation, records=records, split=split
             )
 
-        if "y" == input("import prescreen spreadsheet [y,n]?"):
+        if "y" == input("import prescreen table [y,n]?"):
             self.import_table(prescreen_operation=prescreen_operation, records=records)
 
         if prescreen_operation.review_manager.dataset.has_changes():
             if "y" == input("create commit [y,n]?"):
                 prescreen_operation.review_manager.create_commit(
-                    msg="Pre-screen (spreadsheets)",
+                    msg="Pre-screen (table)",
                     manual_author=True,
                     script_call="colrev prescreen",
                 )

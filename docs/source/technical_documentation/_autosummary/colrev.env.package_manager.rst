@@ -1,4 +1,4 @@
-colrev.env.package\_manager
+﻿colrev.env.package\_manager
 ===========================
 
 .. automodule:: colrev.env.package_manager

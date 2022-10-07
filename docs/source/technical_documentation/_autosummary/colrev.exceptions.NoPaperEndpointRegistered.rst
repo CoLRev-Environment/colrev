@@ -1,4 +1,4 @@
-colrev.exceptions.NoPaperEndpointRegistered
+﻿colrev.exceptions.NoPaperEndpointRegistered
 ===========================================
 
 .. currentmodule:: colrev.exceptions

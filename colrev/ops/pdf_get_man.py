@@ -51,7 +51,7 @@ class PDFGetMan(colrev.operation.Operation):
         return missing_records
 
     def export_retrieval_table(self, *, records: dict) -> None:
-        """Export a spreadsheet table for manual PDF retrieval"""
+        """Export a table for manual PDF retrieval"""
 
         missing_records = self.get_pdf_get_man(records=records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")

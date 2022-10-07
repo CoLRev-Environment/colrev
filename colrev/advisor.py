@@ -196,7 +196,7 @@ class Advisor:
                     + "(see instructions above).",
                 }
 
-    def get_collaboration_instructions(
+    def __get_collaboration_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats = None
     ) -> dict:
         """Get instructions related to collaboration"""
@@ -600,7 +600,7 @@ class Advisor:
                 }
                 environment_instructions.append(instruction)
 
-    def get_environment_instructions(
+    def __get_environment_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
         """Get instructions related to the CoLRev environment"""
@@ -648,10 +648,10 @@ class Advisor:
             "review_instructions": self.get_review_instructions(
                 status_stats=status_stats
             ),
-            "environment_instructions": self.get_environment_instructions(
+            "environment_instructions": self.__get_environment_instructions(
                 status_stats=status_stats
             ),
-            "collaboration_instructions": self.get_collaboration_instructions(
+            "collaboration_instructions": self.__get_collaboration_instructions(
                 status_stats=status_stats
             ),
         }
@@ -663,7 +663,7 @@ class Advisor:
     def get_sharing_instructions(self) -> dict:
         """Get instructions related to sharing the project"""
 
-        collaboration_instructions = self.get_collaboration_instructions()
+        collaboration_instructions = self.__get_collaboration_instructions()
 
         status_code = not all(
             x["level"] in ["SUCCESS", "WARNING"]

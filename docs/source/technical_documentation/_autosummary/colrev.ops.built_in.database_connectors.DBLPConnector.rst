@@ -1,4 +1,4 @@
-colrev.ops.built\_in.database\_connectors.DBLPConnector
+﻿colrev.ops.built\_in.database\_connectors.DBLPConnector
 =======================================================
 
 .. currentmodule:: colrev.ops.built_in.database_connectors

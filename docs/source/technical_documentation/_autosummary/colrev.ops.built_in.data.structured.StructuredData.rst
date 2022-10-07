@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.structured.StructuredData
+﻿colrev.ops.built\_in.data.structured.StructuredData
 ===================================================
 
 .. currentmodule:: colrev.ops.built_in.data.structured

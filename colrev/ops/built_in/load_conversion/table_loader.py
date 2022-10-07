@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Load conversion of spreadsheets (xlsx, csv)"""
+"""Load conversion of tables (xlsx, csv)"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,12 +21,12 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-class SpreadsheetLoadUtility:
-    """Utility for spreadsheet loading"""
+class TableLoadUtility:
+    """Utility for tables loading"""
 
     @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
-        """Preprocess records imported from a spreadsheet"""
+        """Preprocess records imported from a table"""
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
@@ -142,7 +142,7 @@ class CSVLoader(JsonSchemaMixin):
         data.columns = data.columns.str.lower()
         records_value_list = data.to_dict("records")
 
-        records_dict = SpreadsheetLoadUtility.preprocess_records(
+        records_dict = TableLoadUtility.preprocess_records(
             records=records_value_list
         )
         records = {r["ID"]: r for r in records_dict}
@@ -199,7 +199,7 @@ class ExcelLoader:
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
         record_value_list = data.to_dict("records")
-        records_dicts = SpreadsheetLoadUtility.preprocess_records(
+        records_dicts = TableLoadUtility.preprocess_records(
             records=record_value_list
         )
         records = {r["ID"]: r for r in records_dicts}

@@ -1,4 +1,4 @@
-colrev.env.pdf\_hash\_service.PDFHashService
+﻿colrev.env.pdf\_hash\_service.PDFHashService
 ============================================
 
 .. currentmodule:: colrev.env.pdf_hash_service
