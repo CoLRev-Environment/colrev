@@ -1,4 +1,4 @@
-﻿colrev.dataset.Dataset
+colrev.dataset.Dataset
 ======================
 
 .. currentmodule:: colrev.dataset

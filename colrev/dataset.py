@@ -693,13 +693,18 @@ class Dataset:
         return temp_id
 
     def propagated_id(self, *, record_id: str) -> bool:
-        """Check whether an ID has been propagated"""
+        """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
 
-        checker = self.review_manager.get_checker()
-        propagation_notes = checker.check_propagated_id(
-            prior_id=record_id, project_context=self.review_manager.path
-        )
-        return len(propagation_notes) > 0
+        for record in self.load_records_dict(header_only=True):
+            if record["ID"] == record_id:
+                if record[
+                    "colrev_status"
+                ] in colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.md_processed
+                ):
+                    return True
+
+        return False
 
     def __generate_id_blacklist(
         self,
@@ -708,16 +713,18 @@ class Dataset:
         record_dict: dict,
         id_blacklist: list = None,
         record_in_bib_db: bool = False,
-        raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        # Make sure that IDs that have been propagated to the
+        # Only change IDs that are before md_processed
+        if record_dict["colrev_status"] in colrev.record.RecordState.get_post_x_states(
+            state=colrev.record.RecordState.md_processed
+        ):
+            raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
+        # Alternatively, we could change IDs except for those
+        # that have been propagated to the
         # screen or data will not be replaced
         # (this would break the chain of evidence)
-        if raise_error:
-            if self.propagated_id(record_id=record_dict["ID"]):
-                raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
 
         temp_id = self.__create_temp_id(
             local_index=local_index, record_dict=record_dict
@@ -769,7 +776,6 @@ class Dataset:
                 record_dict=record_dict,
                 id_blacklist=id_list,
                 record_in_bib_db=True,
-                raise_error=False,
             )
 
             id_list.append(new_id)

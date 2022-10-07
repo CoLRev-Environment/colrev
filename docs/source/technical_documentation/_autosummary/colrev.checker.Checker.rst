@@ -1,4 +1,4 @@
-﻿colrev.checker.Checker
+colrev.checker.Checker
 ======================
 
 .. currentmodule:: colrev.checker
@@ -16,9 +16,8 @@
    .. autosummary::
       :nosignatures:
 
+      ~Checker.check_change_in_propagated_id
       ~Checker.check_fields
-      ~Checker.check_persisted_id_changes
-      ~Checker.check_propagated_id
       ~Checker.check_repo
       ~Checker.check_repository_setup
       ~Checker.check_sources

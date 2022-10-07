@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import itertools
-import logging
 import os
 import re
 import sys
@@ -369,7 +368,7 @@ class Checker:
                         field_errors.append(f"screen_crit field not NA: {screen_crit}")
 
                     if "=out" not in screen_crit:
-                        logging.error("criteria: %s", criteria)
+                        self.review_manager.logger.error("criteria: %s", criteria)
                         field_errors.append(
                             "Excluded record with no screening_criterion violated: "
                             f"{record_id}, {status}, {screen_crit}"
@@ -400,10 +399,15 @@ class Checker:
                 "\n    " + "\n    ".join(field_errors)
             )
 
-    def check_propagated_id(
+    def check_change_in_propagated_id(
         self, *, prior_id: str, new_id: str = "TBD", project_context: Path
     ) -> list:
-        """Check whether propagated IDs were changed"""
+        """Check whether propagated IDs were changed
+
+        A propagated ID is a record ID that is stored outside the records.bib.
+        Propagated IDs should not be changed in the records.bib
+        because this would break the link between the propagated ID and its metadata.
+        """
         # pylint: disable=too-many-branches
 
         ignore_patterns = [
@@ -427,9 +431,9 @@ class Checker:
                         notifications.append(msg)
 
                 if not any(name.endswith(x) for x in text_formats):
-                    logging.debug("Skipping %s", name)
+                    self.review_manager.logger.debug("Skipping %s", name)
                     continue
-                logging.debug("Checking %s", name)
+                self.review_manager.logger.debug("Checking %s", name)
                 if name.endswith(".bib"):
                     retrieved_ids = self.__retrieve_ids_from_bib(
                         file_path=Path(os.path.join(root, name))
@@ -465,8 +469,10 @@ class Checker:
                     )
         return notifications
 
-    def check_persisted_id_changes(self, *, prior: dict, status_data: dict) -> None:
-        """Check for changes in persisted IDs"""
+    def __check_change_in_propagated_ids(
+        self, *, prior: dict, status_data: dict
+    ) -> None:
+        """Check for changes in propagated IDs"""
 
         if "persisted_IDs" not in prior:
             return
@@ -477,7 +483,7 @@ class Checker:
             for new_id, new_origin in status_data["origin_list"]:
                 if new_origin == prior_origin:
                     if new_id != prior_id:
-                        notifications = self.check_propagated_id(
+                        notifications = self.check_change_in_propagated_id(
                             prior_id=prior_id,
                             new_id=new_id,
                             project_context=self.review_manager.path,
@@ -694,7 +700,7 @@ class Checker:
                 main_refs_checks.extend(
                     [
                         {
-                            "script": self.check_persisted_id_changes,
+                            "script": self.__check_change_in_propagated_ids,
                             "params": {"prior": prior, "status_data": status_data},
                         },
                         {
