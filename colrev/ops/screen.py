@@ -153,7 +153,7 @@ class Screen(colrev.operation.Operation):
                 # because at least one of the other criteria led to exclusion decision
 
         # TODO : screening: if screening_criteria field is already available
-        # only go through the criteria with "TODO"
+        # only go through the criteria with "TODO" (in the built-in package endpoints)
         # This would be important when screening-criteria are added
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()

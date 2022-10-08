@@ -32,7 +32,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     """Performs a search in the LocalIndex"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    # TODO : add a colrev_projet_origin field and use it as the identifier?
+    # TODO : add a colrev_project_origin field and use it as the identifier?
     source_identifier = "index"
 
     def __init__(

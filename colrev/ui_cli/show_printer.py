@@ -26,7 +26,6 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
 
     for sample_r in sample:
         colrev.record.Record(data=sample_r).print_citation_format()
-    # TODO : print sample size, distributions over years/journals
 
 
 def print_venv_notes() -> None:

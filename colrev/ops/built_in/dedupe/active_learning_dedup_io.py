@@ -2,6 +2,7 @@
 """Deduplication based on active learning (dedupe-io)"""
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 import statistics
@@ -51,6 +52,10 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
+
+        logging.basicConfig()
+        logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __setup_active_learning_dedupe(
@@ -455,6 +460,8 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
+        logging.basicConfig()
+        logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 

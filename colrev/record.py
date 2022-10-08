@@ -1703,7 +1703,6 @@ class Record:
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
 
-        toc_key = "NA"
         if "article" == self.data["ENTRYTYPE"]:
             toc_key = f"{self.data.get('journal', '-').replace(' ', '-').lower()}"
             toc_key += f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
@@ -1714,7 +1713,13 @@ class Record:
                 f"{self.data.get('booktitle', '').replace(' ', '-').lower()}"
                 + f"|{self.data.get('year', '')}"
             )
-        # TODO : tbd: else?
+        else:
+            msg = (
+                f"ENTRYTYPE {self.data['ENTRYTYPE']} "
+                + f"({self.data['ID']}) not toc-identifiable"
+            )
+            colrev_exceptions.NotTOCIdentifiableException(msg)
+
         return toc_key
 
     def print_citation_format(self) -> None:

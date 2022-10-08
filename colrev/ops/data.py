@@ -273,10 +273,6 @@ class Data(colrev.operation.Operation):
         # if self.verbose:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
-        # TODO : include paper.md / data.csv as arguments of the data endpoint
-        # not the review_manager? (but: the other scripts/checks may rely
-        # on the review_manager/path variables....)
-
         for (
             data_package_endpoint
         ) in self.review_manager.settings.data.data_package_endpoints:

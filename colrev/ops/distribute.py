@@ -53,6 +53,7 @@ class Distribute(colrev.operation.Operation):
             if path.suffix == ".bib":
                 # TODO : append records (check duplicates/duplicate IDs)
                 # if path already exists
+                # TODO : should the following really rename the file? or just get the updated filepath?
                 path.rename(target / Path("data/search/local_import.bib"))
                 input(path)
 

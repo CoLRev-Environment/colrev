@@ -226,7 +226,6 @@ class DBLPSearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         """Source-specific preparation for DBLP"""
 
-        # TODO (if any)
         return record
 
 

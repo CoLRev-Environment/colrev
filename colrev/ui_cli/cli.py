@@ -109,8 +109,6 @@ def init(ctx: click.core.Context, type: str, example: bool) -> None:
 
     try:
         if type is None:
-            # TODO : the type (if not passed as an argument) should
-            # be selected as the first step of the web-ui
             type = "literature_review"
 
         colrev.review_manager.ReviewManager.get_init_operation(
@@ -333,7 +331,7 @@ def prep(
     """Prepare records"""
 
     # pylint: disable=import-outside-toplevel
-    # TODO : catch inside prep:
+    # TODO : catch inside prep (and raise ServiceNotAvailable):
     from sqlite3 import OperationalError
 
     try:
@@ -451,10 +449,6 @@ def dedupe(
         if source_comparison:
             dedupe_operation.source_comparison()
             return
-
-        # TODO : move to active learning init:
-        logging.basicConfig()
-        logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
         dedupe_operation.main()
 

@@ -66,7 +66,6 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         """Source-specific preparation for Transport Research International Documentation"""
 
-        # TODO (if any)
         return record
 
 

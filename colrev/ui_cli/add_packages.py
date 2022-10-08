@@ -61,8 +61,6 @@ def add_data(
             data_operation.review_manager.dataset.add_changes(
                 path=default_endpoint_conf["word_template"]
             )
-            # TODO : check whether template_name is_file
-            # and csl_link.name is_file()
 
         data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
         data_operation.review_manager.create_commit(

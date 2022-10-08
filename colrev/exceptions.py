@@ -199,6 +199,16 @@ class NotEnoughDataToIdentifyException(CoLRevException):
         super().__init__(self.message)
 
 
+class NotTOCIdentifiableException(CoLRevException):
+    """The record cannot be identified through table-of-contents.
+    Either the table-of-contents key is not implemented or
+    the ENTRYTPE is not organized in tables-of-contents (e.g., online)."""
+
+    def __init__(self, msg: str = None) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class PropagatedIDChange(CoLRevException):
     """Changes in propagated records ID detected."""
 
@@ -306,6 +316,14 @@ class RecordNotInRepoException(CoLRevException):
             self.message = f"Record not in index ({record_id})"
         else:
             self.message = "Record not in index"
+        super().__init__(self.message)
+
+
+class CorrectionPreconditionException(CoLRevException):
+    """Precondition for corrections not given (clean git repository)."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
         super().__init__(self.message)
 
 

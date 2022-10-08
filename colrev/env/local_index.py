@@ -684,7 +684,7 @@ class LocalIndex:
         ):
             raise colrev_exceptions.RecordNotIndexedException()
 
-        # TODO : remove provenance on project-specific fields
+        # TODO : remove provenance on project-specific fields (WHY?!)
 
         if "screening_criteria" in record_dict:
             del record_dict["screening_criteria"]

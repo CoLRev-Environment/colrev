@@ -67,7 +67,6 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         """Source-specific preparation for Wiley"""
 
-        # TODO (if any)
         return record
 
 

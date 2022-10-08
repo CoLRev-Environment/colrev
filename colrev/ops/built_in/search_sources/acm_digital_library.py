@@ -68,7 +68,6 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
         """Source-specific preparation for ACM Digital Library"""
 
-        # TODO (if any)
         return record
 
 

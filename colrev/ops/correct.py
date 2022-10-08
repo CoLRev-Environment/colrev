@@ -269,12 +269,8 @@ class Corrections:
         git_repo = check_operation.review_manager.dataset.get_repo()
 
         if git_repo.is_dirty():
-            # TODO : raise exception
-            print(
-                f"Repo not clean ({source_url}): "
-                "commit or stash before updating records"
-            )
-            return False
+            msg = f"Repo not clean ({source_url}): commit or stash before updating records"
+            raise colrev_exceptions.CorrectionPreconditionException(msg)
 
         if check_operation.review_manager.dataset.behind_remote():
             origin = git_repo.remotes.origin
@@ -520,9 +516,12 @@ class Corrections:
             review_manager=check_review_manager
         )
 
-        if not self.__apply_corrections_precondition(
-            check_operation=check_operation, source_url=source_url
-        ):
+        try:
+            if not self.__apply_corrections_precondition(
+                check_operation=check_operation, source_url=source_url
+            ):
+                return
+        except colrev_exceptions.CorrectionPreconditionException:
             return
 
         # pylint: disable=duplicate-code

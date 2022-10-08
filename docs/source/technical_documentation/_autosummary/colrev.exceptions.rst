@@ -26,6 +26,7 @@ colrev.exceptions
       CleanRepoRequiredError
       CoLRevException
       CoLRevUpgradeError
+      CorrectionPreconditionException
       CuratedOutletNotUnique
       DedupeError
       DirtyRepoAfterProcessingError
@@ -42,6 +43,7 @@ colrev.exceptions
       NoSearchFeedRegistered
       NonEmptyDirectoryError
       NotEnoughDataToIdentifyException
+      NotTOCIdentifiableException
       OriginError
       ParameterError
       ProcessOrderViolation

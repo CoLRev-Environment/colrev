@@ -194,7 +194,7 @@ class Load(colrev.operation.Operation):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 
-        self.review_manager.logger.info("Loading source pheuristics...")
+        self.review_manager.logger.info("Loading source heuristics...")
 
         all_available_packages_names = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,

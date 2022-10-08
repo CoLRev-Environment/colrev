@@ -63,7 +63,7 @@ class Manuscript(JsonSchemaMixin):
         csl_style: str
         paper_path: Path = Path("paper.md")
         paper_output: Path = Path("paper.docx")
-        # TODO : output path
+        # TODO : output filetype options (docx, pdf, html,...)
 
         _details = {
             "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
