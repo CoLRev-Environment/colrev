@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-lines
 
 
 class Dataset:
@@ -165,14 +166,18 @@ class Dataset:
                 }
 
             elif "" != value:
-                for item in (value + " ").split("; "):
-                    if "" == item:
-                        continue
-                    item += ";"  # removed by split
+                # Pybtex automatically replaces \n in fields.
+                # For consistency, we also do that for header_only mode:
+                if "\n" in value:
+                    value = value.replace("\n", " ")
+                items = [x.lstrip() + ";" for x in (value + " ").split("; ") if x != ""]
+
+                for item in items:
                     key_source = item[: item[:-1].rfind(";")]
                     if ":" in key_source:
                         note = item[item[:-1].rfind(";") + 1 : -1]
                         key, source = key_source.split(":", 1)
+                        # key = key.rstrip().lstrip()
                         return_dict[key] = {
                             "source": source,
                             "note": note,
@@ -280,6 +285,10 @@ class Dataset:
                 return key, value_list
             if "colrev_status" == key:
                 return key, colrev.record.RecordState[value]
+            if "colrev_masterdata_provenance" == key:
+                return key, self.__load_field_dict(value=value, field=key)
+            if "file" == key:
+                return key, Path(value)
             return key, value
 
         # pylint: disable=consider-using-with
@@ -291,8 +300,8 @@ class Dataset:
             "ID": "NA",
             "colrev_origin": "NA",
             "colrev_status": "NA",
-            "screening_criteria": "NA",
             "file": "NA",
+            "screening_criteria": "NA",
             "colrev_masterdata_provenance": "NA",
         }
         number_required_header_items = len(default)
@@ -322,13 +331,22 @@ class Dataset:
             current_key_value_pair_str += line
             if "}," in line or "@" in line[:2]:
                 key, value = parse_k_v(current_key_value_pair_str)
+                if "colrev_masterdata_provenance" == key:
+                    if "NA" == value:
+                        value = {}
+                if "NA" == value:
+                    current_key_value_pair_str = ""
+                    continue
                 current_key_value_pair_str = ""
                 if key in record_header_item:
                     current_header_item_count += 1
                     record_header_item[key] = value
         if "NA" != record_header_item["colrev_origin"]:
             record_header_items.append(record_header_item)
-        return record_header_items
+        return [
+            {k: v for k, v in record_header_item.items() if "NA" != v}
+            for record_header_item in record_header_items
+        ]
 
     def load_records_dict(
         self, *, load_str: str = None, header_only: bool = False
@@ -342,9 +360,9 @@ class Dataset:
         {"Staehr2010": {'ID': 'Staehr2010',
         'colrev_origin': ['30_example_records.bib/Staehr2010'],
         'colrev_status': <RecordState.md_imported: 2>,
-        'screening_criteria': 'NA',
-        'file': 'NA',
-        'colrev_masterdata_provenance': 'CURATED:https://github.com/...;;'}},
+        'screening_criteria': 'criterion1=in;criterion2=out',
+        'file': PosixPath('data/pdfs/Smith2000.pdf'),
+        'colrev_masterdata_provenance': {"author":{"source":"...", "note":"..."}}},
         }
         """
 
@@ -354,8 +372,8 @@ class Dataset:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
 
         if header_only:
-            # TODO : parse Path / screening_criteria / colrev_masterdata_provenance
-
+            # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
+            # to optimize performance
             record_header_list = (
                 self.__read_record_header_items() if self.records_file.is_file() else []
             )

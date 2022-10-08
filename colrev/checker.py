@@ -615,10 +615,10 @@ class Checker:
                     )
 
             if "file" in record_dict:
-                if not all(Path(f).is_file() for f in record_dict["file"].split(";")):
+                if record_dict["file"].is_file():
                     status_data["pdf_not_exists"].append(record_dict["ID"])
 
-            if "" != record_dict.get("colrev_origin", ""):
+            if [] != record_dict.get("colrev_origin", []):
                 for org in record_dict["colrev_origin"]:
                     status_data["record_links_in_bib"].append(org)
             else:

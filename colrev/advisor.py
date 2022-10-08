@@ -384,7 +384,7 @@ class Advisor:
         ).values():
             if (
                 record_dict["colrev_status"] in file_required_status
-                and record_dict.get("file", "NA") == "NA"
+                and "file" not in record_dict
             ):
                 missing_files.append(record_dict["ID"])
 
@@ -417,7 +417,7 @@ class Advisor:
         for record_dict in self.review_manager.dataset.load_records_dict(
             header_only=True
         ).values():
-            if record_dict.get("file", "NA") != "NA":
+            if "file" in record_dict:
                 if not (self.review_manager.path / Path(record_dict["file"])).is_file():
                     review_instructions.append(
                         {

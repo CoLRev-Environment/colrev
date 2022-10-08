@@ -122,7 +122,7 @@ class StatusStats:
         self.screening_criteria = [
             x["screening_criteria"]
             for x in self._record_header_list
-            if x["screening_criteria"] not in ["", "NA"]
+            if x.get("screening_criteria", "") not in ["", "NA"]
         ]
 
         self.md_duplicates_removed = sum(
@@ -173,7 +173,7 @@ class StatusStats:
         self.currently.pdf_needs_retrieval = self.currently.rev_prescreen_included
 
         colrev_masterdata_items = [
-            x["colrev_masterdata_provenance"] for x in self._record_header_list
+            x["colrev_masterdata_provenance"] for x in self._record_header_list if "colrev_masterdata_provenance" in x
         ]
         self.nr_curated_records = len(
             [x for x in colrev_masterdata_items if "CURATED:" in x]
