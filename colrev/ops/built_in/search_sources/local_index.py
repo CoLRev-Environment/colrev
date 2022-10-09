@@ -164,7 +164,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for local-index"""
 
-        # TODO
+        # TODO: heuristic for local_index SearchSource?
         result = {"confidence": 0.0}
 
         return result

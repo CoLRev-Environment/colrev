@@ -322,7 +322,6 @@ class Load(colrev.operation.Operation):
                     ].load_conversion_package_endpoint = {
                         "endpoint": custom_load_conversion_package_endpoint
                     }
-                # TODO : check if custom_load_conversion_package_endpoint is available?
 
             sources.append(heuristic_source["source_candidate"])
             self.review_manager.save_settings()
@@ -735,7 +734,6 @@ class Load(colrev.operation.Operation):
 
         saved_args = locals()
         if not keep_ids:
-            # TODO : keep_ids as a potential parameter for the source/settings?
             del saved_args["keep_ids"]
 
         def load_active_sources() -> list:

@@ -22,7 +22,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
 
-# from importlib.metadata import version
 
 # pylint: disable=too-few-public-methods
 
@@ -43,20 +42,25 @@ class Initializer:
         saved_args = locals()
         assert not (example and local_index_repo)
 
-        # TODO : adapt to  new colrev.review_types
-        # if review_type not in colrev.settings.ReviewType.get_options():
-        #     raise colrev_exceptions.ParameterError(
-        #         parameter="init.review_type",
-        #         value=f"'{review_type}'",
-        #         options=colrev.settings.ReviewType.get_options(),
-        #     )
+        self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
+        if "." not in self.review_type:
+            self.review_type = "colrev_built_in." + self.review_type
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        try:
+            res = review_manager.get_review_types(review_type=self.review_type)
+        except colrev.exceptions.MissingDependencyError as exc:
+            res = review_manager.get_review_types(
+                review_type="colrev_built_in.literature_review"
+            )
+            raise colrev_exceptions.ParameterError(
+                parameter="init.review_type",
+                value=f"'{review_type}'",
+                options=list(res.all_available_packages_names.keys()),
+            ) from exc
 
         self.__check_init_precondition()
 
         self.title = str(Path.cwd().name)
-        self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
-        if "." not in self.review_type:
-            self.review_type = "colrev_built_in." + self.review_type
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
@@ -87,7 +91,7 @@ class Initializer:
             self.review_manager.logger.info(instruction)
 
     def __check_init_precondition(self) -> None:
-        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
+        cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
 
         # pylint: disable=duplicate-code
         if "venv" in cur_content:

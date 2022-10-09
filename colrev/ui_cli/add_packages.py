@@ -14,7 +14,6 @@ def add_data(
     data_operation: colrev.ops.data.Data,
     review_manager: colrev.review_manager.ReviewManager,
     add_endpoint: str,
-    force: bool,
 ) -> None:
     """Add a data package_endpoint"""
 
@@ -69,7 +68,7 @@ def add_data(
         )
 
         # Note : reload updated settings
-        review_manager = colrev.review_manager.ReviewManager(force_mode=force)
+        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
         data_operation = colrev.ops.data.Data(review_manager=review_manager)
     else:
         print("Data format not available")

@@ -17,3 +17,14 @@ colrev.ui\_web.settings\_editor.SettingsEditor
       :nosignatures:
 
       ~SettingsEditor.open_settings_editor
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~SettingsEditor.settings_path
+      ~SettingsEditor.review_manager

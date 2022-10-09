@@ -357,6 +357,14 @@ class ServiceNotAvailableException(CoLRevException):
         super().__init__(f"Service not available: {self.message}")
 
 
+class PortAlreadyRegisteredException(CoLRevException):
+    """The port (localhost) is already registered."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
 class TEITimeoutException(CoLRevException):
     """A timeout occurred during TEI generation"""
 
@@ -384,6 +392,14 @@ class RecordNotIndexedException(CoLRevException):
             self.message = f"Record not indexed ({record_id})"
         else:
             self.message = "Record not indexed"
+        super().__init__(self.message)
+
+
+class TOCNotAvailableException(CoLRevException):
+    """Tables of contents (toc) are not available for the requested item."""
+
+    def __init__(self, msg: str = None) -> None:
+        self.message = msg
         super().__init__(self.message)
 
 

@@ -34,10 +34,15 @@ class PDFCheckOCR(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+
+        self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
+        pdf_prep_operation.review_manager.environment_manager.build_docker_image(
+            imagename=self.ocrmypdf_image
+        )
 
     # TODO : test whether this is too slow:
     language_detector = (
@@ -83,7 +88,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         command = (
             'docker run --rm --user "$(id -u):$(id -g)" -v "'
             + str(orig_path)
-            + ':/home/docker" jbarlow83/ocrmypdf --force-ocr '
+            + f':/home/docker" {self.ocrmypdf_image} --force-ocr '
             + options
             + ' -l eng "'
             + str(docker_home_path / pdf_path.name)

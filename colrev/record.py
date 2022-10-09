@@ -1718,7 +1718,7 @@ class Record:
                 f"ENTRYTYPE {self.data['ENTRYTYPE']} "
                 + f"({self.data['ID']}) not toc-identifiable"
             )
-            colrev_exceptions.NotTOCIdentifiableException(msg)
+            raise colrev_exceptions.NotTOCIdentifiableException(msg)
 
         return toc_key
 

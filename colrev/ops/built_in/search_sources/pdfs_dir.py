@@ -314,13 +314,9 @@ class PDFSearchSource(JsonSchemaMixin):
             if "keywords" in record_dict:
                 del record_dict["keywords"]
 
-            environment_manager = (
-                search_operation.review_manager.get_environment_manager()
-            )
             # to allow users to update/reindex with newer version:
-            record_dict["grobid-version"] = environment_manager.docker_images[
-                "lfoppiano/grobid"
-            ]
+            record_dict["grobid-version"] = tei.get_grobid_version()
+
             return record_dict
 
     def __index_pdf(

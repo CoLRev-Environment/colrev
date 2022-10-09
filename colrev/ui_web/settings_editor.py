@@ -35,6 +35,9 @@ class SettingsEditor:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
+    settings_path: Path
+    review_manager: colrev.review_manager.ReviewManager
+
     def __init__(self, *, review_manager: any = None) -> None:
 
         if DEV:
@@ -42,7 +45,7 @@ class SettingsEditor:
         else:
             self.review_manager = review_manager
             self.package_manager = self.review_manager.get_package_manager()
-            self.settings_path: Path = self.review_manager.settings_path
+            self.settings_path = self.review_manager.settings_path
 
         # Note : no need for default values (they are already inserted before by the template setup)
 

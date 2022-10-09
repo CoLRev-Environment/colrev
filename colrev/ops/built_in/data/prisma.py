@@ -75,8 +75,6 @@ class PRISMA(JsonSchemaMixin):
         prisma_data.loc["records_excluded", "n"] = status_stats.overall.rev_excluded
         prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
-        # TODO : TBD: if settings.pdf_get.pdf_required_for_screen_and_synthesis = False
-        # should the following be included?
         prisma_data.loc[
             "dbr_notretrieved_reports", "n"
         ] = status_stats.overall.pdf_not_available

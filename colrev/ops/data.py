@@ -233,7 +233,6 @@ class Data(colrev.operation.Operation):
     def main(self, *, pre_commit_hook: bool = False) -> dict:
         """Data operation (main entrypoint)"""
 
-        # TODO : use self.verbose in the update scripts of data endpoints
         self.verbose = not pre_commit_hook
 
         no_endpoints_registered = 0 == len(

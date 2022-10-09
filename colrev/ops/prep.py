@@ -37,6 +37,8 @@ class Prep(colrev.operation.Operation):
     first_round: bool
     last_round: bool
 
+    debug_mode: bool
+
     pad: int
 
     prep_package_endpoints: dict[str, typing.Any]
@@ -103,18 +105,17 @@ class Prep(colrev.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
-        debug: str = "NA",
     ) -> None:
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.prep,
             notify_state_transition_operation=notify_state_transition_operation,
-            debug=(debug != "NA"),
         )
         self.notify_state_transition_operation = notify_state_transition_operation
 
         self.fields_to_keep += self.review_manager.settings.prep.fields_to_keep
 
+        self.debug_mode = False
         self.cpus: int = self.cpus * 4
         self.pad = 0
 
@@ -147,7 +148,7 @@ class Prep(colrev.operation.Operation):
                 f'({preparation_record.data["ID"]})'
                 f" changed:\n{self.review_manager.p_printer.pformat(diffs)}\n"
             )
-            if self.review_manager.debug_mode:
+            if self.debug_mode:
                 self.review_manager.logger.info(change_report)
                 self.review_manager.logger.info(
                     "To correct errors in the endpoint,"
@@ -162,7 +163,7 @@ class Prep(colrev.operation.Operation):
                 print("\n")
         else:
             self.review_manager.logger.debug(f"{prep_package_endpoint} changed: -")
-            if self.review_manager.debug_mode:
+            if self.debug_mode:
                 print("\n")
                 time.sleep(0.3)
 
@@ -193,7 +194,7 @@ class Prep(colrev.operation.Operation):
                     prep_round_package_endpoint["endpoint"].lower()
                 ]
 
-                if self.review_manager.debug_mode:
+                if self.debug_mode:
                     self.review_manager.logger.info(
                         f"{endpoint.settings.endpoint}(...) called"
                     )
@@ -450,7 +451,7 @@ class Prep(colrev.operation.Operation):
         debug_file: Path = None,
         debug_ids: str,
     ) -> list:
-        if self.review_manager.debug_mode:
+        if self.debug_mode:
             prepare_data = self.__load_prep_data_for_debug(
                 debug_ids=debug_ids, debug_file=debug_file
             )
@@ -459,7 +460,7 @@ class Prep(colrev.operation.Operation):
         else:
             prepare_data = self.__load_prep_data()
 
-        if self.review_manager.debug_mode:
+        if self.debug_mode:
             self.review_manager.logger.info(
                 "In this round, we set the similarity "
                 f"threshold ({self.retrieval_similarity})"
@@ -672,7 +673,7 @@ class Prep(colrev.operation.Operation):
 
         self.check_dbs_availability()
 
-        if self.review_manager.debug_mode:
+        if self.debug_mode:
             print("\n\n\n")
             self.review_manager.logger.info("Start debug prep\n")
             self.review_manager.logger.info(
@@ -687,7 +688,7 @@ class Prep(colrev.operation.Operation):
             del saved_args["keep_ids"]
 
         if "NA" != debug_ids:
-            self.review_manager.debug_mode = True
+            self.debug_mode = True
 
         for i, prep_round in enumerate(self.review_manager.settings.prep.prep_rounds):
 
@@ -702,7 +703,7 @@ class Prep(colrev.operation.Operation):
                 print("No records to prepare.")
                 return
 
-            if self.review_manager.debug_mode:
+            if self.debug_mode:
                 # Note: preparation_data is not turned into a list of records.
                 prepared_records = []
                 for item in preparation_data:
@@ -731,7 +732,7 @@ class Prep(colrev.operation.Operation):
                 pool.join()
                 pool.clear()
 
-            if not self.review_manager.debug_mode:
+            if not self.debug_mode:
                 self.review_manager.dataset.save_records_dict(
                     records={r["ID"]: r for r in prepared_records}, partial=True
                 )
@@ -746,7 +747,7 @@ class Prep(colrev.operation.Operation):
                 self.review_manager.reset_report_logger()
                 print()
 
-        if not keep_ids and not self.review_manager.debug_mode:
+        if not keep_ids and not self.debug_mode:
             self.review_manager.dataset.set_ids()
             self.review_manager.create_commit(
                 msg="Set IDs", script_call="colrev prep", saved_args=saved_args

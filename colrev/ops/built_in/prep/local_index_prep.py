@@ -53,14 +53,16 @@ class LocalIndexPrep(JsonSchemaMixin):
 
         # TBD: maybe extract the following three lines as a separate script...
         if not record.masterdata_is_curated():
-            year = self.local_index.get_year_from_toc(record_dict=record.get_data())
-            if "NA" != year:
+            try:
+                year = self.local_index.get_year_from_toc(record_dict=record.get_data())
                 record.update_field(
                     key="year",
                     value=year,
                     source="LocalIndexPrep",
                     keep_source_if_equal=True,
                 )
+            except colrev_exceptions.TOCNotAvailableException:
+                pass
 
         # Note : cannot use local_index as an attribute of PrepProcess
         # because it creates problems with multiprocessing
@@ -82,6 +84,7 @@ class LocalIndexPrep(JsonSchemaMixin):
                     retrieved = True
             except (
                 colrev_exceptions.RecordNotInIndexException,
+                colrev_exceptions.NotTOCIdentifiableException,
                 NotFoundError,
                 TransportError,
             ):

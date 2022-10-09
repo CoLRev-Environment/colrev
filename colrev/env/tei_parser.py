@@ -37,6 +37,7 @@ class TEIParser:
     def __init__(
         self,
         *,
+        environment_manager: colrev.env.environment_manager.EnvironmentManager,
         pdf_path: Path = None,
         tei_path: Path = None,
     ):
@@ -47,6 +48,7 @@ class TEIParser:
         - tei_path: read TEI from file
         """
 
+        self.environment_manager = environment_manager
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
@@ -82,7 +84,9 @@ class TEIParser:
 
     def __create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
-        grobid_service = colrev.env.grobid_service.GrobidService()
+        grobid_service = colrev.env.grobid_service.GrobidService(
+            environment_manager=self.environment_manager
+        )
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
         # if we do it in the colrev process
@@ -139,6 +143,23 @@ class TEIParser:
         """Get the TEI string"""
 
         return etree.tostring(self.root).decode("utf-8")
+
+    def get_grobid_version(self) -> str:
+        """Get the GROBID version used for TEI creation"""
+        grobid_version = "NA"
+        encoding_description = self.root.find(".//" + self.ns["tei"] + "encodingDesc")
+        if encoding_description is not None:
+            app_info_node = encoding_description.find(
+                ".//" + self.ns["tei"] + "appInfo"
+            )
+            if app_info_node is not None:
+                application_node = encoding_description.find(
+                    ".//" + self.ns["tei"] + "application"
+                )
+                if application_node is not None:
+                    if application_node.get("version") is not None:
+                        grobid_version = application_node.get("version")
+        return grobid_version
 
     def __get_paper_title(self) -> str:
         title_text = "NA"

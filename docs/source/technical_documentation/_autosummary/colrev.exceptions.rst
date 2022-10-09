@@ -46,6 +46,7 @@ colrev.exceptions
       NotTOCIdentifiableException
       OriginError
       ParameterError
+      PortAlreadyRegisteredException
       ProcessOrderViolation
       PropagatedIDChange
       RecordNotInIndexException
@@ -59,5 +60,6 @@ colrev.exceptions
       StatusTransitionError
       TEIException
       TEITimeoutException
+      TOCNotAvailableException
       UnstagedGitChangesError
       UnsupportedImportFormatError

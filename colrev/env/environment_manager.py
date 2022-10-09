@@ -31,23 +31,32 @@ class EnvironmentManager:
     REGISTRY_RELATIVE = Path("registry.yaml")
     registry = colrev_path.joinpath(REGISTRY_RELATIVE)
 
-    os_db = "opensearchproject/opensearch-dashboards:1.3.0"
-
-    # TODO : include ports in the dict?
-    docker_images = {
-        "lfoppiano/grobid": "lfoppiano/grobid:0.7.1",
-        "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
-        "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
-        "zotero/translation-server": "zotero/translation-server:2.0.4",
-        "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
-        "opensearchproject/opensearch-dashboards": os_db,
-        "browserless/chrome": "browserless/chrome:latest",
-        "bibutils": "bibutils:latest",
-        "pdf_hash": "pdf_hash:latest",
-    }
-
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
+        self.__registered_ports: typing.List[str] = []
+        self.__registered_services: typing.List[str] = []
+
+    def register_ports(self, *, ports: typing.List[str]) -> None:
+        """Register a localhost port to avoid conflicts"""
+        for port_to_register in ports:
+            if port_to_register in self.__registered_ports:
+                raise colrev_exceptions.PortAlreadyRegisteredException(
+                    f"Port {port_to_register} already registered"
+                )
+            self.__registered_ports.append(port_to_register)
+
+    def register_docker_service(self, *, imagename: str) -> None:
+        """Register a docker service"""
+        self.__registered_services.append(imagename)
+
+    def stop_docker_services(self) -> None:
+        """Stop registered docker services"""
+
+        client = docker.from_env()
+        for container in client.containers.list():
+            if any(x in str(container.image) for x in self.__registered_services):
+                container.stop()
+                print(f"Stopped container {container.name} ({container.image})")
 
     def load_environment_registry(self) -> list:
         """Load the local registry"""
@@ -122,34 +131,26 @@ class EnvironmentManager:
             )
         return global_conf_details
 
-    def build_docker_images(self) -> None:
-        """Build the docker images"""
+    def build_docker_image(self, *, imagename: str, image_path: Path = None) -> None:
+        """Build a docker image"""
+
         client = docker.from_env()
+        repo_tags = [t for image in client.images.list() for t in image.tags]
 
-        repo_tags = [image.tags for image in client.images.list()]
-        repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
+        if imagename not in repo_tags:
 
-        assert colrev.review_manager.__file__
-        colrev_path = Path("")
-        if colrev.review_manager.__file__:
-            colrev_path = Path(colrev.review_manager.__file__).parents[0]
+            if image_path:
+                assert colrev.review_manager.__file__
+                colrev_path = Path("")
+                if colrev.review_manager.__file__:
+                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                print(f"Building {imagename} Docker image ...")
+                context_path = colrev_path / image_path
+                client.images.build(path=str(context_path), tag=f"{imagename}:latest")
 
-        for img_name, img_version in self.docker_images.items():
-            if img_name not in repo_tags:
-
-                if "bibutils" == img_name:
-                    print("Building bibutils Docker image...")
-                    context_path = colrev_path / Path("docker/bibutils")
-                    client.images.build(path=str(context_path), tag="bibutils:latest")
-
-                elif "pdf_hash" == img_name:
-                    print("Building pdf_hash Docker image...")
-                    context_path = colrev_path / Path("docker/pdf_hash")
-                    client.images.build(path=str(context_path), tag="pdf_hash:latest")
-
-                else:
-                    print(f"Pulling {img_name} Docker image...")
-                    client.images.pull(img_version)
+            else:
+                print(f"Pulling {imagename} Docker image...")
+                client.images.pull(imagename)
 
     def check_git_installed(self) -> None:
         """Check whether git is installed"""

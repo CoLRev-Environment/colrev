@@ -17,3 +17,4 @@ colrev.ops.built\_in.database\_connectors.OpenLibraryConnector
       :nosignatures:
 
       ~OpenLibraryConnector.check_status
+      ~OpenLibraryConnector.get_masterdata_from_open_library

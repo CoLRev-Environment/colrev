@@ -57,14 +57,15 @@ class ReviewManager:
         *,
         path_str: str = None,
         force_mode: bool = False,
-        debug_mode: bool = False,
+        verbose_mode: bool = False,
     ) -> None:
 
         self.force_mode = force_mode
         """Force mode variable (bool)"""
+        self.verbose_mode = verbose_mode
+        """Verbose mode variable (bool)"""
 
-        self.__move_to_parents_if_necessary()
-        self.path = Path(path_str) if path_str is not None else Path.cwd()
+        self.path = self.__get_project_home_dir(path_str=path_str)
 
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE
@@ -76,18 +77,17 @@ class ReviewManager:
         self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
         self.data_dir = self.path / self.DATA_DIR_RELATIVE
 
-        self.data_dir.mkdir(exist_ok=True)
-        self.search_dir.mkdir(exist_ok=True)
-        self.pdf_dir.mkdir(exist_ok=True)
-        self.output_dir.mkdir(exist_ok=True)
-
-        self.debug_mode = debug_mode
-
-        # Start LocalIndex to prevent waiting times
-        self.get_local_index(startup_without_waiting=True)
-
         try:
-            if self.debug_mode:
+            if self.settings_path.is_file():
+                self.data_dir.mkdir(exist_ok=True)
+                self.search_dir.mkdir(exist_ok=True)
+                self.pdf_dir.mkdir(exist_ok=True)
+                self.output_dir.mkdir(exist_ok=True)
+
+            # Start LocalIndex to prevent waiting times
+            self.get_local_index(startup_without_waiting=True)
+
+            if self.verbose_mode:
                 self.report_logger = colrev.logger.setup_report_logger(
                     review_manager=self, level=logging.DEBUG
                 )
@@ -104,8 +104,11 @@ class ReviewManager:
                     review_manager=self, level=logging.INFO
                 )
 
-            environment_manager = self.get_environment_manager()
-            self.committer, self.email = environment_manager.get_name_mail_from_git()
+            self.environment_manager = self.get_environment_manager()
+            (
+                self.committer,
+                self.email,
+            ) = self.environment_manager.get_name_mail_from_git()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.dataset = colrev.dataset.Dataset(review_manager=self)
@@ -113,21 +116,22 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
-                self.logger.debug(exc)
+                if verbose_mode:
+                    self.logger.debug(exc)
             else:
                 raise exc
 
-        if self.debug_mode:
-            print("\n\n")
-            self.logger.debug("Created review manager instance")
-            self.logger.debug("Settings:\n%s", self.settings)
+    def __get_project_home_dir(self, *, path_str: str = None) -> Path:
+        if path_str:
+            return Path(path_str)
 
-    def __move_to_parents_if_necessary(self) -> None:
-
+        original_dir = Path.cwd()
         while ".git" not in [f.name for f in Path.cwd().iterdir() if f.is_dir()]:
             os.chdir("..")
             if Path("/") == Path.cwd():
+                os.chdir(original_dir)
                 break
+        return Path.cwd()
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
@@ -331,14 +335,19 @@ class ReviewManager:
         """Get a grobid service object"""
         import colrev.env.grobid_service
 
-        return colrev.env.grobid_service.GrobidService(**kwargs)
+        environment_manager = cls.get_environment_manager()
+        return colrev.env.grobid_service.GrobidService(
+            environment_manager=environment_manager, **kwargs
+        )
 
     def get_tei(self, **kwargs) -> colrev.env.tei_parser.TEIParser:  # type: ignore
         """Get a tei object"""
 
         import colrev.env.tei_parser
 
-        return colrev.env.tei_parser.TEIParser(**kwargs)
+        return colrev.env.tei_parser.TEIParser(
+            environment_manager=self.environment_manager, **kwargs
+        )
 
     @classmethod
     def get_environment_manager(  # type: ignore
@@ -366,25 +375,29 @@ class ReviewManager:
         """Get the zotero-translation service object"""
         import colrev.env.zotero_translation_service
 
-        return colrev.env.zotero_translation_service.ZoteroTranslationService(**kwargs)
+        environment_manager = cls.get_environment_manager()
 
-    @classmethod
+        return colrev.env.zotero_translation_service.ZoteroTranslationService(
+            environment_manager=environment_manager, **kwargs
+        )
+
     def get_screenshot_service(  # type: ignore
-        cls, **kwargs
+        self, **kwargs
     ) -> colrev.env.screenshot_service.ScreenshotService:
         """Get the screenshot-service object"""
         import colrev.env.screenshot_service
 
-        return colrev.env.screenshot_service.ScreenshotService(**kwargs)
+        return colrev.env.screenshot_service.ScreenshotService(
+            review_manager=self, **kwargs
+        )
 
-    @classmethod
     def get_pdf_hash_service(  # type: ignore
-        cls, **kwargs
+        self, **kwargs
     ) -> colrev.env.pdf_hash_service.PDFHashService:
         """Get the pdf-hash-service object"""
         import colrev.env.pdf_hash_service
 
-        return colrev.env.pdf_hash_service.PDFHashService(**kwargs)
+        return colrev.env.pdf_hash_service.PDFHashService(review_manager=self, **kwargs)
 
     @classmethod
     def get_resources(cls, **kwargs) -> colrev.env.resources.Resources:  # type: ignore

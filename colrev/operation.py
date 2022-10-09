@@ -54,7 +54,6 @@ class Operation:
         review_manager: colrev.review_manager.ReviewManager,
         operations_type: OperationsType,
         notify_state_transition_operation: bool = True,
-        debug: bool = False,
     ) -> None:
 
         self.review_manager = review_manager
@@ -67,8 +66,6 @@ class Operation:
             self.review_manager.notify(operation=self)
         else:
             self.review_manager.notify(operation=self, state_transition=False)
-
-        self.review_manager.debug_mode = debug
 
         self.cpus = 4
 

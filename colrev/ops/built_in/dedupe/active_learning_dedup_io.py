@@ -68,7 +68,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         """Prepare data for active learning setup"""
         # pylint: disable=import-outside-toplevel
         import random
-        import logging
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)

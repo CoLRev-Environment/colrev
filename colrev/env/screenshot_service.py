@@ -17,8 +17,14 @@ import colrev.record
 class ScreenshotService:
     """Environment service for website screenshots"""
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+
+        self.chrome_browserless_image = "browserless/chrome:latest"
+        review_manager.environment_manager.build_docker_image(
+            imagename=self.chrome_browserless_image
+        )
+        if not self.screenshot_service_available():
+            review_manager.environment_manager.register_ports(ports=["3000"])
 
     def start_screenshot_service(self) -> None:
         """Start the screenshot service"""
@@ -26,23 +32,14 @@ class ScreenshotService:
         if self.screenshot_service_available():
             return
 
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        environment_manager.build_docker_images()
-
-        chrome_browserless_image = (
-            colrev.env.environment_manager.EnvironmentManager.docker_images[
-                "browserless/chrome"
-            ]
-        )
-
         client = docker.from_env()
 
         running_containers = [
             str(container.image) for container in client.containers.list()
         ]
-        if chrome_browserless_image not in running_containers:
+        if self.chrome_browserless_image not in running_containers:
             client.containers.run(
-                chrome_browserless_image,
+                self.chrome_browserless_image,
                 ports={"3000/tcp": ("127.0.0.1", 3000)},
                 auto_remove=True,
                 detach=True,
@@ -104,13 +101,13 @@ class ScreenshotService:
             record.update_field(
                 key="file",
                 value=str(pdf_filepath),
-                source="browserless/chrome screenshot",
+                source="chrome (browserless) screenshot",
             )
             record.data.update(
                 colrev_status=colrev.record.RecordState.rev_prescreen_included
             )
             record.update_field(
-                key="urldate", value=urldate, source="browserless/chrome screenshot"
+                key="urldate", value=urldate, source="chrome (browserless) screenshot"
             )
 
         else:

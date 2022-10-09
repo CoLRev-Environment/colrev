@@ -5,16 +5,23 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
+
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class PDFHashService:
     """The PDFHashService calculates hashes to identify PDFs (based on image/layout)"""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self) -> None:
-        pass
+    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+        self.pdf_hash_image = "pdf_hash:latest"
+        review_manager.environment_manager.build_docker_image(
+            imagename=self.pdf_hash_image, image_path=Path("docker/pdf_hash")
+        )
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF hash"""
@@ -27,7 +34,7 @@ class PDFHashService:
 
         command = (
             f'docker run --rm -v "{pdf_dir}:/home/docker" '
-            f'pdf_hash python app.py "{pdf_path.name}" {page_nr} {hash_size}'
+            f'{self.pdf_hash_image} python app.py "{pdf_path.name}" {page_nr} {hash_size}'
         )
 
         try:
@@ -41,9 +48,13 @@ class PDFHashService:
 
             raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
 
-        # TODO : raise exception if errors occur
+        pdf_hash = ret.decode("utf-8").replace("\n", "")
 
-        return ret.decode("utf-8").replace("\n", "")
+        # when PDFs are not readable, the pdf-hash may consist of 0s
+        if len(pdf_hash) * "0" == pdf_hash:
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+
+        return pdf_hash
 
 
 if __name__ == "__main__":

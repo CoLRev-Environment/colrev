@@ -72,7 +72,20 @@ class LocalIndex:
 
     # Note: we need the local_curated_metadata field for is_duplicate()
 
-    def __init__(self, *, startup_without_waiting: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        startup_without_waiting: bool = False,
+    ) -> None:
+
+        self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        self.os_dashboard_image = "opensearchproject/opensearch-dashboards:1.3.0"
+        self.environment_manager.build_docker_image(imagename=self.os_dashboard_image)
+        self.environment_manager.register_ports(ports=["5601"])
+
+        self.os_image = "opensearchproject/opensearch:1.3.0"
+        self.environment_manager.build_docker_image(imagename=self.os_image)
+        self.environment_manager.register_ports(ports=["9200"])
 
         self.open_search = OpenSearch(self.OPENSEARCH_URL)
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
@@ -86,18 +99,12 @@ class LocalIndex:
         if not startup_without_waiting:
             self.check_opensearch_docker_available()
 
-        self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
     def start_opensearch_docker_dashboards(self) -> None:
         """Start the local_index dashboard (opensearch dashboard Docker container)"""
 
         self.start_opensearch_docker()
-        os_dashboard_image = (
-            colrev.env.environment_manager.EnvironmentManager.docker_images[
-                "opensearchproject/opensearch-dashboards"
-            ]
-        )
         client = docker.from_env()
         if not any(
             "opensearch-dashboards" in container.name
@@ -110,7 +117,7 @@ class LocalIndex:
                     client.networks.create("opensearch-net")
 
                 client.containers.run(
-                    os_dashboard_image,
+                    self.os_dashboard_image,
                     name="opensearch-dashboards",
                     ports={"5601/tcp": 5601},
                     auto_remove=True,
@@ -127,9 +134,6 @@ class LocalIndex:
     def start_opensearch_docker(self, *, startup_without_waiting: bool = False) -> None:
         """Start the local_index (opensearch Docker container)"""
 
-        os_image = colrev.env.environment_manager.EnvironmentManager.docker_images[
-            "opensearchproject/opensearch"
-        ]
         client = docker.from_env()
         if not any(
             "opensearch" in container.name for container in client.containers.list()
@@ -141,7 +145,7 @@ class LocalIndex:
                 if not client.networks.list(names=["opensearch-net"]):
                     client.networks.create("opensearch-net")
                 client.containers.run(
-                    os_image,
+                    self.os_image,
                     name="opensearch-node",
                     ports={"9200/tcp": 9200, "9600/tcp": 9600},
                     auto_remove=True,
@@ -260,6 +264,7 @@ class LocalIndex:
                 tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                 if Path(record_dict["file"]).is_file():
                     tei = colrev.env.tei_parser.TEIParser(
+                        environment_manager=self.environment_manager,
                         pdf_path=Path(record_dict["file"]),
                         tei_path=tei_path,
                     )
@@ -344,6 +349,7 @@ class LocalIndex:
                     tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                     if Path(record_dict["file"]).is_file():
                         tei = colrev.env.tei_parser.TEIParser(
+                            environment_manager=self.environment_manager,
                             pdf_path=Path(record_dict["file"]),
                             tei_path=tei_path,
                         )
@@ -929,38 +935,34 @@ class LocalIndex:
         """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
 
-        year = "NA"
-
-        toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-        toc_items = []
         try:
+            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+            toc_items = []
             if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
-        except (TransportError, SerializationError):
-            toc_items = []
 
-        if len(toc_items) > 0:
-            try:
+            if not toc_items:
+                raise colrev_exceptions.TOCNotAvailableException()
 
-                toc_records_colrev_id = toc_items[0]
-                paper_hash = hashlib.sha256(
-                    toc_records_colrev_id.encode("utf-8")
-                ).hexdigest()
-                res = open_search_thread_instance.get(
-                    index=self.RECORD_INDEX,
-                    id=str(paper_hash),
-                )
-                record_dict = res["_source"]  # type: ignore
-                year = record_dict.get("year", "NA")
+            toc_records_colrev_id = toc_items[0]
+            paper_hash = hashlib.sha256(
+                toc_records_colrev_id.encode("utf-8")
+            ).hexdigest()
+            res = open_search_thread_instance.get(
+                index=self.RECORD_INDEX,
+                id=str(paper_hash),
+            )
+            record_dict = res["_source"]  # type: ignore
+            year = record_dict.get("year", "NA")
 
-            except (
-                colrev_exceptions.NotEnoughDataToIdentifyException,
-                TransportError,
-                SerializationError,
-                KeyError,
-            ):
-                pass
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            TransportError,
+            SerializationError,
+            colrev_exceptions.NotTOCIdentifiableException,
+        ) as exc:
+            raise colrev_exceptions.TOCNotAvailableException() from exc
 
         return year
 

@@ -307,9 +307,11 @@ class Dataset:
         number_required_header_items = len(default)
 
         record_header_item = default.copy()
-        current_header_item_count = 0
-        current_key_value_pair_str = ""
-        record_header_items = []
+        current_header_item_count, current_key_value_pair_str, record_header_items = (
+            0,
+            "",
+            [],
+        )
         while True:
             line = file_object.readline()
             if not line:

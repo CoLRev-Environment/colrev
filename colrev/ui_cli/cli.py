@@ -100,8 +100,24 @@ def main(ctx: click.core.Context) -> None:
     default=False,
     help="Add search results example",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode: conduct full search again",
+)
 @click.pass_context
-def init(ctx: click.core.Context, type: str, example: bool) -> None:
+def init(
+    ctx: click.core.Context, type: str, example: bool, verbose: bool, force: bool
+) -> None:
     """Initialize repository"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
@@ -116,7 +132,9 @@ def init(ctx: click.core.Context, type: str, example: bool) -> None:
             example=example,
         )
 
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
             review_manager=review_manager
         )
@@ -137,12 +155,33 @@ def init(ctx: click.core.Context, type: str, example: bool) -> None:
     default=False,
     help="Print analytics",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def status(ctx: click.core.Context, analytics: bool) -> None:
+def status(
+    ctx: click.core.Context,
+    analytics: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Show status"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         status_operation = review_manager.get_status_operation()
 
         if analytics:
@@ -188,11 +227,18 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
     help="Setup template for custom search script.",
 )
 @click.option(
-    "-f",
-    "--force_mode",
+    "-v",
+    "--verbose",
     is_flag=True,
     default=False,
-    help="Force mode: conduct full search again",
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
 )
 @click.pass_context
 def search(
@@ -201,12 +247,15 @@ def search(
     view: bool,
     selected: str,
     setup_custom_script: bool,
-    force_mode: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Retrieve search records"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(force_mode=force_mode)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         search_operation = review_manager.get_search_operation()
 
         if add:
@@ -247,12 +296,34 @@ def search(
     default=False,
     help="Combine load of multiple sources in one commit.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def load(ctx: click.core.Context, keep_ids: bool, combine_commits: bool) -> None:
+def load(
+    ctx: click.core.Context,
+    keep_ids: bool,
+    combine_commits: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Import records"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         # already start LocalIndex (for set_ids)
         review_manager.get_local_index(startup_without_waiting=True)
         load_operation = review_manager.get_load_operation()
@@ -316,7 +387,20 @@ def load(ctx: click.core.Context, keep_ids: bool, combine_commits: bool) -> None
     type=click.Path(exists=True),
     help="Debug the preparation step for a selected record (in a file).",
 )
-@click.option("-f", "--force", is_flag=True, default=False)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def prep(
     ctx: click.core.Context,
@@ -326,17 +410,15 @@ def prep(
     debug: str,
     debug_file: Path,
     setup_custom_script: bool,
+    verbose: bool,
     force: bool,
 ) -> None:
     """Prepare records"""
 
-    # pylint: disable=import-outside-toplevel
-    # TODO : catch inside prep (and raise ServiceNotAvailable):
-    from sqlite3 import OperationalError
-
     try:
+        # TODO : replace debug
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, debug_mode=bool(debug)
+            force_mode=force, verbose_mode=verbose
         )
         prep_operation = review_manager.get_prep_operation()
 
@@ -381,13 +463,6 @@ def prep(
         logging.error(exc)
         print("You can use the force mode to override")
         print("  colrev prep -f")
-    except OperationalError as exc:
-        logging.error(
-            "SQLite Error: %s. "
-            "Another colrev operation is accessing a shared resource. "
-            "Please try again later.",
-            exc,
-        )
 
 
 def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
@@ -416,19 +491,35 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     default=False,
     help="Export a table for (non-matched) source comparison",
 )
-@click.option("--force", is_flag=True, default=False)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def dedupe(
     ctx: click.core.Context,
     fix_errors: bool,
     view: bool,
     source_comparison: bool,
+    verbose: bool,
     force: bool,
 ) -> None:
     """Deduplicate records"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(force_mode=force)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         state_transition_operation = not view
         dedupe_operation = review_manager.get_dedupe_operation(
             notify_state_transition_operation=state_transition_operation
@@ -467,12 +558,28 @@ def dedupe(
     default=False,
     help="Print statistics of records with colrev_status md_needs_manual_preparation",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def prep_man(ctx: click.core.Context, stats: bool) -> None:
+def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -> None:
     """Manual preparation of records (not yet fully implemented)"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         prep_man_operation = review_manager.get_prep_man_operation()
 
         if stats:
@@ -521,6 +628,20 @@ def prep_man(ctx: click.core.Context, stats: bool) -> None:
     default=False,
     help="Setup template for custom search script.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def prescreen(
     ctx: click.core.Context,
@@ -530,11 +651,15 @@ def prescreen(
     create_split: int,
     split: str,
     setup_custom_script: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Pre-screen based on titles and abstracts"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         prescreen_operation = review_manager.get_prescreen_operation()
 
         if export_format:
@@ -607,6 +732,20 @@ def prescreen(
     default=False,
     help="Setup template for custom search script.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def screen(
     ctx: click.core.Context,
@@ -616,11 +755,15 @@ def screen(
     create_split: int,
     split: str,
     setup_custom_script: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         screen_operation = review_manager.get_screen_operation()
 
         if include_all:
@@ -679,6 +822,20 @@ def screen(
     default=False,
     help="Setup template for custom search script.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def pdf_get(
     ctx: click.core.Context,
@@ -686,11 +843,15 @@ def pdf_get(
     rename: bool,
     relink_files: bool,
     setup_custom_script: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Retrieve PDFs to the default pdf directory (/pdfs)"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
 
         state_transition_operation = not relink_files and not setup_custom_script
         pdf_get_operation = review_manager.get_pdf_get_operation(
@@ -731,34 +892,42 @@ def pdf_get(
     help="Prepare all PDFs again (pdf_needs_manual_preparation).",
 )
 @click.option(
-    "--debug",
-    "-d",
-    is_flag=True,
-    default=False,
-    help="Debug",
-)
-@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
     default=False,
     help="Setup template for custom search script.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def pdf_prep(
     ctx: click.core.Context,
     update_colrev_pdf_ids: bool,
     reprocess: bool,
-    debug: bool,
     setup_custom_script: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Prepare PDFs"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
-        pdf_prep_operation = review_manager.get_pdf_prep_operation(
-            reprocess=reprocess, debug=debug
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
         )
+        pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
         if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
@@ -778,7 +947,6 @@ def pdf_prep(
 
 
 @main.command(help_priority=13)
-@click.pass_context
 @click.option(
     "-e",
     "--export",
@@ -792,11 +960,34 @@ def pdf_prep(
     default=False,
     help="Discard all missing PDFs as not_available",
 )
-def pdf_get_man(ctx: click.core.Context, export: bool, discard_missing: bool) -> None:
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def pdf_get_man(
+    ctx: click.core.Context,
+    export: bool,
+    discard_missing: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Get PDFs manually"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
         if export:
@@ -891,6 +1082,20 @@ def __delete_first_pages_cli(
     default=False,
     help="Apply manual preparation (from csv or bib)",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def pdf_prep_man(
     ctx: click.core.Context,
@@ -898,11 +1103,15 @@ def pdf_prep_man(
     stats: bool,
     extract: bool,
     apply: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Prepare PDFs manually"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
         if delete_first_page:
@@ -954,11 +1163,18 @@ def pdf_prep_man(
     help="Setup template for custom search script.",
 )
 @click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
     "-f",
     "--force",
     is_flag=True,
     default=False,
-    help="Option to override operation preconditions",
+    help="Force mode",
 )
 @click.pass_context
 def data(
@@ -967,6 +1183,7 @@ def data(
     reading_heuristics: bool,
     add_endpoint: str,
     setup_custom_script: bool,
+    verbose: bool,
     force: bool,
 ) -> None:
     """Extract data"""
@@ -975,7 +1192,9 @@ def data(
     import colrev.ui_cli.add_packages
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(force_mode=force)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         data_operation = review_manager.get_data_operation()
 
         if profile:
@@ -997,7 +1216,6 @@ def data(
                 data_operation=data_operation,
                 review_manager=review_manager,
                 add_endpoint=add_endpoint,
-                force=force,
             )
 
             return
@@ -1079,14 +1297,38 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     help="Git tree hash to validate.",
     default=None,
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def validate(
-    ctx: click.core.Context, scope: str, properties: bool, commit: str, tree_hash: str
+    ctx: click.core.Context,
+    scope: str,
+    properties: bool,
+    commit: str,
+    tree_hash: str,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Validate changes"""
 
+    # pylint: disable=too-many-locals
+
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         validate_operation = review_manager.get_validate_operation()
 
         if tree_hash:
@@ -1146,17 +1388,38 @@ def validate(
 
 
 @main.command(help_priority=17)
-@click.pass_context
 @click.option(
     "--id",  # pylint: disable=invalid-name
     help="Record ID to trace (citation_key).",
     required=True,
 )
-def trace(ctx: click.core.Context, id: str) -> None:  # pylint: disable=invalid-name
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def trace(
+    ctx: click.core.Context,
+    id: str,  # pylint: disable=invalid-name
+    verbose: bool,
+    force: bool,
+) -> None:
     """Trace a record"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         trace_operation = review_manager.get_trace_operation()
         trace_operation.main(record_id=id)
 
@@ -1185,14 +1448,30 @@ def __select_target_repository(environment_registry: list) -> Path:
     type=click.Path(exists=True),
     help="Path to file(s)",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def distribute(ctx: click.core.Context, path: Path) -> None:
+def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) -> None:
     """Distribute records to other local CoLRev repositories"""
 
     try:
         if not path:
             path = Path.cwd()
-        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=True, verbose_mode=verbose
+        )
         distribute_operation = review_manager.get_distribute_operation()
         environment_registry = distribute_operation.get_environment_registry()
 
@@ -1304,6 +1583,20 @@ def __print_environment_status(
     type=click.Path(exists=True),
     help="Path of repository to remove from local registry.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def env(
     ctx: click.core.Context,
@@ -1316,6 +1609,8 @@ def env(
     search: bool,
     register: bool,
     unregister: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """CoLRev environment commands"""
 
@@ -1325,9 +1620,10 @@ def env(
     # pylint: disable=too-many-locals
 
     import webbrowser
-    import docker
 
-    review_manager = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
 
     if install:
         env_resources = review_manager.get_resources()
@@ -1344,7 +1640,9 @@ def env(
             if "/curated_metadata/" not in curated_resource_path:
                 continue
             review_manager = colrev.review_manager.ReviewManager(
-                path_str=curated_resource_path
+                force_mode=force,
+                verbose_mode=verbose,
+                path_str=curated_resource_path,
             )
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
@@ -1355,14 +1653,8 @@ def env(
         return
 
     if stop:
-        client = docker.from_env()
         environment_manager = review_manager.get_environment_manager()
-
-        images_to_stop = [k for k, v in environment_manager.docker_images.items()]
-        for container in client.containers.list():
-            if any(x in str(container.image) for x in images_to_stop):
-                container.stop()
-                print(f"Stopped container {container.name} ({container.image})")
+        environment_manager.stop_docker_services()
         return
 
     if register:
@@ -1422,9 +1714,28 @@ def env(
     default="",
     help="Modify the settings through the command line",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
 def settings(
-    ctx: click.core.Context, upgrade: bool, update_hooks: bool, modify: str
+    ctx: click.core.Context,
+    upgrade: bool,
+    update_hooks: bool,
+    modify: str,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Settings of the CoLRev project"""
 
@@ -1441,12 +1752,16 @@ def settings(
     import colrev.review_manager
 
     if upgrade:
-        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=True, verbose_mode=verbose
+        )
         upgrad_operation = review_manager.get_upgrade()
         upgrad_operation.main()
         return
 
-    review_manager = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
     if update_hooks:
 
         print("Update pre-commit hooks")
@@ -1503,7 +1818,9 @@ def settings(
 
     import colrev.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=True, verbose_mode=verbose
+    )
     settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
         review_manager=review_manager
     )
@@ -1511,8 +1828,26 @@ def settings(
 
 
 @main.command(help_priority=21)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def sync(ctx: click.core.Context) -> None:
+def sync(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
     sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
@@ -1561,12 +1896,34 @@ def sync(ctx: click.core.Context) -> None:
     default=False,
     help="Push project only",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def pull(ctx: click.core.Context, records_only: bool, project_only: bool) -> None:
+def pull(
+    ctx: click.core.Context,
+    records_only: bool,
+    project_only: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Pull CoLRev project remote and record updates"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         pull_operation = review_manager.get_pull_operation()
 
         pull_operation.main(records_only=records_only, project_only=project_only)
@@ -1577,8 +1934,27 @@ def pull(ctx: click.core.Context, records_only: bool, project_only: bool) -> Non
 
 @main.command(help_priority=23)
 @click.argument("git_url")
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def clone(ctx: click.core.Context, git_url: str) -> None:
+def clone(
+    ctx: click.core.Context,
+    git_url: str,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Create local clone from shared CoLRev repository with git_url"""
 
     clone_operation = colrev.review_manager.ReviewManager.get_clone_operation(
@@ -1602,12 +1978,34 @@ def clone(ctx: click.core.Context, git_url: str) -> None:
     default=False,
     help="Push project only",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def push(ctx: click.core.Context, records_only: bool, project_only: bool) -> None:
+def push(
+    ctx: click.core.Context,
+    records_only: bool,
+    project_only: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Push CoLRev project remote and record updates"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         push_operation = review_manager.get_push_operation()
 
         push_operation.main(records_only=records_only, project_only=project_only)
@@ -1617,13 +2015,33 @@ def push(ctx: click.core.Context, records_only: bool, project_only: bool) -> Non
 
 
 @main.command(help_priority=25)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def service(ctx: click.core.Context) -> None:
+def service(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
     """Service for real-time reviews"""
 
     try:
 
-        review_manager = colrev.review_manager.ReviewManager()
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
         review_manager.get_service_operation()
 
     except KeyboardInterrupt:
@@ -1645,15 +2063,37 @@ def __validate_show(ctx: click.core.Context, param: str, value: str) -> None:
 
 @main.command(help_priority=26)
 @click.argument("keyword")
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def show(ctx: click.core.Context, keyword: str, callback=__validate_show) -> None:  # type: ignore
+def show(  # type: ignore
+    ctx: click.core.Context,
+    keyword: str,
+    verbose: bool,
+    force: bool,
+    callback=__validate_show,
+) -> None:
     """Show aspects (sample, ...)"""
 
     # pylint: disable=import-outside-toplevel
     import colrev.operation
     import colrev.ui_cli.show_printer
 
-    review_manager = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
 
     if "sample" == keyword:
         colrev.ui_cli.show_printer.print_sample(review_manager=review_manager)
@@ -1671,14 +2111,34 @@ def show(ctx: click.core.Context, keyword: str, callback=__validate_show) -> Non
 
 
 @main.command(help_priority=27)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
 @click.pass_context
-def web(ctx: click.core.Context) -> None:
+def web(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
     """CoLRev web interface."""
 
     # pylint: disable=import-outside-toplevel
     import colrev.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
     se_instance = colrev.ui_web.settings_editor.SettingsEditor(
         review_manager=review_manager
     )

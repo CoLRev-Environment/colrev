@@ -31,14 +31,12 @@ class PDFPrep(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         reprocess: bool = False,
         notify_state_transition_operation: bool = True,
-        debug: bool = False,
     ) -> None:
 
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.pdf_prep,
             notify_state_transition_operation=notify_state_transition_operation,
-            debug=debug,
         )
 
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
@@ -109,7 +107,7 @@ class PDFPrep(colrev.operation.Operation):
                     target_fname.relative_to(self.review_manager.path)
                 )
 
-            if not self.review_manager.debug_mode:
+            if not self.review_manager.verbose_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
                     for fpath in self.review_manager.pdf_dir.glob("*.pdf"):
@@ -357,7 +355,7 @@ class PDFPrep(colrev.operation.Operation):
 
         pdf_prep_data = self.__get_data()
 
-        if self.review_manager.debug_mode:
+        if self.review_manager.verbose_mode:
             for item in pdf_prep_data["items"]:
                 record = item["record"]
                 print(record["ID"])

@@ -16,7 +16,7 @@ colrev.env.environment\_manager.EnvironmentManager
    .. autosummary::
       :nosignatures:
 
-      ~EnvironmentManager.build_docker_images
+      ~EnvironmentManager.build_docker_image
       ~EnvironmentManager.check_docker_installed
       ~EnvironmentManager.check_git_installed
       ~EnvironmentManager.get_curated_outlets
@@ -24,8 +24,11 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.get_environment_stats
       ~EnvironmentManager.get_name_mail_from_git
       ~EnvironmentManager.load_environment_registry
+      ~EnvironmentManager.register_docker_service
+      ~EnvironmentManager.register_ports
       ~EnvironmentManager.register_repo
       ~EnvironmentManager.save_environment_registry
+      ~EnvironmentManager.stop_docker_services
 
 
 
@@ -38,6 +41,4 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.REGISTRY_RELATIVE
       ~EnvironmentManager.cache_path
       ~EnvironmentManager.colrev_path
-      ~EnvironmentManager.docker_images
-      ~EnvironmentManager.os_db
       ~EnvironmentManager.registry

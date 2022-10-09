@@ -304,15 +304,18 @@ class Checker:
 
     def check_status_transitions(self, *, status_data: dict) -> None:
         """Check for invalid state transitions"""
+        # Note : currently, we do not prevent particular transitions.
+        # We may decide to provide settings parameters to apply
+        # more restrictive rules related to valid transitions.
 
-        # TODO / TBD: we may allow most multiple transitions
+        # We allow particular combinations of multiple transitions
         # if len(set(status_data["start_states"])) > 1:
         #     raise colrev_exceptions.StatusTransitionError(
         #         "multiple transitions from different "
         #         f'start states ({set(status_data["start_states"])})'
         #     )
-        # TODO : we may apply less restrictive criteria to identify
-        # invalid_state_transitions
+
+        # We may apply more restrictive criteria to prevent invalid_state_transitions
         # E.g., setting a record from rev_synthesized to rev_included should be ok.
         # if len(set(status_data["invalid_state_transitions"])) > 0:
         #     raise colrev_exceptions.StatusTransitionError(
@@ -668,10 +671,6 @@ class Checker:
             },
             {
                 "script": environment_manager.check_docker_installed,
-                "params": [],
-            },
-            {
-                "script": environment_manager.build_docker_images,
                 "params": [],
             },
             {"script": self.__check_git_conflicts, "params": []},

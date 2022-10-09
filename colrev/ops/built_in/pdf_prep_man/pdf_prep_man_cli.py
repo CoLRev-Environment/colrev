@@ -95,10 +95,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                             pdf_path.unlink()
                         if filepath.is_file():
                             filepath.unlink()
-                # TODO : save to file
 
             else:
                 print(f'File does not exist ({record.data["ID"]})')
+
+            pdf_prep_man.review_manager.dataset.save_records_dict(records=records)
 
             return records
 

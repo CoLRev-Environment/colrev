@@ -15,8 +15,14 @@ import colrev.exceptions as colrev_exceptions
 class ZoteroTranslationService:
     """An environment service based on zotero translators"""
 
-    def __init__(self) -> None:
-        pass
+    def __init__(
+        self, *, environment_manager: colrev.env.environment_manager.EnvironmentManager
+    ) -> None:
+
+        self.image_name = "zotero/translation-server:2.0.4"
+        environment_manager.build_docker_image(imagename=self.image_name)
+        if not self.zotero_service_available():
+            environment_manager.register_ports(ports=["1969"])
 
     def start_zotero_translators(
         self, *, startup_without_waiting: bool = False
@@ -26,17 +32,10 @@ class ZoteroTranslationService:
         if self.zotero_service_available():
             return
 
-        zotero_image = colrev.env.environment_manager.EnvironmentManager.docker_images[
-            "zotero/translation-server"
-        ]
-
         client = docker.from_env()
-        for container in client.containers.list():
-            if zotero_image in str(container.image):
-                return
         try:
-            container = client.containers.run(
-                zotero_image,
+            _ = client.containers.run(
+                self.image_name,
                 ports={"1969/tcp": ("127.0.0.1", 1969)},
                 auto_remove=True,
                 detach=True,

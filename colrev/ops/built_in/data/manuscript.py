@@ -111,6 +111,11 @@ class Manuscript(JsonSchemaMixin):
 
         self.__create_non_sample_references_bib()
 
+        self.pandoc_image = "pandoc/ubuntu-latex:2.14"
+        data_operation.review_manager.environment_manager.build_docker_image(
+            imagename=self.pandoc_image
+        )
+
     def get_default_setup(self) -> dict:
         """Get the default setup"""
 
@@ -410,16 +415,11 @@ class Manuscript(JsonSchemaMixin):
 
         client = docker.from_env()
         try:
-            environment_manager = (
-                data_operation.review_manager.get_environment_manager()
-            )
-
-            pandoc_img = environment_manager.docker_images["pandoc/ubuntu-latex"]
-            msg = "Running docker container created from " f"image {pandoc_img}"
+            msg = f"Running docker container created from image {self.pandoc_image}"
             data_operation.review_manager.report_logger.info(msg)
             data_operation.review_manager.logger.debug(msg)
             client.containers.run(
-                image=pandoc_img,
+                image=self.pandoc_image,
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
@@ -449,9 +449,6 @@ class Manuscript(JsonSchemaMixin):
                 "Complete processing and use colrev data"
             )
             return
-
-        environment_manager = data_operation.review_manager.get_environment_manager()
-        environment_manager.build_docker_images()
 
         self.__create_non_sample_references_bib()
 

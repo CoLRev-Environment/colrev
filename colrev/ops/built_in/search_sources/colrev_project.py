@@ -125,7 +125,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for CoLRev projects"""
 
-        # TODO
+        # TODO : heuristic for colrev project SearchSource?
         result = {"confidence": 0.0}
 
         return result

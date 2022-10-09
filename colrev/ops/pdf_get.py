@@ -247,7 +247,8 @@ class PDFGet(colrev.operation.Operation):
         grobid_service.start()
         self.review_manager.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
-            self.review_manager.logger.info(f"Checking unlinked PDF: {file}")
+            msg = f"Checking unlinked PDF: {file.relative_to(self.review_manager.path)}"
+            self.review_manager.logger.info(msg)
             if file.stem not in records.keys():
 
                 tei = self.review_manager.get_tei(pdf_path=file)
@@ -274,9 +275,15 @@ class PDFGet(colrev.operation.Operation):
                         ):
                             continue
 
-                        max_sim_record.update(file=str(file))
-                        max_sim_record.update(
-                            colrev_status=colrev.record.RecordState.pdf_imported
+                        record = colrev.record.Record(data=max_sim_record)
+                        record.update_field(
+                            key="file",
+                            value=str(file),
+                            source="linking-available-files",
+                        )
+                        record.import_file(review_manager=self.review_manager)
+                        record.set_status(
+                            target_state=colrev.record.RecordState.pdf_imported
                         )
 
                         self.review_manager.report_logger.info(

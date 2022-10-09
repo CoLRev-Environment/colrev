@@ -39,6 +39,7 @@ colrev.ops.prep.Prep
       ~Prep.retrieval_similarity
       ~Prep.first_round
       ~Prep.last_round
+      ~Prep.debug_mode
       ~Prep.pad
       ~Prep.prep_package_endpoints
       ~Prep.force_mode

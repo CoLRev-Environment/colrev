@@ -105,7 +105,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             text=record.data["title"]
         )
 
-        if prep_operation.review_manager.debug_mode:
+        if prep_operation.review_manager.verbose_mode:
             print(record.data["title"].lower())
             prep_operation.review_manager.p_printer.pprint(confidence_values)
 

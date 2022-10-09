@@ -28,7 +28,6 @@ class Status(colrev.operation.Operation):
 
     def get_analytics(self) -> dict:
         """Get status analytics"""
-        # TODO : this functionality needs to be developed further
 
         analytics_dict = {}
         git_repo = self.review_manager.dataset.get_repo()
@@ -173,7 +172,9 @@ class StatusStats:
         self.currently.pdf_needs_retrieval = self.currently.rev_prescreen_included
 
         colrev_masterdata_items = [
-            x["colrev_masterdata_provenance"] for x in self._record_header_list if "colrev_masterdata_provenance" in x
+            x["colrev_masterdata_provenance"]
+            for x in self._record_header_list
+            if "colrev_masterdata_provenance" in x
         ]
         self.nr_curated_records = len(
             [x for x in colrev_masterdata_items if "CURATED:" in x]
