@@ -10,8 +10,6 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from jinja2 import Environment
-from jinja2 import FunctionLoader
 
 import colrev.env.package_manager
 import colrev.ops.pdf_get
@@ -72,10 +70,10 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         author_name = record.data.get("author", "").split(",")[0]
         signed = pdf_get_man_operation.review_manager.committer
 
-        environment = Environment(
-            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
+        template = colrev.env.utils.get_template(
+            template_path="template/pdf_get_man_mail.txt"
         )
-        template = environment.get_template("template/pdf_get_man_mail.txt")
+
         content = template.render(record=record, author_name=author_name, signed=signed)
 
         print("\n\n")

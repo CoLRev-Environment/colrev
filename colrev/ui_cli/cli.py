@@ -1622,7 +1622,7 @@ def env(
     import webbrowser
 
     review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+        force_mode=True, verbose_mode=verbose
     )
 
     if install:

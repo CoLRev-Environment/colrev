@@ -12,8 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
-from jinja2 import Environment
-from jinja2 import FunctionLoader
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -115,20 +113,18 @@ class Commit:
 
     def __get_commit_report_header(self) -> str:
 
-        environment = Environment(
-            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
+        template = colrev.env.utils.get_template(
+            template_path="template/commit_report_header.txt"
         )
-        template = environment.get_template("template/commit_report_header.txt")
         content = template.render(commit_details=self)
 
         return content
 
     def __get_commit_report_details(self) -> str:
 
-        environment = Environment(
-            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
+        template = colrev.env.utils.get_template(
+            template_path="template/commit_report_details.txt"
         )
-        template = environment.get_template("template/commit_report_details.txt")
         content = template.render(commit_details=self)
 
         return content

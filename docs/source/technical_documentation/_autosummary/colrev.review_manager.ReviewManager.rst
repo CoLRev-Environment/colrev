@@ -91,5 +91,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.dataset
       ~ReviewManager.path
       ~ReviewManager.force_mode
+      ~ReviewManager.verbose_mode
       ~ReviewManager.report_logger
       ~ReviewManager.logger

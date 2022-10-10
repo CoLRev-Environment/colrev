@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
-from jinja2 import Environment
-from jinja2 import FunctionLoader
 
 import colrev.env.utils
 import colrev.operation
@@ -80,10 +78,7 @@ class Status(colrev.operation.Operation):
 
         status_stats = self.review_manager.get_status_stats()
 
-        environment = Environment(
-            loader=FunctionLoader(colrev.env.utils.load_jinja_template)
-        )
-        template = environment.get_template("template/status.txt")
+        template = colrev.env.utils.get_template(template_path="template/status.txt")
         content = template.render(status_stats=status_stats, colors=colors)
 
         if commit_report:
