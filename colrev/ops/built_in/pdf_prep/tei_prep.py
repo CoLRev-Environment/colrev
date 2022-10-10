@@ -53,7 +53,6 @@ class TEIPDFPrep(JsonSchemaMixin):
                     f" creating tei: {record.data['ID']}"
                 )
                 _ = pdf_prep_operation.review_manager.get_tei(
-                    environment_manager=pdf_prep_operation.review_manager.environment_manager,
                     pdf_path=Path(record.data["file"]),
                     tei_path=record.get_tei_filename(),
                 )

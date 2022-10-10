@@ -171,8 +171,9 @@ class StatusStats:
             for x in self._record_header_list
             if "colrev_masterdata_provenance" in x
         ]
+
         self.nr_curated_records = len(
-            [x for x in colrev_masterdata_items if "CURATED:" in x]
+            [x for x in colrev_masterdata_items if "CURATED" in x]
         )
         if review_manager.settings.project.curated_masterdata:
             self.nr_curated_records = self.overall.md_processed

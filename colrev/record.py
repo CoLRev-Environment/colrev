@@ -517,7 +517,13 @@ class Record:
         if "colrev_data_provenance" not in self.data:
             self.add_data_provenance_note(key="file", note="")
         else:
-            self.data["colrev_data_provenance"]["file"]["note"] = ""
+            if "file" in self.data["colrev_data_provenance"]:
+                self.data["colrev_data_provenance"]["file"]["note"] = ""
+            else:
+                self.data["colrev_data_provenance"]["file"] = {
+                    "source": "NA",
+                    "note": "",
+                }
 
     def get_missing_fields(self) -> list:
         """Get the missing fields"""

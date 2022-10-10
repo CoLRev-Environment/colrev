@@ -71,7 +71,8 @@ class PDFGet(colrev.operation.Operation):
         if pdf_filepath.is_file() and str(pdf_filepath) != record.data.get(
             "file", "NA"
         ):
-            record.data.update(file=str(pdf_filepath))
+            record.update_field(key="file", value=str(pdf_filepath), source="link_pdf")
+            record.import_file(review_manager=self.review_manager)
 
         return record
 
@@ -295,6 +296,8 @@ class PDFGet(colrev.operation.Operation):
                         # colrev_status = max_sim_record['colrev_status']
                         # if RecordState.pdf_needs_manual_preparation == colrev_status:
                         #     # revert?
+
+        self.review_manager.dataset.save_records_dict(records=records)
 
         return records
 
