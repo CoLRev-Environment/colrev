@@ -2,7 +2,6 @@
 """CoLRev data operation: extract data, analyze, and synthesize."""
 from __future__ import annotations
 
-import typing
 from pathlib import Path
 
 import pandas as pd
@@ -30,15 +29,6 @@ class Data(colrev.operation.Operation):
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.data,
             notify_state_transition_operation=notify_state_transition_operation,
-        )
-
-        package_manager = self.review_manager.get_package_manager()
-        self.data_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.data,
-            selected_packages=review_manager.settings.data.data_package_endpoints,
-            operation=self,
         )
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
@@ -272,23 +262,28 @@ class Data(colrev.operation.Operation):
         # if self.verbose:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
+        package_manager = self.review_manager.get_package_manager()
+
         for (
             data_package_endpoint
         ) in self.review_manager.settings.data.data_package_endpoints:
 
-            endpoint = self.data_package_endpoints[
-                data_package_endpoint["endpoint"].lower()
-            ]
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.data,
+                selected_packages=[data_package_endpoint],
+                operation=self,
+            )
+            endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
-            endpoint.update_data(self, records, synthesized_record_status_matrix)
-            endpoint.update_record_status_matrix(
+            endpoint.update_data(self, records, synthesized_record_status_matrix)  # type: ignore
+            endpoint.update_record_status_matrix(  # type: ignore
                 self,
                 synthesized_record_status_matrix,
                 data_package_endpoint["endpoint"],
             )
 
             if self.verbose:
-                print(f"updated {endpoint.settings.endpoint}")
+                print(f"updated {endpoint.settings.endpoint}")  # type: ignore
 
         for (
             record_id,

@@ -6,7 +6,6 @@ import logging
 import multiprocessing as mp
 import os
 import subprocess
-import typing
 from pathlib import Path
 
 import timeout_decorator
@@ -47,11 +46,9 @@ class PDFPrep(colrev.operation.Operation):
         self.cpus = 8
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
+        self.pdf_prep_package_endpoints = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
-            selected_packages=review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
+            selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
             operation=self,
         )
 
@@ -150,24 +147,24 @@ class PDFPrep(colrev.operation.Operation):
 
             try:
                 endpoint = self.pdf_prep_package_endpoints[
-                    pdf_prep_package_endpoint["endpoint"]
+                    pdf_prep_package_endpoint["endpoint"]  # type: ignore
                 ]
                 self.review_manager.logger.debug(
-                    f"{endpoint.settings.endpoint}(...) called"
+                    f"{endpoint.settings.endpoint}(...) called"  # type: ignore
                 )
 
                 self.review_manager.report_logger.info(
-                    f'{endpoint.settings.endpoint}({record.data["ID"]}) called'
+                    f'{endpoint.settings.endpoint}({record.data["ID"]}) called'  # type: ignore
                 )
 
-                record.data = endpoint.prep_pdf(self, record, pad)
+                record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore
 
             except (
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
             ) as err:
                 self.review_manager.logger.error(
-                    f'Error for {record.data["ID"]} '
+                    f'Error for {record.data["ID"]} '  # type: ignore
                     f"(in {endpoint.settings.endpoint} : {err})"
                 )
                 record.data[
@@ -185,8 +182,8 @@ class PDFPrep(colrev.operation.Operation):
                 == record.data["colrev_status"]
             )
             msg = (
-                f'{endpoint.settings.endpoint}({record.data["ID"]}):'.ljust(pad, " ")
-                + " "
+                f"{endpoint.settings.endpoint}"  # type: ignore
+                f'({record.data["ID"]}):'.ljust(pad, " ") + " "
             )
             msg += "fail" if failed else "pass"
             self.review_manager.report_logger.info(msg)

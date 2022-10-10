@@ -28,8 +28,6 @@ class Search(colrev.operation.Operation):
 
         self.sources = review_manager.settings.sources
 
-        self.package_manager = self.review_manager.get_package_manager()
-
     def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
         """Save the feed file"""
 
@@ -187,6 +185,8 @@ class Search(colrev.operation.Operation):
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
 
+        package_manager = self.review_manager.get_package_manager()
+
         for source in self.__get_search_sources(selection_str=selection_str):
 
             print()
@@ -194,7 +194,7 @@ class Search(colrev.operation.Operation):
                 f"Retrieve from {source.endpoint} ({source.filename.name})"
             )
 
-            endpoint_dict = self.package_manager.load_packages(
+            endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,

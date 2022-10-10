@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -80,17 +81,16 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
                 f"Zotero import translators failed ({exc})"
             )
 
-        if source.endpoint in load_operation.search_sources.packages:
-            search_source_package = load_operation.search_sources.packages[
-                source.endpoint
-            ]
-            records = search_source_package.load_fixes(
-                self, source=source, records=records
-            )
-        else:
-            load_operation.review_manager.logger.info(
-                "No custom source load_fixes for %s", source.endpoint
-            )
+        endpoint_dict = load_operation.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            selected_packages=[asdict(source)],
+            operation=load_operation,
+            ignore_not_available=False,
+        )
+        endpoint = endpoint_dict[source.endpoint]
+
+        records = endpoint.load_fixes(self, source=source, records=records)  # type: ignore
+
         return records
 
 

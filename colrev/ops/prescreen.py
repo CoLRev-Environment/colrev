@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import typing
 from pathlib import Path
 
 import colrev.operation
@@ -28,15 +27,6 @@ class Prescreen(colrev.operation.Operation):
         )
 
         self.verbose = True
-
-        package_manager = self.review_manager.get_package_manager()
-        self.prescreen_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
-            selected_packages=review_manager.settings.prescreen.prescreen_package_endpoints,
-            operation=self,
-        )
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
         """Export a table with records to prescreen"""
@@ -149,17 +139,23 @@ class Prescreen(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for (
-            prescreen_package_endpoint
-        ) in self.review_manager.settings.prescreen.prescreen_package_endpoints:
+        package_manager = self.review_manager.get_package_manager()
+
+        prescreen_package_endpoints = (
+            self.review_manager.settings.prescreen.prescreen_package_endpoints
+        )
+        for prescreen_package_endpoint in prescreen_package_endpoints:
 
             self.review_manager.logger.info(
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )
-            endpoint = self.prescreen_package_endpoints[
-                prescreen_package_endpoint["endpoint"]
-            ]
-            records = endpoint.run_prescreen(self, records, split)
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+                selected_packages=prescreen_package_endpoints,
+                operation=self,
+            )
+            endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
+            records = endpoint.run_prescreen(self, records, split)  # type: ignore
 
 
 if __name__ == "__main__":

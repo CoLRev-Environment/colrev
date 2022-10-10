@@ -2,7 +2,6 @@
 """CoLRev pdf_prep_man operation: Prepare PDF documents manually."""
 from __future__ import annotations
 
-import typing
 from pathlib import Path
 
 import pandas as pd
@@ -30,15 +29,6 @@ class PDFPrepMan(colrev.operation.Operation):
         )
 
         self.verbose = True
-
-        package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_man_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
-            selected_packages=review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints,
-            operation=self,
-        )
 
     def get_data(self) -> dict:
         """Get the data for PDF prep man"""
@@ -256,25 +246,22 @@ class PDFPrepMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for (
-            pdf_prep_man_package_endpoint
-        ) in self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints:
+        package_manager = self.review_manager.get_package_manager()
 
-            if (
-                pdf_prep_man_package_endpoint["endpoint"]
-                not in self.pdf_prep_man_package_endpoints
-            ):
-                if self.verbose:
-                    print(
-                        f"Error: endpoint not available: {pdf_prep_man_package_endpoint}"
-                    )
-                continue
+        pdf_prep_man_package_endpoints = (
+            self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints
+        )
+        for pdf_prep_man_package_endpoint in pdf_prep_man_package_endpoints:
 
-            endpoint = self.pdf_prep_man_package_endpoints[
-                pdf_prep_man_package_endpoint["endpoint"]
-            ]
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+                selected_packages=pdf_prep_man_package_endpoints,
+                operation=self,
+            )
 
-            records = endpoint.pdf_prep_man(self, records)
+            endpoint = endpoint_dict[pdf_prep_man_package_endpoint["endpoint"]]
+
+            records = endpoint.pdf_prep_man(self, records)  # type: ignore
 
 
 if __name__ == "__main__":

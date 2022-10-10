@@ -2,8 +2,6 @@
 """CoLRev prep_man operation: Prepare metadata manually."""
 from __future__ import annotations
 
-import typing
-
 import pandas as pd
 
 import colrev.operation
@@ -26,15 +24,6 @@ class PrepMan(colrev.operation.Operation):
         )
 
         self.verbose = True
-
-        package_manager = self.review_manager.get_package_manager()
-        self.prep_man_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
-            selected_packages=review_manager.settings.prep.prep_man_package_endpoints,
-            operation=self,
-        )
 
     def __get_crosstab_df(self) -> pd.DataFrame:
 
@@ -184,14 +173,19 @@ class PrepMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
+        package_manager = self.review_manager.get_package_manager()
+
         for (
             prep_man_package_endpoint
         ) in self.review_manager.settings.prep.prep_man_package_endpoints:
 
-            endpoint = self.prep_man_package_endpoints[
-                prep_man_package_endpoint["endpoint"]
-            ]
-            records = endpoint.prepare_manual(self, records)
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+                selected_packages=self.review_manager.settings.prep.prep_man_package_endpoints,
+                operation=self,
+            )
+            endpoint = endpoint_dict[prep_man_package_endpoint["endpoint"]]
+            records = endpoint.prepare_manual(self, records)  # type: ignore
 
 
 if __name__ == "__main__":

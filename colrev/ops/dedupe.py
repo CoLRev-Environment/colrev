@@ -662,13 +662,13 @@ class Dedupe(colrev.operation.Operation):
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
 
+        package_manager = self.review_manager.get_package_manager()
         for (
             dedupe_package_endpoint
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
 
             # Note : load package/script at this point because the same script
             # may run with different parameters
-            package_manager = self.review_manager.get_package_manager()
             endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
                 selected_packages=[dedupe_package_endpoint],

@@ -38,16 +38,9 @@ class PDFGet(colrev.operation.Operation):
         self.cpus = 4
         self.verbose = False
 
-        self.review_manager.pdf_dir.mkdir(exist_ok=True)
+        self.package_manager = self.review_manager.get_package_manager()
 
-        package_manager = self.review_manager.get_package_manager()
-        self.pdf_get_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
-            selected_packages=review_manager.settings.pdf_get.pdf_get_package_endpoints,
-            operation=self,
-        )
+        self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
     def copy_pdfs_to_repo(self) -> None:
         """Copy the PDFs to the repository"""
@@ -101,24 +94,29 @@ class PDFGet(colrev.operation.Operation):
             pdf_get_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
 
-            endpoint = self.pdf_get_package_endpoints[
-                pdf_get_package_endpoint["endpoint"]
-            ]
-            self.review_manager.report_logger.info(
-                f'{endpoint.settings.endpoint}({record_dict["ID"]}) called'
+            endpoint_dict = self.package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+                selected_packages=[pdf_get_package_endpoint],
+                operation=self,
             )
-            endpoint.get_pdf(self, record)
+
+            endpoint = endpoint_dict[pdf_get_package_endpoint["endpoint"]]
+            self.review_manager.report_logger.info(
+                f'{endpoint.settings.endpoint}({record_dict["ID"]}) called'  # type: ignore
+            )
+            endpoint.get_pdf(self, record)  # type: ignore
 
             if "file" in record.data:
                 self.review_manager.report_logger.info(
-                    f"{endpoint.settings.endpoint}"
+                    f"{endpoint.settings.endpoint}"  # type: ignore
                     f'({record_dict["ID"]}): retrieved .../{Path(record_dict["file"]).name}'
                 )
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
-                break
-            record.data.update(
-                colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
-            )
+                return record.get_data()
+
+        record.data.update(
+            colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
+        )
 
         return record.get_data()
 

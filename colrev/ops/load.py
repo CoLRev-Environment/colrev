@@ -30,8 +30,6 @@ class Load(colrev.operation.Operation):
         notify_state_transition_operation: bool = True,
     ) -> None:
 
-        review_manager.logger.info("Loading source package endpoints...")
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.load,
@@ -40,19 +38,6 @@ class Load(colrev.operation.Operation):
         self.verbose = True
 
         self.package_manager = self.review_manager.get_package_manager()
-        self.load_conversion_package_endpoints: dict[
-            str, typing.Any
-        ] = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            selected_packages=[
-                s.load_conversion_package_endpoint
-                for s in review_manager.settings.sources
-                if "endpoint" in s.load_conversion_package_endpoint
-            ],
-            operation=self,
-        )
-
-        self.search_sources = self.review_manager.get_search_sources()
 
     def __get_new_search_files(self) -> list[Path]:
         """ "Retrieve new search files (not yet registered in settings)"""
@@ -60,14 +45,9 @@ class Load(colrev.operation.Operation):
         if not self.review_manager.search_dir.is_dir():
             return []
 
-        # Only supported filetypes
         files = [
             f.relative_to(self.review_manager.path)
-            for f_ in [
-                self.review_manager.search_dir.glob(f"**/*.{e}")
-                for e in self.supported_extensions
-            ]
-            for f in f_
+            for f in self.review_manager.search_dir.glob("**/*")
         ]
 
         # Only files that are not yet registered
@@ -194,8 +174,11 @@ class Load(colrev.operation.Operation):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 
-        self.review_manager.logger.info("Loading source heuristics...")
+        new_search_files = self.__get_new_search_files()
+        if not new_search_files:
+            return
 
+        self.review_manager.logger.info("Loading all available source heuristics...")
         all_available_packages_names = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             installed_only=True,
@@ -216,14 +199,18 @@ class Load(colrev.operation.Operation):
             for item in sublist
         ]
 
-        sources = self.review_manager.settings.sources
+        for sfp in new_search_files:
+            if sfp.suffix[1:] not in self.supported_extensions:
+                print(f"Warning: file type not supported: {sfp.suffix}")
+                continue
 
-        for sfp in self.__get_new_search_files():
             # Note : for non-bib files, we check sources for corresponding bib file
             # (which will be created later in the process)
 
             sfp_name = sfp
-            if sfp_name in [str(source.filename) for source in sources]:
+            if sfp_name in [
+                str(source.filename) for source in self.review_manager.settings.sources
+            ]:
                 continue
 
             self.review_manager.logger.info(f"Discovering new source: {sfp_name}")
@@ -323,7 +310,9 @@ class Load(colrev.operation.Operation):
                         "endpoint": custom_load_conversion_package_endpoint
                     }
 
-            sources.append(heuristic_source["source_candidate"])
+            self.review_manager.settings.sources.append(
+                heuristic_source["source_candidate"]
+            )
             self.review_manager.save_settings()
             self.review_manager.logger.info(
                 f"{colors.GREEN}Added new source: "
@@ -741,16 +730,6 @@ class Load(colrev.operation.Operation):
             checker.check_sources()
             sources = []
             for source in self.review_manager.settings.sources:
-                if (
-                    source.load_conversion_package_endpoint["endpoint"]
-                    not in self.load_conversion_package_endpoints
-                ):
-                    if self.verbose:
-                        self.review_manager.logger.error(
-                            "Error: endpoint not available: "
-                            f"{source.load_conversion_package_endpoint}"
-                        )
-                    continue
                 sources.append(source)
             return sources
 
@@ -760,13 +739,16 @@ class Load(colrev.operation.Operation):
             records = {}
 
             # 1. convert to bib and fix format (if necessary)
-            load_conversion_package_endpoint_name = (
-                source.load_conversion_package_endpoint["endpoint"]
+            load_conversion_package_endpoint_dict = self.package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+                selected_packages=[source.load_conversion_package_endpoint],
+                operation=self,
             )
-            load_conversion_package_endpoint = self.load_conversion_package_endpoints[
-                load_conversion_package_endpoint_name
+
+            load_conversion_package_endpoint = load_conversion_package_endpoint_dict[
+                source.load_conversion_package_endpoint["endpoint"]
             ]
-            records = load_conversion_package_endpoint.load(self, source)
+            records = load_conversion_package_endpoint.load(self, source)  # type: ignore
             self.__save_records(
                 records=records,
                 corresponding_bib_file=source.get_corresponding_bib_file(),

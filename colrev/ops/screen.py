@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import typing
 from pathlib import Path
 
 import colrev.operation
@@ -27,15 +26,6 @@ class Screen(colrev.operation.Operation):
         )
 
         self.verbose = True
-
-        package_manager = self.review_manager.get_package_manager()
-        self.screen_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.screen,
-            selected_packages=review_manager.settings.screen.screen_package_endpoints,
-            operation=self,
-        )
 
     def include_all_in_screen(
         self,
@@ -261,14 +251,20 @@ class Screen(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
+        package_manager = self.review_manager.get_package_manager()
+
         for (
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
 
-            endpoint = self.screen_package_endpoints[
-                screen_package_endpoint["endpoint"]
-            ]
-            records = endpoint.run_screen(self, records, split)
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.screen,
+                selected_packages=self.review_manager.settings.screen.screen_package_endpoints,
+                operation=self,
+            )
+
+            endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
+            records = endpoint.run_screen(self, records, split)  # type: ignore
 
 
 if __name__ == "__main__":
