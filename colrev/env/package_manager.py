@@ -364,7 +364,8 @@ class PackageManager:
 
     def __load_package_endpoints_index(self) -> dict:
 
-        # TODO : the list of packages should be curated
+        # gh_issue https://github.com/geritwagner/colrev/issues/66
+        # the list of packages should be curated
         # (like CRAN: packages that meet *minimum* requirements)
         # We should not load any package that matches the colrev* on PyPI
         # (security/quality issues...)
@@ -390,7 +391,8 @@ class PackageManager:
                 assert " " not in package_path
                 assert package_identifier.islower()
 
-        # TODO : testing: validate the structure of packages.json
+        # gh_issue https://github.com/geritwagner/colrev/issues/66
+        # testing: validate the structure of packages.json
         # and whether all endpoints are available
 
         # Note : parsing to a dataclass may not have many advantages
@@ -484,9 +486,9 @@ class PackageManager:
                             "options"
                         ] = settings_class._details[parameter]["options"]
 
-        # TODO apply validation when parsing settings during package init (based on _details)
-
-        # TODO (later) : package version?
+        # gh_issue https://github.com/geritwagner/colrev/issues/66
+        # apply validation when parsing settings during package init (based on _details)
+        # later : package version?
 
         # Note : fix because Path is not (yet) supported.
         if "paper_path" in package_details["properties"]:

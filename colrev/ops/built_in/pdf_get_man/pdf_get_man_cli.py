@@ -63,7 +63,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         record: colrev.record.Record,
     ) -> colrev.record.Record:
 
-        # TODO : get the recipient email(s) from the local author index
+        # get the recipient email(s) from the local author index
         recipient = "TODO"
         subject = "Copy of a PDF"
 
@@ -83,7 +83,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         print(content)
         print("\n\n")
 
-        # TODO : better integration with email clients
+        # next steps: better integration with email clients
 
         return record
 

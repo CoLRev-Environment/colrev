@@ -622,7 +622,8 @@ class SettingsEditor:
 
             package_details = {}
 
-            # TODO (GW): use endpoint_version
+            # gh_issue https://github.com/geritwagner/colrev/issues/66
+            # use endpoint_version
 
             if DEV:
                 if package_type_string == "data":

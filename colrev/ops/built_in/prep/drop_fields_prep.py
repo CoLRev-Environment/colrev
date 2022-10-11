@@ -66,7 +66,6 @@ class DropFieldsPrep(JsonSchemaMixin):
                 )
                 for field_to_remove in fields_to_remove:
                     if field_to_remove in record.data:
-                        # TODO : maybe use set_masterdata_complete()?
                         record.remove_field(
                             key=field_to_remove,
                             not_missing_note=True,

@@ -48,7 +48,8 @@ class BibPybtexLoader(JsonSchemaMixin):
     ) -> dict:
         """Load records from the source"""
         records = {}
-        # TODO : implement set_incremental_ids() and fix_keys() (text-file replacements)
+        # gh_issue https://github.com/geritwagner/colrev/issues/80
+        # implement set_incremental_ids() and fix_keys() (text-file replacements)
         # here (pybtex does not load records with identical IDs /
         # fields with keys containing white spaces)
         if source.filename.is_file():

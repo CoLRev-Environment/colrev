@@ -44,7 +44,6 @@ class PDFCheckOCR(JsonSchemaMixin):
             imagename=self.ocrmypdf_image
         )
 
-    # TODO : test whether this is too slow:
     language_detector = (
         LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
     )
@@ -78,7 +77,6 @@ class PDFCheckOCR(JsonSchemaMixin):
             pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
         )
 
-        # TODO : use variable self.cpus
         options = f"--jobs {4}"
         # if rotate:
         #     options = options + '--rotate-pages '
@@ -115,7 +113,8 @@ class PDFCheckOCR(JsonSchemaMixin):
         if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
             return record.data
 
-        # TODO : allow for other languages in this and the following if statement
+        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # allow for other languages in this and the following if statement
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             pdf_prep_operation.review_manager.report_logger.info(
                 f'apply_ocr({record.data["ID"]})'

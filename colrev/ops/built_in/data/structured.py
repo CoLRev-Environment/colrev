@@ -34,7 +34,9 @@ class StructuredData(JsonSchemaMixin):
 
         endpoint: str
         version: str
-        fields: dict  # TODO : Field dataclass (name, explanation, data_type)
+        # gh_issue https://github.com/geritwagner/colrev/issues/79
+        # Field dataclass (name, explanation, data_type)
+        fields: dict
         data_path_relative: Path = Path("data.csv")
 
         _details = {
@@ -50,7 +52,8 @@ class StructuredData(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
-        # TODO : integrate filename in custom settings
+        # gh_issue https://github.com/geritwagner/colrev/issues/79
+        # integrate filename in custom settings
         self.data_path = (
             data_operation.review_manager.data_dir / self.settings.data_path_relative
         )
@@ -73,7 +76,8 @@ class StructuredData(JsonSchemaMixin):
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""
 
-        # TODO : implement the following:
+        # gh_issue https://github.com/geritwagner/colrev/issues/79
+        # implement the following:
         # # Check whether there are duplicate IDs in data.csv
         # if not data['ID'].is_unique:
         #     raise some error (data[data.duplicated(['ID'])].ID.tolist())

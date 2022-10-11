@@ -103,7 +103,8 @@ class ScopePrescreen(JsonSchemaMixin):
             assert settings["TimeScopeTo"] > 1900
         if "TimeScopeTo" in settings:
             assert settings["TimeScopeTo"] < 2100
-        # TODO : validate values (assert, e.g., LanguageScope)
+        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # validate values (assert, e.g., LanguageScope)
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
@@ -190,11 +191,9 @@ class ScopePrescreen(JsonSchemaMixin):
                     reason="not in OutletInclusionScope"
                 )
 
-        # TODO : discuss whether we should move this to the prep scripts
         if self.settings.ExcludeComplementaryMaterials:
             if self.settings.ExcludeComplementaryMaterials:
                 if "title" in record_dict:
-                    # TODO : extend/test the following
                     if (
                         record_dict["title"].lower()
                         in self.title_complementary_materials_keywords

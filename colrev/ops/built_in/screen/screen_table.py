@@ -116,9 +116,10 @@ class TableScreen(JsonSchemaMixin):
     ) -> None:
         """Export a screening table"""
 
-        # TODO : add delta (records not yet in the table)
+        # gh_issue https://github.com/geritwagner/colrev/issues/73
+        # add delta (records not yet in the table)
         # instead of overwriting
-        # TODO : export_table_format as a settings parameter
+        # export_table_format as a settings parameter
 
         if self.screen_table_path.is_file():
             print("File already exists. Please rename it.")

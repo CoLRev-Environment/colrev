@@ -175,8 +175,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         try:
 
             # Note : journal_abbreviated is the abbreviated venue_key
-            # TODO : tbd how the abbreviated venue_key can be retrieved
-            # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
             if len(records) > 100 and not search_operation.review_manager.force_mode:

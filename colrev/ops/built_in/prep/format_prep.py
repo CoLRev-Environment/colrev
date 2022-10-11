@@ -134,7 +134,8 @@ class FormatPrep(JsonSchemaMixin):
                     )
 
         if "language" in record.data:
-            # TODO : use https://pypi.org/project/langcodes/
+            # gh_issue https://github.com/geritwagner/colrev/issues/64
+            # use https://pypi.org/project/langcodes/
             record.update_field(
                 key="language",
                 value=record.data["language"]

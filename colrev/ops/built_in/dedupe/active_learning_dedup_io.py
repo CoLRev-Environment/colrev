@@ -98,7 +98,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
             )
-            # TODO : consider similar proportions of post-md_processed/md_prepared?
+            # gh_issue https://github.com/geritwagner/colrev/issues/75
+            # consider similar proportions of post-md_processed/md_prepared?
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
@@ -120,7 +121,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # Training
 
-        # TODO : creating a corpus from all fields may create memory issues...
+        # gh_issue https://github.com/geritwagner/colrev/issues/75
+        # creating a corpus from all fields may create memory issues...
 
         # Define the fields dedupe will pay attention to
         fields = [
@@ -202,7 +204,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         else:
             self.deduper.prepare_training(data_d)
 
-        # TODO  input('del data_d - check memory')
         del data_d
 
         dedupe_operation.review_manager.logger.info(

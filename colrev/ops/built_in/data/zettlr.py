@@ -314,8 +314,7 @@ class Zettlr(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
 
-        # TODO : not yet implemented!
-        # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.
+        print("not yet implemented")
 
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):

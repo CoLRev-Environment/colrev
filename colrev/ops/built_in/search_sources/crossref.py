@@ -100,7 +100,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
         def get_crossref_query_return(params: dict) -> typing.Iterator[dict]:
             if "selection_clause" in params:
                 crossref_query = {"bibliographic": params["selection_clause"]}
-                # TODO : add the container_title:
+                # potential extension : add the container_title:
                 # crossref_query_return = works.query(
                 #     container_title=
                 #       "Journal of the Association for Information Systems"

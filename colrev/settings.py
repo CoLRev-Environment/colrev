@@ -379,6 +379,8 @@ class PDFGetSettings(JsonSchemaMixin):
 class PDFPrepSettings(JsonSchemaMixin):
     """PDF prep settings"""
 
+    keep_backup_of_pdfs: bool
+
     pdf_prep_package_endpoints: list
 
     pdf_prep_man_package_endpoints: list

@@ -36,7 +36,8 @@ class BibFormats(Enum):
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
 
-    # TODO: this should become a more general endpoint
+    # gh_issue https://github.com/geritwagner/colrev/issues/70
+    # this should become a more general endpoint
     # that exports a bibliography (Endnote/Citavi,...)
     # It should have the modes incremental/replace
 
@@ -72,7 +73,8 @@ class BibliographyExport(JsonSchemaMixin):
             data_operation.review_manager.output_dir / self.settings.endpoint_dir
         )
 
-    # TODO : change to DefaultSettings structure...
+    # gh_issue https://github.com/geritwagner/colrev/issues/70
+    # change to DefaultSettings structure...
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         endnote_endpoint_details = {

@@ -34,5 +34,6 @@ colrev.settings.PDFPrepSettings
 
    .. autosummary::
 
+      ~PDFPrepSettings.keep_backup_of_pdfs
       ~PDFPrepSettings.pdf_prep_package_endpoints
       ~PDFPrepSettings.pdf_prep_man_package_endpoints

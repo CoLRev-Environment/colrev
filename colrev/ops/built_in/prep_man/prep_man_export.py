@@ -62,7 +62,8 @@ class ExportManPrep(JsonSchemaMixin):
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
 
         prep_man_path_pdfs = self.prep_man_path / Path("pdfs")
-        # TODO : empty prep_man_path_pdfs?
+        if prep_man_path_pdfs.is_dir():
+            input(f"Remove {prep_man_path_pdfs} and press Enter.")
         prep_man_path_pdfs.mkdir(exist_ok=True)
 
         for record in records.values():

@@ -92,9 +92,10 @@ class Search(colrev.operation.Operation):
         assert not feed_file_path.is_file()
         query_dict["filename"] = feed_file_path
 
-        # TODO : get search_type/source_identifier from the SearchSource
-        # TODO : query validation based on ops.built_in.search_source settings
-        # TODO : prevent duplicate sources (same endpoint and search_parameters)
+        # gh_issue https://github.com/geritwagner/colrev/issues/68
+        # get search_type/source_identifier from the SearchSource
+        # query validation based on ops.built_in.search_source settings
+        # prevent duplicate sources (same endpoint and search_parameters)
         if "search_type" not in query_dict:
             query_dict["search_type"] = colrev.settings.SearchType.DB
         else:

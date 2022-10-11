@@ -89,9 +89,7 @@ class PDFPrep(colrev.operation.Operation):
         # restore it from git
         # linked_file.rename(str(linked_file).replace(".pdf", "_backup.pdf"))
 
-        # TODO: rm_temp_if_successful should be a settings attribute of pdf-prep
-        rm_temp_if_successful = False
-        if rm_temp_if_successful:
+        if not self.review_manager.settings.pdf_prep.keep_backup_of_pdfs:
             # Remove temporary PDFs when processing has succeeded
             target_fname = self.review_manager.path / Path(f'{record.data["ID"]}.pdf')
             linked_file = self.review_manager.path / Path(record.data["file"])

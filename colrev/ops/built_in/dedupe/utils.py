@@ -31,7 +31,6 @@ def console_duplicate_instance_label(
             print("#")
             print("# index_dupe_info: yes/duplicate")
             print("#")
-            # TODO : add option to validate explicitly  (Enter to confirm)
             time.sleep(0.6)
     elif "no" == index_dupe_info:
         user_input = "n"
@@ -40,7 +39,6 @@ def console_duplicate_instance_label(
             print("#")
             print("# index_dupe_info: no duplicate")
             print("#")
-            # TODO : add option to validate explicitly  (Enter to confirm)
             time.sleep(0.6)
     else:
         if manual:

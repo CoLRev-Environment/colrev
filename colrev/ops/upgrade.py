@@ -678,6 +678,9 @@ class Upgrade(colrev.operation.Operation):
         if "rename_pdfs" not in settings["pdf_get"]:
             settings["pdf_get"]["rename_pdfs"] = True
 
+        if "keep_backup_of_pdfs" not in settings["pdf_prep"]:
+            settings["pdf_prep"]["keep_backup_of_pdfs"] = True
+
         if "pdf_required_for_screen_and_synthesis" not in settings["pdf_get"]:
             settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = True
 

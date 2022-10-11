@@ -162,7 +162,7 @@ class PDFCompletenessValidation(JsonSchemaMixin):
 
         record.set_pages_in_pdf(project_path=pdf_prep_operation.review_manager.path)
         if nr_pages_metadata != record.data["pages_in_file"]:
-            # TODO : this should become a settings option (coverpages: ok)
+            # this may become a settings option (coverpages: ok)
             # if nr_pages_metadata == int(record.data["pages_in_file"]) - 1:
             #     record.add_data_provenance_note(key="file", note="more_pages_in_pdf")
 

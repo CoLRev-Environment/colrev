@@ -31,7 +31,8 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
 def print_venv_notes() -> None:
     """Print the virtual environment details on cli"""
 
-    # TODO : test installation of colrev in venv
+    # gh_issue https://github.com/geritwagner/colrev/issues/65
+    # test installation of colrev in venv
 
     current_platform = platform.system()
     if "Linux" == current_platform:

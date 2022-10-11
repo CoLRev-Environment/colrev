@@ -69,9 +69,10 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         )
         self.skip_duplicates = True
-        # TODO : remove path parameter? -> should be /pdfs per default.
-        # self.pdfs_path = Path(self.settings.search_parameters["scope"]["path"])
-        self.pdfs_path = source_operation.review_manager.pdf_dir
+
+        self.pdfs_path = source_operation.review_manager.path / Path(
+            self.settings.search_parameters["scope"]["path"]
+        )
 
     def __update_if_pdf_renamed(
         self,

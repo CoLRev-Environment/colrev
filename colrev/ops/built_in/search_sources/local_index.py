@@ -32,7 +32,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     """Performs a search in the LocalIndex"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    # TODO : add a colrev_project_origin field and use it as the identifier?
+    # gh_issue https://github.com/geritwagner/colrev/issues/76
+    # add a colrev_project_origin field and use it as the identifier?
     source_identifier = "index"
 
     def __init__(
@@ -73,7 +74,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             #     f"SELECT colrev_id FROM {local_index.RECORD_INDEX} "
             #     f"WHERE {params['selection_clause']}"
             # )
-            # TODO : update to opensearch standard (DSL?)
+
+            # gh_issue https://github.com/geritwagner/colrev/issues/76
+            # update to opensearch standard (DSL?)
             # or use opensearch-sql plugin
             # https://github.com/opensearch-project/opensearch-py/issues/98
             # client.transport.perform_request
@@ -164,7 +167,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for local-index"""
 
-        # TODO: heuristic for local_index SearchSource?
+        # gh_issue https://github.com/geritwagner/colrev/issues/76
+        # heuristic for local_index SearchSource?
         result = {"confidence": 0.0}
 
         return result

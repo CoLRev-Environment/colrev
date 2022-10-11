@@ -19,22 +19,6 @@ import colrev.record
 # pylint: disable=duplicate-code
 
 
-def apply_field_mapping(
-    *, record: colrev.record.PrepRecord, mapping: dict
-) -> colrev.record.PrepRecord:
-    """Convenience function for the prep scripts"""
-    # TODO : could move the function to PrepRecord?
-
-    mapping = {k.lower(): v.lower() for k, v in mapping.items()}
-    prior_keys = list(record.data.keys())
-    # Note : warning: do not create a new dict.
-    for key in prior_keys:
-        if key.lower() in mapping:
-            record.rename_field(key=key, new_key=mapping[key.lower()])
-
-    return record
-
-
 @zope.interface.implementer(
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
@@ -86,7 +70,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
         ais_mapping: dict = {}
-        record = apply_field_mapping(record=record, mapping=ais_mapping)
+        record.rename_fields_based_on_mapping(mapping=ais_mapping)
 
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers

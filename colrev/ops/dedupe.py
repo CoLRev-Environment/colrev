@@ -358,7 +358,19 @@ class Dedupe(colrev.operation.Operation):
             "ENTRYTYPE"
         ] in ["proceedings"]:
             cross_level_merge_attempt = True
-        # TODO: book vs. inbook?
+
+        if (
+            main_record.data["ENTRYTYPE"] == "book"
+            and dupe_record.data["ENTRYTYPE"] == "inbook"
+        ):
+            cross_level_merge_attempt = True
+
+        if (
+            main_record.data["ENTRYTYPE"] == "inbook"
+            and dupe_record.data["ENTRYTYPE"] == "book"
+        ):
+            cross_level_merge_attempt = True
+
         return cross_level_merge_attempt
 
     def apply_merges(self, *, results: list, complete_dedupe: bool = False) -> None:

@@ -2042,6 +2042,16 @@ class PrepRecord(Record):
                         "note"
                     ] = note.replace("quality_defect", "")
 
+    def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
+        """Convenience function for the prep scripts (to rename fields)"""
+
+        mapping = {k.lower(): v.lower() for k, v in mapping.items()}
+        prior_keys = list(self.data.keys())
+        # Note : warning: do not create a new dict.
+        for key in prior_keys:
+            if key.lower() in mapping:
+                self.rename_field(key=key, new_key=mapping[key.lower()])
+
     def check_potential_retracts(self) -> None:
         """Check for potential retracts (indicated in the crossmark field)"""
         # Note : we retrieved metadata in get_masterdata_from_crossref()

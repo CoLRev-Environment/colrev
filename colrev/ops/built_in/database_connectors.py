@@ -105,8 +105,6 @@ class OpenLibraryConnector:
 
         # pylint: disable=too-many-branches
         try:
-            # TODO : integrate more functionality into open_library_json_to_record() /
-            # database_connectors.py/OpenLibraryConnector
 
             session = prep_operation.review_manager.get_cached_session()
 
@@ -270,8 +268,6 @@ class URLConnector:
 
         zotero_translation_service.start_zotero_translators()
 
-        # TODO : change to the similar merge()/fuse_best_field structure?
-
         try:
             content_type_header = {"Content-type": "text/plain"}
             headers = {**prep_operation.requests_headers, **content_type_header}
@@ -389,17 +385,6 @@ class DOIConnector:
         """Get the website link from DOI resolution API"""
 
         doi_url = f"https://www.doi.org/{record.data['doi']}"
-
-        # TODO : retry for 50X
-        # from requests.adapters import HTTPAdapter
-        # from requests.adapters import Retry
-        # example for testing: ({'doi':'10.1177/02683962221086300'})
-        # s = requests.Session()
-        # headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
-        # retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
-        # s.mount('https://', HTTPAdapter(max_retries=retries))
-        # ret = s.get(url, headers=headers)
-        # print(ret)
 
         def meta_redirect(*, content: bytes) -> str:
             if "<!DOCTYPE HTML PUBLIC" not in str(content):
@@ -666,7 +651,8 @@ class CrossrefConnector:
         if "language" in item:
             record_dict["language"] = item["language"]
             # convert to ISO 639-3
-            # TODO : other languages/more systematically
+            # gh_issue https://github.com/geritwagner/colrev/issues/64
+            # other languages/more systematically
             if "en" == record_dict["language"]:
                 record_dict["language"] = record_dict["language"].replace("en", "eng")
 

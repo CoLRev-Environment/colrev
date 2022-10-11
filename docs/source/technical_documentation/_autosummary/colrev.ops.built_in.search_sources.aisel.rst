@@ -9,14 +9,6 @@ colrev.ops.built\_in.search\_sources.aisel
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      apply_field_mapping
-
 
 
 

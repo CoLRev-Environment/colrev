@@ -33,7 +33,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     """Performs a search in a CoLRev project"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    # TODO : add a colrev_projet_origin field and use it as the identifier?
+
+    # gh_issue https://github.com/geritwagner/colrev/issues/76
+    # add a colrev_projet_origin field and use it as the identifier?
     source_identifier = "project"
 
     def __init__(
@@ -125,7 +127,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for CoLRev projects"""
 
-        # TODO : heuristic for colrev project SearchSource?
+        # gh_issue https://github.com/geritwagner/colrev/issues/76
+        # heuristic for colrev project SearchSource?
         result = {"confidence": 0.0}
 
         return result

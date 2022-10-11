@@ -36,7 +36,8 @@ import colrev.record
 
 # pylint: disable=too-many-lines
 
-# TODO : change logging level temporarily and fix issues that lead to warnings
+# gh_issue https://github.com/geritwagner/colrev/issues/65
+# change logging level temporarily and fix issues that lead to warnings
 logging.getLogger("opensearchpy").setLevel(logging.ERROR)
 logging.getLogger("lxml").setLevel(logging.ERROR)
 logging.getLogger("xml").setLevel(logging.ERROR)
@@ -514,7 +515,9 @@ class LocalIndex:
         for cid_to_retrieve in cids_to_retrieve:
             try:
                 # match_phrase := exact match
-                # TODO : the following requires some testing.
+
+                # gh_issue https://github.com/geritwagner/colrev/issues/65
+                # the following requires some testing.
                 resp = self.open_search.search(
                     index=self.RECORD_INDEX,
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
@@ -690,7 +693,8 @@ class LocalIndex:
         ):
             raise colrev_exceptions.RecordNotIndexedException()
 
-        # TODO : remove provenance on project-specific fields (WHY?!)
+        # gh_issue https://github.com/geritwagner/colrev/issues/65
+        # remove provenance on project-specific fields (WHY?!)
 
         if "screening_criteria" in record_dict:
             del record_dict["screening_criteria"]
@@ -989,7 +993,9 @@ class LocalIndex:
         # 2. get most similar record_dict
         elif len(toc_items) > 0:
             try:
-                # TODO : we need to search tocs even if records are not complete:
+
+                # gh_issue https://github.com/geritwagner/colrev/issues/65
+                # we need to search tocs even if records are not complete:
                 # and a NotEnoughDataToIdentifyException is thrown
                 record_colrev_id = colrev.record.Record(
                     data=record_dict

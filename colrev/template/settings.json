@@ -251,6 +251,7 @@
         ]
     },
     "pdf_prep": {
+        "keep_backup_of_pdfs": true,
         "pdf_prep_package_endpoints": [
             {
                 "endpoint": "colrev_built_in.pdf_check_ocr"

@@ -70,6 +70,7 @@ colrev.record.PrepRecord
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
+      ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete

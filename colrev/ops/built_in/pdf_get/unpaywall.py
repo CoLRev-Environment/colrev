@@ -104,9 +104,6 @@ class Unpaywall(JsonSchemaMixin):
             return record
 
         try:
-            # TODO : download often fails...
-            # example:
-            # https://journals.sagepub.com/doi/pdf/10.1177/02683962211019406
             res = requests.get(
                 url,
                 headers={

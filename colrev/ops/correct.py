@@ -130,7 +130,8 @@ class Corrections:
             corrected_curated_record=corrected_curated_record,
         )
 
-        # TODO : export only essential changes?
+        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # export only essential changes?
         changes = diff(original_curated_record, corrected_curated_record)
 
         selected_change_items = []
@@ -175,7 +176,8 @@ class Corrections:
             #         ]
             #     }
 
-        # TODO : cover non-masterdata corrections
+        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # cover non-masterdata corrections
         if "colrev_masterdata_provenance" not in original_curated_record:
             return
 
@@ -192,7 +194,8 @@ class Corrections:
         with open(filepath, "w", encoding="utf8") as corrections_file:
             json.dump(dict_to_save, corrections_file, indent=4)
 
-        # TODO : combine merge-record corrections
+        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # combine merge-record corrections
 
     def __get_records_curated_prior_from_history(
         self,
@@ -228,10 +231,12 @@ class Corrections:
         record_curated_current = self.__get_records_curated_current()
         record_curated_prior = self.__get_records_curated_prior_from_history()
 
-        # TODO : The following code should be much simpler...
+        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # The following code should be much simpler...
         for curated_record in record_curated_current:
 
-            # TODO : use origin-indexed dict (discarding changes during merges)
+            # gh_issue https://github.com/geritwagner/colrev/issues/63
+            # use origin-indexed dict (discarding changes during merges)
 
             # identify curated records for which essential metadata is changed
             record_curated_prior = [
@@ -387,7 +392,8 @@ class Corrections:
                 if key not in self.essential_md_keys:
                     continue
                 record_dict[key] = value
-            # TODO : deal with remove/merge
+            # gh_issue https://github.com/geritwagner/colrev/issues/63
+            # deal with remove/merge
 
         record = colrev.record.Record(data=record_dict)
         record.add_colrev_ids(records=[record_dict])
@@ -502,7 +508,8 @@ class Corrections:
         for pull_request_msg in pull_request_msgs:
             print(pull_request_msg)
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
-        # TODO : handle cases where update branch already exists
+        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # handle cases where update branch already exists
 
     def apply_correction(self, *, source_url: str, change_list: list) -> None:
         """Apply a (list of) corrections"""

@@ -89,7 +89,6 @@ class CustomSearch:
     ) -> dict:
         """Heuristic to identify the custom source"""
 
-        # TODO
         result = {"confidence": 0}
 
         return result

@@ -123,9 +123,6 @@ class SimpleDedupe(JsonSchemaMixin):
 
         max_similarity = records_df.similarity.max()
 
-        # TODO: it may not be sufficient to consider
-        # the record with the highest similarity
-
         ret = {}
         if max_similarity <= self.settings.merging_non_dup_threshold:
             # Note: if no other record has a similarity exceeding the threshold,
@@ -314,7 +311,6 @@ class SimpleDedupe(JsonSchemaMixin):
 
         return potential_duplicates
 
-    # TODO : add similarity function as a parameter?
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Pairwise identification of duplicates based on static similarity measure
 

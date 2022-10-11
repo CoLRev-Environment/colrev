@@ -63,8 +63,17 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.sources.insert(0, crossref_source)
         settings.search.retrieve_forthcoming = False
 
-        # TODO : exclude complementary materials in prep scripts
-        # TODO : exclude get_masterdata_from_citeas etc. from prep
+        settings.prep.prep_rounds[0].prep_package_endpoints.insert(
+            0, {"endpoint": "colrev_built_in.prep_exclude_complementary_materials"}
+        )
+
+        for prep_round in settings.prep.prep_rounds:
+            prep_round.prep_package_endpoints = [
+                x
+                for x in prep_round.prep_package_endpoints
+                if x["endpoint"] != "colrev_built_in.get_masterdata_from_citeas"
+            ]
+
         settings.prep.prep_man_package_endpoints = [
             {"endpoint": "colrev_built_in.prep_man_curation_jupyter"},
             {"endpoint": "colrev_built_in.export_man_prep"},
@@ -89,8 +98,10 @@ class CuratedMasterdata(JsonSchemaMixin):
             {"endpoint": "colrev_built_in.conditional_screen"}
         ]
         settings.pdf_get.pdf_get_package_endpoints = []
-        # TODO : Deactivate languages, ...
-        #  exclusion and add a complementary exclusion built-in script
+
+        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # Deactivate languages, ...
+        # exclusion and add a complementary exclusion built-in script
 
         settings.dedupe.dedupe_package_endpoints = [
             {

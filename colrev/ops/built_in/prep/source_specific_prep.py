@@ -46,8 +46,6 @@ class SourceSpecificPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by applying source-specific fixes"""
 
-        # TODO : may need to rerun import_provenance
-
         search_sources = colrev.ops.search_sources.SearchSources(
             review_manager=prep_operation.review_manager
         )

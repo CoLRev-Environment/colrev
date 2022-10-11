@@ -416,7 +416,7 @@ def prep(
     """Prepare records"""
 
     try:
-        # TODO : replace debug
+
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
         )
@@ -1380,7 +1380,8 @@ def validate(
             if "y" == user_selection:
                 continue
 
-            # TODO: correct? if not, replace current record with old one
+            # gh_issue https://github.com/geritwagner/colrev/issues/72
+            # correct? if not, replace current record with old one
 
     except colrev_exceptions.InvalidSettingsError as exc:
         logging.error(exc)
@@ -1858,7 +1859,7 @@ def sync(
         # Resolve non-unique cases
         for case in sync_operation.non_unique_for_import:
             for val in case.values():
-                # TODO: there may be more collisions (v3, v4)
+                # later: there may be more collisions (v3, v4)
                 v_1 = colrev.record.Record(data=val[0]).format_bib_style()
                 v_2 = colrev.record.Record(data=val[1]).format_bib_style()
                 if v_1.lower() == v_2.lower():

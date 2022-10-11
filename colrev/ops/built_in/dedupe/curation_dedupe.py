@@ -52,10 +52,7 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        # TODO : the settings could be used
-        # to select the specific files/grouping properties?!
-        # -> see selected_source.
-        # TODO : validate whether selected_source is in SOURCES.filenames
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
@@ -546,9 +543,6 @@ class CurationDedupe(JsonSchemaMixin):
         self.__warn_on_missing_sources(
             dedupe_operation=dedupe_operation, first_source=first_source
         )
-
-        # TODO : create a data/search/retrieval script that retrieves
-        # records based on linked attributes (see cml_assistant)
 
         if first_source:
             self.__add_first_source_if_deduplicated(
