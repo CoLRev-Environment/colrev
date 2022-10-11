@@ -73,6 +73,7 @@ class PDFGet(colrev.operation.Operation):
         ):
             record.update_field(key="file", value=str(pdf_filepath), source="link_pdf")
             record.import_file(review_manager=self.review_manager)
+            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
 
         return record
 
@@ -88,8 +89,6 @@ class PDFGet(colrev.operation.Operation):
             return record_dict
 
         record = colrev.record.Record(data=record_dict)
-
-        record = self.link_pdf(record=record)
 
         for (
             pdf_get_package_endpoint
@@ -296,6 +295,9 @@ class PDFGet(colrev.operation.Operation):
                         # colrev_status = max_sim_record['colrev_status']
                         # if RecordState.pdf_needs_manual_preparation == colrev_status:
                         #     # revert?
+            else:
+                record = records[file.stem]
+                self.link_pdf(record=colrev.record.Record(data=record))
 
         self.review_manager.dataset.save_records_dict(records=records)
 
