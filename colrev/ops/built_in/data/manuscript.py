@@ -379,8 +379,7 @@ class Manuscript(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         synthesized_record_status_matrix: dict,
     ) -> None:
-        review_manager.report_logger.info("Updating manuscript")
-        review_manager.logger.info("Updating manuscript")
+
         missing_records = self.__get_data_page_missing(
             paper=self.settings.paper_path,
             record_id_list=list(synthesized_record_status_matrix.keys()),
@@ -398,6 +397,8 @@ class Manuscript(JsonSchemaMixin):
                 f"All records included in {self.settings.paper_path.name}"
             )
         else:
+            review_manager.report_logger.info("Updating manuscript")
+            review_manager.logger.info("Updating manuscript")
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 paper_path=self.settings.paper_path,
