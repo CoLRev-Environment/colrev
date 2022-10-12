@@ -15,6 +15,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+### [0.6.0] - 2022-10-12
+
+### Added
+
+- Web-based editor for project settings
+- Comprehensive architecture refactoring
+- Conformance with pylint, mypy, flake8
+- Introduced packages
+- Updated file and directory structure
+- Documentation of modules, classes, and methods
+- Github-pages as a data package_endpoint
+
+### Changed
+
+- Renamed from colrev_core to colrev (integrated cli)
+- Switch to poetry for dependency management
+- Renamed scripts to package_endpoints
+- PDF-hash generation based on Docker to avoid platform dependency issues
+- Switch to Jinja templates (instead of concatenating multiple strings)
+
+### Fixed
+
+- Concurrent request session handling
+- StatusStats calculations
 
 ### [0.5.0] - 2022-06-28
 

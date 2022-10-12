@@ -14,10 +14,16 @@ Upcoming
 - Templates for review_types
 - Synchronous session support
 
-2022-09-01: v0.6.0 (expected)
+2022-12-01: v0.7.0 (expected)
 --------------------------------------
 
-- Tests
+- Unit tests
+- User tests
+- Package management
+
+2022-10-12: v0.6.0
+--------------------------------------
+
 - Architecture refactoring
 
 2022-06-28: v0.5.0
