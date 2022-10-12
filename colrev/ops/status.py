@@ -258,9 +258,18 @@ class StatusStats:
                         states_to_consider.append(predecessor["dest"])
                 if len(predecessors) > 0:
                     if predecessors[0]["trigger"] != "init":
-                        self.completed_atomic_steps += getattr(
-                            self.overall, str(predecessor["dest"])
-                        )
+                        # ignore _man versions to avoid double-counting:
+                        if "_man" not in predecessors[0]["trigger"]:
+                            self.completed_atomic_steps += getattr(
+                                self.overall, str(predecessor["dest"])
+                            )
+                        # Note : load is not a predecessor so we need to
+                        # correct for a missing step (same number like prep)
+                        if "prep" == predecessors[0]["trigger"]:
+                            self.completed_atomic_steps += getattr(
+                                self.overall, str(predecessor["dest"])
+                            )
+
             atomic_step_number += 1
             # Note : the following does not consider multiple parallel steps.
             for trans_for_completeness in [
