@@ -352,6 +352,17 @@ class Initializer:
         git_repo = git.Repo.init()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
+        with open("settings.json", encoding="utf-8") as file:
+            settings = json.load(file)
+
+        settings["dedupe"]["dedupe_package_endpoints"] = [
+            {"endpoint": "colrev_built_in.simple_dedupe"}
+        ]
+
+        with open("settings.json", "w", encoding="utf-8") as outfile:
+            json.dump(settings, outfile, indent=4)
+        git_repo.index.add(["settings.json"])
+
     def __create_local_index(self) -> None:
 
         self.review_manager.report_logger.handlers = []

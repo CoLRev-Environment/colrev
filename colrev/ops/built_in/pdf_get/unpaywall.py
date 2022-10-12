@@ -120,7 +120,7 @@ class Unpaywall(JsonSchemaMixin):
                     pdf_get_operation.review_manager.report_logger.info(
                         "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
-                    pdf_get_operation.review_manager.logger.info(
+                    pdf_get_operation.review_manager.logger.debug(
                         "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
                     source = (

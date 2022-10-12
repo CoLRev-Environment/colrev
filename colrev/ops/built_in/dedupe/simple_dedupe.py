@@ -209,7 +209,7 @@ class SimpleDedupe(JsonSchemaMixin):
                 colrev.record.RecordState.md_needs_manual_preparation,
             ]
         ]
-        if len(ids_to_dedupe) > 20:
+        if len(ids_to_dedupe) > 40:
             if not dedupe_operation.review_manager.force_mode:
                 dedupe_operation.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
