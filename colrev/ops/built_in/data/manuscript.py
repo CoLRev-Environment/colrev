@@ -393,7 +393,7 @@ class Manuscript(JsonSchemaMixin):
             review_manager.report_logger.info(
                 f"All records included in {self.settings.paper_path.name}"
             )
-            review_manager.logger.info(
+            review_manager.logger.debug(
                 f"All records included in {self.settings.paper_path.name}"
             )
         else:
@@ -499,7 +499,7 @@ class Manuscript(JsonSchemaMixin):
         if not data_operation.review_manager.dataset.file_changed(
             relative_path=paper_relative_path
         ):
-            data_operation.review_manager.logger.info(
+            data_operation.review_manager.logger.debug(
                 "Skipping manuscript build (no changes)"
             )
             return

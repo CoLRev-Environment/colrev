@@ -16,8 +16,6 @@ class Data(colrev.operation.Operation):
 
     __pad = 0
 
-    verbose: bool
-
     def __init__(
         self,
         *,
@@ -220,10 +218,8 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def main(self, *, pre_commit_hook: bool = False) -> dict:
+    def main(self) -> dict:
         """Data operation (main entrypoint)"""
-
-        self.verbose = not pre_commit_hook
 
         no_endpoints_registered = 0 == len(
             self.review_manager.settings.data.data_package_endpoints
@@ -239,7 +235,7 @@ class Data(colrev.operation.Operation):
         self.__pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-        # if 0 == len(included) and self.verbose:
+        # if 0 == len(included) and self.review_manager.verbose_mode:
         #     self.review_manager.report_logger.info("No records included yet")
         #     self.review_manager.logger.info("No records included yet")
 
@@ -259,7 +255,7 @@ class Data(colrev.operation.Operation):
         }
         synthesized_record_status_matrix = {ID: default_row.copy() for ID in included}
 
-        # if self.verbose:
+        # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
         package_manager = self.review_manager.get_package_manager()
@@ -282,7 +278,7 @@ class Data(colrev.operation.Operation):
                 data_package_endpoint["endpoint"],
             )
 
-            if self.verbose:
+            if self.review_manager.verbose_mode:
                 print(f"updated {endpoint.settings.endpoint}")  # type: ignore
 
         for (
@@ -294,7 +290,7 @@ class Data(colrev.operation.Operation):
                     records[record_id]["colrev_status"]
                     != colrev.record.RecordState.rev_synthesized
                 ):
-                    if self.verbose:
+                    if self.review_manager.verbose_mode:
                         self.review_manager.report_logger.info(
                             f" {record_id}".ljust(self.__pad, " ")
                             + "set colrev_status to synthesized"
@@ -311,7 +307,7 @@ class Data(colrev.operation.Operation):
                     colrev_status=colrev.record.RecordState.rev_included
                 )
 
-        # if self.verbose:
+        # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
         self.review_manager.dataset.save_records_dict(records=records)
