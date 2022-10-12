@@ -870,6 +870,17 @@ class Dataset:
         filecontents = list(revlist)[0][1]
         return filecontents
 
+    def file_changed(self, relative_path: Path) -> bool:
+        """Check whether a file was changed"""
+        main_recs_changed = False
+        try:
+            main_recs_changed = str(relative_path) in [
+                item.a_path for item in self.__git_repo.index.diff(None)
+            ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
+        except ValueError:
+            pass
+        return main_recs_changed
+
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
         main_recs_changed = str(self.RECORDS_FILE_RELATIVE) in [

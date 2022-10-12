@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import dacite
 import docker
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -143,6 +144,34 @@ class Manuscript(JsonSchemaMixin):
             path=template_name.relative_to(self.data_operation.review_manager.path)
         )
         return template_name
+
+    def __retrieve_default_csl(self) -> None:
+        csl_link = ""
+        with open(self.settings.paper_path, encoding="utf-8") as file:
+            for line in file:
+                csl_match = re.match(r"csl: ?\"([^\"\n]*)\"\n", line)
+                if csl_match:
+                    csl_link = csl_match.group(1)
+
+        if "http" in csl_link:
+            ret = requests.get(csl_link, allow_redirects=True)
+            with open(Path(csl_link).name, "wb") as file:
+                file.write(ret.content)
+            csl_filename = Path(csl_link).name
+            colrev.env.utils.inplace_change(
+                filename=self.settings.paper_path,
+                old_string=f'csl: "{csl_link}"',
+                new_string=f'csl: "{csl_filename}"',
+            )
+            self.data_operation.review_manager.dataset.add_changes(
+                path=self.settings.paper_path
+            )
+            self.data_operation.review_manager.dataset.add_changes(
+                path=Path(csl_filename)
+            )
+            self.data_operation.review_manager.logger.info(
+                "Downloaded csl file for offline use"
+            )
 
     def __check_new_record_source_tag(
         self,
@@ -438,8 +467,6 @@ class Manuscript(JsonSchemaMixin):
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
         """Build the manuscript (based on pandoc)"""
 
-        data_operation.review_manager.logger.info("Build manuscript")
-
         if not data_operation.review_manager.dataset.records_file.is_file():
             data_operation.review_manager.dataset.records_file.touch()
 
@@ -452,6 +479,7 @@ class Manuscript(JsonSchemaMixin):
             )
             return
 
+        self.__retrieve_default_csl()
         self.__create_non_sample_references_bib()
 
         word_template = self.settings.word_template
@@ -467,6 +495,16 @@ class Manuscript(JsonSchemaMixin):
             data_operation.review_manager.path
         )
 
+        if not data_operation.review_manager.dataset.file_changed(
+            relative_path=paper_relative_path
+        ):
+            data_operation.review_manager.logger.info(
+                "Skipping manuscript build (no changes)"
+            )
+            return
+
+        data_operation.review_manager.logger.info("Build manuscript")
+
         script = (
             f"{paper_relative_path} --citeproc "
             + f"--reference-doc {word_template.relative_to(data_operation.review_manager.path)} "
@@ -479,8 +517,6 @@ class Manuscript(JsonSchemaMixin):
                 data_operation=data_operation, script=script
             ),
         ).start()
-
-        return
 
     def update_data(
         self,
