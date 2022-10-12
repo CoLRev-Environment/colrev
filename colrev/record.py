@@ -1929,7 +1929,7 @@ class PrepRecord(Record):
         *,
         record_original: Record,
         retrieved_record_original: Record,
-        same_record_type_required: bool = False,
+        same_record_type_required: bool = True,
     ) -> float:
         """Get the retrieval similarity between the record and a retrieved record"""
         # pylint: disable=too-many-branches
