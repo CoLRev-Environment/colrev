@@ -58,7 +58,8 @@ class Upgrade(colrev.operation.Operation):
         # {'from': '0.5.0', "to": upcoming_version, 'script': __migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"from": "0.4.0", "to": "0.5.0", "script": self.__migrate_0_4_0},
-            {"from": "0.5.0", "to": upcoming_version, "script": self.__migrate_0_5_0},
+            {"from": "0.5.0", "to": "0.6.0", "script": self.__migrate_0_5_0},
+            {"from": "0.6.0", "to": upcoming_version, "script": self.__migrate_0_6_0},
         ]
 
         # Start with the first step if the version is older:
@@ -802,6 +803,13 @@ class Upgrade(colrev.operation.Operation):
         # git filter-branch --tree-filter
         # "find . \( -name **.md -o -name .pre-commit-config.yaml \)
         # -exec sed -i -e \ 's/references.bib/records.bib/g' {} \;"
+
+    def __migrate_0_6_0(self) -> None:
+        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+
+        return
 
 
 if __name__ == "__main__":
