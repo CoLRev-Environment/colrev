@@ -79,6 +79,9 @@ Projects that power CoLRev and its extension scripts:
    * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
      - Cross-disciplinary
      - > 125,000,000
+   * - `Europe PMC <https://europepmc.org/>`_, including PubMed Central (PMC) (metadata)
+     - Life sciences
+     - > 40,000,000
    * - `Semantic Scholar <https://www.semanticscholar.org/>`_ (metadata)
      - Cross-disciplinary
      - > 175,000,000

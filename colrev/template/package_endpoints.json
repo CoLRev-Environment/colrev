@@ -62,6 +62,9 @@
         "colrev_built_in.get_masterdata_from_crossref": {
             "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep"
         },
+        "colrev_built_in.get_masterdata_from_europe_pmc": {
+            "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep"
+        },
         "colrev_built_in.get_masterdata_from_dblp": {
             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep"
         },

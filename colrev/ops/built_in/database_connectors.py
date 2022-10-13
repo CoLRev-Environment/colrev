@@ -8,9 +8,11 @@ import re
 import sys
 import typing
 import urllib
+import xml.etree.ElementTree as ET
 from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
+from xml.etree.ElementTree import Element
 
 import requests
 from bs4 import BeautifulSoup
@@ -26,6 +28,258 @@ if TYPE_CHECKING:
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-lines
+
+
+class EuropePMCConnector:
+    """Connector for the Europe PMC API"""
+
+    # @classmethod
+    # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
+    # ...
+
+    @classmethod
+    def __europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+
+        retrieved_record_dict: dict = {}
+
+        author_node = item.find("authorString")
+        if author_node is not None:
+            if author_node.text is not None:
+                authors_string = colrev.record.PrepRecord.format_author_field(
+                    input_string=author_node.text
+                )
+                retrieved_record_dict.update(author=authors_string)
+
+        journal_node = item.find("journalTitle")
+        if journal_node is not None:
+            if journal_node.text is not None:
+                retrieved_record_dict.update(journal=journal_node.text)
+                retrieved_record_dict.update(ENTRYTYPE="article")
+
+        doi_node = item.find("doi")
+        if doi_node is not None:
+            if doi_node.text is not None:
+                retrieved_record_dict.update(doi=doi_node.text)
+
+        title_node = item.find("title")
+        if title_node is not None:
+            if title_node.text is not None:
+                retrieved_record_dict.update(title=title_node.text)
+
+        year_node = item.find("pubYear")
+        if year_node is not None:
+            if year_node.text is not None:
+                retrieved_record_dict.update(year=year_node.text)
+
+        volume_node = item.find("journalVolume")
+        if volume_node is not None:
+            if volume_node.text is not None:
+                retrieved_record_dict.update(volume=volume_node.text)
+
+        issue_node = item.find("issue")
+        if issue_node is not None:
+            if issue_node.text is not None:
+                retrieved_record_dict.update(issue=issue_node.text)
+
+        pmid_node = item.find("pmid")
+        if pmid_node is not None:
+            if pmid_node.text is not None:
+                retrieved_record_dict.update(pmid=pmid_node.text)
+
+        source_node = item.find("source")
+        if source_node is not None:
+            if source_node.text is not None:
+                retrieved_record_dict.update(epmc_source=source_node.text)
+
+        epmc_id_node = item.find("id")
+        if epmc_id_node is not None:
+            if epmc_id_node.text is not None:
+                retrieved_record_dict.update(epmc_id=epmc_id_node.text)
+
+        record = colrev.record.PrepRecord(data=retrieved_record_dict)
+
+        # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
+        source = (
+            "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+            f"{record.data['epmc_source']}/{record.data['epmc_id']}"
+        )
+
+        record.add_provenance_all(source=source)
+        return record
+
+    @classmethod
+    def __get_similarity(
+        cls,
+        *,
+        record: colrev.record.Record,
+        retrieved_record: colrev.record.Record,
+    ) -> float:
+        title_similarity = fuzz.partial_ratio(
+            retrieved_record.data["title"].lower(),
+            record.data.get("title", "").lower(),
+        )
+        container_similarity = fuzz.partial_ratio(
+            retrieved_record.get_container_title().lower(),
+            record.get_container_title().lower(),
+        )
+
+        weights = [0.6, 0.4]
+        similarities = [title_similarity, container_similarity]
+
+        similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
+        # logger.debug(f'record: {pp.pformat(record)}')
+        # logger.debug(f'similarities: {similarities}')
+        # logger.debug(f'similarity: {similarity}')
+        # pp.pprint(retrieved_record_dict)
+        return similarity
+
+    @classmethod
+    def europe_pcmc_query(
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        record_input: colrev.record.Record,
+        timeout: int = 10,
+    ) -> list:
+        """Retrieve records from Europe PMC based on a query"""
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
+
+        try:
+
+            record = record_input.copy_prep_rec()
+
+            url = (
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?"
+                + urllib.parse.urlencode({"query": record.data["title"]})
+            )
+
+            headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+            record_list = []
+            session = review_manager.get_cached_session()
+
+            review_manager.logger.debug(url)
+            ret = session.request("GET", url, headers=headers, timeout=timeout)
+            ret.raise_for_status()
+            if ret.status_code != 200:
+                review_manager.logger.debug(
+                    f"europe_pmc failed with status {ret.status_code}"
+                )
+                return []
+
+            most_similar, most_similar_record = 0.0, {}
+            root = ET.fromstring(ret.text)
+            result_list = root.findall("resultList")[0]
+            for result_item in result_list.findall("result"):
+
+                retrieved_record = cls.__europe_pmc_xml_to_record(item=result_item)
+
+                if "title" not in retrieved_record.data:
+                    continue
+
+                similarity = cls.__get_similarity(
+                    record=record, retrieved_record=retrieved_record
+                )
+
+                source = (
+                    "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+                    f"{retrieved_record.data['epmc_source']}/{retrieved_record.data['epmc_id']}"
+                )
+                record.set_masterdata_complete(source_identifier=source)
+                if most_similar < similarity:
+                    most_similar = similarity
+                    most_similar_record = retrieved_record.get_data()
+        except json.decoder.JSONDecodeError:
+            pass
+        except requests.exceptions.RequestException:
+            return []
+        except OperationalError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            ) from exc
+
+        record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+
+        return record_list
+
+    @classmethod
+    def get_masterdata_from_europe_pmc(
+        cls,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        timeout: int = 10,  # pylint: disable=unused-argument
+    ) -> colrev.record.Record:
+        """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
+
+        # pylint: disable=too-many-branches
+        try:
+
+            if len(record.data.get("title", "")) > 35:
+
+                retrieved_records = EuropePMCConnector.europe_pcmc_query(
+                    review_manager=prep_operation.review_manager,
+                    record_input=record,
+                    timeout=timeout,
+                )
+                retrieved_record = retrieved_records.pop()
+
+                retries = 0
+                while (
+                    not retrieved_record
+                    and retries < prep_operation.max_retries_on_error
+                ):
+                    retries += 1
+
+                    retrieved_records = EuropePMCConnector.europe_pcmc_query(
+                        review_manager=prep_operation.review_manager,
+                        record_input=record,
+                        timeout=timeout,
+                    )
+                    retrieved_record = retrieved_records.pop()
+
+                if 0 == len(retrieved_record.data):
+                    return record
+
+                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                    record_original=record, retrieved_record_original=retrieved_record
+                )
+
+                if similarity > prep_operation.retrieval_similarity:
+                    prep_operation.review_manager.logger.debug("Found matching record")
+                    prep_operation.review_manager.logger.debug(
+                        f"europe_pmc similarity: {similarity} "
+                        f"(>{prep_operation.retrieval_similarity})"
+                    )
+
+                    # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
+                    source = (
+                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+                        f"{retrieved_record.data['epmc_source']}/{retrieved_record.data['epmc_id']}"
+                    )
+
+                    record.merge(merging_record=retrieved_record, default_source=source)
+
+                else:
+                    prep_operation.review_manager.logger.debug(
+                        f"europe_pmc similarity: {similarity} "
+                        f"(<{prep_operation.retrieval_similarity})"
+                    )
+
+        except requests.exceptions.RequestException:
+            pass
+        except UnicodeEncodeError:
+            prep_operation.review_manager.logger.error(
+                "UnicodeEncodeError - this needs to be fixed at some time"
+            )
+
+        return record
 
 
 class OpenLibraryConnector:
