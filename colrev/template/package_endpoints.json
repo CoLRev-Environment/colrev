@@ -223,6 +223,9 @@
         "colrev_built_in.dblp": {
             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource"
         },
+        "colrev_built_in.europe_pmc": {
+            "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource"
+        },
         "colrev_built_in.acm_digital_library": {
             "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource"
         },

@@ -31,6 +31,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.colrev_project
    colrev.ops.built_in.search_sources.crossref
    colrev.ops.built_in.search_sources.dblp
+   colrev.ops.built_in.search_sources.europe_pmc
    colrev.ops.built_in.search_sources.google_scholar
    colrev.ops.built_in.search_sources.local_index
    colrev.ops.built_in.search_sources.pdf_backward_search

@@ -1380,7 +1380,7 @@ def validate(
             if "y" == user_selection:
                 continue
 
-            # gh_issue https://github.com/geritwagner/colrev/issues/72
+            # gh_issue https://github.com/geritwagner/colrev/issues/57
             # correct? if not, replace current record with old one
 
     except colrev_exceptions.InvalidSettingsError as exc:

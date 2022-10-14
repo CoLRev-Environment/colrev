@@ -2,7 +2,6 @@
 """Load conversion of bib files using pybtex"""
 from __future__ import annotations
 
-from dataclasses import asdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -61,7 +60,7 @@ class BibPybtexLoader(JsonSchemaMixin):
 
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[asdict(source)],
+            selected_packages=[source.get_dict()],
             operation=load_operation,
             ignore_not_available=False,
         )

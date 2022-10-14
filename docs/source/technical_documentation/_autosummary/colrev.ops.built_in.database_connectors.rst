@@ -23,5 +23,6 @@ colrev.ops.built\_in.database\_connectors
       CrossrefConnector
       DBLPConnector
       DOIConnector
+      EuropePMCConnector
       OpenLibraryConnector
       URLConnector

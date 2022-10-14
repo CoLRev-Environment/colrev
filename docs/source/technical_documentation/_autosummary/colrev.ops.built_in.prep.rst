@@ -36,6 +36,7 @@ colrev.ops.built\_in.prep
    colrev.ops.built_in.prep.doi_from_urls_prep
    colrev.ops.built_in.prep.doi_metadata_prep
    colrev.ops.built_in.prep.drop_fields_prep
+   colrev.ops.built_in.prep.europe_pmc_prep
    colrev.ops.built_in.prep.exclude_collections
    colrev.ops.built_in.prep.exclude_languages
    colrev.ops.built_in.prep.exclude_non_latin_alphabets

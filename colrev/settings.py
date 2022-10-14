@@ -203,6 +203,12 @@ class SearchSource(JsonSchemaMixin):
             return {k: convert_value(v) for k, v in data}
 
         exported_dict = asdict(self, dict_factory=custom_asdict_factory)
+
+        exported_dict["search_type"] = colrev.settings.SearchType[
+            exported_dict["search_type"]
+        ]
+        exported_dict["filename"] = Path(exported_dict["filename"])
+
         return exported_dict
 
     def __str__(self) -> str:
@@ -590,7 +596,12 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
             data=loaded_settings,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
-    except (ValueError, MissingValueError, WrongTypeError) as exc:
+        for source in settings.sources:
+            if not str(source.filename).startswith("data/search"):
+                msg = f"Source filename does not start with data/search: {source.filename}"
+                raise colrev_exceptions.InvalidSettingsError(msg=msg)
+
+    except (ValueError, MissingValueError, WrongTypeError, AssertionError) as exc:
         raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings

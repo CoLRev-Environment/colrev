@@ -74,8 +74,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             raise colrev_exceptions.InvalidQueryException(
                 "journal_abbreviated required in search_parameters/scope"
             )
-        settings["filename"] = Path(settings["filename"])
-        settings["search_type"] = colrev.settings.SearchType[settings["search_type"]]
+
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __retrieve_and_append_year_batch(

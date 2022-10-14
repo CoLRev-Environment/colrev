@@ -43,8 +43,6 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 "Crossref search_parameters/scope requires a query or journal_issn field"
             )
 
-        settings["search_type"] = colrev.settings.SearchType[settings["search_type"]]
-        settings["filename"] = Path(settings["filename"])
         assert settings["search_type"] in [
             colrev.settings.SearchType.DB,
             colrev.settings.SearchType.TOC,

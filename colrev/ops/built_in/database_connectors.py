@@ -11,6 +11,7 @@ import urllib
 import xml.etree.ElementTree as ET
 from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 from urllib.parse import unquote
 from xml.etree.ElementTree import Element
 
@@ -42,8 +43,9 @@ class EuropePMCConnector:
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-statements
 
-        retrieved_record_dict: dict = {}
+        retrieved_record_dict: dict = {"ENTRYTYPE": "misc"}
 
         author_node = item.find("authorString")
         if author_node is not None:
@@ -79,10 +81,10 @@ class EuropePMCConnector:
             if volume_node.text is not None:
                 retrieved_record_dict.update(volume=volume_node.text)
 
-        issue_node = item.find("issue")
-        if issue_node is not None:
-            if issue_node.text is not None:
-                retrieved_record_dict.update(issue=issue_node.text)
+        number_node = item.find("issue")
+        if number_node is not None:
+            if number_node.text is not None:
+                retrieved_record_dict.update(number=number_node.text)
 
         pmid_node = item.find("pmid")
         if pmid_node is not None:
@@ -99,12 +101,21 @@ class EuropePMCConnector:
             if epmc_id_node.text is not None:
                 retrieved_record_dict.update(epmc_id=epmc_id_node.text)
 
+        retrieved_record_dict["europe_pmc_id"] = (
+            retrieved_record_dict.get("epmc_source", "NO_SOURCE")
+            + "/"
+            + retrieved_record_dict.get("epmc_id", "NO_ID")
+        )
+        retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
+        del retrieved_record_dict["epmc_id"]
+        del retrieved_record_dict["epmc_source"]
+
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
         source = (
             "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-            f"{record.data['epmc_source']}/{record.data['epmc_id']}"
+            f"{record.data['europe_pmc_id']}"
         )
 
         record.add_provenance_all(source=source)
@@ -142,6 +153,7 @@ class EuropePMCConnector:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
+        most_similar_only: bool = True,
         timeout: int = 10,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
@@ -155,45 +167,59 @@ class EuropePMCConnector:
             record = record_input.copy_prep_rec()
 
             url = (
-                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?"
-                + urllib.parse.urlencode({"query": record.data["title"]})
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
+                + quote(record.data["title"])
             )
 
             headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
             record_list = []
             session = review_manager.get_cached_session()
 
-            review_manager.logger.debug(url)
-            ret = session.request("GET", url, headers=headers, timeout=timeout)
-            ret.raise_for_status()
-            if ret.status_code != 200:
-                review_manager.logger.debug(
-                    f"europe_pmc failed with status {ret.status_code}"
-                )
-                return []
+            while url != "END":
+                review_manager.logger.info(url)
+                ret = session.request("GET", url, headers=headers, timeout=timeout)
+                ret.raise_for_status()
+                if ret.status_code != 200:
+                    review_manager.logger.debug(
+                        f"europe_pmc failed with status {ret.status_code}"
+                    )
+                    return []
 
-            most_similar, most_similar_record = 0.0, {}
-            root = ET.fromstring(ret.text)
-            result_list = root.findall("resultList")[0]
-            for result_item in result_list.findall("result"):
+                most_similar, most_similar_record = 0.0, {}
+                root = ET.fromstring(ret.text)
+                result_list = root.findall("resultList")[0]
 
-                retrieved_record = cls.__europe_pmc_xml_to_record(item=result_item)
+                for result_item in result_list.findall("result"):
 
-                if "title" not in retrieved_record.data:
-                    continue
+                    retrieved_record = cls.__europe_pmc_xml_to_record(item=result_item)
 
-                similarity = cls.__get_similarity(
-                    record=record, retrieved_record=retrieved_record
-                )
+                    if "title" not in retrieved_record.data:
+                        continue
 
-                source = (
-                    "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-                    f"{retrieved_record.data['epmc_source']}/{retrieved_record.data['epmc_id']}"
-                )
-                record.set_masterdata_complete(source_identifier=source)
-                if most_similar < similarity:
-                    most_similar = similarity
-                    most_similar_record = retrieved_record.get_data()
+                    similarity = cls.__get_similarity(
+                        record=record, retrieved_record=retrieved_record
+                    )
+
+                    source = (
+                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+                        f"{retrieved_record.data['europe_pmc_id']}"
+                    )
+                    retrieved_record.set_masterdata_complete(source_identifier=source)
+
+                    if not most_similar_only:
+                        record_list.append(retrieved_record)
+
+                    elif most_similar < similarity:
+                        most_similar = similarity
+                        most_similar_record = retrieved_record.get_data()
+
+                url = "END"
+                if not most_similar_only:
+                    next_page_url_node = root.find("nextPageUrl")
+                    if next_page_url_node is not None:
+                        if next_page_url_node.text is not None:
+                            url = next_page_url_node.text
+
         except json.decoder.JSONDecodeError:
             pass
         except requests.exceptions.RequestException:
@@ -204,7 +230,8 @@ class EuropePMCConnector:
                 "(possibly caused by concurrent operations)"
             ) from exc
 
-        record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+        if most_similar_only:
+            record_list = [colrev.record.PrepRecord(data=most_similar_record)]
 
         return record_list
 
@@ -261,7 +288,7 @@ class EuropePMCConnector:
                     # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
                     source = (
                         "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-                        f"{retrieved_record.data['epmc_source']}/{retrieved_record.data['epmc_id']}"
+                        f"{retrieved_record.data.get('europe_pmc_id', 'NO_ID')}"
                     )
 
                     record.merge(merging_record=retrieved_record, default_source=source)
@@ -1069,7 +1096,7 @@ class CrossrefConnector:
 
                 if jour_vol_iss_list:
                     record_list.append(retrieved_record)
-                if most_similar < similarity:
+                elif most_similar < similarity:
                     most_similar = similarity
                     most_similar_record = retrieved_record.get_data()
         except json.decoder.JSONDecodeError:

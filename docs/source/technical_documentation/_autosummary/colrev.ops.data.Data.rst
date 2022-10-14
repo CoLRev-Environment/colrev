@@ -32,6 +32,5 @@ colrev.ops.data.Data
 
    .. autosummary::
 
-      ~Data.verbose
       ~Data.force_mode
       ~Data.type
