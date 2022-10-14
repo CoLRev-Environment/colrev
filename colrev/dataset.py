@@ -781,7 +781,6 @@ class Dataset:
             record = colrev.record.Record(data=record_dict)
             if record.masterdata_is_curated():
                 continue
-            self.review_manager.logger.debug(f"Set ID for {record_id}")
             if selected_ids is not None:
                 if record_id not in selected_ids:
                     continue

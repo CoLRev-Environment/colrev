@@ -439,9 +439,7 @@ class Prep(colrev.operation.Operation):
             "items": list(items),
             "prior_ids": prior_ids,
         }
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(prep_data)
-        )
+
         return prep_data
 
     def __get_preparation_data(
