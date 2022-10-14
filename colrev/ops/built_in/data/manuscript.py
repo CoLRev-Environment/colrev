@@ -65,12 +65,12 @@ class Manuscript(JsonSchemaMixin):
         paper_path: Path = Path("paper.md")
         paper_output: Path = Path("paper.docx")
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/71
-        # output filetype options (docx, pdf, html,...)
-
         _details = {
             "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
             "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
+            "paper_output": {
+                "tooltip": "Path for the output (e.g., paper.docx/pdf/latex/html)"
+            },
         }
 
     settings_class = ManuscriptSettings
