@@ -2117,7 +2117,9 @@ class PrepRecord(Record):
         ]
 
     def update_metadata_status(
-        self, *, review_manager: colrev.review_manager.ReviewManager
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> None:
         """Update the metadata status (retracts, incompleteness, inconsistencies, etc.)
         and setting the status accordingly"""
@@ -2130,18 +2132,17 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
             return
 
-        review_manager.logger.debug(
-            f'is_incomplete({self.data["ID"]}): {not self.masterdata_is_complete()}'
-        )
-
-        review_manager.logger.debug(
-            f'has_inconsistent_fields({self.data["ID"]}): '
-            f"{self.has_inconsistent_fields()}"
-        )
-        review_manager.logger.debug(
-            f'has_incomplete_fields({self.data["ID"]}): '
-            f"{self.has_incomplete_fields()}"
-        )
+        # review_manager.   (
+        #     f'is_incomplete({self.data["ID"]}): {not self.masterdata_is_complete()}'
+        # )
+        # review_manager.logger.debug(
+        #     f'has_inconsistent_fields({self.data["ID"]}): '
+        #     f"{self.has_inconsistent_fields()}"
+        # )
+        # review_manager.logger.debug(
+        #     f'has_incomplete_fields({self.data["ID"]}): '
+        #     f"{self.has_incomplete_fields()}"
+        # )
 
         if (
             self.masterdata_is_complete()
@@ -2620,10 +2621,10 @@ class RecordStateModel:
 
         if "True" == self.review_manager.settings.project.delay_automated_processing:
             cur_state_list = get_states_set()
-            self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
-            self.review_manager.logger.debug(f"precondition: {self.state}")
+            # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
+            # self.review_manager.logger.debug(f"precondition: {self.state}")
             required_absent = self.get_preceding_states(state=self.state)
-            self.review_manager.logger.debug(f"required_absent: {required_absent}")
+            # self.review_manager.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (
                 len(cur_state_list) == 0

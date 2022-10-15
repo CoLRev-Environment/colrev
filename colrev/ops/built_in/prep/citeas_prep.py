@@ -99,7 +99,7 @@ class CiteAsPrep(JsonSchemaMixin):
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            prep_operation.review_manager.logger.debug(url)
+            # prep_operation.review_manager.logger.debug(url)
 
             data = json.loads(ret.text)
 

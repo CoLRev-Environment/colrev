@@ -225,7 +225,7 @@ class Load(colrev.operation.Operation):
             item
             for sublist in [
                 e.supported_extensions  # type: ignore
-                for _, e in load_conversion_package_identifiers.items()
+                for _, e in load_conversion_packages.items()
             ]
             for item in sublist
         ]

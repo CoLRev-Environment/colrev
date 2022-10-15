@@ -65,7 +65,10 @@ class SimpleDedupe(JsonSchemaMixin):
         assert self.settings.merging_dup_threshold <= 1.0
 
     def __calculate_similarities_record(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records_df: pd.DataFrame
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
+        records_df: pd.DataFrame,
     ) -> pd.DataFrame:
 
         # Note: per definition, similarities are needed relative to the last row.
@@ -77,10 +80,10 @@ class SimpleDedupe(JsonSchemaMixin):
             sim_details = colrev.record.Record.get_similarity_detailed(
                 df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
             )
-            dedupe_operation.review_manager.report_logger.debug(
-                f"Similarity score: {sim_details['score']}"
-            )
-            dedupe_operation.review_manager.report_logger.debug(sim_details["details"])
+            # dedupe_operation.review_manager.report_logger.debug(
+            #     f"Similarity score: {sim_details['score']}"
+            # )
+            # dedupe_operation.review_manager.report_logger.debug(sim_details["details"])
 
             records_df.iloc[base_record_i, sim_col] = sim_details["score"]
             records_df.iloc[base_record_i, details_col] = sim_details["details"]
@@ -95,9 +98,9 @@ class SimpleDedupe(JsonSchemaMixin):
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
     ) -> dict:
 
-        dedupe_operation.review_manager.logger.debug(
-            f'__append_merges {batch_item["record"]}'
-        )
+        # dedupe_operation.review_manager.logger.debug(
+        #     f'__append_merges {batch_item["record"]}'
+        # )
 
         records_df = batch_item["queue"]
 
@@ -127,9 +130,9 @@ class SimpleDedupe(JsonSchemaMixin):
         if max_similarity <= self.settings.merging_non_dup_threshold:
             # Note: if no other record has a similarity exceeding the threshold,
             # it is considered a non-duplicate (in relation to all other records)
-            dedupe_operation.review_manager.logger.debug(
-                f"max_similarity ({max_similarity})"
-            )
+            # dedupe_operation.review_manager.logger.debug(
+            #     f"max_similarity ({max_similarity})"
+            # )
             ret = {
                 "ID1": batch_item["record"],
                 "ID2": "NA",
@@ -144,17 +147,17 @@ class SimpleDedupe(JsonSchemaMixin):
         ):
 
             other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
-            dedupe_operation.review_manager.logger.debug(
-                f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
-            )
+            # dedupe_operation.review_manager.logger.debug(
+            #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
+            # )
             details = records_df.loc[records_df["similarity"].idxmax()]["details"]
-            dedupe_operation.review_manager.logger.debug(details)
+            # dedupe_operation.review_manager.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (
                 f'{batch_item["record"]} - {other_id}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
             )
-            dedupe_operation.review_manager.report_logger.info(msg)
+            # dedupe_operation.review_manager.report_logger.info(msg)
             dedupe_operation.review_manager.logger.info(msg)
             ret = {
                 "ID1": batch_item["record"],
@@ -168,11 +171,11 @@ class SimpleDedupe(JsonSchemaMixin):
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
             other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
-            dedupe_operation.review_manager.logger.debug(
-                f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
-            )
+            # dedupe_operation.review_manager.logger.debug(
+            #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
+            # )
             details = records_df.loc[records_df["similarity"].idxmax()]["details"]
-            dedupe_operation.review_manager.logger.debug(details)
+            # dedupe_operation.review_manager.logger.debug(details)
             msg = (
                 f'Dropped duplicate: {batch_item["record"]} (duplicate of {other_id})'
                 + f" (similarity: {max_similarity})\nDetails: {details}"
@@ -229,9 +232,9 @@ class SimpleDedupe(JsonSchemaMixin):
             "queue": processed_ids + ids_to_dedupe,
             "items_start": len(processed_ids),
         }
-        dedupe_operation.review_manager.logger.debug(
-            dedupe_operation.review_manager.p_printer.pformat(dedupe_data)
-        )
+        # dedupe_operation.review_manager.logger.debug(
+        #     dedupe_operation.review_manager.p_printer.pformat(dedupe_data)
+        # )
         return dedupe_data
 
     def __get_record_batch(

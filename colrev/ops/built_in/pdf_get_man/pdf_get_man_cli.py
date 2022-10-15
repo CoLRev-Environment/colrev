@@ -186,9 +186,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         record: colrev.record.Record,
     ) -> None:
 
-        pdf_get_man_operation.review_manager.logger.debug(
-            f"called pdf_get_man_cli for {record}"
-        )
+        # pdf_get_man_operation.review_manager.logger.debug(
+        #     f"called pdf_get_man_cli for {record}"
+        # )
 
         # to print only the essential information
         print(colrev.record.PrescreenRecord(data=record.get_data()))
@@ -208,10 +208,13 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         filepath = self.__get_filepath(
             pdf_get_man_operation=pdf_get_man_operation, record=record
         )
-        for script_name, retrieval_script in retrieval_scripts.items():
-            pdf_get_man_operation.review_manager.logger.debug(
-                f'{script_name}({record.data["ID"]}) called'
-            )
+        for (
+            script_name,  # pylint: disable=unused-variable
+            retrieval_script,
+        ) in retrieval_scripts.items():
+            # pdf_get_man_operation.review_manager.logger.debug(
+            #     f'{script_name}({record.data["ID"]}) called'
+            # )
             record = retrieval_script(pdf_get_man_operation, record)
 
             if "y" == input("Retrieved (y/n)?"):

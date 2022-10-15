@@ -180,9 +180,9 @@ class EuropePMCConnector:
                 ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
                 if ret.status_code != 200:
-                    review_manager.logger.debug(
-                        f"europe_pmc failed with status {ret.status_code}"
-                    )
+                    # review_manager.logger.debug(
+                    #     f"europe_pmc failed with status {ret.status_code}"
+                    # )
                     return []
 
                 most_similar, most_similar_record = 0.0, {}
@@ -279,11 +279,11 @@ class EuropePMCConnector:
                 )
 
                 if similarity > prep_operation.retrieval_similarity:
-                    prep_operation.review_manager.logger.debug("Found matching record")
-                    prep_operation.review_manager.logger.debug(
-                        f"europe_pmc similarity: {similarity} "
-                        f"(>{prep_operation.retrieval_similarity})"
-                    )
+                    # prep_operation.review_manager.logger.debug("Found matching record")
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"europe_pmc similarity: {similarity} "
+                    #     f"(>{prep_operation.retrieval_similarity})"
+                    # )
 
                     # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
                     source = (
@@ -294,10 +294,11 @@ class EuropePMCConnector:
                     record.merge(merging_record=retrieved_record, default_source=source)
 
                 else:
-                    prep_operation.review_manager.logger.debug(
-                        f"europe_pmc similarity: {similarity} "
-                        f"(<{prep_operation.retrieval_similarity})"
-                    )
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"europe_pmc similarity: {similarity} "
+                    #     f"(<{prep_operation.retrieval_similarity})"
+                    # )
+                    pass
 
         except requests.exceptions.RequestException:
             pass
@@ -400,7 +401,7 @@ class OpenLibraryConnector:
                     timeout=prep_operation.timeout,
                 )
                 ret.raise_for_status()
-                prep_operation.review_manager.logger.debug(url)
+                # prep_operation.review_manager.logger.debug(url)
                 if '"error": "notfound"' in ret.text:
                     record.remove_field(key="isbn")
 
@@ -438,7 +439,7 @@ class OpenLibraryConnector:
                     timeout=prep_operation.timeout,
                 )
                 ret.raise_for_status()
-                prep_operation.review_manager.logger.debug(url)
+                # prep_operation.review_manager.logger.debug(url)
 
                 # if we have an exact match, we don't need to check the similarity
                 if '"numFoundExact": true,' not in ret.text:
@@ -606,7 +607,7 @@ class DOIConnector:
 
             try:
                 url = "http://dx.doi.org/" + record.data["doi"]
-                review_manager.logger.debug(url)
+                # review_manager.logger.debug(url)
                 headers = {"accept": "application/vnd.citationstyles.csl+json"}
                 ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
@@ -1061,13 +1062,13 @@ class CrossrefConnector:
             record_list = []
             session = review_manager.get_cached_session()
 
-            review_manager.logger.debug(url)
+            # review_manager.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=timeout)
             ret.raise_for_status()
             if ret.status_code != 200:
-                review_manager.logger.debug(
-                    f"crossref_query failed with status {ret.status_code}"
-                )
+                # review_manager.logger.debug(
+                #     f"crossref_query failed with status {ret.status_code}"
+                # )
                 return []
 
             most_similar, most_similar_record = 0.0, {}
@@ -1161,11 +1162,11 @@ class CrossrefConnector:
                     record_original=record, retrieved_record_original=retrieved_record
                 )
                 if similarity > prep_operation.retrieval_similarity:
-                    prep_operation.review_manager.logger.debug("Found matching record")
-                    prep_operation.review_manager.logger.debug(
-                        f"crossref similarity: {similarity} "
-                        f"(>{prep_operation.retrieval_similarity})"
-                    )
+                    # prep_operation.review_manager.logger.debug("Found matching record")
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"crossref similarity: {similarity} "
+                    #     f"(>{prep_operation.retrieval_similarity})"
+                    # )
                     source = (
                         f"https://api.crossref.org/works/{retrieved_record.data['doi']}"
                     )
@@ -1387,7 +1388,7 @@ class DBLPConnector:
                 url = cls.api_url + query.replace(" ", "+") + "&format=json"
 
             headers = {"user-agent": f"{__name__}  (mailto:{review_manager.email})"}
-            review_manager.logger.debug(url)
+            # review_manager.logger.debug(url)
             ret = session.request(
                 "GET", url, headers=headers, timeout=timeout  # type: ignore
             )

@@ -972,7 +972,7 @@ class Dataset:
         if self.__git_repo.active_branch.tracking_branch() is not None:
             branch_name = str(self.__git_repo.active_branch)
             tracking_branch_name = str(self.__git_repo.active_branch.tracking_branch())
-            self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
+            # self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
             commits_behind = self.__git_repo.iter_commits(behind_operation)

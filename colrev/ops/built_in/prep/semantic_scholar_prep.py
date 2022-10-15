@@ -101,7 +101,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
     ) -> colrev.record.PrepRecord:
         """Prepare the record metadata based on SemanticScholar"""
 
-        prep_operation.review_manager.logger.debug(url)
+        # prep_operation.review_manager.logger.debug(url)
         ret = self.session.request(
             "GET", url, headers=self.headers, timeout=prep_operation.timeout
         )
@@ -116,7 +116,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
-        prep_operation.review_manager.logger.debug(record_retrieval_url)
+        # prep_operation.review_manager.logger.debug(record_retrieval_url)
         ret_ent = self.session.request(
             "GET",
             record_retrieval_url,
@@ -165,11 +165,11 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 same_record_type_required=same_record_type_required,
             )
             if similarity > prep_operation.retrieval_similarity:
-                prep_operation.review_manager.logger.debug("Found matching record")
-                prep_operation.review_manager.logger.debug(
-                    f"scholar similarity: {similarity} "
-                    f"(>{prep_operation.retrieval_similarity})"
-                )
+                # prep_operation.review_manager.logger.debug("Found matching record")
+                # prep_operation.review_manager.logger.debug(
+                #     f"scholar similarity: {similarity} "
+                #     f"(>{prep_operation.retrieval_similarity})"
+                # )
 
                 record.merge(
                     merging_record=retrieved_record,
@@ -177,10 +177,12 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 )
 
             else:
-                prep_operation.review_manager.logger.debug(
-                    f"scholar similarity: {similarity} "
-                    f"(<{prep_operation.retrieval_similarity})"
-                )
+                # prep_operation.review_manager.logger.debug(
+                #     f"scholar similarity: {similarity} "
+                #     f"(<{prep_operation.retrieval_similarity})"
+                # )
+                pass
+
         except UnicodeEncodeError:
             prep_operation.review_manager.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"

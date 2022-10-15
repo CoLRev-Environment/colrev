@@ -124,9 +124,9 @@ class PDFSearchSource(JsonSchemaMixin):
         self, *, search_operation: colrev.ops.search.Search
     ) -> None:
 
-        search_operation.review_manager.logger.debug(
-            "Checking for PDFs that no longer exist"
-        )
+        # search_operation.review_manager.logger.debug(
+        #     "Checking for PDFs that no longer exist"
+        # )
 
         if not self.settings.filename.is_file():
             return
@@ -184,9 +184,9 @@ class PDFSearchSource(JsonSchemaMixin):
                         to_remove.append(record["colrev_origin"])
 
             for record_dict in to_remove:
-                search_operation.review_manager.logger.debug(
-                    f"remove from index (PDF path no longer exists): {record_dict}"
-                )
+                # search_operation.review_manager.logger.debug(
+                #     f"remove from index (PDF path no longer exists): {record_dict}"
+                # )
                 search_operation.review_manager.report_logger.info(
                     f"remove from index (PDF path no longer exists): {record_dict}"
                 )

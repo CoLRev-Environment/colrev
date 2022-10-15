@@ -385,7 +385,7 @@ class Manuscript(JsonSchemaMixin):
             record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
-        review_manager.logger.debug(f"missing_records: {missing_records}")
+        # review_manager.logger.debug(f"missing_records: {missing_records}")
 
         self.__check_new_record_source_tag()
 
@@ -393,9 +393,9 @@ class Manuscript(JsonSchemaMixin):
             review_manager.report_logger.info(
                 f"All records included in {self.settings.paper_path.name}"
             )
-            review_manager.logger.debug(
-                f"All records included in {self.settings.paper_path.name}"
-            )
+            # review_manager.logger.debug(
+            #     f"All records included in {self.settings.paper_path.name}"
+            # )
         else:
             review_manager.report_logger.info("Updating manuscript")
             review_manager.logger.info("Updating manuscript")
@@ -449,7 +449,7 @@ class Manuscript(JsonSchemaMixin):
         try:
             msg = f"Running docker container created from image {self.pandoc_image}"
             data_operation.review_manager.report_logger.info(msg)
-            data_operation.review_manager.logger.debug(msg)
+            # data_operation.review_manager.logger.debug(msg)
             client.containers.run(
                 image=self.pandoc_image,
                 command=script,
@@ -499,9 +499,9 @@ class Manuscript(JsonSchemaMixin):
         if not data_operation.review_manager.dataset.file_changed(
             relative_path=paper_relative_path
         ):
-            data_operation.review_manager.logger.debug(
-                "Skipping manuscript build (no changes)"
-            )
+            # data_operation.review_manager.logger.debug(
+            #     "Skipping manuscript build (no changes)"
+            # )
             return
 
         data_operation.review_manager.logger.info("Build manuscript")

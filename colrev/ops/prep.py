@@ -145,9 +145,12 @@ class Prep(colrev.operation.Operation):
         if diffs:
             change_report = (
                 f"{prep_package_endpoint}"
-                f'({preparation_record.data["ID"]})'
+                f' on {preparation_record.data["ID"]}'
                 f" changed:\n{self.review_manager.p_printer.pformat(diffs)}\n"
             )
+            if self.review_manager.verbose_mode:
+                self.review_manager.logger.info(change_report)
+
             if self.debug_mode:
                 self.review_manager.logger.info(change_report)
                 self.review_manager.logger.info(
@@ -162,7 +165,11 @@ class Prep(colrev.operation.Operation):
                 input("Press Enter to continue")
                 print("\n")
         else:
-            self.review_manager.logger.debug(f"{prep_package_endpoint} changed: -")
+            self.review_manager.logger.debug(
+                f"{prep_package_endpoint}"
+                f' on {preparation_record.data["ID"]}'
+                " changed: -"
+            )
             if self.debug_mode:
                 print("\n")
                 time.sleep(0.3)

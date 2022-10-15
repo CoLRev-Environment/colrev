@@ -115,7 +115,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 + f"&format=json&h={batch_size}&f={nr_retrieved}"
             )
             nr_retrieved += batch_size
-            search_operation.review_manager.logger.debug(url)
+            # search_operation.review_manager.logger.debug(url)
 
             retrieved = False
             for retrieved_record in dblp_connector.retrieve_dblp_records(

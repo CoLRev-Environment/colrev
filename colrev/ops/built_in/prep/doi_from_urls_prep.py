@@ -61,9 +61,9 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         url = record.data.get("url", record.data.get("fulltext", "NA"))
         if "NA" != url:
             try:
-                prep_operation.review_manager.logger.debug(
-                    f"Retrieve doi-md from {url}"
-                )
+                # prep_operation.review_manager.logger.debug(
+                #     f"Retrieve doi-md from {url}"
+                # )
                 headers = {
                     "user-agent": f"{__name__}  "
                     f"(mailto:{prep_operation.review_manager.email})"
@@ -106,10 +106,10 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                                 merging_record=retrieved_record, default_source=url
                             )
 
-                            prep_operation.review_manager.report_logger.debug(
-                                "Retrieved metadata based on doi from"
-                                f' website: {record.data["doi"]}'
-                            )
+                            # prep_operation.review_manager.report_logger.debug(
+                            #     "Retrieved metadata based on doi from"
+                            #     f' website: {record.data["doi"]}'
+                            # )
 
             except requests.exceptions.RequestException:
                 pass
