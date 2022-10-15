@@ -36,8 +36,6 @@ import colrev.record
 
 # pylint: disable=too-many-lines
 
-# gh_issue https://github.com/geritwagner/colrev/issues/65
-# change logging level temporarily and fix issues that lead to warnings
 logging.getLogger("opensearchpy").setLevel(logging.ERROR)
 logging.getLogger("lxml").setLevel(logging.ERROR)
 logging.getLogger("xml").setLevel(logging.ERROR)
@@ -514,13 +512,10 @@ class LocalIndex:
         # search colrev_id field
         for cid_to_retrieve in cids_to_retrieve:
             try:
-                # match_phrase := exact match
 
-                # gh_issue https://github.com/geritwagner/colrev/issues/65
-                # the following requires some testing.
                 resp = self.open_search.search(
                     index=self.RECORD_INDEX,
-                    body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
+                    body={"query": {"match_phrase": {"colrev_id": cid_to_retrieve}}},
                 )
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
@@ -693,9 +688,6 @@ class LocalIndex:
         ):
             raise colrev_exceptions.RecordNotIndexedException()
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/65
-        # remove provenance on project-specific fields (WHY?!)
-
         if "screening_criteria" in record_dict:
             del record_dict["screening_criteria"]
         # Note: if the colrev_pdf_id has not been checked,
@@ -734,7 +726,54 @@ class LocalIndex:
         elif "year" in record_dict:
             del record_dict["year"]
 
-        return record_dict
+        # Provenance should point to the original repository path.
+        # If the provenance/source was example.bib (and the record is amended during indexing)
+        # we wouldn't know where the example.bib belongs to.
+        record = colrev.record.Record(data=record_dict)
+        for key in list(record.data.keys()):
+            if key not in colrev.record.Record.identifying_field_keys:
+                if key not in colrev.record.Record.provenance_keys + [
+                    "ID",
+                    "ENTRYTYPE",
+                    "local_curated_metadata",
+                    "metadata_source_repository_paths",
+                ]:
+                    if key not in record.data.get("colrev_data_provenance", {}):
+                        record.add_data_provenance(
+                            key=key,
+                            source=record_dict["metadata_source_repository_paths"],
+                        )
+                    else:
+                        if (
+                            "CURATED"
+                            not in record.data["colrev_data_provenance"][key]["source"]
+                        ):
+                            record.add_data_provenance(
+                                key=key,
+                                source=record_dict["metadata_source_repository_paths"],
+                            )
+            else:
+                if not record.masterdata_is_curated():
+                    record.add_masterdata_provenance(
+                        key=key, source=record_dict["metadata_source_repository_paths"]
+                    )
+
+        # Make sure that we don't add provenance information without corresponding fields
+        if "colrev_data_provenance" in record.data:
+            provenance_keys = list(record.data.get("colrev_data_provenance", {}).keys())
+            for provenance_key in provenance_keys:
+                if provenance_key not in record.data:
+                    del record.data["colrev_data_provenance"][provenance_key]
+        if not record.masterdata_is_curated():
+            if "colrev_masterdata_provenance" in record.data:
+                provenance_keys = list(
+                    record.data.get("colrev_masterdata_provenance", {}).keys()
+                )
+                for provenance_key in provenance_keys:
+                    if provenance_key not in record.data:
+                        del record.data["colrev_masterdata_provenance"][provenance_key]
+
+        return record.get_data()
 
     def _add_record_to_index(self, *, record_dict: dict) -> None:
         cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
@@ -978,7 +1017,10 @@ class LocalIndex:
         include_file: bool = False,
     ) -> dict:
         """Retrieve a record from the toc (table-of-contents)"""
-        toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+        try:
+            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+        except colrev_exceptions.NotTOCIdentifiableException as exc:
+            raise colrev_exceptions.RecordNotInIndexException() from exc
 
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
         # 1. get TOC
@@ -994,9 +1036,6 @@ class LocalIndex:
         elif len(toc_items) > 0:
             try:
 
-                # gh_issue https://github.com/geritwagner/colrev/issues/65
-                # we need to search tocs even if records are not complete:
-                # and a NotEnoughDataToIdentifyException is thrown
                 record_colrev_id = colrev.record.Record(
                     data=record_dict
                 ).create_colrev_id()
