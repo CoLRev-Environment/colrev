@@ -92,15 +92,12 @@ class Initializer:
 
     def __check_init_precondition(self) -> None:
         cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
+        cur_content = [x for x in cur_content if not x.startswith("venv")]
 
         # pylint: disable=duplicate-code
-        if "venv" in cur_content:
-            cur_content.remove("venv")
-            # Note: we can use paths directly when initiating the project
-        if ".report.log" in cur_content:
-            cur_content.remove(".report.log")
-
-        if 0 != len(cur_content):
+        if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
+            cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
+        if cur_content:
             raise colrev_exceptions.NonEmptyDirectoryError()
 
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
@@ -325,17 +322,17 @@ class Initializer:
 
     def __require_empty_directory(self) -> None:
 
-        cur_content = [str(x.name) for x in Path.cwd().glob("**/*")]
+        cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
+        cur_content = [x for x in cur_content if not x.startswith("venv")]
 
-        if "venv" in cur_content:
-            cur_content.remove("venv")
-            # Note: we can use paths directly when initiating the project
-        if ".report.log" in cur_content:
-            cur_content.remove(".report.log")
-        if "settings.json" in cur_content:
-            cur_content.remove("settings.json")
+        if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
+            cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
+        if str(colrev.review_manager.ReviewManager.SETTINGS_RELATIVE) in cur_content:
+            cur_content.remove(
+                str(colrev.review_manager.ReviewManager.SETTINGS_RELATIVE)
+            )
 
-        if 0 != len(cur_content):
+        if cur_content:
             raise colrev_exceptions.NonEmptyDirectoryError()
 
     def __create_example_repo(self) -> None:
