@@ -146,10 +146,10 @@ class PDFMetadataValidation(JsonSchemaMixin):
 
             if "colrev_pdf_id" in retrieved_record:
                 if retrieved_record["colrev_pdf_id"] == str(current_cpid):
-                    pdf_prep_operation.review_manager.logger.debug(
-                        "validated pdf metadata based on local_index "
-                        f"({record.data['ID']})"
-                    )
+                    # pdf_prep_operation.review_manager.logger.debug(
+                    #     "validated pdf metadata based on local_index "
+                    #     f"({record.data['ID']})"
+                    # )
                     return record.data
                 print("colrev_pdf_ids not matching")
         except colrev_exceptions.RecordNotInIndexException:

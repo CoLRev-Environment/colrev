@@ -358,6 +358,9 @@ class SimpleDedupe(JsonSchemaMixin):
             script_call="colrev dedupe",
         )
 
+        dedupe_operation.review_manager.logger.info(
+            "Pairwise identification of potential duplicates based on static similarity measure"
+        )
         potential_duplicates = self.__process_potential_duplicates(
             dedupe_operation=dedupe_operation, dedupe_batch_results=dedupe_batch_results
         )

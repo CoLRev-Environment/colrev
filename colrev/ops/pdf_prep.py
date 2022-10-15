@@ -121,7 +121,7 @@ class PDFPrep(colrev.operation.Operation):
         ):
             return record_dict
 
-        pad = len(record_dict["ID"]) + 35
+        pad = 70
 
         pdf_path = self.review_manager.path / Path(record_dict["file"])
         if not Path(pdf_path).is_file():
@@ -147,12 +147,12 @@ class PDFPrep(colrev.operation.Operation):
                 endpoint = self.pdf_prep_package_endpoints[
                     pdf_prep_package_endpoint["endpoint"]  # type: ignore
                 ]
-                self.review_manager.logger.debug(
-                    f"{endpoint.settings.endpoint}(...) called"  # type: ignore
-                )
 
-                self.review_manager.report_logger.info(
-                    f'{endpoint.settings.endpoint}({record.data["ID"]}) called'  # type: ignore
+                self.review_manager.report_logger.debug(
+                    f'{endpoint.settings.endpoint}({record.data["ID"]}):'.ljust(  # type: ignore
+                        pad, " "
+                    )
+                    + "called"
                 )
 
                 record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore
@@ -183,7 +183,11 @@ class PDFPrep(colrev.operation.Operation):
                 f"{endpoint.settings.endpoint}"  # type: ignore
                 f'({record.data["ID"]}):'.ljust(pad, " ") + " "
             )
-            msg += "fail" if failed else "pass"
+            msg += (
+                f"{colors.RED}fail{colors.END}"
+                if failed
+                else f"{colors.GREEN}pass{colors.END}"
+            )
             self.review_manager.report_logger.info(msg)
             if failed:
                 break
@@ -200,6 +204,14 @@ class PDFPrep(colrev.operation.Operation):
             self.__complete_successful_pdf_prep(
                 record=record, original_filename=original_filename
             )
+
+        msg = f'({record.data["ID"]}):'.ljust(pad, " ")
+        msg += (
+            f"{colors.GREEN}completed{colors.END}"
+            if successfully_prepared
+            else f"{colors.RED}failed{colors.END}"
+        )
+        self.review_manager.report_logger.info(msg)
 
         record.cleanup_pdf_processing_fields()
 
@@ -228,9 +240,9 @@ class PDFPrep(colrev.operation.Operation):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(prep_data)
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(prep_data)
+        # )
         return prep_data
 
     def __set_to_reprocess(self) -> None:
@@ -353,9 +365,8 @@ class PDFPrep(colrev.operation.Operation):
         if self.review_manager.verbose_mode:
             for item in pdf_prep_data["items"]:
                 record = item["record"]
-                print(record["ID"])
+                print()
                 record = self.prepare_pdf(item)
-                self.review_manager.p_printer.pprint(record)
                 self.review_manager.dataset.save_records_dict(
                     records={record["ID"]: record}, partial=True
                 )
@@ -380,7 +391,7 @@ class PDFPrep(colrev.operation.Operation):
                 records={r["ID"]: r for r in pdf_prep_record_list}, partial=True
             )
 
-        self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
+            self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...
         records = self.review_manager.dataset.load_records_dict()

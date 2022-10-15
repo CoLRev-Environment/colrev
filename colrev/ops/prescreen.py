@@ -85,9 +85,9 @@ class Prescreen(colrev.operation.Operation):
             conditions=[{"colrev_status": colrev.record.RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(prescreen_data)
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(prescreen_data)
+        # )
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:
