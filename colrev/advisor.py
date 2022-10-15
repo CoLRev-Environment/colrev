@@ -501,7 +501,7 @@ class Advisor:
 
             branch_name = str(git_repo.active_branch)
             tracking_branch_name = str(git_repo.active_branch.tracking_branch())
-            self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
+            # self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
             commits_behind = git_repo.iter_commits(behind_operation)
@@ -655,9 +655,9 @@ class Advisor:
                 status_stats=status_stats
             ),
         }
-        self.review_manager.logger.debug(
-            f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
-        )
+        # self.review_manager.logger.debug(
+        #     f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
+        # )
         return instructions
 
     def get_sharing_instructions(self) -> dict:

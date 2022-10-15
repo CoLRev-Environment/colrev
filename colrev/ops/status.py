@@ -202,18 +202,18 @@ class StatusStats:
 
     def __overall_stats_backward_calculation(self) -> None:
         """Calculate the state_x overall stats (based on backward calculation)"""
-        self.review_manager.logger.debug(
-            "Set overall colrev_status statistics (going backwards)"
-        )
+        # self.review_manager.logger.debug(
+        #     "Set overall colrev_status statistics (going backwards)"
+        # )
         visited_states = []
         current_state = colrev.record.RecordState.rev_synthesized  # start with the last
         atomic_step_number = 0
         while True:
-            self.review_manager.logger.debug(
-                "current_state: %s with %s",
-                current_state,
-                getattr(self.overall, str(current_state)),
-            )
+            # self.review_manager.logger.debug(
+            #     "current_state: %s with %s",
+            #     current_state,
+            #     getattr(self.overall, str(current_state)),
+            # )
             if colrev.record.RecordState.md_prepared == current_state:
                 overall_md_prepared = (
                     getattr(self.overall, str(current_state))
@@ -239,12 +239,12 @@ class StatusStats:
                     and t["dest"] not in visited_states
                 ]
                 for predecessor in predecessors:
-                    self.review_manager.logger.debug(
-                        " add %s from %s (predecessor transition: %s)",
-                        getattr(self.overall, str(predecessor["dest"])),
-                        str(predecessor["dest"]),
-                        predecessor["trigger"],
-                    )
+                    # self.review_manager.logger.debug(
+                    #     " add %s from %s (predecessor transition: %s)",
+                    #     getattr(self.overall, str(predecessor["dest"])),
+                    #     str(predecessor["dest"]),
+                    #     predecessor["trigger"],
+                    # )
                     setattr(
                         self.overall,
                         str(current_state),

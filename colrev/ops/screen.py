@@ -94,9 +94,9 @@ class Screen(colrev.operation.Operation):
             conditions=[{"colrev_status": colrev.record.RecordState.pdf_prepared}]
         )
         screen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(screen_data)
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(screen_data)
+        # )
         return screen_data
 
     def add_criterion(self, *, criterion_to_add: str) -> None:

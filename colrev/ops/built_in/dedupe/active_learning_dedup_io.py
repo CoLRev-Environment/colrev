@@ -102,9 +102,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
-        dedupe_operation.review_manager.logger.debug(
-            dedupe_operation.review_manager.p_printer.pformat(data_d)
-        )
+        # dedupe_operation.review_manager.logger.debug(
+        #     dedupe_operation.review_manager.p_printer.pformat(data_d)
+        # )
 
         # def title_corpus():
         #     for record in data_d.values():

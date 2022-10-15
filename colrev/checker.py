@@ -434,9 +434,9 @@ class Checker:
                         notifications.append(msg)
 
                 if not any(name.endswith(x) for x in text_formats):
-                    self.review_manager.logger.debug("Skipping %s", name)
+                    # self.review_manager.logger.debug("Skipping %s", name)
                     continue
-                self.review_manager.logger.debug("Checking %s", name)
+                # self.review_manager.logger.debug("Checking %s", name)
                 if name.endswith(".bib"):
                     retrieved_ids = self.__retrieve_ids_from_bib(
                         file_path=Path(os.path.join(root, name))
@@ -502,12 +502,8 @@ class Checker:
         for source in self.review_manager.settings.sources:
 
             if not source.filename.is_file():
-                self.review_manager.logger.debug(
+                self.review_manager.logger.info(
                     f"Search details without file: {source.filename}"
-                )
-            if not str(source.filename)[:12].startswith("data/search/"):
-                self.review_manager.logger.debug(
-                    f"Source filename does not start with 'data/search/: {source.filename}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"
@@ -743,21 +739,21 @@ class Checker:
         for check_script in check_scripts:
             try:
                 if not check_script["params"]:
-                    self.review_manager.logger.debug(
-                        "%s() called", check_script["script"].__name__
-                    )
+                    # self.review_manager.logger.debug(
+                    #     "%s() called", check_script["script"].__name__
+                    # )
                     check_script["script"]()
                 else:
-                    self.review_manager.logger.debug(
-                        "%s(params) called", check_script["script"].__name__
-                    )
+                    # self.review_manager.logger.debug(
+                    #     "%s(params) called", check_script["script"].__name__
+                    # )
                     if isinstance(check_script["params"], list):
                         check_script["script"](*check_script["params"])
                     else:
                         check_script["script"](**check_script["params"])
-                self.review_manager.logger.debug(
-                    "%s: passed\n", check_script["script"].__name__
-                )
+                # self.review_manager.logger.debug(
+                #     "%s: passed\n", check_script["script"].__name__
+                # )
             except (
                 colrev_exceptions.MissingDependencyError,
                 colrev_exceptions.GitConflictError,

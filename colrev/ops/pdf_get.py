@@ -101,9 +101,6 @@ class PDFGet(colrev.operation.Operation):
             )
 
             endpoint = endpoint_dict[pdf_get_package_endpoint["endpoint"]]
-            self.review_manager.report_logger.info(
-                f'{endpoint.settings.endpoint}({record_dict["ID"]}) called'  # type: ignore
-            )
             endpoint.get_pdf(self, record)  # type: ignore
 
             if "file" in record.data:
@@ -392,17 +389,17 @@ class PDFGet(colrev.operation.Operation):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(pdf_get_data)
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(pdf_get_data)
+        # )
 
-        self.review_manager.logger.debug(
-            f"pdf_get_data: {self.review_manager.p_printer.pformat(pdf_get_data)}"
-        )
+        # self.review_manager.logger.debug(
+        #     f"pdf_get_data: {self.review_manager.p_printer.pformat(pdf_get_data)}"
+        # )
 
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(pdf_get_data["items"])
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(pdf_get_data["items"])
+        # )
 
         return pdf_get_data
 

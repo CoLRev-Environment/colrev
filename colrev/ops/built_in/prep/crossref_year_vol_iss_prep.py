@@ -100,8 +100,8 @@ class CrossrefYearVolIssPrep(JsonSchemaMixin):
             if len(years) == 0:
                 return record
             most_common = max(years, key=years.count)
-            prep_operation.review_manager.logger.debug(most_common)
-            prep_operation.review_manager.logger.debug(years.count(most_common))
+            # prep_operation.review_manager.logger.debug(most_common)
+            # prep_operation.review_manager.logger.debug(years.count(most_common))
             if years.count(most_common) > 3:
                 record.update_field(
                     key="year", value=most_common, source="CROSSREF(average)"

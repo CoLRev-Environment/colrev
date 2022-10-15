@@ -81,11 +81,11 @@ class DBLPMetadataPrep(JsonSchemaMixin):
                     same_record_type_required=same_record_type_required,
                 )
                 if similarity > prep_operation.retrieval_similarity:
-                    prep_operation.review_manager.logger.debug("Found matching record")
-                    prep_operation.review_manager.logger.debug(
-                        f"dblp similarity: {similarity} "
-                        f"(>{prep_operation.retrieval_similarity})"
-                    )
+                    # prep_operation.review_manager.logger.debug("Found matching record")
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"dblp similarity: {similarity} "
+                    #     f"(>{prep_operation.retrieval_similarity})"
+                    # )
                     source = retrieved_record.data["dblp_key"]
                     record.merge(
                         merging_record=retrieved_record,
@@ -102,10 +102,12 @@ class DBLPMetadataPrep(JsonSchemaMixin):
                         record.remove_field(key="warning")
 
                 else:
-                    prep_operation.review_manager.logger.debug(
-                        f"dblp similarity: {similarity} "
-                        f"(<{prep_operation.retrieval_similarity})"
-                    )
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"dblp similarity: {similarity} "
+                    #     f"(<{prep_operation.retrieval_similarity})"
+                    # )
+                    pass
+
         except (requests.exceptions.RequestException, UnicodeEncodeError):
             pass
         return record

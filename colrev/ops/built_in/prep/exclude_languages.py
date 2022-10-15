@@ -78,7 +78,9 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
@@ -106,9 +108,9 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             text=record.data["title"]
         )
 
-        if prep_operation.review_manager.verbose_mode:
-            print(record.data["title"].lower())
-            prep_operation.review_manager.p_printer.pprint(confidence_values)
+        # if prep_operation.review_manager.verbose_mode:
+        #     print(record.data["title"].lower())
+        #     prep_operation.review_manager.p_printer.pprint(confidence_values)
 
         # If language not in record, add language (always - needed in dedupe.)
         set_most_likely_language = False

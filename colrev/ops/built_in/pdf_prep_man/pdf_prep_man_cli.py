@@ -53,9 +53,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             stat: str,
         ) -> dict:
 
-            pdf_prep_man_operation.review_manager.logger.debug(
-                f"called man_pdf_prep for {_pp.pformat(item)}"
-            )
+            # pdf_prep_man_operation.review_manager.logger.debug(
+            #     f"called man_pdf_prep for {_pp.pformat(item)}"
+            # )
             print(stat)
             record = colrev.record.PDFPrepManRecord(data=item)
             print(record)

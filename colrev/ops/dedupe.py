@@ -61,7 +61,6 @@ class Dedupe(colrev.operation.Operation):
             "source_comparison.xlsx"
         )
 
-        self.review_manager.report_logger.info("Dedupe")
         self.review_manager.logger.info("Dedupe")
 
     def __pre_process(self, *, key: str, value: str) -> str:
@@ -190,9 +189,9 @@ class Dedupe(colrev.operation.Operation):
             str
         )
         records_list = records_df.to_dict("records")
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(records_list)
-        )
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(records_list)
+        # )
 
         records = {}
         for row in records_list:
@@ -394,6 +393,8 @@ class Dedupe(colrev.operation.Operation):
         # Completeness of comparisons should be ensured by the
         # dedupe clustering routine
 
+        # pylint: disable=too-many-branches
+
         records = self.review_manager.dataset.load_records_dict()
 
         removed_duplicates = []
@@ -403,6 +404,10 @@ class Dedupe(colrev.operation.Operation):
             if self.__cross_level_merge(
                 main_record=main_record, dupe_record=dupe_record
             ):
+                self.review_manager.logger.debug(
+                    "Prevented cross-level merge: "
+                    f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                )
                 continue
 
             if self.__same_source_merge(
@@ -417,8 +422,20 @@ class Dedupe(colrev.operation.Operation):
                     colrev.settings.SameSourceMergePolicy.prevent
                     == self.review_manager.settings.dedupe.same_source_merges
                 ):
-                    continue  # with next pair
+                    self.review_manager.logger.debug(
+                        "Prevented same-source merge: "
+                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                    )
 
+                    continue  # with next pair
+                self.review_manager.logger.debug(
+                    "Applying same-source merge: "
+                    f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                )
+
+            self.review_manager.logger.debug(
+                f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
+            )
             dupe_record.data["MOVED_DUPE_ID"] = main_record.data["ID"]
             main_record.merge(
                 merging_record=dupe_record,
@@ -444,6 +461,9 @@ class Dedupe(colrev.operation.Operation):
         for removed_duplicate in removed_duplicates:
             if removed_duplicate in records:
                 del records[removed_duplicate]
+
+        if not removed_duplicates:
+            self.review_manager.logger.info("No duplicates to remove")
 
         if complete_dedupe:
             # Set remaining records to md_processed (not duplicate) because all records

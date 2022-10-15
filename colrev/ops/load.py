@@ -76,7 +76,11 @@ class Load(colrev.operation.Operation):
         return imported_origins
 
     def __apply_source_heuristics(
-        self, *, filepath: Path, all_available_packages: dict
+        self,
+        *,
+        filepath: Path,
+        search_sources: dict,
+        load_conversion: dict,
     ) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
@@ -87,7 +91,7 @@ class Load(colrev.operation.Operation):
             for (
                 package_identifier,
                 selected_package,
-            ) in all_available_packages.items():
+            ) in load_conversion.items():
                 if filetype in selected_package.supported_extensions:  # type: ignore
                     return {"endpoint": package_identifier}
 
@@ -103,12 +107,15 @@ class Load(colrev.operation.Operation):
         for (
             endpoint,
             endpoint_class,
-        ) in all_available_packages.items():
+        ) in search_sources.items():
             # pylint: disable=no-member
             has_heuristic = getattr(endpoint_class, "heuristic", None)
             if not has_heuristic:
+                self.review_manager.logger.debug(f"- {endpoint}: no heuristic")
                 continue
             res = endpoint_class.heuristic(filepath, data)  # type: ignore
+            self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
+
             if res["confidence"] > 0:
                 search_type = colrev.settings.SearchType("DB")
 
@@ -173,20 +180,44 @@ class Load(colrev.operation.Operation):
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
 
         new_search_files = self.__get_new_search_files()
         if not new_search_files:
+            self.review_manager.logger.info("No new search files...")
             return
 
-        self.review_manager.logger.info("Loading all available source heuristics...")
-        all_available_packages_names = self.package_manager.discover_packages(
+        self.review_manager.logger.info("Loading available search_source endpoints...")
+
+        search_source_identifiers = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            installed_only=True,
+        )
+        # self.review_manager.logger.debug("\n- " +
+        # "\n- ".join(search_source_identifiers.keys()))
+
+        search_sources = self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
+            operation=self,
+            instantiate_objects=False,
+        )
+
+        self.review_manager.logger.info(
+            "Loading available load_conversion endpoints..."
+        )
+        load_conversion_package_identifiers = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             installed_only=True,
         )
+        # self.review_manager.logger.debug("\n- " +
+        # "\n- ".join(load_conversion_package_identifiers.keys()))
 
-        all_available_packages = self.package_manager.load_packages(
+        load_conversion_packages = self.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            selected_packages=[{"endpoint": p} for p in all_available_packages_names],
+            selected_packages=[
+                {"endpoint": p} for p in load_conversion_package_identifiers
+            ],
             operation=self,
         )
 
@@ -194,15 +225,15 @@ class Load(colrev.operation.Operation):
             item
             for sublist in [
                 e.supported_extensions  # type: ignore
-                for _, e in all_available_packages.items()
+                for _, e in load_conversion_packages.items()
             ]
             for item in sublist
         ]
 
         for sfp in new_search_files:
-            if sfp.suffix[1:] not in self.supported_extensions:
-                print(f"Warning: file type not supported: {sfp.suffix}")
-                continue
+            # if sfp.suffix[1:] not in self.supported_extensions:
+            #     print(f"Warning: file type not supported: {sfp.suffix}")
+            #     continue
 
             # Note : for non-bib files, we check sources for corresponding bib file
             # (which will be created later in the process)
@@ -223,7 +254,9 @@ class Load(colrev.operation.Operation):
             #     search_type_input = input(cmd)
 
             heuristic_result_list = self.__apply_source_heuristics(
-                filepath=sfp, all_available_packages=all_available_packages
+                filepath=sfp,
+                search_sources=search_sources,
+                load_conversion=load_conversion_packages,
             )
 
             if 1 == len(heuristic_result_list):
@@ -315,8 +348,8 @@ class Load(colrev.operation.Operation):
             )
             self.review_manager.save_settings()
             self.review_manager.logger.info(
-                f"{colors.GREEN}Added new source: "
-                f"{heuristic_source['source_candidate'].endpoint}{colors.END}"
+                f"{colors.GREEN}Add new source: {sfp} "
+                f"({heuristic_source['source_candidate'].endpoint}){colors.END}"
             )
             print("\n")
 
@@ -439,7 +472,7 @@ class Load(colrev.operation.Operation):
     ) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
-            f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
+            # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
         )
         if colrev.record.RecordState.md_retrieved != record_dict["colrev_status"]:
             return record_dict
@@ -532,7 +565,7 @@ class Load(colrev.operation.Operation):
 
             self.review_manager.logger.debug(
                 f'append record {record["ID"]} '
-                f"\n{self.review_manager.p_printer.pformat(record)}\n\n"
+                # f"\n{self.review_manager.p_printer.pformat(record)}\n\n"
             )
             record_list.append(record)
         return record_list
@@ -616,10 +649,6 @@ class Load(colrev.operation.Operation):
         self.__check_bib_file(source=source, records=records)
         self.review_manager.dataset.save_records_dict(records=records)
 
-        self.review_manager.logger.info(
-            f"Records loaded: {colors.GREEN}{source.to_import}{colors.END}"
-        )
-
         if keep_ids:
             self.review_manager.logger.warning(
                 "Not yet fully implemented. Need to check/resolve ID duplicates."
@@ -630,6 +659,10 @@ class Load(colrev.operation.Operation):
                 records=records,
                 selected_ids=[r["ID"] for r in source.source_records_list],
             )
+
+        self.review_manager.logger.info(
+            f"Records loaded: {colors.GREEN}{source.to_import}{colors.END}"
+        )
 
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(
