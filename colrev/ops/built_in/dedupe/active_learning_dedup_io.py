@@ -24,7 +24,6 @@ from dedupe.core import unique
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
-import colrev.ops.built_in.pdf_prep.metadata_valiation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 

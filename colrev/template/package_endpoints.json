@@ -171,7 +171,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage"
         },
         "colrev_built_in.validate_pdf_metadata": {
-            "endpoint": "colrev.ops.built_in.pdf_prep.metadata_valiation.PDFMetadataValidation"
+            "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation"
         },
         "colrev_built_in.validate_completeness": {
             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation"

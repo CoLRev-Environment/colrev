@@ -14,7 +14,7 @@ from thefuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager
-import colrev.ops.built_in.pdf_prep.metadata_valiation
+import colrev.ops.built_in.pdf_prep.metadata_validation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -400,7 +400,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         pdf_prep_operation = dedupe_operation.review_manager.get_pdf_prep_operation()
         pdf_metadata_validation = (
-            colrev.ops.built_in.pdf_prep.metadata_valiation.PDFMetadataValidation(
+            colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
                 pdf_prep_operation=pdf_prep_operation,
                 settings={"name": "dedupe_pdf_md_validation"},
             )

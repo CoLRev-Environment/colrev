@@ -13,7 +13,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.pdf_prep.metadata_valiation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
