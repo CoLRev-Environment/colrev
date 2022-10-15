@@ -2092,6 +2092,10 @@ def show(  # type: ignore
     import colrev.operation
     import colrev.ui_cli.show_printer
 
+    if "venv" == keyword:
+        colrev.ui_cli.show_printer.print_venv_notes()
+        return
+
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose
     )
@@ -2106,9 +2110,6 @@ def show(  # type: ignore
         status_operation = review_manager.get_status_operation()
         stats_report = status_operation.get_review_status_report(colors=colors)
         print(stats_report)
-
-    elif "venv" == keyword:
-        colrev.ui_cli.show_printer.print_venv_notes()
 
 
 @main.command(help_priority=27)

@@ -279,7 +279,8 @@ class Data(colrev.operation.Operation):
             )
 
             if self.review_manager.verbose_mode:
-                self.review_manager.logger.info(f"Updated {endpoint.settings.endpoint}")  # type: ignore
+                msg = f"Updated {endpoint.settings.endpoint}"  # type: ignore
+                self.review_manager.logger.info(msg)
 
         for (
             record_id,

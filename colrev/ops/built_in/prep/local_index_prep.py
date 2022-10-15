@@ -49,9 +49,6 @@ class LocalIndexPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record metadtaa based on local-index"""
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/65
-        # how to distinguish masterdata and complementary CURATED sources?
-
         # TBD: maybe extract the following three lines as a separate script...
         if not record.masterdata_is_curated():
             try:

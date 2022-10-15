@@ -31,9 +31,6 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
 def print_venv_notes() -> None:
     """Print the virtual environment details on cli"""
 
-    # gh_issue https://github.com/geritwagner/colrev/issues/65
-    # test installation of colrev in venv
-
     current_platform = platform.system()
     if "Linux" == current_platform:
         print("Detected platform: Linux")
@@ -43,7 +40,7 @@ def print_venv_notes() -> None:
         print("To activate virtualenv, run")
         print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
+        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
         print("To deactivate virtualenv, run")
         print(f"  {colors.ORANGE}deactivate{colors.END}")
     elif "Darwin" == current_platform:
@@ -54,7 +51,7 @@ def print_venv_notes() -> None:
         print("To activate virtualenv, run")
         print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
+        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
         print("To deactivate virtualenv, run")
         print(f"  {colors.ORANGE}deactivate{colors.END}")
     elif "Windows" == current_platform:
@@ -65,7 +62,7 @@ def print_venv_notes() -> None:
         print("To activate virtualenv, run")
         print(f"  {colors.ORANGE}venv\\Scripts\\Activate.ps1{colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev colrev{colors.END}")
+        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
         print("To deactivate virtualenv, run")
         print(f"  {colors.ORANGE}deactivate{colors.END}")
     else:
