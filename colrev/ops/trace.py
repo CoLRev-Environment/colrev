@@ -47,7 +47,7 @@ class Trace(colrev.operation.Operation):
                 + f" {commit_message_first_line} (by {commit.author.name})"
             )
 
-            if str(self.review_manager.dataset.RECORDS_FILE_RELATIVE) in commit.tree:
+            try:
                 filecontents = (
                     commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
                 ).data_stream.read()
@@ -68,6 +68,8 @@ class Trace(colrev.operation.Operation):
                         for diff in diffs:
                             print(self.__lpad_multiline(s=_pp.pformat(diff), lpad=5))
                     prev_record = record
+            except KeyError:
+                pass
 
             if "data.csv" in commit.tree:
                 filecontents = (commit.tree / "data.csv").data_stream.read()
