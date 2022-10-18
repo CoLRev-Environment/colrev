@@ -37,11 +37,6 @@ import colrev.record
 
 # pylint: disable=too-many-lines
 
-logging.getLogger("opensearchpy").setLevel(logging.ERROR)
-logging.getLogger("lxml").setLevel(logging.ERROR)
-logging.getLogger("xml").setLevel(logging.ERROR)
-logging.getLogger("pybtex").setLevel(logging.ERROR)
-
 
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
@@ -271,6 +266,7 @@ class LocalIndex:
                         pdf_path=Path(record_dict["file"]),
                         tei_path=tei_path,
                     )
+
                     record_dict["fulltext"] = tei.get_tei_str()
 
                     self.__index_author(tei=tei, record_dict=record_dict)
@@ -311,6 +307,11 @@ class LocalIndex:
             )
             saved_record_dict = saved_record_response["_source"]
 
+            # Create fulltext backup to prevent bibtext parsing issues
+            fulltext_backup = saved_record_dict.get("fulltext", "NA")
+            if "fulltext" in saved_record_dict:
+                del saved_record_dict["fulltext"]
+
             parsed_record_dict = self.__parse_record(record_dict=saved_record_dict)
             saved_record = colrev.record.Record(data=parsed_record_dict)
             record = colrev.record.Record(data=record_dict)
@@ -331,8 +332,6 @@ class LocalIndex:
                 if key in saved_record.data or key in ["colrev_status"]:
                     continue
 
-                # source_info = colrev.record.Record(data=record_dict).
-                # get_provenance_field_source(key=k)
                 field_provenance = colrev.record.Record(
                     data=record_dict
                 ).get_field_provenance(
@@ -346,7 +345,13 @@ class LocalIndex:
                     key=key, value=value, source=field_provenance["source_info"]
                 )
 
-            if "file" in record_dict and "fulltext" not in saved_record.data:
+            saved_record_dict = saved_record.get_data(stringify=True)
+
+            # Important: full-texts should be added after get_data (parsing records)
+            # to avoid error-printouts by pybtex
+            if "NA" != fulltext_backup:
+                saved_record.data["fulltext"] = fulltext_backup
+            elif "file" in record_dict:
                 try:
                     tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
                     tei_path.parents[0].mkdir(exist_ok=True, parents=True)
@@ -365,14 +370,14 @@ class LocalIndex:
                 ):
                     pass
 
-            # pylint: disable=unexpected-keyword-arg
             # Note : update(...) accepts the timeout keyword
             # https://opensearch-project.github.io/opensearch-py/
             # api-ref/client.html#opensearchpy.OpenSearch.update
+            # pylint: disable=unexpected-keyword-arg
             self.open_search.update(
                 index=self.RECORD_INDEX,
                 id=paper_hash,
-                body={"doc": saved_record.get_data(stringify=True)},
+                body={"doc": saved_record_dict},
                 timeout=self.request_timeout,
             )
         except (NotFoundError, KeyError):
@@ -591,6 +596,10 @@ class LocalIndex:
         include_colrev_ids: bool = False,
     ) -> dict:
         """Prepare a record for return (from local index)"""
+
+        # Note : remove fulltext before parsing because it raises errors
+        if "fulltext" in record_dict:
+            del record_dict["fulltext"]
 
         record_dict = self.__parse_record(record_dict=record_dict)
 
