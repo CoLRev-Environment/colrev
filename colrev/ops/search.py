@@ -32,16 +32,7 @@ class Search(colrev.operation.Operation):
         """Save the feed file"""
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        records = {
-            str(r["ID"]).replace(" ", ""): {
-                k.lower()
-                .replace(" ", "_")
-                .replace("id", "ID")
-                .replace("entrytype", "ENTRYTYPE"): v
-                for k, v in r.items()
-            }
-            for r in records.values()
-        }
+        records = {str(r["ID"]).replace(" ", ""): r for r in records.values()}
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=feed_file
         )
