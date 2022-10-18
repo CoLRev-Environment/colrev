@@ -5,7 +5,6 @@ from __future__ import annotations
 import binascii
 import collections
 import hashlib
-import json
 import logging
 import os
 import time
@@ -24,6 +23,8 @@ from opensearchpy.exceptions import NotFoundError
 from opensearchpy.exceptions import SerializationError
 from opensearchpy.exceptions import TransportError
 from pybtex.database.input import bibtex
+from pybtex.scanner import PrematureEOF
+from pybtex.scanner import TokenRequired
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -35,10 +36,6 @@ import colrev.record
 
 
 # pylint: disable=too-many-lines
-
-logging.getLogger("opensearchpy").setLevel(logging.ERROR)
-logging.getLogger("lxml").setLevel(logging.ERROR)
-logging.getLogger("xml").setLevel(logging.ERROR)
 
 
 class LocalIndex:
@@ -75,14 +72,16 @@ class LocalIndex:
         self,
         *,
         startup_without_waiting: bool = False,
+        verbose_mode: bool = False,
     ) -> None:
 
+        self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        self.os_dashboard_image = "opensearchproject/opensearch-dashboards:1.3.0"
+        self.os_dashboard_image = "opensearchproject/opensearch-dashboards:2.3.0"
         self.environment_manager.build_docker_image(imagename=self.os_dashboard_image)
         self.environment_manager.register_ports(ports=["5601"])
 
-        self.os_image = "opensearchproject/opensearch:1.3.0"
+        self.os_image = "opensearchproject/opensearch:2.3.0"
         self.environment_manager.build_docker_image(imagename=self.os_image)
         self.environment_manager.register_ports(ports=["9200"])
 
@@ -267,6 +266,7 @@ class LocalIndex:
                         pdf_path=Path(record_dict["file"]),
                         tei_path=tei_path,
                     )
+
                     record_dict["fulltext"] = tei.get_tei_str()
 
                     self.__index_author(tei=tei, record_dict=record_dict)
@@ -307,6 +307,11 @@ class LocalIndex:
             )
             saved_record_dict = saved_record_response["_source"]
 
+            # Create fulltext backup to prevent bibtext parsing issues
+            fulltext_backup = saved_record_dict.get("fulltext", "NA")
+            if "fulltext" in saved_record_dict:
+                del saved_record_dict["fulltext"]
+
             parsed_record_dict = self.__parse_record(record_dict=saved_record_dict)
             saved_record = colrev.record.Record(data=parsed_record_dict)
             record = colrev.record.Record(data=record_dict)
@@ -324,11 +329,9 @@ class LocalIndex:
             # amend saved record
             for key, value in record_dict.items():
                 # Note : the record from the first repository should take precedence)
-                if key in saved_record_dict or key in ["colrev_status"]:
+                if key in saved_record.data or key in ["colrev_status"]:
                     continue
 
-                # source_info = colrev.record.Record(data=record_dict).
-                # get_provenance_field_source(key=k)
                 field_provenance = colrev.record.Record(
                     data=record_dict
                 ).get_field_provenance(
@@ -342,7 +345,13 @@ class LocalIndex:
                     key=key, value=value, source=field_provenance["source_info"]
                 )
 
-            if "file" in record_dict and "fulltext" not in saved_record.data:
+            saved_record_dict = saved_record.get_data(stringify=True)
+
+            # Important: full-texts should be added after get_data (parsing records)
+            # to avoid error-printouts by pybtex
+            if "NA" != fulltext_backup:
+                saved_record.data["fulltext"] = fulltext_backup
+            elif "file" in record_dict:
                 try:
                     tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
                     tei_path.parents[0].mkdir(exist_ok=True, parents=True)
@@ -361,14 +370,14 @@ class LocalIndex:
                 ):
                     pass
 
-            # pylint: disable=unexpected-keyword-arg
             # Note : update(...) accepts the timeout keyword
             # https://opensearch-project.github.io/opensearch-py/
             # api-ref/client.html#opensearchpy.OpenSearch.update
+            # pylint: disable=unexpected-keyword-arg
             self.open_search.update(
                 index=self.RECORD_INDEX,
                 id=paper_hash,
-                body={"doc": saved_record.get_data(stringify=True)},
+                body={"doc": saved_record_dict},
                 timeout=self.request_timeout,
             )
         except (NotFoundError, KeyError):
@@ -588,6 +597,10 @@ class LocalIndex:
     ) -> dict:
         """Prepare a record for return (from local index)"""
 
+        # Note : remove fulltext before parsing because it raises errors
+        if "fulltext" in record_dict:
+            del record_dict["fulltext"]
+
         record_dict = self.__parse_record(record_dict=record_dict)
 
         keys_to_remove = (
@@ -625,33 +638,47 @@ class LocalIndex:
 
         return record_dict
 
-    def search(self, *, query: dict, size: int = 10000) -> list[colrev.record.Record]:
+    def search(self, *, query: dict) -> list[colrev.record.Record]:
         """Run a search for records"""
 
-        query_string = json.dumps(query)
+        # Resource for other query types:
+        # https://github.com/aiven/demo-opensearch-python/blob/main/search.py
 
-        # Note : size is set to maximum.
-        # We may iterate (using the from=... parameter)
-        # Note : search(...) accepts the size keyword (tested & works)
-        # https://opensearch-project.github.io/opensearch-py/
-        # api-ref/client.html#opensearchpy.OpenSearch.search
         # pylint: disable=unexpected-keyword-arg
+
+        # https://opensearch.org/docs/latest/opensearch/ux/#scroll-search
+        # Code based on: https://t1p.de/vbyc3
         res = self.open_search.search(
-            index=self.RECORD_INDEX, body=query_string, size=size
+            index=self.RECORD_INDEX, body=query, size=100, scroll="10m"
         )
+
+        old_scroll_id = res.get("_scroll_id", "NA")
         records_to_return = []
+        while len(res["hits"]["hits"]):
 
-        for item in res["hits"]["hits"]:
-            record_to_import = item["_source"]  # type: ignore
+            for item in res["hits"]["hits"]:
+                record_to_import = item["_source"]  # type: ignore
+                if "fulltext" in record_to_import:
+                    del record_to_import["fulltext"]
 
-            record_to_import = {k: str(v) for k, v in record_to_import.items()}
-            record_to_import = {
-                k: v for k, v in record_to_import.items() if "None" != v
-            }
-            record_to_import = self.__prep_record_for_return(
-                record_dict=record_to_import, include_file=False
-            )
-            records_to_return.append(record_to_import)
+                record_to_import = {k: str(v) for k, v in record_to_import.items()}
+                record_to_import = {
+                    k: v for k, v in record_to_import.items() if "None" != v
+                }
+                try:
+                    record_to_import = self.__prep_record_for_return(
+                        record_dict=record_to_import, include_file=False
+                    )
+                    records_to_return.append(
+                        colrev.record.Record(data=record_to_import)
+                    )
+                except (PrematureEOF, TokenRequired):
+                    pass
+
+            res = self.open_search.scroll(scroll_id=old_scroll_id, scroll="2s")
+
+            # Note : the scroll_id typically does not change (but it can)
+            old_scroll_id = res["_scroll_id"]
 
         return records_to_return
 
@@ -848,7 +875,10 @@ class LocalIndex:
             TransportError,
             SerializationError,
             KeyError,
-        ):
+        ) as exc:
+            if self.verbose_mode:
+                print(exc)
+                print(record_dict)
             return
 
         # Note : only use curated journal metadata for TOC indices

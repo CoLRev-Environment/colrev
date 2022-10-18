@@ -65,7 +65,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         # get the recipient email(s) from the local author index
         recipient = "TODO"
-        subject = "Copy of a PDF"
+        subject = f"Copy of a PDF ({record.data['ID']})"
 
         author_name = record.data.get("author", "").split(",")[0]
         signed = pdf_get_man_operation.review_manager.committer

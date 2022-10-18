@@ -19,7 +19,7 @@
             "filename": "data/search/pdfs.bib",
             "search_type": "PDFS",
             "source_identifier": "{{file}}",
-            "search_parameters": {"scope": {"path": "pdfs"}},
+            "search_parameters": {"scope": {"path": "data/pdfs"}},
             "load_conversion_package_endpoint": {"endpoint": "colrev_built_in.bibtex"},
             "comment": ""
         }
