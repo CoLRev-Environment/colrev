@@ -174,10 +174,6 @@ class Initializer:
             [Path("template/.gitattributes"), Path(".gitattributes")],
             [Path("template/gitignore"), Path(".gitignore")],
             [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
-            [
-                Path("template/docker-compose.yml"),
-                colrev_path / Path("docker-compose.yml"),
-            ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
             colrev.env.utils.retrieve_package_file(
