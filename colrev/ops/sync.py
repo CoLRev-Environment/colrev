@@ -36,7 +36,8 @@ class Sync:
             content = paper_md.read_text(encoding="utf-8")
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
-            citation_keys.remove("fig")
+            if "fig" in citation_keys:
+                citation_keys.remove("fig")
             print(f"Citations in paper.md: {len(citation_keys)}")
             self.cited_papers = citation_keys
 

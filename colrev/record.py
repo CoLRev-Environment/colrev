@@ -2186,7 +2186,9 @@ class PrepRecord(Record):
                 missing_fields.remove(not_missing_field)
 
             if "forthcoming" == self.data.get("year", ""):
-                source = self.data["colrev_masterdata_provenance"]["year"]["source"]
+                source = "NA"
+                if "year" in self.data["colrev_masterdata_provenance"]:
+                    source = self.data["colrev_masterdata_provenance"]["year"]["source"]
                 if "volume" in missing_fields:
                     missing_fields.remove("volume")
                     self.data["colrev_masterdata_provenance"]["volume"] = {
