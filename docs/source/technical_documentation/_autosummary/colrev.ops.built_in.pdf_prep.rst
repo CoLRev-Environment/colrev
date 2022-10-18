@@ -31,4 +31,5 @@ colrev.ops.built\_in.pdf\_prep
    colrev.ops.built_in.pdf_prep.cover_page
    colrev.ops.built_in.pdf_prep.last_page
    colrev.ops.built_in.pdf_prep.metadata_valiation
+   colrev.ops.built_in.pdf_prep.metadata_validation
    colrev.ops.built_in.pdf_prep.tei_prep

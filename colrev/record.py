@@ -1361,7 +1361,7 @@ class Record:
             ]
             if len(missing_field_keys) > 0:
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                    ",".join(missing_field_keys)
+                    "Missing fields:" + ",".join(missing_field_keys)
                 )
             record_dict = also_known_as_record
 
@@ -1408,7 +1408,9 @@ class Record:
         except KeyError as exc:
             if "ENTRYTYPE" in str(exc):
                 print(f"Missing ENTRYTYPE in {record_dict['ID']}")
-            raise colrev_exceptions.NotEnoughDataToIdentifyException(str(exc))
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                "Missing field:" + str(exc)
+            )
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 

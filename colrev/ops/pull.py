@@ -76,7 +76,7 @@ class Pull(colrev.operation.Operation):
         )
 
         crossref_prep = built_in_crossref_prep.CrossrefMetadataPrep(
-            prep_operation=prep_operation, settings={"name": "local_index_prep"}
+            prep_operation=prep_operation, settings={"endpoint": "local_index_prep"}
         )
 
         self.review_manager.logger.info("Pull records from Crossref")
