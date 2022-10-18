@@ -1019,6 +1019,14 @@ class Dataset:
             origin = self.__git_repo.remotes.origin
             origin.pull()
 
+    def get_remote_url(self) -> str:
+        """Get the remote url"""
+        remote_url = "NA"
+        for remote in self.__git_repo.remotes:
+            if "origin" == remote.name:
+                remote_url = remote.url
+        return remote_url
+
 
 if __name__ == "__main__":
     pass

@@ -31,6 +31,7 @@ colrev.dataset.Dataset
       ~Dataset.get_next_id
       ~Dataset.get_nr_in_bib
       ~Dataset.get_origin_state_dict
+      ~Dataset.get_remote_url
       ~Dataset.get_repo
       ~Dataset.get_tree_hash
       ~Dataset.get_untracked_files
