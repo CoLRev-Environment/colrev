@@ -627,7 +627,7 @@ class Dataset:
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
-    def __create_temp_id(
+    def __generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
 
@@ -681,31 +681,19 @@ class Dataset:
 
         return temp_id
 
-    def __update_temp_id_based_on_id_blacklist(
+    def generate_next_unique_id(
         self,
         *,
-        record_in_bib_db: bool,
-        record_dict: dict,
         temp_id: str,
-        id_blacklist: list,
+        existing_ids: list,
     ) -> str:
-        if record_in_bib_db:
-            # allow IDs to remain the same.
-            other_ids = id_blacklist
-            # Note: only remove it once. It needs to change when there are
-            # other records with the same ID
-            if record_dict["ID"] in other_ids:
-                other_ids.remove(record_dict["ID"])
-        else:
-            # ID can remain the same, but it has to change
-            # if it is already in bib_db
-            other_ids = id_blacklist
+        """Get the next unique ID"""
 
         order = 0
         letters = list(string.ascii_lowercase)
         next_unique_id = temp_id
         appends: list = []
-        while next_unique_id.lower() in [i.lower() for i in other_ids]:
+        while next_unique_id.lower() in [i.lower() for i in existing_ids]:
             if len(appends) == 0:
                 order += 1
                 appends = list(itertools.product(letters, repeat=order))
@@ -727,13 +715,12 @@ class Dataset:
 
         return False
 
-    def __generate_id_blacklist(
+    def __generate_id(
         self,
         *,
         local_index: colrev.env.local_index.LocalIndex,
         record_dict: dict,
-        id_blacklist: list = None,
-        record_in_bib_db: bool = False,
+        existing_ids: list = None,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
@@ -747,16 +734,14 @@ class Dataset:
         # screen or data will not be replaced
         # (this would break the chain of evidence)
 
-        temp_id = self.__create_temp_id(
+        temp_id = self.__generate_temp_id(
             local_index=local_index, record_dict=record_dict
         )
 
-        if id_blacklist:
-            temp_id = self.__update_temp_id_based_on_id_blacklist(
-                record_in_bib_db=record_in_bib_db,
-                record_dict=record_dict,
+        if existing_ids:
+            temp_id = self.generate_next_unique_id(
                 temp_id=temp_id,
-                id_blacklist=id_blacklist,
+                existing_ids=existing_ids,
             )
 
         return temp_id
@@ -791,11 +776,10 @@ class Dataset:
                 continue
 
             old_id = record_id
-            new_id = self.__generate_id_blacklist(
+            new_id = self.__generate_id(
                 local_index=local_index,
                 record_dict=record_dict,
-                id_blacklist=id_list,
-                record_in_bib_db=True,
+                existing_ids=id_list,
             )
 
             id_list.append(new_id)
