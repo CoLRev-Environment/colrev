@@ -141,7 +141,7 @@ class Load(colrev.operation.Operation):
                     endpoint=endpoint,
                     filename=filepath,
                     search_type=search_type,
-                    source_identifier=endpoint.source_identifier,  # type: ignore
+                    source_identifier=endpoint_class.source_identifier,  # type: ignore
                     search_parameters={},
                     load_conversion_package_endpoint=res[
                         "load_conversion_package_endpoint"

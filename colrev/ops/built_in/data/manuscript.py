@@ -369,9 +369,6 @@ class Manuscript(JsonSchemaMixin):
             old_string="{{author}}",
             new_string=author,
         )
-        review_manager.logger.info(
-            f"Please update title and authors in {self.settings.paper_path.name}"
-        )
 
     def __add_missing_records(
         self,
