@@ -809,7 +809,7 @@ class Upgrade(colrev.operation.Operation):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
 
-        return
+        self.__update_colrev_ids()
 
 
 if __name__ == "__main__":

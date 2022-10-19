@@ -1274,6 +1274,11 @@ class Record:
                         author_list.append(str(name.rstrip()[:-1]))
                 else:
                     parsed_name = HumanName(name)
+
+                    if "" == parsed_name.last and "" != parsed_name.first:
+                        author_list.append(parsed_name.first)
+                        continue
+
                     # Note: do not set parsed_name.string_format as a global constant
                     # to preserve consistent creation of identifiers
                     parsed_name.string_format = "{last} "
