@@ -603,10 +603,6 @@ class PackageManager:
                     ] = self.load_package_endpoint(
                         package_type=package_type, package_identifier=package_identifier
                     )
-            elif ignore_not_available:
-                raise colrev_exceptions.MissingDependencyError(
-                    f"Dependency {package_identifier} not available."
-                )
 
             # 2. Load module packages
             elif not Path(package_identifier + ".py").is_file():
@@ -633,6 +629,10 @@ class PackageManager:
                     package_identifier, "."
                 )
                 packages_dict[package_identifier]["custom_flag"] = True
+            elif ignore_not_available:
+                raise colrev_exceptions.MissingDependencyError(
+                    f"Dependency {package_identifier} not available."
+                )
             else:
                 print(f"Could not load {selected_package}")
                 continue

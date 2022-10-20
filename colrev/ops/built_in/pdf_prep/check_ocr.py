@@ -101,7 +101,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         record.data["file"] = str(ocred_filename.relative_to(review_manager.path))
         record.set_text_from_pdf(project_path=review_manager.path)
 
-    @timeout_decorator.timeout(60, use_signals=False)
+    @timeout_decorator.timeout(120, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,

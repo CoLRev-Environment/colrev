@@ -210,22 +210,24 @@ class Search(colrev.operation.Operation):
         """Setup a custom search script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_search_script.py")
+            file_path=Path("template/custom_search_source_script.py")
         )
 
         if filedata:
-            with open("custom_search_script.py", "w", encoding="utf-8") as file:
+            with open("custom_search_source_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_search_script.py"))
+        self.review_manager.dataset.add_changes(
+            path=Path("custom_search_source_script.py")
+        )
 
         new_source = colrev.settings.SearchSource(
-            endpoint="custom_search_script",
-            filename=Path("custom_search.bib"),
+            endpoint="custom_search_source_script",
+            filename=Path("data/search/custom_search.bib"),
             search_type=colrev.settings.SearchType.DB,
             source_identifier="TODO",
             search_parameters={},
-            load_conversion_package_endpoint={"endpoint": "TODO"},
+            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",
         )
 

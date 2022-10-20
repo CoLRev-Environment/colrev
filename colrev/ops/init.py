@@ -39,6 +39,9 @@ class Initializer:
         local_index_repo: bool = False,
     ) -> None:
 
+        if review_type is None:
+            review_type = "literature_review"
+
         saved_args = locals()
         assert not (example and local_index_repo)
 

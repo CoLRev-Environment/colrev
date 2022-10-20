@@ -197,6 +197,11 @@ class Sync:
         added = []
         for record_to_import in self.records_to_import:
             if record_to_import["ID"] not in available_ids:
+                record_to_import = {
+                    k: v
+                    for k, v in record_to_import.items()
+                    if k not in colrev.record.Record.provenance_keys
+                }
                 records.append(record_to_import)
                 available_ids.append(record_to_import["ID"])
                 added.append(record_to_import)
@@ -207,30 +212,6 @@ class Sync:
                 colrev.record.Record(data=record_dict).print_citation_format()
 
             print(f"Loaded {len(added)} papers")
-
-        records = [
-            {
-                k: v
-                for k, v in record.items()
-                if k
-                in [
-                    "ID",
-                    "ENTRYTYPE",
-                    "author",
-                    "title",
-                    "year",
-                    "journal",
-                    "doi",
-                    "booktitle",
-                    "chapter",
-                    "volume",
-                    "number",
-                    "pages",
-                    "publisher",
-                ]
-            }
-            for record in records
-        ]
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 

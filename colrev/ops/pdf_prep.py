@@ -43,7 +43,7 @@ class PDFPrep(colrev.operation.Operation):
         self.reprocess = reprocess
         self.verbose = False
 
-        self.cpus = 8
+        self.cpus = 4
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_prep_package_endpoints = package_manager.load_packages(
@@ -78,10 +78,6 @@ class PDFPrep(colrev.operation.Operation):
                 current_file.rename(original_filename)
                 record.data["file"] = str(
                     original_file.relative_to(self.review_manager.path)
-                )
-                bfp = backup_filename.relative_to(self.review_manager.path)
-                self.review_manager.report_logger.info(
-                    f"created backup after successful pdf-prep: {bfp}"
                 )
 
         # Backup:
@@ -135,7 +131,7 @@ class PDFPrep(colrev.operation.Operation):
         record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
 
-        self.review_manager.report_logger.info(f'prepare({record.data["ID"]})')
+        self.review_manager.logger.info(f'Prep PDF of {record_dict["ID"]}')
         # Note: if there are problems
         # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
@@ -148,7 +144,7 @@ class PDFPrep(colrev.operation.Operation):
                     pdf_prep_package_endpoint["endpoint"]  # type: ignore
                 ]
 
-                self.review_manager.report_logger.debug(
+                self.review_manager.logger.debug(
                     f'{endpoint.settings.endpoint}({record.data["ID"]}):'.ljust(  # type: ignore
                         pad, " "
                     )
@@ -160,6 +156,7 @@ class PDFPrep(colrev.operation.Operation):
             except (
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
+                colrev.exceptions.InvalidPDFException,
             ) as err:
                 self.review_manager.logger.error(
                     f'Error for {record.data["ID"]} '  # type: ignore
@@ -188,7 +185,7 @@ class PDFPrep(colrev.operation.Operation):
                 if failed
                 else f"{colors.GREEN}pass{colors.END}"
             )
-            self.review_manager.report_logger.info(msg)
+            self.review_manager.logger.info(msg)
             if failed:
                 break
 
@@ -211,7 +208,6 @@ class PDFPrep(colrev.operation.Operation):
             if successfully_prepared
             else f"{colors.RED}failed{colors.END}"
         )
-        self.review_manager.report_logger.info(msg)
 
         record.cleanup_pdf_processing_fields()
 

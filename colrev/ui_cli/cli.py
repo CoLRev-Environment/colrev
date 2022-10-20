@@ -1037,19 +1037,19 @@ def pdf_get_man(
 
 
 def __delete_first_pages_cli(
-    pdf_get_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
+    pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
 ) -> None:
 
-    records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
+    records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
     while True:
         if record_id in records:
             record = records[record_id]
             if "file" in record:
                 print(record["file"])
-                pdf_path = pdf_get_man_operation.review_manager.path / Path(
+                pdf_path = pdf_prep_man_operation.review_manager.path / Path(
                     record["file"]
                 )
-                pdf_get_man_operation.extract_coverpage(filepath=pdf_path)
+                pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
             else:
                 print("no file in record")
         if "n" == input("Extract coverpage from another PDF? (y/n)"):
