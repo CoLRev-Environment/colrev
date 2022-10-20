@@ -124,21 +124,19 @@ def init(
     import colrev.ui_web.settings_editor
 
     try:
-        if type is None:
-            type = "literature_review"
+
+        if not type:
+            print(
+                "TODO: open review type selector (option to open settings editor next)"
+            )
+            # the review selector should simply call the init (with a review_type parameter)
+            # we may also pass the title/review objectives
+            return
 
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
             example=example,
         )
-
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
-        )
-        settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
-            review_manager=review_manager
-        )
-        settings_operation.open_settings_editor()
 
     except (
         colrev_exceptions.ParameterError,

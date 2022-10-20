@@ -2,7 +2,10 @@
 """CLI interface for manual preparation of PDFs"""
 from __future__ import annotations
 
+import os
+import platform
 import pprint
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -44,6 +47,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare PDF manually based on a cli"""
 
+        # pylint: disable=too-many-statements
+
         _pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
         def man_pdf_prep(
@@ -52,6 +57,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             item: dict,
             stat: str,
         ) -> dict:
+
+            # pylint: disable=no-member
+            # pylint: disable=too-many-branches
 
             # pdf_prep_man_operation.review_manager.logger.debug(
             #     f"called man_pdf_prep for {_pp.pformat(item)}"
@@ -76,16 +84,35 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
             if pdf_path.is_file() or filepath.is_file():
+                current_platform = platform.system()
+                if current_platform:
+                    subprocess.call(["xdg-open", filepath])
+                else:
+                    os.startfile(filepath)  # type: ignore
+
                 user_selection = ""
-                valid_selections = ["y", "n", "d"]
+                valid_selections = ["y", "n", "r"]
                 while user_selection not in valid_selections:
-                    user_selection = input("Prepared? ( (y)es, (n)o, (d)elete file)?")
+
+                    user_selection = input(
+                        "Prepared? ( (y)es, (n)o/delete file, (s)kip, (r)emove coverpage, (q)uit)?"
+                    )
+                    if "s" == user_selection:
+                        return records
+                    if "q" == user_selection:
+                        raise QuitPressedException()
+
+                    if "r" == user_selection:
+                        pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
+                        user_selection = "y"
+
                     if "y" == user_selection:
                         record = colrev.record.PDFPrepManRecord(data=record_dict)
                         record.set_pdf_man_prepared(
                             review_manager=pdf_prep_man.review_manager
                         )
-                    if "d" == user_selection:
+
+                    elif "n" == user_selection:
                         record = colrev.record.PDFPrepManRecord(data=record_dict)
                         record.remove_field(key="file")
                         record.set_status(
@@ -109,8 +136,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
 
         for i, item in enumerate(pdf_prep_man_data["items"]):
-            stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
-            records = man_pdf_prep(pdf_prep_man_operation, records, item, stat)
+            try:
+                stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
+                records = man_pdf_prep(pdf_prep_man_operation, records, item, stat)
+            except QuitPressedException:
+                break
 
         pdf_prep_man_operation.review_manager.dataset.save_records_dict(records=records)
         pdf_prep_man_operation.review_manager.dataset.add_record_changes()
@@ -129,6 +159,10 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             )
 
         return records
+
+
+class QuitPressedException(Exception):
+    """Quit-pressed exception"""
 
 
 if __name__ == "__main__":
