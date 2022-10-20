@@ -331,7 +331,7 @@ class CorrectionPreconditionException(CoLRevException):
 
 
 class InvalidPDFException(CoLRevException):
-    """The PDF is invalid (empty or broken)."""
+    """The PDF is invalid (empty, encrypted or broken)."""
 
     def __init__(self, path: Path) -> None:
         self.message = f"Invalid PDF (empty/broken): {path}"

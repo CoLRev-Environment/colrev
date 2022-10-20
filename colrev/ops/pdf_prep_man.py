@@ -7,7 +7,9 @@ from pathlib import Path
 import pandas as pd
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
+from PyPDF2.errors import PdfReadError
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 
@@ -223,6 +225,27 @@ class PDFPrepMan(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.check_repo()
 
+    def extract_lastpage(self, *, filepath: Path) -> None:
+        """Extract last page from PDF"""
+
+        local_index = self.review_manager.get_local_index()
+        lp_path = local_index.local_environment_path / Path(".lastpages")
+        lp_path.mkdir(exist_ok=True)
+
+        try:
+            pdf_reader = PdfFileReader(str(filepath), strict=False)
+            writer_lp = PdfFileWriter()
+            writer_lp.addPage(pdf_reader.getPage(pdf_reader.getNumPages() - 1))
+            writer = PdfFileWriter()
+            for i in range(0, pdf_reader.getNumPages() - 1):
+                writer.addPage(pdf_reader.getPage(i))
+            with open(filepath, "wb") as outfile:
+                writer.write(outfile)
+            with open(lp_path / filepath.name, "wb") as outfile:
+                writer_lp.write(outfile)
+        except PdfReadError as exc:
+            raise colrev_exceptions.InvalidPDFException(filepath) from exc
+
     def extract_coverpage(self, *, filepath: Path) -> None:
         """Extract coverpage from PDF"""
 
@@ -230,16 +253,19 @@ class PDFPrepMan(colrev.operation.Operation):
         cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
-        pdf_reader = PdfFileReader(str(filepath), strict=False)
-        writer_cp = PdfFileWriter()
-        writer_cp.addPage(pdf_reader.getPage(0))
-        writer = PdfFileWriter()
-        for i in range(1, pdf_reader.getNumPages()):
-            writer.addPage(pdf_reader.getPage(i))
-        with open(filepath, "wb") as outfile:
-            writer.write(outfile)
-        with open(cp_path / filepath.name, "wb") as outfile:
-            writer_cp.write(outfile)
+        try:
+            pdf_reader = PdfFileReader(str(filepath), strict=False)
+            writer_cp = PdfFileWriter()
+            writer_cp.addPage(pdf_reader.getPage(0))
+            writer = PdfFileWriter()
+            for i in range(1, pdf_reader.getNumPages()):
+                writer.addPage(pdf_reader.getPage(i))
+            with open(filepath, "wb") as outfile:
+                writer.write(outfile)
+            with open(cp_path / filepath.name, "wb") as outfile:
+                writer_cp.write(outfile)
+        except PdfReadError as exc:
+            raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""

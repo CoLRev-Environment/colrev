@@ -97,7 +97,7 @@ class BibPybtexLoader(JsonSchemaMixin):
                 ):
                     replacement_line = re.sub(
                         r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
-                        r"\1\2\3\4",
+                        r"\1\2_\3\4",
                         line.decode("utf-8"),
                     ).encode("utf-8")
                     load_operation.review_manager.logger.info(
