@@ -1699,11 +1699,14 @@ class Record:
         self.reset_pdf_provenance_notes()
 
         pdf_path = Path(review_manager.path / Path(self.data["file"]))
+        prev_cpid = self.data.get("colrev_pdf_id", "NA")
         self.data.update(
             colrev_pdf_id=self.get_colrev_pdf_id(
                 review_manager=review_manager, pdf_path=pdf_path
             )
         )
+        if prev_cpid != self.data.get("colrev_pdf_id", "NA"):
+            self.add_data_provenance(key="file", source="manual")
 
         record_dict = self.get_data()
         review_manager.dataset.save_records_dict(

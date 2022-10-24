@@ -145,6 +145,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
             filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
             pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
+            record.data.update(
+                colrev_pdf_id=record.get_colrev_pdf_id(
+                    review_manager=pdf_prep_man.review_manager, pdf_path=pdf_path
+                )
+            )
             if pdf_path.is_file() or filepath.is_file():
                 current_platform = platform.system()
                 if current_platform == "Linux":
