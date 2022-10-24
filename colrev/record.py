@@ -1632,15 +1632,14 @@ class Record:
 
     def import_provenance(self, *, source_identifier: str) -> None:
         """Set the provenance for an imported record"""
-        source_identifier_string = self.__get_source_identifier_string(
-            source_identifier=source_identifier
-        )
-
-        self.__set_initial_import_provenance(
-            source_identifier_string=source_identifier_string
-        )
 
         if not self.masterdata_is_curated():
+            source_identifier_string = self.__get_source_identifier_string(
+                source_identifier=source_identifier
+            )
+            self.__set_initial_import_provenance(
+                source_identifier_string=source_identifier_string
+            )
             self.__set_initial_non_curated_import_provenance()
 
     def pdf_get_man(
