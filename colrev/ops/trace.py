@@ -2,12 +2,16 @@
 """Traces records and changes through history."""
 from __future__ import annotations
 
-import pprint
 import time
+from typing import TYPE_CHECKING
 
 import dictdiffer
 
 import colrev.operation
+import colrev.ui_cli.cli_colors as colors
+
+if TYPE_CHECKING:
+    import git.objects.commit
 
 
 class Trace(colrev.operation.Operation):
@@ -24,6 +28,64 @@ class Trace(colrev.operation.Operation):
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
+    def __print_record_changes(
+        self,
+        *,
+        commit: git.objects.commit.Commit,
+        records_dict: dict,
+        record_id: str,
+        prev_record: dict,
+    ) -> dict:
+
+        record = records_dict[record_id]
+
+        diffs = list(dictdiffer.diff(prev_record, record))
+
+        if len(diffs) > 0:
+            if not self.review_manager.verbose_mode:
+                commit_message_first_line = str(commit.message).partition("\n")[0]
+                print(
+                    "\n\n"
+                    + time.strftime(
+                        "%Y-%m-%d %H:%M",
+                        time.gmtime(commit.committed_date),
+                    )
+                    + f" {commit} ".ljust(40, " ")
+                    + f" {commit_message_first_line} (by {commit.author.name})"
+                )
+
+            for diff in diffs:
+                if "add" == diff[0]:
+                    print(
+                        colors.GREEN
+                        + self.__lpad_multiline(
+                            s=self.review_manager.p_printer.pformat(diff),
+                            lpad=5,
+                        )
+                        + colors.END
+                    )
+                if "change" == diff[0]:
+                    print(
+                        colors.ORANGE
+                        + self.__lpad_multiline(
+                            s=self.review_manager.p_printer.pformat(diff),
+                            lpad=5,
+                        )
+                        + colors.END
+                    )
+                if "delete" == diff[0]:
+                    print(
+                        colors.RED
+                        + self.__lpad_multiline(
+                            s=self.review_manager.p_printer.pformat(diff),
+                            lpad=5,
+                        )
+                        + colors.END
+                    )
+
+        prev_record = record
+        return prev_record
+
     def main(self, *, record_id: str) -> None:
         """Trace a record (main entrypoint)"""
 
@@ -31,53 +93,43 @@ class Trace(colrev.operation.Operation):
 
         revlist = self.review_manager.dataset.get_repo().iter_commits()
 
-        _pp = pprint.PrettyPrinter(indent=4)
-
         prev_record: dict = {}
-        prev_data = ""
         for commit in reversed(list(revlist)):
-            commit_message_first_line = str(commit.message).partition("\n")[0]
-            print(
-                "\n\n"
-                + time.strftime(
-                    "%Y-%m-%d %H:%M",
-                    time.gmtime(commit.committed_date),
-                )
-                + f" {commit} ".ljust(40, " ")
-                + f" {commit_message_first_line} (by {commit.author.name})"
-            )
-
             try:
                 filecontents = (
                     commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
                 ).data_stream.read()
 
-                records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=filecontents.decode("utf-8")
-                )
+                commit_message_first_line = str(commit.message).partition("\n")[0]
 
-                if record_id not in records_dict:
-                    continue
-                record = records_dict[record_id]
-
-                if len(record) == 0:
-                    print(f"record {record_id} not in commit.")
-                else:
-                    diffs = list(dictdiffer.diff(prev_record, record))
-                    if len(diffs) > 0:
-                        for diff in diffs:
-                            print(self.__lpad_multiline(s=_pp.pformat(diff), lpad=5))
-                    prev_record = record
+                if self.review_manager.verbose_mode:
+                    print(
+                        "\n\n"
+                        + time.strftime(
+                            "%Y-%m-%d %H:%M",
+                            time.gmtime(commit.committed_date),
+                        )
+                        + f" {commit} ".ljust(40, " ")
+                        + f" {commit_message_first_line} (by {commit.author.name})"
+                    )
             except KeyError:
-                pass
+                continue
 
-            if "data.csv" in commit.tree:
-                filecontents = (commit.tree / "data.csv").data_stream.read()
-                for line in str(filecontents).split("\\n"):
-                    if record_id in line:
-                        if line != prev_data:
-                            print(f"Data: {line}")
-                            prev_data = line
+            records_dict = self.review_manager.dataset.load_records_dict(
+                load_str=filecontents.decode("utf-8")
+            )
+
+            if record_id not in records_dict:
+                if self.review_manager.verbose_mode:
+                    print(f"record {record_id} not in commit.")
+                continue
+
+            prev_record = self.__print_record_changes(
+                commit=commit,
+                records_dict=records_dict,
+                record_id=record_id,
+                prev_record=prev_record,
+            )
 
 
 if __name__ == "__main__":
