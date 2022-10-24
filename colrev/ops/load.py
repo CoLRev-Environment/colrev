@@ -513,6 +513,8 @@ class Load(colrev.operation.Operation):
             record_dict["pages"] = record_dict["pages"].replace("–", "--")
             if record_dict["pages"].count("-") == 1:
                 record_dict["pages"] = record_dict["pages"].replace("-", "--")
+            if "n.pag" == record_dict["pages"].lower():
+                del record_dict["pages"]
 
         if "number" not in record_dict and "issue" in record_dict:
             record_dict.update(number=record_dict["issue"])
