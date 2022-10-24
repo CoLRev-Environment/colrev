@@ -340,7 +340,8 @@ class Record:
                     return
         self.data[key] = value
         if key in self.identifying_field_keys:
-            self.add_masterdata_provenance(key=key, source=source, note=note)
+            if not self.masterdata_is_curated():
+                self.add_masterdata_provenance(key=key, source=source, note=note)
         else:
             self.add_data_provenance(key=key, source=source, note=note)
 
