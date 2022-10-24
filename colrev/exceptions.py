@@ -33,7 +33,7 @@ class CoLRevUpgradeError(CoLRevException):
     def __init__(self, old: str, new: str) -> None:
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
-            f"{colors.ORANGE}colrev settings --upgrade{colors.END}"
+            f"{colors.ORANGE}colrev upgrade{colors.END}"
         )
         super().__init__(self.message)
 
@@ -73,7 +73,7 @@ class InvalidSettingsError(CoLRevException):
         msg = (
             f"Error in settings.json: {msg}\n"
             "To solve this, use\n  "
-            f"{colors.ORANGE}colrev settings --upgrade{colors.END}"
+            f"{colors.ORANGE}colrev upgrade{colors.END}"
         )
         self.message = msg
         super().__init__(self.message)

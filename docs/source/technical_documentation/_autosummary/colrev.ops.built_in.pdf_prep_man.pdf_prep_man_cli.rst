@@ -21,3 +21,14 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli
       :nosignatures:
 
       CoLRevCLIPDFManPrep
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      QuitPressedException

@@ -1693,13 +1693,6 @@ def env(
 @main.command(help_priority=20)
 # @click.option("-v", "--view", is_flag=True, default=False)
 @click.option(
-    "-u",
-    "--upgrade",
-    is_flag=True,
-    default=False,
-    help="Update to the latest CoLRev project version",
-)
-@click.option(
     "-uh",
     "--update_hooks",
     is_flag=True,
@@ -1730,7 +1723,6 @@ def env(
 @click.pass_context
 def settings(
     ctx: click.core.Context,
-    upgrade: bool,
     update_hooks: bool,
     modify: str,
     verbose: bool,
@@ -1749,14 +1741,6 @@ def settings(
     import ast
     import glom
     import colrev.review_manager
-
-    if upgrade:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=True, verbose_mode=verbose
-        )
-        upgrad_operation = review_manager.get_upgrade()
-        upgrad_operation.main()
-        return
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose
@@ -2143,6 +2127,36 @@ def web(
         review_manager=review_manager
     )
     se_instance.open_settings_editor()
+
+
+@main.command(help_priority=28)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def upgrade(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Upgrade to the latest CoLRev project version."""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=True, verbose_mode=verbose
+    )
+    upgrad_operation = review_manager.get_upgrade()
+    upgrad_operation.main()
 
 
 @main.command(hidden=True)

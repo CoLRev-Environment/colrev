@@ -97,7 +97,7 @@ class Upgrade(colrev.operation.Operation):
         if self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(
                 msg=f"Upgrade to CoLRev {upcoming_version}",
-                script_call="colrev settings -u",
+                script_call="colrev upgrade",
             )
             self.__print_release_notes(selected_version=upcoming_version)
         else:
@@ -810,6 +810,39 @@ class Upgrade(colrev.operation.Operation):
         # pylint: disable=too-many-locals
 
         self.__update_colrev_ids()
+        if not Path("settings.json").is_file():
+            filedata = colrev.env.utils.get_package_file_content(
+                file_path=Path("template/settings.json")
+            )
+
+            if not filedata:
+                print("error reading file")
+                return
+            settings = json.loads(filedata.decode("utf-8"))
+        else:
+            with open("settings.json", encoding="utf-8") as file:
+                settings = json.load(file)
+
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev_built_in.pdfs_dir":
+                if "scope" in source["search_parameters"]:
+                    if "path" in source["search_parameters"]["scope"]:
+                        if source["search_parameters"]["scope"]["path"] == "pdfs":
+                            source["search_parameters"]["scope"]["path"] = "data/pdfs"
+
+        with open("settings.json", "w", encoding="utf-8") as outfile:
+            json.dump(settings, outfile, indent=4)
+
+        self.review_manager.dataset.add_changes(path=Path("settings.json"))
+
+        for bib_file in self.review_manager.DATA_DIR_RELATIVE.glob("**/*.bib"):
+            print(bib_file)
+            colrev.env.utils.inplace_change(
+                filename=bib_file,
+                old_string="CURATED:https://github.com/geritwagner",
+                new_string="CURATED:https://github.com/CoLRev-curations",
+            )
+            self.review_manager.dataset.add_changes(path=bib_file)
 
 
 if __name__ == "__main__":
