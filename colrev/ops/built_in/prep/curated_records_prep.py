@@ -46,7 +46,9 @@ class CuratedPrep(JsonSchemaMixin):
         """Prepare a record by setting curated ones to md_prepared"""
 
         if record.masterdata_is_curated():
-            if colrev.record.RecordState.md_imported == record.data["colrev_status"]:
+            if colrev.record.RecordState.md_imported == record.data.get(
+                "colrev_status", "NA"
+            ):
                 record.data["colrev_status"] = colrev.record.RecordState.md_prepared
         return record
 
