@@ -39,20 +39,21 @@ class WebsiteScreenshot(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Get a PDF of the website (screenshot)"""
 
+        if "online" != record.data["ENTRYTYPE"]:
+            return record
+
         screenshot_service = pdf_get_operation.review_manager.get_screenshot_service()
+        screenshot_service.start_screenshot_service()
 
-        if "online" == record.data["ENTRYTYPE"]:
-            screenshot_service.start_screenshot_service()
+        pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
+            f"{record.data['ID']}.pdf"
+        )
+        record = screenshot_service.add_screenshot(
+            record=record, pdf_filepath=pdf_filepath
+        )
 
-            pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
-                f"{record.data['ID']}.pdf"
-            )
-            record = screenshot_service.add_screenshot(
-                record=record, pdf_filepath=pdf_filepath
-            )
-
-            if "file" in record.data:
-                record.import_file(review_manager=pdf_get_operation.review_manager)
+        if "file" in record.data:
+            record.import_file(review_manager=pdf_get_operation.review_manager)
 
         return record
 

@@ -20,11 +20,10 @@ class ScreenshotService:
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
         self.chrome_browserless_image = "browserless/chrome:latest"
-        review_manager.environment_manager.build_docker_image(
+        self.review_manager = review_manager
+        self.review_manager.environment_manager.build_docker_image(
             imagename=self.chrome_browserless_image
         )
-        if not self.screenshot_service_available():
-            review_manager.environment_manager.register_ports(ports=["3000"])
 
     def start_screenshot_service(self) -> None:
         """Start the screenshot service"""
@@ -32,6 +31,7 @@ class ScreenshotService:
         if self.screenshot_service_available():
             return
 
+        self.review_manager.environment_manager.register_ports(ports=["3000"])
         client = docker.from_env()
 
         running_containers = [
