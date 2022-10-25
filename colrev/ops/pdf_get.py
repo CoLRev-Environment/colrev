@@ -6,9 +6,8 @@ import os
 import shutil
 import typing
 from glob import glob
+from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
-
-from p_tqdm import p_map
 
 import colrev.operation
 import colrev.record
@@ -494,7 +493,10 @@ class PDFGet(colrev.operation.Operation):
 
         if pdf_get_data["nr_tasks"] > 0:
 
-            retrieved_record_list = p_map(self.get_pdf, pdf_get_data["items"])
+            pool = Pool(self.cpus)
+            retrieved_record_list = pool.map(self.get_pdf, pdf_get_data["items"])
+            pool.close()
+            pool.join()
 
             self.review_manager.dataset.save_records_dict(
                 records={r["ID"]: r for r in retrieved_record_list}, partial=True

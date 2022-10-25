@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import multiprocessing as mp
 from multiprocessing import Value
+from multiprocessing.pool import ThreadPool as Pool
 
-from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
 import colrev.operation
@@ -220,11 +220,10 @@ class Pull(colrev.operation.Operation):
 
         CHANGE_COUNTER = Value("i", 0)
 
-        pool = ProcessPool(nodes=mp.cpu_count() - 1)
+        pool = Pool(mp.cpu_count() - 1)
         records_list = pool.map(pull_record, records.values())
         pool.close()
         pool.join()
-        pool.clear()
 
         if CHANGE_COUNTER.value > 0:
             self.review_manager.logger.info(

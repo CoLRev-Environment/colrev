@@ -7,10 +7,10 @@ import multiprocessing as mp
 import time
 import typing
 from copy import deepcopy
+from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
-from pathos.multiprocessing import ProcessPool
 
 import colrev.env.utils
 import colrev.operation
@@ -715,10 +715,6 @@ class Prep(colrev.operation.Operation):
                     record = self.prepare(item)
                     prepared_records.append(record)
             else:
-                # Note : p_map shows the progress (tqdm) but it is inefficient
-                # https://github.com/swansonk14/p_tqdm/issues/34
-                # from p_tqdm import p_map
-                # preparation_data = p_map(self.prepare, preparation_data)
 
                 prep_pe_names = [
                     r["endpoint"] for r in prep_round.prep_package_endpoints
@@ -728,14 +724,12 @@ class Prep(colrev.operation.Operation):
                         f"{colors.ORANGE}The language detector may take "
                         f"longer and require RAM{colors.END}"
                     )
-                    pool = ProcessPool(nodes=mp.cpu_count() // 2)
+                    pool = Pool(mp.cpu_count() // 2)
                 else:
-                    pool = ProcessPool(nodes=self.cpus)
+                    pool = Pool(self.cpus)
                 prepared_records = pool.map(self.prepare, preparation_data)
-
                 pool.close()
                 pool.join()
-                pool.clear()
 
             if not self.debug_mode:
                 self.review_manager.dataset.save_records_dict(
