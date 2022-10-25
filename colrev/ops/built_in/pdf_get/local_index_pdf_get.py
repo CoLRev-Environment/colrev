@@ -53,6 +53,9 @@ class LocalIndexPDFGet(JsonSchemaMixin):
                 key="file", value=str(retrieved_record["file"]), source="local_index"
             )
             record.import_file(review_manager=pdf_get_operation.review_manager)
+            if "fulltext" in retrieved_record:
+                record.get_tei_filename().write_text(retrieved_record["fulltext"])
+                del retrieved_record["fulltext"]
 
         return record
 

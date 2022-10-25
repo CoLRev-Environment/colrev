@@ -598,6 +598,7 @@ class LocalIndex:
         """Prepare a record for return (from local index)"""
 
         # Note : remove fulltext before parsing because it raises errors
+        fulltext_backup = record_dict.get("fulltext", "NA")
         if "fulltext" in record_dict:
             del record_dict["fulltext"]
 
@@ -612,6 +613,7 @@ class LocalIndex:
             "local_curated_metadata",
             "metadata_source_repository_paths",
         )
+
         for key in keys_to_remove:
             record_dict.pop(key, None)
 
@@ -628,7 +630,10 @@ class LocalIndex:
             if "colrev_id" in record_dict:
                 del record_dict["colrev_id"]
 
-        if not include_file:
+        if include_file:
+            if "NA" != fulltext_backup:
+                record_dict["fulltext"] = fulltext_backup
+        else:
             if "file" in record_dict:
                 del record_dict["file"]
             if "colref_pdf_id" in record_dict:
