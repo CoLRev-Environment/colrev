@@ -8,7 +8,6 @@ import signal
 import webbrowser
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import jsonify
@@ -18,10 +17,8 @@ from flask import send_from_directory
 from flask_cors import CORS
 
 import colrev.env.package_manager
+import colrev.review_manager
 import colrev.settings
-
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
 
 
 class SettingsEditor:
