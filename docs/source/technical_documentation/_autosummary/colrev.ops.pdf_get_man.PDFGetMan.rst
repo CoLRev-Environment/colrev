@@ -17,7 +17,7 @@ colrev.ops.pdf\_get\_man.PDFGetMan
       :nosignatures:
 
       ~PDFGetMan.check_precondition
-      ~PDFGetMan.discard_missing
+      ~PDFGetMan.discard
       ~PDFGetMan.export_retrieval_table
       ~PDFGetMan.get_data
       ~PDFGetMan.get_pdf_get_man

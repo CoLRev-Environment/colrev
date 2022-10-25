@@ -32,6 +32,22 @@ class PDFPrepMan(colrev.operation.Operation):
 
         self.verbose = True
 
+    def discard(self) -> None:
+        """Discard records whose PDFs need manual preparation (set to pdf_not_available)"""
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if (
+                record["colrev_status"]
+                == colrev.record.RecordState.pdf_needs_manual_preparation
+            ):
+                record["colrev_status"] = colrev.record.RecordState.pdf_not_available
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
+            msg="Discard man-prep PDFs", manual_author=True
+        )
+
     def get_data(self) -> dict:
         """Get the data for PDF prep man"""
         # pylint: disable=duplicate-code

@@ -953,7 +953,7 @@ def pdf_prep(
     help="Export a table.",
 )
 @click.option(
-    "--discard_missing",
+    "--discard",
     is_flag=True,
     default=False,
     help="Discard all missing PDFs as not_available",
@@ -976,7 +976,7 @@ def pdf_prep(
 def pdf_get_man(
     ctx: click.core.Context,
     export: bool,
-    discard_missing: bool,
+    discard: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1021,8 +1021,8 @@ def pdf_get_man(
                 "Created pdf_get_man_records.csv"
             )
             return
-        if discard_missing:
-            pdf_get_man_operation.discard_missing()
+        if discard:
+            pdf_get_man_operation.discard()
             return
 
         pdf_get_man_operation.main()
@@ -1069,6 +1069,12 @@ def __delete_first_pages_cli(
     help="Print statistics of records with colrev_status pdf_needs_manual_preparation",
 )
 @click.option(
+    "--discard",
+    is_flag=True,
+    default=False,
+    help="Discard records whose PDF needs to be prepared manually",
+)
+@click.option(
     "--extract",
     is_flag=True,
     default=False,
@@ -1099,6 +1105,7 @@ def pdf_prep_man(
     ctx: click.core.Context,
     delete_first_page: str,
     stats: bool,
+    discard: bool,
     extract: bool,
     apply: bool,
     verbose: bool,
@@ -1114,6 +1121,9 @@ def pdf_prep_man(
 
         if delete_first_page:
             __delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
+            return
+        if discard:
+            pdf_prep_man_operation.discard()
             return
         if stats:
             pdf_prep_man_operation.pdf_prep_man_stats()
