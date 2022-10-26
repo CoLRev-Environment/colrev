@@ -39,7 +39,7 @@ class PRISMA(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         prisma_endpoint_details = {
-            "endpoint": "PRISMA",
+            "endpoint": "colrev_built_in.prisma",
             "prisma_data_endpoint_version": "0.1",
         }
         return prisma_endpoint_details

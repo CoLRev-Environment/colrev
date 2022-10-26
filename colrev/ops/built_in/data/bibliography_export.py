@@ -76,7 +76,7 @@ class BibliographyExport(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         endnote_endpoint_details = {
-            "endpoint": "ENDNOTE",
+            "endpoint": "colrev_built_in.bibliography_export",
             "endnote_data_endpoint_version": "0.1",
             "config": {
                 "path": "endnote",

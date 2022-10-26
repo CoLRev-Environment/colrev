@@ -18,19 +18,21 @@ def add_data(
     """Add a data package_endpoint"""
 
     package_manager = review_manager.get_package_manager()
-    available_data_endpoins = package_manager.discover_packages(
+    available_data_endpoints = package_manager.discover_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data
     )
 
-    if add_endpoint in available_data_endpoins:
-        endpoint_class = available_data_endpoins[add_endpoint]["endpoint"]
-        endpoint = endpoint_class(
-            data_operation=data_operation, settings={"name": add_endpoint}
+    if add_endpoint in available_data_endpoints:
+        package_endpoints = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.data,
+            selected_packages=[{"endpoint": add_endpoint}],
+            operation=data_operation,
         )
+        endpoint = package_endpoints[add_endpoint]
 
-        default_endpoint_conf = endpoint.get_default_setup()
+        default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
 
-        if "MANUSCRIPT" == add_endpoint:
+        if "colrev_built_in.manuscript" == add_endpoint:
             if "y" == input("Select a custom word template (y/n)?"):
 
                 template_name = input(

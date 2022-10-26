@@ -61,7 +61,7 @@ class GithubPages(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         github_pages_endpoint_details = {
-            "endpoint": "GITHUB_PAGES",
+            "endpoint": "colrev_built_in.github_pages",
             "version": "0.1",
             "auto_push": True,
         }

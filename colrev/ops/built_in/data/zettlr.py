@@ -70,7 +70,7 @@ class Zettlr(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         zettlr_endpoint_details = {
-            "endpoint": "ZETTLR",
+            "endpoint": "colrev_built_in.zettlr",
             "version": "0.1",
             "config": {},
         }

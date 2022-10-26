@@ -123,7 +123,7 @@ class Manuscript(JsonSchemaMixin):
         """Get the default setup"""
 
         manuscript_endpoint_details = {
-            "endpoint": "MANUSCRIPT",
+            "endpoint": "colrev_built_in.manuscript",
             "version": "0.1",
             "word_template": self.__retrieve_default_word_template(),
         }
