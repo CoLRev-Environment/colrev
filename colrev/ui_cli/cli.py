@@ -295,6 +295,13 @@ def search(
     help="Combine load of multiple sources in one commit.",
 )
 @click.option(
+    "-sq",
+    "--skip_query",
+    is_flag=True,
+    default=False,
+    help="Skip entering the search query (if applicable)",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -313,6 +320,7 @@ def load(
     ctx: click.core.Context,
     keep_ids: bool,
     combine_commits: bool,
+    skip_query: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -326,7 +334,7 @@ def load(
         review_manager.get_local_index(startup_without_waiting=True)
         load_operation = review_manager.get_load_operation()
 
-        load_operation.check_update_sources()
+        load_operation.check_update_sources(skip_query=skip_query)
 
         if combine_commits:
             logging.info(

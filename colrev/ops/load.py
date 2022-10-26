@@ -174,7 +174,7 @@ class Load(colrev.operation.Operation):
 
         return results_list
 
-    def check_update_sources(self) -> None:
+    def check_update_sources(self, *, skip_query: bool = False) -> None:
         """Check the SearchSources and update if necessary"""
 
         # pylint: disable=redefined-outer-name
@@ -293,7 +293,9 @@ class Load(colrev.operation.Operation):
                     )
 
                 cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
-                query_input = input(cmd)
+                query_input = ""
+                if not skip_query:
+                    query_input = input(cmd)
                 if query_input not in ["", "NA"]:
                     heuristic_source["source_candidate"].search_parameters = {
                         "query": query_input
@@ -317,12 +319,13 @@ class Load(colrev.operation.Operation):
             #     "source_candidate"
             # ].search_parameters = search_parameters
 
-            cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
-            comment_input = input(cmd)
-            if comment_input != "":
-                comment = comment_input
-            else:
-                comment = None  # type: ignore
+            comment = None  # type: ignore
+            if not skip_query:
+                cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
+                comment_input = input(cmd)
+                if comment_input != "":
+                    comment = comment_input
+
             heuristic_source["source_candidate"].comment = comment
 
             if (
