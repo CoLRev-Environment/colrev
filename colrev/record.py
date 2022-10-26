@@ -1335,16 +1335,15 @@ class Record:
             return input_string
 
         if not assume_complete:
-            if "colrev_status" in self.data:
-                if self.data["colrev_status"] in [
-                    RecordState.md_imported,
-                    RecordState.md_needs_manual_preparation,
-                ]:
-                    if len(also_known_as_record) != 0:
-                        raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                            "cannot determine field requirements "
-                            "(e.g., volume/number for journal articles)"
-                        )
+            if self.data.get("colrev_status", "NA") in [
+                RecordState.md_imported,
+                RecordState.md_needs_manual_preparation,
+            ]:
+                if len(also_known_as_record) != 0:
+                    raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                        "cannot determine field requirements "
+                        "(e.g., volume/number for journal articles)"
+                    )
             # Make sure that colrev_ids are not generated when
             # identifying_field_keys are UNKNOWN but possibly required
             for identifying_field_key in self.identifying_field_keys:
@@ -1428,7 +1427,7 @@ class Record:
         # Especially in cases in which the prescreen-exclusion decision
         # is revised (e.g., because a paper was retracted)
         # In these cases, the paper may already be in the data extraction/synthesis
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_synthesized,
             RecordState.rev_included,
         ]:
@@ -2097,7 +2096,7 @@ class PrepRecord(Record):
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_prescreen_excluded,
             RecordState.md_prepared,
         ]:
@@ -2112,7 +2111,7 @@ class PrepRecord(Record):
         if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
             return True
 
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_prescreen_excluded,
         ]:
             return True
@@ -2120,7 +2119,7 @@ class PrepRecord(Record):
 
     def status_to_prepare(self) -> bool:
         """Check whether the record needs to be prepared"""
-        return self.data["colrev_status"] in [
+        return self.data.get("colrev_status", "NA") in [
             RecordState.md_needs_manual_preparation,
             RecordState.md_imported,
             RecordState.md_prepared,

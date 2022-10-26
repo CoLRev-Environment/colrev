@@ -129,7 +129,9 @@ class PDFMetadataValidation(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by validating it against the metadata (record)"""
 
-        if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
+        if colrev.record.RecordState.pdf_imported != record.data.get(
+            "colrev_status", "NA"
+        ):
             return record.data
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
