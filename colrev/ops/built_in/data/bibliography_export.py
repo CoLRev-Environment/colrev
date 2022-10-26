@@ -65,9 +65,7 @@ class BibliographyExport(JsonSchemaMixin):
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-        data_operation.review_manager.get_zotero_translation_service(
-            startup_without_waiting=True
-        )
+        data_operation.review_manager.get_zotero_translation_service()
 
         self.endpoint_path = (
             data_operation.review_manager.output_dir / self.settings.endpoint_dir
