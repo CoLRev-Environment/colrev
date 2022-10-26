@@ -111,7 +111,8 @@ class Pull(colrev.operation.Operation):
                     f"{colors.GREEN}Update published forthcoming paper: "
                     f"{record.data['ID']}{colors.END}"
                 )
-                record = crossref_prep.prepare(prep_operation, record)
+                prepared_record = crossref_prep.prepare(prep_operation, record)
+                record = colrev.record.PrepRecord(data=prepared_record.data)
 
                 colrev_id = record.create_colrev_id(
                     also_known_as_record=record.get_data()
