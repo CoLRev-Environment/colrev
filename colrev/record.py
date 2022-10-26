@@ -883,9 +883,9 @@ class Record:
             "booktitle",
         ]
         for mandatory_field in mandatory_fields:
-            if mandatory_field not in record_a_dict:
+            if record_a_dict.get(mandatory_field, "UNKNOWN"):
                 record_a_dict[mandatory_field] = ""
-            if mandatory_field not in record_b_dict:
+            if record_b_dict.get(mandatory_field, "UNKNOWN"):
                 record_b_dict[mandatory_field] = ""
 
         if "container_title" not in record_a_dict:
