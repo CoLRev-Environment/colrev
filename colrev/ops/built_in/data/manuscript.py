@@ -155,9 +155,12 @@ class Manuscript(JsonSchemaMixin):
 
         if "http" in csl_link:
             ret = requests.get(csl_link, allow_redirects=True)
-            with open(Path(csl_link).name, "wb") as file:
+            csl_filename = (
+                self.data_operation.review_manager.DATA_DIR_RELATIVE
+                / Path(csl_link).name
+            )
+            with open(csl_filename, "wb") as file:
                 file.write(ret.content)
-            csl_filename = Path(csl_link).name
             colrev.env.utils.inplace_change(
                 filename=self.settings.paper_path,
                 old_string=f'csl: "{csl_link}"',

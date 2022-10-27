@@ -10,7 +10,6 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
-from p_tqdm import p_map
 
 import colrev.operation
 import colrev.record
@@ -264,7 +263,8 @@ class PDFPrep(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_colrev_pdf_ids(self, *, record_dict: dict) -> dict:
+    # Note : no named arguments (multiprocessing)
+    def __update_colrev_pdf_ids(self, record_dict: dict) -> dict:
         if "file" in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict["file"])
             record_dict.update(
@@ -278,7 +278,10 @@ class PDFPrep(colrev.operation.Operation):
         """Update the colrev-pdf-ids"""
         self.review_manager.logger.info("Update colrev_pdf_ids")
         records = self.review_manager.dataset.load_records_dict()
-        records_list = p_map(self.__update_colrev_pdf_ids, records.values())
+        pool = Pool(self.cpus)
+        records_list = pool.map(self.__update_colrev_pdf_ids, records.values())
+        pool.close()
+        pool.join()
         records = {r["ID"]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()

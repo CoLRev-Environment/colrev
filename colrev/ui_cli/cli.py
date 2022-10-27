@@ -1302,6 +1302,12 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     help="prepare, merge, or all.",
 )
 @click.option(
+    "--threshold",
+    type=float,
+    default=0.05,
+    help="Change score threshold for changes to display.",
+)
+@click.option(
     "--properties", is_flag=True, default=False, help="Git commit id to validate."
 )
 @click.option(
@@ -1334,6 +1340,7 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
 def validate(
     ctx: click.core.Context,
     scope: str,
+    threshold: float,
     properties: bool,
     commit: str,
     tree_hash: str,
@@ -1375,7 +1382,11 @@ def validate(
             "pages",
         ]
 
+        displayed = False
         for record_a, record_b, difference in validation_details:
+            if difference < threshold:
+                continue
+            displayed = True
             # Escape sequence to clear terminal output for each new comparison
             os.system("cls" if os.name == "nt" else "clear")
             if record_a["ID"] == record_b["ID"]:
@@ -1402,6 +1413,8 @@ def validate(
             # gh_issue https://github.com/geritwagner/colrev/issues/57
             # correct? if not, replace current record with old one
 
+        if not displayed:
+            review_manager.logger.info("No preparation changes above threshold")
     except colrev_exceptions.InvalidSettingsError as exc:
         logging.error(exc)
         return

@@ -17,7 +17,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import ansiwrap
 import dictdiffer
 import pandas as pd
 from nameparser import HumanName
@@ -890,7 +889,7 @@ class Record:
             + f"{record_b.data.get('journal', '')}{record_b.data.get('booktitle', '')}, "
             + f"{record_b.data.get('volume', '')} ({record_b.data.get('number', '')})"
         )
-        return fuzz.ratio(str_a.lower(), str_b.lower()) / 100
+        return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
 
     @classmethod
     def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
@@ -1798,7 +1797,7 @@ class Record:
                     letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
                 elif letter.startswith("- "):
                     letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
-            res = ansiwrap.fill("".join(letters)).replace("\n", " ")
+            res = "".join(letters).replace("\n", " ")
             return res
 
         for key in keys:

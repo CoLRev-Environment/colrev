@@ -614,7 +614,7 @@ class Prep(colrev.operation.Operation):
                 r for r in prepared_records if r["ID"] == previous_record.data["ID"]
             ][0]
 
-            change = 1 - colrev.record.Record.get_record_change_score(
+            change = colrev.record.Record.get_record_change_score(
                 record_a=colrev.record.Record(data=prepared_record),
                 record_b=previous_record,
             )
