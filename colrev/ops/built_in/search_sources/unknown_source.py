@@ -80,6 +80,14 @@ class UnknownSearchSource(JsonSchemaMixin):
         ):
             if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
                 record.data["ENTRYTYPE"] = "book"
+            if record.data.get("year", "year") == record.data.get("date", "date"):
+                record.remove_field(key="date")
+            if (
+                "inbook" == record.data["ENTRYTYPE"]
+                and "chapter" not in record.data
+                and "title" in record.data
+            ):
+                record.rename_field(key="title", new_key="chapter")
 
         return record
 
