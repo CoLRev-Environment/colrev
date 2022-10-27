@@ -64,7 +64,7 @@ def test_provenance() -> None:
     R1.add_data_provenance_note(key="url", note="1")
     assert R1.data["colrev_data_provenance"]["url"]["note"] == "test,1"
 
-    assert R1.get_field_provenance(key="url") == ["manual", "test,1"]
+    assert R1.get_field_provenance(key="url") == {"source": "manual", "note": "test,1"}
 
     R1.add_masterdata_provenance(key="author", source="manual", note="test")
     assert R1.data["colrev_masterdata_provenance"]["author"]["note"] == "test"
@@ -252,7 +252,7 @@ def test_parse_bib() -> None:
         "colrev_data_provenance": "url:manual;testing;",
         "colrev_masterdata_provenance": "volume:source-1;;",
         "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_origin": "orig1",
+        "colrev_origin": "orig1;",
         "title": "EDITORIAL",
         "author": "Rai, Arun",
         "journal": "MIS Quarterly",
