@@ -182,8 +182,13 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
+
+        if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
+            record.data["ENTRYTYPE"] = "book"
 
         return record
 

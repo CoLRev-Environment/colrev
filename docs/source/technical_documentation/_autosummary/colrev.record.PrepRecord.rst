@@ -45,6 +45,7 @@ colrev.record.PrepRecord
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_missing_fields
       ~PrepRecord.get_quality_defects
+      ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity

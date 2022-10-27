@@ -71,7 +71,9 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for Web of Science"""
 
         return record

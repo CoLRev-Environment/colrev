@@ -55,6 +55,8 @@ class Record:
         "year",
         "journal",
         "booktitle",
+        "chapter",
+        "publisher",
         "volume",
         "number",
         "pages",
@@ -867,8 +869,32 @@ class Record:
             # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
+    def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
+        """Determine how much records changed
+
+        This method is less sensitive than get_record_similarity, especially when
+        fields are missing. For example, if the journal field is missing in both
+        records, get_similarity will return a value > 1.0. The get_record_changes
+        will return 0.0 (if all other fields are equal)."""
+
+        # At some point, this may become more sensitive to major changes
+        str_a = (
+            f"{record_a.data.get('author', '')} ({record_a.data.get('year', '')}) "
+            + f"{record_a.data.get('title', '')}. "
+            + f"{record_a.data.get('journal', '')}{record_a.data.get('booktitle', '')}, "
+            + f"{record_a.data.get('volume', '')} ({record_a.data.get('number', '')})"
+        )
+        str_b = (
+            f"{record_b.data.get('author', '')} ({record_b.data.get('year', '')}) "
+            + f"{record_b.data.get('title', '')}. "
+            + f"{record_b.data.get('journal', '')}{record_b.data.get('booktitle', '')}, "
+            + f"{record_b.data.get('volume', '')} ({record_b.data.get('number', '')})"
+        )
+        return fuzz.ratio(str_a.lower(), str_b.lower()) / 100
+
+    @classmethod
     def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
-        """Determine the similarity between two records"""
+        """Determine the similarity between two records (their masterdata)"""
         record_a_dict = record_a.copy().get_data()
         record_b_dict = record_b.copy().get_data()
 
@@ -926,9 +952,11 @@ class Record:
             # partial ratio (catching 2010-10 or 2001-2002)
             year_similarity = fuzz.ratio(str(df_a["year"]), str(df_b["year"])) / 100
 
-            outlet_similarity = (
-                fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
-            )
+            outlet_similarity = 0.0
+            if df_b["container_title"] != "" and df_a["container_title"] != "":
+                outlet_similarity = (
+                    fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
+                )
 
             if str(df_a["journal"]) != "nan":
                 # Note: for journals papers, we expect more details
@@ -1851,8 +1879,10 @@ class PrepRecord(Record):
 
         if " and " in input_string:
             names = input_string.split(" and ")
-        else:
+        elif input_string.count(",") > 1:
             names = input_string.split(", ")
+        else:
+            names = [input_string]
         author_string = ""
         for name in names:
             # Note: https://github.com/derek73/python-nameparser
@@ -2165,9 +2195,6 @@ class PrepRecord(Record):
 
     def update_masterdata_provenance(
         self,
-        *,
-        unprepared_record: Record,
-        review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         """Update the masterdata provenance"""
         # pylint: disable=too-many-branches
@@ -2245,14 +2272,6 @@ class PrepRecord(Record):
 
             if missing_fields or inconsistencies or incomplete_fields or defect_fields:
                 self.set_status(target_state=RecordState.md_needs_manual_preparation)
-
-        change = 1 - Record.get_record_similarity(
-            record_a=self, record_b=unprepared_record
-        )
-        if change > 0.1:
-            review_manager.report_logger.info(
-                f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
-            )
 
 
 class PrescreenRecord(Record):

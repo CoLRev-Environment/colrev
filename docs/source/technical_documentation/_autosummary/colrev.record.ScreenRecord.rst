@@ -41,6 +41,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_missing_fields
       ~ScreenRecord.get_quality_defects
+      ~ScreenRecord.get_record_change_score
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed

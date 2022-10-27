@@ -588,9 +588,7 @@ class Dataset:
             if record_dict["colrev_status"] in [
                 colrev.record.RecordState.md_needs_manual_preparation,
             ]:
-                record.update_masterdata_provenance(
-                    unprepared_record=record, review_manager=self.review_manager
-                )
+                record.update_masterdata_provenance()
                 record.update_metadata_status(review_manager=self.review_manager)
 
             if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
@@ -779,7 +777,7 @@ class Dataset:
             new_id = self.__generate_id(
                 local_index=local_index,
                 record_dict=record_dict,
-                existing_ids=id_list,
+                existing_ids=[x for x in id_list if x != record_id],
             )
 
             id_list.append(new_id)

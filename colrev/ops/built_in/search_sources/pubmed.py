@@ -67,7 +67,9 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for Pubmed"""
 
         if "first_author" in record.data:

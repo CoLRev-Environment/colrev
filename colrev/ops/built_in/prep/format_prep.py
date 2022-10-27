@@ -82,7 +82,10 @@ class FormatPrep(JsonSchemaMixin):
         if "booktitle" in record.data and "UNKNOWN" != record.data.get(
             "booktitle", "UNKNOWN"
         ):
-            if "UNKNOWN" != record.data["booktitle"]:
+            if (
+                "UNKNOWN" != record.data["booktitle"]
+                and "inbook" != record.data["ENTRYTYPE"]
+            ):
                 record.format_if_mostly_upper(key="booktitle", case="title")
 
                 stripped_btitle = re.sub(r"\d{4}", "", record.data["booktitle"])

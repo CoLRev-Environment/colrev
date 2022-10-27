@@ -53,20 +53,21 @@ class SourceSpecificPrep(JsonSchemaMixin):
         origin_source = record.data["colrev_origin"][0].split("/")[0]
 
         sources = [
-            s.endpoint
+            s
             for s in prep_operation.review_manager.settings.sources
-            if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
+            if s.filename.with_suffix(".bib")
+            == Path("data/search") / Path(origin_source)
         ]
 
         for source in sources:
-            if source not in search_sources.packages:
+            if source.endpoint not in search_sources.packages:
                 continue
-            endpoint = search_sources.packages[source]
+            endpoint = search_sources.packages[source.endpoint]
 
             if callable(endpoint.prepare):
-                record = endpoint.prepare(record)
+                record = endpoint.prepare(record, source)
             else:
-                print(f"error: {source}")
+                print(f"error: {source.endpoint}")
 
         if "howpublished" in record.data and "url" not in record.data:
             if "url" in record.data["howpublished"]:

@@ -41,6 +41,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_missing_fields
       ~PrescreenRecord.get_quality_defects
+      ~PrescreenRecord.get_record_change_score
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed

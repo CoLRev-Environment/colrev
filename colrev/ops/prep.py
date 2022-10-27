@@ -146,7 +146,8 @@ class Prep(colrev.operation.Operation):
             change_report = (
                 f"{prep_package_endpoint}"
                 f' on {preparation_record.data["ID"]}'
-                f" changed:\n{self.review_manager.p_printer.pformat(diffs)}\n"
+                " changed:\n"
+                f"{colors.ORANGE}{self.review_manager.p_printer.pformat(diffs)}{colors.END}\n"
             )
             if self.review_manager.verbose_mode:
                 self.review_manager.logger.info(change_report)
@@ -189,9 +190,6 @@ class Prep(colrev.operation.Operation):
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
 
-        # unprepared_record will not change (for diffs)
-        unprepared_record = record.copy_prep_rec()
-
         for prep_round_package_endpoint in deepcopy(
             item["prep_round_package_endpoints"]
         ):
@@ -221,10 +219,7 @@ class Prep(colrev.operation.Operation):
 
                 if preparation_record.preparation_save_condition():
                     record.update_by_record(update_record=preparation_record)
-                    record.update_masterdata_provenance(
-                        unprepared_record=unprepared_record,
-                        review_manager=self.review_manager,
-                    )
+                    record.update_masterdata_provenance()
 
                 if preparation_record.preparation_break_condition():
                     record.update_by_record(update_record=preparation_record)
@@ -238,10 +233,7 @@ class Prep(colrev.operation.Operation):
             if record.status_to_prepare():
                 record.update_by_record(update_record=preparation_record)
                 # Note: update_masterdata_provenance sets to md_needs_manual_preparation
-                record.update_masterdata_provenance(
-                    unprepared_record=unprepared_record,
-                    review_manager=self.review_manager,
-                )
+                record.update_masterdata_provenance()
 
         return record.get_data()
 
@@ -613,6 +605,24 @@ class Prep(colrev.operation.Operation):
             operation=self,
         )
 
+    def __log_record_change_scores(
+        self, *, preparation_data: list, prepared_records: list
+    ) -> None:
+        for previous_record_item in preparation_data:
+            previous_record = previous_record_item["record"]
+            prepared_record = [
+                r for r in prepared_records if r["ID"] == previous_record.data["ID"]
+            ][0]
+
+            change = 1 - colrev.record.Record.get_record_change_score(
+                record_a=colrev.record.Record(data=prepared_record),
+                record_b=previous_record,
+            )
+            if change > 0.05:
+                self.review_manager.report_logger.info(
+                    f' {prepared_record["ID"]} ' + f"Change score: {round(change, 2)}"
+                )
+
     def __log_details(self, *, prepared_records: list) -> None:
         nr_recs = len(
             [
@@ -703,6 +713,7 @@ class Prep(colrev.operation.Operation):
             preparation_data = self.__get_preparation_data(
                 prep_round=prep_round, debug_file=debug_file, debug_ids=debug_ids
             )
+            previous_preparation_data = deepcopy(preparation_data)
 
             if len(preparation_data) == 0:
                 print("No records to prepare.")
@@ -731,6 +742,11 @@ class Prep(colrev.operation.Operation):
                 pool.close()
                 pool.join()
 
+            self.__log_record_change_scores(
+                preparation_data=previous_preparation_data,
+                prepared_records=prepared_records,
+            )
+
             if not self.debug_mode:
                 self.review_manager.dataset.save_records_dict(
                     records={r["ID"]: r for r in prepared_records}, partial=True
@@ -743,8 +759,8 @@ class Prep(colrev.operation.Operation):
                     script_call="colrev prep",
                     saved_args=saved_args,
                 )
-                self.review_manager.reset_report_logger()
                 print()
+            self.review_manager.reset_report_logger()
 
         if not keep_ids and not self.debug_mode:
             self.review_manager.dataset.set_ids()

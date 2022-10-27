@@ -76,7 +76,8 @@ class SearchSourcePackageEndpointInterface(
     ) -> None:
         """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
 
-    def prepare(record: dict) -> None:  # type: ignore
+    # pylint: disable=no-self-argument
+    def prepare(record: dict, source: colrev.settings.SearchSource) -> None:  # type: ignore
         """Run the custom source-prep operation"""
 
 

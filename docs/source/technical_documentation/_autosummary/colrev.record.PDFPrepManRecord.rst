@@ -41,6 +41,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.get_inconsistencies
       ~PDFPrepManRecord.get_missing_fields
       ~PDFPrepManRecord.get_quality_defects
+      ~PDFPrepManRecord.get_record_change_score
       ~PDFPrepManRecord.get_record_similarity
       ~PDFPrepManRecord.get_similarity
       ~PDFPrepManRecord.get_similarity_detailed
