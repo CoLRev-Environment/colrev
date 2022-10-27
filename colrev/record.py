@@ -2294,8 +2294,9 @@ class PrescreenRecord(Record):
             ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
         if "abstract" in self.data:
             lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
-            ret_str += f"\nAbstract: {lines.pop(0)}\n"
-            ret_str += "\n".join(lines) + "\n"
+            if lines:
+                ret_str += f"\nAbstract: {lines.pop(0)}\n"
+                ret_str += "\n".join(lines) + "\n"
 
         if "url" in self.data:
             ret_str += f"\nurl: {self.data['url']}\n"

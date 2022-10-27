@@ -852,7 +852,7 @@ def pdf_get(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Retrieve PDFs to the default pdf directory (/pdfs)"""
+    """Retrieve PDFs to the default pdf directory (data/pdfs)"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -1049,13 +1049,16 @@ def __delete_first_pages_cli(
     records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
     while True:
         if record_id in records:
-            record = records[record_id]
-            if "file" in record:
-                print(record["file"])
+            record_dict = records[record_id]
+            if "file" in record_dict:
+                print(record_dict["file"])
                 pdf_path = pdf_prep_man_operation.review_manager.path / Path(
-                    record["file"]
+                    record_dict["file"]
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
+                colrev.record.Record(data=record_dict).set_pdf_man_prepared(
+                    review_manager=pdf_prep_man_operation.review_manager
+                )
             else:
                 print("no file in record")
         if "n" == input("Extract coverpage from another PDF? (y/n)"):
