@@ -218,7 +218,6 @@ class Manuscript(JsonSchemaMixin):
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        paper_path: Path,
         missing_records: list,
     ) -> None:
         # pylint: disable=consider-using-with
@@ -226,6 +225,7 @@ class Manuscript(JsonSchemaMixin):
         # pylint: disable=too-many-locals
 
         temp = tempfile.NamedTemporaryFile()
+        paper_path = self.settings.paper_path
         paper_path.rename(temp.name)
         with open(temp.name, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
@@ -370,6 +370,58 @@ class Manuscript(JsonSchemaMixin):
             new_string=author,
         )
 
+    def __exclude_marked_records(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        synthesized_record_status_matrix: dict,
+        records: typing.Dict,
+    ) -> None:
+
+        # pylint: disable=consider-using-with
+
+        temp = tempfile.NamedTemporaryFile()
+        paper_path = self.settings.paper_path
+        paper_path.rename(temp.name)
+        with open(temp.name, encoding="utf-8") as reader, open(
+            paper_path, "w", encoding="utf-8"
+        ) as writer:
+
+            line = reader.readline()
+            while line:
+                if not line.startswith("EXCLUDE "):
+                    writer.write(line)
+                    line = reader.readline()
+                    continue
+                # TBD: how to cover reasons? (add a screening_criteria string in the first round?)
+                # EXCLUDE Wagner2022
+                # replaced by
+                # EXCLUDE Wagner2022 because () digital () knowledge_work () contract
+                # users: mark / add criteria
+
+                record_id = (
+                    line.replace("EXCLUDE ", "").replace("@", "").rstrip().lstrip()
+                )
+                if (
+                    record_id in synthesized_record_status_matrix
+                    and record_id in records
+                ):
+                    del synthesized_record_status_matrix[record_id]
+                    colrev.record.ScreenRecord(data=records[record_id]).screen(
+                        review_manager=review_manager,
+                        screen_inclusion=False,
+                        screening_criteria="NA",
+                    )
+
+                    review_manager.logger.info(f"Excluded {record_id}")
+                    review_manager.report_logger.info(f"Excluded {record_id}")
+                else:
+                    review_manager.logger.error(f"Did not find ID {record_id}")
+                    writer.write(line)
+                    line = reader.readline()
+                    continue
+                line = reader.readline()
+
     def __add_missing_records(
         self,
         *,
@@ -398,7 +450,6 @@ class Manuscript(JsonSchemaMixin):
             review_manager.logger.info("Updating manuscript")
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
-                paper_path=self.settings.paper_path,
                 missing_records=missing_records,
             )
 
@@ -417,6 +468,12 @@ class Manuscript(JsonSchemaMixin):
         self.__add_missing_records(
             review_manager=review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
+        )
+
+        self.__exclude_marked_records(
+            review_manager=review_manager,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
+            records=records,
         )
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
