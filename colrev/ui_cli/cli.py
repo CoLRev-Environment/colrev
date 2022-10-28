@@ -80,9 +80,23 @@ class SpecialHelpOrder(click.Group):
 @click.group(cls=SpecialHelpOrder)
 @click.pass_context
 def main(ctx: click.core.Context) -> None:
-    """CoLRev
+    """CoLRev commands:
 
-    Main commands: init | status | search, load, screen, ...
+    \b
+    status        Shows status, how to proceed, and checks for errors
+
+    \b
+    init          Initialize (define review objectives and type)
+    retrieve      Search, load, prepare, and deduplicate metadata records
+    prescreen     Exclude records based on metadata
+    pdfs          Get and prepare PDFs
+    screen        Include records based on PDFs
+    data          Complete selected forms of data analysis and synthesis
+
+    \b
+    validate      Validate changes in the previous commit
+
+    Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
     Documentation:  https://github.com/geritwagner/colrev/docs
     """
@@ -118,7 +132,7 @@ def main(ctx: click.core.Context) -> None:
 def init(
     ctx: click.core.Context, type: str, example: bool, verbose: bool, force: bool
 ) -> None:
-    """Initialize repository"""
+    """Initialize (define review objectives and type)"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
     import colrev.ui_web.settings_editor
@@ -203,6 +217,56 @@ def status(
 
 @main.command(help_priority=3)
 @click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def retrieve(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Retrieve, i.e., earch, load, prepare, and deduplicate metadata records"""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            verbose_mode=verbose, force_mode=force
+        )
+        review_manager.get_local_index(startup_without_waiting=True)
+
+        search_operation = review_manager.get_search_operation()
+        search_operation.main()
+
+        load_operation = review_manager.get_load_operation()
+        load_operation.check_update_sources(skip_query=True)
+        load_operation = review_manager.get_load_operation()
+        load_operation.main(keep_ids=False, combine_commits=False)
+
+        prep_operation = review_manager.get_prep_operation()
+        prep_operation.main()
+
+        dedupe_operation = review_manager.get_dedupe_operation()
+        dedupe_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
+
+
+@main.command(help_priority=4)
+@click.option(
     "-a",
     "--add",
     type=str,
@@ -248,7 +312,7 @@ def search(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Retrieve search records"""
+    """Search for records"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -279,7 +343,7 @@ def search(
         logging.error(exc)
 
 
-@main.command(help_priority=4)
+@main.command(help_priority=5)
 @click.option(
     "-k",
     "--keep_ids",
@@ -324,7 +388,7 @@ def load(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Import records"""
+    """Load records"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -352,7 +416,7 @@ def load(
         logging.error(exc)
 
 
-@main.command(help_priority=5)
+@main.command(help_priority=6)
 @click.option(
     "-k",
     "--keep_ids",
@@ -471,6 +535,47 @@ def prep(
         print("  colrev prep -f")
 
 
+@main.command(help_priority=7)
+@click.option(
+    "--stats",
+    is_flag=True,
+    default=False,
+    help="Print statistics of records with colrev_status md_needs_manual_preparation",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -> None:
+    """Prepare records manually"""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
+        prep_man_operation = review_manager.get_prep_man_operation()
+
+        if stats:
+            prep_man_operation.prep_man_stats()
+            return
+
+        prep_man_operation.main()
+
+    except colrev_exceptions.InvalidSettingsError as exc:
+        logging.error(exc)
+
+
 def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
     info = dedupe_operation.get_info()
@@ -480,7 +585,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         print("\n- " + "\n- ".join(info["same_source_merges"]))
 
 
-@main.command(help_priority=6)
+@main.command(help_priority=8)
 @click.option(
     "-f",
     "--fix_errors",
@@ -557,47 +662,6 @@ def dedupe(
         logging.error(exc)
 
 
-@main.command(help_priority=7)
-@click.option(
-    "--stats",
-    is_flag=True,
-    default=False,
-    help="Print statistics of records with colrev_status md_needs_manual_preparation",
-)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
-@click.pass_context
-def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -> None:
-    """Manual preparation of records (not yet fully implemented)"""
-
-    try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
-        )
-        prep_man_operation = review_manager.get_prep_man_operation()
-
-        if stats:
-            prep_man_operation.prep_man_stats()
-            return
-
-        prep_man_operation.main()
-
-    except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
-
-
 @main.command(help_priority=9)
 @click.option(
     "--include_all",
@@ -660,7 +724,7 @@ def prescreen(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Pre-screen based on titles and abstracts"""
+    """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -764,7 +828,7 @@ def screen(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Screen based on exclusion criteria and fulltext documents"""
+    """Screen based on PDFs and inclusion/exclusion criteria"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -801,6 +865,49 @@ def screen(
 
 
 @main.command(help_priority=11)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def pdfs(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Retrieve and prepare PDFs"""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
+
+        pdf_get_operation = review_manager.get_pdf_get_operation(
+            notify_state_transition_operation=True
+        )
+        pdf_get_operation.main()
+
+        pdf_prep_operation = review_manager.get_pdf_prep_operation()
+        pdf_prep_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
+
+
+@main.command(help_priority=12)
 @click.option(
     "-c",
     "--copy-to-repo",
@@ -852,7 +959,7 @@ def pdf_get(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Retrieve PDFs to the default pdf directory (data/pdfs)"""
+    """Get PDFs"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -879,71 +986,6 @@ def pdf_get(
             return
 
         pdf_get_operation.main()
-
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
-        logging.error(exc)
-
-
-@main.command(help_priority=12)
-@click.option(
-    "--update_colrev_pdf_ids", is_flag=True, default=False, help="Update colrev_pdf_ids"
-)
-@click.option(
-    "--reprocess",
-    is_flag=True,
-    default=False,
-    help="Prepare all PDFs again (pdf_needs_manual_preparation).",
-)
-@click.option(
-    "-scs",
-    "--setup_custom_script",
-    is_flag=True,
-    default=False,
-    help="Setup template for custom search script.",
-)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
-@click.pass_context
-def pdf_prep(
-    ctx: click.core.Context,
-    update_colrev_pdf_ids: bool,
-    reprocess: bool,
-    setup_custom_script: bool,
-    verbose: bool,
-    force: bool,
-) -> None:
-    """Prepare PDFs"""
-
-    try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
-        )
-        pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
-
-        if update_colrev_pdf_ids:
-            pdf_prep_operation.update_colrev_pdf_ids()
-            return
-        if setup_custom_script:
-            pdf_prep_operation.setup_custom_script()
-            print("Activated custom_pdf_prep_script.py.")
-            return
-
-        pdf_prep_operation.main()
 
     except (
         colrev_exceptions.InvalidSettingsError,
@@ -1042,6 +1084,71 @@ def pdf_get_man(
         logging.error(exc)
 
 
+@main.command(help_priority=14)
+@click.option(
+    "--update_colrev_pdf_ids", is_flag=True, default=False, help="Update colrev_pdf_ids"
+)
+@click.option(
+    "--reprocess",
+    is_flag=True,
+    default=False,
+    help="Prepare all PDFs again (pdf_needs_manual_preparation).",
+)
+@click.option(
+    "-scs",
+    "--setup_custom_script",
+    is_flag=True,
+    default=False,
+    help="Setup template for custom search script.",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def pdf_prep(
+    ctx: click.core.Context,
+    update_colrev_pdf_ids: bool,
+    reprocess: bool,
+    setup_custom_script: bool,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Prepare PDFs"""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
+        pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
+
+        if update_colrev_pdf_ids:
+            pdf_prep_operation.update_colrev_pdf_ids()
+            return
+        if setup_custom_script:
+            pdf_prep_operation.setup_custom_script()
+            print("Activated custom_pdf_prep_script.py.")
+            return
+
+        pdf_prep_operation.main()
+
+    except (
+        colrev_exceptions.InvalidSettingsError,
+        colrev_exceptions.ProcessOrderViolation,
+    ) as exc:
+        logging.error(exc)
+
+
 def __delete_first_pages_cli(
     pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
 ) -> None:
@@ -1066,7 +1173,7 @@ def __delete_first_pages_cli(
         record_id = input("ID of next PDF for coverpage extraction:")
 
 
-@main.command(help_priority=14)
+@main.command(help_priority=15)
 @click.option(
     "-dfp",
     "--delete_first_page",
@@ -1155,7 +1262,7 @@ def pdf_prep_man(
         logging.error(exc)
 
 
-@main.command(help_priority=15)
+@main.command(help_priority=16)
 @click.option(
     "--profile",
     is_flag=True,
@@ -1205,7 +1312,7 @@ def data(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Extract data"""
+    """Complete selected forms of data analysis and synthesis"""
 
     # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
@@ -1294,7 +1401,7 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     raise click.BadParameter("not a git commit id")
 
 
-@main.command(help_priority=16)
+@main.command(help_priority=17)
 @click.option(
     "--scope",
     type=click.Choice(["prepare", "merge", "all", "unspecified"], case_sensitive=False),
@@ -1420,7 +1527,7 @@ def validate(
         return
 
 
-@main.command(help_priority=17)
+@main.command(help_priority=18)
 @click.option(
     "--id",  # pylint: disable=invalid-name
     help="Record ID to trace (citation_key).",
@@ -1474,7 +1581,7 @@ def __select_target_repository(environment_registry: list) -> Path:
             return target
 
 
-@main.command(help_priority=18)
+@main.command(help_priority=19)
 @click.option(
     "-p",
     "--path",
@@ -1497,7 +1604,7 @@ def __select_target_repository(environment_registry: list) -> Path:
 )
 @click.pass_context
 def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) -> None:
-    """Distribute records to other local CoLRev repositories"""
+    """Distribute records to other local repositories"""
 
     try:
         if not path:
@@ -1582,7 +1689,7 @@ def __print_environment_status(
             print(f'- {broken_link["source_url"]}')
 
 
-@main.command(help_priority=19)
+@main.command(help_priority=20)
 @click.option(
     "-i", "--index", is_flag=True, default=False, help="Create the LocalIndex"
 )
@@ -1645,7 +1752,7 @@ def env(
     verbose: bool,
     force: bool,
 ) -> None:
-    """CoLRev environment commands"""
+    """Manage the environment"""
 
     # pylint: disable=import-outside-toplevel
     # pylint: disable=too-many-return-statements
@@ -1724,7 +1831,7 @@ def env(
         print("Started.")
 
 
-@main.command(help_priority=20)
+@main.command(help_priority=21)
 # @click.option("-v", "--view", is_flag=True, default=False)
 @click.option(
     "-uh",
@@ -1844,7 +1951,7 @@ def settings(
     settings_operation.open_settings_editor()
 
 
-@main.command(help_priority=21)
+@main.command(help_priority=22)
 @click.option(
     "-v",
     "--verbose",
@@ -1898,7 +2005,7 @@ def sync(
     sync_operation.add_to_bib()
 
 
-@main.command(help_priority=22)
+@main.command(help_priority=23)
 @click.option(
     "-r",
     "--records_only",
@@ -1949,7 +2056,7 @@ def pull(
         logging.error(exc)
 
 
-@main.command(help_priority=23)
+@main.command(help_priority=24)
 @click.argument("git_url")
 @click.option(
     "-v",
@@ -1980,7 +2087,7 @@ def clone(
     clone_operation.clone_git_repo()
 
 
-@main.command(help_priority=24)
+@main.command(help_priority=25)
 @click.option(
     "-r",
     "--records_only",
@@ -2031,7 +2138,7 @@ def push(
         logging.error(exc)
 
 
-@main.command(help_priority=25)
+@main.command(hidden=True, help_priority=26)
 @click.option(
     "-v",
     "--verbose",
@@ -2078,7 +2185,7 @@ def __validate_show(ctx: click.core.Context, param: str, value: str) -> None:
         raise click.BadParameter("Invalid argument")
 
 
-@main.command(help_priority=26)
+@main.command(help_priority=27)
 @click.argument("keyword")
 @click.option(
     "-v",
@@ -2128,7 +2235,7 @@ def show(  # type: ignore
         print(stats_report)
 
 
-@main.command(help_priority=27)
+@main.command(help_priority=28)
 @click.option(
     "-v",
     "--verbose",
@@ -2163,7 +2270,7 @@ def web(
     se_instance.open_settings_editor()
 
 
-@main.command(help_priority=28)
+@main.command(hidden=True, help_priority=29)
 @click.option(
     "-v",
     "--verbose",

@@ -17,6 +17,10 @@ This documentation provides an overview of the cli commands and the correspondin
    :prog: colrev init
    :nested: full
 
+.. click:: colrev.ui_cli.cli:retrieve
+   :prog: colrev retrieve
+   :nested: full
+
 .. click:: colrev.ui_cli.cli:search
    :prog: colrev search
    :nested: full
@@ -43,6 +47,10 @@ This documentation provides an overview of the cli commands and the correspondin
 
 .. click:: colrev.ui_cli.cli:screen
    :prog: colrev screen
+   :nested: full
+
+.. click:: colrev.ui_cli.cli:pdfs
+   :prog: colrev pdfs
    :nested: full
 
 .. click:: colrev.ui_cli.cli:pdf_get
@@ -96,6 +104,11 @@ This documentation provides an overview of the cli commands and the correspondin
 .. click:: colrev.ui_cli.cli:trace
    :prog: colrev trace
    :nested: full
+
+.. click:: colrev.ui_cli.cli:web
+   :prog: colrev web
+   :nested: full
+
 
 ..
    https://sphinx-click.readthedocs.io/en/latest/usage/
