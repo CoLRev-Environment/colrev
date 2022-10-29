@@ -119,6 +119,10 @@ class Manuscript(JsonSchemaMixin):
             imagename=self.pandoc_image
         )
 
+        self.paper_relative_path = self.settings.paper_path.relative_to(
+            data_operation.review_manager.path
+        )
+
     def get_default_setup(self) -> dict:
         """Get the default setup"""
 
@@ -456,6 +460,51 @@ class Manuscript(JsonSchemaMixin):
                 missing_records=missing_records,
             )
 
+    def __append_to_non_sample_references(
+        self, *, review_manager: colrev.review_manager.ReviewManager, filepath: Path
+    ) -> None:
+
+        filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
+
+        if filedata:
+            non_sample_records = {}
+            with open(self.NON_SAMPLE_REFERENCES_RELATIVE, encoding="utf8") as file:
+                non_sample_records = review_manager.dataset.load_records_dict(
+                    load_str=file.read()
+                )
+
+            records_to_add = review_manager.dataset.load_records_dict(
+                load_str=filedata.decode("utf-8")
+            )
+
+            # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
+            duplicated_keys = [
+                k for k in records_to_add.keys() if k in non_sample_records.keys()
+            ]
+            duplicated_records = [
+                item
+                for item in records_to_add.values()
+                if item["ID"] in non_sample_records.keys()
+            ]
+            records_to_add = {
+                k: v for k, v in records_to_add.items() if k not in non_sample_records
+            }
+            if duplicated_keys:
+                review_manager.logger.error(
+                    f"{colors.RED}Cannot add {duplicated_keys} to "
+                    f"{self.NON_SAMPLE_REFERENCES_RELATIVE}, "
+                    f"please change ID and add manually:{colors.END}"
+                )
+                for duplicated_record in duplicated_records:
+                    print(colrev.record.Record(data=duplicated_record))
+
+            non_sample_records = {**non_sample_records, **records_to_add}
+            review_manager.dataset.save_records_dict_to_file(
+                records=non_sample_records,
+                save_path=self.NON_SAMPLE_REFERENCES_RELATIVE,
+            )
+            review_manager.dataset.add_changes(path=self.NON_SAMPLE_REFERENCES_RELATIVE)
+
     def __add_prisma_if_available(
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
@@ -466,14 +515,15 @@ class Manuscript(JsonSchemaMixin):
             if d["endpoint"] == "colrev_built_in.prisma"
         ]
         if prisma_endpoint_l:
-            prisma_endpoint = prisma_endpoint_l[0]
-            # TODO : include any png/svg/... supported file formats
-            # TODO : rename to PRISMA2020.png (add the reference to non_sample_refs.bib
-            # and cite (together with the PRISMA reporting standard))
-            # print(prisma_endpoint.diagram_path)
-            if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
-                print("ADD prisma diagram")
 
+            if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
+                review_manager.logger.info("Adding PRISMA diagram to manuscript")
+                self.__append_to_non_sample_references(
+                    review_manager=review_manager,
+                    filepath=Path("template/prisma/prisma-refs.bib"),
+                )
+
+                # pylint: disable=consider-using-with
                 temp = tempfile.NamedTemporaryFile()
                 paper_path = self.settings.paper_path
                 paper_path.rename(temp.name)
@@ -489,10 +539,13 @@ class Manuscript(JsonSchemaMixin):
                             continue
 
                         writer.write(line)
-                        writer.write(
-                            "\n![PRISMA flow diagram](../output/PRISMA.png){#fig:prisma width=600px}\n\n"
-                            "The PRISMA flow diagram is displayed in @fig:prisma\n\n"
+
+                        filedata = colrev.env.utils.get_package_file_content(
+                            file_path=Path("template/prisma/prisma_text.md")
                         )
+                        if filedata:
+                            writer.write(filedata.decode("utf-8"))
+
                         line = reader.readline()
 
         print()
@@ -589,15 +642,12 @@ class Manuscript(JsonSchemaMixin):
             self.__retrieve_default_word_template()
         assert word_template.is_file()
 
-        paper_relative_path = self.settings.paper_path.relative_to(
-            data_operation.review_manager.path
-        )
         output_relative_path = self.settings.paper_output.relative_to(
             data_operation.review_manager.path
         )
 
-        if not data_operation.review_manager.dataset.file_changed(
-            relative_path=paper_relative_path
+        if not data_operation.review_manager.dataset.has_changes(
+            relative_path=self.paper_relative_path
         ):
             # data_operation.review_manager.logger.debug(
             #     "Skipping manuscript build (no changes)"
@@ -607,7 +657,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation.review_manager.logger.info("Build manuscript")
 
         script = (
-            f"{paper_relative_path} --filter pandoc-crossref --citeproc "
+            f"{self.paper_relative_path} --filter pandoc-crossref --citeproc "
             + f"--reference-doc {word_template.relative_to(data_operation.review_manager.path)} "
             + f"--output {output_relative_path}"
         )
@@ -627,11 +677,20 @@ class Manuscript(JsonSchemaMixin):
     ) -> None:
         """Update the data/manuscript"""
 
-        records = self.update_manuscript(
-            review_manager=data_operation.review_manager,
-            records=records,
-            synthesized_record_status_matrix=synthesized_record_status_matrix,
-        )
+        if not data_operation.review_manager.dataset.has_changes(
+            relative_path=self.paper_relative_path, change_type="unstaged"
+        ):
+            records = self.update_manuscript(
+                review_manager=data_operation.review_manager,
+                records=records,
+                synthesized_record_status_matrix=synthesized_record_status_matrix,
+            )
+        else:
+            data_operation.review_manager.logger.warning(
+                f"{colors.RED}Skipping updates of "
+                f"{self.paper_relative_path} due to unstaged changes{colors.END}"
+            )
+
         self.build_manuscript(data_operation=data_operation)
 
     def __get_to_synthesize_in_manuscript(

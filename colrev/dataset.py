@@ -819,9 +819,31 @@ class Dataset:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
         return self.__git_repo
 
-    def has_changes(self) -> bool:
-        """Check whether the git repository has changes"""
-        # Extension : allow for optional path (check changes for that file)
+    def has_changes(
+        self, *, relative_path: Path = None, change_type: str = "all"
+    ) -> bool:
+        """Check whether the relative path (or the git repository) has changes"""
+
+        if relative_path:
+            main_recs_changed = False
+            try:
+                if "all" == change_type:
+                    main_recs_changed = str(relative_path) in [
+                        item.a_path for item in self.__git_repo.index.diff(None)
+                    ] + [item.a_path for item in self.__git_repo.head.commit.diff()]
+                elif "staged" == change_type:
+                    main_recs_changed = str(relative_path) in [
+                        item.a_path for item in self.__git_repo.head.commit.diff()
+                    ]
+
+                elif "unstaged" == change_type:
+                    main_recs_changed = str(relative_path) in [
+                        item.a_path for item in self.__git_repo.index.diff(None)
+                    ]
+            except ValueError:
+                pass
+            return main_recs_changed
+
         return self.__git_repo.is_dirty()
 
     def add_changes(self, *, path: Path) -> None:
@@ -850,17 +872,6 @@ class Dataset:
         )
         filecontents = list(revlist)[0][1]
         return filecontents
-
-    def file_changed(self, relative_path: Path) -> bool:
-        """Check whether a file was changed"""
-        main_recs_changed = False
-        try:
-            main_recs_changed = str(relative_path) in [
-                item.a_path for item in self.__git_repo.index.diff(None)
-            ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
-        except ValueError:
-            pass
-        return main_recs_changed
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""

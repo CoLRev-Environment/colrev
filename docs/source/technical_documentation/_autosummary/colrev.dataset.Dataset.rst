@@ -21,7 +21,6 @@ colrev.dataset.Dataset
       ~Dataset.add_setting_changes
       ~Dataset.behind_remote
       ~Dataset.create_commit
-      ~Dataset.file_changed
       ~Dataset.file_in_history
       ~Dataset.format_records_file
       ~Dataset.generate_next_unique_id

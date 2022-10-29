@@ -82,7 +82,7 @@ class PRISMA(JsonSchemaMixin):
         return prisma_endpoint_details
 
     def __export_csv(self, data_operation: colrev.ops.data.Data) -> None:
-        csv_resource_path = Path("template/") / Path("PRISMA.csv")
+        csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         if self.csv_path.is_file():
