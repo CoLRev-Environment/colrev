@@ -117,7 +117,7 @@ class PRISMA(JsonSchemaMixin):
         prisma_data.loc["dbr_excluded", "n"] = "; ".join(exclusion_stats)
 
         prisma_data.to_csv(self.csv_path, index=False)
-        print(f"Exported {self.csv_path}")
+        data_operation.review_manager.logger.debug(f"Exported {self.csv_path}")
 
         if not status_stats.completeness_condition:
             print("Warning: review not (yet) complete")

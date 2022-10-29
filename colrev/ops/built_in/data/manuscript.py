@@ -456,6 +456,47 @@ class Manuscript(JsonSchemaMixin):
                 missing_records=missing_records,
             )
 
+    def __add_prisma_if_available(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
+
+        prisma_endpoint_l = [
+            d
+            for d in review_manager.settings.data.data_package_endpoints
+            if d["endpoint"] == "colrev_built_in.prisma"
+        ]
+        if prisma_endpoint_l:
+            prisma_endpoint = prisma_endpoint_l[0]
+            # TODO : include any png/svg/... supported file formats
+            # TODO : rename to PRISMA2020.png (add the reference to non_sample_refs.bib
+            # and cite (together with the PRISMA reporting standard))
+            # print(prisma_endpoint.diagram_path)
+            if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
+                print("ADD prisma diagram")
+
+                temp = tempfile.NamedTemporaryFile()
+                paper_path = self.settings.paper_path
+                paper_path.rename(temp.name)
+                with open(temp.name, encoding="utf-8") as reader, open(
+                    paper_path, "w", encoding="utf-8"
+                ) as writer:
+
+                    line = reader.readline()
+                    while line:
+                        if "# Method" not in line:
+                            writer.write(line)
+                            line = reader.readline()
+                            continue
+
+                        writer.write(line)
+                        writer.write(
+                            "\n![PRISMA flow diagram](../output/PRISMA.png){#fig:prisma width=600px}\n\n"
+                            "The PRISMA flow diagram is displayed in @fig:prisma\n\n"
+                        )
+                        line = reader.readline()
+
+        print()
+
     def update_manuscript(
         self,
         *,
@@ -478,6 +519,8 @@ class Manuscript(JsonSchemaMixin):
             synthesized_record_status_matrix=synthesized_record_status_matrix,
             records=records,
         )
+
+        self.__add_prisma_if_available(review_manager=review_manager)
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
 
@@ -564,7 +607,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation.review_manager.logger.info("Build manuscript")
 
         script = (
-            f"{paper_relative_path} --citeproc "
+            f"{paper_relative_path} --filter pandoc-crossref --citeproc "
             + f"--reference-doc {word_template.relative_to(data_operation.review_manager.path)} "
             + f"--output {output_relative_path}"
         )
