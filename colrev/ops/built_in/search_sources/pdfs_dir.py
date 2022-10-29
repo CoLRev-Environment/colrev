@@ -2,16 +2,17 @@
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
 
+import multiprocessing as mp
 import re
 import typing
 from collections import Counter
 from dataclasses import dataclass
+from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from p_tqdm import p_map
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
@@ -423,7 +424,12 @@ class PDFSearchSource(JsonSchemaMixin):
         search_operation.review_manager.logger.info(
             "Calculate PDF hashes to skip duplicates"
         )
-        pdfs_path_cpid = p_map(get_pdf_cpid_path, pdfs_to_index)
+
+        pool = Pool(mp.cpu_count() // 2)
+        pdfs_path_cpid = pool.map(get_pdf_cpid_path, pdfs_to_index)
+        pool.close()
+        pool.join()
+
         pdfs_cpid = [x[1] for x in pdfs_path_cpid if x[1] != "Exception"]
         duplicate_cpids = [
             item for item, count in Counter(pdfs_cpid).items() if count > 1
@@ -521,11 +527,6 @@ class PDFSearchSource(JsonSchemaMixin):
                         search_operation=search_operation, pdf_path=pdf_path
                     )
                 )
-            # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
-            # p = Pool(ncpus=4)
-            # new_records = p.map(index_pdf, pdf_batch)
-            # alternatively:
-            # new_records = p_map(index_pdf, pdf_batch)
 
             for new_r in new_records:
                 indexed_pdf_paths.append(new_r["file"])
@@ -570,7 +571,9 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
 
         return record

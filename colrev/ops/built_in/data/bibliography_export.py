@@ -65,9 +65,7 @@ class BibliographyExport(JsonSchemaMixin):
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-        data_operation.review_manager.get_zotero_translation_service(
-            startup_without_waiting=True
-        )
+        data_operation.review_manager.get_zotero_translation_service()
 
         self.endpoint_path = (
             data_operation.review_manager.output_dir / self.settings.endpoint_dir
@@ -78,7 +76,7 @@ class BibliographyExport(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         endnote_endpoint_details = {
-            "endpoint": "ENDNOTE",
+            "endpoint": "colrev_built_in.bibliography_export",
             "endnote_data_endpoint_version": "0.1",
             "config": {
                 "path": "endnote",

@@ -597,7 +597,7 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
         for source in settings.sources:
-            if not str(source.filename).startswith("data/search"):
+            if not str(source.filename).replace("\\", "/").startswith("data/search"):
                 msg = f"Source filename does not start with data/search: {source.filename}"
                 raise colrev_exceptions.InvalidSettingsError(msg=msg)
 

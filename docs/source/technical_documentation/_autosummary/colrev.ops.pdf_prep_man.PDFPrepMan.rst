@@ -18,9 +18,11 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
 
       ~PDFPrepMan.apply_pdf_prep_man
       ~PDFPrepMan.check_precondition
+      ~PDFPrepMan.discard
       ~PDFPrepMan.extract_coverpage
       ~PDFPrepMan.extract_lastpage
       ~PDFPrepMan.extract_needs_pdf_prep_man
+      ~PDFPrepMan.extract_pages
       ~PDFPrepMan.get_data
       ~PDFPrepMan.main
       ~PDFPrepMan.pdf_prep_man_stats

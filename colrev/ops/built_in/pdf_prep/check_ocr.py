@@ -110,7 +110,9 @@ class PDFCheckOCR(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by checking/applying OCR"""
 
-        if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
+        if colrev.record.RecordState.pdf_imported != record.data.get(
+            "colrev_status", "NA"
+        ):
             return record.data
 
         # gh_issue https://github.com/geritwagner/colrev/issues/64

@@ -120,10 +120,7 @@ class ExportManPrep(JsonSchemaMixin):
         records = prep_man_operation.review_manager.dataset.load_records_dict()
         for record_id, record_dict in man_prep_recs.items():
             record = colrev.record.PrepRecord(data=record_dict)
-            record.update_masterdata_provenance(
-                unprepared_record=record.copy(),
-                review_manager=prep_man_operation.review_manager,
-            )
+            record.update_masterdata_provenance()
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
             for k in list(record.data.keys()):
                 if k in ["colrev_status"]:

@@ -75,7 +75,9 @@ class PDFCompletenessValidation(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by validating completeness (based on number of pages)"""
 
-        if colrev.record.RecordState.pdf_imported != record.data["colrev_status"]:
+        if colrev.record.RecordState.pdf_imported != record.data.get(
+            "colrev_status", "NA"
+        ):
             return record.data
 
         def __roman_to_int(*, s: str) -> int:

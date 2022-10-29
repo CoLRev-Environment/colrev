@@ -41,6 +41,7 @@ colrev.record.Record
       ~Record.get_inconsistencies
       ~Record.get_missing_fields
       ~Record.get_quality_defects
+      ~Record.get_record_change_score
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed

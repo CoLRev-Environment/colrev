@@ -32,6 +32,22 @@ class PDFPrepMan(colrev.operation.Operation):
 
         self.verbose = True
 
+    def discard(self) -> None:
+        """Discard records whose PDFs need manual preparation (set to pdf_not_available)"""
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if (
+                record["colrev_status"]
+                == colrev.record.RecordState.pdf_needs_manual_preparation
+            ):
+                record["colrev_status"] = colrev.record.RecordState.pdf_not_available
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
+            msg="Discard man-prep PDFs", manual_author=True
+        )
+
     def get_data(self) -> dict:
         """Get the data for PDF prep man"""
         # pylint: disable=duplicate-code
@@ -225,6 +241,27 @@ class PDFPrepMan(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.check_repo()
 
+    def extract_coverpage(self, *, filepath: Path) -> None:
+        """Extract coverpage from PDF"""
+
+        local_index = self.review_manager.get_local_index()
+        cp_path = local_index.local_environment_path / Path(".coverpages")
+        cp_path.mkdir(exist_ok=True)
+
+        try:
+            pdf_reader = PdfFileReader(str(filepath), strict=False)
+            writer_cp = PdfFileWriter()
+            writer_cp.addPage(pdf_reader.getPage(0))
+            writer = PdfFileWriter()
+            for i in range(1, pdf_reader.getNumPages()):
+                writer.addPage(pdf_reader.getPage(i))
+            with open(filepath, "wb") as outfile:
+                writer.write(outfile)
+            with open(cp_path / filepath.name, "wb") as outfile:
+                writer_cp.write(outfile)
+        except PdfReadError as exc:
+            raise colrev_exceptions.InvalidPDFException(filepath) from exc
+
     def extract_lastpage(self, *, filepath: Path) -> None:
         """Extract last page from PDF"""
 
@@ -246,24 +283,22 @@ class PDFPrepMan(colrev.operation.Operation):
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
-    def extract_coverpage(self, *, filepath: Path) -> None:
-        """Extract coverpage from PDF"""
-
-        local_index = self.review_manager.get_local_index()
-        cp_path = local_index.local_environment_path / Path(".coverpages")
-        cp_path.mkdir(exist_ok=True)
+    def extract_pages(self, *, filepath: Path, pages_to_remove: list) -> None:
+        """Extract pages from PDF"""
 
         try:
             pdf_reader = PdfFileReader(str(filepath), strict=False)
-            writer_cp = PdfFileWriter()
-            writer_cp.addPage(pdf_reader.getPage(0))
+            pages_to_add = [
+                x
+                for x in list(range(0, pdf_reader.getNumPages()))
+                if x not in pages_to_remove
+            ]
             writer = PdfFileWriter()
-            for i in range(1, pdf_reader.getNumPages()):
+            for i in pages_to_add:
                 writer.addPage(pdf_reader.getPage(i))
             with open(filepath, "wb") as outfile:
                 writer.write(outfile)
-            with open(cp_path / filepath.name, "wb") as outfile:
-                writer_cp.write(outfile)
+
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 

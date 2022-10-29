@@ -60,7 +60,10 @@ class CiteAsPrep(JsonSchemaMixin):
                 authors_string = authors_string.lstrip().rstrip().replace("  ", " ")
                 retrieved_record.update(author=authors_string)
             if "container-title" in data["metadata"]:
-                retrieved_record.update(title=data["metadata"]["container-title"])
+                container_title = data["metadata"]["container-title"]
+                if isinstance(data["metadata"]["container-title"], list):
+                    container_title = "".join(data["metadata"]["container-title"])
+                retrieved_record.update(title=container_title)
             if "URL" in data["metadata"]:
                 retrieved_record.update(url=data["metadata"]["URL"])
             if "note" in data["metadata"]:

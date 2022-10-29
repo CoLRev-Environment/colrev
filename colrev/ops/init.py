@@ -21,6 +21,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 # pylint: disable=too-few-public-methods
@@ -317,7 +318,12 @@ class Initializer:
                         " ".join(script_to_call),
                     )
                 else:
-                    self.logger.info("Failed: %s", " ".join(script_to_call))
+                    self.logger.error(
+                        "%sFailed: %s%s",
+                        colors.RED,
+                        " ".join(script_to_call),
+                        colors.END,
+                    )
 
     def __require_empty_directory(self) -> None:
 

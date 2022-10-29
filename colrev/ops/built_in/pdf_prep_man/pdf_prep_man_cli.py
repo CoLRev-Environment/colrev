@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import platform
 import pprint
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -118,6 +119,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
             # pylint: disable=no-member
             # pylint: disable=too-many-branches
+            # pylint: disable=too-many-locals
 
             current_platform = platform.system()
             if current_platform in ["Linux", "Darwin"]:
@@ -157,17 +159,19 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 else:
                     os.startfile(filepath)  # type: ignore
 
+                # if PDF > 100 pages, we may check on which page we find the title & print
+
                 intro_paragraph = (
                     "Prepared?\n"
                     "       (y)es, \n"
                     "       (n)o/delete file,\n"
                     "       (s)kip, (s10) to skip 10 records, or (q)uit,\n"
-                    "       (c)overpage remove, (l)ast page remove, "
+                    "       (c)overpage remove, (l)ast page remove, (r)emove page range"
                     "(m)etadata needs to be updated\n"
                 )
                 print(intro_paragraph)
                 user_selection = ""
-                valid_selections = ["y", "n", "r"]
+                valid_selections = ["y", "n", "s", "q"]
                 while user_selection not in valid_selections:
 
                     user_selection = input("Selection: ")
@@ -192,6 +196,24 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                             pdf_prep_man_operation.extract_lastpage(filepath=filepath)
                         except colrev_exceptions.InvalidPDFException:
                             pass
+                    elif "r" == user_selection:
+                        range_str = ""
+                        while not re.match(r"(\d)+-(\d)+", range_str):
+                            range_str = input('Page range to remove (e.g., "0-10"):')
+
+                        pages_to_exclude = list(
+                            range(
+                                int(range_str[: range_str.find("-")]),
+                                int(range_str[range_str.find("-") + 1 :]),
+                            )
+                        )
+                        try:
+                            pdf_prep_man_operation.extract_pages(
+                                filepath=filepath, pages_to_remove=pages_to_exclude
+                            )
+                        except colrev_exceptions.InvalidPDFException:
+                            pass
+
                     elif "y" == user_selection:
                         record.set_pdf_man_prepared(
                             review_manager=pdf_prep_man.review_manager

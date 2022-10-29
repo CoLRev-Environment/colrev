@@ -293,10 +293,10 @@ class ReviewManager:
 
         return colrev.advisor.Advisor(review_manager=self)
 
-    def get_checker(self, **kwargs) -> colrev.checker.Checker:  # type: ignore
+    def get_checker(self) -> colrev.checker.Checker:
         """Get a checker object"""
 
-        return colrev.checker.Checker(review_manager=self, **kwargs)
+        return colrev.checker.Checker(review_manager=self)
 
     def get_status_stats(self) -> colrev.ops.status.StatusStats:
         """Get a status stats object"""
@@ -311,12 +311,16 @@ class ReviewManager:
         return status_stats.completeness_condition
 
     @classmethod
-    def get_local_index(cls, **kwargs) -> colrev.env.local_index.LocalIndex:  # type: ignore
+    def get_local_index(
+        cls, *, startup_without_waiting: bool = False, verbose_mode: bool = False
+    ) -> colrev.env.local_index.LocalIndex:
         """Get a local-index object"""
 
         import colrev.env.local_index
 
-        return colrev.env.local_index.LocalIndex(**kwargs)
+        return colrev.env.local_index.LocalIndex(
+            startup_without_waiting=startup_without_waiting, verbose_mode=verbose_mode
+        )
 
     @classmethod
     def get_package_manager(  # type: ignore
@@ -329,34 +333,36 @@ class ReviewManager:
         return colrev.env.package_manager.PackageManager(**kwargs)
 
     @classmethod
-    def get_grobid_service(  # type: ignore
-        cls, **kwargs
-    ) -> colrev.env.grobid_service.GrobidService:
+    def get_grobid_service(cls) -> colrev.env.grobid_service.GrobidService:
         """Get a grobid service object"""
         import colrev.env.grobid_service
 
         environment_manager = cls.get_environment_manager()
         return colrev.env.grobid_service.GrobidService(
-            environment_manager=environment_manager, **kwargs
+            environment_manager=environment_manager
         )
 
-    def get_tei(self, **kwargs) -> colrev.env.tei_parser.TEIParser:  # type: ignore
+    def get_tei(
+        self, *, pdf_path: Path = None, tei_path: Path = None
+    ) -> colrev.env.tei_parser.TEIParser:  # type: ignore
         """Get a tei object"""
 
         import colrev.env.tei_parser
 
         return colrev.env.tei_parser.TEIParser(
-            environment_manager=self.environment_manager, **kwargs
+            environment_manager=self.environment_manager,
+            pdf_path=pdf_path,
+            tei_path=tei_path,
         )
 
     @classmethod
-    def get_environment_manager(  # type: ignore
-        cls, **kwargs
+    def get_environment_manager(
+        cls,
     ) -> colrev.env.environment_manager.EnvironmentManager:
         """Get an environment manager"""
         import colrev.env.environment_manager
 
-        return colrev.env.environment_manager.EnvironmentManager(**kwargs)
+        return colrev.env.environment_manager.EnvironmentManager()
 
     @classmethod
     def get_cached_session(cls) -> requests_cache.CachedSession:
@@ -369,8 +375,8 @@ class ReviewManager:
         )
 
     @classmethod
-    def get_zotero_translation_service(  # type: ignore
-        cls, **kwargs
+    def get_zotero_translation_service(
+        cls,
     ) -> colrev.env.zotero_translation_service.ZoteroTranslationService:
         """Get the zotero-translation service object"""
         import colrev.env.zotero_translation_service
@@ -378,159 +384,215 @@ class ReviewManager:
         environment_manager = cls.get_environment_manager()
 
         return colrev.env.zotero_translation_service.ZoteroTranslationService(
-            environment_manager=environment_manager, **kwargs
+            environment_manager=environment_manager
         )
 
-    def get_screenshot_service(  # type: ignore
-        self, **kwargs
-    ) -> colrev.env.screenshot_service.ScreenshotService:
+    def get_screenshot_service(self) -> colrev.env.screenshot_service.ScreenshotService:
         """Get the screenshot-service object"""
         import colrev.env.screenshot_service
 
-        return colrev.env.screenshot_service.ScreenshotService(
-            review_manager=self, **kwargs
-        )
+        return colrev.env.screenshot_service.ScreenshotService(review_manager=self)
 
-    def get_pdf_hash_service(  # type: ignore
-        self, **kwargs
-    ) -> colrev.env.pdf_hash_service.PDFHashService:
+    def get_pdf_hash_service(self) -> colrev.env.pdf_hash_service.PDFHashService:
         """Get the pdf-hash-service object"""
         import colrev.env.pdf_hash_service
 
-        return colrev.env.pdf_hash_service.PDFHashService(review_manager=self, **kwargs)
+        return colrev.env.pdf_hash_service.PDFHashService(review_manager=self)
 
     @classmethod
-    def get_resources(cls, **kwargs) -> colrev.env.resources.Resources:  # type: ignore
+    def get_resources(cls) -> colrev.env.resources.Resources:
         """Get a resources object"""
         import colrev.env.resources
 
-        return colrev.env.resources.Resources(**kwargs)
+        return colrev.env.resources.Resources()
 
     @classmethod
-    def get_init_operation(cls, **kwargs) -> colrev.ops.init.Initializer:  # type: ignore
+    def get_init_operation(
+        cls,
+        review_type: str,
+        example: bool = False,
+        local_index_repo: bool = False,
+    ) -> colrev.ops.init.Initializer:
         """Get an init operation object"""
         import colrev.ops.init
 
-        return colrev.ops.init.Initializer(**kwargs)
+        return colrev.ops.init.Initializer(
+            review_type=review_type, example=example, local_index_repo=local_index_repo
+        )
 
     @classmethod
-    def get_sync_operation(cls, **kwargs) -> colrev.ops.sync.Sync:  # type: ignore
+    def get_sync_operation(cls) -> colrev.ops.sync.Sync:
         """Get a sync operation object"""
         import colrev.ops.sync
 
-        return colrev.ops.sync.Sync(**kwargs)
+        return colrev.ops.sync.Sync()
 
     @classmethod
-    def get_clone_operation(cls, **kwargs) -> colrev.ops.clone.Clone:  # type: ignore
+    def get_clone_operation(cls, *, git_url: str) -> colrev.ops.clone.Clone:
         """Get a clone operation object"""
         import colrev.ops.clone
 
-        return colrev.ops.clone.Clone(**kwargs)
+        return colrev.ops.clone.Clone(git_url=git_url)
 
-    def get_search_operation(self, **kwargs) -> colrev.ops.search.Search:  # type: ignore
+    def get_search_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.search.Search:
         """Get a search operation object"""
         import colrev.ops.search
 
-        return colrev.ops.search.Search(review_manager=self, **kwargs)
+        return colrev.ops.search.Search(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_load_operation(self, **kwargs) -> colrev.ops.load.Load:  # type: ignore
+    def get_load_operation(
+        self, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.load.Load:
         """Get a load operation object"""
         import colrev.ops.load
 
-        return colrev.ops.load.Load(review_manager=self, **kwargs)
+        return colrev.ops.load.Load(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_prep_operation(self, **kwargs) -> colrev.ops.prep.Prep:  # type: ignore
+    def get_prep_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.prep.Prep:
         """Get a prep operation object"""
         import colrev.ops.prep
 
-        return colrev.ops.prep.Prep(review_manager=self, **kwargs)
+        return colrev.ops.prep.Prep(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_prep_man_operation(self, **kwargs) -> colrev.ops.prep_man.PrepMan:  # type: ignore
+    def get_prep_man_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.prep_man.PrepMan:
         """Get a prep-man operation object"""
         import colrev.ops.prep_man
 
-        return colrev.ops.prep_man.PrepMan(review_manager=self, **kwargs)
+        return colrev.ops.prep_man.PrepMan(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_dedupe_operation(self, **kwargs) -> colrev.ops.dedupe.Dedupe:  # type: ignore
+    def get_dedupe_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.dedupe.Dedupe:
         """Get a dedupe operation object"""
         import colrev.ops.dedupe
 
-        return colrev.ops.dedupe.Dedupe(review_manager=self, **kwargs)
+        return colrev.ops.dedupe.Dedupe(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_prescreen_operation(self, **kwargs) -> colrev.ops.prescreen.Prescreen:  # type: ignore
+    def get_prescreen_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.prescreen.Prescreen:
         """Get a prescreen operation object"""
 
         import colrev.ops.prescreen
 
-        return colrev.ops.prescreen.Prescreen(review_manager=self, **kwargs)
+        return colrev.ops.prescreen.Prescreen(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_pdf_get_operation(self, **kwargs) -> colrev.ops.pdf_get.PDFGet:  # type: ignore
+    def get_pdf_get_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.pdf_get.PDFGet:
         """Get a pdf-get operation object"""
         import colrev.ops.pdf_get
 
-        return colrev.ops.pdf_get.PDFGet(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get.PDFGet(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_pdf_get_man_operation(  # type: ignore
-        self, **kwargs
+    def get_pdf_get_man_operation(
+        self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.pdf_get_man.PDFGetMan:
         """Get a pdf-get-man operation object"""
         import colrev.ops.pdf_get_man
 
-        return colrev.ops.pdf_get_man.PDFGetMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_get_man.PDFGetMan(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_pdf_prep_operation(self, **kwargs) -> colrev.ops.pdf_prep.PDFPrep:  # type: ignore
+    def get_pdf_prep_operation(
+        self, *, reprocess: bool = False, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.pdf_prep.PDFPrep:
         """Get a pdfprep operation object"""
         import colrev.ops.pdf_prep
 
-        return colrev.ops.pdf_prep.PDFPrep(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep.PDFPrep(
+            review_manager=self,
+            reprocess=reprocess,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_pdf_prep_man_operation(  # type: ignore
-        self, **kwargs
+    def get_pdf_prep_man_operation(
+        self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.pdf_prep_man.PDFPrepMan:
         """Get a pdf-prep-man operation object"""
         import colrev.ops.pdf_prep_man
 
-        return colrev.ops.pdf_prep_man.PDFPrepMan(review_manager=self, **kwargs)
+        return colrev.ops.pdf_prep_man.PDFPrepMan(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_screen_operation(self, **kwargs) -> colrev.ops.screen.Screen:  # type: ignore
+    def get_screen_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.screen.Screen:
         """Get a screen operation object"""
         import colrev.ops.screen
 
-        return colrev.ops.screen.Screen(review_manager=self, **kwargs)
+        return colrev.ops.screen.Screen(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_data_operation(self, **kwargs) -> colrev.ops.data.Data:  # type: ignore
+    def get_data_operation(
+        self, *, notify_state_transition_operation: bool = True
+    ) -> colrev.ops.data.Data:
         """Get a data operation object"""
         import colrev.ops.data
 
-        return colrev.ops.data.Data(review_manager=self, **kwargs)
+        return colrev.ops.data.Data(
+            review_manager=self,
+            notify_state_transition_operation=notify_state_transition_operation,
+        )
 
-    def get_status_operation(self, **kwargs) -> colrev.ops.status.Status:  # type: ignore
+    def get_status_operation(self) -> colrev.ops.status.Status:
         """Get a status operation object"""
 
         import colrev.ops.status
 
-        return colrev.ops.status.Status(review_manager=self, **kwargs)
+        return colrev.ops.status.Status(review_manager=self)
 
-    def get_validate_operation(self, **kwargs) -> colrev.ops.validate.Validate:  # type: ignore
+    def get_validate_operation(self) -> colrev.ops.validate.Validate:
         """Get a validate operation object"""
         import colrev.ops.validate
 
-        return colrev.ops.validate.Validate(review_manager=self, **kwargs)
+        return colrev.ops.validate.Validate(review_manager=self)
 
-    def get_trace_operation(self, **kwargs) -> colrev.ops.trace.Trace:  # type: ignore
+    def get_trace_operation(self) -> colrev.ops.trace.Trace:
         """Get a trace operation object"""
         import colrev.ops.trace
 
-        return colrev.ops.trace.Trace(review_manager=self, **kwargs)
+        return colrev.ops.trace.Trace(review_manager=self)
 
-    def get_distribute_operation(  # type: ignore
-        self, **kwargs
-    ) -> colrev.ops.distribute.Distribute:
+    def get_distribute_operation(self) -> colrev.ops.distribute.Distribute:
         """Get a distribute operation object"""
 
         import colrev.ops.distribute
 
-        return colrev.ops.distribute.Distribute(review_manager=self, **kwargs)
+        return colrev.ops.distribute.Distribute(review_manager=self)
 
     def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:  # type: ignore
         """Get a push operation object"""
@@ -539,38 +601,48 @@ class ReviewManager:
 
         return colrev.ops.push.Push(review_manager=self, **kwargs)
 
-    def get_pull_operation(self, **kwargs) -> colrev.ops.pull.Pull:  # type: ignore
+    def get_pull_operation(self) -> colrev.ops.pull.Pull:
         """Get a pull operation object"""
 
         import colrev.ops.pull
 
-        return colrev.ops.pull.Pull(review_manager=self, **kwargs)
+        return colrev.ops.pull.Pull(review_manager=self)
 
-    def get_service_operation(self, **kwargs) -> colrev.service.Service:  # type: ignore
+    def get_service_operation(self) -> colrev.service.Service:
         """Get a service operation object"""
 
         import colrev.service
 
-        return colrev.service.Service(review_manager=self, **kwargs)
+        return colrev.service.Service(review_manager=self)
 
-    def get_search_sources(  # type: ignore
-        self, **kwargs
-    ) -> colrev.ops.search_sources.SearchSources:
+    def get_search_sources(self) -> colrev.ops.search_sources.SearchSources:
         """Get a SearchSources object"""
 
         import colrev.ops.search_sources
 
-        return colrev.ops.search_sources.SearchSources(review_manager=self, **kwargs)
+        return colrev.ops.search_sources.SearchSources(review_manager=self)
 
-    def get_review_types(self, **kwargs) -> colrev.ops.review_types.ReviewTypes:  # type: ignore
+    def get_review_types(
+        self, *, review_type: str = None
+    ) -> colrev.ops.review_types.ReviewTypes:
         """Get a ReviewTypes object"""
         import colrev.ops.review_types
 
-        return colrev.ops.review_types.ReviewTypes(review_manager=self, **kwargs)
+        return colrev.ops.review_types.ReviewTypes(
+            review_manager=self, review_type=review_type
+        )
 
-    def get_review_manager(self, **kwargs) -> ReviewManager:  # type: ignore
+    def get_review_manager(
+        self,
+        *,
+        path_str: str = None,
+        force_mode: bool = False,
+        verbose_mode: bool = False,
+    ) -> ReviewManager:
         """Get a ReviewManager object"""
-        return type(self)(**kwargs)
+        return type(self)(
+            path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
+        )
 
 
 if __name__ == "__main__":

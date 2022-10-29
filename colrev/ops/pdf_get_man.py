@@ -80,7 +80,7 @@ class PDFGetMan(colrev.operation.Operation):
                 "Created missing_pdf_files.csv with paper details"
             )
 
-    def discard_missing(self) -> None:
+    def discard(self) -> None:
         """Discard missing PDFs (set to pdf_not_available)"""
 
         records = self.review_manager.dataset.load_records_dict()

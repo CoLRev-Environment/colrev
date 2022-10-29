@@ -69,8 +69,25 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for unknown sources"""
+
+        if (
+            "colrev_built_in.md_to_bib"
+            == source.load_conversion_package_endpoint["endpoint"]
+        ):
+            if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
+                record.data["ENTRYTYPE"] = "book"
+            if record.data.get("year", "year") == record.data.get("date", "date"):
+                record.remove_field(key="date")
+            if (
+                "inbook" == record.data["ENTRYTYPE"]
+                and "chapter" not in record.data
+                and "title" in record.data
+            ):
+                record.rename_field(key="title", new_key="chapter")
 
         return record
 

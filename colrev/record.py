@@ -17,7 +17,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import ansiwrap
 import dictdiffer
 import pandas as pd
 from nameparser import HumanName
@@ -55,6 +54,8 @@ class Record:
         "year",
         "journal",
         "booktitle",
+        "chapter",
+        "publisher",
         "volume",
         "number",
         "pages",
@@ -867,8 +868,32 @@ class Record:
             # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
+    def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
+        """Determine how much records changed
+
+        This method is less sensitive than get_record_similarity, especially when
+        fields are missing. For example, if the journal field is missing in both
+        records, get_similarity will return a value > 1.0. The get_record_changes
+        will return 0.0 (if all other fields are equal)."""
+
+        # At some point, this may become more sensitive to major changes
+        str_a = (
+            f"{record_a.data.get('author', '')} ({record_a.data.get('year', '')}) "
+            + f"{record_a.data.get('title', '')}. "
+            + f"{record_a.data.get('journal', '')}{record_a.data.get('booktitle', '')}, "
+            + f"{record_a.data.get('volume', '')} ({record_a.data.get('number', '')})"
+        )
+        str_b = (
+            f"{record_b.data.get('author', '')} ({record_b.data.get('year', '')}) "
+            + f"{record_b.data.get('title', '')}. "
+            + f"{record_b.data.get('journal', '')}{record_b.data.get('booktitle', '')}, "
+            + f"{record_b.data.get('volume', '')} ({record_b.data.get('number', '')})"
+        )
+        return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
+
+    @classmethod
     def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
-        """Determine the similarity between two records"""
+        """Determine the similarity between two records (their masterdata)"""
         record_a_dict = record_a.copy().get_data()
         record_b_dict = record_b.copy().get_data()
 
@@ -883,9 +908,9 @@ class Record:
             "booktitle",
         ]
         for mandatory_field in mandatory_fields:
-            if mandatory_field not in record_a_dict:
+            if record_a_dict.get(mandatory_field, "UNKNOWN"):
                 record_a_dict[mandatory_field] = ""
-            if mandatory_field not in record_b_dict:
+            if record_b_dict.get(mandatory_field, "UNKNOWN"):
                 record_b_dict[mandatory_field] = ""
 
         if "container_title" not in record_a_dict:
@@ -926,9 +951,11 @@ class Record:
             # partial ratio (catching 2010-10 or 2001-2002)
             year_similarity = fuzz.ratio(str(df_a["year"]), str(df_b["year"])) / 100
 
-            outlet_similarity = (
-                fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
-            )
+            outlet_similarity = 0.0
+            if df_b["container_title"] != "" and df_a["container_title"] != "":
+                outlet_similarity = (
+                    fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
+                )
 
             if str(df_a["journal"]) != "nan":
                 # Note: for journals papers, we expect more details
@@ -1335,16 +1362,15 @@ class Record:
             return input_string
 
         if not assume_complete:
-            if "colrev_status" in self.data:
-                if self.data["colrev_status"] in [
-                    RecordState.md_imported,
-                    RecordState.md_needs_manual_preparation,
-                ]:
-                    if len(also_known_as_record) != 0:
-                        raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                            "cannot determine field requirements "
-                            "(e.g., volume/number for journal articles)"
-                        )
+            if self.data.get("colrev_status", "NA") in [
+                RecordState.md_imported,
+                RecordState.md_needs_manual_preparation,
+            ]:
+                if len(also_known_as_record) != 0:
+                    raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                        "cannot determine field requirements "
+                        "(e.g., volume/number for journal articles)"
+                    )
             # Make sure that colrev_ids are not generated when
             # identifying_field_keys are UNKNOWN but possibly required
             for identifying_field_key in self.identifying_field_keys:
@@ -1428,7 +1454,7 @@ class Record:
         # Especially in cases in which the prescreen-exclusion decision
         # is revised (e.g., because a paper was retracted)
         # In these cases, the paper may already be in the data extraction/synthesis
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_synthesized,
             RecordState.rev_included,
         ]:
@@ -1771,7 +1797,7 @@ class Record:
                     letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
                 elif letter.startswith("- "):
                     letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
-            res = ansiwrap.fill("".join(letters)).replace("\n", " ")
+            res = "".join(letters).replace("\n", " ")
             return res
 
         for key in keys:
@@ -1852,8 +1878,10 @@ class PrepRecord(Record):
 
         if " and " in input_string:
             names = input_string.split(" and ")
-        else:
+        elif input_string.count(",") > 1:
             names = input_string.split(", ")
+        else:
+            names = [input_string]
         author_string = ""
         for name in names:
             # Note: https://github.com/derek73/python-nameparser
@@ -2097,7 +2125,7 @@ class PrepRecord(Record):
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_prescreen_excluded,
             RecordState.md_prepared,
         ]:
@@ -2112,7 +2140,7 @@ class PrepRecord(Record):
         if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
             return True
 
-        if self.data["colrev_status"] in [
+        if self.data.get("colrev_status", "NA") in [
             RecordState.rev_prescreen_excluded,
         ]:
             return True
@@ -2120,7 +2148,7 @@ class PrepRecord(Record):
 
     def status_to_prepare(self) -> bool:
         """Check whether the record needs to be prepared"""
-        return self.data["colrev_status"] in [
+        return self.data.get("colrev_status", "NA") in [
             RecordState.md_needs_manual_preparation,
             RecordState.md_imported,
             RecordState.md_prepared,
@@ -2166,9 +2194,6 @@ class PrepRecord(Record):
 
     def update_masterdata_provenance(
         self,
-        *,
-        unprepared_record: Record,
-        review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         """Update the masterdata provenance"""
         # pylint: disable=too-many-branches
@@ -2247,14 +2272,6 @@ class PrepRecord(Record):
             if missing_fields or inconsistencies or incomplete_fields or defect_fields:
                 self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
-        change = 1 - Record.get_record_similarity(
-            record_a=self, record_b=unprepared_record
-        )
-        if change > 0.1:
-            review_manager.report_logger.info(
-                f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
-            )
-
 
 class PrescreenRecord(Record):
     """The PrescreenRecord class provides convenience functions for record prescreen"""
@@ -2276,8 +2293,9 @@ class PrescreenRecord(Record):
             ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
         if "abstract" in self.data:
             lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
-            ret_str += f"\nAbstract: {lines.pop(0)}\n"
-            ret_str += "\n".join(lines) + "\n"
+            if lines:
+                ret_str += f"\nAbstract: {lines.pop(0)}\n"
+                ret_str += "\n".join(lines) + "\n"
 
         if "url" in self.data:
             ret_str += f"\nurl: {self.data['url']}\n"

@@ -7,10 +7,10 @@ import multiprocessing as mp
 import time
 import typing
 from copy import deepcopy
+from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
-from pathos.multiprocessing import ProcessPool
 
 import colrev.env.utils
 import colrev.operation
@@ -146,7 +146,8 @@ class Prep(colrev.operation.Operation):
             change_report = (
                 f"{prep_package_endpoint}"
                 f' on {preparation_record.data["ID"]}'
-                f" changed:\n{self.review_manager.p_printer.pformat(diffs)}\n"
+                " changed:\n"
+                f"{colors.ORANGE}{self.review_manager.p_printer.pformat(diffs)}{colors.END}\n"
             )
             if self.review_manager.verbose_mode:
                 self.review_manager.logger.info(change_report)
@@ -189,9 +190,6 @@ class Prep(colrev.operation.Operation):
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
 
-        # unprepared_record will not change (for diffs)
-        unprepared_record = record.copy_prep_rec()
-
         for prep_round_package_endpoint in deepcopy(
             item["prep_round_package_endpoints"]
         ):
@@ -221,10 +219,7 @@ class Prep(colrev.operation.Operation):
 
                 if preparation_record.preparation_save_condition():
                     record.update_by_record(update_record=preparation_record)
-                    record.update_masterdata_provenance(
-                        unprepared_record=unprepared_record,
-                        review_manager=self.review_manager,
-                    )
+                    record.update_masterdata_provenance()
 
                 if preparation_record.preparation_break_condition():
                     record.update_by_record(update_record=preparation_record)
@@ -238,10 +233,7 @@ class Prep(colrev.operation.Operation):
             if record.status_to_prepare():
                 record.update_by_record(update_record=preparation_record)
                 # Note: update_masterdata_provenance sets to md_needs_manual_preparation
-                record.update_masterdata_provenance(
-                    unprepared_record=unprepared_record,
-                    review_manager=self.review_manager,
-                )
+                record.update_masterdata_provenance()
 
         return record.get_data()
 
@@ -613,6 +605,24 @@ class Prep(colrev.operation.Operation):
             operation=self,
         )
 
+    def __log_record_change_scores(
+        self, *, preparation_data: list, prepared_records: list
+    ) -> None:
+        for previous_record_item in preparation_data:
+            previous_record = previous_record_item["record"]
+            prepared_record = [
+                r for r in prepared_records if r["ID"] == previous_record.data["ID"]
+            ][0]
+
+            change = colrev.record.Record.get_record_change_score(
+                record_a=colrev.record.Record(data=prepared_record),
+                record_b=previous_record,
+            )
+            if change > 0.05:
+                self.review_manager.report_logger.info(
+                    f' {prepared_record["ID"]} ' + f"Change score: {round(change, 2)}"
+                )
+
     def __log_details(self, *, prepared_records: list) -> None:
         nr_recs = len(
             [
@@ -703,6 +713,7 @@ class Prep(colrev.operation.Operation):
             preparation_data = self.__get_preparation_data(
                 prep_round=prep_round, debug_file=debug_file, debug_ids=debug_ids
             )
+            previous_preparation_data = deepcopy(preparation_data)
 
             if len(preparation_data) == 0:
                 print("No records to prepare.")
@@ -715,10 +726,6 @@ class Prep(colrev.operation.Operation):
                     record = self.prepare(item)
                     prepared_records.append(record)
             else:
-                # Note : p_map shows the progress (tqdm) but it is inefficient
-                # https://github.com/swansonk14/p_tqdm/issues/34
-                # from p_tqdm import p_map
-                # preparation_data = p_map(self.prepare, preparation_data)
 
                 prep_pe_names = [
                     r["endpoint"] for r in prep_round.prep_package_endpoints
@@ -728,14 +735,17 @@ class Prep(colrev.operation.Operation):
                         f"{colors.ORANGE}The language detector may take "
                         f"longer and require RAM{colors.END}"
                     )
-                    pool = ProcessPool(nodes=mp.cpu_count() // 2)
+                    pool = Pool(mp.cpu_count() // 2)
                 else:
-                    pool = ProcessPool(nodes=self.cpus)
+                    pool = Pool(self.cpus)
                 prepared_records = pool.map(self.prepare, preparation_data)
-
                 pool.close()
                 pool.join()
-                pool.clear()
+
+            self.__log_record_change_scores(
+                preparation_data=previous_preparation_data,
+                prepared_records=prepared_records,
+            )
 
             if not self.debug_mode:
                 self.review_manager.dataset.save_records_dict(
@@ -749,8 +759,8 @@ class Prep(colrev.operation.Operation):
                     script_call="colrev prep",
                     saved_args=saved_args,
                 )
-                self.review_manager.reset_report_logger()
                 print()
+            self.review_manager.reset_report_logger()
 
         if not keep_ids and not self.debug_mode:
             self.review_manager.dataset.set_ids()

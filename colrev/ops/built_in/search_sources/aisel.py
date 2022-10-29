@@ -65,7 +65,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 
         # pylint: disable=too-many-branches

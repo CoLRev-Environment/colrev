@@ -74,9 +74,10 @@ def setup_report_logger(
 def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
     """Reset the report log file (used for the git commit report)"""
 
-    report_handler = review_manager.report_logger.handlers[0]
-    review_manager.report_logger.removeHandler(report_handler)
-    report_handler.close()
+    if review_manager.report_logger.handlers:
+        report_handler = review_manager.report_logger.handlers[0]
+        review_manager.report_logger.removeHandler(report_handler)
+        report_handler.close()
 
     with open(review_manager.report_path, "r+", encoding="utf8") as file:
         file.truncate(0)

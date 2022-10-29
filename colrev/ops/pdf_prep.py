@@ -6,11 +6,10 @@ import logging
 import multiprocessing as mp
 import os
 import subprocess
+from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
-from p_tqdm import p_map
-from pathos.multiprocessing import ProcessPool
 
 import colrev.operation
 import colrev.record
@@ -117,7 +116,7 @@ class PDFPrep(colrev.operation.Operation):
         ):
             return record_dict
 
-        pad = 70
+        pad = 50
 
         pdf_path = self.review_manager.path / Path(record_dict["file"])
         if not Path(pdf_path).is_file():
@@ -131,10 +130,11 @@ class PDFPrep(colrev.operation.Operation):
         record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
 
-        self.review_manager.logger.info(f'Prep PDF of {record_dict["ID"]}')
+        self.review_manager.logger.info(f'Start PDF prep of {record_dict["ID"]}')
         # Note: if there are problems
         # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
+        detailed_msgs = []
         for (
             pdf_prep_package_endpoint
         ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
@@ -176,16 +176,15 @@ class PDFPrep(colrev.operation.Operation):
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 == record.data["colrev_status"]
             )
-            msg = (
-                f"{endpoint.settings.endpoint}"  # type: ignore
-                f'({record.data["ID"]}):'.ljust(pad, " ") + " "
-            )
+            msg = f"{endpoint.settings.endpoint}:".ljust(pad, " ") + " "  # type: ignore
             msg += (
                 f"{colors.RED}fail{colors.END}"
                 if failed
                 else f"{colors.GREEN}pass{colors.END}"
             )
-            self.review_manager.logger.info(msg)
+            if self.review_manager.verbose_mode:
+                self.review_manager.logger.info(msg)
+            detailed_msgs.append(msg)
             if failed:
                 break
 
@@ -194,20 +193,27 @@ class PDFPrep(colrev.operation.Operation):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
+        print()
+        self.review_manager.logger.info(f'Completed PDF prep of {record_dict["ID"]}')
+
+        for msg in detailed_msgs:
+            self.review_manager.logger.info(msg)
         successfully_prepared = (
             colrev.record.RecordState.pdf_imported == record.data["colrev_status"]
         )
-        if successfully_prepared:
-            self.__complete_successful_pdf_prep(
-                record=record, original_filename=original_filename
-            )
-
-        msg = f'({record.data["ID"]}):'.ljust(pad, " ")
+        msg = "Overall PDF prep outcome: ".ljust(pad, " ")
         msg += (
             f"{colors.GREEN}completed{colors.END}"
             if successfully_prepared
             else f"{colors.RED}failed{colors.END}"
         )
+        self.review_manager.logger.info(msg)
+        print()
+
+        if successfully_prepared:
+            self.__complete_successful_pdf_prep(
+                record=record, original_filename=original_filename
+            )
 
         record.cleanup_pdf_processing_fields()
 
@@ -257,7 +263,8 @@ class PDFPrep(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_colrev_pdf_ids(self, *, record_dict: dict) -> dict:
+    # Note : no named arguments (multiprocessing)
+    def __update_colrev_pdf_ids(self, record_dict: dict) -> dict:
         if "file" in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict["file"])
             record_dict.update(
@@ -271,7 +278,10 @@ class PDFPrep(colrev.operation.Operation):
         """Update the colrev-pdf-ids"""
         self.review_manager.logger.info("Update colrev_pdf_ids")
         records = self.review_manager.dataset.load_records_dict()
-        records_list = p_map(self.__update_colrev_pdf_ids, records.values())
+        pool = Pool(self.cpus)
+        records_list = pool.map(self.__update_colrev_pdf_ids, records.values())
+        pool.close()
+        pool.join()
         records = {r["ID"]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -374,14 +384,12 @@ class PDFPrep(colrev.operation.Operation):
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
             if "colrev_built_in.create_tei" in endpoint_names:  # type: ignore
-                pool = ProcessPool(nodes=mp.cpu_count() // 2)
+                pool = Pool(mp.cpu_count() // 2)
             else:
-                pool = ProcessPool(nodes=self.cpus)
+                pool = Pool(self.cpus)
             pdf_prep_record_list = pool.map(self.prepare_pdf, pdf_prep_data["items"])
-
             pool.close()
             pool.join()
-            pool.clear()
 
             self.review_manager.dataset.save_records_dict(
                 records={r["ID"]: r for r in pdf_prep_record_list}, partial=True

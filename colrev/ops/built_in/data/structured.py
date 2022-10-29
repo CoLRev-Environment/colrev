@@ -61,7 +61,7 @@ class StructuredData(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         structured_endpoint_details = {
-            "endpoint": "STRUCTURED",
+            "endpoint": "colrev_built_in.structured",
             "version": "0.1",
             "fields": [
                 {

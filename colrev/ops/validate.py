@@ -39,16 +39,21 @@ class Validate(colrev.operation.Operation):
 
         found_target_commit = False
         for commit_id, filecontents in list(revlist):
-            if commit_id == target_commit:
+            if target_commit:
+                if commit_id == target_commit:
+                    found_target_commit = True
+                    continue
+                if not found_target_commit:
+                    continue
+            elif not found_target_commit:
+                # To skip the same commit
                 found_target_commit = True
-                continue
-            if not found_target_commit:
                 continue
             prior_records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")
             )
-            break
-        return prior_records_dict
+            return prior_records_dict
+        return {}
 
     def validate_preparation_changes(
         self, *, records: list[dict], target_commit: str
@@ -71,14 +76,11 @@ class Validate(colrev.operation.Operation):
                     if cur_record_link in x["colrev_origin"]
                 ]
                 for prior_record_dict in prior_records:
-                    similarity = colrev.record.Record.get_record_similarity(
+                    change_score = colrev.record.Record.get_record_change_score(
                         record_a=colrev.record.Record(data=record_dict),
                         record_b=colrev.record.Record(data=prior_record_dict),
                     )
-                    # change_diff.append([record["ID"], cur_record_link, similarity])
-                    change_diff.append([prior_record_dict, record_dict, similarity])
-
-        change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
+                    change_diff.append([prior_record_dict, record_dict, change_score])
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)
@@ -251,13 +253,14 @@ class Validate(colrev.operation.Operation):
         if target_commit == "" and "unspecified" == scope:
             scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)
 
+        validation_details = []
         if scope in ["prepare", "all"]:
-            validation_details = self.validate_preparation_changes(
+            validation_details += self.validate_preparation_changes(
                 records=records, target_commit=target_commit
             )
 
         if scope in ["merge", "all"]:
-            validation_details = self.validate_merging_changes(
+            validation_details += self.validate_merging_changes(
                 records=records, target_commit=target_commit
             )
 

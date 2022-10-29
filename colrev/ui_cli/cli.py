@@ -295,6 +295,13 @@ def search(
     help="Combine load of multiple sources in one commit.",
 )
 @click.option(
+    "-sq",
+    "--skip_query",
+    is_flag=True,
+    default=False,
+    help="Skip entering the search query (if applicable)",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -313,6 +320,7 @@ def load(
     ctx: click.core.Context,
     keep_ids: bool,
     combine_commits: bool,
+    skip_query: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -326,7 +334,7 @@ def load(
         review_manager.get_local_index(startup_without_waiting=True)
         load_operation = review_manager.get_load_operation()
 
-        load_operation.check_update_sources()
+        load_operation.check_update_sources(skip_query=skip_query)
 
         if combine_commits:
             logging.info(
@@ -844,7 +852,7 @@ def pdf_get(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Retrieve PDFs to the default pdf directory (/pdfs)"""
+    """Retrieve PDFs to the default pdf directory (data/pdfs)"""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -953,7 +961,7 @@ def pdf_prep(
     help="Export a table.",
 )
 @click.option(
-    "--discard_missing",
+    "--discard",
     is_flag=True,
     default=False,
     help="Discard all missing PDFs as not_available",
@@ -976,7 +984,7 @@ def pdf_prep(
 def pdf_get_man(
     ctx: click.core.Context,
     export: bool,
-    discard_missing: bool,
+    discard: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1021,8 +1029,8 @@ def pdf_get_man(
                 "Created pdf_get_man_records.csv"
             )
             return
-        if discard_missing:
-            pdf_get_man_operation.discard_missing()
+        if discard:
+            pdf_get_man_operation.discard()
             return
 
         pdf_get_man_operation.main()
@@ -1041,13 +1049,16 @@ def __delete_first_pages_cli(
     records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
     while True:
         if record_id in records:
-            record = records[record_id]
-            if "file" in record:
-                print(record["file"])
+            record_dict = records[record_id]
+            if "file" in record_dict:
+                print(record_dict["file"])
                 pdf_path = pdf_prep_man_operation.review_manager.path / Path(
-                    record["file"]
+                    record_dict["file"]
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
+                colrev.record.Record(data=record_dict).set_pdf_man_prepared(
+                    review_manager=pdf_prep_man_operation.review_manager
+                )
             else:
                 print("no file in record")
         if "n" == input("Extract coverpage from another PDF? (y/n)"):
@@ -1067,6 +1078,12 @@ def __delete_first_pages_cli(
     is_flag=True,
     default=False,
     help="Print statistics of records with colrev_status pdf_needs_manual_preparation",
+)
+@click.option(
+    "--discard",
+    is_flag=True,
+    default=False,
+    help="Discard records whose PDF needs to be prepared manually",
 )
 @click.option(
     "--extract",
@@ -1099,6 +1116,7 @@ def pdf_prep_man(
     ctx: click.core.Context,
     delete_first_page: str,
     stats: bool,
+    discard: bool,
     extract: bool,
     apply: bool,
     verbose: bool,
@@ -1114,6 +1132,9 @@ def pdf_prep_man(
 
         if delete_first_page:
             __delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
+            return
+        if discard:
+            pdf_prep_man_operation.discard()
             return
         if stats:
             pdf_prep_man_operation.pdf_prep_man_stats()
@@ -1281,6 +1302,12 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     help="prepare, merge, or all.",
 )
 @click.option(
+    "--threshold",
+    type=float,
+    default=0.05,
+    help="Change score threshold for changes to display.",
+)
+@click.option(
     "--properties", is_flag=True, default=False, help="Git commit id to validate."
 )
 @click.option(
@@ -1313,6 +1340,7 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
 def validate(
     ctx: click.core.Context,
     scope: str,
+    threshold: float,
     properties: bool,
     commit: str,
     tree_hash: str,
@@ -1354,7 +1382,11 @@ def validate(
             "pages",
         ]
 
+        displayed = False
         for record_a, record_b, difference in validation_details:
+            if difference < threshold:
+                continue
+            displayed = True
             # Escape sequence to clear terminal output for each new comparison
             os.system("cls" if os.name == "nt" else "clear")
             if record_a["ID"] == record_b["ID"]:
@@ -1381,6 +1413,8 @@ def validate(
             # gh_issue https://github.com/geritwagner/colrev/issues/57
             # correct? if not, replace current record with old one
 
+        if not displayed:
+            review_manager.logger.info("No preparation changes above threshold")
     except colrev_exceptions.InvalidSettingsError as exc:
         logging.error(exc)
         return
