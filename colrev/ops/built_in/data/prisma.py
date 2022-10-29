@@ -136,7 +136,7 @@ class PRISMA(JsonSchemaMixin):
             data_operation.review_manager.path
         )
 
-        data_operation.review_manager.logger.info("Export diagram")
+        data_operation.review_manager.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
             diagram_relative_path = diagram_path.relative_to(
@@ -149,9 +149,19 @@ class PRISMA(JsonSchemaMixin):
                 + f"/data/{csv_relative_path} "
                 + f"/data/{diagram_relative_path}"
             )
+            # Users can place a custom script in src/prisma.R
+            if (data_operation.review_manager.path / Path("src/prisma.R")).is_file():
+                script = (
+                    "Rscript "
+                    + "-e \"source('/data/src/prisma.R')\" "
+                    + f"/data/{csv_relative_path} "
+                    + f"/data/{diagram_relative_path}"
+                )
+
             self.__call_docker_build_process(
                 data_operation=data_operation, script=script
             )
+            csv_relative_path.unlink()
 
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
