@@ -49,7 +49,10 @@ class Initializer:
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         if "." not in self.review_type:
             self.review_type = "colrev_built_in." + self.review_type
-        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=True, navigate_to_home_dir=False
+        )
+
         try:
             res = review_manager.get_review_types(review_type=self.review_type)
         except colrev.exceptions.MissingDependencyError as exc:
@@ -102,7 +105,9 @@ class Initializer:
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
             cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
         if cur_content:
-            raise colrev_exceptions.NonEmptyDirectoryError()
+            raise colrev_exceptions.NonEmptyDirectoryError(
+                filepath=Path.cwd(), content=cur_content
+            )
 
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
         global_git_vars = environment_manager.get_name_mail_from_git()
@@ -338,7 +343,9 @@ class Initializer:
             )
 
         if cur_content:
-            raise colrev_exceptions.NonEmptyDirectoryError()
+            raise colrev_exceptions.NonEmptyDirectoryError(
+                filepath=Path.cwd(), content=cur_content
+            )
 
     def __create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration

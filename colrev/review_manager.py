@@ -58,6 +58,7 @@ class ReviewManager:
         path_str: str = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
+        navigate_to_home_dir: bool = True,
     ) -> None:
 
         self.force_mode = force_mode
@@ -65,7 +66,10 @@ class ReviewManager:
         self.verbose_mode = verbose_mode
         """Verbose mode variable (bool)"""
 
-        self.path = self.__get_project_home_dir(path_str=path_str)
+        if navigate_to_home_dir:
+            self.path = self.__get_project_home_dir(path_str=path_str)
+        else:
+            self.path = Path.cwd()
 
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE

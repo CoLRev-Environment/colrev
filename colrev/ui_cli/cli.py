@@ -11,6 +11,7 @@ from pathlib import Path
 import click
 import click_completion.core
 import pandas as pd
+from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -142,7 +143,7 @@ def init(
         colrev_exceptions.ParameterError,
         colrev_exceptions.NonEmptyDirectoryError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=2)
@@ -197,8 +198,10 @@ def status(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.RepoSetupError,
     ) as exc:
-        logging.error(exc)
-        return
+        print(exc)
+    except DockerException as exc:
+        print(exc)
+        print("Please install and start Docker service")
 
 
 @main.command(help_priority=3)
@@ -276,7 +279,7 @@ def search(
         colrev_exceptions.ServiceNotAvailableException,
         colrev_exceptions.ParameterError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=4)
@@ -349,7 +352,7 @@ def load(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.SearchSettingsError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=5)
@@ -463,10 +466,10 @@ def prep(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.MissingDependencyError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
         return
     except colrev_exceptions.ServiceNotAvailableException as exc:
-        logging.error(exc)
+        print(exc)
         print("You can use the force mode to override")
         print("  colrev prep -f")
 
@@ -554,7 +557,7 @@ def dedupe(
         colrev_exceptions.ProcessOrderViolation,
         colrev_exceptions.DedupeError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=7)
@@ -595,7 +598,7 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
         prep_man_operation.main()
 
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=9)
@@ -696,7 +699,7 @@ def prescreen(
         colrev_exceptions.ProcessOrderViolation,
         colrev_exceptions.CleanRepoRequiredError,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=10)
@@ -797,7 +800,7 @@ def screen(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=11)
@@ -884,7 +887,7 @@ def pdf_get(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=12)
@@ -949,7 +952,7 @@ def pdf_prep(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=13)
@@ -1039,7 +1042,7 @@ def pdf_get_man(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 def __delete_first_pages_cli(
@@ -1152,7 +1155,7 @@ def pdf_prep_man(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=15)
@@ -1261,7 +1264,7 @@ def data(
         colrev_exceptions.InvalidSettingsError,
         colrev_exceptions.ProcessOrderViolation,
     ) as exc:
-        logging.error(exc)
+        print(exc)
 
 
 def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
@@ -1416,7 +1419,7 @@ def validate(
         if not displayed:
             review_manager.logger.info("No preparation changes above threshold")
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
         return
 
 
@@ -1457,7 +1460,7 @@ def trace(
         trace_operation.main(record_id=id)
 
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
         return
 
 
@@ -1514,7 +1517,7 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
         distribute_operation.main(path=path, target=target)
 
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
         return
 
 
@@ -1946,7 +1949,7 @@ def pull(
         pull_operation.main(records_only=records_only, project_only=project_only)
 
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=23)
@@ -2028,7 +2031,7 @@ def push(
         push_operation.main(records_only=records_only, project_only=project_only)
 
     except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+        print(exc)
 
 
 @main.command(help_priority=25)

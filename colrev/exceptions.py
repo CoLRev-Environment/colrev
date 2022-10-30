@@ -223,8 +223,14 @@ class PropagatedIDChange(CoLRevException):
 class NonEmptyDirectoryError(CoLRevException):
     """Trying to initialize CoLRev in a non-empty directory."""
 
-    def __init__(self) -> None:
-        self.message = "please change to an empty directory to initialize a project"
+    def __init__(self, *, filepath: Path, content: list) -> None:
+        if len(content) > 3:
+            content = content[0:5] + ["..."]
+        self.message = (
+            f"Directory {filepath} not empty "
+            + f"(files: {', '.join(content)}). "
+            + "\nPlease change to an empty directory to initialize a project."
+        )
         super().__init__(self.message)
 
 
