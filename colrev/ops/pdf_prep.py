@@ -130,7 +130,7 @@ class PDFPrep(colrev.operation.Operation):
         record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
 
-        self.review_manager.logger.info(f'Start PDF prep of {record_dict["ID"]}')
+        self.review_manager.logger.debug(f'Start PDF prep of {record_dict["ID"]}')
         # Note: if there are problems
         # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
@@ -176,15 +176,12 @@ class PDFPrep(colrev.operation.Operation):
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 == record.data["colrev_status"]
             )
-            msg = f"{endpoint.settings.endpoint}:".ljust(pad, " ") + " "  # type: ignore
-            msg += (
-                f"{colors.RED}fail{colors.END}"
-                if failed
-                else f"{colors.GREEN}pass{colors.END}"
-            )
-            if self.review_manager.verbose_mode:
-                self.review_manager.logger.info(msg)
-            detailed_msgs.append(msg)
+
+            if failed:
+                detailed_msgs.append(
+                    f"{colors.RED}{endpoint.settings.endpoint}{colors.END}"  # type: ignore
+                )
+
             if failed:
                 break
 
@@ -193,22 +190,21 @@ class PDFPrep(colrev.operation.Operation):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
-        print()
-        self.review_manager.logger.info(f'Completed PDF prep of {record_dict["ID"]}')
+        self.review_manager.logger.debug(f'Completed PDF prep of {record_dict["ID"]}')
 
-        for msg in detailed_msgs:
-            self.review_manager.logger.info(msg)
         successfully_prepared = (
             colrev.record.RecordState.pdf_imported == record.data["colrev_status"]
         )
-        msg = "Overall PDF prep outcome: ".ljust(pad, " ")
-        msg += (
-            f"{colors.GREEN}completed{colors.END}"
-            if successfully_prepared
-            else f"{colors.RED}failed{colors.END}"
-        )
-        self.review_manager.logger.info(msg)
-        print()
+
+        if successfully_prepared:
+            self.review_manager.logger.info(
+                f"{colors.GREEN} pdf-prep {record_dict['ID']}{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.RED} pdf-prep {record_dict['ID']} "
+                f"({', '.join(detailed_msgs)}{colors.END})"
+            )
 
         if successfully_prepared:
             self.__complete_successful_pdf_prep(
@@ -301,6 +297,7 @@ class PDFPrep(colrev.operation.Operation):
 
         self.not_prepared = self.to_prepare - self.pdf_prepared
 
+        print()
         prepared_string = "Prepared:    "
         if self.pdf_prepared == 0:
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
@@ -361,7 +358,10 @@ class PDFPrep(colrev.operation.Operation):
         # temporary fix: remove all lines containing PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
-        self.review_manager.logger.info("Prepare PDFs")
+        self.review_manager.logger.info(
+            f"Prepare PDFs ({colors.ORANGE}computationally intensive/may take time{colors.END})"
+        )
+        print()
 
         if reprocess:
             self.__set_to_reprocess()

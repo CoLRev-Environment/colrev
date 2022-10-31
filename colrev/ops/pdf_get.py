@@ -108,7 +108,14 @@ class PDFGet(colrev.operation.Operation):
                     f'({record_dict["ID"]}): retrieved .../{Path(record_dict["file"]).name}'
                 )
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
+                self.review_manager.logger.info(
+                    f" pdf-get {colors.GREEN}{record.data['ID']}{colors.END}"
+                )
                 return record.get_data()
+
+        self.review_manager.logger.info(
+            f" pdf-get {colors.RED}{record.data['ID']}{colors.END}"
+        )
 
         record.data.update(
             colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval

@@ -315,8 +315,8 @@ class Manuscript(JsonSchemaMixin):
         self, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
 
-        review_manager.report_logger.info("Creating manuscript")
-        review_manager.logger.info("Creating manuscript")
+        review_manager.report_logger.info("Create manuscript")
+        review_manager.logger.info("Create manuscript")
 
         title = "Manuscript template"
         readme_file = review_manager.readme

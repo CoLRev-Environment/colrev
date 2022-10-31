@@ -44,7 +44,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def __print_screening_criteria(
         self, *, screen_operation: colrev.ops.screen.Screen
     ) -> None:
-        print("\n\nIn the screen, the following criteria are applied:\n")
+        print("\nIn the screen, the following criteria are applied:\n")
         for (
             criterion_name,
             criterion_settings,
@@ -84,9 +84,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             )
             screen_record.data["abstract"] = tei.get_abstract()
 
+        print("\n\n")
         print(screen_record)
 
-        print("\n\n")
         self.__i += 1
         quit_pressed, skip_pressed = False, False
         if self.criteria_available:

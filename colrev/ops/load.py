@@ -187,7 +187,7 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info("No new search files...")
             return
 
-        self.review_manager.logger.info("Loading available search_source endpoints...")
+        self.review_manager.logger.info("Load available search_source endpoints...")
 
         search_source_identifiers = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
@@ -203,9 +203,7 @@ class Load(colrev.operation.Operation):
             instantiate_objects=False,
         )
 
-        self.review_manager.logger.info(
-            "Loading available load_conversion endpoints..."
-        )
+        self.review_manager.logger.info("Load available load_conversion endpoints...")
         load_conversion_package_identifiers = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             installed_only=True,
@@ -244,7 +242,7 @@ class Load(colrev.operation.Operation):
             ]:
                 continue
 
-            self.review_manager.logger.info(f"Discovering new source: {sfp_name}")
+            self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
             # Assuming that all other search types are added by query
             # search_type_input = "NA"
@@ -281,7 +279,7 @@ class Load(colrev.operation.Operation):
                 "colrev_built_in.unknown_source"
                 == heuristic_source["source_candidate"].endpoint
             ):
-                self.review_manager.logger.warning(
+                self.review_manager.logger.info(
                     "Could not detect source (using fallback: unknown_source)"
                 )
                 if heuristic_source["source_candidate"].source_identifier in [
@@ -354,7 +352,8 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Add new source: {sfp} "
                 f"({heuristic_source['source_candidate'].endpoint}){colors.END}"
             )
-            print("\n")
+
+        print()
 
     def __check_bib_file(
         self, *, source: colrev.settings.SearchSource, records: dict
@@ -590,7 +589,6 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info(
                 f"{colors.GREEN}No records to load{colors.END}"
             )
-            print()
             return search_records
 
         nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
@@ -659,7 +657,7 @@ class Load(colrev.operation.Operation):
                 "Not yet fully implemented. Need to check/resolve ID duplicates."
             )
         else:
-            self.review_manager.logger.info("Set IDs")
+            self.review_manager.logger.debug("Set IDs")
             records = self.review_manager.dataset.set_ids(
                 records=records,
                 selected_ids=[r["ID"] for r in source.source_records_list],
@@ -742,8 +740,8 @@ class Load(colrev.operation.Operation):
             return {r["ID"]: r for r in records_list}
 
         if len(records) == 0:
-            self.review_manager.report_logger.error("No records loaded")
-            self.review_manager.logger.error("No records loaded")
+            self.review_manager.report_logger.debug("No records loaded")
+            self.review_manager.logger.debug("No records loaded")
             return
 
         records = fix_keys(records=records)
@@ -772,7 +770,8 @@ class Load(colrev.operation.Operation):
             return sources
 
         for source in load_active_sources():
-            self.review_manager.logger.info(f"Loading {source}")
+
+            self.review_manager.logger.info(f"Load {source.filename}")
             saved_args["file"] = source.filename.name
             records = {}
 
@@ -798,6 +797,7 @@ class Load(colrev.operation.Operation):
             # 3. load and add records to data/records.bib
             self.__load_source_records(source=source, keep_ids=keep_ids)
             if 0 == getattr(source, "to_import", 0):
+                print("")
                 continue
 
             # 4. validate load
@@ -809,8 +809,6 @@ class Load(colrev.operation.Operation):
                     script_call="colrev load",
                     saved_args=saved_args,
                 )
-
-            print("\n")
 
         if combine_commits and self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(

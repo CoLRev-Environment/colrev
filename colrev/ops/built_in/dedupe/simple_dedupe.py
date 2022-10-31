@@ -349,8 +349,10 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_operation.apply_merges(
             results=dedupe_batch_results, complete_dedupe=True
         )
-
-        dedupe_operation.review_manager.logger.info("Completed application of merges")
+        if [x for x in dedupe_batch_results if "duplicate" == x["decision"]]:
+            dedupe_operation.review_manager.logger.info(
+                "Completed application of merges"
+            )
 
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",

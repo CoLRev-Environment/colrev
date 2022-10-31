@@ -49,7 +49,7 @@ class TEIPDFPrep(JsonSchemaMixin):
 
         if "file" in record.data:
             if not record.get_tei_filename().is_file():
-                pdf_prep_operation.review_manager.logger.info(
+                pdf_prep_operation.review_manager.logger.debug(
                     f" creating tei: {record.data['ID']}"
                 )
                 _ = pdf_prep_operation.review_manager.get_tei(
