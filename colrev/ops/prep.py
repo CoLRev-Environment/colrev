@@ -377,7 +377,9 @@ class Prep(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        prior_records_dict = next(self.review_manager.dataset.load_from_git_history())
+        prior_records_dict = next(
+            self.review_manager.dataset.load_records_from_history()
+        )
         for record in records.values():
             prior_record_l = [
                 x
@@ -503,7 +505,9 @@ class Prep(colrev.operation.Operation):
     ) -> list:
 
         retrieved, prior_records = [], []
-        for prior_records_dict in self.review_manager.dataset.load_from_git_history():
+        for (
+            prior_records_dict
+        ) in self.review_manager.dataset.load_records_from_history():
             for prior_record in prior_records_dict.values():
                 if prior_record.get("colrev_status", "NA") != condition_state:
                     continue

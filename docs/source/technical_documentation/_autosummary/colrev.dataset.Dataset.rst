@@ -37,15 +37,14 @@ colrev.dataset.Dataset
       ~Dataset.get_untracked_files
       ~Dataset.has_changes
       ~Dataset.has_untracked_search_records
-      ~Dataset.load_from_git_history
       ~Dataset.load_records_dict
+      ~Dataset.load_records_from_history
       ~Dataset.parse_bibtex_str
       ~Dataset.parse_records_dict
       ~Dataset.propagated_id
       ~Dataset.pull_if_repo_clean
       ~Dataset.read_next_record
       ~Dataset.records_changed
-      ~Dataset.records_file_in_history
       ~Dataset.remote_ahead
       ~Dataset.remove_file_from_git
       ~Dataset.reprocess_id

@@ -522,7 +522,7 @@ class Checker:
 
     def __retrieve_prior(self) -> dict:
         prior: dict = {"colrev_status": [], "persisted_IDs": []}
-        prior_records = next(self.review_manager.dataset.load_from_git_history())
+        prior_records = next(self.review_manager.dataset.load_records_from_history())
         for prior_record in prior_records.values():
             for orig in prior_record["colrev_origin"]:
                 prior["colrev_status"].append([orig, prior_record["colrev_status"]])
@@ -675,7 +675,9 @@ class Checker:
         ]
 
         if self.review_manager.dataset.records_file.is_file():
-            if self.review_manager.dataset.records_file_in_history():
+            if self.review_manager.dataset.file_in_history(
+                filepath=self.review_manager.dataset.RECORDS_FILE_RELATIVE
+            ):
                 prior = self.__retrieve_prior()
                 self.review_manager.logger.debug("prior")
                 self.review_manager.logger.debug(

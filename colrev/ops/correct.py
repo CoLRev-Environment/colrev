@@ -201,7 +201,9 @@ class Corrections:
         self,
     ) -> list:
 
-        prior_records_dict = next(self.review_manager.dataset.load_from_git_history())
+        prior_records_dict = next(
+            self.review_manager.dataset.load_records_from_history()
+        )
         prior_curated_records = []
         for prior_record in prior_records_dict.values():
             if colrev.record.Record(data=prior_record).masterdata_is_curated():

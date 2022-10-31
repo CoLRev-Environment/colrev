@@ -89,7 +89,9 @@ class Dataset:
                 line = file.readline()
         return number_in_bib
 
-    def load_from_git_history(self) -> typing.Iterator[dict]:
+    def load_records_from_history(
+        self, *, commit_sha: str = ""
+    ) -> typing.Iterator[dict]:
         """Returns an iterator of the records_dict based on git history"""
         revlist = (
             (
@@ -102,7 +104,10 @@ class Dataset:
         )
         parser = bibtex.Parser()
 
-        for _, filecontents in list(revlist):
+        for hist_sha, filecontents in list(revlist):
+            if commit_sha:
+                if commit_sha != hist_sha:
+                    continue
             bib_data = parser.parse_string(filecontents.decode("utf-8"))
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
             yield records_dict
@@ -899,10 +904,6 @@ class Dataset:
             committer=committer,
             skip_hooks=hook_skipping,
         )
-
-    def records_file_in_history(self) -> bool:
-        """Check whether the records file is in the git history"""
-        return self.file_in_history(filepath=self.RECORDS_FILE_RELATIVE)
 
     def file_in_history(self, *, filepath: Path) -> bool:
         """Check whether a file is in the git history"""
