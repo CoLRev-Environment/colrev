@@ -179,12 +179,15 @@ class Prep(colrev.operation.Operation):
     def prepare(self, item: dict) -> dict:
         """Prepare a record (based on package_endpoints in the settings)"""
 
+        # pylint: disable=too-many-branches
+
         record: colrev.record.PrepRecord = item["record"]
 
         if not record.status_to_prepare():
             return record.get_data()
 
-        self.review_manager.logger.info(" prep " + record.data["ID"])
+        if self.review_manager.verbose_mode:
+            self.review_manager.logger.info(" prep " + record.data["ID"])
 
         # preparation_record changes with each endpoint and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
@@ -228,6 +231,14 @@ class Prep(colrev.operation.Operation):
                 self.review_manager.logger.error(
                     f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
                 )
+
+        if not self.review_manager.verbose_mode:
+            if record.preparation_save_condition():
+                self.review_manager.logger.info(
+                    f" prepared {colors.GREEN}{record.data['ID']}{colors.END}"
+                )
+            else:
+                self.review_manager.logger.info(f" prepared {record.data['ID']}")
 
         if self.last_round:
             if record.status_to_prepare():

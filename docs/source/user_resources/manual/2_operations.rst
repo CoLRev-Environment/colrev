@@ -1,13 +1,19 @@
 
-2. Operations
+2. Steps and operations
 ==================================
 
-TODO : add introductory paragraph and reduce options (link to the cli reference)
+TODO :
 
-.. _Init:
+- include an overview figure
+- cite methods papers
+- add introductory paragraph and reduce options (link to the cli reference)
 
-Init
+.. _Problem formulation:
+
+Problem formulation
 ---------------------------------------------
+
+TODO : problem formulation phase, ... coherence
 
 :program:`colrev init` initializes a new CoLRev project. It should be called in an empty directory.
 
@@ -131,10 +137,15 @@ Settings
       "data": {"data_format": []}
       }
 
-.. _Search:
+.. _Metadaata retrieval:
+
+Metadata retrieval
+---------------------------------------------
+
+Consists of search, load, prep, dedupe
 
 Search
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev search` retrieves search results from
 
@@ -179,7 +190,7 @@ Note:
 .. _Load:
 
 Load
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev load` loads search results as follows:
 
@@ -206,7 +217,7 @@ Formats
 .. _Prepare:
 
 Prepare
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev prep` prepares the metadata. It completes the following steps:
 
@@ -266,7 +277,7 @@ If the error was introduced in a 'prep' commit, the commit message will guide yo
 .. _Dedupe:
 
 Dedupe
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev dedupe` identifies and merges duplicates as follows:
 
@@ -290,9 +301,9 @@ Dedupe
 .. figure:: ../../../figures/duplicate_validation.png
    :alt: Validation of duplicates
 
-.. _Prescreen:
+.. _Metadata prescreen:
 
-Pre-screen
+Metadata prescreen
 ---------------------------------------------
 
 :program:`colrev prescreen` supports interactive prescreening
@@ -356,10 +367,17 @@ The settings can be used to specify scope variables which are applied automatica
                     }
 
 
+.. _PDF retrieval:
+
+PDF retrieval
+---------------------------------------------
+
+Consists of PDF get and PDF prep
+
 .. _PDF get:
 
 PDF get
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev pdf-get` retrieves PDFs based on
 
@@ -390,7 +408,7 @@ Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy 
 .. _PDF prep:
 
 PDF prep
----------------------------------------------
+^^^^^^^^^^^^^^^^
 
 :program:`colrev pdf-prep` prepares PDFs for the screen and analysis as follows:
 
@@ -410,9 +428,9 @@ When PDFs cannot be prepared automatically, :program:`colrev pdf-prep-man` provi
 
 	colrev pdf-prep-man [options]
 
-.. _Screen:
+.. _PDF screen:
 
-Screen
+PDF screen
 ---------------------------------------------
 
 :program:`colrev screen` supports interactive screening based on a list of exclusion criteria
@@ -465,17 +483,5 @@ Depending on the data format, the :program:`colrev data` command
     Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
 
 .. TODO: include examples (figure) for data --profile/--reading_heuristics
-
-.. _Paper:
-
-Paper
----------------------------------------------
-
-:program:`colrev paper` builds the final paper (e.g., PDF, Word) from the markdown document paper.md using `pandoc <https://github.com/jgm/pandoc>`_.
-
-
-.. code:: bash
-
-	colrev paper [options]
 
 Links and references for standalone literature reviews will be made available here (TODO).

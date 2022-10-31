@@ -50,35 +50,23 @@ After each step, [validate the changes](docs/build/user_resources/manual/1_workf
 **The operations** allow you to complete a literature review. It should be as simple as running the following commands:
 
 ```
-# Initialize the project
+# Initialize the project, formulate the objectives, specify the review type
 colrev init
-# To try colrev: colrev init --example
 
-# Run new search or store search results in the ./search directory
-colrev search --add "FROM crossref WHERE digital"
-
-# Load the search results
-colrev load
-
-# Prepare the metadata
-colrev prep
-
-# Identify and merge duplicates
-colrev dedupe
+# Store search results in the data/search directory
+# Load, prepare, and deduplicate the metadata reocrds
+colrev retrieve
 
 # Conduct a prescreen
 colrev prescreen
 
-# Get the PDFs for included papers
-colrev pdf-get
+# Get and prepare the PDFs
+colrev pdfs
 
-# Prepare the PDFs
-colrev pdf-prep
-
-# Conduct a screen (using specific criteria)
+# Conduct a screen based on PDFs
 colrev screen
 
-# Complete the data analysis/synthesis
+# Complete the forms of data analysis and synthesis, as specified in the settings
 colrev data
 
 ```

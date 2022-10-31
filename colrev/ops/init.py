@@ -72,9 +72,9 @@ class Initializer:
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
         self.__require_empty_directory()
-        self.logger.info("Setup git")
+        self.logger.info("Create git repository")
         self.__setup_git()
-        self.logger.info("Setup files")
+        self.logger.info("Add files")
         self.__setup_files(path=Path.cwd())
 
         if example:
@@ -82,7 +82,6 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
-        self.logger.info("Create commit")
         self.__create_commit(saved_args=saved_args)
         if not example:
             self.review_manager.logger.info("Register repo")
@@ -90,12 +89,12 @@ class Initializer:
         if local_index_repo:
             self.__create_local_index()
 
-        self.review_manager.logger.info("Post-commit edits")
         self.__post_commit_edits()
 
-        print("\n")
-        for instruction in self.instructions:
-            self.review_manager.logger.info(instruction)
+        if self.instructions:
+            print("\n")
+            for instruction in self.instructions:
+                self.review_manager.logger.info(instruction)
 
     def __check_init_precondition(self) -> None:
         cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
@@ -268,6 +267,7 @@ class Initializer:
     def __post_commit_edits(self) -> None:
 
         if "curated_masterdata" == self.review_type:
+            self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
             self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
 
@@ -305,23 +305,34 @@ class Initializer:
 
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [
-            ["pre-commit", "install"],
-            ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
-            ["pre-commit", "install", "--hook-type", "pre-push"],
-            ["pre-commit", "autoupdate"],
-            ["daff", "git", "csv"],
+            {
+                "description": "Install pre-commit hooks",
+                "command": ["pre-commit", "install"],
+            },
+            {
+                "description": "",
+                "command": [
+                    "pre-commit",
+                    "install",
+                    "--hook-type",
+                    "prepare-commit-msg",
+                ],
+            },
+            {
+                "description": "",
+                "command": ["pre-commit", "install", "--hook-type", "pre-push"],
+            },
+            {"description": "", "command": ["pre-commit", "autoupdate"]},
+            {"description": "", "command": ["daff", "git", "csv"]},
         ]
         for script_to_call in scripts_to_call:
             try:
-                self.logger.info("%s...", " ".join(script_to_call))
-                check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
+                if script_to_call["description"]:
+                    self.logger.info("%s...", script_to_call["description"])
+                check_call(script_to_call["command"], stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
-                if "" == " ".join(script_to_call):
-                    self.logger.info(
-                        "%s did not succeed "
-                        "(Internet connection could not be available)",
-                        " ".join(script_to_call),
-                    )
+                if "pre-commit autoupdate" == " ".join(script_to_call["command"]):
+                    pass
                 else:
                     self.logger.error(
                         "%sFailed: %s%s",

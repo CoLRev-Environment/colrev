@@ -7,7 +7,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 .. figure:: ../../figures/framework_design_areas.svg
    :align: center
    :alt: Design areas
-   :figwidth: 400px
+   :figwidth: 800px
 
 :any:`preliminaries`
 
@@ -123,11 +123,6 @@ The model is enforced by the platform engine and the command-line interface prov
 The overview defines the micro-level steps and situates them in the three macro-level processes of metadata preparation, full-text preparation and the main review process.
 Each step can effect a state transition for a record, as recorded in the *status* field.
 Key considerations are documented in the guides for the reference implementation.
-
-.. figure:: ../../figures/state-machine.svg
-   :width: 700
-   :alt: Overview of states
-
 
 .. _systematicity_transparency:
 
@@ -424,7 +419,7 @@ In its basic form, the workflow consists of iteratively calling ``colrev status`
 It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``git [process]``
 
 .. figure:: ../../figures/workflow.svg
-   :width: 400
+   :width: 600
    :align: center
    :alt: Workflow cycle
 

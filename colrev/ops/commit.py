@@ -206,7 +206,7 @@ class Commit:
             return False
 
         if self.review_manager.dataset.has_changes():
-            self.review_manager.logger.info("Preparing commit: checks and updates")
+            self.review_manager.logger.debug("Prepare commit: checks and updates")
             self.review_manager.update_status_yaml()
             self.review_manager.dataset.add_changes(
                 path=self.review_manager.STATUS_RELATIVE

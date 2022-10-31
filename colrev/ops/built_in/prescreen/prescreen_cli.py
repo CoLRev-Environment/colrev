@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -46,10 +47,21 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         padding: int,
     ) -> bool:
 
-        print("\n\nIn the prescreen, the following process is followed:\n")
-        print("   " + prescreen_operation.review_manager.settings.prescreen.explanation)
+        if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
+            prescreen_operation.review_manager.settings.prescreen.explanation = input(
+                f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "
+                "(which papers should be included?):"
+            )
+            prescreen_operation.review_manager.save_settings()
+        else:
+            print("\nIn the prescreen, the following process is followed:\n")
+            print(
+                "   "
+                + prescreen_operation.review_manager.settings.prescreen.explanation
+            )
+            print()
 
-        prescreen_operation.review_manager.logger.info("Start prescreen")
+        prescreen_operation.review_manager.logger.debug("Start prescreen")
 
         if 0 == stat_len:
             prescreen_operation.review_manager.logger.info("No records to prescreen")
@@ -107,13 +119,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         prescreen_data = prescreen_operation.get_data()
         stat_len = len(split) if len(split) > 0 else prescreen_data["nr_tasks"]
         padding = prescreen_data["PAD"]
-
-        if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
-            prescreen_operation.review_manager.settings.prescreen.explanation = input(
-                "Provide a short explanation of the prescreen "
-                "(which papers should be included?):"
-            )
-            prescreen_operation.review_manager.save_settings()
 
         completed = self.__fun_cli_prescreen(
             prescreen_operation=prescreen_operation,

@@ -463,7 +463,9 @@ class Dedupe(colrev.operation.Operation):
                 del records[removed_duplicate]
 
         if not removed_duplicates:
-            self.review_manager.logger.info("No duplicates to remove")
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No duplicates to remove{colors.END}"
+            )
 
         if complete_dedupe:
             # Set remaining records to md_processed (not duplicate) because all records
@@ -699,6 +701,7 @@ class Dedupe(colrev.operation.Operation):
             dedupe_package_endpoint
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
 
+            print()
             # Note : load package/script at this point because the same script
             # may run with different parameters
             endpoint_dict = package_manager.load_packages(
@@ -710,7 +713,6 @@ class Dedupe(colrev.operation.Operation):
             endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 
             endpoint.run_dedupe(self)  # type: ignore
-            print()
 
 
 if __name__ == "__main__":

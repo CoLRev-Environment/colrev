@@ -502,7 +502,7 @@ class Checker:
         for source in self.review_manager.settings.sources:
 
             if not source.filename.is_file():
-                self.review_manager.logger.info(
+                self.review_manager.logger.debug(
                     f"Search details without file: {source.filename}"
                 )
 
