@@ -203,7 +203,7 @@ class Data(colrev.operation.Operation):
         """Setup a custom data script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_data_script.py")
+            file_path=Path("template/custom/custom_scripts/custom_data_script.py")
         )
         if filedata:
             with open("custom_data_script.py", "w", encoding="utf-8") as file:

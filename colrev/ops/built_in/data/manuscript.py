@@ -138,7 +138,7 @@ class Manuscript(JsonSchemaMixin):
         template_name = self.data_operation.review_manager.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/APA-7.docx")
+            file_path=Path("template/manuscript/APA-7.docx")
         )
 
         if filedata:
@@ -264,13 +264,17 @@ class Manuscript(JsonSchemaMixin):
                         f"{nr_records_added} records added to {self.settings.paper_path.name}"
                     )
 
+                    for paper_id_added in paper_ids_added:
+                        review_manager.logger.info(
+                            f" add {colors.GREEN}{paper_id_added}{colors.END}"
+                        )
+
                     review_manager.logger.info(
-                        "%sAdded %s records to %s%s %s",
+                        "Added %s%s records %s to %s",
                         colors.GREEN,
                         nr_records_added,
-                        paper_path.name,
                         colors.END,
-                        ": \n- " + "\n- ".join(paper_ids_added),
+                        paper_path.name,
                     )
 
                     # skip empty lines between to connect lists
@@ -351,7 +355,7 @@ class Manuscript(JsonSchemaMixin):
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
         except FileNotFoundError:
-            paper_resource_path = Path("template/") / Path("paper.md")
+            paper_resource_path = Path("template/manuscript") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
@@ -548,7 +552,7 @@ class Manuscript(JsonSchemaMixin):
 
                         line = reader.readline()
 
-        print()
+                print()
 
     def update_manuscript(
         self,
@@ -582,7 +586,7 @@ class Manuscript(JsonSchemaMixin):
     def __create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
 
-            retrieval_path = Path("template/non_sample_references.bib")
+            retrieval_path = Path("template/manuscript/non_sample_references.bib")
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
             )

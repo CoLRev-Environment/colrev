@@ -198,11 +198,11 @@ class PDFPrep(colrev.operation.Operation):
 
         if successfully_prepared:
             self.review_manager.logger.info(
-                f"{colors.GREEN} pdf-prep {record_dict['ID']}{colors.END}"
+                f" pdf-prep {colors.GREEN}{record_dict['ID']}{colors.END}"
             )
         else:
             self.review_manager.logger.info(
-                f"{colors.RED} pdf-prep {record_dict['ID']} "
+                f" pdf-prep {colors.RED}{record_dict['ID']} "
                 f"({', '.join(detailed_msgs)}{colors.END})"
             )
 
@@ -331,7 +331,7 @@ class PDFPrep(colrev.operation.Operation):
         """Setup a custom pdf-prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_pdf_prep_script.py")
+            file_path=Path("template/custom/custom_pdf_prep_script.py")
         )
 
         if filedata:

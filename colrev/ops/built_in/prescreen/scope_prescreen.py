@@ -115,7 +115,7 @@ class ScopePrescreen(JsonSchemaMixin):
         predatory_journals = {}
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/predatory_journals_beall.csv")
+            file_path=Path("template/ops/predatory_journals_beall.csv")
         )
 
         if filedata:

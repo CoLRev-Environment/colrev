@@ -18,15 +18,15 @@ if TYPE_CHECKING:
 class CustomData:
     """Class for custom data scripts"""
 
+    settings_class = colrev.env.package_manager.DefaultSettings
+
     def __init__(
         self,
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.env.package_manager.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def get_default_setup(self) -> dict:
         """Get the default setup for the custom data script"""

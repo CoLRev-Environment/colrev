@@ -179,6 +179,8 @@ class Search(colrev.operation.Operation):
 
         package_manager = self.review_manager.get_package_manager()
 
+        self.review_manager.logger.info("Search")
+
         for source in self.__get_search_sources(selection_str=selection_str):
 
             print()
@@ -210,7 +212,7 @@ class Search(colrev.operation.Operation):
         """Setup a custom search script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_search_source_script.py")
+            file_path=Path("template/custom/custom_search_source_script.py")
         )
 
         if filedata:

@@ -158,7 +158,7 @@ class Initializer:
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/settings.json")
+            file_path=Path("template/init/settings.json")
         )
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))
@@ -173,15 +173,15 @@ class Initializer:
         colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
-            [Path("template/readme.md"), Path("readme.md")],
+            [Path("template/init/readme.md"), Path("readme.md")],
             [
-                Path("template/.pre-commit-config.yaml"),
+                Path("template/init/pre-commit-config.yaml"),
                 Path(".pre-commit-config.yaml"),
             ],
-            [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
-            [Path("template/.gitattributes"), Path(".gitattributes")],
-            [Path("template/gitignore"), Path(".gitignore")],
-            [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
+            [Path("template/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
+            [Path("template/init/gitattributes"), Path(".gitattributes")],
+            [Path("template/init/gitignore"), Path(".gitignore")],
+            [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
         ]
         for retrieval_path, target_path in files_to_retrieve:
             colrev.env.utils.retrieve_package_file(

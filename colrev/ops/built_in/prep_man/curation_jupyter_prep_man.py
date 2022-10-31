@@ -40,7 +40,7 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/prep_man_curation.ipynb"),
+                template_file=Path("template/ops/prep_man_curation.ipynb"),
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )
 

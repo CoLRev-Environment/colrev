@@ -71,7 +71,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         signed = pdf_get_man_operation.review_manager.committer
 
         template = colrev.env.utils.get_template(
-            template_path="template/pdf_get_man_mail.txt"
+            template_path="template/ops/pdf_get_man_mail.txt"
         )
 
         content = template.render(record=record, author_name=author_name, signed=signed)

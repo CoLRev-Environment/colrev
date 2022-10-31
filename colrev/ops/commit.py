@@ -114,7 +114,7 @@ class Commit:
     def __get_commit_report_header(self) -> str:
 
         template = colrev.env.utils.get_template(
-            template_path="template/commit_report_header.txt"
+            template_path="template/ops/commit_report_header.txt"
         )
         content = template.render(commit_details=self)
 
@@ -123,7 +123,7 @@ class Commit:
     def __get_commit_report_details(self) -> str:
 
         template = colrev.env.utils.get_template(
-            template_path="template/commit_report_details.txt"
+            template_path="template/ops/commit_report_details.txt"
         )
         content = template.render(commit_details=self)
 
