@@ -12,7 +12,7 @@ Mention agreement on a shared data structure and steps of the literature review
 
 
 .. figure:: ../../../figures/workflow.svg
-   :width: 400
+   :width: 600
    :align: center
    :alt: Workflow cycle
 
@@ -36,12 +36,11 @@ It consists of the following (as shown below):
 
    Status
 
-      Search         7661 retrieved    (0% curated)
-      Metadata       7042 processed    (619 duplicates removed)
-      Prescreen       577 included     (5807 excluded)
-      PDFs            577 prepared
-      Screen           49 included     (528 excluded)
-      Data              0 synthesized  (49 to synthesize)
+    Metadata retrieval        7040 processed    [6198 curated]
+    Metadata prescreen         814 included     [6226 prescreen excluded]
+    PDF retrieval              814 prepared
+    PDF screen                  49 included     [716 excluded]
+    Data synthesis              49 synthesized
 
       Progress: |██████████████████▊    |82%
 
@@ -68,29 +67,27 @@ The sequence of steps and operations as well as the corresponding state transiti
 Within this standardized structure, each operation can be configured.
 Through the settings, it is possible to rely on the default configuration (the CoLRev reference implementation with reasonable parameters), to adapt selected parameters, to plug in CoLRev packages (community packages or custom built ones).
 
-Step Search
-   - Operation: Search
-Step Metadata
-   - Operation: Load
-   - Operation: Prep
-   - Operation: Dedupe
-Step Prescreen
-   - Operation: Prescreen
+Step Problem formulation
+   - Operation: init
+Step Metadata retrieval
+   - Operation: search
+   - Operation: load
+   - Operation: prep
+   - Operation: dedupe
+Step Metadata prescreen
+   - Operation: prescreen
 Step PDFs
-   - Operation: PDF get
-   - Operation: PDF prep
-Step Screen
-   - Operation: Screen
+   - Operation: pdf-get
+   - Operation: pdf-prep
+Step PDF screen
+   - Operation: screen
 Step Data
-   - Operation: Data
-   - Operation: Paper
+   - Operation: data
 
-Operations lead records to transition between states as illustrated in the following
+Operations can lead records to transition between states as illustrated in the following.
 
-TODO : add search
-
-.. figure:: ../../../figures/state-machine.svg
-   :width: 700
+.. figure:: ../../../figures/steps_operations.svg
+   :width: 800
    :alt: Overview of states
 
 
