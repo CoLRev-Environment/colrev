@@ -116,6 +116,13 @@ def main(ctx: click.core.Context) -> None:
     help="Add search results example",
 )
 @click.option(
+    "-lpdf",
+    "--local_pdf_collection",
+    is_flag=True,
+    default=False,
+    help="Add a local PDF collection repository",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -131,7 +138,12 @@ def main(ctx: click.core.Context) -> None:
 )
 @click.pass_context
 def init(
-    ctx: click.core.Context, type: str, example: bool, verbose: bool, force: bool
+    ctx: click.core.Context,
+    type: str,
+    example: bool,
+    lpdf: bool,
+    verbose: bool,
+    force: bool,
 ) -> None:
     """Initialize (define review objectives and type)"""
     # pylint: disable=import-outside-toplevel
@@ -151,6 +163,7 @@ def init(
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
             example=example,
+            local_pdf_collection=lpdf,
         )
 
     except (

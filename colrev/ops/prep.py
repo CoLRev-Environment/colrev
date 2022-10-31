@@ -116,7 +116,6 @@ class Prep(colrev.operation.Operation):
         self.fields_to_keep += self.review_manager.settings.prep.fields_to_keep
 
         self.debug_mode = False
-        self.cpus: int = self.cpus * 4
         self.pad = 0
 
     def check_dbs_availability(self) -> None:
@@ -752,7 +751,7 @@ class Prep(colrev.operation.Operation):
                     )
                     pool = Pool(mp.cpu_count() // 2)
                 else:
-                    pool = Pool(self.cpus)
+                    pool = Pool(self.cpus * 4)
                 prepared_records = pool.map(self.prepare, preparation_data)
                 pool.close()
                 pool.join()

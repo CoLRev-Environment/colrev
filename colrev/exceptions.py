@@ -234,6 +234,14 @@ class NonEmptyDirectoryError(CoLRevException):
         super().__init__(self.message)
 
 
+class RepoInitError(CoLRevException):
+    """Error during initialization of CoLRev project."""
+
+    def __init__(self, *, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Search
 
 
@@ -283,10 +291,6 @@ class UnsupportedImportFormatError(CoLRevException):
             + f"({self.import_path.name}) "
         )
         super().__init__(self.message)
-
-
-class BibFileFormatError(CoLRevException):
-    """An error in the bib-file format was detected."""
 
 
 # Dedupe

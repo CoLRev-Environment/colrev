@@ -37,18 +37,22 @@ class Initializer:
         *,
         review_type: str,
         example: bool = False,
-        local_index_repo: bool = False,
+        local_pdf_collection: bool = False,
     ) -> None:
 
         if review_type is None:
             review_type = "literature_review"
 
         saved_args = locals()
-        assert not (example and local_index_repo)
+        if example and local_pdf_collection:
+            raise colrev_exceptions.RepoInitError(
+                msg="Cannot initialize local_pdf_collection repository with example data."
+            )
 
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         if "." not in self.review_type:
             self.review_type = "colrev_built_in." + self.review_type
+
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=True, navigate_to_home_dir=False
         )
@@ -71,10 +75,7 @@ class Initializer:
         self.instructions: typing.List[str] = []
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
-        self.__require_empty_directory()
-        self.logger.info("Create git repository")
         self.__setup_git()
-        self.logger.info("Add files")
         self.__setup_files(path=Path.cwd())
 
         if example:
@@ -84,10 +85,9 @@ class Initializer:
 
         self.__create_commit(saved_args=saved_args)
         if not example:
-            self.review_manager.logger.info("Register repo")
             self.__register_repo()
-        if local_index_repo:
-            self.__create_local_index()
+        if local_pdf_collection:
+            self.__create_local_pdf_collection()
 
         self.__post_commit_edits()
 
@@ -100,7 +100,6 @@ class Initializer:
         cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
         cur_content = [x for x in cur_content if not x.startswith("venv")]
 
-        # pylint: disable=duplicate-code
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
             cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
         if cur_content:
@@ -140,12 +139,14 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
+        self.review_manager.logger.info("Register repo")
+
         environment_manager = self.review_manager.get_environment_manager()
         environment_manager.register_repo(path_to_register=Path.cwd())
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
-        del saved_args["local_index_repo"]
+        del saved_args["local_pdf_collection"]
         self.review_manager.create_commit(
             msg="Initial commit",
             manual_author=True,
@@ -155,6 +156,8 @@ class Initializer:
 
     def __setup_files(self, *, path: Path) -> None:
         # pylint: disable=too-many-locals
+
+        self.logger.info("Add files")
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
@@ -297,6 +300,8 @@ class Initializer:
 
     def __setup_git(self) -> None:
 
+        self.logger.info("Create git repository")
+
         git.Repo.init()
 
         # To check if git actors are set
@@ -341,23 +346,6 @@ class Initializer:
                         colors.END,
                     )
 
-    def __require_empty_directory(self) -> None:
-
-        cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
-        cur_content = [x for x in cur_content if not x.startswith("venv")]
-
-        if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
-            cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
-        if str(colrev.review_manager.ReviewManager.SETTINGS_RELATIVE) in cur_content:
-            cur_content.remove(
-                str(colrev.review_manager.ReviewManager.SETTINGS_RELATIVE)
-            )
-
-        if cur_content:
-            raise colrev_exceptions.NonEmptyDirectoryError(
-                filepath=Path.cwd(), content=cur_content
-            )
-
     def __create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
@@ -383,22 +371,24 @@ class Initializer:
             json.dump(settings, outfile, indent=4)
         git_repo.index.add(["settings.json"])
 
-    def __create_local_index(self) -> None:
+    def __create_local_pdf_collection(self) -> None:
 
         self.review_manager.report_logger.handlers = []
 
         local_index = self.review_manager.get_local_index()
-        local_index_path = local_index.local_environment_path / Path("local_index")
+        local_pdf_collection_path = local_index.local_environment_path / Path(
+            "local_pdf_collection"
+        )
 
         curdir = Path.cwd()
-        if not local_index_path.is_dir():
-            local_index_path.mkdir(parents=True, exist_ok=True)
-            os.chdir(local_index_path)
+        if not local_pdf_collection_path.is_dir():
+            local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
+            os.chdir(local_pdf_collection_path)
             Initializer(
-                review_type="curated_masterdata",
-                local_index_repo=True,
+                review_type="colrev_built_in.literature_review",
+                local_pdf_collection=True,
             )
-            self.logger.info("Created local_index repository")
+            self.logger.info("Created local_pdf_collection repository")
 
         os.chdir(curdir)
 

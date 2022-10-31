@@ -415,13 +415,15 @@ class ReviewManager:
         cls,
         review_type: str,
         example: bool = False,
-        local_index_repo: bool = False,
+        local_pdf_collection: bool = False,
     ) -> colrev.ops.init.Initializer:
         """Get an init operation object"""
         import colrev.ops.init
 
         return colrev.ops.init.Initializer(
-            review_type=review_type, example=example, local_index_repo=local_index_repo
+            review_type=review_type,
+            example=example,
+            local_pdf_collection=local_pdf_collection,
         )
 
     @classmethod
