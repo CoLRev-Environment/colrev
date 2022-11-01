@@ -11,7 +11,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
 import colrev.ops.search_sources
 import colrev.record
 

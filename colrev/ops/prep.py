@@ -14,7 +14,9 @@ import timeout_decorator
 
 import colrev.env.utils
 import colrev.operation
-import colrev.ops.built_in.database_connectors as db_connectors
+import colrev.ops.built_in.search_sources.crossref as crossref_connector
+import colrev.ops.built_in.search_sources.dblp as dblp_connector
+import colrev.ops.built_in.search_sources.open_library as open_library_connector
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -124,11 +126,16 @@ class Prep(colrev.operation.Operation):
         # The following could become default methods for the PreparationInterface
 
         self.review_manager.logger.info("Check availability of connectors...")
-        db_connectors.CrossrefConnector.check_status(prep_operation=self)
+        crossref_source = crossref_connector.CrossrefSourceSearchSource(
+            source_operation=self
+        )
+        crossref_source.check_status(prep_operation=self)
         self.review_manager.logger.info("CrossrefConnector available")
-        db_connectors.DBLPConnector.check_status(prep_operation=self)
+        dblp_source = dblp_connector.DBLPSearchSource(source_operation=self)
+        dblp_source.check_status(prep_operation=self)
         self.review_manager.logger.info("DBLPConnector available")
-        db_connectors.OpenLibraryConnector.check_status(prep_operation=self)
+        open_library_source = open_library_connector.OpenLibraryConnector()
+        open_library_source.check_status(prep_operation=self)
         self.review_manager.logger.info("OpenLibraryConnector available")
 
         print()

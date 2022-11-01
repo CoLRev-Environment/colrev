@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -50,7 +50,10 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record based on Crossref metadata"""
 
-        colrev.ops.built_in.database_connectors.CrossrefConnector.get_masterdata_from_crossref(
+        crossref_source = crossref_connector.CrossrefSourceSearchSource(
+            source_operation=prep_operation
+        )
+        crossref_source.get_masterdata_from_crossref(
             prep_operation=prep_operation, record=record
         )
         return record

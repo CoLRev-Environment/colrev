@@ -16,7 +16,6 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.database_connectors
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors

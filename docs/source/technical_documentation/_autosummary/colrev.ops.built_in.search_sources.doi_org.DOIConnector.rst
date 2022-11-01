@@ -1,7 +1,7 @@
-colrev.ops.built\_in.database\_connectors.DOIConnector
-======================================================
+colrev.ops.built\_in.search\_sources.doi\_org.DOIConnector
+==========================================================
 
-.. currentmodule:: colrev.ops.built_in.database_connectors
+.. currentmodule:: colrev.ops.built_in.search_sources.doi_org
 
 .. autoclass:: DOIConnector
    :members:

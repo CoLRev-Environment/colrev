@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -52,12 +52,12 @@ class DOIMetadataPrep(JsonSchemaMixin):
 
         if "doi" not in record.data:
             return record
-        colrev.ops.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
+        doi_connector.DOIConnector.retrieve_doi_metadata(
             review_manager=prep_operation.review_manager,
             record=record,
             timeout=prep_operation.timeout,
         )
-        colrev.ops.built_in.database_connectors.DOIConnector.get_link_from_doi(
+        doi_connector.DOIConnector.get_link_from_doi(
             record=record,
             review_manager=prep_operation.review_manager,
         )

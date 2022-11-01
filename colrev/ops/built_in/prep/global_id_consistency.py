@@ -12,7 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.crossref as crossref_connector
+import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -55,10 +56,11 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
 
         if "doi" in record.data:
             record_copy = record.copy_prep_rec()
-            crossref_connector = (
-                colrev.ops.built_in.database_connectors.CrossrefConnector
+
+            crossref_search_source = crossref_connector.CrossrefSourceSearchSource(
+                source_operation=prep_operation
             )
-            crossref_md = crossref_connector.get_masterdata_from_crossref(
+            crossref_md = crossref_search_source.get_masterdata_from_crossref(
                 prep_operation=prep_operation, record=record_copy
             )
             for key, value in crossref_md.data.items():
@@ -84,9 +86,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
 
         if "url" in record.data:
             try:
-                url_connector = colrev.ops.built_in.database_connectors.URLConnector()
+                url_connector = website_connector.WebsiteConnector()
                 url_record = record.copy_prep_rec()
-                url_connector.retrieve_md_from_url(
+                url_connector.retrieve_md_from_website(
                     record=url_record, prep_operation=prep_operation
                 )
                 for key, value in url_record.data.items():

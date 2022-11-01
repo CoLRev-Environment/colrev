@@ -14,7 +14,6 @@ from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.database_connectors
 import colrev.ops.search_sources
 import colrev.record
 

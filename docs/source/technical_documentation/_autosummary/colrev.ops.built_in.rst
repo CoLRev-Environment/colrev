@@ -27,7 +27,6 @@ colrev.ops.built\_in
    :recursive:
 
    colrev.ops.built_in.data
-   colrev.ops.built_in.database_connectors
    colrev.ops.built_in.dedupe
    colrev.ops.built_in.load_conversion
    colrev.ops.built_in.pdf_get

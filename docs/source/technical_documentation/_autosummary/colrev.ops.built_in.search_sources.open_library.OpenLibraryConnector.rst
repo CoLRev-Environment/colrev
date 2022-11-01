@@ -1,7 +1,7 @@
-colrev.ops.built\_in.database\_connectors.OpenLibraryConnector
-==============================================================
+colrev.ops.built\_in.search\_sources.open\_library.OpenLibraryConnector
+=======================================================================
 
-.. currentmodule:: colrev.ops.built_in.database_connectors
+.. currentmodule:: colrev.ops.built_in.search_sources.open_library
 
 .. autoclass:: OpenLibraryConnector
    :members:

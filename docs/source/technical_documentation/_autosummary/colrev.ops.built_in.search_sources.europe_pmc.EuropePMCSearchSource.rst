@@ -17,10 +17,12 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       :nosignatures:
 
       ~EuropePMCSearchSource.all_json_schemas
+      ~EuropePMCSearchSource.europe_pcmc_query
       ~EuropePMCSearchSource.field_mapping
       ~EuropePMCSearchSource.from_dict
       ~EuropePMCSearchSource.from_json
       ~EuropePMCSearchSource.from_object
+      ~EuropePMCSearchSource.get_masterdata_from_europe_pmc
       ~EuropePMCSearchSource.heuristic
       ~EuropePMCSearchSource.json_schema
       ~EuropePMCSearchSource.load_fixes

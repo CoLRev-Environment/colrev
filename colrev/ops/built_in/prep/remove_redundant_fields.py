@@ -11,7 +11,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
 import colrev.ops.search_sources
 import colrev.record
 
