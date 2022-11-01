@@ -18,6 +18,8 @@ import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from docker.errors import APIError
+from docker.errors import DockerException
 
 import colrev.env.package_manager
 import colrev.env.utils
@@ -233,6 +235,7 @@ class Manuscript(JsonSchemaMixin):
 
         temp = tempfile.NamedTemporaryFile()
         paper_path = self.settings.paper_path
+        Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
         with open(temp.name, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
@@ -393,6 +396,7 @@ class Manuscript(JsonSchemaMixin):
 
         temp = tempfile.NamedTemporaryFile()
         paper_path = self.settings.paper_path
+        Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
         with open(temp.name, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
@@ -530,6 +534,7 @@ class Manuscript(JsonSchemaMixin):
                 # pylint: disable=consider-using-with
                 temp = tempfile.NamedTemporaryFile()
                 paper_path = self.settings.paper_path
+                Path(temp.name).unlink(missing_ok=True)
                 paper_path.rename(temp.name)
                 with open(temp.name, encoding="utf-8") as reader, open(
                     paper_path, "w", encoding="utf-8"
@@ -598,21 +603,23 @@ class Manuscript(JsonSchemaMixin):
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
 
-        uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
-        gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
-        user = f"{uid}:{gid}"
-
-        client = docker.from_env()
+        # pylint: disable=duplicate-code
         try:
+            uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
+            gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
+            user = f"{uid}:{gid}"
+
+            client = docker.from_env()
             msg = f"Running docker container created from image {self.pandoc_image}"
             data_operation.review_manager.report_logger.info(msg)
-            # data_operation.review_manager.logger.debug(msg)
+
             client.containers.run(
                 image=self.pandoc_image,
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
             )
+
         except docker.errors.ImageNotFound:
             data_operation.review_manager.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
@@ -621,6 +628,10 @@ class Manuscript(JsonSchemaMixin):
                     "pandoc service failed (tried to fetch csl without Internet connection)"
                 ) from exc
             raise exc
+        except (DockerException, APIError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
         """Build the manuscript (based on pandoc)"""

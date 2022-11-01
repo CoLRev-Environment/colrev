@@ -7,6 +7,7 @@ import time
 import docker
 import requests
 from docker.errors import APIError
+from docker.errors import DockerException
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
@@ -29,19 +30,24 @@ class ZoteroTranslationService:
     ) -> None:
         """Start the zotero translation service"""
 
+        # pylint: disable=duplicate-code
+
         if self.zotero_service_available():
             return
 
-        client = docker.from_env()
         try:
+            client = docker.from_env()
             _ = client.containers.run(
                 self.image_name,
                 ports={"1969/tcp": ("127.0.0.1", 1969)},
                 auto_remove=True,
                 detach=True,
             )
-        except APIError:
-            pass
+
+        except (DockerException, APIError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
         if startup_without_waiting:
             return

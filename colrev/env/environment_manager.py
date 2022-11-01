@@ -13,6 +13,8 @@ import docker
 import git
 import pandas as pd
 import yaml
+from docker.errors import APIError
+from docker.errors import DockerException
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 from opensearchpy.exceptions import NotFoundError
@@ -52,11 +54,16 @@ class EnvironmentManager:
     def stop_docker_services(self) -> None:
         """Stop registered docker services"""
 
-        client = docker.from_env()
-        for container in client.containers.list():
-            if any(x in str(container.image) for x in self.__registered_services):
-                container.stop()
-                print(f"Stopped container {container.name} ({container.image})")
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if any(x in str(container.image) for x in self.__registered_services):
+                    container.stop()
+                    print(f"Stopped container {container.name} ({container.image})")
+        except (DockerException, APIError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
     def load_environment_registry(self) -> list:
         """Load the local registry"""
@@ -134,23 +141,30 @@ class EnvironmentManager:
     def build_docker_image(self, *, imagename: str, image_path: Path = None) -> None:
         """Build a docker image"""
 
-        client = docker.from_env()
-        repo_tags = [t for image in client.images.list() for t in image.tags]
+        try:
+            client = docker.from_env()
+            repo_tags = [t for image in client.images.list() for t in image.tags]
 
-        if imagename not in repo_tags:
+            if imagename not in repo_tags:
 
-            if image_path:
-                assert colrev.review_manager.__file__
-                colrev_path = Path("")
-                if colrev.review_manager.__file__:
-                    colrev_path = Path(colrev.review_manager.__file__).parents[0]
-                print(f"Building {imagename} Docker image ...")
-                context_path = colrev_path / image_path
-                client.images.build(path=str(context_path), tag=f"{imagename}:latest")
+                if image_path:
+                    assert colrev.review_manager.__file__
+                    colrev_path = Path("")
+                    if colrev.review_manager.__file__:
+                        colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                    print(f"Building {imagename} Docker image ...")
+                    context_path = colrev_path / image_path
+                    client.images.build(
+                        path=str(context_path), tag=f"{imagename}:latest"
+                    )
 
-            else:
-                print(f"Pulling {imagename} Docker image...")
-                client.images.pull(imagename)
+                else:
+                    print(f"Pulling {imagename} Docker image...")
+                    client.images.pull(imagename)
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
     def check_git_installed(self) -> None:
         """Check whether git is installed"""

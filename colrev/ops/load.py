@@ -290,7 +290,7 @@ class Load(colrev.operation.Operation):
                         sfp_name.name
                     )
 
-                cmd = "Enter the search query (or NA)".ljust(70, " ") + ": "
+                cmd = "Enter the search query (or NA)".ljust(40, " ") + ": "
                 query_input = ""
                 if not skip_query:
                     query_input = input(cmd)
@@ -303,15 +303,15 @@ class Load(colrev.operation.Operation):
 
             else:
                 print(
-                    "Source name".ljust(70, " ")
+                    "Source name".ljust(40, " ")
                     + f": {heuristic_source['source_candidate'].endpoint}"
                 )
                 print(
-                    "Source identifier".ljust(70, " ")
+                    "Source identifier".ljust(40, " ")
                     + f": {heuristic_source['source_candidate'].source_identifier}"
                 )
 
-            # cmd = "Enter search_parameters".ljust(70, " ") + ": "
+            # cmd = "Enter search_parameters".ljust(40, " ") + ": "
             # search_parameters = input(cmd)
             # heuristic_source[
             #     "source_candidate"
@@ -319,7 +319,7 @@ class Load(colrev.operation.Operation):
 
             comment = None  # type: ignore
             if not skip_query:
-                cmd = "Enter a comment (or NA)".ljust(70, " ") + ": "
+                cmd = "Enter a comment (or NA)".ljust(40, " ") + ": "
                 comment_input = input(cmd)
                 if comment_input != "":
                     comment = comment_input
