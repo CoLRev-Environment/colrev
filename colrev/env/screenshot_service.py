@@ -8,8 +8,11 @@ from pathlib import Path
 
 import docker
 import requests
+from docker.errors import APIError
+from docker.errors import DockerException
 
 import colrev.env.environment_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 
@@ -28,22 +31,30 @@ class ScreenshotService:
     def start_screenshot_service(self) -> None:
         """Start the screenshot service"""
 
+        # pylint: disable=duplicate-code
+
         if self.screenshot_service_available():
             return
 
         self.review_manager.environment_manager.register_ports(ports=["3000"])
-        client = docker.from_env()
 
-        running_containers = [
-            str(container.image) for container in client.containers.list()
-        ]
-        if self.chrome_browserless_image not in running_containers:
-            client.containers.run(
-                self.chrome_browserless_image,
-                ports={"3000/tcp": ("127.0.0.1", 3000)},
-                auto_remove=True,
-                detach=True,
-            )
+        try:
+            client = docker.from_env()
+
+            running_containers = [
+                str(container.image) for container in client.containers.list()
+            ]
+            if self.chrome_browserless_image not in running_containers:
+                client.containers.run(
+                    self.chrome_browserless_image,
+                    ports={"3000/tcp": ("127.0.0.1", 3000)},
+                    auto_remove=True,
+                    detach=True,
+                )
+        except (DockerException, APIError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
         i = 0
         while i < 45:

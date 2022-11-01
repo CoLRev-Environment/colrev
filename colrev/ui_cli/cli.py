@@ -11,7 +11,6 @@ from pathlib import Path
 import click
 import click_completion.core
 import pandas as pd
-from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -166,10 +165,7 @@ def init(
             local_pdf_collection=lpdf,
         )
 
-    except (
-        colrev_exceptions.ParameterError,
-        colrev_exceptions.NonEmptyDirectoryError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -220,15 +216,8 @@ def status(
 
     except KeyboardInterrupt:
         print("Stopped...")
-    except (
-        colrev_exceptions.CoLRevUpgradeError,
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.RepoSetupError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
-    except DockerException as exc:
-        print(exc)
-        print("Please install and start Docker service")
 
 
 @main.command(help_priority=3)
@@ -274,11 +263,8 @@ def retrieve(
         dedupe_operation = review_manager.get_dedupe_operation()
         dedupe_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
-        logging.error(exc)
+    except colrev_exceptions.CoLRevException as exc:
+        print(exc)
 
 
 @main.command(help_priority=4)
@@ -350,12 +336,7 @@ def search(
 
         search_operation.main(selection_str=selected)
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.NoSearchFeedRegistered,
-        colrev_exceptions.ServiceNotAvailableException,
-        colrev_exceptions.ParameterError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -425,10 +406,7 @@ def load(
         load_operation = review_manager.get_load_operation()
         load_operation.main(keep_ids=keep_ids, combine_commits=combine_commits)
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.SearchSettingsError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -539,16 +517,13 @@ def prep(
         print("   colrev prep --reset_records ID1,ID2,...")
         print()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.MissingDependencyError,
-    ) as exc:
-        print(exc)
-        return
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
         print("You can use the force mode to override")
         print("  colrev prep -f")
+        return
+    except colrev_exceptions.CoLRevException as exc:
+        print(exc)
 
 
 @main.command(help_priority=7)
@@ -588,8 +563,8 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
 
         prep_man_operation.main()
 
-    except colrev_exceptions.InvalidSettingsError as exc:
-        logging.error(exc)
+    except colrev_exceptions.CoLRevException as exc:
+        print(exc)
 
 
 def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
@@ -670,11 +645,7 @@ def dedupe(
 
         dedupe_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-        colrev_exceptions.DedupeError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -771,11 +742,7 @@ def prescreen(
 
         prescreen_operation.main(split_str=split)
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-        colrev_exceptions.CleanRepoRequiredError,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -873,10 +840,7 @@ def screen(
 
         screen_operation.main(split_str=split)
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -916,11 +880,8 @@ def pdfs(
         pdf_prep_operation = review_manager.get_pdf_prep_operation()
         pdf_prep_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
-        logging.error(exc)
+    except colrev_exceptions.CoLRevException as exc:
+        print(exc)
 
 
 @main.command(help_priority=12)
@@ -1003,10 +964,7 @@ def pdf_get(
 
         pdf_get_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -1093,10 +1051,7 @@ def pdf_get_man(
 
         pdf_get_man_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -1158,11 +1113,8 @@ def pdf_prep(
 
         pdf_prep_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
-        logging.error(exc)
+    except colrev_exceptions.CoLRevException as exc:
+        print(exc)
 
 
 def __delete_first_pages_cli(
@@ -1271,10 +1223,7 @@ def pdf_prep_man(
 
         pdf_prep_man_operation.main()
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -1380,10 +1329,7 @@ def data(
                 "    colrev data --add_endpoint ENDNOTE"
             )
 
-    except (
-        colrev_exceptions.InvalidSettingsError,
-        colrev_exceptions.ProcessOrderViolation,
-    ) as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -1538,9 +1484,8 @@ def validate(
 
         if not displayed:
             review_manager.logger.info("No preparation changes above threshold")
-    except colrev_exceptions.InvalidSettingsError as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
-        return
 
 
 @main.command(help_priority=18)
@@ -1636,9 +1581,8 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
         # (whole file -> add as source/load vs. records individually like a prescreen)
         distribute_operation.main(path=path, target=target)
 
-    except colrev_exceptions.InvalidSettingsError as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
-        return
 
 
 def __print_environment_status(
@@ -1823,7 +1767,7 @@ def env(
 
         environment_registry = environment_manager.load_environment_registry()
         if str(unregister) not in [x["source_url"] for x in environment_registry]:
-            logging.error("Not in local registry (cannot remove): %s", unregister)
+            print("Not in local registry (cannot remove): %s", unregister)
         else:
             environment_registry = [
                 x for x in environment_registry if x["source_url"] != str(unregister)
@@ -2068,7 +2012,7 @@ def pull(
 
         pull_operation.main(records_only=records_only, project_only=project_only)
 
-    except colrev_exceptions.InvalidSettingsError as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 
@@ -2150,7 +2094,7 @@ def push(
 
         push_operation.main(records_only=records_only, project_only=project_only)
 
-    except colrev_exceptions.InvalidSettingsError as exc:
+    except colrev_exceptions.CoLRevException as exc:
         print(exc)
 
 

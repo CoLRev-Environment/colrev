@@ -46,6 +46,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         if nr_items > 0:
             result["confidence"] = nr_ais_links / nr_items
 
+        if data.count("%U https://aisel.aisnet.org") > 0.9 * data.count("%T "):
+            result["confidence"] = 1.0
+
         return result
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:

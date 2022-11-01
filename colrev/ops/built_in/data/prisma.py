@@ -14,10 +14,12 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from docker.errors import APIError
+from docker.errors import DockerException
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.exceptions
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 
@@ -167,15 +169,17 @@ class PRISMA(JsonSchemaMixin):
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
 
-        uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
-        gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
-        user = f"{uid}:{gid}"
-
-        client = docker.from_env()
+        # pylint: disable=duplicate-code
         try:
+            uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
+            gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
+            user = f"{uid}:{gid}"
+
+            client = docker.from_env()
+
             msg = f"Running docker container created from image {self.prisma_image}"
             data_operation.review_manager.report_logger.info(msg)
-            # data_operation.review_manager.logger.debug(msg)
+
             client.containers.run(
                 image=self.prisma_image,
                 command=script,
@@ -186,10 +190,14 @@ class PRISMA(JsonSchemaMixin):
             data_operation.review_manager.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
             if "Temporary failure in name resolution" in str(exc):
-                raise colrev.exceptions.ServiceNotAvailableException(
+                raise colrev_exceptions.ServiceNotAvailableException(
                     "prisma service failed"
                 ) from exc
             raise exc
+        except (DockerException, APIError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Docker service not available. Please install/start Docker."
+            ) from exc
 
     def update_data(
         self,

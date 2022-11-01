@@ -880,13 +880,12 @@ class Dataset:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = str(self.RECORDS_FILE_RELATIVE) in [
-            item.a_path for item in self.__git_repo.index.diff(None)
-        ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
-
         try:
+            main_recs_changed = str(self.RECORDS_FILE_RELATIVE) in [
+                item.a_path for item in self.__git_repo.index.diff(None)
+            ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
             self.__get_last_records_filecontents()
-        except IndexError:
+        except (IndexError, ValueError):
             main_recs_changed = False
         return main_recs_changed
 
