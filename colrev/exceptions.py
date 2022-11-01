@@ -292,7 +292,7 @@ class BibFileFormatError(CoLRevException):
 # Dedupe
 
 
-class DedupeError(Exception):
+class DedupeError(CoLRevException):
     """An exception in the dedupe operation"""
 
     def __init__(self, message: str) -> None:
