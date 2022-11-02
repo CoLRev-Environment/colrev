@@ -26,10 +26,9 @@ if TYPE_CHECKING:
 class SourceSpecificPrep(JsonSchemaMixin):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
-
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,

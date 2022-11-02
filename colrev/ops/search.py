@@ -212,7 +212,7 @@ class Search(colrev.operation.Operation):
         """Setup a custom search script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom/custom_search_source_script.py")
+            file_path=Path("template/custom_scripts/custom_search_source_script.py")
         )
 
         if filedata:

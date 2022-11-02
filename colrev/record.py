@@ -376,14 +376,15 @@ class Record:
                     # Example: journal without number
                     # we should keep that information that a particular masterdata
                     # field is not required
-                    if key in self.data["colrev_masterdata_provenance"]:
+                    if key not in self.data["colrev_masterdata_provenance"]:
+                        self.data["colrev_masterdata_provenance"][key] = {}
+                    self.data["colrev_masterdata_provenance"][key][
+                        "note"
+                    ] = "not_missing"
+                    if source != "":
                         self.data["colrev_masterdata_provenance"][key][
-                            "note"
-                        ] = "not_missing"
-                        if source != "":
-                            self.data["colrev_masterdata_provenance"][key][
-                                "source"
-                            ] = source
+                            "source"
+                        ] = source
 
             else:
                 if key in self.identifying_field_keys:
@@ -505,7 +506,9 @@ class Record:
     def set_fields_complete(self) -> None:
         """Set fields to complete"""
         for identifying_field_key in self.identifying_field_keys:
-            if identifying_field_key in self.data["colrev_masterdata_provenance"]:
+            if identifying_field_key in self.data.get(
+                "colrev_masterdata_provenance", {}
+            ):
                 note = self.data["colrev_masterdata_provenance"][identifying_field_key][
                     "note"
                 ]

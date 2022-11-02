@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -22,6 +23,7 @@ class PDFHashService:
         review_manager.environment_manager.build_docker_image(
             imagename=self.pdf_hash_image, image_path=Path("docker/pdf_hash")
         )
+        self.review_manager = review_manager
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF hash"""
@@ -44,7 +46,9 @@ class PDFHashService:
         except subprocess.CalledProcessError as exc:
 
             if 0 == os.path.getsize(pdf_path):
-                print(f"PDF with size 0: {pdf_path}")
+                self.review_manager.logger.error(
+                    f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}"
+                )
 
             raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
 

@@ -30,7 +30,8 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # Optional: install autocompletion (Bash, Zsh, Fish):
    colrev install-click
 
-Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
+Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks
+On Windows, Docker must be started before using CoLRev. This can be done manually or automatically based on the Settings (General/Start Docker Desktop when you log in).
 Extensions are available in the `extensions section <manual/A_appendix.html#extension>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 **Python venv**

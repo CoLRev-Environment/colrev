@@ -140,7 +140,7 @@ def init(
     ctx: click.core.Context,
     type: str,
     example: bool,
-    lpdf: bool,
+    local_pdf_collection: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -162,7 +162,7 @@ def init(
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
             example=example,
-            local_pdf_collection=lpdf,
+            local_pdf_collection=local_pdf_collection,
         )
 
     except colrev_exceptions.CoLRevException as exc:

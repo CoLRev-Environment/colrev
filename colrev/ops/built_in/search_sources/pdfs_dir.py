@@ -213,19 +213,19 @@ class PDFSearchSource(JsonSchemaMixin):
         self, *, record_dict: dict, params: dict
     ) -> dict:
 
-        if "params" not in params:
+        if "scope" not in params:
             return record_dict
 
-        if "journal" in params["params"]:
-            record_dict["journal"] = params["params"]["journal"]
+        if "journal" in params["scope"]:
+            record_dict["journal"] = params["scope"]["journal"]
             record_dict["ENTRYTYPE"] = "article"
 
-        if "conference" in params["params"]:
-            record_dict["booktitle"] = params["params"]["conference"]
+        if "conference" in params["scope"]:
+            record_dict["booktitle"] = params["scope"]["conference"]
             record_dict["ENTRYTYPE"] = "inproceedings"
 
-        if "sub_dir_pattern" in params["params"]:
-            sub_dir_pattern = params["params"]["sub_dir_pattern"]
+        if "sub_dir_pattern" in params["scope"]:
+            sub_dir_pattern = params["scope"]["sub_dir_pattern"]
 
             # Note : no file access here (just parsing the patterns)
             # no absolute paths needed
@@ -487,13 +487,14 @@ class PDFSearchSource(JsonSchemaMixin):
 
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
-        print(len(pdfs_to_index))
-
         if self.skip_duplicates:
             pdfs_to_index = self.__skip_duplicates(
                 search_operation=search_operation, pdfs_to_index=pdfs_to_index
             )
-        print(len(pdfs_to_index))
+
+        search_operation.review_manager.logger.info(
+            f"PDFs to index: {len(pdfs_to_index)}"
+        )
         pdfs_to_index = self.__skip_broken_filepaths(
             search_operation=search_operation, pdfs_to_index=pdfs_to_index
         )

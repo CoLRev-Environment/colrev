@@ -7,6 +7,7 @@ import multiprocessing as mp
 import time
 import typing
 from copy import deepcopy
+from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
@@ -24,6 +25,8 @@ import colrev.ui_cli.cli_colors as colors
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
+
+PREP_COUNTER = Value("i", 0)
 
 
 class Prep(colrev.operation.Operation):
@@ -179,7 +182,7 @@ class Prep(colrev.operation.Operation):
             )
             if self.debug_mode:
                 print("\n")
-                time.sleep(0.3)
+                time.sleep(0.1)
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
@@ -239,12 +242,22 @@ class Prep(colrev.operation.Operation):
                 )
 
         if not self.review_manager.verbose_mode:
+
+            # pylint: disable=redefined-outer-name,invalid-name
+            with PREP_COUNTER.get_lock():
+                PREP_COUNTER.value += 1
+            progress = ""
+            if item["nr_items"] > 100:
+                progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(12, " ")
+
             if record.preparation_save_condition():
                 self.review_manager.logger.info(
-                    f" prepared {colors.GREEN}{record.data['ID']}{colors.END}"
+                    f" {progress}prepared {colors.GREEN}{record.data['ID']}{colors.END}"
                 )
             else:
-                self.review_manager.logger.info(f" prepared {record.data['ID']}")
+                self.review_manager.logger.info(
+                    f" {progress}prepared {record.data['ID']}"
+                )
 
         if self.last_round:
             if record.status_to_prepare():
@@ -403,7 +416,7 @@ class Prep(colrev.operation.Operation):
         """Setup a custom prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom/custom_prep_script.py")
+            file_path=Path("template/custom_scripts/custom_prep_script.py")
         )
         if filedata:
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:
@@ -482,7 +495,6 @@ class Prep(colrev.operation.Operation):
                 f"threshold ({self.retrieval_similarity})"
             )
             input("Press Enter to continue")
-            print("\n\n")
             self.review_manager.logger.info(
                 f"prepare_data: "
                 f"{self.review_manager.p_printer.pformat(prepare_data)}"
@@ -490,10 +502,12 @@ class Prep(colrev.operation.Operation):
         self.pad = prepare_data["PAD"]
         items = prepare_data["items"]
         prep_data = []
+        nr_items = len(items)
         for item in items:
             prep_data.append(
                 {
                     "record": colrev.record.PrepRecord(data=item),
+                    "nr_items": nr_items,
                     # Note : we cannot load endpoints here
                     # because pathos/multiprocessing
                     # does not support functions as parameters
@@ -539,8 +553,6 @@ class Prep(colrev.operation.Operation):
         self, *, debug_ids: str, debug_file: Path = None
     ) -> dict:
 
-        self.review_manager.logger.info("Data passed to the endpoints")
-
         if debug_file:
             with open(debug_file, encoding="utf8") as target_db:
                 records_dict = self.review_manager.dataset.load_records_dict(
@@ -571,14 +583,10 @@ class Prep(colrev.operation.Operation):
                 original_records=original_records,
                 condition_state=colrev.record.RecordState.md_imported,
             )
-            self.review_manager.logger.info("Imported record (retrieved from history)")
 
         if len(records) == 0:
             prep_data = {"nr_tasks": 0, "PAD": 0, "items": [], "prior_ids": []}
         else:
-            print(colrev.record.PrepRecord(data=records[0]))
-            input("Press Enter to continue")
-            print("\n\n")
             prep_data = {
                 "nr_tasks": len(debug_ids_list),
                 "PAD": len(debug_ids),
@@ -590,6 +598,11 @@ class Prep(colrev.operation.Operation):
     def __setup_prep_round(
         self, *, i: int, prep_round: colrev.settings.PrepRound
     ) -> None:
+
+        # pylint: disable=redefined-outer-name,invalid-name
+        PREP_COUNTER = Value("i", 0)
+        with PREP_COUNTER.get_lock():
+            PREP_COUNTER.value = 0
 
         self.first_round = bool(i == 0)
 
@@ -604,6 +617,8 @@ class Prep(colrev.operation.Operation):
                 {"endpoint": "colrev_built_in.update_metadata_status"}
             )
 
+        if self.debug_mode:
+            print("\n\n")
         self.review_manager.logger.info(f"Prepare ({prep_round.name})")
 
         self.retrieval_similarity = prep_round.similarity  # type: ignore

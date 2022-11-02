@@ -28,7 +28,7 @@ class DropFieldsPrep(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
-    always_apply_changes = False
+    always_apply_changes = True
     local_index: colrev.env.local_index.LocalIndex
 
     def __init__(

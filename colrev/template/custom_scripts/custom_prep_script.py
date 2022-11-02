@@ -22,6 +22,7 @@ class CustomPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+    settings_class = colrev.env.package_manager.DefaultSettings
 
     def __init__(
         self,
@@ -29,9 +30,7 @@ class CustomPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.env.package_manager.DefaultSettings, data=settings
-        )
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
