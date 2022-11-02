@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.europe_pmc as europe_pmc_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -46,7 +46,11 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record based on Europe PMC metadata"""
 
-        colrev.ops.built_in.database_connectors.EuropePMCConnector.get_masterdata_from_europe_pmc(
+        # pylint: disable=invalid-name
+        EuropePMCSearchSource = europe_pmc_connector.EuropePMCSearchSource(
+            source_operation=prep_operation, settings={"query": "NA"}
+        )
+        EuropePMCSearchSource.get_masterdata_from_europe_pmc(
             prep_operation=prep_operation, record=record
         )
         return record

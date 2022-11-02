@@ -17,6 +17,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       :nosignatures:
 
       ~DBLPSearchSource.all_json_schemas
+      ~DBLPSearchSource.check_status
       ~DBLPSearchSource.field_mapping
       ~DBLPSearchSource.from_dict
       ~DBLPSearchSource.from_json
@@ -26,6 +27,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.load_fixes
       ~DBLPSearchSource.prepare
       ~DBLPSearchSource.register_field_encoders
+      ~DBLPSearchSource.retrieve_dblp_records
       ~DBLPSearchSource.run_search
       ~DBLPSearchSource.to_dict
       ~DBLPSearchSource.to_json

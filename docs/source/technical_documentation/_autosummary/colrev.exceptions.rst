@@ -22,7 +22,6 @@ colrev.exceptions
    .. autosummary::
       :toctree:
 
-      BibFileFormatError
       CleanRepoRequiredError
       CoLRevException
       CoLRevUpgradeError
@@ -52,6 +51,7 @@ colrev.exceptions
       RecordNotInIndexException
       RecordNotInRepoException
       RecordNotIndexedException
+      RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
       SearchSettingsError

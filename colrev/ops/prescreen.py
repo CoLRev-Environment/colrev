@@ -68,7 +68,9 @@ class Prescreen(colrev.operation.Operation):
 
     def get_data(self) -> dict:
         """Get the data for prescreen"""
+
         # pylint: disable=duplicate-code
+
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -85,9 +87,7 @@ class Prescreen(colrev.operation.Operation):
             conditions=[{"colrev_status": colrev.record.RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        # self.review_manager.logger.debug(
-        #     self.review_manager.p_printer.pformat(prescreen_data)
-        # )
+
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:

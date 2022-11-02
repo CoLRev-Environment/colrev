@@ -12,7 +12,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.dblp as dblp_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -69,9 +69,10 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             # if "year" in record:
             #     query = query + "_" + record["year"]
 
-            for (
-                retrieved_record
-            ) in colrev.ops.built_in.database_connectors.DBLPConnector.retrieve_dblp_records(
+            dblp_source = dblp_connector.DBLPSearchSource(
+                source_operation=prep_operation
+            )
+            for retrieved_record in dblp_source.retrieve_dblp_records(
                 review_manager=prep_operation.review_manager,
                 query=query,
             ):

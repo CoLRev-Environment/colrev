@@ -31,14 +31,18 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.colrev_project
    colrev.ops.built_in.search_sources.crossref
    colrev.ops.built_in.search_sources.dblp
+   colrev.ops.built_in.search_sources.doi_org
    colrev.ops.built_in.search_sources.europe_pmc
    colrev.ops.built_in.search_sources.google_scholar
    colrev.ops.built_in.search_sources.local_index
+   colrev.ops.built_in.search_sources.open_library
    colrev.ops.built_in.search_sources.pdf_backward_search
    colrev.ops.built_in.search_sources.pdfs_dir
    colrev.ops.built_in.search_sources.pubmed
    colrev.ops.built_in.search_sources.scopus
    colrev.ops.built_in.search_sources.transport_research_international_documentation
    colrev.ops.built_in.search_sources.unknown_source
+   colrev.ops.built_in.search_sources.utils
    colrev.ops.built_in.search_sources.web_of_science
+   colrev.ops.built_in.search_sources.website
    colrev.ops.built_in.search_sources.wiley

@@ -9,7 +9,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.ops.built_in.database_connectors
 import colrev.ops.search
 import colrev.record
 

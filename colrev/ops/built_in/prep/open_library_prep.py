@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.open_library as open_library_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -48,9 +48,7 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
 
         if record.data.get("ENTRYTYPE", "NA") != "book":
             return record
-        OpenLibraryConnector = (
-            colrev.ops.built_in.database_connectors.OpenLibraryConnector
-        )
+        OpenLibraryConnector = open_library_connector.OpenLibraryConnector
         OpenLibraryConnector.get_masterdata_from_open_library(
             prep_operation=prep_operation, record=record
         )

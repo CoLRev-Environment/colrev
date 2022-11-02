@@ -40,7 +40,6 @@ class PDFPrep(colrev.operation.Operation):
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
         self.reprocess = reprocess
-        self.verbose = False
 
         self.cpus = 4
 
@@ -166,12 +165,6 @@ class PDFPrep(colrev.operation.Operation):
                     "colrev_status"
                 ] = colrev.record.RecordState.pdf_needs_manual_preparation
 
-            # except Exception as exc:  # pylint: disable=broad-except
-            #     print(exc)
-            #     record.data[
-            #         "colrev_status"
-            #     ] = colrev.record.RecordState.pdf_needs_manual_preparation
-            #     record.add_data_provenance_note(key="file", note=str(exc))
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 == record.data["colrev_status"]
@@ -238,9 +231,7 @@ class PDFPrep(colrev.operation.Operation):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        # self.review_manager.logger.debug(
-        #     self.review_manager.p_printer.pformat(prep_data)
-        # )
+
         return prep_data
 
     def __set_to_reprocess(self) -> None:

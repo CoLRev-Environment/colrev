@@ -34,9 +34,6 @@ class PDFGet(colrev.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
-        self.cpus = 4
-        self.verbose = False
-
         self.package_manager = self.review_manager.get_package_manager()
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True)
@@ -369,6 +366,7 @@ class PDFGet(colrev.operation.Operation):
 
     def __get_data(self) -> dict:
         # pylint: disable=duplicate-code
+
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -395,17 +393,6 @@ class PDFGet(colrev.operation.Operation):
             "nr_tasks": nr_tasks,
             "items": [{"record": item} for item in items],
         }
-        # self.review_manager.logger.debug(
-        #     self.review_manager.p_printer.pformat(pdf_get_data)
-        # )
-
-        # self.review_manager.logger.debug(
-        #     f"pdf_get_data: {self.review_manager.p_printer.pformat(pdf_get_data)}"
-        # )
-
-        # self.review_manager.logger.debug(
-        #     self.review_manager.p_printer.pformat(pdf_get_data["items"])
-        # )
 
         return pdf_get_data
 
@@ -500,7 +487,7 @@ class PDFGet(colrev.operation.Operation):
 
         if pdf_get_data["nr_tasks"] > 0:
 
-            pool = Pool(self.cpus)
+            pool = Pool(4)
             retrieved_record_list = pool.map(self.get_pdf, pdf_get_data["items"])
             pool.close()
             pool.join()

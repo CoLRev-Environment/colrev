@@ -13,7 +13,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -62,10 +62,12 @@ class CrossrefYearVolIssPrep(JsonSchemaMixin):
         else:
             return record
 
-        CrossrefConnector = colrev.ops.built_in.database_connectors.CrossrefConnector
+        crossref_source = crossref_connector.CrossrefSourceSearchSource(
+            source_operation=prep_operation
+        )
         try:
 
-            retrieved_records = CrossrefConnector.crossref_query(
+            retrieved_records = crossref_source.crossref_query(
                 review_manager=prep_operation.review_manager,
                 record_input=record,
                 jour_vol_iss_list=True,
@@ -76,7 +78,7 @@ class CrossrefYearVolIssPrep(JsonSchemaMixin):
                 not retrieved_records and retries < prep_operation.max_retries_on_error
             ):
                 retries += 1
-                retrieved_records = CrossrefConnector.crossref_query(
+                retrieved_records = crossref_source.crossref_query(
                     review_manager=prep_operation.review_manager,
                     record_input=record,
                     jour_vol_iss_list=True,
@@ -108,6 +110,7 @@ class CrossrefYearVolIssPrep(JsonSchemaMixin):
                 )
         except requests.exceptions.RequestException:
             pass
+        # pylint: disable=duplicate-code
         except KeyboardInterrupt:
             sys.exit()
 

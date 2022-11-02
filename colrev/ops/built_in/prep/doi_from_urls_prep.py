@@ -14,7 +14,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.database_connectors
+import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -90,7 +90,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                         retrieved_record = colrev.record.PrepRecord(
                             data=retrieved_record_dict
                         )
-                        colrev.ops.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
+                        doi_connector.DOIConnector.retrieve_doi_metadata(
                             review_manager=prep_operation.review_manager,
                             record=retrieved_record,
                             timeout=prep_operation.timeout,
