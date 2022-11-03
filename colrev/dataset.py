@@ -51,6 +51,10 @@ class Dataset:
             msg = "Not a CoLRev/git repository. Run\n    colrev init"
             raise colrev_exceptions.RepoSetupError(msg) from exc
 
+        if not self.review_manager.verbose_mode:
+            temp_f = io.StringIO()
+            pybtex.io.stderr = temp_f
+
     def get_origin_state_dict(self, *, file_object: io.StringIO = None) -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
 
