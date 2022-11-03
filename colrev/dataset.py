@@ -885,7 +885,7 @@ class Dataset:
                 item.a_path for item in self.__git_repo.index.diff(None)
             ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
             self.__get_last_records_filecontents()
-        except (IndexError, ValueError):
+        except (IndexError, ValueError, KeyError):
             main_recs_changed = False
         return main_recs_changed
 
