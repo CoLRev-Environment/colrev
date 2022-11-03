@@ -93,8 +93,7 @@ class SettingsEditor:
 
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
-
-            options = colrev.settings.Settings.get_settings_schema()
+            options = self.review_manager.settings.get_settings_schema()
 
             return jsonify(options)
 

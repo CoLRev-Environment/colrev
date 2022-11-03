@@ -3,6 +3,7 @@
 import pkgutil
 import typing
 import unicodedata
+from enum import Enum
 from pathlib import Path
 
 from jinja2 import Environment
@@ -87,6 +88,19 @@ def remove_accents(*, input_str: str) -> str:
 def percent_upper_chars(input_string: str) -> float:
     """Get the percentage of upper-case characters in a string"""
     return sum(map(str.isupper, input_string)) / len(input_string)
+
+
+def custom_asdict_factory(data) -> dict:  # type: ignore
+    """Custom asdict factory for (dataclass)object-to-dict conversion"""
+
+    def convert_value(obj: object) -> object:
+        if isinstance(obj, Enum):
+            return obj.value
+        if isinstance(obj, Path):
+            return str(obj)
+        return obj
+
+    return {k: convert_value(v) for k, v in data}
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ colrev.env.utils
       :toctree:
       :nosignatures:
 
+      custom_asdict_factory
       get_package_file_content
       get_template
       inplace_change

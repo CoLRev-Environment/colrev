@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import typing
+import warnings
 from dataclasses import asdict
 from dataclasses import dataclass
 from enum import Enum
@@ -15,6 +16,7 @@ import dacite
 from dacite import from_dict
 from dacite.exceptions import MissingValueError
 from dacite.exceptions import WrongTypeError
+from dataclasses_jsonschema import FieldEncoder
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.utils
@@ -192,17 +194,9 @@ class SearchSource(JsonSchemaMixin):
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""
 
-        def custom_asdict_factory(data) -> dict:  # type: ignore
-            def convert_value(obj: object) -> object:
-                if isinstance(obj, Enum):
-                    return obj.value
-                if isinstance(obj, Path):
-                    return str(obj)
-                return obj
-
-            return {k: convert_value(v) for k, v in data}
-
-        exported_dict = asdict(self, dict_factory=custom_asdict_factory)
+        exported_dict = asdict(
+            self, dict_factory=colrev.env.utils.custom_asdict_factory
+        )
 
         exported_dict["search_type"] = colrev.settings.SearchType[
             exported_dict["search_type"]
@@ -503,11 +497,22 @@ class Settings(JsonSchemaMixin):
             + str(self.data)
         )
 
-    @classmethod
-    def get_settings_schema(cls) -> dict:
+    def get_settings_schema(self) -> dict:
         """Get the json-schema for the settings"""
 
-        schema = cls.json_schema()
+        class PathField(FieldEncoder):
+            """JsonSchemaMixin encoder for Path fields"""
+
+            @property
+            def json_schema(self) -> dict:
+                return {"type": "path"}
+
+        JsonSchemaMixin.register_field_encoders({Path: PathField()})
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            schema = self.json_schema()
+
         sdefs = schema["definitions"]
         sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
             "package_endpoint_type": "load_conversion",
@@ -610,17 +615,9 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
     """Save the settings"""
 
-    def custom_asdict_factory(data) -> dict:  # type: ignore
-        def convert_value(obj: object) -> object:
-            if isinstance(obj, Enum):
-                return obj.value
-            if isinstance(obj, Path):
-                return str(obj)
-            return obj
-
-        return {k: convert_value(v) for k, v in data}
-
-    exported_dict = asdict(review_manager.settings, dict_factory=custom_asdict_factory)
+    exported_dict = asdict(
+        review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
+    )
     with open("settings.json", "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
     review_manager.dataset.add_changes(path=Path("settings.json"))
