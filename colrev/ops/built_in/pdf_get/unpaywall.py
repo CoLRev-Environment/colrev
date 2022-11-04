@@ -51,7 +51,7 @@ class Unpaywall(JsonSchemaMixin):
         url = f"https://api.unpaywall.org/v2/{doi}"
 
         try:
-            ret = requests.get(url, params={"email": review_manager.email})
+            ret = requests.get(url, params={"email": review_manager.email}, timeout=30)
             if ret.status_code == 500 and retry < 3:
                 return self.__unpaywall(
                     review_manager=review_manager, doi=doi, retry=retry + 1
@@ -111,6 +111,7 @@ class Unpaywall(JsonSchemaMixin):
                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
                 },
                 stream=True,
+                timeout=30,
             )
 
             if 200 == res.status_code:

@@ -110,6 +110,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             files={str(pdf_path): open(pdf_path, "rb", encoding="utf8")},
             data=options,
             headers={"Accept": "application/x-bibtex"},
+            timeout=30,
         )
 
         new_records_dict = search_operation.review_manager.dataset.load_records_dict(

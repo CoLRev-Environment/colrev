@@ -74,6 +74,7 @@ class ScreenshotService:
             ret = requests.get(
                 "http://127.0.0.1:3000/",
                 headers=content_type_header,
+                timeout=30,
             )
             browserless_chrome_available = ret.status_code == 200
 
@@ -103,7 +104,7 @@ class ScreenshotService:
             },
         }
 
-        ret = requests.post("http://127.0.0.1:3000/pdf", json=json_val)
+        ret = requests.post("http://127.0.0.1:3000/pdf", json=json_val, timeout=30)
 
         if 200 == ret.status_code:
             with open(pdf_filepath, "wb") as file:

@@ -98,6 +98,7 @@ class BibliographyExport(JsonSchemaMixin):
             "http://127.0.0.1:1969/import",
             headers=headers,
             files={"file": str.encode(content)},
+            timeout=30,
         )
         headers = {"Content-type": "application/json"}
         if "No suitable translators found" == ret.content.decode("utf-8"):
@@ -111,6 +112,7 @@ class BibliographyExport(JsonSchemaMixin):
                 "http://127.0.0.1:1969/export?format=refer",
                 headers=headers,
                 json=zotero_format,
+                timeout=30,
             )
 
         except Exception as exc:

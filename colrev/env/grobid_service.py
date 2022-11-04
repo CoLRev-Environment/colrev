@@ -32,7 +32,7 @@ class GrobidService:
             i += 1
             time.sleep(1)
             try:
-                ret = requests.get(self.GROBID_URL + "/api/isalive")
+                ret = requests.get(self.GROBID_URL + "/api/isalive", timeout=30)
                 if ret.text == "true":
                     return True
             except requests.exceptions.ConnectionError:

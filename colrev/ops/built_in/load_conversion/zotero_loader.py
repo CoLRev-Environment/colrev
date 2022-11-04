@@ -57,7 +57,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
         files = {"file": open(source.filename, "rb")}
         headers = {"Content-type": "text/plain"}
         ret = requests.post(
-            "http://127.0.0.1:1969/import", headers=headers, files=files
+            "http://127.0.0.1:1969/import", headers=headers, files=files, timeout=30
         )
         headers = {"Content-type": "application/json"}
         if "No suitable translators found" == ret.content.decode("utf-8"):
@@ -71,6 +71,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
                 "http://127.0.0.1:1969/export?format=bibtex",
                 headers=headers,
                 json=zotero_format,
+                timeout=30,
             )
             records = load_operation.review_manager.dataset.load_records_dict(
                 load_str=ret.content.decode("utf-8")

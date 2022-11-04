@@ -49,7 +49,7 @@ def add_data(
                     "https://github.com/citation-style-language/styles"
                 )
                 csl_link = input("Please select a citation style and provide the link.")
-                ret = requests.get(csl_link, allow_redirects=True)
+                ret = requests.get(csl_link, allow_redirects=True, timeout=30)
                 with open(Path(csl_link).name, "wb") as file:
                     file.write(ret.content)
                 default_endpoint_conf["csl_style"] = Path(csl_link).name

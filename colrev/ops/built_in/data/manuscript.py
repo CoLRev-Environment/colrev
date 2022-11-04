@@ -160,7 +160,7 @@ class Manuscript(JsonSchemaMixin):
                     csl_link = csl_match.group(1)
 
         if "http" in csl_link:
-            ret = requests.get(csl_link, allow_redirects=True)
+            ret = requests.get(csl_link, allow_redirects=True, timeout=30)
             csl_filename = (
                 self.data_operation.review_manager.DATA_DIR_RELATIVE
                 / Path(csl_link).name

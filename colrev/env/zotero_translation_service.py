@@ -73,6 +73,7 @@ class ZoteroTranslationService:
                 "http://127.0.0.1:1969/web",
                 headers=content_type_header,
                 data=url,
+                timeout=30,
             )
             if ret.status_code == 200:
                 return True

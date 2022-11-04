@@ -65,6 +65,7 @@ class MarkdownLoader(JsonSchemaMixin):
                 grobid_service.GROBID_URL + "/api/processCitation",
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
+                timeout=30,
             )
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")

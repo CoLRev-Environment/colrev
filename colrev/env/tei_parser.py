@@ -106,6 +106,7 @@ class TEIParser:
                 grobid_service.GROBID_URL + "/api/processFulltextDocument",
                 files={"input": open(str(self.pdf_path), "rb")},
                 data=options,
+                timeout=30,
             )
 
             # Possible extension: get header only (should be more efficient)
