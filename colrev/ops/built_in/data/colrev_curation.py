@@ -76,62 +76,35 @@ class ColrevCuration(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
     ) -> None:
         """Update the CoLRev curation"""
 
-        # pylint: disable=too-many-branches
-        start_year_values = list(self.settings.masterdata_restrictions.keys())
-
-        for record in records.values():
-            if record["colrev_status"] == colrev.record.RecordState.md_imported:
+        for record_dict in records.values():
+            if record_dict["colrev_status"] == colrev.record.RecordState.md_imported:
                 continue
-            if record.get("year", "UNKOWN") == "UNKNOWN":
-                record[
+            if record_dict.get("year", "UNKNOWN") == "UNKNOWN":
+                record_dict[
                     "colrev_status"
                 ] = colrev.record.RecordState.md_needs_manual_preparation
+                colrev.record.Record(data=record_dict).add_masterdata_provenance(
+                    key="year",
+                    source="colrev_curation.masterdata_restrictions",
+                    note="missing",
+                )
                 continue
 
-            year_index_diffs = [int(record["year"]) - int(x) for x in start_year_values]
-            year_index_diffs = [x if x > 0 else 2000 for x in year_index_diffs]
-            index_min = min(
-                range(len(year_index_diffs)), key=year_index_diffs.__getitem__
+            applicable_restrictions = (
+                data_operation.review_manager.dataset.get_applicable_restrictions(
+                    record_dict=record_dict,
+                )
             )
-            applicable_requirements = self.settings.masterdata_restrictions[
-                start_year_values[index_min]
-            ]
-            if "ENTRYTYPE" in applicable_requirements:
-                if applicable_requirements["ENTRYTYPE"] != record["ENTRYTYPE"]:
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
-            if "journal" in applicable_requirements:
-                if applicable_requirements["journal"] != record.get("journal", ""):
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
 
-            if "booktitle" in applicable_requirements:
-                if applicable_requirements["booktitle"] != record.get("booktitle", ""):
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
-
-            if "volume" in applicable_requirements:
-                if applicable_requirements["volume"]:
-                    if "volume" not in record:
-                        record[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
-
-            if "number" in applicable_requirements:
-                if applicable_requirements["number"]:
-                    if "number" not in record:
-                        record[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
+            colrev.record.Record(data=record_dict).apply_restrictions(
+                restrictions=applicable_restrictions
+            )
 
     def update_record_status_matrix(
         self,

@@ -22,6 +22,7 @@ colrev.record.Record
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
+      ~Record.apply_restrictions
       ~Record.change_entrytype
       ~Record.cleanup_pdf_processing_fields
       ~Record.complete_provenance

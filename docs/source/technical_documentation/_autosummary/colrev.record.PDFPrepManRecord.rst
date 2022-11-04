@@ -22,6 +22,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.add_masterdata_provenance
       ~PDFPrepManRecord.add_masterdata_provenance_note
       ~PDFPrepManRecord.add_provenance_all
+      ~PDFPrepManRecord.apply_restrictions
       ~PDFPrepManRecord.change_entrytype
       ~PDFPrepManRecord.cleanup_pdf_processing_fields
       ~PDFPrepManRecord.complete_provenance
