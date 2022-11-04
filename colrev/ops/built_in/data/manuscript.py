@@ -18,7 +18,6 @@ import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from docker.errors import APIError
 from docker.errors import DockerException
 
 import colrev.env.package_manager
@@ -628,9 +627,9 @@ class Manuscript(JsonSchemaMixin):
                     "pandoc service failed (tried to fetch csl without Internet connection)"
                 ) from exc
             raise exc
-        except (DockerException, APIError) as exc:
+        except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                "Docker service not available. Please install/start Docker."
+                f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
     def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:

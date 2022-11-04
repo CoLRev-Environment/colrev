@@ -8,7 +8,6 @@ from pathlib import Path
 
 import docker
 import requests
-from docker.errors import APIError
 from docker.errors import DockerException
 
 import colrev.env.environment_manager
@@ -51,9 +50,9 @@ class ScreenshotService:
                     auto_remove=True,
                     detach=True,
                 )
-        except (DockerException, APIError) as exc:
+        except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                "Docker service not available. Please install/start Docker."
+                f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
         i = 0

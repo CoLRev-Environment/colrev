@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import typing
 from datetime import datetime
 from pathlib import Path
@@ -13,7 +12,6 @@ import docker
 import git
 import pandas as pd
 import yaml
-from docker.errors import APIError
 from docker.errors import DockerException
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
@@ -60,9 +58,9 @@ class EnvironmentManager:
                 if any(x in str(container.image) for x in self.__registered_services):
                     container.stop()
                     print(f"Stopped container {container.name} ({container.image})")
-        except (DockerException, APIError) as exc:
+        except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                "Docker service not available. Please install/start Docker."
+                f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
     def load_environment_registry(self) -> list:
@@ -163,28 +161,32 @@ class EnvironmentManager:
                     client.images.pull(imagename)
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                "Docker service not available. Please install/start Docker."
+                f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
     def check_git_installed(self) -> None:
         """Check whether git is installed"""
-        # pylint: disable=consider-using-with
 
         try:
-            with open("/dev/null", "w", encoding="utf8") as null:
-                subprocess.Popen("git", stdout=null, stderr=null)
-        except OSError as exc:
-            raise colrev_exceptions.MissingDependencyError("git") from exc
+            git_instance = git.Git()
+            g_version = git_instance.version()
+            print(g_version)
+        except Exception as exc:  # pylint: disable=broad-except
+            print(exc)
+            print(g_version)
+            # raise colrev_exceptions.MissingDependencyError("git") from exc
 
     def check_docker_installed(self) -> None:
         """Check whether Docker is installed"""
-        # pylint: disable=consider-using-with
 
         try:
-            with open("/dev/null", "w", encoding="utf8") as null:
-                subprocess.Popen("docker", stdout=null, stderr=null)
-        except OSError as exc:
-            raise colrev_exceptions.MissingDependencyError("docker") from exc
+            client = docker.from_env()
+            d_version = client.version()
+            print(d_version)
+        except Exception as exc:  # pylint: disable=broad-except
+            print(exc)
+            print(d_version)
+            # raise colrev_exceptions.MissingDependencyError("docker") from exc
 
     def _get_status(
         self, *, review_manager: colrev.review_manager.ReviewManager

@@ -11,7 +11,6 @@ import docker
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from docker.errors import APIError
 from docker.errors import DockerException
 
 import colrev.env.package_manager
@@ -70,9 +69,9 @@ class BibutilsLoader(JsonSchemaMixin):
                 raise colrev_exceptions.ImportException(
                     "Docker images for bibutils not found"
                 ) from exc
-            except (DockerException, APIError) as exc:
+            except DockerException as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    "Docker service not available. Please install/start Docker."
+                    f"Docker service not available ({exc}). Please install/start Docker."
                 ) from exc
 
             sock = client.attach_socket(
