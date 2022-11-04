@@ -769,14 +769,14 @@ def prescreen(
 @click.option(
     "--create_split",
     type=int,
-    help="Split the prescreen between n researchers "
-    + "(same size, non-overlapping samples)",
+    help="Split the screen between n researchers "
+    + "(each researcher screens the same number of papers without overlaps)",
 )
 @click.option(
     "--split",
     type=str,
     default="",
-    help="Prescreen a split sample",
+    help="Screen a split sample",
 )
 @click.option(
     "-scs",

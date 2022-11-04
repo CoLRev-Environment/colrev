@@ -206,19 +206,20 @@ class Screen(colrev.operation.Operation):
     def create_screen_split(self, *, create_split: int) -> list:
         """Split the screen between researchers"""
 
-        screen_splits = []
-
         data = self.get_data()
         nrecs = math.floor(data["nr_tasks"] / create_split)
 
-        self.review_manager.report_logger.info(
+        self.review_manager.logger.info(
             f"Creating screen splits for {create_split} researchers " f"({nrecs} each)"
         )
 
-        added: list[str] = []
-        while len(added) < nrecs:
-            added.append(next(data["items"])["ID"])
-        screen_splits.append("colrev screen --split " + ",".join(added))
+        screen_splits = []
+        for _ in range(0, create_split):
+            added: list[str] = []
+            while len(added) < nrecs:
+                added.append(next(data["items"])["ID"])
+            addition = "colrev screen --split " + ",".join(added)
+            screen_splits.append(addition)
 
         return screen_splits
 
