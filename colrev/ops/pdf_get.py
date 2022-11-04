@@ -52,11 +52,14 @@ class PDFGet(colrev.operation.Operation):
                     if linked_file.is_file():
                         fpath.unlink()
                         shutil.copyfile(linked_file, new_fpath)
-                        self.review_manager.logger.info(f'Copied PDF ({record["ID"]})')
+                        self.review_manager.logger.info(
+                            f' {colors.GREEN}copied PDF for {record["ID"]} {colors.END}'
+                        )
                 elif new_fpath.is_file():
-                    self.review_manager.logger.warning(
-                        f'No need to copy PDF - already exits ({record["ID"]})'
-                    )
+                    if self.review_manager.verbose_mode:
+                        self.review_manager.logger.info(
+                            f'No need to copy PDF - already exits ({record["ID"]})'
+                        )
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
         """Link the PDF in its record (should be {ID}.pdf)"""
