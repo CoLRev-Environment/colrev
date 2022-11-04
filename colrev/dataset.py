@@ -334,7 +334,7 @@ class Dataset:
                 current_header_item_count = 0
                 continue
 
-            if "@" in line[:2] and not "NA" == record_header_item["ID"]:
+            if "@" in line[:2] and "NA" != record_header_item["ID"]:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0

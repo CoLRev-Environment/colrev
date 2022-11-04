@@ -897,6 +897,7 @@ class LocalIndex:
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         # pylint: disable=cyclic-import
+        # pylint: disable=too-many-branches
         import colrev.review_manager
 
         try:
@@ -921,18 +922,26 @@ class LocalIndex:
             for record in records.values():
                 record.update(metadata_source_repository_paths=repo_source_path)
 
+            curation_endpoints = [
+                x
+                for x in check_operation.review_manager.settings.data.data_package_endpoints
+                if x["endpoint"] == "colrev_built_in.colrev_curation"
+            ]
+            if not curation_endpoints:
+                return
+            curation_endpoint = curation_endpoints[0]
+
             # Set masterdata_provenace to CURATED:{url}
-            curation_url = check_operation.review_manager.settings.project.curation_url
-            if check_operation.review_manager.settings.project.curated_masterdata:
+            curation_url = curation_endpoint["curation_url"]
+            if check_operation.review_manager.settings.is_curated_masterdata_repo():
                 for record in records.values():
                     record.update(
                         colrev_masterdata_provenance=f"CURATED:{curation_url};;"
                     )
 
             # Add curation_url to curated fields (provenance)
-            for (
-                curated_field
-            ) in check_operation.review_manager.settings.project.curated_fields:
+            curated_fields = curation_endpoint["curated_fields"]
+            for curated_field in curated_fields:
 
                 for record_dict in records.values():
                     colrev.record.Record(data=record_dict).add_data_provenance(

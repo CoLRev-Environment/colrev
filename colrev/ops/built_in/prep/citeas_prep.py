@@ -86,7 +86,7 @@ class CiteAsPrep(JsonSchemaMixin):
         try:
 
             same_record_type_required = (
-                prep_operation.review_manager.settings.project.curated_masterdata
+                prep_operation.review_manager.settings.is_curated_masterdata_repo()
             )
 
             session = prep_operation.review_manager.get_cached_session()

@@ -85,7 +85,6 @@ class CuratedMasterdata(JsonSchemaMixin):
             "All records are automatically included in the screen."
         )
 
-        settings.project.curated_masterdata = True
         settings.prescreen.prescreen_package_endpoints = [
             {
                 "endpoint": "colrev_built_in.scope_prescreen",
@@ -112,6 +111,19 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "selected_source": "data/search/pdfs.bib",
             },
             {"endpoint": "colrev_built_in.curation_missing_dedupe"},
+        ]
+
+        settings.data.data_package_endpoints = [
+            {
+                "endpoint": "colrev_built_in.colrev_curation",
+                "version": "0.1",
+                "curation_url": "TODO",
+                "curated_masterdata": True,
+                "volume_number_requirements": [
+                    {"from_year": 1900, "to_year": 5000, "volume": True, "number": True}
+                ],
+                "curated_fields": ["doi", "url"],
+            }
         ]
 
         # curated repo: automatically prescreen/screen-include papers

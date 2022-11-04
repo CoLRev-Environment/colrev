@@ -810,6 +810,7 @@ class Upgrade(colrev.operation.Operation):
         # pylint: disable=too-many-locals
 
         self.__update_colrev_ids()
+
         if not Path("settings.json").is_file():
             filedata = colrev.env.utils.get_package_file_content(
                 file_path=Path("template/settings.json")
@@ -830,13 +831,72 @@ class Upgrade(colrev.operation.Operation):
                         if source["search_parameters"]["scope"]["path"] == "pdfs":
                             source["search_parameters"]["scope"]["path"] = "data/pdfs"
 
+        if "curation_url" in settings["project"]:
+            if settings["project"]["curation_url"] is not None:
+                records = self.review_manager.dataset.load_records_dict()
+                example_record = {
+                    "ENTRYTYPE": "article",
+                    "journal": "TODO",
+                    "volume": True,
+                    "number": True,
+                }
+                min_date = 3000
+                for record in records.values():
+                    if record[
+                        "colrev_status"
+                    ] in colrev.record.RecordState.get_post_x_states(
+                        state=colrev.record.RecordState.md_processed
+                    ):
+                        example_record = record
+                    if record.get("year", "3000").isdigit():
+                        if int(record.get("year", "3000")) < min_date:
+                            min_date = int(record["year"])
+                if min_date == 3000:
+                    min_date = 1900
+
+                curation_endpoint = {
+                    "endpoint": "colrev_built_in.colrev_curation",
+                    "curation_url": settings["project"]["curation_url"],
+                    "curated_masterdata": settings["project"].get(
+                        "curated_masterdata", False
+                    ),
+                    "masterdata_restrictions": {
+                        min_date: {
+                            "ENTRYTYPE": example_record["ENTRYTYPE"],
+                            "volume": bool("volume" in example_record),
+                            "number": bool("number" in example_record),
+                        }
+                    },
+                    "curated_fields": settings["project"].get("curated_fields", []),
+                }
+                if "journal" in example_record:
+                    curation_endpoint["masterdata_restrictions"][min_date][
+                        "journal"
+                    ] = example_record["journal"]
+                if "booktitle" in example_record:
+                    curation_endpoint["masterdata_restrictions"][min_date][
+                        "booktitle"
+                    ] = example_record["booktitle"]
+
+                settings["data"]["data_package_endpoints"].append(curation_endpoint)
+            del settings["project"]["curation_url"]
+            del settings["project"]["curated_masterdata"]
+            del settings["project"]["curated_fields"]
+            self.review_manager.logger.info(
+                "If masterdata_restrictions changed over time, "
+                "the settings need to be adapted manually."
+            )
+
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
 
         self.review_manager.dataset.add_changes(path=Path("settings.json"))
 
+        self.review_manager.settings = self.review_manager.load_settings()
+
+        self.review_manager.update_status_yaml()
+
         for bib_file in self.review_manager.DATA_DIR_RELATIVE.glob("**/*.bib"):
-            print(bib_file)
             colrev.env.utils.inplace_change(
                 filename=bib_file,
                 old_string="CURATED:https://github.com/geritwagner",

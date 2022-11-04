@@ -177,7 +177,7 @@ class StatusStats:
         self.nr_curated_records = len(
             [x for x in colrev_masterdata_items if "CURATED" in x]
         )
-        if review_manager.settings.project.curated_masterdata:
+        if review_manager.settings.is_curated_masterdata_repo():
             self.nr_curated_records = self.overall.md_processed
 
         self.atomic_steps = (

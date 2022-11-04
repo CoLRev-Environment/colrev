@@ -117,9 +117,6 @@ class ProjectSettings(JsonSchemaMixin):
     id_pattern: IDPattern
     share_stat_req: ShareStatReq
     delay_automated_processing: bool
-    curation_url: typing.Optional[str]
-    curated_masterdata: bool
-    curated_fields: typing.List[str]
     colrev_version: str
 
     def __str__(self) -> str:
@@ -471,6 +468,16 @@ class Settings(JsonSchemaMixin):
     pdf_prep: PDFPrepSettings
     screen: ScreenSettings
     data: DataSettings
+
+    def is_curated_masterdata_repo(self) -> bool:
+        """Check whether the masterdata is curated in this repository"""
+
+        curation_endpoints = [
+            x
+            for x in self.data.data_package_endpoints
+            if x["endpoint"] == "colrev_built_in.colrev_curation"
+        ]
+        return bool(curation_endpoints)
 
     def __str__(self) -> str:
         return (

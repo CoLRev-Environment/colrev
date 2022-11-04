@@ -42,7 +42,4 @@ colrev.settings.ProjectSettings
       ~ProjectSettings.id_pattern
       ~ProjectSettings.share_stat_req
       ~ProjectSettings.delay_automated_processing
-      ~ProjectSettings.curation_url
-      ~ProjectSettings.curated_masterdata
-      ~ProjectSettings.curated_fields
       ~ProjectSettings.colrev_version
