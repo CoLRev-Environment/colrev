@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Hook for reporting in CoLRev projects"""
 import sys
 from pathlib import Path
 
@@ -6,6 +7,8 @@ import colrev.review_manager
 
 
 def main() -> int:
+    """Main entrypoint for the reporting"""
+
     print(sys.argv)
     msgfile = Path(sys.argv[1])
 
