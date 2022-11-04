@@ -55,10 +55,6 @@ class Dataset:
             temp_f = io.StringIO()
             pybtex.io.stderr = temp_f
 
-        # TODO : initialize requirements more generally?
-        # DQ-Rule class? (some rules are for evaluation, some for fixing;
-        # rules depend on the context: curated repo or not?)
-        # generally: consolidate masterdata_restrictions and requirements?!
         self.masterdata_restrictions = self.__get_masterdata_restrictions()
 
     def get_origin_state_dict(self, *, file_object: io.StringIO = None) -> dict:
