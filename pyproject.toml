@@ -23,6 +23,10 @@ include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py
 
 [tool.poetry.scripts]
 colrev = "colrev.ui_cli.cli:main"
+colrev-hooks-check = "colrev.hooks.check:main"
+colrev-hooks-format = "colrev.hooks.format:main"
+colrev-hooks-report = "colrev.hooks.report:main"
+colrev-hooks-share = "colrev.hooks.share:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"

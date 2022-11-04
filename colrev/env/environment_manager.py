@@ -169,11 +169,9 @@ class EnvironmentManager:
 
         try:
             git_instance = git.Git()
-            g_version = git_instance.version()
-            print(g_version)
+            _ = git_instance.version()
         except Exception as exc:  # pylint: disable=broad-except
             print(exc)
-            print(g_version)
             # raise colrev_exceptions.MissingDependencyError("git") from exc
 
     def check_docker_installed(self) -> None:
@@ -181,11 +179,9 @@ class EnvironmentManager:
 
         try:
             client = docker.from_env()
-            d_version = client.version()
-            print(d_version)
+            _ = client.version()
         except Exception as exc:  # pylint: disable=broad-except
             print(exc)
-            print(d_version)
             # raise colrev_exceptions.MissingDependencyError("docker") from exc
 
     def _get_status(

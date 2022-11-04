@@ -31,6 +31,7 @@
    colrev.dataset
    colrev.env
    colrev.exceptions
+   colrev.hooks
    colrev.logger
    colrev.operation
    colrev.ops
