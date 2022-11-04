@@ -394,14 +394,14 @@ class RecordNotInIndexException(CoLRevException):
         super().__init__(self.message)
 
 
-class RecordNotIndexedException(CoLRevException):
+class RecordNotIndexableException(CoLRevException):
     """The requested record could not be added to the LocalIndex."""
 
     def __init__(self, record_id: str = None) -> None:
         if id is not None:
-            self.message = f"Record not indexed ({record_id})"
+            self.message = f"Record cannot be indexed ({record_id})"
         else:
-            self.message = "Record not indexed"
+            self.message = "Record cannot be indexed"
         super().__init__(self.message)
 
 

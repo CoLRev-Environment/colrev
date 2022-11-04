@@ -710,7 +710,7 @@ class LocalIndex:
 
         # pylint: disable=too-many-branches
         if "colrev_status" not in record_dict:
-            raise colrev_exceptions.RecordNotIndexedException()
+            raise colrev_exceptions.RecordNotIndexableException()
 
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
@@ -718,7 +718,14 @@ class LocalIndex:
             record_dict["colrev_status"]
             in colrev.record.RecordState.get_non_processed_states()
         ):
-            raise colrev_exceptions.RecordNotIndexedException()
+            raise colrev_exceptions.RecordNotIndexableException()
+
+        # Some prescreen_excluded records are not prepared
+        if (
+            record_dict["colrev_status"]
+            == colrev.record.RecordState.rev_prescreen_excluded
+        ):
+            raise colrev_exceptions.RecordNotIndexableException()
 
         if "screening_criteria" in record_dict:
             del record_dict["screening_criteria"]
@@ -830,7 +837,7 @@ class LocalIndex:
                 )
                 return
         except (
-            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.RecordNotIndexableException,
             TransportError,
             SerializationError,
         ):
@@ -956,7 +963,7 @@ class LocalIndex:
             for record_dict in tqdm(records.values()):
                 try:
                     self.index_record(record_dict=record_dict)
-                except colrev_exceptions.RecordNotIndexedException:
+                except colrev_exceptions.RecordNotIndexableException:
                     pass
 
         except (colrev_exceptions.InvalidSettingsError) as exc:
