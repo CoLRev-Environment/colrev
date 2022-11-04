@@ -137,7 +137,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         """Prepare a record based on metadata from SemanticScholar"""
 
         same_record_type_required = (
-            prep_operation.review_manager.settings.project.curated_masterdata
+            prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         try:
             search_api_url = (

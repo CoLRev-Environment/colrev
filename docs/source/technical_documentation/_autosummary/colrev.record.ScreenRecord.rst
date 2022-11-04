@@ -22,6 +22,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.add_masterdata_provenance
       ~ScreenRecord.add_masterdata_provenance_note
       ~ScreenRecord.add_provenance_all
+      ~ScreenRecord.apply_restrictions
       ~ScreenRecord.change_entrytype
       ~ScreenRecord.cleanup_pdf_processing_fields
       ~ScreenRecord.complete_provenance

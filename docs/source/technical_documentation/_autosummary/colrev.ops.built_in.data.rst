@@ -27,6 +27,7 @@ colrev.ops.built\_in.data
    :recursive:
 
    colrev.ops.built_in.data.bibliography_export
+   colrev.ops.built_in.data.colrev_curation
    colrev.ops.built_in.data.github_pages
    colrev.ops.built_in.data.manuscript
    colrev.ops.built_in.data.prisma

@@ -53,7 +53,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 
         same_record_type_required = (
-            prep_operation.review_manager.settings.project.curated_masterdata
+            prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
 
         session = prep_operation.review_manager.get_cached_session()

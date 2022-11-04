@@ -22,6 +22,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.add_masterdata_provenance
       ~PrescreenRecord.add_masterdata_provenance_note
       ~PrescreenRecord.add_provenance_all
+      ~PrescreenRecord.apply_restrictions
       ~PrescreenRecord.change_entrytype
       ~PrescreenRecord.cleanup_pdf_processing_fields
       ~PrescreenRecord.complete_provenance

@@ -55,6 +55,8 @@ class Dataset:
             temp_f = io.StringIO()
             pybtex.io.stderr = temp_f
 
+        self.masterdata_restrictions = self.__get_masterdata_restrictions()
+
     def get_origin_state_dict(self, *, file_object: io.StringIO = None) -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
 
@@ -334,7 +336,7 @@ class Dataset:
                 current_header_item_count = 0
                 continue
 
-            if "@" in line[:2] and not "NA" == record_header_item["ID"]:
+            if "@" in line[:2] and "NA" != record_header_item["ID"]:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0
@@ -597,7 +599,11 @@ class Dataset:
             if record_dict["colrev_status"] in [
                 colrev.record.RecordState.md_needs_manual_preparation,
             ]:
-                record.update_masterdata_provenance()
+                record.update_masterdata_provenance(
+                    masterdata_restrictions=self.get_applicable_restrictions(
+                        record_dict=record_dict
+                    )
+                )
                 record.update_metadata_status(review_manager=self.review_manager)
 
             if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
@@ -818,6 +824,38 @@ class Dataset:
                     line = file.readline()
         max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
         return max_id
+
+    def __get_masterdata_restrictions(self) -> dict:
+        masterdata_restrictions = {}
+        curated_endpoints = [
+            x
+            for x in self.review_manager.settings.data.data_package_endpoints
+            if x["endpoint"] == "colrev_built_in.colrev_curation"
+        ]
+        if curated_endpoints:
+            curated_endpoint = curated_endpoints[0]
+            masterdata_restrictions = curated_endpoint.get(
+                "masterdata_restrictions", {}
+            )
+        return masterdata_restrictions
+
+    def get_applicable_restrictions(self, *, record_dict: dict) -> dict:
+        """Get the applicable masterdata restrictions"""
+
+        applicable_restrictions = {}
+
+        start_year_values = list(self.masterdata_restrictions.keys())
+
+        year_index_diffs = [
+            int(record_dict["year"]) - int(x) for x in start_year_values
+        ]
+        year_index_diffs = [x if x >= 0 else 2000 for x in year_index_diffs]
+        index_min = min(range(len(year_index_diffs)), key=year_index_diffs.__getitem__)
+        applicable_restrictions = self.masterdata_restrictions[
+            start_year_values[index_min]
+        ]
+
+        return applicable_restrictions
 
     # GIT operations -----------------------------------------------
 

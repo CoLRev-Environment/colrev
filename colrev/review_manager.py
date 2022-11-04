@@ -115,8 +115,8 @@ class ReviewManager:
             ) = self.environment_manager.get_name_mail_from_git()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-            self.dataset = colrev.dataset.Dataset(review_manager=self)
             self.settings = self.load_settings()
+            self.dataset = colrev.dataset.Dataset(review_manager=self)
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:

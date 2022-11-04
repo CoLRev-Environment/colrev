@@ -1623,7 +1623,7 @@ class Record:
                 self.data["ENTRYTYPE"]
             ]
         for required_fields_key in required_fields_keys:
-            if self.data.get(required_fields_key, "") in ["UNKNOWN", ""]:
+            if self.data.get(required_fields_key, "UNKNOWN") == "UNKNOWN":
                 self.update_field(
                     key=required_fields_key,
                     value="UNKNOWN",
@@ -1859,6 +1859,45 @@ class Record:
                 shutil.copyfile(original_fp, new_fp.resolve())
             self.data["file"] = str(new_fp)
         # Note : else: leave absolute paths
+
+    def apply_restrictions(self, *, restrictions: dict) -> None:
+        """Apply masterdata restrictions to the record"""
+
+        if "ENTRYTYPE" in restrictions:
+            if restrictions["ENTRYTYPE"] != self.data["ENTRYTYPE"]:
+                self.data["ENTRYTYPE"] = restrictions["ENTRYTYPE"]
+
+        if "journal" in restrictions:
+            if restrictions["journal"] != self.data.get("journal", ""):
+                self.data["journal"] = restrictions["journal"]
+
+        if "booktitle" in restrictions:
+            if restrictions["booktitle"] != self.data.get("booktitle", ""):
+                self.data["booktitle"] = restrictions["booktitle"]
+
+        if "volume" in restrictions:
+            if restrictions["volume"]:
+                if "volume" not in self.data:
+                    self.data[
+                        "colrev_status"
+                    ] = colrev.record.RecordState.md_needs_manual_preparation
+                    colrev.record.Record(data=self.data).add_masterdata_provenance(
+                        key="volume",
+                        source="colrev_curation.masterdata_restrictions",
+                        note="missing",
+                    )
+
+        if "number" in restrictions:
+            if restrictions["number"]:
+                if "number" not in self.data:
+                    self.data[
+                        "colrev_status"
+                    ] = colrev.record.RecordState.md_needs_manual_preparation
+                    colrev.record.Record(data=self.data).add_masterdata_provenance(
+                        key="number",
+                        source="colrev_curation.masterdata_restrictions",
+                        note="missing",
+                    )
 
 
 class PrepRecord(Record):
@@ -2196,10 +2235,13 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
     def update_masterdata_provenance(
-        self,
+        self, *, masterdata_restrictions: dict = None
     ) -> None:
         """Update the masterdata provenance"""
         # pylint: disable=too-many-branches
+
+        if masterdata_restrictions is None:
+            masterdata_restrictions = {}
 
         if not self.masterdata_is_curated():
             if "colrev_masterdata_provenance" not in self.data:
@@ -2220,6 +2262,9 @@ class PrepRecord(Record):
 
             for not_missing_field in not_missing_fields:
                 missing_fields.remove(not_missing_field)
+
+            if masterdata_restrictions:
+                self.apply_restrictions(restrictions=masterdata_restrictions)
 
             if "forthcoming" == self.data.get("year", ""):
                 source = "NA"
