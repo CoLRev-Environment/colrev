@@ -24,7 +24,7 @@ import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
-
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -460,6 +460,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                     # )
                     yield from self.bibliographic_query(**crossref_query)
 
+        nr_retrieved = 0
         try:
             for record_dict in get_crossref_query_return(params):
                 if record_dict["doi"].upper() not in available_ids:
@@ -485,6 +486,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                     available_ids.append(record_dict["doi"])
                     records[record_dict["ID"]] = record_dict
                     max_id += 1
+                    nr_retrieved += 1
         except (requests.exceptions.JSONDecodeError, KeyError) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
@@ -496,6 +498,14 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
         search_operation.save_feed_file(records=records, feed_file=feed_file)
+        if nr_retrieved > 0:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+            )
+        else:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

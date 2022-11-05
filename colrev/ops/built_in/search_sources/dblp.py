@@ -21,6 +21,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 if TYPE_CHECKING:
@@ -304,7 +305,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         year: int,
     ) -> typing.Dict[str, typing.Dict]:
 
-        search_operation.review_manager.logger.info(f"Retrieving year {year}")
+        search_operation.review_manager.logger.debug(f"Retrieve year {year}")
         __api_url = "https://dblp.org/search/publ/api?q="
 
         query = (
@@ -412,7 +413,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
-        search_operation.review_manager.logger.info(
+        search_operation.review_manager.logger.debug(
             f"Retrieve DBLP: {self.settings.search_parameters}"
         )
 
@@ -424,6 +425,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 )
                 records = list(feed_rd.values())
 
+        nr_retrieved = 0
+
         try:
 
             # Note : journal_abbreviated is the abbreviated venue_key
@@ -433,11 +436,14 @@ class DBLPSearchSource(JsonSchemaMixin):
                 start = datetime.now().year - 2
             records_dict = {r["ID"]: r for r in records}
             for year in range(start, datetime.now().year):
+                len_before = len(records_dict)
                 records_dict = self.__retrieve_and_append_year_batch(
                     search_operation=search_operation,
                     records_dict=records_dict,
                     year=year,
                 )
+                nr_added = len(records_dict) - len_before
+                nr_retrieved += nr_added
 
                 search_operation.save_feed_file(
                     records=records_dict, feed_file=self.settings.filename
@@ -451,6 +457,15 @@ class DBLPSearchSource(JsonSchemaMixin):
             requests.exceptions.ConnectionError,
         ):
             pass
+
+        if nr_retrieved > 0:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+            )
+        else:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
