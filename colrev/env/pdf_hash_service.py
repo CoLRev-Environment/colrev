@@ -19,9 +19,9 @@ class PDFHashService:
 
     # pylint: disable=too-few-public-methods
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        self.pdf_hash_image = "pdf_hash:latest"
+        self.pdf_hash_image = "colrev/pdf_hash:latest"
         review_manager.environment_manager.build_docker_image(
-            imagename=self.pdf_hash_image, image_path=Path("docker/pdf_hash")
+            imagename=self.pdf_hash_image
         )
         self.review_manager = review_manager
 
