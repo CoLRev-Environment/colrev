@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.run_search
       ~WileyOnlineLibrarySearchSource.to_dict
       ~WileyOnlineLibrarySearchSource.to_json
+      ~WileyOnlineLibrarySearchSource.validate_source
 
 
 

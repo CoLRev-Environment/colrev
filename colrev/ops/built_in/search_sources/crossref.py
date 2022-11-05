@@ -55,20 +55,6 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
     ) -> None:
 
         if settings:
-            if not any(
-                x in settings["search_parameters"]["scope"]
-                for x in ["query", "journal_issn"]
-            ):
-                raise colrev_exceptions.InvalidQueryException(
-                    "Crossref search_parameters/scope requires a query or journal_issn field"
-                )
-
-            assert settings["search_type"] in [
-                colrev.settings.SearchType.DB,
-                colrev.settings.SearchType.TOC,
-            ]
-            assert settings["source_identifier"] == self.source_identifier
-
             self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         # pylint: disable=import-outside-toplevel
@@ -377,25 +363,70 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 sys.exit()
         return record
 
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if not any(x in source.search_parameters for x in ["query", "scope"]):
+            raise colrev_exceptions.InvalidQueryException(
+                "Crossref search_parameters requires a query or journal_issn field"
+            )
+
+        if "scope" in source.search_parameters:
+            if "journal_issn" in source.search_parameters["scope"]:
+                issn_field = source.search_parameters["scope"]["journal_issn"]
+                if not re.match(
+                    "[0-9][0-9][0-9][0-9][-]?[0-9][0-9][0-9][X0-9]", issn_field
+                ):
+                    raise colrev_exceptions.InvalidQueryException(
+                        f"Crossref journal issn ({issn_field}) not matching required format"
+                    )
+            else:
+                raise colrev_exceptions.InvalidQueryException(
+                    "Query missing valid parameters"
+                )
+
+        elif "query" in source.search_parameters:
+            # Note: not yet implemented/supported
+            if " AND " in source.search_parameters["query"]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "AND not supported in CROSSREF query"
+                )
+
+        else:
+            raise colrev_exceptions.InvalidQueryException(
+                "Query missing valid parameters"
+            )
+
+        if source.search_type not in [
+            colrev.settings.SearchType.DB,
+            colrev.settings.SearchType.TOC,
+        ]:
+            raise colrev_exceptions.InvalidQueryException(
+                "Crossref search_type should be in [DB,TOC]"
+            )
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
+
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of Crossref"""
 
         params = self.settings.search_parameters
         feed_file = self.settings.filename
-
-        # Note: not yet implemented/supported
-        if " AND " in params.get("selection_clause", ""):
-            raise colrev_exceptions.InvalidQueryException(
-                "AND not supported in CROSSREF query selection_clause"
-            )
-        # Either one or the other is possible:
-        if not bool("selection_clause" in params) ^ bool(
-            "journal_issn" in params.get("scope", {})
-        ):
-            raise colrev_exceptions.InvalidQueryException(
-                "combined selection_clause and journal_issn (scope) "
-                "not supported in CROSSREF query"
-            )
 
         available_ids = []
         max_id = 1
@@ -414,19 +445,20 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
             )
 
         def get_crossref_query_return(params: dict) -> typing.Iterator[dict]:
-            if "selection_clause" in params:
-                crossref_query = {"bibliographic": params["selection_clause"]}
-                # potential extension : add the container_title:
-                # crossref_query_return = works.query(
-                #     container_title=
-                #       "Journal of the Association for Information Systems"
-                # )
-                yield from self.bibliographic_query(**crossref_query)
 
-            if "journal_issn" in params.get("scope", {}):
-
-                for journal_issn in params["scope"]["journal_issn"].split("|"):
-                    yield from self.journal_query(journal_issn=journal_issn)
+            if "scope" in params:
+                if "journal_issn" in params["scope"]:
+                    for journal_issn in params["scope"]["journal_issn"].split("|"):
+                        yield from self.journal_query(journal_issn=journal_issn)
+            else:
+                if "query" in params:
+                    crossref_query = {"bibliographic": params["query"]}
+                    # potential extension : add the container_title:
+                    # crossref_query_return = works.query(
+                    #     container_title=
+                    #       "Journal of the Association for Information Systems"
+                    # )
+                    yield from self.bibliographic_query(**crossref_query)
 
         try:
             for record_dict in get_crossref_query_return(params):

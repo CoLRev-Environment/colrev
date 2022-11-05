@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.run_search
       ~UnknownSearchSource.to_dict
       ~UnknownSearchSource.to_json
+      ~UnknownSearchSource.validate_source
 
 
 

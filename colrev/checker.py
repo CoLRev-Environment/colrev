@@ -506,20 +506,6 @@ class Checker:
                     f"Search details without file: {source.filename}"
                 )
 
-            # date_regex = r"^\d{4}-\d{2}-\d{2}$"
-            # if "completion_date" in source:
-            #     if not re.search(date_regex, source["completion_date"]):
-            #         raise SearchSettingsError(
-            #             "completion date not matching YYYY-MM-DD format: "
-            #             f'{source["completion_date"]}'
-            #         )
-            # if "start_date" in source:
-            #     if not re.search(date_regex, source["start_date"]):
-            #         raise SearchSettingsError(
-            #             "start_date date not matchin YYYY-MM-DD format: "
-            #             f'{source["start_date"]}'
-            #         )
-
     def __retrieve_prior(self) -> dict:
         prior: dict = {"colrev_status": [], "persisted_IDs": []}
         prior_records = next(self.review_manager.dataset.load_records_from_history())

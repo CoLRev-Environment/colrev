@@ -42,26 +42,6 @@ class PDFSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
 
-        if "sub_dir_pattern" in settings["search_parameters"]:
-            if settings["search_parameters"]["sub_dir_pattern"] != [
-                "NA",
-                "volume_number",
-                "year",
-                "volume",
-            ]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "sub_dir_pattern not in [NA, volume_number, year, volume]"
-                )
-
-        if "scope" not in settings["search_parameters"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "scope required in search_parameters"
-            )
-        if "path" not in settings["search_parameters"]["scope"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "path required in search_parameters/scope"
-            )
-
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
         self.pdf_preparation_operation = (
@@ -470,6 +450,46 @@ class PDFSearchSource(JsonSchemaMixin):
                 x for x in pdfs_to_index if str(x) not in filepaths_to_skip
             ]
         return pdfs_to_index
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if "sub_dir_pattern" in source.search_parameters:
+            if source.search_parameters["sub_dir_pattern"] != [
+                "NA",
+                "volume_number",
+                "year",
+                "volume",
+            ]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "sub_dir_pattern not in [NA, volume_number, year, volume]"
+                )
+
+        if "scope" not in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                "scope required in search_parameters"
+            )
+        if "path" not in source.search_parameters["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "path required in search_parameters/scope"
+            )
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of a PDF directory (based on GROBID)"""

@@ -253,17 +253,6 @@ class InvalidQueryException(CoLRevException):
         super().__init__(self.message)
 
 
-class SearchSettingsError(CoLRevException):
-    """The search settings format is not valid."""
-
-    def __init__(
-        self,
-        msg: str,
-    ) -> None:
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
 class NoSearchFeedRegistered(CoLRevException):
     """No search feed endpoints registered in settings.json"""
 

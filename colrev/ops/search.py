@@ -119,6 +119,16 @@ class Search(colrev.operation.Operation):
             ],
             comment="",
         )
+
+        package_manager = self.review_manager.get_package_manager()
+        endpoint_dict = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            selected_packages=[add_source.get_dict()],
+            operation=self,
+        )
+        endpoint = endpoint_dict[add_source.endpoint.lower()]
+        endpoint.validate_source(search_operation=self, source=add_source)  # type: ignore
+
         self.review_manager.p_printer.pprint(add_source)
         self.review_manager.settings.sources.append(add_source)
         self.review_manager.save_settings()
@@ -195,6 +205,7 @@ class Search(colrev.operation.Operation):
             )
 
             endpoint = endpoint_dict[source.endpoint.lower()]
+            endpoint.validate_source(search_operation=self, source=source)  # type: ignore
             endpoint.run_search(  # type: ignore
                 search_operation=self,
             )

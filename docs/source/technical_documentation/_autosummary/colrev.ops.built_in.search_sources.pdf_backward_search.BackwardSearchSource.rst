@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
       ~BackwardSearchSource.run_search
       ~BackwardSearchSource.to_dict
       ~BackwardSearchSource.to_json
+      ~BackwardSearchSource.validate_source
 
 
 

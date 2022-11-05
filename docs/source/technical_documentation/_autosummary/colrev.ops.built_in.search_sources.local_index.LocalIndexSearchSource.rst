@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.run_search
       ~LocalIndexSearchSource.to_dict
       ~LocalIndexSearchSource.to_json
+      ~LocalIndexSearchSource.validate_source
 
 
 

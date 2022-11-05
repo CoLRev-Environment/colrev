@@ -34,6 +34,7 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSourceSearchSource
       ~CrossrefSourceSearchSource.run_search
       ~CrossrefSourceSearchSource.to_dict
       ~CrossrefSourceSearchSource.to_json
+      ~CrossrefSourceSearchSource.validate_source
 
 
 

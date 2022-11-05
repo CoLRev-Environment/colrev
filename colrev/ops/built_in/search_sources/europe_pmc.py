@@ -75,11 +75,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ) -> None:
 
         if settings:
-            if "query" not in settings["search_parameters"]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "query required in search_parameters"
-                )
-
             self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def __retrieve_and_append(
@@ -400,6 +395,32 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             )
 
         return record
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if "query" not in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                "Query required in search_parameters"
+            )
+
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of Europe PMC"""

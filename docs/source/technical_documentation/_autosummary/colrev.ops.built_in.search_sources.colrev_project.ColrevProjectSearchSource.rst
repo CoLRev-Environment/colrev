@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.run_search
       ~ColrevProjectSearchSource.to_dict
       ~ColrevProjectSearchSource.to_json
+      ~ColrevProjectSearchSource.validate_source
 
 
 
