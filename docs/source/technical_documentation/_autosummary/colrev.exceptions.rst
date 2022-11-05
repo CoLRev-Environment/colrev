@@ -54,7 +54,6 @@ colrev.exceptions
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
-      SearchSettingsError
       ServiceNotAvailableException
       StatusFieldValueError
       StatusTransitionError

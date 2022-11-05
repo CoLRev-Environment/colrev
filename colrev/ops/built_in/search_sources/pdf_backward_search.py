@@ -31,18 +31,11 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{cited_by_file}} (references)"
+    search_type = colrev.settings.SearchType.BACKWARD_SEARCH
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        if settings["search_parameters"]["scope"].get("file", "") != "paper.md":
-            if (
-                settings["search_parameters"]["scope"]["colrev_status"]
-                != "rev_included|rev_synthesized"
-            ):
-                raise colrev_exceptions.InvalidQueryException(
-                    "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
-                )
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
         self.grobid_service = source_operation.review_manager.get_grobid_service()
@@ -126,6 +119,43 @@ class BackwardSearchSource(JsonSchemaMixin):
                 feed_file_records.append(new_record)
 
         return feed_file_records
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if "scope" not in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                "Scope required in the search_parameters"
+            )
+
+        if source.search_parameters["scope"].get("file", "") == "paper.md":
+            pass
+        else:
+            if (
+                source.search_parameters["scope"]["colrev_status"]
+                != "rev_included|rev_synthesized"
+            ):
+                raise colrev_exceptions.InvalidQueryException(
+                    "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
+                )
+
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""

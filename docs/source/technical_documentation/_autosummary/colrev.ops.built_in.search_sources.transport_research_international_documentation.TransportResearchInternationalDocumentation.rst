@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.transport\_research\_international\_documen
       ~TransportResearchInternationalDocumentation.run_search
       ~TransportResearchInternationalDocumentation.to_dict
       ~TransportResearchInternationalDocumentation.to_json
+      ~TransportResearchInternationalDocumentation.validate_source
 
 
 
@@ -38,4 +39,5 @@ colrev.ops.built\_in.search\_sources.transport\_research\_international\_documen
 
    .. autosummary::
 
+      ~TransportResearchInternationalDocumentation.search_type
       ~TransportResearchInternationalDocumentation.source_identifier

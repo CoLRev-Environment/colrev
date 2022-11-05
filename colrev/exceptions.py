@@ -69,12 +69,12 @@ class InvalidSettingsError(CoLRevException):
     Invalid value in settings.json.
     """
 
-    def __init__(self, *, msg: str) -> None:
-        msg = (
-            f"Error in settings.json: {msg}\n"
-            "To solve this, use\n  "
-            f"{colors.ORANGE}colrev upgrade{colors.END}"
-        )
+    def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
+        msg = f"Error in settings.json: {msg}"
+        if fix_per_upgrade:
+            msg += (
+                "\nTo solve this, use\n  " f"{colors.ORANGE}colrev upgrade{colors.END}"
+            )
         self.message = msg
         super().__init__(self.message)
 
@@ -250,17 +250,6 @@ class InvalidQueryException(CoLRevException):
 
     def __init__(self, msg: str) -> None:
         self.message = msg
-        super().__init__(self.message)
-
-
-class SearchSettingsError(CoLRevException):
-    """The search settings format is not valid."""
-
-    def __init__(
-        self,
-        msg: str,
-    ) -> None:
-        self.message = f" {msg}"
         super().__init__(self.message)
 
 

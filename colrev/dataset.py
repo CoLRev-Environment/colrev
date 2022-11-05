@@ -893,14 +893,17 @@ class Dataset:
 
         return self.__git_repo.is_dirty()
 
-    def add_changes(self, *, path: Path) -> None:
+    def add_changes(self, *, path: Path, remove: bool = False) -> None:
         """Add changed file to git"""
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
-        self.__git_repo.index.add([str(path)])
+        if remove:
+            self.__git_repo.index.remove([str(path)])
+        else:
+            self.__git_repo.index.add([str(path)])
 
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""

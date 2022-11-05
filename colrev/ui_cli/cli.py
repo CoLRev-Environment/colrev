@@ -257,9 +257,11 @@ def retrieve(
         search_operation.main()
 
         load_operation = review_manager.get_load_operation()
-        load_operation.check_update_sources(skip_query=True)
+        new_sources = load_operation.get_new_sources(skip_query=True)
         load_operation = review_manager.get_load_operation()
-        load_operation.main(keep_ids=False, combine_commits=False)
+        load_operation.main(
+            new_sources=new_sources, keep_ids=False, combine_commits=False
+        )
 
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
@@ -403,7 +405,7 @@ def load(
         review_manager.get_local_index(startup_without_waiting=True)
         load_operation = review_manager.get_load_operation()
 
-        load_operation.check_update_sources(skip_query=skip_query)
+        new_sources = load_operation.get_new_sources(skip_query=skip_query)
 
         if combine_commits:
             logging.info(
@@ -412,7 +414,9 @@ def load(
 
         # Note : reinitialize to load new scripts:
         load_operation = review_manager.get_load_operation()
-        load_operation.main(keep_ids=keep_ids, combine_commits=combine_commits)
+        load_operation.main(
+            new_sources=new_sources, keep_ids=keep_ids, combine_commits=combine_commits
+        )
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:

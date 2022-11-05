@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.run_search
       ~GoogleScholarSearchSource.to_dict
       ~GoogleScholarSearchSource.to_json
+      ~GoogleScholarSearchSource.validate_source
 
 
 
@@ -38,4 +39,5 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
 
    .. autosummary::
 
+      ~GoogleScholarSearchSource.search_type
       ~GoogleScholarSearchSource.source_identifier

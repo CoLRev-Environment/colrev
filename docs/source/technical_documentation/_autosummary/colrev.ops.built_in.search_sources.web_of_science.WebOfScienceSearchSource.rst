@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.run_search
       ~WebOfScienceSearchSource.to_dict
       ~WebOfScienceSearchSource.to_json
+      ~WebOfScienceSearchSource.validate_source
 
 
 
@@ -38,4 +39,5 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
 
    .. autosummary::
 
+      ~WebOfScienceSearchSource.search_type
       ~WebOfScienceSearchSource.source_identifier

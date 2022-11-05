@@ -165,7 +165,7 @@ class DOIConnector:
                 source=doi_url,
                 keep_source_if_equal=True,
             )
-        except (requests.exceptions.RequestException, TypeError):
+        except (requests.exceptions.RequestException, TypeError, UnicodeDecodeError):
             pass
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(

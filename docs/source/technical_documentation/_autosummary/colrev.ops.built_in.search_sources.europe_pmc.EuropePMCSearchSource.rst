@@ -31,6 +31,7 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.run_search
       ~EuropePMCSearchSource.to_dict
       ~EuropePMCSearchSource.to_json
+      ~EuropePMCSearchSource.validate_source
 
 
 
@@ -40,4 +41,5 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
 
    .. autosummary::
 
+      ~EuropePMCSearchSource.search_type
       ~EuropePMCSearchSource.source_identifier

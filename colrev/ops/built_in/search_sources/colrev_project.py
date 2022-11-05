@@ -36,18 +36,43 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev_project"
 
+    search_type = colrev.settings.SearchType.OTHER
+
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        if "scope" not in settings["search_parameters"]:
+
+        self.settings = from_dict(data_class=self.settings_class, data=settings)
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "scope required in search_parameters"
             )
-        if "url" not in settings["search_parameters"]["scope"]:
+        if "url" not in source.search_parameters["scope"]:
             raise colrev_exceptions.InvalidQueryException(
                 "url field required in search_parameters"
             )
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of a CoLRev project"""

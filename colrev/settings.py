@@ -613,6 +613,12 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
                 msg = f"Source filename does not start with data/search: {source.filename}"
                 raise colrev_exceptions.InvalidSettingsError(msg=msg)
 
+        filenames = [x.filename for x in settings.sources]
+        if not len(filenames) == len(set(filenames)):
+            non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
+            msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
+            raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
+
     except (ValueError, MissingValueError, WrongTypeError, AssertionError) as exc:
         raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 

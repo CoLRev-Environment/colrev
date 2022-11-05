@@ -191,8 +191,11 @@ class Service:
 
                 load_operation = self.review_manager.get_load_operation()
                 print()
-                load_operation.check_update_sources()
-                load_operation.main(keep_ids=False, combine_commits=False)
+
+                new_sources = load_operation.get_new_sources(skip_query=True)
+                load_operation.main(
+                    new_sources=new_sources, keep_ids=False, combine_commits=False
+                )
             else:
                 self.service_queue.task_done()
                 return

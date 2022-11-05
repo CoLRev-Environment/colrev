@@ -42,6 +42,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{dblp_key}}"
+    search_type = colrev.settings.SearchType.DB
 
     @dataclass
     class DBLPSearchSourceSettings(JsonSchemaMixin):
@@ -72,21 +73,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: dict = None,
     ) -> None:
-        if settings:
-            # maybe : validate/assert that the venue_key is available
-            if "scope" not in settings["search_parameters"]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "scope required in search_parameters"
-                )
-            if "venue_key" not in settings["search_parameters"]["scope"]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "venue_key required in search_parameters/scope"
-                )
-            if "journal_abbreviated" not in settings["search_parameters"]["scope"]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "journal_abbreviated required in search_parameters/scope"
-                )
 
+        if settings:
             self.settings = from_dict(data_class=self.settings_class, data=settings)
 
     def check_status(self, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -383,6 +371,41 @@ class DBLPSearchSource(JsonSchemaMixin):
                 break
 
         return records_dict
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        # maybe : validate/assert that the venue_key is available
+        if "scope" not in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                "scope required in search_parameters"
+            )
+        if "venue_key" not in source.search_parameters["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "venue_key required in search_parameters/scope"
+            )
+        if "journal_abbreviated" not in source.search_parameters["scope"]:
+            raise colrev_exceptions.InvalidQueryException(
+                "journal_abbreviated required in search_parameters/scope"
+            )
+
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of DBLP"""

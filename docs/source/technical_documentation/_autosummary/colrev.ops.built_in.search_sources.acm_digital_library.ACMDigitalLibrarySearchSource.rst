@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
       ~ACMDigitalLibrarySearchSource.run_search
       ~ACMDigitalLibrarySearchSource.to_dict
       ~ACMDigitalLibrarySearchSource.to_json
+      ~ACMDigitalLibrarySearchSource.validate_source
 
 
 
@@ -38,4 +39,5 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
 
    .. autosummary::
 
+      ~ACMDigitalLibrarySearchSource.search_type
       ~ACMDigitalLibrarySearchSource.source_identifier

@@ -11,6 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -28,6 +29,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_local_index"
+    search_type = colrev.settings.SearchType.OTHER
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -36,6 +38,36 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.index_identifier = source_operation.review_manager.email
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        search_operation.review_manager.logger.debug(
+            f"Validate SearchSource {source.filename}"
+        )
+
+        if source.source_identifier != self.source_identifier:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Invalid source_identifier: {source.source_identifier} "
+                f"(should be {self.source_identifier})"
+            )
+
+        if "query" not in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Source missing query search_parameter ({source.filename})"
+            )
+        if "query" not in source.search_parameters["query"]:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Source missing query/query search_parameter ({source.filename})"
+            )
+
+        search_operation.review_manager.logger.debug(
+            f"SearchSource {source.filename} validated"
+        )
 
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of local-index"""

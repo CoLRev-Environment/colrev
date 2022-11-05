@@ -17,7 +17,7 @@ colrev.ops.load.Load
       :nosignatures:
 
       ~Load.check_precondition
-      ~Load.check_update_sources
+      ~Load.get_new_sources
       ~Load.main
 
 

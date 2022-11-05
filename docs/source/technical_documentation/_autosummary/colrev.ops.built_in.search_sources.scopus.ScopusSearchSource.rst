@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.run_search
       ~ScopusSearchSource.to_dict
       ~ScopusSearchSource.to_json
+      ~ScopusSearchSource.validate_source
 
 
 
@@ -38,4 +39,5 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 
    .. autosummary::
 
+      ~ScopusSearchSource.search_type
       ~ScopusSearchSource.source_identifier
