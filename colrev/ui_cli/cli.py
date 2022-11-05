@@ -166,6 +166,8 @@ def init(
         )
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -217,6 +219,8 @@ def status(
     except KeyboardInterrupt:
         print("Stopped...")
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -264,6 +268,8 @@ def retrieve(
         dedupe_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -337,6 +343,8 @@ def search(
         search_operation.main(selection_str=selected)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -407,6 +415,8 @@ def load(
         load_operation.main(keep_ids=keep_ids, combine_commits=combine_commits)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -523,6 +533,8 @@ def prep(
         print("  colrev prep -f")
         return
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -564,6 +576,8 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
         prep_man_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -646,6 +660,8 @@ def dedupe(
         dedupe_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -743,6 +759,8 @@ def prescreen(
         prescreen_operation.main(split_str=split)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -841,6 +859,8 @@ def screen(
         screen_operation.main(split_str=split)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -881,6 +901,8 @@ def pdfs(
         pdf_prep_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -965,6 +987,8 @@ def pdf_get(
         pdf_get_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1052,6 +1076,8 @@ def pdf_get_man(
         pdf_get_man_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1114,6 +1140,8 @@ def pdf_prep(
         pdf_prep_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1224,6 +1252,8 @@ def pdf_prep_man(
         pdf_prep_man_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1322,14 +1352,18 @@ def data(
                 "No data format not specified. "
                 "To register a data endpoint, "
                 "use one (or several) of the following \n"
-                "    colrev data --add_endpoint MANUSCRIPT\n"
-                "    colrev data --add_endpoint STRUCTURED\n"
-                "    colrev data --add_endpoint PRISMA\n"
-                "    colrev data --add_endpoint ZETTLR\n"
-                "    colrev data --add_endpoint ENDNOTE"
+                "    colrev data --add_endpoint colrev_built_in.manuscript\n"
+                "    colrev data --add_endpoint colrev_built_in.structured\n"
+                "    colrev data --add_endpoint colrev_built_in.bibliography_export\n"
+                "    colrev data --add_endpoint colrev_built_in.prisma\n"
+                "    colrev data --add_endpoint colrev_built_in.github_pages\n"
+                "    colrev data --add_endpoint colrev_built_in.zettlr\n"
+                "    colrev data --add_endpoint colrev_built_in.colrev_curation"
             )
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1485,6 +1519,8 @@ def validate(
         if not displayed:
             review_manager.logger.info("No preparation changes above threshold")
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -1582,6 +1618,8 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
         distribute_operation.main(path=path, target=target)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -2013,6 +2051,8 @@ def pull(
         pull_operation.main(records_only=records_only, project_only=project_only)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -2095,6 +2135,8 @@ def push(
         push_operation.main(records_only=records_only, project_only=project_only)
 
     except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 

@@ -10,11 +10,14 @@ Identify the source
 
 CoLRev uses many powerful libraries and data sources.
 In addition, the particular setup of your local machine and CoLRev environment may prevent us from replicating issues.
-We need your help in narrowing down the source of the issue.
-For example,
+We need your help in narrowing down the source of the issue by running the command with the `--verbose` option (e.g., `colrev load --verbose`) to retrieve the full details and error trace (if any).
 
-- Errors in *colrev load* may be caused by the zotero translators
-- Errors in *colrev prep* may result from several metadata sources or preparation scripts. We recommend to run *colrev prep -d RECORD_ID* for the erroneous record to track down the error.
+For example, this may help to identify
+
+- Errors in *colrev load* that are caused by the zotero translators
+- Errors in *colrev prep* that may result from several metadata sources or preparation scripts.
+
+Some operations offer dedicated debugging functionality, such as *colrev prep -d RECORD_ID*, which can track down the scripts or data sources that introduced an error.
 
 Create a minimum reproducible example
 ------------------------------------------
