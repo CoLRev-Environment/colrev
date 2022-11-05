@@ -31,6 +31,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
     source_identifier = "colrev_built_in.unknown_source"
+    search_type = colrev.settings.SearchType.DB
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

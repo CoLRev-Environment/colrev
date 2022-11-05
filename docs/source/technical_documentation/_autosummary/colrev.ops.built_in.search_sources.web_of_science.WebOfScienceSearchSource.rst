@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
 
    .. autosummary::
 
+      ~WebOfScienceSearchSource.search_type
       ~WebOfScienceSearchSource.source_identifier

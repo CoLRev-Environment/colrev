@@ -43,4 +43,5 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSourceSearchSource
 
    .. autosummary::
 
+      ~CrossrefSourceSearchSource.search_type
       ~CrossrefSourceSearchSource.source_identifier

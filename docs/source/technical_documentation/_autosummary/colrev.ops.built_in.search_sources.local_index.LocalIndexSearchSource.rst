@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
 
    .. autosummary::
 
+      ~LocalIndexSearchSource.search_type
       ~LocalIndexSearchSource.source_identifier

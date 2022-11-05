@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
 
    .. autosummary::
 
+      ~PDFSearchSource.search_type
       ~PDFSearchSource.source_identifier

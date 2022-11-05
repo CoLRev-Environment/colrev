@@ -36,6 +36,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
+    search_type = colrev.settings.SearchType.PDFS
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

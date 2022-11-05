@@ -36,6 +36,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev_project"
 
+    search_type = colrev.settings.SearchType.OTHER
+
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:

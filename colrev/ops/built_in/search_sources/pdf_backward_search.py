@@ -31,6 +31,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{cited_by_file}} (references)"
+    search_type = colrev.settings.SearchType.BACKWARD_SEARCH
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

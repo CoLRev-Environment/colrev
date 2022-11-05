@@ -48,6 +48,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
+    search_type = colrev.settings.SearchType.DB
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict = None

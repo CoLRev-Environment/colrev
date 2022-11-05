@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
 
    .. autosummary::
 
+      ~PubMedSearchSource.search_type
       ~PubMedSearchSource.source_identifier

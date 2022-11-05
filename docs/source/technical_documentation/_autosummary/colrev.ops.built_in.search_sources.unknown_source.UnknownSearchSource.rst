@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
 
    .. autosummary::
 
+      ~UnknownSearchSource.search_type
       ~UnknownSearchSource.source_identifier

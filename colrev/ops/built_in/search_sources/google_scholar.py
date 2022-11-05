@@ -28,6 +28,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://scholar.google.com/"
+    search_type = colrev.settings.SearchType.DB
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

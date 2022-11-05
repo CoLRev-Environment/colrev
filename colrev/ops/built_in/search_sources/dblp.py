@@ -42,6 +42,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{dblp_key}}"
+    search_type = colrev.settings.SearchType.DB
 
     @dataclass
     class DBLPSearchSourceSettings(JsonSchemaMixin):

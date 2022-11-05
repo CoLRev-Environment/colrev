@@ -29,6 +29,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     source_identifier = "https://aisel.aisnet.org/"
 
+    search_type = colrev.settings.SearchType.DB
+
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:

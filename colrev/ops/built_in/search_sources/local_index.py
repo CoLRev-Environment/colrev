@@ -28,6 +28,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_local_index"
+    search_type = colrev.settings.SearchType.OTHER
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

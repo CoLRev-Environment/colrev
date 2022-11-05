@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 
    .. autosummary::
 
+      ~ScopusSearchSource.search_type
       ~ScopusSearchSource.source_identifier

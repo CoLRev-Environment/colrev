@@ -42,6 +42,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     source_identifier = (
         "https://www.ebi.ac.uk/europepmc/webservices/rest/article/{{europe_pmc_id}}"
     )
+    search_type = colrev.settings.SearchType.DB
 
     @dataclass
     class EuropePMCSearchSourceSettings(JsonSchemaMixin):

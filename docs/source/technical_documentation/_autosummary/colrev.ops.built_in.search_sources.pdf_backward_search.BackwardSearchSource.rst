@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
 
    .. autosummary::
 
+      ~BackwardSearchSource.search_type
       ~BackwardSearchSource.source_identifier

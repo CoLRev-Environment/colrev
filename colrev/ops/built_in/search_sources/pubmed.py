@@ -27,6 +27,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
+    search_type = colrev.settings.SearchType.DB
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

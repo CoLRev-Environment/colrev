@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
 
    .. autosummary::
 
+      ~ColrevProjectSearchSource.search_type
       ~ColrevProjectSearchSource.source_identifier

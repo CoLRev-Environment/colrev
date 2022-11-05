@@ -29,6 +29,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
+    search_type = colrev.settings.SearchType.DB
+
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:

@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
 
    .. autosummary::
 
+      ~ACMDigitalLibrarySearchSource.search_type
       ~ACMDigitalLibrarySearchSource.source_identifier

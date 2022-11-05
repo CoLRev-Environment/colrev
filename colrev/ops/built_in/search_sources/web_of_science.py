@@ -29,6 +29,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
+    search_type = colrev.settings.SearchType.DB
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

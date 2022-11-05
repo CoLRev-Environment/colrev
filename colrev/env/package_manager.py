@@ -60,6 +60,9 @@ class SearchSourcePackageEndpointInterface(
     source_identifier = zope.interface.Attribute(
         """Source identifier for search and provenance"""
     )
+    search_type = zope.interface.Attribute(
+        """Main SearchType associated with the SearchSource"""
+    )
 
     # pylint: disable=no-self-argument
     def run_search(search_operation: colrev.ops.search.Search) -> None:  # type: ignore

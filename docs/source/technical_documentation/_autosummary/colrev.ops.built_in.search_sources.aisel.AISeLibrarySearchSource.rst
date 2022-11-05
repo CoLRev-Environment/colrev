@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
 
    .. autosummary::
 
+      ~AISeLibrarySearchSource.search_type
       ~AISeLibrarySearchSource.source_identifier

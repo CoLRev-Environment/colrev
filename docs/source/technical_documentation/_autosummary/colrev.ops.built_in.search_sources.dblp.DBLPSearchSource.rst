@@ -40,4 +40,5 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
 
    .. autosummary::
 
+      ~DBLPSearchSource.search_type
       ~DBLPSearchSource.source_identifier

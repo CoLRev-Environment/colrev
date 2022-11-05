@@ -39,7 +39,7 @@ class Load(colrev.operation.Operation):
         self.package_manager = self.review_manager.get_package_manager()
 
     def __get_new_search_files(self) -> list[Path]:
-        """ "Retrieve new search files (not yet registered in settings)"""
+        """Retrieve new search files (not yet registered in settings)"""
 
         if not self.review_manager.search_dir.is_dir():
             return []
@@ -115,20 +115,25 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
 
             if res["confidence"] > 0:
-                search_type = colrev.settings.SearchType("DB")
+                result_item = {}
 
                 res["endpoint"] = endpoint
+
+                search_type = endpoint_class.search_type
+                # Note : as the identifier, we use the filename
+                # (if search results are added by file/not via the API)
 
                 if "filename" not in res:
                     # Correct the file extension if necessary
                     if re.search("%0", data) and filepath.suffix not in [".enl"]:
                         new_filename = filepath.with_suffix(".enl")
                         self.review_manager.logger.info(
-                            f"{colors.GREEN}Renaming to {new_filename} "
+                            f"{colors.GREEN}Rename to {new_filename} "
                             f"(because the format is .enl){colors.END}"
                         )
                         filepath.rename(new_filename)
                         filepath = new_filename
+                        res["filename"] = filepath
 
                 if "load_conversion_package_endpoint" not in res:
                     res[
@@ -147,12 +152,10 @@ class Load(colrev.operation.Operation):
                     comment="",
                 )
 
-                results_list.append(
-                    {
-                        "source_candidate": source_candidate,
-                        "confidence": res["confidence"],
-                    }
-                )
+                result_item["source_candidate"] = source_candidate
+                result_item["confidence"] = res["confidence"]
+
+                results_list.append(result_item)
 
         if 0 == len(results_list):
             source_candidate = colrev.settings.SearchSource(
@@ -167,13 +170,18 @@ class Load(colrev.operation.Operation):
                 comment="",
             )
             results_list.append(
-                {"source_candidate": source_candidate, "confidence": 1.0}
+                {
+                    "source_candidate": source_candidate,
+                    "confidence": 1.0,  # type: ignore
+                }
             )
 
         return results_list
 
-    def check_update_sources(self, *, skip_query: bool = False) -> None:
-        """Check the SearchSources and update if necessary"""
+    def get_new_sources(
+        self, *, skip_query: bool = False
+    ) -> typing.List[colrev.settings.SearchSource]:
+        """Get new SearchSources"""
 
         # pylint: disable=redefined-outer-name
         # pylint: disable=too-many-branches
@@ -183,7 +191,7 @@ class Load(colrev.operation.Operation):
         new_search_files = self.__get_new_search_files()
         if not new_search_files:
             self.review_manager.logger.info("No new search files...")
-            return
+            return []
 
         self.review_manager.logger.info("Load available search_source endpoints...")
 
@@ -222,6 +230,7 @@ class Load(colrev.operation.Operation):
             for item in sublist
         ]
 
+        new_sources = []
         for sfp in new_search_files:
 
             sfp_name = sfp
@@ -230,13 +239,14 @@ class Load(colrev.operation.Operation):
             ]:
                 continue
 
+            print()
             self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
             # Assuming that all other search types are added by query
             # search_type_input = "NA"
             # while search_type_input not in SearchType.get_options():
             #     print(f"Search type options: {SearchType.get_options()}")
-            #     cmd = "Enter search type".ljust(40, " ") + ": "
+            #     cmd = "Enter search type".ljust(25, " ") + ": "
             #     search_type_input = input(cmd)
 
             heuristic_result_list = self.__apply_source_heuristics(
@@ -278,7 +288,7 @@ class Load(colrev.operation.Operation):
                         sfp_name.name
                     )
 
-                cmd = "Enter the search query (or NA)".ljust(40, " ") + ": "
+                cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
                 if not skip_query:
                     query_input = input(cmd)
@@ -291,22 +301,15 @@ class Load(colrev.operation.Operation):
 
             else:
                 print(
-                    "Source name".ljust(40, " ")
+                    "Source name".ljust(25, " ")
                     + f": {heuristic_source['source_candidate'].endpoint}"
                 )
                 print(
-                    "Source identifier".ljust(40, " ")
+                    "Source identifier".ljust(25, " ")
                     + f": {heuristic_source['source_candidate'].source_identifier}"
                 )
 
-            comment = None  # type: ignore
-            if not skip_query:
-                cmd = "Enter a comment (or NA)".ljust(40, " ") + ": "
-                comment_input = input(cmd)
-                if comment_input != "":
-                    comment = comment_input
-
-            heuristic_source["source_candidate"].comment = comment
+            heuristic_source["source_candidate"].comment = None
 
             if (
                 {}
@@ -326,16 +329,9 @@ class Load(colrev.operation.Operation):
                         "endpoint": custom_load_conversion_package_endpoint
                     }
 
-            self.review_manager.settings.sources.append(
-                heuristic_source["source_candidate"]
-            )
-            self.review_manager.save_settings()
-            self.review_manager.logger.info(
-                f"Add new source: {colors.GREEN}{sfp} "
-                f"({heuristic_source['source_candidate'].endpoint}){colors.END}"
-            )
+            new_sources.append(heuristic_source["source_candidate"])
 
-        print()
+        return new_sources
 
     def __check_bib_file(
         self, *, source: colrev.settings.SearchSource, records: dict
@@ -731,7 +727,13 @@ class Load(colrev.operation.Operation):
             records=records, save_path=corresponding_bib_file
         )
 
-    def main(self, *, keep_ids: bool = False, combine_commits: bool = False) -> None:
+    def main(
+        self,
+        *,
+        new_sources: typing.List[colrev.settings.SearchSource],
+        keep_ids: bool = False,
+        combine_commits: bool = False,
+    ) -> None:
         """Load records (main entrypoint)"""
 
         saved_args = locals()
@@ -744,13 +746,32 @@ class Load(colrev.operation.Operation):
             sources = []
             for source in self.review_manager.settings.sources:
                 sources.append(source)
+            for source in new_sources:
+                if source.filename not in [s.filename for s in sources]:
+                    sources.append(source)
             return sources
 
+        print()
+        git_repo = self.review_manager.dataset.get_repo()
         for source in load_active_sources():
 
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
                 saved_args["file"] = source.filename.name
+
+                # Add to settings (if new filename)
+                if source.filename not in [
+                    s.filename for s in self.review_manager.settings.sources
+                ]:
+                    self.review_manager.settings.sources.append(source)
+                    self.review_manager.save_settings()
+                    # Add files that were renamed (removed)
+                    for obj in git_repo.index.diff(None).iter_change_type("D"):
+                        if source.filename.stem in obj.b_path:
+                            self.review_manager.dataset.add_changes(
+                                path=Path(obj.b_path), remove=True
+                            )
+
                 records = {}
 
                 # 1. convert to bib and fix format (if necessary)
@@ -777,18 +798,21 @@ class Load(colrev.operation.Operation):
                 # 3. load and add records to data/records.bib
                 self.__load_source_records(source=source, keep_ids=keep_ids)
                 if 0 == getattr(source, "to_import", 0):
-                    print("")
+                    print()
                     continue
 
                 # 4. validate load
                 self.__validate_load(source=source)
 
+                git_repo.git.stash("push", "--keep-index")
                 if not combine_commits:
                     self.review_manager.create_commit(
                         msg=f"Load {saved_args['file']}",
                         script_call="colrev load",
                         saved_args=saved_args,
                     )
+                git_repo.git.stash("pop")
+                print()
             except (colrev_exceptions.ImportException) as exc:
                 print(exc)
 

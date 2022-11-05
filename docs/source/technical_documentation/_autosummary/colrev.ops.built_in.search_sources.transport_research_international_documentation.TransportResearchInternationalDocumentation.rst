@@ -38,4 +38,5 @@ colrev.ops.built\_in.search\_sources.transport\_research\_international\_documen
 
    .. autosummary::
 
+      ~TransportResearchInternationalDocumentation.search_type
       ~TransportResearchInternationalDocumentation.source_identifier
