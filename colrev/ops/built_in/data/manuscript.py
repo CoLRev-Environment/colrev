@@ -241,7 +241,7 @@ class Manuscript(JsonSchemaMixin):
         ) as writer:
             appended, completed = False, False
             line = reader.readline()
-            while line != "":
+            while line:
                 if self.NEW_RECORD_SOURCE_TAG in line:
                     if "_Records to synthesize" not in line:
                         line = "_Records to synthesize_:" + line + "\n"
@@ -715,7 +715,7 @@ class Manuscript(JsonSchemaMixin):
             with open(paper, encoding="utf-8") as file:
                 for line in file:
                     if self.NEW_RECORD_SOURCE_TAG in line:
-                        while line != "":
+                        while line:
                             line = file.readline()
                             if re.search(r"- @.*", line):
                                 record_id = re.findall(r"- @(.*)$", line)

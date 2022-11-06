@@ -1121,11 +1121,10 @@ class Record:
         md_p_dict = self.data["colrev_masterdata_provenance"]
 
         if key in md_p_dict:
-            if "" != note:
+            if "" == md_p_dict[key]["note"]:
+                md_p_dict[key]["note"] = note
+            elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
-            else:
-                md_p_dict[key]["note"] = ""
-            md_p_dict[key]["source"] = source
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
