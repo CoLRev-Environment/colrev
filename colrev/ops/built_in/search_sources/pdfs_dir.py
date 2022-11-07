@@ -55,6 +55,22 @@ class PDFSearchSource(JsonSchemaMixin):
             self.settings.search_parameters["scope"]["path"]
         )
 
+        self.subdir_pattern: re.Pattern = re.compile("")
+        self.r_subdir_pattern: re.Pattern = re.compile("")
+        if "subdir_pattern" in self.settings.search_parameters.get("scope", {}):
+            self.subdir_pattern = self.settings.search_parameters["scope"][
+                "subdir_pattern"
+            ]
+            source_operation.review_manager.logger.info(
+                f"Activate subdir_pattern: {self.subdir_pattern}"
+            )
+            if "year" == self.subdir_pattern:
+                self.r_subdir_pattern = re.compile("([1-3][0-9]{3})")
+            if "volume_number" == self.subdir_pattern:
+                self.r_subdir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
+            if "volume" == self.subdir_pattern:
+                self.r_subdir_pattern = re.compile("([0-9]{1,4})")
+
     def __update_if_pdf_renamed(
         self,
         *,
@@ -193,8 +209,7 @@ class PDFSearchSource(JsonSchemaMixin):
     def __update_fields_based_on_pdf_dirs(
         self, *, record_dict: dict, params: dict
     ) -> dict:
-
-        if "scope" not in params:
+        if not self.subdir_pattern:
             return record_dict
 
         if "journal" in params["scope"]:
@@ -205,24 +220,22 @@ class PDFSearchSource(JsonSchemaMixin):
             record_dict["booktitle"] = params["scope"]["conference"]
             record_dict["ENTRYTYPE"] = "inproceedings"
 
-        if "sub_dir_pattern" in params["scope"]:
-            sub_dir_pattern = params["scope"]["sub_dir_pattern"]
+        if self.subdir_pattern:
 
             # Note : no file access here (just parsing the patterns)
             # no absolute paths needed
             partial_path = Path(record_dict["file"]).parents[0]
-            if "year" == sub_dir_pattern:
-                r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
+
+            if "year" == self.subdir_pattern:
                 # Note: for year-patterns, we allow subfolders
                 # (eg., conference tracks)
-                match = r_sub_dir_pattern.search(str(partial_path))
+                match = self.r_subdir_pattern.search(str(partial_path))
                 if match is not None:
                     year = match.group(1)
                     record_dict["year"] = year
 
-            if "volume_number" == sub_dir_pattern:
-                r_sub_dir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
-                match = r_sub_dir_pattern.search(str(partial_path))
+            elif "volume_number" == self.subdir_pattern:
+                match = self.r_subdir_pattern.search(str(partial_path))
                 if match is not None:
                     volume = match.group(1)
                     number = match.group(3)
@@ -230,15 +243,14 @@ class PDFSearchSource(JsonSchemaMixin):
                     record_dict["number"] = number
                 else:
                     # sometimes, journals switch...
-                    r_sub_dir_pattern = re.compile("([0-9]{1,3})")
-                    match = r_sub_dir_pattern.search(str(partial_path))
+                    r_subdir_pattern = re.compile("([0-9]{1,3})")
+                    match = r_subdir_pattern.search(str(partial_path))
                     if match is not None:
                         volume = match.group(1)
                         record_dict["volume"] = volume
 
-            if "volume" == sub_dir_pattern:
-                r_sub_dir_pattern = re.compile("([0-9]{1,4})")
-                match = r_sub_dir_pattern.search(str(partial_path))
+            elif "volume" == self.subdir_pattern:
+                match = self.r_subdir_pattern.search(str(partial_path))
                 if match is not None:
                     volume = match.group(1)
                     record_dict["volume"] = volume
@@ -468,16 +480,21 @@ class PDFSearchSource(JsonSchemaMixin):
                 f"(should be {self.source_identifier})"
             )
 
-        if "sub_dir_pattern" in source.search_parameters:
-            if source.search_parameters["sub_dir_pattern"] != [
+        if "subdir_pattern" in source.search_parameters:
+            if source.search_parameters["subdir_pattern"] != [
                 "NA",
                 "volume_number",
                 "year",
                 "volume",
             ]:
                 raise colrev_exceptions.InvalidQueryException(
-                    "sub_dir_pattern not in [NA, volume_number, year, volume]"
+                    "subdir_pattern not in [NA, volume_number, year, volume]"
                 )
+
+        if "sub_dir_pattern" in source.search_parameters:
+            raise colrev_exceptions.InvalidQueryException(
+                "sub_dir_pattern: deprecated. use subdir_pattern"
+            )
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

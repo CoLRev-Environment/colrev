@@ -283,7 +283,7 @@ class Initializer:
                 "scope": {
                     "path": "pdfs",
                     "journal": "TODO",
-                    "sub_dir_pattern": "TODO:volume_number|year",
+                    "subdir_pattern": "TODO:volume_number|year",
                 }
             }
 
