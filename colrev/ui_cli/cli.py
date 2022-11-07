@@ -1985,17 +1985,18 @@ def sync(
         for case in sync_operation.non_unique_for_import:
             for val in case.values():
                 # later: there may be more collisions (v3, v4)
-                v_1 = colrev.record.Record(data=val[0]).format_bib_style()
-                v_2 = colrev.record.Record(data=val[1]).format_bib_style()
+                v_1 = val[0].format_bib_style()
+                v_2 = val[1].format_bib_style()
+
                 if v_1.lower() == v_2.lower():
                     sync_operation.add_to_records_to_import(record=val[0])
                     continue
                 print("\n")
                 print(f"1: {v_1}")
-                print("      " + val[0].get("source_url", ""))
+                print("      " + val[0].data.get("source_url", ""))
                 print("")
                 print(f"2: {v_2}")
-                print("      " + val[1].get("source_url", ""))
+                print("      " + val[1].data.get("source_url", ""))
                 user_selection = input("Import version 1 or 2 (or skip)?")
                 if "1" == user_selection:
                     sync_operation.add_to_records_to_import(record=val[0])
