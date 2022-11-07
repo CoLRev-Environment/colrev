@@ -846,7 +846,7 @@ class Dataset:
 
         start_year_values = list(self.masterdata_restrictions.keys())
 
-        if "year" not in record_dict:
+        if record_dict.get("year", "forthcoming") == "forthcoming":
             return {}
 
         year_index_diffs = [

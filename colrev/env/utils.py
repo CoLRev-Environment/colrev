@@ -98,6 +98,12 @@ def custom_asdict_factory(data) -> dict:  # type: ignore
             return obj.value
         if isinstance(obj, Path):
             return str(obj)
+        if isinstance(obj, float):
+            # Save 1.0 as 1 per default to avoid parsing issues
+            # e.g., with the web ui
+            if str(obj) == "1.0":
+                return 1
+            return obj
         return obj
 
     return {k: convert_value(v) for k, v in data}
