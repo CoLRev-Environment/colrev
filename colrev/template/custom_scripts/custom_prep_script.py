@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import timeout_decorator
 import zope.interface
 from dacite import from_dict
 
 import colrev.operation
+
+# import timeout_decorator
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -32,7 +33,8 @@ class CustomPrep:
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    @timeout_decorator.timeout(60, use_signals=False)
+    # Use timeout decorator to limit the execution time of functions
+    # @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
