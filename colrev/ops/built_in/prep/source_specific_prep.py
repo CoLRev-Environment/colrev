@@ -38,15 +38,15 @@ class SourceSpecificPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+        self.search_sources = colrev.ops.search_sources.SearchSources(
+            review_manager=prep_operation.review_manager
+        )
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare the record by applying source-specific fixes"""
-
-        search_sources = colrev.ops.search_sources.SearchSources(
-            review_manager=prep_operation.review_manager
-        )
 
         origin_source = record.data["colrev_origin"][0].split("/")[0]
 
@@ -58,9 +58,9 @@ class SourceSpecificPrep(JsonSchemaMixin):
         ]
 
         for source in sources:
-            if source.endpoint not in search_sources.packages:
+            if source.endpoint not in self.search_sources.packages:
                 continue
-            endpoint = search_sources.packages[source.endpoint]
+            endpoint = self.search_sources.packages[source.endpoint]
 
             if callable(endpoint.prepare):
                 record = endpoint.prepare(record, source)
