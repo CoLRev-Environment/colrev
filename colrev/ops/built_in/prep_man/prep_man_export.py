@@ -51,6 +51,8 @@ class ExportManPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
 
+        if "pdf_handling_mode" not in settings:
+            settings["pdf_handling_mode"] = "symlink"
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
         self.settings = from_dict(data_class=self.settings_class, data=settings)
@@ -61,10 +63,10 @@ class ExportManPrep(JsonSchemaMixin):
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
 
-        prep_man_path_pdfs = self.prep_man_path / Path("pdfs")
+        prep_man_path_pdfs = self.prep_man_path / Path("data/pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
-        prep_man_path_pdfs.mkdir(exist_ok=True)
+        prep_man_path_pdfs.mkdir(exist_ok=True, parents=True)
 
         for record in records.values():
             if "file" in record:

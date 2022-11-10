@@ -170,6 +170,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
             same_toc_recs = sorted(
                 same_toc_recs, key=lambda d: d["similarity"], reverse=True
             )
+            if len(same_toc_recs) > 20:
+                same_toc_recs = same_toc_recs[0:20]
 
             i = 0
             for i, same_toc_rec in enumerate(same_toc_recs):

@@ -447,6 +447,13 @@ def load(
     help="Reset IDs that have been changed (to fix the sort order in data/records.bib)",
 )
 @click.option(
+    "-sid",
+    "--set_ids",
+    is_flag=True,
+    default=False,
+    help="Set IDs (regenerate)",
+)
+@click.option(
     "-d",
     "--debug",
     type=str,
@@ -485,6 +492,7 @@ def prep(
     keep_ids: bool,
     reset_records: str,
     reset_ids: bool,
+    set_ids: bool,
     debug: str,
     debug_file: Path,
     setup_custom_script: bool,
@@ -509,6 +517,9 @@ def prep(
             return
         if reset_ids:
             prep_operation.reset_ids()
+            return
+        if set_ids:
+            prep_operation.set_ids()
             return
         if debug or debug_file:
             prep_operation.main(
@@ -1147,6 +1158,8 @@ def pdf_prep(
         if verbose:
             raise exc
         print(exc)
+    except KeyboardInterrupt:
+        print("Stopped the process")
 
 
 def __delete_first_pages_cli(

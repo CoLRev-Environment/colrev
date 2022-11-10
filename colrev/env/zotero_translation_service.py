@@ -53,7 +53,6 @@ class ZoteroTranslationService:
 
         i = 0
         while i < 45:
-            print("check")
             if self.zotero_service_available():
                 return
             time.sleep(1)

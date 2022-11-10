@@ -19,6 +19,7 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from pybtex.database import Person
 from pybtex.database.input import bibtex
+from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -281,25 +282,33 @@ class Dataset:
     def __read_record_header_items(self, *, file_object: typing.TextIO = None) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
 
-        def parse_k_v(current_key_value_pair_str: str) -> tuple:
-            if " = " in current_key_value_pair_str:
-                key, value = current_key_value_pair_str.split(" = ", 1)
-            else:
-                key = "ID"
-                value = current_key_value_pair_str.split("{")[1]
+        # pylint: disable=too-many-statements
 
-            key = key.lstrip().rstrip()
-            value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-            if "colrev_origin" == key:
-                value_list = value.replace("\n", "").replace(" ", "").split(";")
-                value_list = [x for x in value_list if x]
-                return key, value_list
-            if "colrev_status" == key:
-                return key, colrev.record.RecordState[value]
-            if "colrev_masterdata_provenance" == key:
-                return key, self.__load_field_dict(value=value, field=key)
-            if "file" == key:
-                return key, Path(value)
+        def parse_k_v(current_key_value_pair_str: str) -> tuple:
+            try:
+                if " = " in current_key_value_pair_str:
+                    key, value = current_key_value_pair_str.split(" = ", 1)
+                else:
+                    key = "ID"
+                    value = current_key_value_pair_str.split("{")[1]
+
+                key = key.lstrip().rstrip()
+                value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+                if "colrev_origin" == key:
+                    value_list = value.replace("\n", "").replace(" ", "").split(";")
+                    value_list = [x for x in value_list if x]
+                    return key, value_list
+                if "colrev_status" == key:
+                    return key, colrev.record.RecordState[value]
+                if "colrev_masterdata_provenance" == key:
+                    return key, self.__load_field_dict(value=value, field=key)
+                if "file" == key:
+                    return key, Path(value)
+            except IndexError as exc:
+                raise colrev_exceptions.BrokenFilesError(
+                    msg="parsing records.bib"
+                ) from exc
+
             return key, value
 
         # pylint: disable=consider-using-with
@@ -644,10 +653,16 @@ class Dataset:
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
 
+        # pylint: disable=too-many-branches
+
         try:
 
             retrieved_record = local_index.retrieve(record_dict=record_dict)
             temp_id = retrieved_record["ID"]
+
+            # Do not use IDs from local_index for curated_metadata repositories
+            if "curated_metadata" in str(self.review_manager.path):
+                raise colrev_exceptions.RecordNotInIndexException()
 
         except colrev_exceptions.RecordNotInIndexException:
 
@@ -774,7 +789,7 @@ class Dataset:
 
         id_list = list(records.keys())
 
-        for record_id in list(records.keys()):
+        for record_id in tqdm(list(records.keys())):
             record_dict = records[record_id]
             record = colrev.record.Record(data=record_dict)
             if record.masterdata_is_curated():
@@ -787,13 +802,18 @@ class Dataset:
                 colrev.record.RecordState.md_prepared,
             ]:
                 continue
-
             old_id = record_id
+
+            temp_stat = record_dict["colrev_status"]
+            if selected_ids:
+                record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
             new_id = self.__generate_id(
                 local_index=local_index,
                 record_dict=record_dict,
                 existing_ids=[x for x in id_list if x != record_id],
             )
+            if selected_ids:
+                record_dict["colrev_status"] = temp_stat
 
             id_list.append(new_id)
             if old_id != new_id:
@@ -846,7 +866,7 @@ class Dataset:
 
         start_year_values = list(self.masterdata_restrictions.keys())
 
-        if record_dict.get("year", "forthcoming") == "forthcoming":
+        if not str(record_dict.get("year", "NA")).isdigit():
             return {}
 
         year_index_diffs = [

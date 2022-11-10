@@ -191,14 +191,16 @@ class Record:
         list_to_return = []
         if "colrev_masterdata_provenance" == input_key:
             for key, value in input_dict.items():
-                formated_node = ",".join(
-                    sorted(e for e in value["note"].split(",") if "" != e)
-                )
-                list_to_return.append(f"{key}:{value['source']};{formated_node};")
+                if isinstance(value, dict):
+                    formated_node = ",".join(
+                        sorted(e for e in value["note"].split(",") if "" != e)
+                    )
+                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
 
         elif "colrev_data_provenance" == input_key:
             for key, value in input_dict.items():
-                list_to_return.append(f"{key}:{value['source']};{value['note']};")
+                if isinstance(value, dict):
+                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
 
         else:
             print(f"error in to_string of dict_field: {input_key}")
@@ -910,10 +912,11 @@ class Record:
             "pages",
             "booktitle",
         ]
+
         for mandatory_field in mandatory_fields:
-            if record_a_dict.get(mandatory_field, "UNKNOWN"):
+            if record_a_dict.get(mandatory_field, "UNKNOWN") == "UNKNOWN":
                 record_a_dict[mandatory_field] = ""
-            if record_b_dict.get(mandatory_field, "UNKNOWN"):
+            if record_b_dict.get(mandatory_field, "UNKNOWN") == "UNKNOWN":
                 record_b_dict[mandatory_field] = ""
 
         if "container_title" not in record_a_dict:
@@ -1211,6 +1214,8 @@ class Record:
     def get_quality_defects(self) -> list:
         """Get the fields (keys) with quality defects"""
 
+        # pylint: disable=too-many-branches
+
         defect_field_keys = []
         for key in self.data.keys():
             if "UNKNOWN" == self.data[key]:
@@ -1232,6 +1237,8 @@ class Record:
                     str(self.data[key]).count(",") - 1
                 ):
                     defect_field_keys.append(key)
+                if "�" in str(self.data[key]):
+                    defect_field_keys.append(key)
 
             if "title" == key:
                 # Note : titles that have no space and special characters
@@ -1241,9 +1248,13 @@ class Record:
                     or any(char.isdigit() for char in self.data[key])
                 ):
                     defect_field_keys.append(key)
+                if "�" in str(self.data[key]):
+                    defect_field_keys.append(key)
 
             if key in ["title", "author", "journal", "booktitle"]:
                 if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
+                    defect_field_keys.append(key)
+                if "�" in str(self.data[key]):
                     defect_field_keys.append(key)
 
         return list(set(defect_field_keys))

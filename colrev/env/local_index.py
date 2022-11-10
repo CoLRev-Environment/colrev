@@ -691,19 +691,24 @@ class LocalIndex:
 
         print("Validate curated metadata")
 
-        curated_outlets = self.environment_manager.get_curated_outlets()
+        try:
 
-        if len(curated_outlets) != len(set(curated_outlets)):
-            duplicated = [
-                item
-                for item, count in collections.Counter(curated_outlets).items()
-                if count > 1
-            ]
-            print(
-                f"Error: Duplicate outlets in curated_metadata : {','.join(duplicated)}"
-            )
+            curated_outlets = self.environment_manager.get_curated_outlets()
+
+            if len(curated_outlets) != len(set(curated_outlets)):
+                duplicated = [
+                    item
+                    for item, count in collections.Counter(curated_outlets).items()
+                    if count > 1
+                ]
+                print(
+                    f"Error: Duplicate outlets in curated_metadata : {','.join(duplicated)}"
+                )
+                return True
+
+        except colrev_exceptions.CuratedOutletNotUnique as exc:
+            print(exc)
             return True
-
         return False
 
     def _prepare_record_for_indexing(self, *, record_dict: dict) -> dict:
@@ -837,7 +842,7 @@ class LocalIndex:
                 )
                 return
         except (
-            colrev_exceptions.RecordNotIndexableException,
+            colrev_exceptions.RecordNotInIndexException,
             TransportError,
             SerializationError,
         ):

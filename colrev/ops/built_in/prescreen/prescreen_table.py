@@ -14,6 +14,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -125,33 +126,80 @@ class TablePrescreen(JsonSchemaMixin):
     ) -> None:
         """Import a prescreen table"""
 
+        prescreen_operation.review_manager.logger.info(f"Load {import_table_path}")
+
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
             prescreen_operation.review_manager.logger.error(
                 f"Did not find {import_table_path} - exiting."
             )
             return
-        screen_df = pd.read_csv(import_table_path)
-        screen_df.fillna("", inplace=True)
-        screened_records = screen_df.to_dict("records")
+        prescreen_df = pd.read_csv(import_table_path)
+        prescreen_df.fillna("", inplace=True)
+        prescreened_records = prescreen_df.to_dict("records")
 
-        prescreen_operation.review_manager.logger.warning("import_table not completed")
+        if "presceen_inclusion" not in prescreened_records[0]:
+            prescreen_operation.review_manager.logger.warning(
+                "presceen_inclusion column missing"
+            )
+            return
 
-        for screened_record in screened_records:
-            if screened_record.get("ID", "") in records:
-                record = records[screened_record.get("ID", "")]
-                if "no" == screened_record.get("inclusion_1", ""):
+        prescreen_included = 0
+        prescreen_excluded = 0
+        nr_todo = 0
+        prescreen_operation.review_manager.logger.info("Update prescreen results")
+        for prescreened_record in prescreened_records:
+            if prescreened_record.get("ID", "") in records:
+                record = records[prescreened_record.get("ID", "")]
+
+                if "no" == prescreened_record.get("presceen_inclusion", ""):
+                    if (
+                        record["colrev_status"]
+                        != colrev.record.RecordState.rev_prescreen_excluded
+                    ):
+                        prescreen_excluded += 1
                     record[
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_excluded
-                if "yes" == screened_record.get("inclusion_1", ""):
+
+                elif "yes" == prescreened_record.get("presceen_inclusion", ""):
+                    if (
+                        record["colrev_status"]
+                        != colrev.record.RecordState.rev_prescreen_included
+                    ):
+                        prescreen_included += 1
                     record[
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_included
+                elif "TODO" == prescreened_record.get("presceen_inclusion", ""):
+                    nr_todo += 1
+                else:
+                    prescreen_operation.review_manager.logger.warning(
+                        "Invalid value in prescreen_inclusion: "
+                        f"{prescreened_record.get('presceen_inclusion', '')} "
+                        f"({prescreened_record.get('ID', 'NO_ID')})"
+                    )
+
+            else:
+                prescreen_operation.review_manager.logger.warning(
+                    f"ID not in records: {prescreened_record.get('ID', '')}"
+                )
+
+        prescreen_operation.review_manager.logger.info(
+            f" {colors.GREEN}{prescreen_included} records prescreen_included{colors.END}"
+        )
+        prescreen_operation.review_manager.logger.info(
+            f" {colors.RED}{prescreen_excluded} records prescreen_excluded{colors.END}"
+        )
+
+        prescreen_operation.review_manager.logger.info(
+            f" {colors.ORANGE}{nr_todo} records to prescreen{colors.END}"
+        )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
         prescreen_operation.review_manager.dataset.add_record_changes()
-        return
+
+        prescreen_operation.review_manager.logger.info("Completed import")
 
     def run_prescreen(
         self,

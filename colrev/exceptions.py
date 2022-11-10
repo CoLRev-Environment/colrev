@@ -23,6 +23,20 @@ class RepoSetupError(CoLRevException):
         super().__init__(self.message)
 
 
+class BrokenFilesError(CoLRevException):
+    """
+    Project files are broken (e.g., the main records.bib).
+    """
+
+    def __init__(self, msg: str) -> None:
+
+        self.message = (
+            f"Detected broken files ({msg}). To fix use\n     "
+            f"{colors.ORANGE}colrev fix{colors.END}"
+        )
+        super().__init__(self.message)
+
+
 class CoLRevUpgradeError(CoLRevException):
     """
     The version of the local CoLRev package does not match with the CoLRev version
@@ -214,7 +228,7 @@ class PropagatedIDChange(CoLRevException):
 
     def __init__(self, notifications: list) -> None:
         self.message = "\n    ".join(notifications)
-        super().__init__(self.message)
+        super().__init__("Attempt to change propagated IDs:" + self.message)
 
 
 # Init

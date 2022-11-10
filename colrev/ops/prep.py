@@ -390,6 +390,17 @@ class Prep(colrev.operation.Operation):
             saved_args=saved_args,
         )
 
+    def set_ids(self) -> None:
+        """Set IDs (regenerate)"""
+        self.review_manager.logger.info("Set IDs")
+        records = self.review_manager.dataset.load_records_dict()
+        self.review_manager.dataset.set_ids(records=records, selected_ids=list(records))
+        self.review_manager.create_commit(
+            msg="Set IDs",
+            script_call="colrev prep -sid",
+            saved_args={},
+        )
+
     def reset_ids(self) -> None:
         """Reset the IDs of records"""
         # Note: entrypoint for CLI
@@ -773,6 +784,7 @@ class Prep(colrev.operation.Operation):
                     )
                     pool = Pool(mp.cpu_count() // 2)
                 else:
+                    # Note : if we use too many CPUS, a "too many open files" exception is thrown
                     pool = Pool(self.cpus * 4)
                 prepared_records = pool.map(self.prepare, preparation_data)
                 pool.close()

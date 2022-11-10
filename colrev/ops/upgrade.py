@@ -887,6 +887,25 @@ class Upgrade(colrev.operation.Operation):
                 "the settings need to be adapted manually."
             )
 
+        if "curated_metadata" in str(self.review_manager.path):
+            for prep_round in settings["prep"]["prep_rounds"]:
+                prep_round["prep_package_endpoints"] = [
+                    s
+                    for s in prep_round["prep_package_endpoints"]
+                    if s["endpoint"]
+                    not in [
+                        "colrev_built_in.prep_curated",
+                        "colrev_built_in.get_doi_from_urls",
+                        "colrev_built_in.get_masterdata_from_doi",
+                        "colrev_built_in.get_masterdata_from_crossref",
+                        "colrev_built_in.get_masterdata_from_dblp",
+                        "colrev_built_in.get_masterdata_from_open_library",
+                        "colrev_built_in.get_year_from_vol_iss_jour_crossref",
+                        "colrev_built_in.get_record_from_local_index",
+                        "colrev_built_in.get_year_from_vol_iss_jour_crossref",
+                    ]
+                ]
+
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
 

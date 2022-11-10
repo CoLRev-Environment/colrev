@@ -206,6 +206,10 @@ class PDFPrep(colrev.operation.Operation):
 
         record.cleanup_pdf_processing_fields()
 
+        self.review_manager.dataset.save_records_dict(
+            records={record.data["ID"]: record.get_data()}, partial=True
+        )
+
         return record.get_data()
 
     def __get_data(self) -> dict:
