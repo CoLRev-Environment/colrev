@@ -8,6 +8,7 @@ from pathlib import Path
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 class Search(colrev.operation.Operation):
@@ -142,7 +143,6 @@ class Search(colrev.operation.Operation):
         self.main(selection_str="all")
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
-        self.review_manager.logger.info("Remove forthcoming")
 
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
@@ -150,7 +150,16 @@ class Search(colrev.operation.Operation):
             )
 
             record_list = list(records.values())
+            before = len(record_list)
             record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
+            changed = len(record_list) - before
+            if changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
+                )
+            else:
+                self.review_manager.logger.info(f"Removed {changed} forthcoming")
+
             records = {r["ID"]: r for r in record_list}
 
             self.review_manager.dataset.save_records_dict_to_file(
@@ -195,7 +204,7 @@ class Search(colrev.operation.Operation):
 
             print()
             self.review_manager.logger.info(
-                f"Retrieve from {source.endpoint} ({source.filename.name})"
+                f"Retrieve from {source.endpoint} (results > data/search/{source.filename.name})"
             )
 
             endpoint_dict = package_manager.load_packages(

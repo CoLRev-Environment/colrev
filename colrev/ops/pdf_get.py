@@ -309,6 +309,8 @@ class PDFGet(colrev.operation.Operation):
     def rename_pdfs(self) -> None:
         """Rename the PDFs"""
 
+        # pylint: disable=too-many-branches
+
         self.review_manager.logger.info("Rename PDFs")
 
         records = self.review_manager.dataset.load_records_dict()
@@ -330,24 +332,21 @@ class PDFGet(colrev.operation.Operation):
             if str(file) == str(new_filename):
                 continue
 
-            # This should replace the file fields
-            colrev.env.utils.inplace_change(
-                filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
-                old_string="{" + str(file) + "}",
-                new_string="{" + str(new_filename) + "}",
-            )
-            # This should replace the provenance dict fields
-            colrev.env.utils.inplace_change(
-                filename=self.review_manager.dataset.RECORDS_FILE_RELATIVE,
-                old_string=":" + str(file) + ";",
-                new_string=":" + str(new_filename) + ";",
-            )
+            record["file"] = new_filename
+
+            for value in record.get("colrev_masterdata_provenance", {}).values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
+
+            for value in record.get("data_provenance", {}).values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
 
             if pdfs_search_file.is_file():
                 colrev.env.utils.inplace_change(
                     filename=pdfs_search_file,
-                    old_string=str(file),
-                    new_string=str(new_filename),
+                    old_string="{" + str(file) + "}",
+                    new_string="{" + str(new_filename) + "}",
                 )
 
             if not file.is_file():
@@ -362,6 +361,8 @@ class PDFGet(colrev.operation.Operation):
 
             record["file"] = str(new_filename)
             self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
+
+        self.review_manager.dataset.save_records_dict(records=records)
 
         if pdfs_search_file.is_file():
             self.review_manager.dataset.add_changes(path=pdfs_search_file)

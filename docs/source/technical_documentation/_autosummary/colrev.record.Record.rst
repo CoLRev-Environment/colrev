@@ -76,6 +76,7 @@ colrev.record.Record
       ~Record.shares_origins
       ~Record.update_by_record
       ~Record.update_field
+      ~Record.update_masterdata_provenance
 
 
 

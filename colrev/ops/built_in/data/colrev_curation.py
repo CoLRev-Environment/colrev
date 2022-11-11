@@ -259,7 +259,10 @@ class ColrevCuration(JsonSchemaMixin):
         """Update the CoLRev curation"""
 
         for record_dict in records.values():
-            if record_dict["colrev_status"] == colrev.record.RecordState.md_imported:
+            if (
+                record_dict["colrev_status"]
+                == colrev.record.RecordState.rev_prescreen_excluded
+            ):
                 continue
             if record_dict.get("year", "UNKNOWN") == "UNKNOWN":
                 record_dict[

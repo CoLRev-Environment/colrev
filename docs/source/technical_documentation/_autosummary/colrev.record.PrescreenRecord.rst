@@ -77,6 +77,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.shares_origins
       ~PrescreenRecord.update_by_record
       ~PrescreenRecord.update_field
+      ~PrescreenRecord.update_masterdata_provenance
 
 
 

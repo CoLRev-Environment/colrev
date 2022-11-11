@@ -34,6 +34,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -125,7 +126,9 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         # TBD: how to distinguish other types?
         record.change_entrytype(new_entrytype="article")
-        record.import_provenance(source_identifier=self.source_identifier)
+        record.import_provenance(
+            review_manager=self.review_manager, source_identifier=self.source_identifier
+        )
 
         return record
 

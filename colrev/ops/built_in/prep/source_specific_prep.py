@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import timeout_decorator
@@ -53,8 +52,10 @@ class SourceSpecificPrep(JsonSchemaMixin):
         sources = [
             s
             for s in prep_operation.review_manager.settings.sources
-            if s.filename.with_suffix(".bib")
-            == Path("data/search") / Path(origin_source)
+            if str(s.filename.with_suffix(".bib"))
+            == origin_source.get_origin_prefix(
+                review_manager=prep_operation.review_manager
+            )
         ]
 
         for source in sources:

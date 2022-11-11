@@ -502,7 +502,10 @@ class Load(colrev.operation.Operation):
                 doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
             )
 
-        record.import_provenance(source_identifier=source.source_identifier)
+        record.import_provenance(
+            review_manager=self.review_manager,
+            source_identifier=source.source_identifier,
+        )
         record.set_status(target_state=colrev.record.RecordState.md_imported)
 
         return record.get_data()
@@ -511,12 +514,9 @@ class Load(colrev.operation.Operation):
         self, *, source: colrev.settings.SearchSource, search_records: list
     ) -> list:
         record_list = []
+        origin_prefix = source.get_origin_prefix(review_manager=self.review_manager)
         for record in search_records:
-            record.update(
-                colrev_origin=[
-                    f"{source.get_corresponding_bib_file().name}/{record['ID']}"
-                ]
-            )
+            record.update(colrev_origin=[f"{origin_prefix}/{record['ID']}"])
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
@@ -636,7 +636,7 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.logger.info(
-            f"Records loaded: {colors.GREEN}{source.to_import}{colors.END}"
+            f"New records loaded: {colors.GREEN}{source.to_import}{colors.END}"
         )
 
         self.review_manager.dataset.add_setting_changes()

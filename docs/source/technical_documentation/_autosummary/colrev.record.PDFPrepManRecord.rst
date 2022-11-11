@@ -76,6 +76,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.shares_origins
       ~PDFPrepManRecord.update_by_record
       ~PDFPrepManRecord.update_field
+      ~PDFPrepManRecord.update_masterdata_provenance
 
 
 

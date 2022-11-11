@@ -295,8 +295,8 @@ class Dataset:
                 key = key.lstrip().rstrip()
                 value = value.lstrip().rstrip().lstrip("{").rstrip("},")
                 if "colrev_origin" == key:
-                    value_list = value.replace("\n", "").replace(" ", "").split(";")
-                    value_list = [x for x in value_list if x]
+                    value_list = value.replace("\n", "").split(";")
+                    value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
                     return key, value_list
                 if "colrev_status" == key:
                     return key, colrev.record.RecordState[value]
@@ -873,6 +873,10 @@ class Dataset:
             int(record_dict["year"]) - int(x) for x in start_year_values
         ]
         year_index_diffs = [x if x >= 0 else 2000 for x in year_index_diffs]
+
+        if not year_index_diffs:
+            return {}
+
         index_min = min(range(len(year_index_diffs)), key=year_index_diffs.__getitem__)
         applicable_restrictions = self.masterdata_restrictions[
             start_year_values[index_min]

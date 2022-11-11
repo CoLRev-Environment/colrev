@@ -1641,9 +1641,19 @@ class Record:
                     note="missing",
                 )
 
-    def __set_initial_non_curated_import_provenance(self) -> None:
+    def __set_initial_non_curated_import_provenance(
+        self, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
 
-        self.__apply_fields_keys_requirements()
+        masterdata_restrictions = review_manager.dataset.get_applicable_restrictions(
+            record_dict=self.get_data()
+        )
+        if masterdata_restrictions:
+            self.update_masterdata_provenance(
+                masterdata_restrictions=masterdata_restrictions
+            )
+        else:
+            self.__apply_fields_keys_requirements()
 
         if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
             inconsistent_fields = self.record_field_inconsistencies[
@@ -1669,7 +1679,12 @@ class Record:
                     key=defect_field, note="quality_defect"
                 )
 
-    def import_provenance(self, *, source_identifier: str) -> None:
+    def import_provenance(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        source_identifier: str,
+    ) -> None:
         """Set the provenance for an imported record"""
 
         if not self.masterdata_is_curated():
@@ -1679,7 +1694,9 @@ class Record:
             self.__set_initial_import_provenance(
                 source_identifier_string=source_identifier_string
             )
-            self.__set_initial_non_curated_import_provenance()
+            self.__set_initial_non_curated_import_provenance(
+                review_manager=review_manager
+            )
 
     def pdf_get_man(
         self,
@@ -1873,6 +1890,8 @@ class Record:
     def apply_restrictions(self, *, restrictions: dict) -> None:
         """Apply masterdata restrictions to the record"""
 
+        # pylint: disable=too-many-branches
+
         if "ENTRYTYPE" in restrictions:
             if restrictions["ENTRYTYPE"] != self.data["ENTRYTYPE"]:
                 self.data["ENTRYTYPE"] = restrictions["ENTRYTYPE"]
@@ -1908,6 +1927,99 @@ class Record:
                         source="colrev_curation.masterdata_restrictions",
                         note="missing",
                     )
+            else:
+                if "number" in self.data:
+                    self.remove_field(
+                        key="number",
+                        not_missing_note=True,
+                        source="colrev_curation.masterdata_restrictions",
+                    )
+
+    def update_masterdata_provenance(
+        self, *, masterdata_restrictions: dict = None
+    ) -> None:
+        """Update the masterdata provenance"""
+        # pylint: disable=too-many-branches
+
+        if masterdata_restrictions is None:
+            masterdata_restrictions = {}
+
+        if not self.masterdata_is_curated():
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
+            missing_fields = self.get_missing_fields()
+            not_missing_fields = []
+            for missing_field in missing_fields:
+                if missing_field in self.data["colrev_masterdata_provenance"]:
+                    if (
+                        "not_missing"
+                        in self.data["colrev_masterdata_provenance"][missing_field][
+                            "note"
+                        ]
+                    ):
+                        not_missing_fields.append(missing_field)
+                        continue
+                self.add_masterdata_provenance_note(key=missing_field, note="missing")
+
+            for not_missing_field in not_missing_fields:
+                missing_fields.remove(not_missing_field)
+
+            if masterdata_restrictions:
+                self.apply_restrictions(restrictions=masterdata_restrictions)
+
+            if "forthcoming" == self.data.get("year", ""):
+                source = "NA"
+                if "year" in self.data["colrev_masterdata_provenance"]:
+                    source = self.data["colrev_masterdata_provenance"]["year"]["source"]
+                if "volume" in missing_fields:
+                    missing_fields.remove("volume")
+                    self.data["colrev_masterdata_provenance"]["volume"] = {
+                        "source": source,
+                        "note": "not_missing",
+                    }
+                if "number" in missing_fields:
+                    missing_fields.remove("number")
+                    self.data["colrev_masterdata_provenance"]["number"] = {
+                        "source": source,
+                        "note": "not_missing",
+                    }
+
+            if not missing_fields:
+                self.set_masterdata_complete(
+                    source_identifier="update_masterdata_provenance",
+                    replace_source=False,
+                )
+
+            inconsistencies = self.get_inconsistencies()
+            if inconsistencies:
+                for inconsistency in inconsistencies:
+                    self.add_masterdata_provenance_note(
+                        key=inconsistency,
+                        note="inconsistent with ENTRYTYPE",
+                    )
+            else:
+                self.set_masterdata_consistent()
+
+            incomplete_fields = self.get_incomplete_fields()
+            if incomplete_fields:
+                for incomplete_field in incomplete_fields:
+                    self.add_masterdata_provenance_note(
+                        key=incomplete_field, note="incomplete"
+                    )
+            else:
+                self.set_fields_complete()
+
+            defect_fields = self.get_quality_defects()
+            if defect_fields:
+                for defect_field in defect_fields:
+                    self.add_masterdata_provenance_note(
+                        key=defect_field, note="quality_defect"
+                    )
+            else:
+                self.remove_quality_defect_notes()
+
+            if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+                self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
 
 class PrepRecord(Record):
@@ -2243,92 +2355,6 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
         else:
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
-
-    def update_masterdata_provenance(
-        self, *, masterdata_restrictions: dict = None
-    ) -> None:
-        """Update the masterdata provenance"""
-        # pylint: disable=too-many-branches
-
-        if masterdata_restrictions is None:
-            masterdata_restrictions = {}
-
-        if not self.masterdata_is_curated():
-            if "colrev_masterdata_provenance" not in self.data:
-                self.data["colrev_masterdata_provenance"] = {}
-            missing_fields = self.get_missing_fields()
-            not_missing_fields = []
-            for missing_field in missing_fields:
-                if missing_field in self.data["colrev_masterdata_provenance"]:
-                    if (
-                        "not_missing"
-                        in self.data["colrev_masterdata_provenance"][missing_field][
-                            "note"
-                        ]
-                    ):
-                        not_missing_fields.append(missing_field)
-                        continue
-                self.add_masterdata_provenance_note(key=missing_field, note="missing")
-
-            for not_missing_field in not_missing_fields:
-                missing_fields.remove(not_missing_field)
-
-            if masterdata_restrictions:
-                self.apply_restrictions(restrictions=masterdata_restrictions)
-
-            if "forthcoming" == self.data.get("year", ""):
-                source = "NA"
-                if "year" in self.data["colrev_masterdata_provenance"]:
-                    source = self.data["colrev_masterdata_provenance"]["year"]["source"]
-                if "volume" in missing_fields:
-                    missing_fields.remove("volume")
-                    self.data["colrev_masterdata_provenance"]["volume"] = {
-                        "source": source,
-                        "note": "not_missing",
-                    }
-                if "number" in missing_fields:
-                    missing_fields.remove("number")
-                    self.data["colrev_masterdata_provenance"]["number"] = {
-                        "source": source,
-                        "note": "not_missing",
-                    }
-
-            if not missing_fields:
-                self.set_masterdata_complete(
-                    source_identifier="update_masterdata_provenance",
-                    replace_source=False,
-                )
-
-            inconsistencies = self.get_inconsistencies()
-            if inconsistencies:
-                for inconsistency in inconsistencies:
-                    self.add_masterdata_provenance_note(
-                        key=inconsistency,
-                        note="inconsistent with ENTRYTYPE",
-                    )
-            else:
-                self.set_masterdata_consistent()
-
-            incomplete_fields = self.get_incomplete_fields()
-            if incomplete_fields:
-                for incomplete_field in incomplete_fields:
-                    self.add_masterdata_provenance_note(
-                        key=incomplete_field, note="incomplete"
-                    )
-            else:
-                self.set_fields_complete()
-
-            defect_fields = self.get_quality_defects()
-            if defect_fields:
-                for defect_field in defect_fields:
-                    self.add_masterdata_provenance_note(
-                        key=defect_field, note="quality_defect"
-                    )
-            else:
-                self.remove_quality_defect_notes()
-
-            if missing_fields or inconsistencies or incomplete_fields or defect_fields:
-                self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
 
 class PrescreenRecord(Record):

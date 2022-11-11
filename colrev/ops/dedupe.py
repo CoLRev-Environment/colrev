@@ -484,8 +484,12 @@ class Dedupe(colrev.operation.Operation):
         duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
         for dupe in duplicates_to_process:
 
-            rec_1 = records[dupe.pop("ID1")]
-            rec_2 = records[dupe.pop("ID2")]
+            try:
+                rec_1 = records[dupe.pop("ID1")]
+                rec_2 = records[dupe.pop("ID2")]
+            except KeyError:
+                print(f"skip {dupe}")
+                continue
 
             # Simple way of implementing the closure
             # cases where the main_record has already been merged into another record

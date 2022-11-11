@@ -22,6 +22,7 @@ colrev.ops.prep.Prep
       ~Prep.prepare
       ~Prep.reset_ids
       ~Prep.reset_records
+      ~Prep.set_ids
       ~Prep.setup_custom_script
 
 

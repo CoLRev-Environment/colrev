@@ -142,12 +142,21 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         if len(pdfs_in_downloads_folder) == 0:
             print("No PDF found in downloads_folder")
             return
-        if len(pdfs_in_downloads_folder) > 1:
+        if (
+            len(pdfs_in_downloads_folder) > 1
+            and not (downloads_folder / Path(f"{record.data['ID']}.pdf")).is_file()
+        ):
             print("Multiple PDFs found in downloads_folder (skipping)")
             return
 
-        pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
+        if Path(f"{record.data['ID']}.pdf").is_file():
+            pdf_in_downloads_folder = downloads_folder / Path(
+                f"{record.data['ID']}.pdf"
+            )
+        else:
+            pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
 
+        # TODO : derive from settings (and mkdir) instead of using simple heuristics
         # simple heuristics:
         vol_slash_nr_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
@@ -165,6 +174,13 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             pdf_in_downloads_folder.rename(
                 vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")
             )
+            return
+
+        vol_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
+            f"{record.data.get('volume', 'NA')}"
+        )
+        if vol_path.is_dir():
+            pdf_in_downloads_folder.rename(vol_path / Path(f"{record.data['ID']}.pdf"))
             return
 
         year_path = pdf_get_man_operation.review_manager.pdf_dir / Path(

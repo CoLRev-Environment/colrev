@@ -13,6 +13,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -114,6 +115,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
     ) -> dict:
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
         nr_recs_to_merge = len(
@@ -137,19 +139,30 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 continue
             record = colrev.record.Record(data=record_dict)
 
-            toc_key = record.get_toc_key()
-            same_toc_recs = [
-                r
-                for r in records.values()
-                if toc_key == colrev.record.Record(data=r).get_toc_key()
-                if r["ID"] != record.data["ID"]
-                and r["colrev_status"]
-                not in [
+            try:
+                toc_key = record.get_toc_key()
+            except colrev_exceptions.NotTOCIdentifiableException:
+                continue
+
+            same_toc_recs = []
+            for record_candidate in records.values():
+                try:
+                    candidate_toc_key = colrev.record.Record(
+                        data=record_candidate
+                    ).get_toc_key()
+                except colrev_exceptions.NotTOCIdentifiableException:
+                    continue
+                if toc_key != candidate_toc_key:
+                    continue
+                if record_candidate["ID"] == record.data["ID"]:
+                    continue
+                if record_candidate["colrev_status"] in [
                     colrev.record.RecordState.md_prepared,
                     colrev.record.RecordState.md_needs_manual_preparation,
                     colrev.record.RecordState.md_imported,
-                ]
-            ]
+                ]:
+                    continue
+                same_toc_recs.append(record_candidate)
 
             if len(same_toc_recs) == 0:
                 print("no same toc records")

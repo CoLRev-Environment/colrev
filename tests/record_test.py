@@ -105,7 +105,8 @@ def test_defects() -> None:
     R1 = colrev.record.Record(data=v1)
     assert set(R1.get_quality_defects()) == {"title", "author"}
     assert R1.has_quality_defects()
-    R1.import_provenance(source_identifier="google")
+    review_manager = colrev.review_manager.ReviewManager()
+    R1.import_provenance(review_manager=review_manager, source_identifier="google")
     assert R1.data == {
         "ENTRYTYPE": "article",
         "ID": "R1",

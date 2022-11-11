@@ -78,6 +78,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.shares_origins
       ~ScreenRecord.update_by_record
       ~ScreenRecord.update_field
+      ~ScreenRecord.update_masterdata_provenance
 
 
 

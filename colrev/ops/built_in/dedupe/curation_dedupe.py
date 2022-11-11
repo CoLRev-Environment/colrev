@@ -244,7 +244,7 @@ class CurationDedupe(JsonSchemaMixin):
                         )
 
                 if "y" == input(
-                    "No existing records (md_processed*) found."
+                    "No existing records (md_processed*) found. "
                     "All records unique? Set to md_processed [y]? "
                 ):
                     for source_record_dict in source_records:
