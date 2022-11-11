@@ -607,6 +607,12 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
 @main.command(help_priority=8)
 @click.option(
+    "-m",
+    "--merge",
+    help="Merge records by providing a comma-separated list of IDs (ID1,ID2).",
+    required=True,
+)
+@click.option(
     "-f",
     "--fix_errors",
     is_flag=True,
@@ -639,6 +645,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.pass_context
 def dedupe(
     ctx: click.core.Context,
+    merge: str,
     fix_errors: bool,
     view: bool,
     source_comparison: bool,
@@ -648,6 +655,8 @@ def dedupe(
     """Deduplicate records"""
 
     try:
+        if merge:
+            force = True
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
         )
@@ -655,6 +664,10 @@ def dedupe(
         dedupe_operation = review_manager.get_dedupe_operation(
             notify_state_transition_operation=state_transition_operation
         )
+
+        if merge:
+            dedupe_operation.merge_records(merge=merge)
+            return
 
         if fix_errors:
             dedupe_operation.fix_errors()

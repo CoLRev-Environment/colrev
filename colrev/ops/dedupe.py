@@ -393,6 +393,8 @@ class Dedupe(colrev.operation.Operation):
         - complete_dedupe: when not all potential duplicates were considered,
         we cannot set records to md_procssed for non-duplicate decisions
 
+        results : [{"ID1": "...", "ID2": "...", "decision": "duplicate"}]
+
         """
 
         # The merging also needs to consider whether IDs are propagated
@@ -712,6 +714,11 @@ class Dedupe(colrev.operation.Operation):
             "same_source_merges": same_source_merges,
         }
         return info
+
+    def merge_records(self, *, merge: str) -> None:
+        merge_ids = merge.split(",")
+        results = [{"ID1": merge_ids[0], "ID2": merge_ids[1], "decision": "duplicate"}]
+        self.apply_merges(results=results)
 
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
