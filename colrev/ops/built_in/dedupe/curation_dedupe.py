@@ -584,7 +584,19 @@ class CurationDedupe(JsonSchemaMixin):
             f"{colors.GREEN}Duplicates identified{colors.END}"
         )
         print(decision_list)
-        dedupe_operation.apply_merges(results=decision_list)
+
+        # decision_list =
+        # [{'ID1': '0000000053', 'ID2': 'BellMillsFadel2013', 'decision': 'duplicate'}, .. . ]
+
+        preferred_masterdata_sources = [
+            s
+            for s in dedupe_operation.review_manager.settings.sources
+            if s.endpoint != "colrev_built_in.pdfs_dir"
+        ]
+        dedupe_operation.apply_merges(
+            results=decision_list,
+            preferred_masterdata_sources=preferred_masterdata_sources,
+        )
 
         dedupe_operation.review_manager.dataset.add_record_changes()
 

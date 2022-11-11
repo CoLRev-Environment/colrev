@@ -372,7 +372,13 @@ class Dedupe(colrev.operation.Operation):
 
         return cross_level_merge_attempt
 
-    def apply_merges(self, *, results: list, complete_dedupe: bool = False) -> None:
+    def apply_merges(
+        self,
+        *,
+        results: list,
+        complete_dedupe: bool = False,
+        preferred_masterdata_sources: list = None,
+    ) -> None:
         """Apply automated deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -394,6 +400,15 @@ class Dedupe(colrev.operation.Operation):
         # dedupe clustering routine
 
         # pylint: disable=too-many-branches
+
+        # TODO : we could set reasonable defaults for preferred_masterdata_sources
+        # e.g., prefer everything except for PDF/website sources?
+        preferred_masterdata_source_prefixes = []
+        if preferred_masterdata_sources:
+            preferred_masterdata_source_prefixes = [
+                s.get_origin_prefix(review_manager=self.review_manager)
+                for s in preferred_masterdata_sources
+            ]
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -440,6 +455,7 @@ class Dedupe(colrev.operation.Operation):
             main_record.merge(
                 merging_record=dupe_record,
                 default_source="merged",
+                preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
             )
             removed_duplicates.append(dupe_record.data["ID"])
 

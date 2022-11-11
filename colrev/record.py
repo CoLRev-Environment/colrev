@@ -605,13 +605,29 @@ class Record:
 
         return val
 
-    def merge(self, *, merging_record: Record, default_source: str) -> None:
+    def merge(
+        self,
+        *,
+        merging_record: Record,
+        default_source: str,
+        preferred_masterdata_source_prefixes: list = None,
+    ) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
 
 
         Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
+
+        # pylint: disable=too-many-branches
+
+        merging_record_preferred = True
+        if preferred_masterdata_source_prefixes:
+            if any(
+                any(ps in origin for ps in preferred_masterdata_source_prefixes)
+                for origin in self.data["colrev_origin"]
+            ):
+                merging_record_preferred = True
 
         self.__merge_origins(merging_record=merging_record)
 
@@ -651,6 +667,10 @@ class Record:
                     and not merging_record.masterdata_is_curated()
                 ):
                     continue
+
+                elif preferred_masterdata_source_prefixes:
+                    if merging_record_preferred:
+                        self.update_field(key=key, value=str(val), source=source)
 
                 # Fuse best fields if none is curated
                 else:
