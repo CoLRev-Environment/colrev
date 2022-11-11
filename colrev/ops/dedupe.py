@@ -716,6 +716,8 @@ class Dedupe(colrev.operation.Operation):
         return info
 
     def merge_records(self, *, merge: str) -> None:
+        """Merge two records by ID"""
+
         merge_ids = merge.split(",")
         results = [{"ID1": merge_ids[0], "ID2": merge_ids[1], "decision": "duplicate"}]
         self.apply_merges(results=results)

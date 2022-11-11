@@ -2,12 +2,9 @@
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
 
-import multiprocessing as mp
 import re
 import typing
-from collections import Counter
 from dataclasses import dataclass
-from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import zope.interface
@@ -22,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -49,7 +47,6 @@ class PDFSearchSource(JsonSchemaMixin):
                 notify_state_transition_operation=False
             )
         )
-        self.skip_duplicates = True
 
         self.pdfs_path = source_operation.review_manager.path / Path(
             self.settings.search_parameters["scope"]["path"]
@@ -397,41 +394,6 @@ class PDFSearchSource(JsonSchemaMixin):
             if "  " in str(pdf):
                 pdf.rename(str(pdf).replace("  ", " "))
 
-    def __skip_duplicates(
-        self,
-        *,
-        search_operation: colrev.ops.search.Search,
-        pdfs_to_index: typing.List[Path],
-    ) -> typing.List[Path]:
-        def get_pdf_cpid_path(path: Path) -> typing.List[str]:
-            try:
-                cpid = colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=search_operation.review_manager,
-                    pdf_path=search_operation.review_manager.path / path,
-                )
-            except colrev_exceptions.InvalidPDFException:
-                cpid = "Exception"
-            return [str(path), str(cpid)]
-
-        search_operation.review_manager.logger.info(
-            "Calculate PDF hashes to skip duplicates"
-        )
-
-        pool = Pool(mp.cpu_count() // 2)
-        pdfs_path_cpid = pool.map(get_pdf_cpid_path, pdfs_to_index)
-        pool.close()
-        pool.join()
-
-        pdfs_cpid = [x[1] for x in pdfs_path_cpid if x[1] != "Exception"]
-        duplicate_cpids = [
-            item for item, count in Counter(pdfs_cpid).items() if count > 1
-        ]
-        duplicate_pdfs = [
-            str(path) for path, cpid in pdfs_path_cpid if cpid in duplicate_cpids
-        ]
-        pdfs_to_index = [p for p in pdfs_to_index if str(p) not in duplicate_pdfs]
-        return pdfs_to_index
-
     def __skip_broken_filepaths(
         self,
         search_operation: colrev.ops.search.Search,
@@ -508,8 +470,20 @@ class PDFSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
+    def __add_md_string(self, *, record_dict: dict) -> dict:
+
+        md_copy = record_dict.copy()
+        for key in ["ID", "grobid-version", "file"]:
+            if key in md_copy:
+                md_copy.pop(key)
+        md_string = ",".join([f"{k}:{v}" for k, v in md_copy.items()])
+        record_dict["md_string"] = md_string
+        return record_dict
+
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
+
+        # pylint: disable=too-many-locals
 
         records = self.__load_records(search_operation=search_operation)
 
@@ -524,11 +498,6 @@ class PDFSearchSource(JsonSchemaMixin):
         ]
 
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
-
-        if self.skip_duplicates:
-            pdfs_to_index = self.__skip_duplicates(
-                search_operation=search_operation, pdfs_to_index=pdfs_to_index
-            )
 
         search_operation.review_manager.logger.info(
             f"PDFs to index: {len(pdfs_to_index)}"
@@ -556,15 +525,34 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         )
 
+        for record in records:
+            record = self.__add_md_string(record_dict=record)
+
         for pdf_batch in pdf_batches:
 
-            new_records = []
+            new_records: list = []
             for pdf_path in pdf_batch:
-                new_records.append(
-                    self.__index_pdf(
-                        search_operation=search_operation, pdf_path=pdf_path
-                    )
+                new_record = self.__index_pdf(
+                    search_operation=search_operation, pdf_path=pdf_path
                 )
+
+                new_record = self.__add_md_string(record_dict=new_record)
+
+                # Note: identical md_string as a heuristic for duplicates
+                potential_duplicates = [
+                    r
+                    for r in records + new_records
+                    if r["md_string"] == new_record["md_string"]
+                ]
+                if potential_duplicates:
+                    search_operation.review_manager.logger.warning(
+                        f" {colors.RED}skip record (PDF potential duplicate): "
+                        f"{new_record['file']} {colors.END} "
+                        f"({','.join([r['file'] for r in potential_duplicates])})"
+                    )
+                    continue
+
+                new_records.append(new_record)
 
             for new_r in new_records:
                 indexed_pdf_paths.append(new_r["file"])
@@ -578,6 +566,8 @@ class PDFSearchSource(JsonSchemaMixin):
                         new_r["colrev_status"] = str(new_r["colrev_status"])
 
             records = records + new_records
+            for record in records:
+                record.pop("md_string")
 
             if len(records) > 0:
                 records_dict = {r["ID"]: r for r in records}
