@@ -44,6 +44,7 @@ colrev.ops
    colrev.ops.prescreen
    colrev.ops.pull
    colrev.ops.push
+   colrev.ops.repair
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search

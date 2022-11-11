@@ -2320,6 +2320,36 @@ def upgrade(
     upgrad_operation.main()
 
 
+@main.command(hidden=True, help_priority=30)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def repair(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Repair file formatting errors in the CoLRev project."""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=True, verbose_mode=verbose
+    )
+    repair_operation = review_manager.get_repair()
+    repair_operation.main()
+
+
 @main.command(hidden=True)
 @click.option(
     "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"

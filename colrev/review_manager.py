@@ -290,6 +290,13 @@ class ReviewManager:
 
         return colrev.ops.upgrade.Upgrade(review_manager=self)
 
+    def get_repair(self) -> colrev.ops.repair.Repair:
+        """Get a a repair object"""
+
+        import colrev.ops.repair
+
+        return colrev.ops.repair.Repair(review_manager=self)
+
     def get_advisor(self) -> colrev.advisor.Advisor:
         """Get an advisor object"""
 
