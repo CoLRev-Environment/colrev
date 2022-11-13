@@ -11,7 +11,7 @@ Mention agreement on a shared data structure and steps of the literature review
 .. The main purpose of the three-step workflow is to make your work easier.
 
 
-.. figure:: ../../../figures/workflow.svg
+.. figure:: ../../figures/workflow.svg
    :width: 600
    :align: center
    :alt: Workflow cycle
@@ -84,12 +84,7 @@ Step PDF screen
 Step Data
    - Operation: data
 
-Operations can lead records to transition between states as illustrated in the following.
-
-.. figure:: ../../../figures/steps_operations.svg
-   :width: 800
-   :alt: Overview of states
-
+Detailed information on the steps and operations is available in `part 2 <2_operations>`_
 
 CoLRev validate
 -------------------------------

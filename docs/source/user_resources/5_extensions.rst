@@ -1,29 +1,11 @@
 
-A. Appendix
+5. Extension
 ==================================
-
-
-Publication
-------------------
-
-TODO: how to publish  (include a license, link at colrev/make it discoverable, do not include paywalled PDFs - not even in the history )
-
-call colrev prep --polish (e.g., to update references that were in print when retrieved but have been published in the meantime)
-
-Curation
-------------------
-
-TODO: introductory guidelines on curating repositories
-
-
-Extension
-------------------
-
 
 Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_. Guidelines on extension development and a few examples are summarized below.
 
 Extension development
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------
 
 Developing CoLRev extensions in Python/R is easy. Instructions and examples are provided below.
 
@@ -38,7 +20,7 @@ Developing CoLRev extensions in Python/R is easy. Instructions and examples are 
 
 
 Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------
 
 .. code-block:: python
 
@@ -67,7 +49,7 @@ Python
 
 
 R
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------
 
 For analytical extensions
 
@@ -100,14 +82,14 @@ For extensions aimed at changing records
 
 
 Example: colrev_cml_assistant
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------
 
 Aimed at supporting crowdsourcing and machine-learning based on CoLRev datasets.
 
 Link to the repository: `colrev_cml_assistant <https://github.com/geritwagner/colrev_cml_assistant>`_.
 
 Custom script extensions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------
 
 To develop a custom extension script, run the command for the respective operation:
 

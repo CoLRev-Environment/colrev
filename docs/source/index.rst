@@ -16,7 +16,12 @@ Collaborative Literature Reviews
    :maxdepth: 2
    :caption: User resources
 
-   Manual <user_resources/manual>
+   Introduction <user_resources/manual>
+   user_resources/1_workflow
+   user_resources/2_operations
+   user_resources/3_collaboration
+   user_resources/4_curation
+   user_resources/5_extensions
    user_resources/credits
    user_resources/help
 
