@@ -48,7 +48,7 @@ class RemoveNicknamesPrep(JsonSchemaMixin):
         if "author" in record.data:
             # Replace nicknames in parentheses
             record.data["author"] = re.sub(r"\([^)]*\)", "", record.data["author"])
-            record.data["author"] = record.data["author"].replace("  ", " ")
+            record.data["author"] = record.data["author"].replace("  ", " ").rstrip()
         return record
 
 

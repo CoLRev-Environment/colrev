@@ -150,6 +150,13 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
 
         else:
             params = {"rows": "15"}
+            if not isinstance(record.data.get("year", ""), str) or not isinstance(
+                record.data.get("title", ""), str
+            ):
+                print("year or title field not a string")
+                print(record.data)
+                raise AssertionError
+
             bibl = (
                 record.data["title"].replace("-", "_")
                 + " "

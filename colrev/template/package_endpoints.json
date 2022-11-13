@@ -23,6 +23,9 @@
         "colrev_built_in.source_specific_prep": {
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep"
         },
+        "colrev_built_in.exclude_complementary_materials": {
+            "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep"
+        },
         "colrev_built_in.exclude_non_latin_alphabets": {
             "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep"
         },
@@ -74,8 +77,8 @@
         "colrev_built_in.get_masterdata_from_citeas": {
             "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep"
         },
-        "colrev_built_in.get_year_from_vol_iss_jour_crossref": {
-            "endpoint": "colrev.ops.built_in.prep.crossref_year_vol_iss_prep.CrossrefYearVolIssPrep"
+        "colrev_built_in.get_year_from_vol_iss_jour": {
+            "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep"
         },
         "colrev_built_in.get_record_from_local_index": {
             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep"

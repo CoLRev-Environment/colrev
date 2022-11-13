@@ -145,14 +145,17 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 f" {colors.RED}{file_provenance['note']}{colors.END}"
             )
 
-            filepath = pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
-            pdf_path = pdf_prep_man.review_manager.path / Path(record_dict["file"])
+            filepath = pdf_prep_man.review_manager.path / Path(record_dict["file"])
+            if not filepath.is_file():
+                filepath = (
+                    pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
+                )
             record.data.update(
                 colrev_pdf_id=record.get_colrev_pdf_id(
-                    review_manager=pdf_prep_man.review_manager, pdf_path=pdf_path
+                    review_manager=pdf_prep_man.review_manager, pdf_path=filepath
                 )
             )
-            if pdf_path.is_file() or filepath.is_file():
+            if filepath.is_file():
                 current_platform = platform.system()
                 if current_platform == "Linux":
                     subprocess.call(["xdg-open", filepath])
@@ -166,7 +169,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                     "       (y)es, \n"
                     "       (n)o/delete file,\n"
                     "       (s)kip, (s10) to skip 10 records, or (q)uit,\n"
-                    "       (c)overpage remove, (l)ast page remove, (r)emove page range"
+                    "       (c)overpage remove, (l)ast page remove, (r)emove page range, "
                     "(m)etadata needs to be updated\n"
                 )
                 print(intro_paragraph)
@@ -223,8 +226,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                         record.set_status(
                             target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
                         )
-                        if pdf_path.is_file():
-                            pdf_path.unlink()
                         if filepath.is_file():
                             filepath.unlink()
                     else:

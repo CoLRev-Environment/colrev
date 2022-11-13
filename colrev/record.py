@@ -1541,7 +1541,7 @@ class Record:
                     # close open handles
                     converter.close()
                     fake_file_handle.close()
-            except TypeError:
+            except (TypeError, KeyError):
                 pass
         return "".join(text_list)
 

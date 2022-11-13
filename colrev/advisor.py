@@ -313,7 +313,7 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
             elif len(in_progress_processes) > 1:
-                rec_str = ", ".join([x["ID"] for x in transitioned_records])
+                rec_str = ", ".join([x["origin"] for x in transitioned_records])
                 instruction = {
                     "msg": "Detected multiple processes in progress "
                     + f"({', '.join(in_progress_processes)}). Complete one "

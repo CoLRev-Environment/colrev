@@ -525,10 +525,9 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         )
 
-        for record in records:
-            record = self.__add_md_string(record_dict=record)
-
         for pdf_batch in pdf_batches:
+            for record in records:
+                record = self.__add_md_string(record_dict=record)
 
             new_records: list = []
             for pdf_path in pdf_batch:
@@ -596,6 +595,10 @@ class PDFSearchSource(JsonSchemaMixin):
         records: typing.Dict,
     ) -> dict:
         """Load fixes for PDF directories (GROBID)"""
+
+        for record in records.values():
+            if "grobid-version" in record:
+                del record["grobid-version"]
 
         return records
 

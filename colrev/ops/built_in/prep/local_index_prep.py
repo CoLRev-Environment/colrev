@@ -46,20 +46,7 @@ class LocalIndexPrep(JsonSchemaMixin):
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
-        """Prepare the record metadtaa based on local-index"""
-
-        # TBD: maybe extract the following three lines as a separate script...
-        if not record.masterdata_is_curated():
-            try:
-                year = self.local_index.get_year_from_toc(record_dict=record.get_data())
-                record.update_field(
-                    key="year",
-                    value=year,
-                    source="LocalIndexPrep",
-                    keep_source_if_equal=True,
-                )
-            except colrev_exceptions.TOCNotAvailableException:
-                pass
+        """Prepare the record metadata based on local-index"""
 
         # Note : cannot use local_index as an attribute of PrepProcess
         # because it creates problems with multiprocessing

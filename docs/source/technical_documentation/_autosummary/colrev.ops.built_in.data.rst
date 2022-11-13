@@ -30,6 +30,7 @@ colrev.ops.built\_in.data
    colrev.ops.built_in.data.colrev_curation
    colrev.ops.built_in.data.github_pages
    colrev.ops.built_in.data.manuscript
+   colrev.ops.built_in.data.obsidian
    colrev.ops.built_in.data.prisma
    colrev.ops.built_in.data.structured
    colrev.ops.built_in.data.zettlr

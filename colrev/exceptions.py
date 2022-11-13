@@ -32,7 +32,7 @@ class BrokenFilesError(CoLRevException):
 
         self.message = (
             f"Detected broken files ({msg}). To fix use\n     "
-            f"{colors.ORANGE}colrev fix{colors.END}"
+            f"{colors.ORANGE}colrev repair{colors.END}"
         )
         super().__init__(self.message)
 

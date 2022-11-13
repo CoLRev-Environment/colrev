@@ -54,11 +54,16 @@ class PDFCoverPage(JsonSchemaMixin):
         cp_path.mkdir(exist_ok=True)
 
         def __get_coverpages(*, pdf: str) -> typing.List[int]:
+            # pylint: disable=too-many-branches
             # for corrupted PDFs pdftotext seems to be more robust than
             # pdf_reader.getPage(0).extractText()
             coverpages: typing.List[int] = []
 
-            pdf_reader = PdfFileReader(str(pdf), strict=False)
+            try:
+                pdf_reader = PdfFileReader(str(pdf), strict=False)
+            except ValueError:
+                return coverpages
+
             if pdf_reader.getNumPages() == 1:
                 return coverpages
 

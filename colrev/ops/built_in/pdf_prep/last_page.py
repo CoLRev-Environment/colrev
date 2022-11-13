@@ -58,7 +58,11 @@ class PDFLastPage(JsonSchemaMixin):
             # pdf_reader.getPage(0).extractText()
 
             last_pages: typing.List[int] = []
-            pdf_reader = PdfFileReader(str(pdf), strict=False)
+            try:
+                pdf_reader = PdfFileReader(str(pdf), strict=False)
+            except ValueError:
+                return last_pages
+
             last_page_nr = pdf_reader.getNumPages()
 
             pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
