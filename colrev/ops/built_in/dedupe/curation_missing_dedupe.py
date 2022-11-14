@@ -118,13 +118,31 @@ class CurationMissingDedupe(JsonSchemaMixin):
         # pylint: disable=too-many-statements
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
-        nr_recs_to_merge = len(
-            [
-                x
-                for x in records.values()
-                if x["colrev_status"] in [colrev.record.RecordState.md_prepared]
-            ]
+
+        post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
+            state=colrev.record.RecordState.md_processed
         )
+        if dedupe_operation.review_manager.force_mode:
+            dedupe_operation.review_manager.logger.info(
+                "Scope: md_prepared, md_needs_manual_preparation, md_imported"
+            )
+            nr_recs_to_merge = len(
+                [
+                    x
+                    for x in records.values()
+                    if x["colrev_status"] not in post_md_prepared_states
+                ]
+            )
+        else:
+            dedupe_operation.review_manager.logger.info("Scope: md_prepared")
+            nr_recs_to_merge = len(
+                [
+                    x
+                    for x in records.values()
+                    if x["colrev_status"] in [colrev.record.RecordState.md_prepared]
+                ]
+            )
+
         nr_recs_checked = 0
         results: typing.Dict[str, list] = {
             "decision_list": [],
@@ -133,10 +151,15 @@ class CurationMissingDedupe(JsonSchemaMixin):
         }
 
         for record_dict in records.values():
-            if record_dict["colrev_status"] not in [
-                colrev.record.RecordState.md_prepared
-            ]:
-                continue
+            if dedupe_operation.review_manager.force_mode:
+                if record_dict["colrev_status"] in post_md_prepared_states:
+                    continue
+            else:
+                if record_dict["colrev_status"] not in [
+                    colrev.record.RecordState.md_prepared
+                ]:
+                    continue
+
             record = colrev.record.Record(data=record_dict)
 
             try:
@@ -265,7 +288,16 @@ class CurationMissingDedupe(JsonSchemaMixin):
         if len(ret["decision_list"]) > 0:
             print("Duplicates identified:")
             print(ret["decision_list"])
-            dedupe_operation.apply_merges(results=ret["decision_list"])
+            preferred_masterdata_sources = [
+                s
+                for s in dedupe_operation.review_manager.settings.sources
+                if s.endpoint != "colrev_built_in.pdfs_dir"
+            ]
+
+            dedupe_operation.apply_merges(
+                results=ret["decision_list"],
+                preferred_masterdata_sources=preferred_masterdata_sources,
+            )
 
         if len(ret["records_to_prepare"]) > 0:
             records = dedupe_operation.review_manager.dataset.load_records_dict()

@@ -621,11 +621,11 @@ class Record:
 
         # pylint: disable=too-many-branches
 
-        merging_record_preferred = True
+        merging_record_preferred = False
         if preferred_masterdata_source_prefixes:
             if any(
                 any(ps in origin for ps in preferred_masterdata_source_prefixes)
-                for origin in self.data["colrev_origin"]
+                for origin in merging_record.data["colrev_origin"]
             ):
                 merging_record_preferred = True
 

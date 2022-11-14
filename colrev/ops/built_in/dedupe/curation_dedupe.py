@@ -563,12 +563,12 @@ class CurationDedupe(JsonSchemaMixin):
 
         decision_list: list[dict] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
-        if self.__pdf_source_selected(dedupe_operation=dedupe_operation):
-            decision_list = self.__dedupe_pdf_source(
+        if not self.__pdf_source_selected(dedupe_operation=dedupe_operation):
+            decision_list = self.__dedupe_source(
                 dedupe_operation=dedupe_operation, records=records
             )
         else:
-            decision_list = self.__dedupe_source(
+            decision_list = self.__dedupe_pdf_source(
                 dedupe_operation=dedupe_operation, records=records
             )
 
@@ -583,7 +583,6 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation.review_manager.logger.info(
             f"{colors.GREEN}Duplicates identified{colors.END}"
         )
-        print(decision_list)
 
         # decision_list =
         # [{'ID1': '0000000053', 'ID2': 'BellMillsFadel2013', 'decision': 'duplicate'}, .. . ]
