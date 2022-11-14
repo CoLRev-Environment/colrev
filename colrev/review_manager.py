@@ -297,6 +297,13 @@ class ReviewManager:
 
         return colrev.ops.repair.Repair(review_manager=self)
 
+    def get_remove_operation(self) -> colrev.ops.remove.Remove:
+        """Get a a remove object"""
+
+        import colrev.ops.remove
+
+        return colrev.ops.remove.Remove(review_manager=self)
+
     def get_advisor(self) -> colrev.advisor.Advisor:
         """Get an advisor object"""
 

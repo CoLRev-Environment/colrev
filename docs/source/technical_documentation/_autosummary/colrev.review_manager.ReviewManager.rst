@@ -45,6 +45,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_prescreen_operation
       ~ReviewManager.get_pull_operation
       ~ReviewManager.get_push_operation
+      ~ReviewManager.get_remove_operation
       ~ReviewManager.get_repair
       ~ReviewManager.get_resources
       ~ReviewManager.get_review_manager
