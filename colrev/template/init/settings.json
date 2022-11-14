@@ -90,7 +90,7 @@
                         "endpoint": "colrev_built_in.get_masterdata_from_open_library"
                     },
                     {
-                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour_crossref"
+                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour"
                     },
                     {
                         "endpoint": "colrev_built_in.get_record_from_local_index"
@@ -129,7 +129,7 @@
                         "endpoint": "colrev_built_in.get_masterdata_from_open_library"
                     },
                     {
-                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour_crossref"
+                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour"
                     },
                     {
                         "endpoint": "colrev_built_in.get_record_from_local_index"
@@ -177,7 +177,7 @@
                         "endpoint": "colrev_built_in.get_masterdata_from_open_library"
                     },
                     {
-                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour_crossref"
+                        "endpoint": "colrev_built_in.get_year_from_vol_iss_jour"
                     },
                     {
                         "endpoint": "colrev_built_in.get_record_from_local_index"
