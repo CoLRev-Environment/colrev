@@ -2363,6 +2363,79 @@ def repair(
     repair_operation.main()
 
 
+@main.command(help_priority=31)
+@click.option(
+    "--ids",
+    help="Remove records and their origins from the repository (ID1,ID2,...).",
+    required=False,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def remove(
+    ctx: click.core.Context,
+    ids: str,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Remove records, ... from CoLRev repositories"""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
+
+    remove_operation = review_manager.get_remove_operation()
+
+    if ids:
+        remove_operation.remove_records(ids=ids)
+
+
+@main.command(hidden=True, help_priority=32)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def man(
+    ctx: click.core.Context,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Show the CoLRev manual."""
+
+    # pylint: disable=import-outside-toplevel
+
+    import webbrowser
+
+    webbrowser.open(
+        str(Path(colrev.__file__).resolve()).replace(
+            "colrev/__init__.py", "docs/build/html/index.html"
+        )
+    )
+
+
 @main.command(hidden=True)
 @click.option(
     "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
