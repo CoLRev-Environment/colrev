@@ -132,8 +132,12 @@ class Load(colrev.operation.Operation):
                             f"(because the format is .enl){colors.END}"
                         )
                         filepath.rename(new_filename)
+                        self.review_manager.dataset.add_changes(
+                            path=filepath, remove=True
+                        )
                         filepath = new_filename
                         res["filename"] = filepath
+                        self.review_manager.dataset.add_changes(path=new_filename)
 
                 if "load_conversion_package_endpoint" not in res:
                     res[

@@ -37,7 +37,7 @@ class StructuredData(JsonSchemaMixin):
         # gh_issue https://github.com/geritwagner/colrev/issues/79
         # Field dataclass (name, explanation, data_type)
         fields: dict
-        data_path_relative: Path = Path("data.csv")
+        data_path_relative: Path = Path("data/data.csv")
 
         _details = {
             "fields": {"tooltip": "Fields for the structured data extraction"},
@@ -55,7 +55,7 @@ class StructuredData(JsonSchemaMixin):
         # gh_issue https://github.com/geritwagner/colrev/issues/79
         # integrate filename in custom settings
         self.data_path = (
-            data_operation.review_manager.data_dir / self.settings.data_path_relative
+            data_operation.review_manager.path / self.settings.data_path_relative
         )
 
     def get_default_setup(self) -> dict:
@@ -116,7 +116,7 @@ class StructuredData(JsonSchemaMixin):
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
 
-            if not self.settings.data_path_relative.is_file():
+            if not self.data_path.is_file():
 
                 coding_dimensions_str = input(
                     "\n\nEnter columns for data extraction (comma-separted)"
@@ -131,15 +131,13 @@ class StructuredData(JsonSchemaMixin):
                 data_df = pd.DataFrame(data_list, columns=["ID"] + coding_dimensions)
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(
-                    self.settings.data_path_relative, index=False, quoting=csv.QUOTE_ALL
-                )
+                data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
             else:
 
                 nr_records_added = 0
 
-                data_df = pd.read_csv(self.settings.data_path_relative, dtype=str)
+                data_df = pd.read_csv(self.data_path, dtype=str)
 
                 for record_id in list(synthesized_record_status_matrix.keys()):
                     # skip when already available
@@ -157,9 +155,7 @@ class StructuredData(JsonSchemaMixin):
 
                 data_df.sort_values(by=["ID"], inplace=True)
 
-                data_df.to_csv(
-                    self.settings.data_path_relative, index=False, quoting=csv.QUOTE_ALL
-                )
+                data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
                 review_manager.report_logger.info(
                     f"{nr_records_added} records added ({self.settings.data_path_relative})"
