@@ -38,6 +38,17 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True)
 
+        self.filepath_directory_pattern = ""
+        pdf_endpoints = [
+            s
+            for s in self.review_manager.settings.sources
+            if s.endpoint == "colrev_built_in.pdfs_dir"
+        ]
+        if pdf_endpoints:
+            self.filepath_directory_pattern = (
+                pdf_endpoints[0].search_parameters["scope"].get("subdir_pattern", {})
+            )
+
     def copy_pdfs_to_repo(self) -> None:
         """Copy the PDFs to the repository"""
         self.review_manager.logger.info("Copy PDFs to dir")
@@ -71,10 +82,60 @@ class PDFGet(colrev.operation.Operation):
             "file", "NA"
         ):
             record.update_field(key="file", value=str(pdf_filepath), source="link_pdf")
-            record.import_file(review_manager=self.review_manager)
+            self.import_file(record=record)
             record.set_status(target_state=colrev.record.RecordState.pdf_imported)
 
         return record
+
+    def get_target_filepath(self, *, record: colrev.record.Record) -> Path:
+        """Get the target filepath for a PDF"""
+
+        if "year" == self.filepath_directory_pattern:
+            target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+                f"{record.data.get('year', 'no_year')}/{record.data['ID']}.pdf"
+            )
+
+        elif "volume_number" == self.filepath_directory_pattern:
+            if "volume" in record.data and "number" in record.data:
+                target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+                    f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
+                )
+
+            if "volume" in record.data and "number" not in record.data:
+                target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+                    f"{record.data['volume']}/{record.data['ID']}.pdf"
+                )
+        else:
+            target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+                f"{record.data['ID']}.pdf"
+            )
+
+        return target_filepath
+
+    def import_file(self, *, record: colrev.record.Record) -> None:
+        """Import a file (PDF) and copy/symlink it"""
+        # self.review_manager.pdf_dir.mkdir(exist_ok=True)
+        # new_fp = self.review_manager.PDF_DIR_RELATIVE / Path(record.data["ID"] + ".pdf").name
+        new_fp = self.get_target_filepath(record=record)
+        original_fp = Path(record.data["file"])
+
+        if new_fp != original_fp:
+            new_fp.parents[0].mkdir(exist_ok=True, parents=True)
+            if (
+                colrev.settings.PDFPathType.symlink
+                == self.review_manager.settings.pdf_get.pdf_path_type
+            ):
+                if not new_fp.is_file():
+                    new_fp.symlink_to(original_fp)
+            elif (
+                colrev.settings.PDFPathType.copy
+                == self.review_manager.settings.pdf_get.pdf_path_type
+            ):
+                if not new_fp.is_file():
+                    shutil.copyfile(original_fp, new_fp.resolve())
+            # Note : else: leave absolute paths
+
+        record.data["file"] = str(new_fp)
 
     # Note : no named arguments (multiprocessing)
     def get_pdf(self, item: dict) -> dict:
@@ -282,7 +343,7 @@ class PDFGet(colrev.operation.Operation):
                             value=str(file),
                             source="linking-available-files",
                         )
-                        record.import_file(review_manager=self.review_manager)
+                        self.import_file(record=record)
                         record.set_status(
                             target_state=colrev.record.RecordState.pdf_imported
                         )

@@ -53,7 +53,6 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.has_inconsistent_fields
       ~PDFPrepManRecord.has_overlapping_colrev_id
       ~PDFPrepManRecord.has_quality_defects
-      ~PDFPrepManRecord.import_file
       ~PDFPrepManRecord.import_provenance
       ~PDFPrepManRecord.masterdata_is_complete
       ~PDFPrepManRecord.masterdata_is_curated

@@ -79,6 +79,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         # pylint: disable=too-many-locals
 
+        pdf_get_operation = search_operation.review_manager.get_pdf_get_operation()
+
         records, imported_ids = [], []
         if self.settings.filename.is_file():
             with open(self.settings.filename, encoding="utf8") as bibtex_file:
@@ -140,8 +142,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                     Path(self.settings.search_parameters["scope"]["url"])
                     / record_to_import["file"]
                 )
-                colrev.record.Record(data=record_to_import).import_file(
-                    review_manager=search_operation.review_manager
+
+                pdf_get_operation.import_file(
+                    record=colrev.record.Record(data=record_to_import)
                 )
 
             record_to_import["colrev_project"] = project_identifier

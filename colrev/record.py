@@ -7,7 +7,6 @@ import io
 import logging
 import pprint
 import re
-import shutil
 import textwrap
 import typing
 from copy import deepcopy
@@ -1882,30 +1881,6 @@ class Record:
             del self.data["text_from_pdf"]
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
-
-    def import_file(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> None:
-        """Import a file (PDF) and copy/symlink it"""
-        review_manager.pdf_dir.mkdir(exist_ok=True)
-        new_fp = review_manager.PDF_DIR_RELATIVE / Path(self.data["ID"] + ".pdf").name
-        original_fp = Path(self.data["file"])
-
-        if (
-            colrev.settings.PDFPathType.symlink
-            == review_manager.settings.pdf_get.pdf_path_type
-        ):
-            if not new_fp.is_file():
-                new_fp.symlink_to(original_fp)
-            self.data["file"] = str(new_fp)
-        elif (
-            colrev.settings.PDFPathType.copy
-            == review_manager.settings.pdf_get.pdf_path_type
-        ):
-            if not new_fp.is_file():
-                shutil.copyfile(original_fp, new_fp.resolve())
-            self.data["file"] = str(new_fp)
-        # Note : else: leave absolute paths
 
     def apply_restrictions(self, *, restrictions: dict) -> None:
         """Apply masterdata restrictions to the record"""

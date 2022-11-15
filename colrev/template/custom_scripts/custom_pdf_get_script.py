@@ -38,6 +38,6 @@ class CustomPDFGet:
         """Get the PDF"""
 
         record.data["file"] = "filepath"
-        record.import_file(review_manager=pdf_get_operation.review_manager)
+        pdf_get_operation.import_file(record=record)
 
         return record

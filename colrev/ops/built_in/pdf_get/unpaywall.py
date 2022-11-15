@@ -92,9 +92,8 @@ class Unpaywall(JsonSchemaMixin):
         if "doi" not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
-            f"{record.data['ID']}.pdf"
-        )
+        pdf_filepath = pdf_get_operation.get_target_filepath(record=record)
+
         url = self.__unpaywall(
             review_manager=pdf_get_operation.review_manager, doi=record.data["doi"]
         )
@@ -115,6 +114,7 @@ class Unpaywall(JsonSchemaMixin):
             )
 
             if 200 == res.status_code:
+                pdf_filepath.parents[0].mkdir(exist_ok=True, parents=True)
                 with open(pdf_filepath, "wb") as file:
                     file.write(res.content)
                 if self.__is_pdf(path_to_file=pdf_filepath):
@@ -131,7 +131,7 @@ class Unpaywall(JsonSchemaMixin):
                     record.update_field(
                         key="file", value=str(pdf_filepath), source=source
                     )
-                    record.import_file(review_manager=pdf_get_operation.review_manager)
+                    pdf_get_operation.import_file(record=record)
 
                 else:
                     os.remove(pdf_filepath)

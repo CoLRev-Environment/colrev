@@ -53,7 +53,6 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.has_inconsistent_fields
       ~PrescreenRecord.has_overlapping_colrev_id
       ~PrescreenRecord.has_quality_defects
-      ~PrescreenRecord.import_file
       ~PrescreenRecord.import_provenance
       ~PrescreenRecord.masterdata_is_complete
       ~PrescreenRecord.masterdata_is_curated
