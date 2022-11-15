@@ -21,6 +21,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -600,13 +601,10 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
     # print(selective_merge(default_settings, project_settings))
 
     if not review_manager.settings_path.is_file():
-        filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/settings.json")
+        raise colrev_exceptions.RepoSetupError(
+            "Not a CoLRev repository. To initialize, use\n  "
+            f"{colors.ORANGE}colrev init --type literature_review{colors.END}"
         )
-        if filedata:
-            settings = json.loads(filedata.decode("utf-8"))
-            with open(review_manager.settings_path, "w", encoding="utf8") as file:
-                json.dump(settings, file, indent=4)
 
     with open(review_manager.settings_path, encoding="utf-8") as file:
         loaded_settings = json.load(file)

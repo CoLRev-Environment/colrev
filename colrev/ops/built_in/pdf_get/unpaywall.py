@@ -81,7 +81,7 @@ class Unpaywall(JsonSchemaMixin):
         try:
             extract_text(str(path_to_file))
             return True
-        except PDFException:
+        except (PDFException, TypeError):
             return False
 
     def get_pdf(

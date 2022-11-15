@@ -22,11 +22,13 @@ class Advisor:
     """The CoLRev advisor guides users through the review process"""
 
     _next_step_description = {
+        "retrieve": "Next step: retrieve metadata",
         "load": "Next step: Import search results",
         "prep": "Next step: Prepare records",
         "prep_man": "Next step: Prepare records (manually)",
         "dedupe": "Next step: Deduplicate records",
         "prescreen": "Next step: Prescreen records",
+        "pdfs": "Next step: retrieve pdfs",
         "pdf_get": "Next step: Retrieve PDFs",
         "pdf_get_man": "Next step: Retrieve PDFs (manually)",
         "pdf_prep": "Next step: Prepare PDFs",
@@ -331,12 +333,26 @@ class Advisor:
         status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
     ) -> None:
+        if status_stats.overall.md_retrieved == 0:
+            if not Path(self.review_manager.search_dir).iterdir():
+                instruction = {
+                    "msg": "Add search results to data/search",
+                    "priority": "yes",
+                }
+                review_instructions.append(instruction)
+            else:
+                instruction = {
+                    "msg": self._next_step_description["retrieve"],
+                    "cmd": "colrev retrieve",
+                    "priority": "yes",
+                }
+                review_instructions.append(instruction)
+
         if status_stats.currently.md_retrieved > 0:
             instruction = {
-                "msg": self._next_step_description["load"],
-                "cmd": "colrev load",
+                "msg": self._next_step_description["retrieve"],
+                "cmd": "colrev retrieve",
                 "priority": "yes",
-                # "high_level_cmd": "colrev metadata",
             }
             review_instructions.append(instruction)
 
@@ -349,11 +365,21 @@ class Advisor:
                 current_origin_states_dict=current_origin_states_dict
             )
             for active_processing_function in active_processing_functions:
-                instruction = {
-                    "msg": self._next_step_description[active_processing_function],
-                    "cmd": f"colrev {active_processing_function.replace('_', '-')}"
-                    # "high_level_cmd": "colrev metadata",
-                }
+                if active_processing_function in ["load", "prep", "dedupe"]:
+                    instruction = {
+                        "msg": self._next_step_description["retrieve"],
+                        "cmd": "colrev retrieve",
+                    }
+                if active_processing_function in ["pdf_get", "pdf_prep"]:
+                    instruction = {
+                        "msg": self._next_step_description["pdfs"],
+                        "cmd": "colrev pdfs",
+                    }
+                else:
+                    instruction = {
+                        "msg": self._next_step_description[active_processing_function],
+                        "cmd": f"colrev {active_processing_function.replace('_', '-')}",
+                    }
                 if active_processing_function in priority_processing_functions:
                     # keylist = [list(x.keys()) for x in review_instructions]
                     # keys = [item for sublist in keylist for item in sublist]

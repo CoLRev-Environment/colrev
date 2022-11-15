@@ -218,6 +218,8 @@ def status(
 
     except KeyboardInterrupt:
         print("Stopped...")
+    except colrev_exceptions.RepoSetupError as exc:
+        print(exc)
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
             raise exc
@@ -924,6 +926,8 @@ def pdfs(
             notify_state_transition_operation=True
         )
         pdf_get_operation.main()
+
+        print()
 
         pdf_prep_operation = review_manager.get_pdf_prep_operation()
         pdf_prep_operation.main()

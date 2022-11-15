@@ -12,6 +12,7 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
+from requests.exceptions import ReadTimeout
 
 import colrev.env.utils
 import colrev.operation
@@ -236,7 +237,7 @@ class Prep(colrev.operation.Operation):
                 if preparation_record.preparation_break_condition():
                     record.update_by_record(update_record=preparation_record)
                     break
-            except timeout_decorator.timeout_decorator.TimeoutError:
+            except (timeout_decorator.timeout_decorator.TimeoutError, ReadTimeout):
                 self.review_manager.logger.error(
                     f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
                 )
