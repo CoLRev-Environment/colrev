@@ -34,14 +34,19 @@ def json_to_record(*, item: dict) -> dict:
     #             record_dict["link"] = link
 
     if "title" in item:
+        retrieved_title = ""
         if isinstance(item["title"], list):
             if len(item["title"]) > 0:
-                retrieved_title = item["title"][0]
-                retrieved_title = re.sub(r"\s+", " ", str(retrieved_title))
-                retrieved_title = retrieved_title.replace("\n", " ")
-                record_dict.update(title=retrieved_title)
+                retrieved_title = str(item["title"][0])
         elif isinstance(item["title"], str):
             retrieved_title = item["title"]
+
+        if retrieved_title:
+            retrieved_title = retrieved_title.replace("\n", " ")
+            retrieved_title = retrieved_title.replace("<scp>", "{")
+            retrieved_title = retrieved_title.replace("</scp>", "}")
+            retrieved_title = re.sub(r"<\/?[^>]*>", " ", retrieved_title)
+            retrieved_title = re.sub(r"\s+", " ", retrieved_title)
             record_dict.update(title=retrieved_title)
 
     container_title = ""
@@ -71,18 +76,27 @@ def json_to_record(*, item: dict) -> dict:
     if "DOI" in item:
         record_dict.update(doi=item["DOI"].upper())
 
-    authors = [
-        f'{author["family"]}, {author.get("given", "")}'
-        for author in item.get("author", "NA")
-        if "family" in author
-    ]
-    authors_string = " and ".join(authors)
+    authors_strings = []
+    for author in item.get("author", "NA"):
+        a_string = ""
+
+        if "family" in author:
+            a_string += author["family"]
+            if "given" in author:
+                a_string += f", {author['given']}"
+            authors_strings.append(a_string)
+    authors_string = " and ".join(authors_strings)
+    authors_string = re.sub(r"\s+", " ", authors_string)
+
     # authors_string = PrepRecord.format_author_field(authors_string)
     record_dict.update(author=authors_string)
 
     try:
         if "published-print" in item:
             date_parts = item["published-print"]["date-parts"]
+            record_dict.update(year=str(date_parts[0][0]))
+        elif "published" in item:
+            date_parts = item["published"]["date-parts"]
             record_dict.update(year=str(date_parts[0][0]))
         elif "published-online" in item:
             date_parts = item["published-online"]["date-parts"]
@@ -91,12 +105,13 @@ def json_to_record(*, item: dict) -> dict:
         pass
 
     retrieved_pages = item.get("page", "")
-    if retrieved_pages != "":
+    if retrieved_pages:
         # DOI data often has only the first page.
         if (
             not record_dict.get("pages", "no_pages") in retrieved_pages
             and "-" in retrieved_pages
         ):
+            record_dict.update(pages=item["page"])
             record = colrev.record.PrepRecord(data=record_dict)
             record.unify_pages_field()
             record_dict = record.get_data()
@@ -130,9 +145,9 @@ def json_to_record(*, item: dict) -> dict:
             record_dict["language"] = record_dict["language"].replace("en", "eng")
 
     if (
-        "published-print" not in item
-        and "volume" not in record_dict
-        and "number" not in record_dict
+        not any(x in item for x in ["published-print", "published"])
+        # and "volume" not in record_dict
+        # and "number" not in record_dict
         and "year" in record_dict
     ):
         record_dict.update(published_online=record_dict["year"])
