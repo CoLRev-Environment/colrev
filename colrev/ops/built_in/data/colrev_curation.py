@@ -298,7 +298,7 @@ class ColrevCuration(JsonSchemaMixin):
         """Update the record_status_matrix"""
 
         for item in synthesized_record_status_matrix:
-            item[endpoint_identifier] = True
+            synthesized_record_status_matrix[item][endpoint_identifier] = True
 
 
 if __name__ == "__main__":

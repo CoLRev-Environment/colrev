@@ -905,9 +905,24 @@ class Upgrade(colrev.operation.Operation):
                         "colrev_built_in.get_year_from_vol_iss_jour_crossref",
                     ]
                 ]
+                if "exclusion" == prep_round["name"]:
+                    if "colrev_built_in.exclude_complementary_materials" not in [
+                        p["endpoint"] for p in prep_round["prep_package_endpoints"]
+                    ]:
+                        prep_round["prep_package_endpoints"].append(
+                            {
+                                "endpoint": "colrev_built_in.exclude_complementary_materials"
+                            }
+                        )
 
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
+
+        colrev.env.utils.inplace_change(
+            filename=Path("settings.json"),
+            old_string='"get_year_from_vol_iss_jour_crossref"',
+            new_string='"get_year_from_vol_iss_jour"',
+        )
 
         self.review_manager.dataset.add_changes(path=Path("settings.json"))
 

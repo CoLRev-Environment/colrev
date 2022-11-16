@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import itertools
 
+from tqdm import tqdm
+
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
@@ -129,6 +131,34 @@ class Validate(colrev.operation.Operation):
                 self.review_manager.logger.info("No substantial differences found.")
             else:
                 self.review_manager.logger.info("No merged records")
+
+        # TODO : create the dataframes (like in the simple merge)
+        # TODO : Similarly: create dataframes of the latest prepared records
+        # to check FP merges efficiently
+        with open(
+            "merge_candidates_file.txt", "w", encoding="utf-8"
+        ) as merge_candidates_file:
+            for ref_rec_dict in tqdm(records):
+                ref_rec = colrev.record.Record(data=ref_rec_dict)
+                for comp_rec_dict in reversed(records):
+                    # Note : due to symmetry, we only need one part of the matrix
+                    if ref_rec_dict["ID"] == comp_rec_dict["ID"]:
+                        break
+                    comp_rec = colrev.record.Record(data=comp_rec_dict)
+                    similarity = colrev.record.Record.get_record_similarity(
+                        record_a=ref_rec, record_b=comp_rec
+                    )
+
+                    if similarity > 0.95:
+                        print(f"{ref_rec_dict['ID']}-{comp_rec_dict['ID']}")
+
+                        merge_candidates_file.write(ref_rec.format_bib_style())
+                        merge_candidates_file.write("\n")
+                        merge_candidates_file.write(comp_rec.format_bib_style())
+                        merge_candidates_file.write("\n")
+                        merge_candidates_file.write(
+                            f"colrev dedupe -m {ref_rec_dict['ID']},{comp_rec_dict['ID']}\n\n"
+                        )
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)

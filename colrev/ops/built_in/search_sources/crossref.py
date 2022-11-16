@@ -432,10 +432,12 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
     def run_search(self, search_operation: colrev.ops.search.Search) -> None:
         """Run a search of Crossref"""
 
+        # pylint: disable=too-many-branches
+
         params = self.settings.search_parameters
         feed_file = self.settings.filename
 
-        available_ids = []
+        available_ids = {}
         max_id = 1
         if not feed_file.is_file():
             records = {}
@@ -445,7 +447,7 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                     load_str=bibtex_file.read()
                 )
 
-            available_ids = [x["doi"] for x in records.values() if "doi" in x]
+            available_ids = {x["doi"]: x["ID"] for x in records.values() if "doi" in x}
             max_id = (
                 max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
                 + 1
@@ -470,29 +472,42 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
         nr_retrieved = 0
         try:
             for record_dict in get_crossref_query_return(params):
+
+                # Note : discard "empty" records
+                if "" == record_dict.get("author", "") and "" == record_dict.get(
+                    "title", ""
+                ):
+                    continue
+
+                if record_dict["doi"].upper() in available_ids:
+                    record_dict["ID"] = available_ids[record_dict["doi"].upper()]
+                else:
+                    record_dict["ID"] = str(max_id).rjust(6, "0")
+
+                prep_record = colrev.record.PrepRecord(data=record_dict)
+                doi_connector.DOIConnector.get_link_from_doi(
+                    record=prep_record,
+                    review_manager=search_operation.review_manager,
+                )
+                record_dict = prep_record.get_data()
+                if "colrev_data_provenance" in record_dict:
+                    del record_dict["colrev_data_provenance"]
+
+                # TODO : if masterdata_curated repo
+                if "cited_by" in record_dict:
+                    del record_dict["cited_by"]
+
+                # TODO : propagate changes to records.bib (if any)?
+                # TODO : notify on major changes!
+
+                available_ids[record_dict["doi"]] = record_dict["ID"]
+                records[record_dict["ID"]] = record_dict
+                max_id += 1
+
                 if record_dict["doi"].upper() not in available_ids:
-
-                    # Note : discard "empty" records
-                    if "" == record_dict.get("author", "") and "" == record_dict.get(
-                        "title", ""
-                    ):
-                        continue
-
                     search_operation.review_manager.logger.info(
                         " retrieved " + record_dict["doi"]
                     )
-                    record_dict["ID"] = str(max_id).rjust(6, "0")
-
-                    prep_record = colrev.record.PrepRecord(data=record_dict)
-                    doi_connector.DOIConnector.get_link_from_doi(
-                        record=prep_record,
-                        review_manager=search_operation.review_manager,
-                    )
-                    record_dict = prep_record.get_data()
-
-                    available_ids.append(record_dict["doi"])
-                    records[record_dict["ID"]] = record_dict
-                    max_id += 1
                     nr_retrieved += 1
         except (requests.exceptions.JSONDecodeError, KeyError) as exc:
             # watch github issue:
