@@ -34,6 +34,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_init_operation
       ~ReviewManager.get_load_operation
       ~ReviewManager.get_local_index
+      ~ReviewManager.get_merge_operation
       ~ReviewManager.get_package_manager
       ~ReviewManager.get_pdf_get_man_operation
       ~ReviewManager.get_pdf_get_operation

@@ -20,7 +20,9 @@ colrev.ops.validate.Validate
       ~Validate.get_commit_from_tree_hash
       ~Validate.load_changed_records
       ~Validate.main
-      ~Validate.validate_merging_changes
+      ~Validate.validate_dedupe_changes
+      ~Validate.validate_merge_changes
+      ~Validate.validate_merge_prescreen_screen
       ~Validate.validate_preparation_changes
       ~Validate.validate_properties
 
