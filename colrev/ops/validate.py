@@ -89,23 +89,28 @@ class Validate(colrev.operation.Operation):
 
         return change_diff
 
-    def validate_merging_changes(
+    def validate_dedupe_changes(
         self, *, records: list[dict], target_commit: str
     ) -> list:
-        """Validate merging changes"""
+        """Validate dedupe changes"""
+
+        # pylint: disable=too-many-locals
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
+        # TODO : change_diff should also have a better data structure
         change_diff = []
         merged_records = False
         for record in records:
+            # TODO : allow users to validate all duplicates/non-duplicates (across commits)
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
             if ";" in record["colrev_origin"]:
                 merged_records = True
-                els = record["colrev_origin"]
-                duplicate_el_pairs = list(itertools.combinations(els, 2))
+                duplicate_el_pairs = list(
+                    itertools.combinations(record["colrev_origin"], 2)
+                )
                 for el_1, el_2 in duplicate_el_pairs:
                     record_1 = [
                         x
@@ -264,10 +269,99 @@ class Validate(colrev.operation.Operation):
                 if "colrev prep" in msg:
                     scope = "prepare"
                 elif "colrev dedupe" in msg:
-                    scope = "merge"
+                    scope = "dedupe"
                 else:
                     scope = "unspecified"
         return scope
+
+    def validate_merge_prescreen_screen(
+        self,
+        *,
+        commit_sha: str = "CURRENT",
+        current_branch_records: dict,
+        other_branch_records: dict,
+        records_reconciled: dict,
+        # current_branch_name: str = "",
+        # other_branch_name: str = "",
+    ) -> dict:
+        """Validate presceen/screen between merged branches"""
+
+        prescreen_validation = {"commit_sha": commit_sha, "prescreen": []}
+        for rid, record_dict in current_branch_records.items():
+            prescreen_validation["prescreen"].append(  # type: ignore
+                {
+                    "ID": rid,
+                    "coder1": str(record_dict["colrev_status"]),
+                    "coder2": str(other_branch_records[rid]["colrev_status"]),
+                    "reconciled": str(records_reconciled[rid]["colrev_status"]),
+                }
+            )
+        prescreen_validation["statistics"] = {  # type: ignore
+            "percentage_agreement": len(
+                [
+                    x
+                    for x in prescreen_validation["prescreen"]
+                    if x["coder1"] == x["coder2"]  # type: ignore
+                ]
+            )
+            / len(prescreen_validation["prescreen"])
+        }
+        return prescreen_validation
+
+    def validate_merge_changes(self) -> list:
+        """Validate merge changes (reconciliation between branches)"""
+
+        merge_validation = []
+
+        git_repo = self.review_manager.dataset.get_repo()
+
+        revlist = git_repo.iter_commits(
+            paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+        )
+
+        for commit in list(revlist):
+            if len(commit.parents) <= 1:
+                continue
+
+            if not any(x in commit.message for x in ["prescreen", "screen"]):
+                continue
+
+            records_branch_1 = self.review_manager.dataset.load_records_dict(
+                load_str=(
+                    commit.parents[0].tree
+                    / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                )
+                .data_stream.read()
+                .decode("utf-8")
+            )
+            records_branch_2 = self.review_manager.dataset.load_records_dict(
+                load_str=(
+                    commit.parents[1].tree
+                    / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                )
+                .data_stream.read()
+                .decode("utf-8")
+            )
+            records_reconciled = self.review_manager.dataset.load_records_dict(
+                load_str=(
+                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
+                )
+                .data_stream.read()
+                .decode("utf-8")
+            )
+            if "screen" in commit.message or "prescreen" in commit.message:
+
+                prescreen_validation = self.validate_merge_prescreen_screen(
+                    commit_sha=commit.hexsha,
+                    current_branch_records=records_branch_1,
+                    other_branch_records=records_branch_2,
+                    records_reconciled=records_reconciled,
+                )
+                merge_validation.append(prescreen_validation)
+
+            # self.review_manager.p_printer.pprint(merge_validation)
+
+        return merge_validation
 
     def main(
         self, *, scope: str, properties: bool = False, target_commit: str = ""
@@ -289,10 +383,13 @@ class Validate(colrev.operation.Operation):
                 records=records, target_commit=target_commit
             )
 
-        if scope in ["merge", "all"]:
-            validation_details += self.validate_merging_changes(
+        if scope in ["dedupe", "all"]:
+            validation_details += self.validate_dedupe_changes(
                 records=records, target_commit=target_commit
             )
+
+        if scope == "merge":
+            validation_details += self.validate_merge_changes()
 
         # if 'unspecified' == scope:
         #     git_repo = self.review_manager.dataset.get_repo()

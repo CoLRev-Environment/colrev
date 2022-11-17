@@ -251,14 +251,15 @@ class ReviewManager:
             else:
                 raise exc
 
-    def update_status_yaml(self) -> None:
+    def update_status_yaml(self, *, add_to_git: bool = True) -> None:
         """Update the status.yaml"""
 
         status_stats = self.get_status_stats()
         exported_dict = asdict(status_stats)
         with open(self.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
-        self.dataset.add_changes(path=self.STATUS_RELATIVE)
+        if add_to_git:
+            self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
     def create_commit(
         self,
@@ -303,6 +304,13 @@ class ReviewManager:
         import colrev.ops.remove
 
         return colrev.ops.remove.Remove(review_manager=self)
+
+    def get_merge_operation(self) -> colrev.ops.merge.Merge:
+        """Get a merge object"""
+
+        import colrev.ops.merge
+
+        return colrev.ops.merge.Merge(review_manager=self)
 
     def get_advisor(self) -> colrev.advisor.Advisor:
         """Get an advisor object"""
