@@ -2,6 +2,7 @@
 """Repair CoLRev projects."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import colrev.env.utils
@@ -51,6 +52,30 @@ class Repair(colrev.operation.Operation):
                     record_str = ""
                 record_str += line
                 line = file.readline()
+
+        # fix file no longer available
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if "file" in record:
+                full_path = self.review_manager.path / Path(record["file"])
+                if not full_path.is_file():
+                    if Path(str(full_path) + ".pdf").is_file():
+                        Path(str(full_path) + ".pdf").rename(full_path)
+
+                    # Check / replace multiple blanks in file and filename
+                    parent_dir = full_path.parent
+                    same_dir_pdfs = [
+                        x.relative_to(self.review_manager.path)
+                        for x in parent_dir.glob("*.pdf")
+                    ]
+                    for same_dir_pdf in same_dir_pdfs:
+                        if record["file"].replace("  ", " ") == str(
+                            same_dir_pdf
+                        ).replace("  ", " "):
+                            same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
+                            record["file"] = record["file"].replace("  ", " ")
+
+        self.review_manager.dataset.save_records_dict(records=records)
 
 
 if __name__ == "__main__":
