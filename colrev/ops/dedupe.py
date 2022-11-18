@@ -443,6 +443,10 @@ class Dedupe(colrev.operation.Operation):
                         "Prevented same-source merge: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
+                    self.review_manager.logger.info(
+                        "To force merge use colrev dedupe --merge "
+                        f"{main_record.data['ID']},{dupe_record.data['ID']}"
+                    )
 
                     continue  # with next pair
                 self.review_manager.logger.debug(
