@@ -204,7 +204,7 @@ class Sync:
                         if k not in colrev.record.Record.provenance_keys
                     }
                 )
-                records.append(record_to_import)
+                records.append(record_to_import.get_data())
                 available_ids.append(record_to_import.data["ID"])
                 added.append(record_to_import)
 
