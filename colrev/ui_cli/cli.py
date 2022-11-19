@@ -1438,7 +1438,9 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
 @main.command(help_priority=17)
 @click.option(
     "--scope",
-    type=click.Choice(["prepare", "merge", "all", "unspecified"], case_sensitive=False),
+    type=click.Choice(
+        ["prepare", "dedupe", "merge", "all", "unspecified"], case_sensitive=False
+    ),
     default="unspecified",
     help="prepare, merge, or all.",
 )

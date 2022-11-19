@@ -146,6 +146,10 @@ class PDFGet(colrev.operation.Operation):
         if str(colrev.record.RecordState.rev_prescreen_included) != str(
             record_dict["colrev_status"]
         ):
+            if "file" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.remove_field(key="file")
+                return record.get_data()
             return record_dict
 
         record = colrev.record.Record(data=record_dict)

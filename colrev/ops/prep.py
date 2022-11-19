@@ -780,8 +780,8 @@ class Prep(colrev.operation.Operation):
                 ]
                 if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
                     self.review_manager.logger.info(
-                        f"{colors.ORANGE}The language detector may take "
-                        f"longer and require RAM{colors.END}"
+                        f"{colors.ORANGE}The language detector requires RAM and "
+                        f"may take longer{colors.END}"
                     )
                     pool = Pool(mp.cpu_count() // 2)
                 else:

@@ -39,7 +39,7 @@ class Remove(colrev.operation.Operation):
                 self.review_manager.logger.info(f" remove {record_id}")
                 origins = records[record_id]["colrev_origin"]
                 if "file" in records[record_id]:
-                    print(f"manually remove file: {records[record_id]}")
+                    print(f"manually remove file: {records[record_id]['file']}")
                 del records[record_id]
                 for origin in origins:
                     file, origin_id = origin.split("/")
