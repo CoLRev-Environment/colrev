@@ -121,6 +121,9 @@ class ExportManPrep(JsonSchemaMixin):
 
         records = prep_man_operation.review_manager.dataset.load_records_dict()
         for record_id, record_dict in man_prep_recs.items():
+            if record_id not in records:
+                print(f"ID no longer in records: {record_id}")
+                continue
             record = colrev.record.PrepRecord(data=record_dict)
             record.update_masterdata_provenance()
             record.set_status(target_state=colrev.record.RecordState.md_prepared)

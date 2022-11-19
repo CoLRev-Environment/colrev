@@ -54,26 +54,31 @@ class Repair(colrev.operation.Operation):
                 line = file.readline()
 
         # fix file no longer available
-        records = self.review_manager.dataset.load_records_dict()
-        for record in records.values():
-            if "file" in record:
+        try:
+            records = self.review_manager.dataset.load_records_dict()
+            for record in records.values():
+                if "file" not in record:
+                    continue
                 full_path = self.review_manager.path / Path(record["file"])
-                if not full_path.is_file():
-                    if Path(str(full_path) + ".pdf").is_file():
-                        Path(str(full_path) + ".pdf").rename(full_path)
+                if full_path.is_file():
+                    continue
+                if Path(str(full_path) + ".pdf").is_file():
+                    Path(str(full_path) + ".pdf").rename(full_path)
 
-                    # Check / replace multiple blanks in file and filename
-                    parent_dir = full_path.parent
-                    same_dir_pdfs = [
-                        x.relative_to(self.review_manager.path)
-                        for x in parent_dir.glob("*.pdf")
-                    ]
-                    for same_dir_pdf in same_dir_pdfs:
-                        if record["file"].replace("  ", " ") == str(
-                            same_dir_pdf
-                        ).replace("  ", " "):
-                            same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
-                            record["file"] = record["file"].replace("  ", " ")
+                # Check / replace multiple blanks in file and filename
+                parent_dir = full_path.parent
+                same_dir_pdfs = [
+                    x.relative_to(self.review_manager.path)
+                    for x in parent_dir.glob("*.pdf")
+                ]
+                for same_dir_pdf in same_dir_pdfs:
+                    if record["file"].replace("  ", " ") == str(same_dir_pdf).replace(
+                        "  ", " "
+                    ):
+                        same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
+                        record["file"] = record["file"].replace("  ", " ")
+        except AttributeError:
+            print("Could not read bibtex file")
 
         self.review_manager.dataset.save_records_dict(records=records)
 
