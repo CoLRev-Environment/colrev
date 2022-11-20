@@ -77,6 +77,17 @@ class Repair(colrev.operation.Operation):
                     ):
                         same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
                         record["file"] = record["file"].replace("  ", " ")
+
+                full_path = self.review_manager.path / Path(record["file"])
+                if full_path.is_file():
+                    continue
+
+                record["colrev_status_backup"] = record["colrev_status"]
+                del record["file"]
+                record[
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_included
+
         except AttributeError:
             print("Could not read bibtex file")
 

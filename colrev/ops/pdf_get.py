@@ -304,16 +304,21 @@ class PDFGet(colrev.operation.Operation):
         ]
 
         pdf_files = glob(str(self.review_manager.pdf_dir) + "/**.pdf", recursive=True)
-        unlinked_pdfs = [Path(x) for x in pdf_files if x not in linked_pdfs]
+        unlinked_pdfs = [
+            Path(x)
+            for x in pdf_files
+            if str(Path(x).resolve()) not in linked_pdfs
+            and not any(kw in x for kw in ["_wo_lp.pdf", "_wo_cp.pdf", "_ocr.pdf"])
+        ]
 
         if len(unlinked_pdfs) == 0:
             return records
 
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
-        self.review_manager.logger.info("Checking unlinked PDFs")
+        self.review_manager.logger.info("Check unlinked PDFs")
         for file in unlinked_pdfs:
-            msg = f"Checking unlinked PDF: {file.relative_to(self.review_manager.path)}"
+            msg = f"Check unlinked PDF: {file.relative_to(self.review_manager.path)}"
             self.review_manager.logger.info(msg)
             if file.stem not in records.keys():
 

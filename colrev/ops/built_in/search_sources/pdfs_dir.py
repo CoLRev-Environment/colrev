@@ -607,6 +607,22 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
 
+        # Typical error in old papers: title fields are equal to journal/booktitle fields
+        if record.data.get("title", "no_title").lower() == record.data.get(
+            "journal", "no_journal"
+        ):
+            record.remove_field(key="title", source="pdfs_dir_prepare")
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
+        if record.data.get("title", "no_title").lower() == record.data.get(
+            "booktitle", "no_booktitle"
+        ):
+            record.remove_field(key="title", source="pdfs_dir_prepare")
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
+
         return record
 
 
