@@ -153,7 +153,9 @@ class PDFMetadataValidation(JsonSchemaMixin):
                     #     f"({record.data['ID']})"
                     # )
                     return record.data
-                print("colrev_pdf_ids not matching")
+                pdf_prep_operation.review_manager.logger.debug(
+                    "colrev_pdf_ids not matching"
+                )
         except colrev_exceptions.RecordNotInIndexException:
             pass
 
