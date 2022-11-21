@@ -2047,14 +2047,14 @@ def sync(
 @main.command(help_priority=23)
 @click.option(
     "-r",
-    "--records_only",
+    "--records",
     is_flag=True,
     default=False,
     help="Update records only",
 )
 @click.option(
     "-p",
-    "--project_only",
+    "--project",
     is_flag=True,
     default=False,
     help="Push project only",
@@ -2076,8 +2076,8 @@ def sync(
 @click.pass_context
 def pull(
     ctx: click.core.Context,
-    records_only: bool,
-    project_only: bool,
+    records: bool,
+    project: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -2089,7 +2089,7 @@ def pull(
         )
         pull_operation = review_manager.get_pull_operation()
 
-        pull_operation.main(records_only=records_only, project_only=project_only)
+        pull_operation.main(records_only=records, project_only=project)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
