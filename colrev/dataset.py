@@ -100,23 +100,28 @@ class Dataset:
         self, *, commit_sha: str = ""
     ) -> typing.Iterator[dict]:
         """Returns an iterator of the records_dict based on git history"""
-        revlist = (
-            (
-                commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
-            )
-            for commit in self.__git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE)
-            )
-        )
+
         parser = bibtex.Parser()
 
-        for hist_sha, filecontents in list(revlist):
+        # If the records are not in the commit (commit_sha), we note that the
+        # commit_sha was foud, but that the records were not changed in that commit.
+        # It means that we ignore the StopIterations and
+        # return the records from the next (prior) commit
+        found_but_not_changed = False
+        for commit in self.__git_repo.iter_commits():
             if commit_sha:
-                if commit_sha != hist_sha:
-                    continue
-            bib_data = parser.parse_string(filecontents.decode("utf-8"))
-            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
+                if not found_but_not_changed:
+                    if commit_sha != commit.hexsha:
+                        continue
+            try:
+                filecontents = (
+                    commit.tree / str(self.RECORDS_FILE_RELATIVE)
+                ).data_stream.read()
+                bib_data = parser.parse_string(filecontents.decode("utf-8"))
+                records_dict = self.parse_records_dict(records_dict=bib_data.entries)
+            except StopIteration:
+                found_but_not_changed = True
+                continue
             yield records_dict
 
     def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
