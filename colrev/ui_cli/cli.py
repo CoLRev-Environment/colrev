@@ -2446,7 +2446,50 @@ def man(
     )
 
 
-@main.command(hidden=True, help_priority=33)
+@main.command(help_priority=33)
+@click.option(
+    "--branch",
+    help="Branch to merge.",
+    required=False,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def merge(
+    ctx: click.core.Context,
+    branch: str,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Merge git branches."""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
+
+    if not branch:
+        colrev.operation.CheckOperation(review_manager=review_manager)
+        git_repo = review_manager.dataset.get_repo()
+        print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
+        return
+
+    merge_operation = review_manager.get_merge_operation()
+    merge_operation.main(branch=branch)
+
+
+@main.command(hidden=True, help_priority=34)
 @click.option(
     "--path",
     help="Path to the other CoLRev project.",
@@ -2473,7 +2516,7 @@ def compare(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Show the CoLRev manual."""
+    """Compare CoLRev projects."""
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
