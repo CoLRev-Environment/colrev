@@ -1,7 +1,7 @@
-colrev.ops.repair
+colrev.ops.repare
 =================
 
-.. automodule:: colrev.ops.repair
+.. automodule:: colrev.ops.repare
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.repair
       :template: custom-class-template.rst
       :nosignatures:
 
-      Repair
+      Repare

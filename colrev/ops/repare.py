@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repair CoLRev projects."""
+"""Repare CoLRev projects."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-class Repair(colrev.operation.Operation):
-    """Repair a CoLRev project"""
+class Repare(colrev.operation.Operation):
+    """Repare a CoLRev project"""
 
     def __init__(
         self,
@@ -30,14 +30,15 @@ class Repair(colrev.operation.Operation):
         )
 
     def main(self) -> None:
-        """Repair a CoLRev project (main entrypoint)"""
+        """Repare a CoLRev project (main entrypoint)"""
 
-        self.review_manager.logger.warning("Repair is not fully implemented.")
+        self.review_manager.logger.warning("Repare is not fully implemented.")
 
-        # Try: open settings, except: notify & start repair
+        # Try: open settings, except: notify & start Repare
 
-        # Try: open records, except: notify & start repair
+        # Try: open records, except: notify & start Repare
 
+        separated_records = {}
         with open(self.review_manager.dataset.records_file, encoding="utf-8") as file:
             record_str = ""
             line = file.readline()
@@ -49,10 +50,17 @@ class Repair(colrev.operation.Operation):
                     )
                     if len(records) != 1:
                         print(record_str)
+                    else:
+                        separated_records = {**separated_records, **records}
                     record_str = ""
                 record_str += line
                 line = file.readline()
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=separated_records, save_path=Path("extracted.bib")
+        )
 
+        # TODO : save backup of records before?
+        # This may remove contents if the records file is broken...
         # fix file no longer available
         try:
             records = self.review_manager.dataset.load_records_dict()
