@@ -304,6 +304,13 @@ class ReviewManager:
 
         return colrev.ops.remove.Remove(review_manager=self)
 
+    def get_compare_operation(self) -> colrev.ops.compare.Compare:
+        """Get a a compare object"""
+
+        import colrev.ops.compare
+
+        return colrev.ops.compare.Compare(review_manager=self)
+
     def get_advisor(self) -> colrev.advisor.Advisor:
         """Get an advisor object"""
 
