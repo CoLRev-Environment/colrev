@@ -111,6 +111,7 @@ class Prep(colrev.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
+        retrieval_similarity: float = 1.0,
     ) -> None:
         super().__init__(
             review_manager=review_manager,
@@ -120,6 +121,8 @@ class Prep(colrev.operation.Operation):
         self.notify_state_transition_operation = notify_state_transition_operation
 
         self.fields_to_keep += self.review_manager.settings.prep.fields_to_keep
+
+        self.retrieval_similarity = retrieval_similarity
 
         self.debug_mode = False
         self.pad = 0

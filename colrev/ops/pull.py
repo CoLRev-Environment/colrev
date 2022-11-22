@@ -168,11 +168,11 @@ class Pull(colrev.operation.Operation):
         self.review_manager.logger.info("Pull records from LocalIndex")
 
         prep_operation = self.review_manager.get_prep_operation(
-            notify_state_transition_operation=False
+            notify_state_transition_operation=False, retrieval_similarity=0.99
         )
 
         local_index_prep = built_in_local_index_prep.LocalIndexPrep(
-            prep_operation=prep_operation, settings={"name": "local_index_prep"}
+            prep_operation=prep_operation, settings={"endpoint": "local_index_prep"}
         )
 
         # Note : do not use named argument (used in multiprocessing)
