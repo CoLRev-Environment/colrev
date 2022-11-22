@@ -1,9 +1,9 @@
-colrev.ops.repair.Repair
+colrev.ops.repare.Repare
 ========================
 
-.. currentmodule:: colrev.ops.repair
+.. currentmodule:: colrev.ops.repare
 
-.. autoclass:: Repair
+.. autoclass:: Repare
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,8 +16,8 @@ colrev.ops.repair.Repair
    .. autosummary::
       :nosignatures:
 
-      ~Repair.check_precondition
-      ~Repair.main
+      ~Repare.check_precondition
+      ~Repare.main
 
 
 
@@ -27,5 +27,5 @@ colrev.ops.repair.Repair
 
    .. autosummary::
 
-      ~Repair.force_mode
-      ~Repair.type
+      ~Repare.force_mode
+      ~Repare.type

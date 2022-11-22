@@ -46,7 +46,7 @@ colrev.ops
    colrev.ops.pull
    colrev.ops.push
    colrev.ops.remove
-   colrev.ops.repair
+   colrev.ops.repare
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search

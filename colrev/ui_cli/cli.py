@@ -2359,18 +2359,18 @@ def upgrade(
     help="Force mode",
 )
 @click.pass_context
-def repair(
+def repare(
     ctx: click.core.Context,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Repair file formatting errors in the CoLRev project."""
+    """Repare file formatting errors in the CoLRev project."""
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )
-    repair_operation = review_manager.get_repair()
-    repair_operation.main()
+    repare_operation = review_manager.get_repare()
+    repare_operation.main()
 
 
 @main.command(help_priority=31)
