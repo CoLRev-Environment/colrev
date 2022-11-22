@@ -254,7 +254,7 @@ class EnvironmentManager:
                     review_manager=cp_review_manager
                 )
                 repo_stat = self._get_status(review_manager=cp_review_manager)
-                repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
+                repo["size"] = repo_stat["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(
                         repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
@@ -273,7 +273,12 @@ class EnvironmentManager:
                 ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
-            except (NoSuchPathError, InvalidGitRepositoryError):
+            except (
+                NoSuchPathError,
+                InvalidGitRepositoryError,
+                KeyError,
+                FileNotFoundError,
+            ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 

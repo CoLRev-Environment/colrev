@@ -1686,11 +1686,11 @@ def __print_environment_status(
     project_repos = [
         x
         for x in environment_details["local_repos"]["repos"]
-        if "curated_metadata" not in x["source_url"]
+        if "curated_metadata" not in x["repo_source_path"]
     ]
-    for colrev_repo in sorted(project_repos, key=lambda d: d["source_name"]):
+    for colrev_repo in sorted(project_repos, key=lambda d: d["repo_name"]):
 
-        repo_stats = f' {colrev_repo["source_name"]}'
+        repo_stats = f' {colrev_repo["repo_name"]}'
         if colrev_repo["remote"]:
             if colrev_repo["behind_remote"]:
                 repo_stats += " (shared, behind remote)"
@@ -1703,17 +1703,17 @@ def __print_environment_status(
         else:
             print("    - Progress : ??")
         print(f'    - Size     : {colrev_repo["size"]} records')
-        print(f'    - Path     : {colrev_repo["source_url"]}')
+        print(f'    - Path     : {colrev_repo["repo_source_path"]}')
 
     print("\nCurated CoLRev resources\n")
     curated_repos = [
         x
         for x in environment_details["local_repos"]["repos"]
-        if "curated_metadata" in x["source_url"]
+        if "curated_metadata" in x["repo_source_path"]
     ]
-    for colrev_repo in sorted(curated_repos, key=lambda d: d["source_name"]):
+    for colrev_repo in sorted(curated_repos, key=lambda d: d["repo_name"]):
         repo_stats = (
-            f' - {colrev_repo["source_name"].ljust(60, " ")}: '
+            f' - {colrev_repo["repo_name"].ljust(60, " ")}: '
             f'{str(colrev_repo["size"]).rjust(10, " ")} records'
         )
         if colrev_repo["behind_remote"]:
@@ -1724,7 +1724,7 @@ def __print_environment_status(
     if len(environment_details["local_repos"]["broken_links"]) > 0:
         print("Broken links: \n")
         for broken_link in environment_details["local_repos"]["broken_links"]:
-            print(f'- {broken_link["source_url"]}')
+            print(f'- {broken_link["repo_source_path"]}')
 
 
 @main.command(help_priority=20)

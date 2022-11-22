@@ -42,9 +42,9 @@ class Push(colrev.operation.Operation):
         for correction in self.review_manager.corrections_path.glob("*.json"):
             with open(correction, encoding="utf8") as json_file:
                 output = json.load(json_file)
-            output["file"] = correction
-            source_url = output["source_url"]
 
+            output["file"] = correction
+            source_url = output["source_url"]["CURATED"]["source"]
             if len(change_sets) == 0:
                 change_sets[source_url] = [output]
                 continue
@@ -114,14 +114,22 @@ class Push(colrev.operation.Operation):
                     corrections_operation = colrev.ops.correct.Corrections(
                         review_manager=self.review_manager
                     )
-                    corrections_operation.apply_correction(
-                        source_url=source_url, change_list=change_itemset
+
+                    environment_manager = (
+                        colrev.env.environment_manager.EnvironmentManager()
                     )
 
-                print(
-                    "\nThank you for supporting other researchers "
-                    "by sharing your corrections ❤\n"
-                )
+                    s_path_element = [
+                        x["repo_source_path"]
+                        for x in environment_manager.load_environment_registry()
+                        if x["repo_source_url"] == source_url
+                    ]
+                    if len(s_path_element) != 1:
+                        print(f"Repo not available locally: {source_url}")
+                        return
+                    corrections_operation.apply_correction(
+                        source_url=s_path_element[0], change_list=change_itemset
+                    )
 
     def __share_correction(self, *, source_url: str, change_list: list) -> None:
 
