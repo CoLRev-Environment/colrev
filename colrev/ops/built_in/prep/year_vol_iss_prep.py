@@ -60,7 +60,7 @@ class YearVolIssPrep(JsonSchemaMixin):
             if not record.get("year", "NA").isdigit():
                 continue
 
-            if "journal" not in record:
+            if "journal" not in record or "volume" not in record:
                 continue
 
             if record["journal"] not in vol_nr_dict:

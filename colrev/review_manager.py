@@ -291,12 +291,12 @@ class ReviewManager:
 
         return colrev.ops.upgrade.Upgrade(review_manager=self)
 
-    def get_repair(self) -> colrev.ops.repair.Repair:
-        """Get a a repair object"""
+    def get_repare(self) -> colrev.ops.repare.Repare:
+        """Get a a repare object"""
 
-        import colrev.ops.repair
+        import colrev.ops.repare
 
-        return colrev.ops.repair.Repair(review_manager=self)
+        return colrev.ops.repare.Repare(review_manager=self)
 
     def get_remove_operation(self) -> colrev.ops.remove.Remove:
         """Get a a remove object"""
@@ -311,6 +311,13 @@ class ReviewManager:
         import colrev.ops.merge
 
         return colrev.ops.merge.Merge(review_manager=self)
+
+    def get_compare_operation(self) -> colrev.ops.compare.Compare:
+        """Get a a compare object"""
+
+        import colrev.ops.compare
+
+        return colrev.ops.compare.Compare(review_manager=self)
 
     def get_advisor(self) -> colrev.advisor.Advisor:
         """Get an advisor object"""
@@ -485,7 +492,10 @@ class ReviewManager:
         )
 
     def get_prep_operation(
-        self, *, notify_state_transition_operation: bool = True
+        self,
+        *,
+        notify_state_transition_operation: bool = True,
+        retrieval_similarity: float = 1.0,
     ) -> colrev.ops.prep.Prep:
         """Get a prep operation object"""
         import colrev.ops.prep
@@ -493,6 +503,7 @@ class ReviewManager:
         return colrev.ops.prep.Prep(
             review_manager=self,
             notify_state_transition_operation=notify_state_transition_operation,
+            retrieval_similarity=retrieval_similarity,
         )
 
     def get_prep_man_operation(

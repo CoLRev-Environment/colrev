@@ -73,7 +73,7 @@ class Service:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
-        assert "realtime" == review_manager.settings.project.review_type
+        # assert "realtime" == review_manager.settings.project.review_type
 
         print("Starting realtime CoLRev service...")
 
@@ -97,7 +97,8 @@ class Service:
         self.logger.info("Service alive")
 
         self.service_queue.put(
-            {"name": "colrev search", "cmd": "colrev search", "priority": "yes"}
+            # {"name": "colrev search", "cmd": "colrev search", "priority": "yes"}
+            {"name": "colrev retrieve", "cmd": "colrev retrieve", "priority": "yes"}
         )
 
         # get initial review instructions and add to queue
@@ -178,7 +179,27 @@ class Service:
         self.previous_command = item["cmd"]
 
         print()
-        if "colrev search" == item["cmd"]:
+        if "colrev retrieve" == item["cmd"]:
+
+            self.review_manager.get_local_index(startup_without_waiting=True)
+
+            search_operation = self.review_manager.get_search_operation()
+            search_operation.main()
+
+            load_operation = self.review_manager.get_load_operation()
+            new_sources = load_operation.get_new_sources(skip_query=True)
+            load_operation = self.review_manager.get_load_operation()
+            load_operation.main(
+                new_sources=new_sources, keep_ids=False, combine_commits=False
+            )
+
+            prep_operation = self.review_manager.get_prep_operation()
+            prep_operation.main()
+
+            dedupe_operation = self.review_manager.get_dedupe_operation()
+            dedupe_operation.main()
+
+        elif "colrev search" == item["cmd"]:
 
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(selection_str=None)

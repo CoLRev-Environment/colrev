@@ -63,9 +63,11 @@ class Zettlr(JsonSchemaMixin):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
         self.endpoint_path = (
-            data_operation.review_manager.data_dir / self.ZETTLR_PATH_RELATIVE
+            data_operation.review_manager.path / self.ZETTLR_PATH_RELATIVE
         )
-        self.zettlr_config_path = self.endpoint_path / self.ZETTLR_CONFIG_PATH_RELATIVE
+        self.zettlr_config_path = (
+            data_operation.review_manager.path / self.ZETTLR_CONFIG_PATH_RELATIVE
+        )
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""

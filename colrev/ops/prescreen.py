@@ -128,6 +128,21 @@ class Prescreen(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
+    def __prescreen_include_all(self, *, records: dict) -> None:
+        self.review_manager.logger.info("Prescreen-including all records")
+        for record in records.values():
+            if record["colrev_status"] == colrev.record.RecordState.md_processed:
+                record[
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_included
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
+            msg="Pre-screen (include_all)",
+            manual_author=False,
+            script_call="colrev prescreen",
+        )
+
     def main(self, *, split_str: str) -> None:
         """Prescreen records (main entrypoint)"""
 
@@ -144,6 +159,11 @@ class Prescreen(colrev.operation.Operation):
         prescreen_package_endpoints = (
             self.review_manager.settings.prescreen.prescreen_package_endpoints
         )
+
+        if not prescreen_package_endpoints:
+            self.__prescreen_include_all(records=records)
+            return
+
         for prescreen_package_endpoint in prescreen_package_endpoints:
 
             self.review_manager.logger.info(

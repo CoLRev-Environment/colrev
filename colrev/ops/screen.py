@@ -241,6 +241,19 @@ class Screen(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
+    def __screen_include_all(self, *, records: dict) -> None:
+        self.review_manager.logger.info("Screen-including all records")
+        for record in records.values():
+            if record["colrev_status"] == colrev.record.RecordState.pdf_prepared:
+                record["colrev_status"] = colrev.record.RecordState.rev_included
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(
+            msg="Screen (include_all)",
+            manual_author=False,
+            script_call="colrev screen",
+        )
+
     def main(self, *, split_str: str) -> None:
         """Screen records for inclusion (main entrypoint)"""
 
@@ -248,11 +261,16 @@ class Screen(colrev.operation.Operation):
         split = []
         if split_str != "NA":
             split = split_str.split(",")
-            split.remove("")
+            if "" in split:
+                split.remove("")
 
         records = self.review_manager.dataset.load_records_dict()
 
         package_manager = self.review_manager.get_package_manager()
+
+        if not self.review_manager.settings.screen.screen_package_endpoints:
+            self.__screen_include_all(records=records)
+            return
 
         for (
             screen_package_endpoint

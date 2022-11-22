@@ -206,13 +206,9 @@ class PDFPrep(colrev.operation.Operation):
 
         record.cleanup_pdf_processing_fields()
 
-        self.review_manager.dataset.save_records_dict(
-            records={record.data["ID"]: record.get_data()}, partial=True
-        )
-
         return record.get_data()
 
-    def __get_data(self) -> dict:
+    def __get_data(self, *, batch_size: int = 0) -> dict:
 
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
@@ -233,8 +229,15 @@ class PDFPrep(colrev.operation.Operation):
 
         prep_data = {
             "nr_tasks": nr_tasks,
-            "items": [{"record": item} for item in items],
+            "items": [],
         }
+
+        if 0 == batch_size:
+            batch_size = nr_tasks
+        for ind, item in enumerate(items):
+            if ind > batch_size:
+                break
+            prep_data["items"].append({"record": item})  # type: ignore
 
         return prep_data
 
@@ -345,6 +348,7 @@ class PDFPrep(colrev.operation.Operation):
         self,
         *,
         reprocess: bool = False,
+        batch_size: int = 0,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
@@ -361,7 +365,7 @@ class PDFPrep(colrev.operation.Operation):
         if reprocess:
             self.__set_to_reprocess()
 
-        pdf_prep_data = self.__get_data()
+        pdf_prep_data = self.__get_data(batch_size=batch_size)
 
         if self.review_manager.verbose_mode:
             for item in pdf_prep_data["items"]:

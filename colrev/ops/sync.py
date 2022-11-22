@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Synchronize records into a non-CoLRev project."""
+import logging
 import re
 import typing
 from pathlib import Path
@@ -10,6 +11,7 @@ from pybtex.database.input import bibtex
 import colrev.dataset
 import colrev.env.local_index
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class Sync:
@@ -20,6 +22,35 @@ class Sync:
     def __init__(self) -> None:
         self.records_to_import: typing.List[colrev.record.Record] = []
         self.non_unique_for_import: typing.List[typing.Dict] = []
+
+        self.logger = self.__setup_logger(level=logging.DEBUG)
+
+    def __setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
+        """Setup the sync logger"""
+        # pylint: disable=duplicate-code
+
+        # for logger debugging:
+        # from logging_tree import printout
+        # printout()
+        logger = logging.getLogger(f"colrev{str(Path.cwd()).replace('/', '_')}")
+        logger.setLevel(level)
+
+        if logger.handlers:
+            for handler in logger.handlers:
+                logger.removeHandler(handler)
+
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+
+        logger.addHandler(handler)
+        logger.propagate = False
+
+        return logger
 
     def __get_cited_papers_citation_keys(self) -> list:
         if Path("paper.md").is_file():
@@ -32,17 +63,17 @@ class Sync:
 
         citation_keys = []
         if paper_md.is_file():
-            print("Loading cited references from paper.md")
+            self.logger.info("Load cited references from paper.md")
             content = paper_md.read_text(encoding="utf-8")
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
             if "fig" in citation_keys:
                 citation_keys.remove("fig")
-            print(f"Citations in paper.md: {len(citation_keys)}")
+            self.logger.info("Citations in paper.md: %s", len(citation_keys))
             self.cited_papers = citation_keys
 
         elif len(rst_files) > 0:
-            print("Loading cited references from *.rst")
+            self.logger.info("Load cited references from *.rst")
             for rst_file in rst_files:
                 content = rst_file.read_text()
                 res = re.findall(r":cite:p:`(.*)`", content)
@@ -50,7 +81,7 @@ class Sync:
                 citation_keys.extend(cited)
 
             citation_keys = list(set(citation_keys))
-            print(f"Citations in *.rst: {len(citation_keys)}")
+            self.logger.info("Citations in *.rst: %s", len(citation_keys))
             self.cited_papers = citation_keys
 
         else:
@@ -63,7 +94,7 @@ class Sync:
         citation_keys = self.__get_cited_papers_citation_keys()
 
         ids_in_bib = self.__get_ids_in_paper()
-        print(f"References in bib: {len(ids_in_bib)}")
+        self.logger.info("References in bib: %s", len(ids_in_bib))
 
         local_index = colrev.env.local_index.LocalIndex()
         for citation_key in citation_keys:
@@ -79,7 +110,7 @@ class Sync:
             )
 
             if 0 == len(returned_records):
-                print(f"Not found: {citation_key}")
+                self.logger.info("Not found: %s", citation_key)
             elif 1 == len(returned_records):
                 if returned_records[0].data["ID"] in [
                     r.data["ID"] for r in self.records_to_import
@@ -204,16 +235,20 @@ class Sync:
                         if k not in colrev.record.Record.provenance_keys
                     }
                 )
-                records.append(record_to_import)
+                records.append(record_to_import.get_data())
                 available_ids.append(record_to_import.data["ID"])
                 added.append(record_to_import)
 
         if len(added) > 0:
-            print("Loaded:")
+            self.logger.info("Loaded:")
+            print()
             for added_record in added:
                 added_record.print_citation_format()
+            print()
 
-            print(f"Loaded {len(added)} papers")
+            self.logger.info(
+                "%s Loaded %s papers%s", colors.GREEN, len(added), colors.END
+            )
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 

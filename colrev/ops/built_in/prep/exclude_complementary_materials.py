@@ -73,6 +73,9 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             "international board of editors",
             "index",
             "subject index",
+            "issue information",
+            "keyword index",
+            "about the authors",
         ]
         # TODO : allow users to override the default lists (based on settings)
 

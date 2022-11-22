@@ -1083,7 +1083,7 @@ class Record:
         source = default_source
         if key in self.identifying_field_keys:
             if "colrev_masterdata_provenance" in self.data:
-                if key in self.data["colrev_masterdata_provenance"]:
+                if key in self.data.get("colrev_masterdata_provenance", {}):
                     if "source" in self.data["colrev_masterdata_provenance"][key]:
                         source = self.data["colrev_masterdata_provenance"][key][
                             "source"
@@ -1104,7 +1104,7 @@ class Record:
         """Add a masterdata provenance note (based on a key)"""
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
-        if key in self.data["colrev_masterdata_provenance"]:
+        if key in self.data.get("colrev_masterdata_provenance", {}):
             if "" == self.data["colrev_masterdata_provenance"][key]["note"]:
                 self.data["colrev_masterdata_provenance"][key]["note"] = note
             elif note not in self.data["colrev_masterdata_provenance"][key][
@@ -1285,7 +1285,7 @@ class Record:
     def remove_quality_defect_notes(self) -> None:
         """Remove the quality defect notes"""
         for key in self.data.keys():
-            if key in self.data["colrev_masterdata_provenance"]:
+            if key in self.data.get("colrev_masterdata_provenance", {}):
                 note = self.data["colrev_masterdata_provenance"][key]["note"]
                 if "quality_defect" in note:
                     self.data["colrev_masterdata_provenance"][key][
@@ -2232,7 +2232,7 @@ class PrepRecord(Record):
                     .replace(" And ", " and ")
                 )
 
-            if key in self.data["colrev_masterdata_provenance"]:
+            if key in self.data.get("colrev_masterdata_provenance", {}):
                 note = self.data["colrev_masterdata_provenance"][key]["note"]
                 if "quality_defect" in note:
                     self.data["colrev_masterdata_provenance"][key][

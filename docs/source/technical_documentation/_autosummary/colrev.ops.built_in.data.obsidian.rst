@@ -1,7 +1,7 @@
-colrev.ops.repair
-=================
+colrev.ops.built\_in.data.obsidian
+==================================
 
-.. automodule:: colrev.ops.repair
+.. automodule:: colrev.ops.built_in.data.obsidian
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.repair
       :template: custom-class-template.rst
       :nosignatures:
 
-      Repair
+      Obsidian

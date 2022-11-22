@@ -29,6 +29,7 @@ colrev.ops
    colrev.ops.built_in
    colrev.ops.clone
    colrev.ops.commit
+   colrev.ops.compare
    colrev.ops.correct
    colrev.ops.data
    colrev.ops.dedupe
@@ -46,7 +47,7 @@ colrev.ops
    colrev.ops.pull
    colrev.ops.push
    colrev.ops.remove
-   colrev.ops.repair
+   colrev.ops.repare
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search

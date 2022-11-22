@@ -1686,11 +1686,11 @@ def __print_environment_status(
     project_repos = [
         x
         for x in environment_details["local_repos"]["repos"]
-        if "curated_metadata" not in x["source_url"]
+        if "curated_metadata" not in x["repo_source_path"]
     ]
-    for colrev_repo in sorted(project_repos, key=lambda d: d["source_name"]):
+    for colrev_repo in sorted(project_repos, key=lambda d: d["repo_name"]):
 
-        repo_stats = f' {colrev_repo["source_name"]}'
+        repo_stats = f' {colrev_repo["repo_name"]}'
         if colrev_repo["remote"]:
             if colrev_repo["behind_remote"]:
                 repo_stats += " (shared, behind remote)"
@@ -1703,17 +1703,17 @@ def __print_environment_status(
         else:
             print("    - Progress : ??")
         print(f'    - Size     : {colrev_repo["size"]} records')
-        print(f'    - Path     : {colrev_repo["source_url"]}')
+        print(f'    - Path     : {colrev_repo["repo_source_path"]}')
 
     print("\nCurated CoLRev resources\n")
     curated_repos = [
         x
         for x in environment_details["local_repos"]["repos"]
-        if "curated_metadata" in x["source_url"]
+        if "curated_metadata" in x["repo_source_path"]
     ]
-    for colrev_repo in sorted(curated_repos, key=lambda d: d["source_name"]):
+    for colrev_repo in sorted(curated_repos, key=lambda d: d["repo_name"]):
         repo_stats = (
-            f' - {colrev_repo["source_name"].ljust(60, " ")}: '
+            f' - {colrev_repo["repo_name"].ljust(60, " ")}: '
             f'{str(colrev_repo["size"]).rjust(10, " ")} records'
         )
         if colrev_repo["behind_remote"]:
@@ -1724,7 +1724,7 @@ def __print_environment_status(
     if len(environment_details["local_repos"]["broken_links"]) > 0:
         print("Broken links: \n")
         for broken_link in environment_details["local_repos"]["broken_links"]:
-            print(f'- {broken_link["source_url"]}')
+            print(f'- {broken_link["repo_source_path"]}')
 
 
 @main.command(help_priority=20)
@@ -2047,14 +2047,14 @@ def sync(
 @main.command(help_priority=23)
 @click.option(
     "-r",
-    "--records_only",
+    "--records",
     is_flag=True,
     default=False,
     help="Update records only",
 )
 @click.option(
     "-p",
-    "--project_only",
+    "--project",
     is_flag=True,
     default=False,
     help="Push project only",
@@ -2076,8 +2076,8 @@ def sync(
 @click.pass_context
 def pull(
     ctx: click.core.Context,
-    records_only: bool,
-    project_only: bool,
+    records: bool,
+    project: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -2089,7 +2089,7 @@ def pull(
         )
         pull_operation = review_manager.get_pull_operation()
 
-        pull_operation.main(records_only=records_only, project_only=project_only)
+        pull_operation.main(records_only=records, project_only=project)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -2359,18 +2359,18 @@ def upgrade(
     help="Force mode",
 )
 @click.pass_context
-def repair(
+def repare(
     ctx: click.core.Context,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Repair file formatting errors in the CoLRev project."""
+    """Repare file formatting errors in the CoLRev project."""
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )
-    repair_operation = review_manager.get_repair()
-    repair_operation.main()
+    repare_operation = review_manager.get_repare()
+    repare_operation.main()
 
 
 @main.command(help_priority=31)
@@ -2473,7 +2473,7 @@ def merge(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Remove records, ... from CoLRev repositories"""
+    """Merge git branches."""
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose
@@ -2487,6 +2487,49 @@ def merge(
 
     merge_operation = review_manager.get_merge_operation()
     merge_operation.main(branch=branch)
+
+
+@main.command(hidden=True, help_priority=34)
+@click.option(
+    "--path",
+    help="Path to the other CoLRev project.",
+    required=False,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def compare(
+    ctx: click.core.Context,
+    path: str,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Compare CoLRev projects."""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
+        compare_operation = review_manager.get_compare_operation()
+
+        compare_operation.main(path=path)
+
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
+        print(exc)
 
 
 @main.command(hidden=True)

@@ -141,7 +141,10 @@ class Unpaywall(JsonSchemaMixin):
                 pdf_get_operation.review_manager.logger.info(
                     "Unpaywall retrieval error " f"{res.status_code} - {url}"
                 )
-        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError):
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ):
             pass
 
         return record
