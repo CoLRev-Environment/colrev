@@ -183,9 +183,14 @@ class Corrections:
 
         dict_to_save = {
             "source_url": original_curated_record["colrev_masterdata_provenance"],
-            "original_curated_record": original_curated_record,
+            "original_curated_record": {
+                k: v
+                for k, v in original_curated_record.items()
+                if k not in ["colrev_status"]
+            },
             "changes": selected_change_items,
         }
+
         filepath = self.review_manager.corrections_path / Path(
             f"{corrected_curated_record['ID']}.json"
         )

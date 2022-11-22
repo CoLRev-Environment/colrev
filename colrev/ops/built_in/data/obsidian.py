@@ -2,6 +2,7 @@
 """Creation of an Obsidian database as part of the data operations"""
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -134,8 +135,6 @@ class Obsidian(JsonSchemaMixin):
         all_keywords = [x["keywords"] for x in missing_record_entities.values()]
         all_keywords = [item for sublist in all_keywords for item in sublist]
 
-        from collections import Counter
-
         cnt = Counter(all_keywords)
         frequent_keywords = [k for k, v in cnt.items() if v > 2]
 
@@ -184,7 +183,8 @@ class Obsidian(JsonSchemaMixin):
                     if "highly_cited" in missing_record_entity["keywords"]:
                         paper_summary.write("highly_cited")
 
-        # TODO : export to csl-json (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
+        # TODO : export to csl-json
+        # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
         # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
 

@@ -500,15 +500,16 @@ class CrossrefSourceSearchSource(JsonSchemaMixin):
                 # TODO : propagate changes to records.bib (if any)?
                 # TODO : notify on major changes!
 
-                available_ids[record_dict["doi"]] = record_dict["ID"]
-                records[record_dict["ID"]] = record_dict
-                max_id += 1
-
                 if record_dict["doi"].upper() not in available_ids:
                     search_operation.review_manager.logger.info(
                         " retrieved " + record_dict["doi"]
                     )
                     nr_retrieved += 1
+                    max_id += 1
+
+                available_ids[record_dict["doi"]] = record_dict["ID"]
+                records[record_dict["ID"]] = record_dict
+
         except (requests.exceptions.JSONDecodeError, KeyError) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
