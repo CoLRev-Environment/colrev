@@ -105,6 +105,7 @@ class Merge(colrev.operation.Operation):
 
         try:
             git_repo.git.merge(branch)
+            self.review_manager.logger.info("Merged without conflicts.")
             return
         except GitCommandError:
             self.review_manager.logger.info("Detected changes in both branches.")
@@ -134,6 +135,11 @@ class Merge(colrev.operation.Operation):
                             load_str=blob.data_stream.read().decode("utf-8")
                         )
                     )
+        else:
+            self.review_manager.logger.info(
+                "No conflicts to reconcile in data/records.bib."
+            )
+            return
 
         # There may be removed records / renamed IDs, changed fields...
         # if so: print, ask to resolve and exit
@@ -150,6 +156,9 @@ class Merge(colrev.operation.Operation):
             )
             print(non_status_changes)
             return
+
+        self.review_manager.logger.info("Reconciling changes in colrev_status.")
+        # Note : reconciliation of other changes not supported yet
 
         (
             current_branch_author,
