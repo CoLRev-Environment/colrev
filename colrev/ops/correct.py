@@ -230,14 +230,19 @@ class Corrections:
     def check_corrections_of_curated_records(self) -> None:
         """Check for corrections of curated records"""
 
+        # to test run
+        # colrev-hooks-report .report.log
+
         dataset = self.review_manager.dataset
 
         if not dataset.records_file.is_file():
             return
 
         record_curated_current = self.__get_records_curated_current()
-        record_curated_prior = self.__get_records_curated_prior_from_history()
-
+        # TODO : shouldn't we get the curated record from the local_index?
+        # TODO : when we use the local_index, it may be outdated,
+        # so we may have to check with the original repo before createing a pull-request
+        records_curated_prior = self.__get_records_curated_prior_from_history()
         # gh_issue https://github.com/geritwagner/colrev/issues/63
         # The following code should be much simpler...
         for curated_record in record_curated_current:
@@ -248,7 +253,7 @@ class Corrections:
             # identify curated records for which essential metadata is changed
             record_curated_prior = [
                 x
-                for x in record_curated_prior
+                for x in records_curated_prior
                 if any(y in curated_record["colrev_origin"] for y in x["colrev_origin"])
             ]
 
@@ -558,6 +563,11 @@ class Corrections:
             check_operation=check_operation,
             source_url=source_url,
             change_list=change_list,
+        )
+
+        print(
+            "\nThank you for supporting other researchers "
+            "by sharing your corrections ❤\n"
         )
 
 

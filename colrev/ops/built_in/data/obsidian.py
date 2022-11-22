@@ -84,14 +84,19 @@ class Obsidian(JsonSchemaMixin):
     def __get_keywords(self, *, record_dict: dict) -> list:
         keywords = []
 
-        tei_file = (
-            self.review_manager.path
-            / colrev.record.Record(data=record_dict).get_tei_filename()
-        )
+        try:
+            tei_file = (
+                self.review_manager.path
+                / colrev.record.Record(data=record_dict).get_tei_filename()
+            )
 
-        if tei_file.is_file():
-            tei = self.review_manager.get_tei(tei_path=tei_file)
-            keywords = [x.lower().replace(" ", "-") for x in tei.get_paper_keywords()]
+            if tei_file.is_file():
+                tei = self.review_manager.get_tei(tei_path=tei_file)
+                keywords = [
+                    x.lower().replace(" ", "-") for x in tei.get_paper_keywords()
+                ]
+        except Exception as exc:  # pylint: disable=broad-except
+            print(exc)
 
         if int(record_dict.get("cited_by", 0)) > 100:
             keywords.append("highly_cited")
