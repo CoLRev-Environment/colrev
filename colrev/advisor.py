@@ -449,7 +449,7 @@ class Advisor:
                         {
                             "level": "WARNING",
                             "msg": f"PDF no longer available: {record_dict['file']}",
-                            "cmd": "colrev repair",
+                            "cmd": "colrev repare",
                         }
                     )
 

@@ -128,7 +128,12 @@ class ExportManPrep(JsonSchemaMixin):
             record.update_masterdata_provenance()
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
             for k in list(record.data.keys()):
-                if k in ["colrev_status"]:
+                if k in [
+                    "colrev_status",
+                    "colrev_masterdata_provenance",
+                    "colrev_data_provenance",
+                    "colrev_id",
+                ]:
                     continue
                 if k in records[record_id]:
                     if record.data[k] != records[record_id][k]:

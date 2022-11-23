@@ -1105,7 +1105,10 @@ class Record:
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         if key in self.data.get("colrev_masterdata_provenance", {}):
-            if "" == self.data["colrev_masterdata_provenance"][key]["note"]:
+            if (
+                "" == self.data["colrev_masterdata_provenance"][key]["note"]
+                or "" == note
+            ):
                 self.data["colrev_masterdata_provenance"][key]["note"] = note
             elif note not in self.data["colrev_masterdata_provenance"][key][
                 "note"
@@ -1143,7 +1146,7 @@ class Record:
         md_p_dict = self.data["colrev_masterdata_provenance"]
 
         if key in md_p_dict:
-            if "" == md_p_dict[key]["note"]:
+            if "" == md_p_dict[key]["note"] or "" == note:
                 md_p_dict[key]["note"] = note
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"

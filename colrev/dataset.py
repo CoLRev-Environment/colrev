@@ -802,10 +802,14 @@ class Dataset:
             if selected_ids is not None:
                 if record_id not in selected_ids:
                     continue
-            elif record_dict["colrev_status"] not in [
-                colrev.record.RecordState.md_imported,
-                colrev.record.RecordState.md_prepared,
-            ]:
+            if (
+                record_dict["colrev_status"]
+                not in [
+                    colrev.record.RecordState.md_imported,
+                    colrev.record.RecordState.md_prepared,
+                ]
+                and not self.review_manager.force_mode
+            ):
                 continue
             old_id = record_id
 

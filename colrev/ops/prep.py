@@ -395,10 +395,53 @@ class Prep(colrev.operation.Operation):
         )
 
     def set_ids(self) -> None:
-        """Set IDs (regenerate)"""
+        """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
         self.review_manager.logger.info("Set IDs")
         records = self.review_manager.dataset.load_records_dict()
         self.review_manager.dataset.set_ids(records=records, selected_ids=list(records))
+        for record_dict in records.values():
+            if "file" not in record_dict:
+                continue
+
+            if str(Path(record_dict["file"]).name) == f'{record_dict["ID"]}.pdf':
+                continue
+
+            old_filename = record_dict["file"]
+            new_filename = Path(record_dict["file"]).parent / Path(
+                f'{record_dict["ID"]}.pdf'
+            )
+            try:
+                Path(record_dict["file"]).rename(new_filename)
+            except FileNotFoundError:
+                print(f"rename error: {record_dict['file']}")
+                continue
+            record_dict["file"] = str(new_filename)
+            if "colrev_data_provenance" in record_dict:
+                for value in record_dict["colrev_data_provenance"].values():
+                    if value["source"] == old_filename:
+                        value["source"] = value["source"].replace(
+                            old_filename, str(new_filename)
+                        )
+            if "colrev_masterdata_provenance" in record_dict:
+                for value in record_dict["colrev_masterdata_provenance"].values():
+                    if value["source"] == old_filename:
+                        value["source"] = value["source"].replace(
+                            old_filename, str(new_filename)
+                        )
+
+            # simple heuristic:
+            pdfs_origin_file = Path("data/search/pdfs.bib")
+            if pdfs_origin_file.is_file():
+                colrev.env.utils.inplace_change(
+                    filename=pdfs_origin_file,
+                    old_string=old_filename,
+                    new_string=str(new_filename),
+                )
+            self.review_manager.dataset.add_changes(path=pdfs_origin_file)
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
         self.review_manager.create_commit(
             msg="Set IDs",
             script_call="colrev prep -sid",
