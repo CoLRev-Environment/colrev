@@ -98,6 +98,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                 key="year",
                 value=year,
                 source="LocalIndexPrep",
+                note="",
                 keep_source_if_equal=True,
             )
             return record
@@ -198,7 +199,7 @@ class YearVolIssPrep(JsonSchemaMixin):
             most_common = max(years, key=years.count)
             if years.count(most_common) > 3:
                 record.update_field(
-                    key="year", value=most_common, source="CROSSREF(average)"
+                    key="year", value=most_common, source="CROSSREF(average)", note=""
                 )
         except requests.exceptions.RequestException:
             pass

@@ -137,6 +137,7 @@ class PDFSearchSource(JsonSchemaMixin):
             records = search_operation.review_manager.dataset.load_records_dict()
 
         to_remove: typing.List[str] = []
+        files_removed = []
         for record_dict in search_rd.values():
             x_pdf_path = search_operation.review_manager.path / Path(
                 record_dict["file"]
@@ -151,44 +152,32 @@ class PDFSearchSource(JsonSchemaMixin):
                     )
                     if updated:
                         continue
-                to_remove = to_remove + [
-                    f"{self.settings.filename.name}/{id}" for id in search_rd.keys()
-                ]
+                to_remove.append(f"{self.settings.filename.name}/{record_dict['ID']}")
+                files_removed.append(record_dict["file"])
 
-        search_rd = {x["ID"]: x for x in search_rd.values() if x_pdf_path.is_file()}
+        search_rd = {
+            x["ID"]: x
+            for x in search_rd.values()
+            if (search_operation.review_manager.path / Path(x["file"])).is_file()
+        }
+
         if len(search_rd.values()) != 0:
             search_operation.review_manager.dataset.save_records_dict_to_file(
                 records=search_rd, save_path=self.settings.filename
             )
 
         if search_operation.review_manager.dataset.records_file.is_file():
-            # Note : origins may contain multiple links
-            # but that should not be a major issue in indexing repositories
-
-            to_remove = []
-            source_ids = list(search_rd.keys())
-            for record in records.values():
-                if any(
-                    str(self.settings.filename.name) in co
-                    for co in record["colrev_origin"]
-                ):
-                    if not any(
-                        x.split("/")[1] in source_ids for x in record["colrev_origin"]
-                    ):
-                        print("REMOVE " + ",".join(record["colrev_origin"]))
-                        to_remove.append(record["colrev_origin"])
-
-            for record_dict in to_remove:
-                # search_operation.review_manager.logger.debug(
-                #     f"remove from index (PDF path no longer exists): {record_dict}"
-                # )
-                search_operation.review_manager.report_logger.info(
-                    f"remove from index (PDF path no longer exists): {record_dict}"
+            for record_dict in records.values():
+                for origin_to_remove in to_remove:
+                    if origin_to_remove in record_dict["colrev_origin"]:
+                        record_dict["colrev_origin"].remove(origin_to_remove)
+            if to_remove:
+                search_operation.review_manager.logger.info(
+                    f" {colors.RED}Removed {len(to_remove)} records "
+                    f"(PDFs no longer available){colors.END}"
                 )
-
-            records = {
-                k: v for k, v in records.items() if v["colrev_origin"] not in to_remove
-            }
+                print(" " + "\n ".join(files_removed))
+            records = {k: v for k, v in records.items() if v["colrev_origin"]}
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
