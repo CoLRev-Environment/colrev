@@ -1122,6 +1122,13 @@ def pdf_get_man(
     "--update_colrev_pdf_ids", is_flag=True, default=False, help="Update colrev_pdf_ids"
 )
 @click.option(
+    "-b",
+    "--batch_size",
+    required=False,
+    type=int,
+    help="Batch size (when not all records should be processed in one batch).",
+)
+@click.option(
     "--reprocess",
     is_flag=True,
     default=False,
@@ -1151,6 +1158,7 @@ def pdf_get_man(
 @click.pass_context
 def pdf_prep(
     ctx: click.core.Context,
+    batch_size: int,
     update_colrev_pdf_ids: bool,
     reprocess: bool,
     setup_custom_script: bool,
@@ -1173,7 +1181,7 @@ def pdf_prep(
             print("Activated custom_pdf_prep_script.py.")
             return
 
-        pdf_prep_operation.main()
+        pdf_prep_operation.main(batch_size=batch_size)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
