@@ -2473,7 +2473,7 @@ def merge(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Remove records, ... from CoLRev repositories"""
+    """Merge git branches."""
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose
@@ -2487,6 +2487,49 @@ def merge(
 
     merge_operation = review_manager.get_merge_operation()
     merge_operation.main(branch=branch)
+
+
+@main.command(hidden=True, help_priority=34)
+@click.option(
+    "--path",
+    help="Path to the other CoLRev project.",
+    required=False,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def compare(
+    ctx: click.core.Context,
+    path: str,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Compare CoLRev projects."""
+
+    try:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=force, verbose_mode=verbose
+        )
+        compare_operation = review_manager.get_compare_operation()
+
+        compare_operation.main(path=path)
+
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
+        print(exc)
 
 
 @main.command(hidden=True)
