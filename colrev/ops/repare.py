@@ -2,10 +2,12 @@
 """Repare CoLRev projects."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
 if TYPE_CHECKING:
@@ -63,13 +65,18 @@ class Repare(colrev.operation.Operation):
         # This may remove contents if the records file is broken...
         # fix file no longer available
         try:
+            local_index = self.review_manager.get_local_index()
+            pdf_get_operation = self.review_manager.get_pdf_get_operation()
+
             records = self.review_manager.dataset.load_records_dict()
-            for record in records.values():
-                if "file" not in record:
+            for record_dict in records.values():
+                if "file" not in record_dict:
                     continue
-                full_path = self.review_manager.path / Path(record["file"])
+                full_path = self.review_manager.path / Path(record_dict["file"])
+
                 if full_path.is_file():
                     continue
+
                 if Path(str(full_path) + ".pdf").is_file():
                     Path(str(full_path) + ".pdf").rename(full_path)
 
@@ -80,23 +87,52 @@ class Repare(colrev.operation.Operation):
                     for x in parent_dir.glob("*.pdf")
                 ]
                 for same_dir_pdf in same_dir_pdfs:
-                    if record["file"].replace("  ", " ") == str(same_dir_pdf).replace(
-                        "  ", " "
-                    ):
+                    if record_dict["file"].replace("  ", " ") == str(
+                        same_dir_pdf
+                    ).replace("  ", " "):
                         same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
-                        record["file"] = record["file"].replace("  ", " ")
+                        record_dict["file"] = record_dict["file"].replace("  ", " ")
 
-                full_path = self.review_manager.path / Path(record["file"])
+                full_path = self.review_manager.path / Path(record_dict["file"])
+
+                if not full_path.is_file():
+                    # Fix broken symlinks based on local_index
+
+                    if os.path.islink(full_path) and not os.path.exists(full_path):
+                        full_path.unlink()
+
+                    try:
+                        record = colrev.record.Record(data=record_dict)
+                        retrieved_record = local_index.retrieve(
+                            record_dict=record.data, include_file=True
+                        )
+                        if "file" in retrieved_record:
+                            record.update_field(
+                                key="file",
+                                value=str(retrieved_record["file"]),
+                                source="local_index",
+                            )
+                            pdf_get_operation.import_file(record=record)
+                            if "fulltext" in retrieved_record:
+                                del retrieved_record["fulltext"]
+                            self.review_manager.logger.info(
+                                f" fix broken symlink: {record_dict['ID']}"
+                            )
+
+                    except colrev_exceptions.RecordNotInIndexException:
+                        pass
+
                 if full_path.is_file():
                     continue
 
-                record["colrev_status_backup"] = record["colrev_status"]
-                del record["file"]
-                record[
+                record_dict["colrev_status_backup"] = record_dict["colrev_status"]
+                del record_dict["file"]
+                record_dict[
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_included
 
         except AttributeError:
+
             print("Could not read bibtex file")
 
         self.review_manager.dataset.save_records_dict(records=records)

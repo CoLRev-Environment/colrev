@@ -49,6 +49,9 @@ class PDFCoverPage(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by removing coverpages (if any)"""
 
+        if not record.data["file"].endswith(".pdf"):
+            return record.data
+
         local_index = pdf_prep_operation.review_manager.get_local_index()
         cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)

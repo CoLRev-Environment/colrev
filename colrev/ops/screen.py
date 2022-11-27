@@ -242,7 +242,7 @@ class Screen(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def __screen_include_all(self, *, records: dict) -> None:
-        self.review_manager.logger.info("Screen-including all records")
+        self.review_manager.logger.info("Screen: Include all records")
         for record in records.values():
             if record["colrev_status"] == colrev.record.RecordState.pdf_prepared:
                 record["colrev_status"] = colrev.record.RecordState.rev_included

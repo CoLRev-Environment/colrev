@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import dictdiffer
 import pandas as pd
+import pdfminer
 from nameparser import HumanName
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
@@ -868,28 +869,35 @@ class Record:
             key, ""
         ) and "UNKNOWN" != merging_record.data.get(key, ""):
             self.data[key] = merging_record.data[key]
+
+            if key in self.identifying_field_keys:
+                self.add_masterdata_provenance(key=key, source=source)
+            else:
+                self.add_data_provenance(key=key, source=source)
+
         elif "UNKNOWN" == merging_record.data.get(key, "UNKNOWN"):
             pass
-        else:
-            try:
-                if key in self.identifying_field_keys:
-                    source = merging_record.data["colrev_masterdata_provenance"][key][
-                        "source"
-                    ]
-                else:
-                    source = merging_record.data["colrev_data_provenance"][key][
-                        "source"
-                    ]
-            except KeyError:
-                pass
-            if val != str(merging_record.data[key]):
-                self.update_field(
-                    key=key,
-                    value=str(merging_record.data[key]),
-                    source=source,
-                    note=note,
-                )
-            # self.update_field(key=key, value=val, source=source, note=note)
+        # Note : the following is deactivated to avoid frequent changes in merged records
+        # else:
+        #     try:
+        #         if key in self.identifying_field_keys:
+        #             source = merging_record.data["colrev_masterdata_provenance"][key][
+        #                 "source"
+        #             ]
+        #         else:
+        #             source = merging_record.data["colrev_data_provenance"][key][
+        #                 "source"
+        #             ]
+        #     except KeyError:
+        #         pass
+        # if val != str(merging_record.data[key]):
+        #     self.update_field(
+        #         key=key,
+        #         value=str(merging_record.data[key]),
+        #         source=source,
+        #         note=note,
+        #     )
+        # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
     def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
@@ -1150,6 +1158,7 @@ class Record:
                 md_p_dict[key]["note"] = note
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
+            md_p_dict[key]["source"] = source
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
@@ -1523,6 +1532,11 @@ class Record:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
+
+        # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
+        laparams = pdfminer.layout.LAParams()
+        setattr(laparams, "all_texts", True)
+
         with open(pdf_path, "rb") as pdf_file:
             try:
                 for page in PDFPage.get_pages(
@@ -1533,7 +1547,9 @@ class Record:
                 ):
                     resource_manager = PDFResourceManager()
                     fake_file_handle = io.StringIO()
-                    converter = TextConverter(resource_manager, fake_file_handle)
+                    converter = TextConverter(
+                        resource_manager, fake_file_handle, laparams=laparams
+                    )
                     page_interpreter = PDFPageInterpreter(resource_manager, converter)
                     page_interpreter.process_page(page)
 
@@ -1572,7 +1588,7 @@ class Record:
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Path
+        self, *, pages: list, project_path: Path, save_to_path: Path = None
     ) -> None:
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data["file"])

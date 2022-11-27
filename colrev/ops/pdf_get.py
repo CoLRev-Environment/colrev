@@ -394,7 +394,7 @@ class PDFGet(colrev.operation.Operation):
                 continue
 
             file = Path(record["file"])
-            new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
+            new_filename = file.parents[0] / Path(f"{record['ID']}{file.suffix}")
             # Possible option: move to top (pdfs) directory:
             # new_filename = self.review_manager.PDF_DIR_RELATIVE / Path(
             #     f"{record['ID']}.pdf"
@@ -404,13 +404,15 @@ class PDFGet(colrev.operation.Operation):
 
             record["file"] = new_filename
 
-            for value in record.get("colrev_masterdata_provenance", {}).values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
+            if "colrev_masterdata_provenance" in record:
+                for value in record["colrev_masterdata_provenance"].values():
+                    if str(file) == value.get("source", ""):
+                        value["source"] = str(new_filename)
 
-            for value in record.get("data_provenance", {}).values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
+            if "data_provenance" in record:
+                for value in record["data_provenance"].values():
+                    if str(file) == value.get("source", ""):
+                        value["source"] = str(new_filename)
 
             if pdfs_search_file.is_file():
                 colrev.env.utils.inplace_change(

@@ -45,6 +45,7 @@ colrev.exceptions
       NotEnoughDataToIdentifyException
       NotTOCIdentifiableException
       OriginError
+      PDFHashError
       ParameterError
       PortAlreadyRegisteredException
       ProcessOrderViolation

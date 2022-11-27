@@ -259,6 +259,9 @@
         "colrev_built_in.pdfs_dir": {
             "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource"
         },
+        "colrev_built_in.video_dir": {
+            "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource"
+        },
         "colrev_built_in.pdf_backward_search": {
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource"
         },

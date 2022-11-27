@@ -52,8 +52,6 @@ class StructuredData(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
-        # gh_issue https://github.com/geritwagner/colrev/issues/79
-        # integrate filename in custom settings
         self.data_path = (
             data_operation.review_manager.path / self.settings.data_path_relative
         )

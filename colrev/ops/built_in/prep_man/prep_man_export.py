@@ -119,6 +119,7 @@ class ExportManPrep(JsonSchemaMixin):
                 load_str=target_bib.read()
             )
 
+        imported_records = []
         records = prep_man_operation.review_manager.dataset.load_records_dict()
         for record_id, record_dict in man_prep_recs.items():
             if record_id not in records:
@@ -127,6 +128,8 @@ class ExportManPrep(JsonSchemaMixin):
             record = colrev.record.PrepRecord(data=record_dict)
             record.update_masterdata_provenance()
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
+                imported_records.append(record.data["ID"])
             for k in list(record.data.keys()):
                 if k in [
                     "colrev_status",
@@ -158,7 +161,7 @@ class ExportManPrep(JsonSchemaMixin):
         prep_man_operation.review_manager.dataset.add_record_changes()
         prep_man_operation.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
 
-        prep_man_operation.review_manager.dataset.set_ids()
+        prep_man_operation.review_manager.dataset.set_ids(selected_ids=imported_records)
         prep_man_operation.review_manager.create_commit(
             msg="Set IDs", script_call="colrev prep", saved_args={}
         )

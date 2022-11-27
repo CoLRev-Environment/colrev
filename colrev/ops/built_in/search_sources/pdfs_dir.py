@@ -356,12 +356,6 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def __fix_filenames(self) -> None:
-        overall_pdfs = self.pdfs_path.glob("**/*.pdf")
-        for pdf in overall_pdfs:
-            if "  " in str(pdf):
-                pdf.rename(str(pdf).replace("  ", " "))
-
     def __skip_broken_filepaths(
         self,
         search_operation: colrev.ops.search.Search,
@@ -461,25 +455,36 @@ class PDFSearchSource(JsonSchemaMixin):
 
         feed_file = self.settings.filename
 
-        self.__fix_filenames()
-
+        # TODO : TBD: this makes sense for curations
+        # (removing records/origins for which PDFs were removed).
+        # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
+        # In these cases, we may simply print a warning instead of modifying/removing records?
         self.__remove_records_if_pdf_no_longer_exists(search_operation=search_operation)
 
         available_ids = {}
         max_id = 1
         if not feed_file.is_file():
-            records = {}
+            pdf_feed_records = {}
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                records = search_operation.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
+                pdf_feed_records = (
+                    search_operation.review_manager.dataset.load_records_dict(
+                        load_str=bibtex_file.read()
+                    )
                 )
 
             available_ids = {
-                x["file"]: x["ID"] for x in records.values() if "file" in x
+                x["file"]: x["ID"] for x in pdf_feed_records.values() if "file" in x
             }
             max_id = (
-                max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
+                max(
+                    [
+                        int(x["ID"])
+                        for x in pdf_feed_records.values()
+                        if x["ID"].isdigit()
+                    ]
+                    + [1]
+                )
                 + 1
             )
 
@@ -490,6 +495,15 @@ class PDFSearchSource(JsonSchemaMixin):
 
         pdfs_to_index = list(
             set(overall_pdfs).difference({Path(x) for x in available_ids})
+        )
+
+        # TODO : add parameter to switch the following on/off:
+        # note: for curations, we want all pdfs indexed/merged separately,
+        # in other projects, it is generally sufficient if the pdf is linked
+        records = search_operation.review_manager.dataset.load_records_dict()
+        linked_pdf_paths = [r["file"] for r in records.values() if "file" in r]
+        pdfs_to_index = list(
+            set(pdfs_to_index).difference({Path(x) for x in linked_pdf_paths})
         )
 
         if search_operation.review_manager.force_mode:  # i.e., reindex all
@@ -516,9 +530,8 @@ class PDFSearchSource(JsonSchemaMixin):
             pdfs_to_index[i * batch_size : (i + 1) * batch_size]
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
-
         for pdf_batch in pdf_batches:
-            for record in records.values():
+            for record in pdf_feed_records.values():
                 record = self.__add_md_string(record_dict=record)
 
             for pdf_path in pdf_batch:
@@ -531,7 +544,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 # Note: identical md_string as a heuristic for duplicates
                 potential_duplicates = [
                     r
-                    for r in records.values()
+                    for r in pdf_feed_records.values()
                     if r["md_string"] == new_record["md_string"]
                     and not r["file"] == new_record["file"]
                 ]
@@ -545,18 +558,18 @@ class PDFSearchSource(JsonSchemaMixin):
 
                 if new_record["file"] in available_ids:
                     new_record["ID"] = available_ids[new_record["file"]]
-                    records[available_ids[new_record["file"]]] = new_record
+                    pdf_feed_records[available_ids[new_record["file"]]] = new_record
                 else:
                     new_record["ID"] = f"{max_id}".rjust(10, "0")
                     max_id += 1
-                    records[new_record["ID"]] = new_record
+                    pdf_feed_records[new_record["ID"]] = new_record
 
-            for record in records.values():
+            for record in pdf_feed_records.values():
                 record.pop("md_string")
 
-            if len(records) > 0:
+            if len(pdf_feed_records) > 0:
                 search_operation.save_feed_file(
-                    records=records, feed_file=self.settings.filename
+                    records=pdf_feed_records, feed_file=self.settings.filename
                 )
 
     @classmethod
@@ -591,6 +604,9 @@ class PDFSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
+
+        # TODO : if curated_repo, load journal/booktitle
+        # from data package (in init() and compare in the following)
 
         # Typical error in old papers: title fields are equal to journal/booktitle fields
         if record.data.get("title", "no_title").lower() == record.data.get(

@@ -47,15 +47,17 @@ class TEIPDFPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
 
-        if "file" in record.data:
-            if not record.get_tei_filename().is_file():
-                pdf_prep_operation.review_manager.logger.debug(
-                    f" creating tei: {record.data['ID']}"
-                )
-                _ = pdf_prep_operation.review_manager.get_tei(
-                    pdf_path=Path(record.data["file"]),
-                    tei_path=record.get_tei_filename(),
-                )
+        if not record.data["file"].endswith(".pdf"):
+            return record.data
+
+        if not record.get_tei_filename().is_file():
+            pdf_prep_operation.review_manager.logger.debug(
+                f" creating tei: {record.data['ID']}"
+            )
+            _ = pdf_prep_operation.review_manager.get_tei(
+                pdf_path=Path(record.data["file"]),
+                tei_path=record.get_tei_filename(),
+            )
 
         return record.data
 

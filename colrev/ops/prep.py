@@ -437,7 +437,7 @@ class Prep(colrev.operation.Operation):
                     old_string=old_filename,
                     new_string=str(new_filename),
                 )
-            self.review_manager.dataset.add_changes(path=pdfs_origin_file)
+                self.review_manager.dataset.add_changes(path=pdfs_origin_file)
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -602,8 +602,6 @@ class Prep(colrev.operation.Operation):
                 original_records = [
                     orec for orec in original_records if orec["ID"] not in retrieved
                 ]
-            if len(original_records) == 0:
-                break
 
         return prior_records
 

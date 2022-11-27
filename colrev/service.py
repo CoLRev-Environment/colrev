@@ -259,7 +259,7 @@ class Service:
             pdf_get_operation.main()
 
             pdf_preparation_operation = self.review_manager.get_pdf_prep_operation()
-            pdf_preparation_operation.main()
+            pdf_preparation_operation.main(batch_size=0)
 
         elif "colrev screen" == item["cmd"]:
 

@@ -306,14 +306,21 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> typing.Dict[str, typing.Dict]:
 
         search_operation.review_manager.logger.debug(f"Retrieve year {year}")
+
         __api_url = "https://dblp.org/search/publ/api?q="
 
-        query = (
-            self.settings.search_parameters["scope"]["journal_abbreviated"]
-            + "+"
-            + str(year)
-        )
-        # query = params['scope']["venue_key"] + "+" + str(year)
+        if "scope" in self.settings.search_parameters:
+
+            query = (
+                __api_url
+                + self.settings.search_parameters["scope"]["journal_abbreviated"]
+                + "+"
+                + str(year)
+            )
+            # query = params['scope']["venue_key"] + "+" + str(year)
+        elif "query" in self.settings.search_parameters:
+
+            query = self.settings.search_parameters["query"] + "+" + str(year)
 
         available_ids = [
             x["dblp_key"] for x in records_dict.values() if "dblp_key" in x
@@ -329,8 +336,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         batch_size = 250
         while True:
             url = (
-                __api_url
-                + query.replace(" ", "+")
+                query.replace(" ", "+")
                 + f"&format=json&h={batch_size}&f={nr_retrieved}"
             )
             nr_retrieved += batch_size
@@ -347,11 +353,12 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 retrieved = True
 
-                if (
-                    f"{self.settings.search_parameters['scope']['venue_key']}/"
-                    not in retrieved_record.data["dblp_key"]
-                ):
-                    continue
+                if "scope" in self.settings.search_parameters:
+                    if (
+                        f"{self.settings.search_parameters['scope']['venue_key']}/"
+                        not in retrieved_record.data["dblp_key"]
+                    ):
+                        continue
 
                 if retrieved_record.data["dblp_key"] not in available_ids:
                     retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
@@ -391,17 +398,20 @@ class DBLPSearchSource(JsonSchemaMixin):
             )
 
         # maybe : validate/assert that the venue_key is available
-        if "scope" not in source.search_parameters:
+        if "scope" in source.search_parameters:
+            if "venue_key" not in source.search_parameters["scope"]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "venue_key required in search_parameters/scope"
+                )
+            if "journal_abbreviated" not in source.search_parameters["scope"]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "journal_abbreviated required in search_parameters/scope"
+                )
+        elif "query" in source.search_parameters:
+            pass
+        else:
             raise colrev_exceptions.InvalidQueryException(
-                "scope required in search_parameters"
-            )
-        if "venue_key" not in source.search_parameters["scope"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "venue_key required in search_parameters/scope"
-            )
-        if "journal_abbreviated" not in source.search_parameters["scope"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "journal_abbreviated required in search_parameters/scope"
+                "scope or query required in search_parameters"
             )
 
         search_operation.review_manager.logger.debug(

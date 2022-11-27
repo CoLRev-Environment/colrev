@@ -11,6 +11,7 @@ from dictdiffer import diff
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -535,13 +536,27 @@ class Corrections:
             review_manager=check_review_manager
         )
 
+        if check_review_manager.dataset.behind_remote():
+            git_repo = check_review_manager.dataset.get_repo()
+            origin = git_repo.remotes.origin
+            self.review_manager.logger.info(
+                f"Pull project changes from {git_repo.remotes.origin}"
+            )
+            res = origin.pull()
+            self.review_manager.logger.info(res)
+
         try:
             if not self.__apply_corrections_precondition(
                 check_operation=check_operation, source_url=source_url
             ):
                 return
-        except colrev_exceptions.CorrectionPreconditionException:
+        except colrev_exceptions.CorrectionPreconditionException as exc:
+            print(exc)
             return
+
+        check_review_manager.logger.info(
+            "Precondition for correction (pull-request) checked."
+        )
 
         # pylint: disable=duplicate-code
         self.essential_md_keys = [
@@ -566,8 +581,8 @@ class Corrections:
         )
 
         print(
-            "\nThank you for supporting other researchers "
-            "by sharing your corrections ❤\n"
+            f"\n{colors.GREEN}Thank you for supporting other researchers "
+            f"by sharing your corrections ❤{colors.END}\n"
         )
 
 

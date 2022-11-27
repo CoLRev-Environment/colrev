@@ -76,6 +76,7 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             "issue information",
             "keyword index",
             "about the authors",
+            "thanks to reviewers",
         ]
         # TODO : allow users to override the default lists (based on settings)
 

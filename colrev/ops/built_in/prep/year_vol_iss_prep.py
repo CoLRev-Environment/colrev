@@ -72,9 +72,13 @@ class YearVolIssPrep(JsonSchemaMixin):
             if "number" not in record:
                 vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
             else:
-                vol_nr_dict[record["journal"]][record["volume"]][
-                    record["number"]
-                ] = record["year"]
+                if isinstance(vol_nr_dict[record["journal"]][record["volume"]], dict):
+                    vol_nr_dict[record["journal"]][record["volume"]][
+                        record["number"]
+                    ] = record["year"]
+                else:
+                    # do not use inconsistent data (has/has no number)
+                    del vol_nr_dict[record["journal"]][record["volume"]]
 
         self.vol_nr_dict = vol_nr_dict
 

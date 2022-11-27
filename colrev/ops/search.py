@@ -68,7 +68,32 @@ class Search(colrev.operation.Operation):
         """Add a new source"""
 
         saved_args = {"add": f'"{query}"'}
-        query_dict = json.loads(query)
+        if "pdfs" == query:
+            query_dict = {
+                "endpoint": "colrev_built_in.pdfs_dir",
+                "filename": "pdfs.bib",
+                "search_type": "PDFS",
+                "source_identifier": "{{file}}",
+                "search_parameters": {"scope": {"path": "data/pdfs"}},
+                "load_conversion_package_endpoint": {
+                    "endpoint": "colrev_built_in.bibtex"
+                },
+                "comment": "",
+            }
+        elif "dblp.org/search" in query:
+            query_dict = {
+                "endpoint": "colrev_built_in.dblp",
+                "filename": "dblp.bib",
+                "search_type": "DB",
+                "source_identifier": "{{dblp_key}}",
+                "search_parameters": {"query": query},
+                "load_conversion_package_endpoint": {
+                    "endpoint": "colrev_built_in.bibtex"
+                },
+                "comment": "",
+            }
+        else:
+            query_dict = json.loads(query)
 
         assert "endpoint" in query_dict
 

@@ -64,22 +64,14 @@ class UnknownSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
+        # Note : source_identifier is not restricted
 
-        if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
-            )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
+        if "query_file" in source.search_parameters:
+            if not Path(source.search_parameters["query_file"]).is_file():
+                raise colrev_exceptions.InvalidQueryException(
+                    f"File does not exist: query_file {source.search_parameters['query_file']} "
+                    f"for ({source.filename})"
+                )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"

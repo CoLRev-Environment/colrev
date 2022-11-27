@@ -43,6 +43,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.transport_research_international_documentation
    colrev.ops.built_in.search_sources.unknown_source
    colrev.ops.built_in.search_sources.utils
+   colrev.ops.built_in.search_sources.video_dir
    colrev.ops.built_in.search_sources.web_of_science
    colrev.ops.built_in.search_sources.website
    colrev.ops.built_in.search_sources.wiley

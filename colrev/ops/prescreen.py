@@ -66,6 +66,54 @@ class Prescreen(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         endpoint.run_prescreen(self, records, [])
 
+    def include_records(self, *, ids: str) -> None:
+        """Include records in the prescreen"""
+
+        self.__prescreen_records(ids=ids, include=True)
+
+    def exclude_records(self, *, ids: str) -> None:
+        """Exclude records in the prescreen"""
+
+        self.__prescreen_records(ids=ids, include=False)
+
+    def __prescreen_records(self, *, ids: str, include: bool) -> None:
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record_id in ids.split(","):
+            if record_id not in records:
+                self.review_manager.logger.info(f" not found: {record_id}")
+                continue
+            record = records[record_id]
+            if (
+                record["colrev_status"] != colrev.record.RecordState.md_processed
+                and not self.review_manager.force_mode
+            ):
+                self.review_manager.logger.info(
+                    f" record not md_processed / cannot prescreen: {record_id}"
+                )
+                continue
+            if include:
+                record[
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_included
+            else:
+                record[
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_excluded
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
+        msg = f"Pre-screen (exclude {ids})"
+        if include:
+            msg = f"Pre-screen (include {ids})"
+
+        self.review_manager.create_commit(
+            msg=msg,
+            manual_author=False,
+            script_call="colrev prescreen",
+        )
+
     def get_data(self) -> dict:
         """Get the data for prescreen"""
 

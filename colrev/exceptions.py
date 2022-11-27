@@ -351,6 +351,14 @@ class InvalidPDFException(CoLRevException):
         super().__init__(self.message)
 
 
+class PDFHashError(CoLRevException):
+    """An error occurred during PDF hashing."""
+
+    def __init__(self, path: Path) -> None:
+        self.message = f"Error during PDF hashing: {path}"
+        super().__init__(self.message)
+
+
 # Environment services
 
 
