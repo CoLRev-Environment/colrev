@@ -1603,7 +1603,8 @@ class Record:
 
         if save_to_path:
             writer_cp = PdfFileWriter()
-            writer_cp.addPage(pdf_reader.getPage(0))
+            for page in pages:
+                writer_cp.addPage(pdf_reader.getPage(page))
             filepath = Path(pdf_path)
             with open(save_to_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)

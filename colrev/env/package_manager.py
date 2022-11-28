@@ -19,6 +19,7 @@ from zope.interface.verify import verifyObject
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+import colrev.settings
 
 
 class PackageEndpointType(Enum):
@@ -278,7 +279,7 @@ class DefaultSettings(JsonSchemaMixin):
 
 
 @dataclass
-class DefaultSourceSettings(JsonSchemaMixin):
+class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     """Search source settings"""
 
     # pylint: disable=duplicate-code

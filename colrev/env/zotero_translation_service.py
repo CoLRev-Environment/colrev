@@ -45,7 +45,7 @@ class ZoteroTranslationService:
 
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                f"Docker service not available ({exc}). Please install/start Docker."
+                dep="Zotero (Docker)", detailed_trace=exc
             ) from exc
 
         if startup_without_waiting:

@@ -50,7 +50,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record based on Crossref metadata"""
 
-        crossref_source = crossref_connector.CrossrefSourceSearchSource(
+        crossref_source = crossref_connector.CrossrefSearchSource(
             source_operation=prep_operation
         )
         crossref_source.get_masterdata_from_crossref(

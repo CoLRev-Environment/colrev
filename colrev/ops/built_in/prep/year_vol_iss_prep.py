@@ -161,7 +161,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         else:
             return record
 
-        crossref_source = crossref_connector.CrossrefSourceSearchSource(
+        crossref_source = crossref_connector.CrossrefSearchSource(
             source_operation=prep_operation
         )
         try:

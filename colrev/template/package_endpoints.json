@@ -227,7 +227,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource"
         },
         "colrev_built_in.crossref": {
-            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSourceSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource"
         },
         "colrev_built_in.dblp": {
             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource"

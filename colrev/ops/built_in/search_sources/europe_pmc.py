@@ -22,6 +22,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.settings
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -45,7 +46,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     search_type = colrev.settings.SearchType.DB
 
     @dataclass
-    class EuropePMCSearchSourceSettings(JsonSchemaMixin):
+    class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
         """Settings for EuropePMCSearchSource"""
 
         # pylint: disable=duplicate-code

@@ -373,9 +373,10 @@ class MissingDependencyError(CoLRevException):
 class ServiceNotAvailableException(CoLRevException):
     """An environment service is not available."""
 
-    def __init__(self, msg: str) -> None:
-        self.message = msg
-        super().__init__(f"Service not available: {self.message}")
+    def __init__(self, dep: str, detailed_trace: str = "") -> None:
+        self.dep = dep
+        self.detailed_trace = detailed_trace
+        super().__init__(f"Service not available: {self.dep}")
 
 
 class PortAlreadyRegisteredException(CoLRevException):

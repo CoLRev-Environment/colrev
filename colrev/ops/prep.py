@@ -15,6 +15,7 @@ import timeout_decorator
 from requests.exceptions import ReadTimeout
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.built_in.search_sources.dblp as dblp_connector
@@ -133,9 +134,7 @@ class Prep(colrev.operation.Operation):
         # The following could become default methods for the PreparationInterface
 
         self.review_manager.logger.info("Check availability of connectors...")
-        crossref_source = crossref_connector.CrossrefSourceSearchSource(
-            source_operation=self
-        )
+        crossref_source = crossref_connector.CrossrefSearchSource(source_operation=self)
         crossref_source.check_status(prep_operation=self)
         self.review_manager.logger.info("CrossrefConnector available")
         dblp_source = dblp_connector.DBLPSearchSource(source_operation=self)
@@ -244,6 +243,11 @@ class Prep(colrev.operation.Operation):
                 self.review_manager.logger.error(
                     f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
                 )
+            except colrev_exceptions.ServiceNotAvailableException as exc:
+                if self.review_manager.force_mode:
+                    self.review_manager.logger.error(exc)
+                else:
+                    raise exc
 
         if not self.review_manager.verbose_mode:
 

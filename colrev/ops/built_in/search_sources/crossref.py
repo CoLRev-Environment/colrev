@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class CrossrefSourceSearchSource(JsonSchemaMixin):
+class CrossrefSearchSource(JsonSchemaMixin):
     """Performs a search using the Crossref API"""
 
     __issn_regex = r"^\d{4}-?\d{3}[\dxX]$"

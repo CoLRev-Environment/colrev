@@ -124,6 +124,17 @@ class PDFLastPage(JsonSchemaMixin):
             ):
                 last_pages.append(last_page_nr - 1)
 
+            # CAIS last page / editorial board
+            if all(
+                x in last_page_text
+                for x in [
+                    "caisadvisoryboard",
+                    "caiseditorialboard",
+                    "caissenioreditors",
+                ]
+            ):
+                last_pages.append(last_page_nr - 1)
+
             return list(set(last_pages))
 
         last_pages = __get_last_pages(pdf=record.data["file"])

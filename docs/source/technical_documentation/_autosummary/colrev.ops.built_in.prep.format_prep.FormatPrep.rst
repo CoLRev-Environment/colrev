@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.format\_prep.FormatPrep
    .. autosummary::
 
       ~FormatPrep.always_apply_changes
+      ~FormatPrep.edit_source
       ~FormatPrep.source_correction_hint

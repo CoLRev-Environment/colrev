@@ -69,82 +69,93 @@ class Search(colrev.operation.Operation):
 
         saved_args = {"add": f'"{query}"'}
         if "pdfs" == query:
-            query_dict = {
-                "endpoint": "colrev_built_in.pdfs_dir",
-                "filename": "pdfs.bib",
-                "search_type": "PDFS",
-                "source_identifier": "{{file}}",
-                "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "load_conversion_package_endpoint": {
-                    "endpoint": "colrev_built_in.bibtex"
-                },
-                "comment": "",
-            }
-        elif "dblp.org/search" in query:
-            query_dict = {
-                "endpoint": "colrev_built_in.dblp",
-                "filename": "dblp.bib",
-                "search_type": "DB",
-                "source_identifier": "{{dblp_key}}",
-                "search_parameters": {"query": query},
-                "load_conversion_package_endpoint": {
-                    "endpoint": "colrev_built_in.bibtex"
-                },
-                "comment": "",
-            }
+            filename = "data/search/pdfs.bib"
+            add_source = colrev.settings.SearchSource(
+                {
+                    "endpoint": "colrev_built_in.pdfs_dir",
+                    "filename": filename,
+                    "search_type": "PDFS",
+                    "source_identifier": "{{file}}",
+                    "search_parameters": {"scope": {"path": "data/pdfs"}},
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    "comment": "",
+                }
+            )
+        elif "https://dblp.org/search?q=" in query:
+            query = query.replace(
+                "https://dblp.org/search?q=", "https://dblp.org/search/publ/api?q="
+            )
+            filename = "data/search/dblp.bib"
+            add_source = colrev.settings.SearchSource(
+                **{
+                    "endpoint": "colrev_built_in.dblp",
+                    "filename": filename,
+                    "search_type": "DB",
+                    "source_identifier": "{{dblp_key}}",
+                    "search_parameters": {"query": query},
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    "comment": "",
+                }
+            )
         else:
             query_dict = json.loads(query)
 
-        assert "endpoint" in query_dict
+            assert "endpoint" in query_dict
 
-        if "filename" in query_dict:
-            filename = query_dict["filename"]
-        else:
-            filename = f"{query_dict['endpoint']}.bib"
-            i = 0
-            while filename in [x.filename for x in self.sources]:
-                i += 1
-                filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
-        feed_file_path = self.review_manager.path / Path(filename)
-        assert not feed_file_path.is_file()
-        query_dict["filename"] = feed_file_path
+            if "filename" in query_dict:
+                filename = query_dict["filename"]
+            else:
+                filename = f"{query_dict['endpoint']}.bib"
+                i = 0
+                while filename in [x.filename for x in self.sources]:
+                    i += 1
+                    filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
+            feed_file_path = self.review_manager.path / Path(filename)
+            assert not feed_file_path.is_file()
+            query_dict["filename"] = feed_file_path
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/68
-        # get search_type/source_identifier from the SearchSource
-        # query validation based on ops.built_in.search_source settings
-        # prevent duplicate sources (same endpoint and search_parameters)
-        if "search_type" not in query_dict:
-            query_dict["search_type"] = colrev.settings.SearchType.DB
-        else:
-            query_dict["search_type"] = colrev.settings.SearchType[
-                query_dict["search_type"]
-            ]
-        if "source_identifier" not in query_dict:
-            query_dict["source_identifier"] = "TODO"
+            # gh_issue https://github.com/geritwagner/colrev/issues/68
+            # get search_type/source_identifier from the SearchSource
+            # query validation based on ops.built_in.search_source settings
+            # prevent duplicate sources (same endpoint and search_parameters)
+            if "search_type" not in query_dict:
+                query_dict["search_type"] = colrev.settings.SearchType.DB
+            else:
+                query_dict["search_type"] = colrev.settings.SearchType[
+                    query_dict["search_type"]
+                ]
+            if "source_identifier" not in query_dict:
+                query_dict["source_identifier"] = "TODO"
 
-        if "load_conversion_package_endpoint" not in query_dict:
-            query_dict["load_conversion_package_endpoint"] = {"endpoint": "bibtex"}
-        if query_dict["search_type"] == colrev.settings.SearchType.DB:
-            feed_config = self.__get_feed_config(query_dict=query_dict)
-            query_dict["source_identifier"] = feed_config["source_identifier"]
-            query_dict["load_conversion_package_endpoint"] = feed_config[
-                "load_conversion_package_endpoint"
-            ]
+            if "load_conversion_package_endpoint" not in query_dict:
+                query_dict["load_conversion_package_endpoint"] = {
+                    "endpoint": "colrev_built_in.bibtex"
+                }
+            if query_dict["search_type"] == colrev.settings.SearchType.DB:
+                feed_config = self.__get_feed_config(query_dict=query_dict)
+                query_dict["source_identifier"] = feed_config["source_identifier"]
+                query_dict["load_conversion_package_endpoint"] = feed_config[
+                    "load_conversion_package_endpoint"
+                ]
 
-        # NOTE: for now, the parameters are limited to whole journals.
-        add_source = colrev.settings.SearchSource(
-            endpoint=query_dict["endpoint"],
-            filename=Path(
-                f"data/search/{filename}",
-            ),
-            search_type=colrev.settings.SearchType(query_dict["search_type"]),
-            source_identifier=query_dict["source_identifier"],
-            search_parameters=query_dict.get("search_parameters", {}),
-            load_conversion_package_endpoint=query_dict[
-                "load_conversion_package_endpoint"
-            ],
-            comment="",
-        )
+            # NOTE: for now, the parameters are limited to whole journals.
+            add_source = colrev.settings.SearchSource(
+                endpoint=query_dict["endpoint"],
+                filename=Path(
+                    f"data/search/{filename}",
+                ),
+                search_type=colrev.settings.SearchType(query_dict["search_type"]),
+                source_identifier=query_dict["source_identifier"],
+                search_parameters=query_dict.get("search_parameters", {}),
+                load_conversion_package_endpoint=query_dict[
+                    "load_conversion_package_endpoint"
+                ],
+                comment="",
+            )
 
         package_manager = self.review_manager.get_package_manager()
         endpoint_dict = package_manager.load_packages(

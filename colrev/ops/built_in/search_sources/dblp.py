@@ -21,8 +21,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.settings
 import colrev.ui_cli.cli_colors as colors
-
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -46,7 +46,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     search_type = colrev.settings.SearchType.DB
 
     @dataclass
-    class DBLPSearchSourceSettings(JsonSchemaMixin):
+    class DBLPSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
         """Settings for DBLPSearchSource"""
 
         # pylint: disable=duplicate-code
@@ -408,7 +408,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                     "journal_abbreviated required in search_parameters/scope"
                 )
         elif "query" in source.search_parameters:
-            pass
+            assert source.search_parameters["query"].startswith(
+                "https://dblp.org/search/publ/api?q="
+            )
         else:
             raise colrev_exceptions.InvalidQueryException(
                 "scope or query required in search_parameters"
