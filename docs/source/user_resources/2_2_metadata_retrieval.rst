@@ -1,6 +1,6 @@
 .. _Metadata retrieval:
 
-Metadata retrieval
+Step 2: Metadata retrieval
 ---------------------------------------------
 
 TODO
@@ -10,6 +10,13 @@ TODO
 - Explain state intermediate transitions
 - Mention that more detailed commands (prep, prep-man, ...) will be suggested if colrev retrieve does not result in all records transitioning to md_processed
 
-Consists of `search <2_2_1_metadata_retrieval_search.html>`_, `load <2_2_2_metadata_retrieval_load.html>`_, `prep <2_2_3_metadata_retrieval_prep.html>`_, `dedupe <2_2_4_metadata_retrieval_dedupe.html>`_.
-
 colrev retrieve
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Operations
+
+   2_2_metadata_retrieval/search
+   2_2_metadata_retrieval/load
+   2_2_metadata_retrieval/prep
+   2_2_metadata_retrieval/dedupe

@@ -2,7 +2,7 @@
 
 .. _Init:
 
-Problem formulation - init
+colrev init
 -------------------------------
 
 

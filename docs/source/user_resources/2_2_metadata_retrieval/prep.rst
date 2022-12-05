@@ -1,6 +1,6 @@
 .. _Prepare:
 
-Metadata retrieval - prep
+colrev prep
 ==================================
 
 TODO

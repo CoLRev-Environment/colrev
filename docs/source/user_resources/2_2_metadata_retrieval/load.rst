@@ -1,6 +1,6 @@
 .. Load:
 
-Metadata retrieval - load
+colrev load
 ==================================
 
 :program:`colrev load` loads search results as follows:

@@ -1,6 +1,6 @@
 .. _Search:
 
-Metadata retrieval - search
+colrev search
 ==================================
 
 :program:`colrev search` retrieves search results from

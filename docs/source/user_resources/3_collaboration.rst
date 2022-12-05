@@ -1,5 +1,5 @@
 
-3. Collaboration
+Collaboration
 ==================================
 
 TODO

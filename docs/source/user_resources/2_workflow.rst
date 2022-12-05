@@ -1,5 +1,5 @@
 
-1. Workflow
+Workflow
 ==================================
 
 This chapter will teach you how to use the CoLRev workflow.

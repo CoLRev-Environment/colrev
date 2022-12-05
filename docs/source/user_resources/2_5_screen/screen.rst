@@ -1,7 +1,7 @@
 
 .. _PDF screen:
 
-Fulltext screen - screen
+colrev screen
 ---------------------------------------------
 
 :program:`colrev screen` supports interactive screening based on a list of exclusion criteria

@@ -1,7 +1,7 @@
 
 .. _Metadata prescreen:
 
-Metadata prescreen - prescreen
+colrev prescreen
 ---------------------------------------------
 
 TODO

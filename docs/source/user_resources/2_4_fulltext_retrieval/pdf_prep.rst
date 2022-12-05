@@ -1,6 +1,6 @@
 .. _PDF prep:
 
-Fulltext retrieval - pdf-prep
+colrev pdf-prep
 ==================================
 
 :program:`colrev pdf-prep` prepares PDFs for the screen and analysis as follows:

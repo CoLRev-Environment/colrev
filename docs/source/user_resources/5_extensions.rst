@@ -1,5 +1,5 @@
 
-5. Extension
+Extension
 ==================================
 
 Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_. Guidelines on extension development and a few examples are summarized below.

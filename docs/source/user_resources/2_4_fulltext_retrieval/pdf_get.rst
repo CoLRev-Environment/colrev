@@ -1,6 +1,6 @@
 .. _PDF get:
 
-Fulltext retrieval - pdf-get
+colrev pdf-get
 ==================================
 
 :program:`colrev pdf-get` retrieves PDFs based on

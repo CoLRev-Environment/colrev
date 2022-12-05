@@ -57,9 +57,21 @@ CoLRev relies on several fixed-version dependencies for reproducibility and venv
    :maxdepth: 2
    :caption: Overview
 
-   manual/1_workflow
+   manual/1_operations
 
-   manual/2_operations
+   manual/2_workflow
+
+   manual/2_1_problem_formulation
+
+   manual/2_2_metadata_retrieval
+
+   manual/2_3_metadata_prescreen
+
+   manual/2_3_metadata_prescreen
+
+   manual/2_5_screen
+
+   manual/2_6_data
 
    manual/3_collaboration
 

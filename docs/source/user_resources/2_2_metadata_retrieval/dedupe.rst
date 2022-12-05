@@ -1,6 +1,6 @@
 .. _Dedupe:
 
-Metadata retrieval - dedupe
+colrev dedupe
 ==================================
 
 TODO
