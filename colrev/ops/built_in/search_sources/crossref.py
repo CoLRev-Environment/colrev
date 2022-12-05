@@ -653,12 +653,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             if nr_changed > 0:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} "
-                    f"records based on Crossref{colors.END}"
+                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
                 )
             else:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Records up-to-date with Crossref{colors.END}"
+                    f"{colors.GREEN}Records up-to-date{colors.END}"
                 )
 
             crossref_feed.save_feed_file()

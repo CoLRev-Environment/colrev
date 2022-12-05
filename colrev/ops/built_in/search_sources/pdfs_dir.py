@@ -491,6 +491,7 @@ class PDFSearchSource(JsonSchemaMixin):
             pdfs_to_index[i * batch_size : (i + 1) * batch_size]
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
+        nr_added, nr_changed = 0, 0
         for pdf_batch in pdf_batches:
 
             for record in pdfs_dir_feed.feed_records.values():
@@ -507,6 +508,13 @@ class PDFSearchSource(JsonSchemaMixin):
                 else:
                     if pdf_path in linked_pdf_paths:
                         # Otherwise: skip linked PDFs
+                        continue
+
+                    if pdf_path in [
+                        Path(r["file"])
+                        for r in pdfs_dir_feed.feed_records.values()
+                        if "file" in r
+                    ]:
                         continue
 
                 new_record = self.__index_pdf(
@@ -531,14 +539,53 @@ class PDFSearchSource(JsonSchemaMixin):
                     continue
 
                 pdfs_dir_feed.set_id(record_dict=new_record)
-                pdfs_dir_feed.add_record(
+
+                prev_record_dict_version = {}
+                if new_record["ID"] in pdfs_dir_feed.feed_records:
+                    prev_record_dict_version = pdfs_dir_feed.feed_records[
+                        new_record["ID"]
+                    ]
+
+                added = pdfs_dir_feed.add_record(
                     record=colrev.record.Record(data=new_record),
                 )
+                if added:
+                    nr_added += 1
+
+                elif self.review_manager.force_mode:
+                    # Note : only re-index/update
+                    changed = search_operation.update_existing_record(
+                        records=records,
+                        record_dict=new_record,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                    )
+                    if changed:
+                        nr_changed += 1
 
             for record in pdfs_dir_feed.feed_records.values():
                 record.pop("md_string")
 
             pdfs_dir_feed.save_feed_file()
+
+        if nr_added > 0:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+            )
+        else:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if self.review_manager.force_mode:
+            if nr_changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                )
+            else:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records up-to-date{colors.END}"
+                )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
