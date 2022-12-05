@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from multiprocessing import Lock
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
+import zope.interface
+from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
-
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -21,11 +27,59 @@ if TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 
 
-class OpenLibraryConnector:
-    """Connector for the OpenLibrary API"""
+@zope.interface.implementer(
+    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+)
+@dataclass
+class OpenLibrarySearchSource(JsonSchemaMixin):
+    """SearchSource for the OpenLibrary API"""
 
-    @classmethod
-    def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
+
+    source_identifier = "{{isbn}}"
+    search_type = colrev.settings.SearchType.DB
+    __open_library_md_filename = Path("data/search/md_open_library.bib")
+
+    def __init__(
+        self, *, source_operation: colrev.operation.Operation, settings: dict = None
+    ) -> None:
+
+        if settings:
+            # OpenLibrary as a search_source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+
+        else:
+            # OpenLibrary as an md-prep source
+            open_library_md_source_l = [
+                s
+                for s in source_operation.review_manager.settings.sources
+                if s.filename == self.__open_library_md_filename
+            ]
+            if open_library_md_source_l:
+                self.search_source = open_library_md_source_l[0]
+            else:
+                self.search_source = colrev.settings.SearchSource(
+                    endpoint="colrev_built_in.open_library",
+                    filename=self.__open_library_md_filename,
+                    search_type=colrev.settings.SearchType.OTHER,
+                    source_identifier=self.source_identifier,
+                    search_parameters={},
+                    load_conversion_package_endpoint={
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    comment="",
+                )
+
+            self.open_library_lock = Lock()
+
+        self.origin_prefix = self.search_source.get_origin_prefix()
+        self.review_manager = source_operation.review_manager
+
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
         """Check the status (availability) of the OpenLibrary API"""
 
         test_rec = {
@@ -38,16 +92,20 @@ class OpenLibraryConnector:
         }
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
+            requests_headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+            }
             ret = requests.get(
                 url,
-                headers=prep_operation.requests_headers,
-                timeout=prep_operation.timeout,
+                headers=requests_headers,
+                timeout=20,
             )
             if ret.status_code != 200:
-                if not prep_operation.force_mode:
+                if not source_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException as exc:
-            if not prep_operation.force_mode:
+            if not source_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "OPENLIBRARY"
                 ) from exc
@@ -86,9 +144,79 @@ class OpenLibraryConnector:
         record.add_provenance_all(source=url)
         return record
 
-    @classmethod
+    def __get_record_from_open_library(
+        self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
+    ) -> colrev.record.Record:
+
+        session = prep_operation.review_manager.get_cached_session()
+
+        url = "NA"
+        if "isbn" in record.data:
+            isbn = record.data["isbn"].replace("-", "").replace(" ", "")
+            url = f"https://openlibrary.org/isbn/{isbn}.json"
+            ret = session.request(
+                "GET",
+                url,
+                headers=prep_operation.requests_headers,
+                timeout=prep_operation.timeout,
+            )
+            ret.raise_for_status()
+            # prep_operation.review_manager.logger.debug(url)
+            if '"error": "notfound"' in ret.text:
+                record.remove_field(key="isbn")
+
+            item = json.loads(ret.text)
+
+        else:
+            base_url = "https://openlibrary.org/search.json?"
+            url = ""
+            if record.data.get("author", "NA").split(",")[0]:
+                url = (
+                    base_url
+                    + "&author="
+                    + record.data.get("author", "NA").split(",")[0]
+                )
+            if "inbook" == record.data["ENTRYTYPE"] and "editor" in record.data:
+                if record.data.get("editor", "NA").split(",")[0]:
+                    url = (
+                        base_url
+                        + "&author="
+                        + record.data.get("editor", "NA").split(",")[0]
+                    )
+            if base_url not in url:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+
+            title = record.data.get("title", record.data.get("booktitle", "NA"))
+            if len(title) < 10:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+            if ":" in title:
+                title = title[: title.find(":")]  # To catch sub-titles
+            url = url + "&title=" + title.replace(" ", "+")
+            ret = session.request(
+                "GET",
+                url,
+                headers=prep_operation.requests_headers,
+                timeout=prep_operation.timeout,
+            )
+            ret.raise_for_status()
+            # prep_operation.review_manager.logger.debug(url)
+
+            # if we have an exact match, we don't need to check the similarity
+            if '"numFoundExact": true,' not in ret.text:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+
+            data = json.loads(ret.text)
+            items = data["docs"]
+            if not items:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+            item = items[0]
+
+        retrieved_record = self.__open_library_json_to_record(item=item, url=url)
+
+        return retrieved_record
+
     def get_masterdata_from_open_library(
-        cls,
+        self,
         *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -96,80 +224,40 @@ class OpenLibraryConnector:
     ) -> colrev.record.Record:
         """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
 
-        # pylint: disable=too-many-branches
+        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+            # Already linked to an open-library record
+            return record
+
         try:
 
-            session = prep_operation.review_manager.get_cached_session()
+            retrieved_record = self.__get_record_from_open_library(
+                prep_operation=prep_operation, record=record
+            )
 
-            url = "NA"
-            if "isbn" in record.data:
-                isbn = record.data["isbn"].replace("-", "").replace(" ", "")
-                url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = session.request(
-                    "GET",
-                    url,
-                    headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
-                )
-                ret.raise_for_status()
-                # prep_operation.review_manager.logger.debug(url)
-                if '"error": "notfound"' in ret.text:
-                    record.remove_field(key="isbn")
+            self.open_library_lock.acquire(timeout=60)
+            open_library_feed = connector_utils.GeneralOriginFeed(
+                source_operation=prep_operation,
+                source=self.search_source,
+                feed_file=self.__open_library_md_filename,
+                update_only=False,
+                key="isbn",
+            )
 
-                item = json.loads(ret.text)
+            open_library_feed.set_id(record_dict=retrieved_record.data)
 
-            else:
-                base_url = "https://openlibrary.org/search.json?"
-                url = ""
-                if record.data.get("author", "NA").split(",")[0]:
-                    url = (
-                        base_url
-                        + "&author="
-                        + record.data.get("author", "NA").split(",")[0]
-                    )
-                if "inbook" == record.data["ENTRYTYPE"] and "editor" in record.data:
-                    if record.data.get("editor", "NA").split(",")[0]:
-                        url = (
-                            base_url
-                            + "&author="
-                            + record.data.get("editor", "NA").split(",")[0]
-                        )
-                if base_url not in url:
-                    return record
+            open_library_feed.add_record(record=retrieved_record)
 
-                title = record.data.get("title", record.data.get("booktitle", "NA"))
-                if len(title) < 10:
-                    return record
-                if ":" in title:
-                    title = title[: title.find(":")]  # To catch sub-titles
-                url = url + "&title=" + title.replace(" ", "+")
-                ret = session.request(
-                    "GET",
-                    url,
-                    headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
-                )
-                ret.raise_for_status()
-                # prep_operation.review_manager.logger.debug(url)
+            record.merge(
+                merging_record=retrieved_record,
+                default_source=retrieved_record.data["colrev_origin"][0],
+            )
+            open_library_feed.save_feed_file()
+            self.open_library_lock.release()
 
-                # if we have an exact match, we don't need to check the similarity
-                if '"numFoundExact": true,' not in ret.text:
-                    return record
-
-                data = json.loads(ret.text)
-                items = data["docs"]
-                if not items:
-                    return record
-                item = items[0]
-
-            retrieved_record = cls.__open_library_json_to_record(item=item, url=url)
-
-            record.merge(merging_record=retrieved_record, default_source=url)
-
-            # if "title" in record.data and "booktitle" in record.data:
-            #     record.remove_field(key="booktitle")
-
-        except requests.exceptions.RequestException:
+        except (
+            requests.exceptions.RequestException,
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+        ):
             pass
         except UnicodeEncodeError:
             prep_operation.review_manager.logger.error(

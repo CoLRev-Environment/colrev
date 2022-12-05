@@ -591,7 +591,7 @@ class LocalIndex:
 
         return record
 
-    def __prep_record_for_return(
+    def __prepare_record_for_return(
         self,
         *,
         record_dict: dict,
@@ -644,6 +644,13 @@ class LocalIndex:
 
         record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
 
+        identifier_string = (
+            record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
+            + "#"
+            + record_dict["ID"]
+        )
+        record_dict["curation_ID"] = identifier_string
+
         return record_dict
 
     def search(self, *, query: dict) -> list[colrev.record.Record]:
@@ -674,7 +681,7 @@ class LocalIndex:
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
                 try:
-                    record_to_import = self.__prep_record_for_return(
+                    record_to_import = self.__prepare_record_for_return(
                         record_dict=record_to_import, include_file=False
                     )
                     records_to_return.append(
@@ -759,6 +766,11 @@ class LocalIndex:
 
         if "colrev_origin" in record_dict:
             del record_dict["colrev_origin"]
+
+        # Note : numbers of citations change regularly.
+        # They should be retrieved from sources like crossref/doi.org
+        if "cited_by" in record_dict:
+            del record_dict["cited_by"]
 
         # Note : file paths should be absolute when added to the LocalIndex
         if "file" in record_dict:
@@ -1119,7 +1131,7 @@ class LocalIndex:
                         id=str(paper_hash),
                     )
                     record_dict = res["_source"]  # type: ignore
-                    return self.__prep_record_for_return(
+                    return self.__prepare_record_for_return(
                         record_dict=record_dict, include_file=include_file
                     )
             except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
@@ -1177,7 +1189,7 @@ class LocalIndex:
         ):
             pass
         if retrieved_record_dict:
-            return self.__prep_record_for_return(
+            return self.__prepare_record_for_return(
                 record_dict=retrieved_record_dict,
                 include_file=include_file,
                 include_colrev_ids=include_colrev_ids,
@@ -1207,7 +1219,7 @@ class LocalIndex:
                 record_dict.get("ID", "no-key")
             )
 
-        return self.__prep_record_for_return(
+        return self.__prepare_record_for_return(
             record_dict=retrieved_record_dict,
             include_file=include_file,
             include_colrev_ids=include_colrev_ids,

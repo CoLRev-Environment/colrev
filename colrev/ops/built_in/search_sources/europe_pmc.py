@@ -20,6 +20,7 @@ from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -72,56 +73,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict = None,
+        settings: dict,
     ) -> None:
 
-        if settings:
-            self.settings = from_dict(data_class=self.settings_class, data=settings)
-
-    def __retrieve_and_append(
-        self,
-        *,
-        search_operation: colrev.ops.search.Search,
-        records_dict: typing.Dict[str, typing.Dict],
-    ) -> typing.Dict[str, typing.Dict]:
-
-        search_operation.review_manager.logger.info(
-            f"Retrieving from Europe PMC: {self.settings.search_parameters['query']}"
-        )
-
-        available_ids = [
-            x["europe_pmc_id"] for x in records_dict.values() if "europe_pmc_id" in x
-        ]
-        max_id = (
-            max(
-                [int(x["ID"]) for x in records_dict.values() if x["ID"].isdigit()] + [1]
-            )
-            + 1
-        )
-
-        record_input = colrev.record.Record(
-            data={"title": self.settings.search_parameters["query"]}
-        )
-
-        for retrieved_record in self.europe_pcmc_query(
-            review_manager=search_operation.review_manager,
-            record_input=record_input,
-            most_similar_only=False,
-        ):
-
-            if "colrev_data_provenance" in retrieved_record.data:
-                del retrieved_record.data["colrev_data_provenance"]
-            if "colrev_masterdata_provenance" in retrieved_record.data:
-                del retrieved_record.data["colrev_masterdata_provenance"]
-
-            if retrieved_record.data["europe_pmc_id"] not in available_ids:
-                retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
-                available_ids.append(retrieved_record.data["europe_pmc_id"])
-
-                records_dict[retrieved_record.data["ID"]] = retrieved_record.data
-                max_id += 1
-
-        return records_dict
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -423,34 +378,44 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of Europe PMC"""
 
         # https://europepmc.org/RestfulWebService
 
         search_operation.review_manager.logger.info(
-            f"Retrieve Europe PMC: {self.settings.search_parameters}"
+            f"Retrieve Europe PMC: {self.search_source.search_parameters}"
         )
 
-        records: list = []
-        if self.settings.filename.is_file():
-            with open(self.settings.filename, encoding="utf8") as bibtex_file:
-                feed_rd = search_operation.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
-                )
-                records = list(feed_rd.values())
+        europe_pmc_feed = connector_utils.GeneralOriginFeed(
+            source_operation=search_operation,
+            source=self.search_source,
+            feed_file=self.search_source.filename,
+            update_only=False,
+            key="europe_pmc_id",
+        )
 
         try:
 
-            records_dict = {r["ID"]: r for r in records}
-            records_dict = self.__retrieve_and_append(
-                search_operation=search_operation,
-                records_dict=records_dict,
-            )
+            for retrieved_record in self.europe_pcmc_query(
+                review_manager=search_operation.review_manager,
+                record_input=colrev.record.Record(
+                    data={"title": self.search_source.search_parameters["query"]}
+                ),
+                most_similar_only=False,
+            ):
 
-            search_operation.save_feed_file(
-                records=records_dict, feed_file=self.settings.filename
-            )
+                if "colrev_data_provenance" in retrieved_record.data:
+                    del retrieved_record.data["colrev_data_provenance"]
+                if "colrev_masterdata_provenance" in retrieved_record.data:
+                    del retrieved_record.data["colrev_masterdata_provenance"]
+
+                europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                europe_pmc_feed.add_record(record=retrieved_record)
+
+            europe_pmc_feed.save_feed_file()
 
         except UnicodeEncodeError:
             print("UnicodeEncodeError - this needs to be fixed at some time")

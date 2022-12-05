@@ -184,7 +184,7 @@ class Service:
             self.review_manager.get_local_index(startup_without_waiting=True)
 
             search_operation = self.review_manager.get_search_operation()
-            search_operation.main()
+            search_operation.main(update_only=False)
 
             load_operation = self.review_manager.get_load_operation()
             new_sources = load_operation.get_new_sources(skip_query=True)
@@ -202,7 +202,7 @@ class Service:
         elif "colrev search" == item["cmd"]:
 
             search_operation = self.review_manager.get_search_operation()
-            search_operation.main(selection_str=None)
+            search_operation.main(selection_str=None, update_only=False)
 
         elif "colrev load" == item["cmd"]:
 

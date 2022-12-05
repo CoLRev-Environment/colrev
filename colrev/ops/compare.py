@@ -33,6 +33,8 @@ class Compare(colrev.operation.Operation):
     def main(self, *, path: str) -> None:
         """Compare a CoLRev project (main entrypoint)"""
 
+        # pylint: disable=too-many-branches
+
         self.review_manager.logger.warning("Compare is not fully implemented.")
 
         other_records = {}
@@ -44,17 +46,17 @@ class Compare(colrev.operation.Operation):
         except colrev_exceptions.CoLRevException:
             # Use the references.bib if path is not a CoLRev project
             references_bib = Path(path) / Path("references.bib")
-            if references_bib.is_file():
-                with open(references_bib, encoding="utf8") as target_db:
-                    other_records = self.review_manager.dataset.load_records_dict(
-                        load_str=target_db.read()
-                    )
-                    for other_record in other_records.values():
-                        other_record[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.rev_synthesized
-            else:
+            if not references_bib.is_file():
                 return
+
+            with open(references_bib, encoding="utf8") as target_db:
+                other_records = self.review_manager.dataset.load_records_dict(
+                    load_str=target_db.read()
+                )
+                for other_record in other_records.values():
+                    other_record[
+                        "colrev_status"
+                    ] = colrev.record.RecordState.rev_synthesized
 
         current_only = str(self.review_manager.path.name)
         other_only = str(Path(path).name)
@@ -88,9 +90,8 @@ class Compare(colrev.operation.Operation):
 
             if record_id not in records:
                 venn_stats[other_only].append(record_id)
-            else:
-                if records[record_id]["colrev_status"] not in included_states:
-                    venn_stats[other_only].append(record_id)
+            elif records[record_id]["colrev_status"] not in included_states:
+                venn_stats[other_only].append(record_id)
 
         print(
             f"only in {current_only}".ljust(30, " ")

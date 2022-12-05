@@ -20,5 +20,4 @@ colrev.ops.built\_in.search\_sources.crossref
       :template: custom-class-template.rst
       :nosignatures:
 
-      CrossrefOriginFeed
       CrossrefSearchSource

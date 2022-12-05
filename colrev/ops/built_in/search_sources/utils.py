@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import html
 import re
+import time
+from pathlib import Path
+from random import randint
 from typing import TYPE_CHECKING
 
 import colrev.record
@@ -172,6 +175,141 @@ def json_to_record(*, item: dict) -> dict:
         record_dict["ENTRYTYPE"] = "misc"
 
     return record_dict
+
+
+# TODO : the following may be integrated into settings.SearchSource
+# Keeping in mind the need for lock-mechanisms, e.g., in concurrent prep operations
+class GeneralOriginFeed:
+    """A general-purpose Origin feed"""
+
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        source: colrev.settings.SearchSource,
+        feed_file: Path,
+        update_only: bool,
+        key: str,
+    ):
+
+        # Note: the key identifies records in the search feed.
+        # This could be a doi or link or database-specific ID (like WOS accession numbers)
+        # The key can be stored in the main records.bib (it does not have to)
+        # The record key (feed-specific) is used in search or other operations (like prep)
+        # In search operations, records are added/updated based on available_ids
+        # (which maps keys to IDs used to generate the colrev_origin)
+        # In other operations, records are linked through colrev_origins,
+        # i.e., there is no need to store the key in the main records (redundantly)
+        self.key = key
+
+        self.update_only = update_only
+
+        self.__available_ids = {}
+        self.__max_id = 1
+        if not feed_file.is_file():
+            self.feed_records = {}
+        else:
+            with open(feed_file, encoding="utf8") as bibtex_file:
+                self.feed_records = (
+                    source_operation.review_manager.dataset.load_records_dict(
+                        load_str=bibtex_file.read()
+                    )
+                )
+
+            self.__available_ids = {
+                x[self.key]: x["ID"]
+                for x in self.feed_records.values()
+                if self.key in x
+            }
+            self.__max_id = (
+                max(
+                    [
+                        int(x["ID"])
+                        for x in self.feed_records.values()
+                        if x["ID"].isdigit()
+                    ]
+                    + [1]
+                )
+                + 1
+            )
+        self.source_operation = source_operation
+        self.source = source
+        self.origin_prefix = self.source.get_origin_prefix()
+        self.feed_file = feed_file
+
+    def save_feed_file(self) -> None:
+        """Save the feed file"""
+
+        search_operation = self.source_operation.review_manager.get_search_operation()
+        if len(self.feed_records) > 0:
+
+            self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            self.source_operation.review_manager.dataset.save_records_dict_to_file(
+                records=self.feed_records, save_path=self.feed_file
+            )
+
+            while True:
+                search_operation.review_manager.load_settings()
+                if self.source.filename.name not in [
+                    s.filename.name
+                    for s in search_operation.review_manager.settings.sources
+                ]:
+                    search_operation.review_manager.settings.sources.append(self.source)
+                    search_operation.review_manager.save_settings()
+
+                try:
+                    search_operation.review_manager.dataset.add_changes(
+                        path=self.feed_file
+                    )
+                    break
+                except (FileExistsError, OSError):
+                    search_operation.review_manager.logger.debug("Wait for git")
+                    time.sleep(randint(1, 15))
+
+    def set_id(self, *, record_dict: dict) -> dict:
+        """Set incremental record ID
+        If self.key is in record_dict, it is updated, otherwise, it is added as a new record.
+        """
+
+        if record_dict[self.key] in self.__available_ids:
+            record_dict["ID"] = self.__available_ids[record_dict[self.key]]
+        else:
+            record_dict["ID"] = str(self.__max_id).rjust(6, "0")
+
+        return record_dict
+
+    def add_record(self, *, record: colrev.record.Record) -> bool:
+        """Add a record to the feed and set its colrev_origin"""
+
+        # Feed:
+        feed_record_dict = record.data.copy()
+        added_new = True
+        if feed_record_dict[self.key] in self.__available_ids:
+            added_new = False
+        else:
+            self.__max_id += 1
+
+        if "colrev_data_provenance" in feed_record_dict:
+            del feed_record_dict["colrev_data_provenance"]
+        if "colrev_masterdata_provenance" in feed_record_dict:
+            del feed_record_dict["colrev_masterdata_provenance"]
+        if "colrev_status" in feed_record_dict:
+            del feed_record_dict["colrev_status"]
+
+        if self.update_only and added_new:
+            added_new = False
+        else:
+            self.__available_ids[feed_record_dict[self.key]] = feed_record_dict["ID"]
+            self.feed_records[feed_record_dict["ID"]] = feed_record_dict
+
+        # Original record
+        colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
+        record.data["colrev_origin"] = [colrev_origin]
+        record.add_provenance_all(source=colrev_origin)
+
+        return added_new
 
 
 if __name__ == "__main__":

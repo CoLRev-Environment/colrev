@@ -161,6 +161,7 @@ class DOIConnector:
                 value=str(url.rstrip("/")),
                 source=doi_url,
                 keep_source_if_equal=True,
+                append_edit=False,
             )
         except (requests.exceptions.RequestException, TypeError, UnicodeDecodeError):
             pass

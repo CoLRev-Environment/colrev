@@ -296,6 +296,13 @@ class UnsupportedImportFormatError(CoLRevException):
         super().__init__(self.message)
 
 
+# Prep
+
+
+class RecordNotFoundInPrepSourceException(CoLRevException):
+    """The record was not found in the prep search source."""
+
+
 # Dedupe
 
 

@@ -35,7 +35,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -87,7 +87,9 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of Web of Science"""
 
         search_operation.review_manager.logger.info(

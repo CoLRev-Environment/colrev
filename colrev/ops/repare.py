@@ -34,13 +34,17 @@ class Repare(colrev.operation.Operation):
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
 
+        # pylint: disable=too-many-nested-blocks
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         self.review_manager.logger.warning("Repare is not fully implemented.")
 
         # Try: open settings, except: notify & start Repare
 
         # Try: open records, except: notify & start Repare
 
-        separated_records = {}
+        separated_records = {}  # type: ignore
         with open(self.review_manager.dataset.records_file, encoding="utf-8") as file:
             record_str = ""
             line = file.readline()

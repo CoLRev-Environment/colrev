@@ -9,15 +9,15 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~CrossrefSearchSource.all_json_schemas
-      ~CrossrefSearchSource.check_status
+      ~CrossrefSearchSource.check_availability
       ~CrossrefSearchSource.crossref_query
       ~CrossrefSearchSource.field_mapping
       ~CrossrefSearchSource.from_dict
@@ -33,16 +33,14 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
       ~CrossrefSearchSource.to_dict
       ~CrossrefSearchSource.to_json
       ~CrossrefSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~CrossrefSearchSource.search_type
       ~CrossrefSearchSource.source_identifier
-   
-   

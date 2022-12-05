@@ -33,7 +33,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
 
     @classmethod
@@ -84,7 +84,9 @@ class PubMedSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of Pubmed"""
 
         search_operation.review_manager.logger.info(
@@ -126,9 +128,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         # TBD: how to distinguish other types?
         record.change_entrytype(new_entrytype="article")
-        record.import_provenance(
-            review_manager=self.review_manager, source_identifier=self.source_identifier
-        )
+        record.import_provenance(review_manager=self.review_manager)
 
         return record
 

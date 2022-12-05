@@ -2,7 +2,9 @@
 """Retrieval of PDFs from the LocalIndex"""
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
@@ -56,6 +58,16 @@ class LocalIndexPDFGet(JsonSchemaMixin):
             if "fulltext" in retrieved_record:
                 record.get_tei_filename().write_text(retrieved_record["fulltext"])
                 del retrieved_record["fulltext"]
+            else:
+                tei_ext_path = Path(
+                    retrieved_record["file"]
+                    .replace("pdfs/", ".tei/")
+                    .replace(".pdf", ".tei.xml")
+                )
+                if tei_ext_path.is_file():
+                    new_path = record.get_tei_filename()
+                    new_path.resolve().parent.mkdir(exist_ok=True, parents=True)
+                    shutil.copy(tei_ext_path, new_path)
 
         return record
 

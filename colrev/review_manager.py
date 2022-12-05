@@ -139,7 +139,8 @@ class ReviewManager:
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
-        return colrev.settings.load_settings(review_manager=self)
+        self.settings = colrev.settings.load_settings(review_manager=self)
+        return self.settings
 
     def save_settings(self) -> None:
         """Save the settings"""
@@ -198,7 +199,7 @@ class ReviewManager:
 
         colrev.operation.CheckOperation(review_manager=self)  # to notify
         corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
-        corrections_operation.check_corrections_of_curated_records()
+        corrections_operation.check_corrections_of_records()
 
         return {"msg": "TODO", "status": 0}
 

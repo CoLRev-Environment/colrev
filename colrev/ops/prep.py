@@ -17,9 +17,6 @@ from requests.exceptions import ReadTimeout
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.ops.built_in.search_sources.crossref as crossref_connector
-import colrev.ops.built_in.search_sources.dblp as dblp_connector
-import colrev.ops.built_in.search_sources.open_library as open_library_connector
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -127,24 +124,6 @@ class Prep(colrev.operation.Operation):
 
         self.debug_mode = False
         self.pad = 0
-
-    def check_dbs_availability(self) -> None:
-        """Check the availability of required databases"""
-
-        # The following could become default methods for the PreparationInterface
-
-        self.review_manager.logger.info("Check availability of connectors...")
-        crossref_source = crossref_connector.CrossrefSearchSource(source_operation=self)
-        crossref_source.check_status(prep_operation=self)
-        self.review_manager.logger.info("CrossrefConnector available")
-        dblp_source = dblp_connector.DBLPSearchSource(source_operation=self)
-        dblp_source.check_status(prep_operation=self)
-        self.review_manager.logger.info("DBLPConnector available")
-        open_library_source = open_library_connector.OpenLibraryConnector()
-        open_library_source.check_status(prep_operation=self)
-        self.review_manager.logger.info("OpenLibraryConnector available")
-
-        print()
 
     def __print_diffs_for_debug(
         self,
@@ -687,7 +666,6 @@ class Prep(colrev.operation.Operation):
         )
 
         required_prep_package_endpoints = list(prep_round.prep_package_endpoints)
-
         required_prep_package_endpoints.append(
             {"endpoint": "colrev_built_in.update_metadata_status"}
         )
@@ -700,6 +678,14 @@ class Prep(colrev.operation.Operation):
             selected_packages=required_prep_package_endpoints,
             operation=self,
         )
+
+        for endpoin_name, endpoint in self.prep_package_endpoints.items():
+            check_function = getattr(endpoint, "check_availability", None)
+            if callable(check_function):
+                self.review_manager.logger.debug(
+                    f"Check availability of {endpoin_name}"
+                )
+                endpoint.check_availability(source_operation=self)  # type: ignore
 
     def __log_record_change_scores(
         self, *, preparation_data: list, prepared_records: list
@@ -781,8 +767,6 @@ class Prep(colrev.operation.Operation):
         """Preparation of records (main entrypoint)"""
 
         saved_args = locals()
-
-        self.check_dbs_availability()
 
         if self.debug_mode:
             print("\n\n\n")

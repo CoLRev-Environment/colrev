@@ -50,6 +50,7 @@ colrev.exceptions
       PortAlreadyRegisteredException
       ProcessOrderViolation
       PropagatedIDChange
+      RecordNotFoundInPrepSourceException
       RecordNotInIndexException
       RecordNotInRepoException
       RecordNotIndexableException

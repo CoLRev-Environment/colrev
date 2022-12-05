@@ -447,9 +447,7 @@ class Load(colrev.operation.Operation):
             )
         return list(search_records_dict.values())
 
-    def __import_record(
-        self, *, source: colrev.settings.SearchSource, record_dict: dict
-    ) -> dict:
+    def __import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -508,7 +506,6 @@ class Load(colrev.operation.Operation):
 
         record.import_provenance(
             review_manager=self.review_manager,
-            source_identifier=source.source_identifier,
         )
         record.set_status(target_state=colrev.record.RecordState.md_imported)
 
@@ -518,18 +515,18 @@ class Load(colrev.operation.Operation):
         self, *, source: colrev.settings.SearchSource, search_records: list
     ) -> list:
         record_list = []
-        origin_prefix = source.get_origin_prefix(review_manager=self.review_manager)
+        origin_prefix = source.get_origin_prefix()
         for record in search_records:
             record.update(colrev_origin=[f"{origin_prefix}/{record['ID']}"])
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            post_md_processed_states = colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_prepared
             )
 
-            if record.get("colrev_status", "") in post_md_processed_states:
+            if record.get("colrev_status", "") in post_md_prepared_states:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
@@ -608,9 +605,7 @@ class Load(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
-            source_record = self.__import_record(
-                source=source, record_dict=source_record
-            )
+            source_record = self.__import_record(record_dict=source_record)
 
             # Make sure IDs are unique / do not replace existing records
             order = 0

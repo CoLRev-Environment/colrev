@@ -418,7 +418,7 @@ class Dataset:
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
         elif self.records_file.is_file():
-            bib_data = parser.parse_file(self.records_file)
+            bib_data = parser.parse_file(str(self.records_file))
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
         else:
             records_dict = {}

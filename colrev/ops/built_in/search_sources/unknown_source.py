@@ -39,7 +39,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> None:
 
         converters = {Path: Path, Enum: Enum}
-        self.settings = from_dict(
+        self.search_source = from_dict(
             data_class=self.settings_class,
             data=settings,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
@@ -77,7 +77,9 @@ class UnknownSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of an unknown source"""
 
         search_operation.review_manager.logger.info(

@@ -189,15 +189,18 @@ class SearchSource(JsonSchemaMixin):
         self.len_before = len(imported_origins)
         self.source_records_list: typing.List[typing.Dict] = record_list
 
-    def get_origin_prefix(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> str:
+    def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
         return (
             str(self.get_corresponding_bib_file().name)
-            .replace(str(review_manager.SEARCHDIR_RELATIVE), "")
+            .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
             .lstrip("/")
         )
+
+    def is_md_source(self) -> bool:
+        """Check whether the source is a metadata source (for preparation)"""
+
+        return str(self.filename.name).startswith("md_")
 
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""

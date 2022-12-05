@@ -16,6 +16,7 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -42,7 +43,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
     def validate_source(
         self,
@@ -74,28 +75,28 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
 
         pdf_get_operation = search_operation.review_manager.get_pdf_get_operation()
 
-        records, imported_ids = [], []
-        if self.settings.filename.is_file():
-            with open(self.settings.filename, encoding="utf8") as bibtex_file:
-                feed_rd = search_operation.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
-                )
-                records = list(feed_rd.values())
-
-            imported_ids = [x["ID"] for x in records]
-
-        project_review_manager = search_operation.review_manager.get_review_manager(
-            path_str=self.settings.search_parameters["scope"]["url"]
+        colrev_project_search_feed = connector_utils.GeneralOriginFeed(
+            source_operation=search_operation,
+            source=self.search_source,
+            feed_file=self.search_source.filename,
+            update_only=update_only,
+            key="colrev_project_identifier",
         )
 
-        project_identifier = self.settings.search_parameters["scope"]["url"]
+        project_review_manager = search_operation.review_manager.get_review_manager(
+            path_str=self.search_source.search_parameters["scope"]["url"]
+        )
+
+        project_identifier = self.search_source.search_parameters["scope"]["url"]
         remote_url = project_review_manager.dataset.get_remote_url()
         if "NA" != remote_url:
             project_identifier = remote_url.rstrip(".git")
@@ -104,52 +105,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             notify_state_transition_operation=False,
         )
         search_operation.review_manager.logger.info(
-            f'Loading records from {self.settings.search_parameters["scope"]["url"]}'
+            f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
         records_to_import = project_review_manager.dataset.load_records_dict()
-        records_to_import = {
-            ID: rec for ID, rec in records_to_import.items() if ID not in imported_ids
-        }
-
-        nr_record_to_import = len(records_to_import)
-        search_operation.review_manager.logger.info(
-            f"{colors.GREEN}Retrieved {nr_record_to_import} records {colors.END}"
-        )
-        search_operation.review_manager.logger.info("Importing selected records")
-        for record_to_import in tqdm(list(records_to_import.values())):
-            if "condition" in self.settings.search_parameters["scope"]:
-                res = []
-                try:
-                    stringified_copy = colrev.record.Record(
-                        data=record_to_import
-                    ).get_data(stringify=True)
-                    stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
-                    # pylint: disable=possibly-unused-variable
-                    rec_df = pd.DataFrame.from_records([stringified_copy])
-                    query = (
-                        "SELECT * FROM rec_df WHERE "
-                        f"{self.settings.search_parameters['scope']['condition']}"
-                    )
-                    res = ps.sqldf(query, locals())
-                except PandaSQLException:
-                    pass
-
-                if len(res) == 0:
-                    continue
-
-            if "file" in record_to_import:
-                record_to_import["file"] = (
-                    Path(self.settings.search_parameters["scope"]["url"])
-                    / record_to_import["file"]
-                )
-
-                pdf_get_operation.import_file(
-                    record=colrev.record.Record(data=record_to_import)
-                )
-
-            record_to_import["colrev_project"] = project_identifier
-
-            records = records + [record_to_import]
 
         keys_to_drop = [
             "colrev_masterdata_provenance",
@@ -161,16 +119,57 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             "grobid-version",
         ]
 
-        records = [
-            {key: item[key] for key in item.keys() if key not in keys_to_drop}
-            for item in records
-        ]
-        if len(records) > 0:
-            records_dict = {r["ID"]: r for r in records}
+        search_operation.review_manager.logger.info("Importing selected records")
+        nr_added = 0
+        for record_to_import in tqdm(list(records_to_import.values())):
+            if "condition" in self.search_source.search_parameters["scope"]:
+                res = []
+                try:
+                    stringified_copy = colrev.record.Record(
+                        data=record_to_import
+                    ).get_data(stringify=True)
+                    stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
+                    # pylint: disable=possibly-unused-variable
+                    rec_df = pd.DataFrame.from_records([stringified_copy])
+                    query = (
+                        "SELECT * FROM rec_df WHERE "
+                        f"{self.search_source.search_parameters['scope']['condition']}"
+                    )
+                    res = ps.sqldf(query, locals())
+                except PandaSQLException:
+                    pass
 
-            search_operation.save_feed_file(
-                records=records_dict, feed_file=self.settings.filename
+                if len(res) == 0:
+                    continue
+
+            if "file" in record_to_import:
+                record_to_import["file"] = (
+                    Path(self.search_source.search_parameters["scope"]["url"])
+                    / record_to_import["file"]
+                )
+
+                pdf_get_operation.import_file(
+                    record=colrev.record.Record(data=record_to_import)
+                )
+
+            record_to_import["colrev_project_identifier"] = (
+                project_identifier + record_to_import["ID"]
             )
+            record_to_import = {
+                k: v for k, v in record_to_import.items() if k not in keys_to_drop
+            }
+
+            colrev_project_search_feed.set_id(record_dict=record_to_import)
+            added = colrev_project_search_feed.add_record(
+                record=colrev.record.Record(data=record_to_import),
+            )
+            if added:
+                nr_added += 1
+
+        colrev_project_search_feed.save_feed_file()
+        search_operation.review_manager.logger.info(
+            f"{colors.GREEN}Retrieved {nr_added} new records {colors.END}"
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

@@ -76,7 +76,10 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
         screen_record = colrev.record.ScreenRecord(data=record_dict)
         abstract_from_tei = False
-        if "abstract" not in screen_record.data:
+        if (
+            "abstract" not in screen_record.data
+            and Path(screen_record.data.get("file", "")).suffix == ".pdf"
+        ):
             abstract_from_tei = True
             tei = screen_operation.review_manager.get_tei(
                 pdf_path=Path(screen_record.data["file"]),

@@ -256,7 +256,7 @@ def retrieve(
         review_manager.get_local_index(startup_without_waiting=True)
 
         search_operation = review_manager.get_search_operation()
-        search_operation.main()
+        search_operation.main(update_only=False)
 
         load_operation = review_manager.get_load_operation()
         new_sources = load_operation.get_new_sources(skip_query=True)
@@ -294,6 +294,13 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
     help="Only retrieve search results for selected sources",
 )
 @click.option(
+    "-u",
+    "--update_only",
+    is_flag=True,
+    default=False,
+    help="Update existing records without retrieving additional ones",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -320,6 +327,7 @@ def search(
     add: str,
     view: bool,
     selected: str,
+    update_only: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -344,7 +352,7 @@ def search(
             print("Please update the source in settings.json and commit.")
             return
 
-        search_operation.main(selection_str=selected)
+        search_operation.main(selection_str=selected, update_only=update_only)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -1138,6 +1146,59 @@ def pdf_get_man(
         print(exc)
 
 
+def __extract_coverpage(*, cover: Path) -> None:
+    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
+    cp_path.mkdir(exist_ok=True)
+
+    assert Path(cover).suffix == ".pdf"
+    record = colrev.record.Record(data={"file": cover})
+    record.extract_pages(
+        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
+    )
+
+
+def __print_pdf_hashes(
+    *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, pdf_hash: Path
+) -> None:
+    # pylint: disable=import-outside-toplevel
+    from PyPDF2 import PdfFileReader
+
+    assert Path(pdf_hash).suffix == ".pdf"
+
+    pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
+
+    first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+        pdf_path=Path(pdf_hash),
+        page_nr=0,
+        hash_size=16,
+    )
+    print(f"first page: {first_page_average_hash_16}")
+    first_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
+        pdf_path=Path(pdf_hash),
+        page_nr=0,
+        hash_size=32,
+    )
+    print(f"first page: {first_page_average_hash_32}")
+
+    try:
+        pdf_reader = PdfFileReader(str(pdf_hash), strict=False)
+    except ValueError:
+        return
+    last_page_nr = pdf_reader.getNumPages()
+    last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+        pdf_path=Path(pdf_hash),
+        page_nr=last_page_nr,
+        hash_size=16,
+    )
+    print(f"last page: {last_page_average_hash_16}")
+    last_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
+        pdf_path=Path(pdf_hash),
+        page_nr=last_page_nr,
+        hash_size=32,
+    )
+    print(f"last page: {last_page_average_hash_32}")
+
+
 @main.command(help_priority=14)
 @click.option(
     "--update_colrev_pdf_ids", is_flag=True, default=False, help="Update colrev_pdf_ids"
@@ -1203,15 +1264,7 @@ def pdf_prep(
     """Prepare PDFs"""
 
     if cover:
-
-        cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
-        cp_path.mkdir(exist_ok=True)
-
-        assert Path(cover).suffix == ".pdf"
-        record = colrev.record.Record(data={"file": cover})
-        record.extract_pages(
-            pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
-        )
+        __extract_coverpage(cover=cover)
         return
 
     try:
@@ -1221,43 +1274,7 @@ def pdf_prep(
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
         if pdf_hash:
-            # pylint: disable=import-outside-toplevel
-            from PyPDF2 import PdfFileReader
-
-            assert Path(pdf_hash).suffix == ".pdf"
-
-            pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
-
-            first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-                pdf_path=Path(pdf_hash),
-                page_nr=0,
-                hash_size=16,
-            )
-            print(f"first page: {first_page_average_hash_16}")
-            first_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-                pdf_path=Path(pdf_hash),
-                page_nr=0,
-                hash_size=32,
-            )
-            print(f"first page: {first_page_average_hash_32}")
-
-            try:
-                pdf_reader = PdfFileReader(str(pdf_hash), strict=False)
-            except ValueError:
-                return
-            last_page_nr = pdf_reader.getNumPages()
-            last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-                pdf_path=Path(pdf_hash),
-                page_nr=last_page_nr,
-                hash_size=16,
-            )
-            print(f"last page: {last_page_average_hash_16}")
-            last_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-                pdf_path=Path(pdf_hash),
-                page_nr=last_page_nr,
-                hash_size=32,
-            )
-            print(f"last page: {last_page_average_hash_32}")
+            __print_pdf_hashes(pdf_prep_operation=pdf_prep_operation, pdf_hash=pdf_hash)
 
         elif update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
@@ -2140,20 +2157,6 @@ def sync(
 
 @main.command(help_priority=23)
 @click.option(
-    "-r",
-    "--records",
-    is_flag=True,
-    default=False,
-    help="Update records only",
-)
-@click.option(
-    "-p",
-    "--project",
-    is_flag=True,
-    default=False,
-    help="Push project only",
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2170,8 +2173,6 @@ def sync(
 @click.pass_context
 def pull(
     ctx: click.core.Context,
-    records: bool,
-    project: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -2183,7 +2184,7 @@ def pull(
         )
         pull_operation = review_manager.get_pull_operation()
 
-        pull_operation.main(records_only=records, project_only=project)
+        pull_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -2238,6 +2239,13 @@ def clone(
     help="Push project only",
 )
 @click.option(
+    "-a",
+    "--all",
+    is_flag=True,
+    default=False,
+    help="Push record changes/corrections to all sources (not just curations).",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2256,6 +2264,7 @@ def push(
     ctx: click.core.Context,
     records_only: bool,
     project_only: bool,
+    all: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -2267,7 +2276,9 @@ def push(
         )
         push_operation = review_manager.get_push_operation()
 
-        push_operation.main(records_only=records_only, project_only=project_only)
+        push_operation.main(
+            records_only=records_only, project_only=project_only, all_records=all
+        )
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:

@@ -110,6 +110,9 @@ class ExportManPrep(JsonSchemaMixin):
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
     ) -> None:
+
+        # pylint: disable=too-many-branches
+
         prep_man_operation.review_manager.logger.info(
             f"Load import changes from {self.export_path}"
         )

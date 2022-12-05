@@ -16,7 +16,6 @@ colrev.ops.prep.Prep
    .. autosummary::
       :nosignatures:
 
-      ~Prep.check_dbs_availability
       ~Prep.check_precondition
       ~Prep.main
       ~Prep.prepare

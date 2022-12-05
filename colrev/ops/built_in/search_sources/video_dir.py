@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.ops.search
 import colrev.record
@@ -36,7 +37,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
         self.pdf_preparation_operation = (
             source_operation.review_manager.get_pdf_prep_operation(
@@ -45,7 +46,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         )
 
         self.video_path = source_operation.review_manager.path / Path(
-            self.settings.search_parameters["scope"]["path"]
+            self.search_source.search_parameters["scope"]["path"]
         )
         self.review_manager = source_operation.review_manager
         self.prep_operation = self.review_manager.get_prep_operation()
@@ -80,69 +81,46 @@ class VideoDirSearchSource(JsonSchemaMixin):
         # TODO : extract based on metadata
         return record_dict
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of a directory containing videos"""
 
-        feed_file = self.settings.filename
+        search_operation.review_manager.logger.info(
+            f"{colors.ORANGE}For better metadata, please add the url "
+            f"(or authors and title){colors.END}"
+        )
 
-        available_ids = {}
-        max_id = 1
-        if not feed_file.is_file():
-            video_feed_records = {}
-        else:
-            with open(feed_file, encoding="utf8") as bibtex_file:
-                video_feed_records = (
-                    search_operation.review_manager.dataset.load_records_dict(
-                        load_str=bibtex_file.read()
-                    )
-                )
-
-            available_ids = {
-                x["file"]: x["ID"] for x in video_feed_records.values() if "file" in x
-            }
-            max_id = (
-                max(
-                    [
-                        int(x["ID"])
-                        for x in video_feed_records.values()
-                        if x["ID"].isdigit()
-                    ]
-                    + [1]
-                )
-                + 1
-            )
+        video_feed = connector_utils.GeneralOriginFeed(
+            source_operation=search_operation,
+            source=self.search_source,
+            feed_file=self.search_source.filename,
+            update_only=False,
+            key="file",
+        )
 
         overall_files = [
             x.relative_to(search_operation.review_manager.path)
             for x in self.video_path.glob("**/*.mp4")
         ]
 
-        files_to_add = list(
-            set(overall_files).difference({Path(x) for x in available_ids})
-        )
+        new_records_added = 0
+        for file_to_add in overall_files:
 
-        search_operation.review_manager.logger.info(
-            f"Videos to add: {len(files_to_add)}"
-        )
-
-        if len(files_to_add) == 0:
-            search_operation.review_manager.logger.info("No additional videos to index")
-            return
-
-        for file_to_add in files_to_add:
             new_record = self.__index_video(path=file_to_add)
-            new_record["ID"] = f"{max_id}".rjust(10, "0")
-            max_id += 1
-            video_feed_records[new_record["ID"]] = new_record
+
+            video_feed.set_id(record_dict=new_record)
+            added = video_feed.add_record(
+                record=colrev.record.Record(data=new_record),
+            )
+            if added:
+                new_records_added += 1
+
+        video_feed.save_feed_file()
 
         search_operation.review_manager.logger.info(
-            f"{colors.ORANGE}For better metadata, please add the url (or authors and title){colors.END}"
+            f"New videos added: {new_records_added}"
         )
-
-        if len(video_feed_records) > 0:
-            search_operation.save_feed_file(
-                records=video_feed_records, feed_file=self.settings.filename
-            )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import requests
 import timeout_decorator
 import zope.interface
 from dacite import from_dict
@@ -43,6 +42,15 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.dblp_source = dblp_connector.DBLPSearchSource(
+            source_operation=prep_operation
+        )
+
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
+        """Check status (availability) of the Crossref API"""
+        self.dblp_source.check_availability(source_operation=source_operation)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -50,67 +58,10 @@ class DBLPMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
 
-        if "dblp_key" in record.data:
-            return record
-
-        same_record_type_required = (
-            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+        self.dblp_source.get_masterdata_from_dblp(
+            prep_operation=prep_operation, record=record
         )
 
-        try:
-            query = "" + record.data.get("title", "").replace("-", "_")
-            # Note: queries combining title+author/journal do not seem to work any more
-            # if "author" in record:
-            #     query = query + "_" + record["author"].split(",")[0]
-            # if "booktitle" in record:
-            #     query = query + "_" + record["booktitle"]
-            # if "journal" in record:
-            #     query = query + "_" + record["journal"]
-            # if "year" in record:
-            #     query = query + "_" + record["year"]
-
-            dblp_source = dblp_connector.DBLPSearchSource(
-                source_operation=prep_operation
-            )
-            for retrieved_record in dblp_source.retrieve_dblp_records(
-                review_manager=prep_operation.review_manager,
-                query=query,
-            ):
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=record,
-                    retrieved_record_original=retrieved_record,
-                    same_record_type_required=same_record_type_required,
-                )
-                if similarity > prep_operation.retrieval_similarity:
-                    # prep_operation.review_manager.logger.debug("Found matching record")
-                    # prep_operation.review_manager.logger.debug(
-                    #     f"dblp similarity: {similarity} "
-                    #     f"(>{prep_operation.retrieval_similarity})"
-                    # )
-                    source = retrieved_record.data["dblp_key"]
-                    record.merge(
-                        merging_record=retrieved_record,
-                        default_source=source,
-                    )
-                    record.set_masterdata_complete(source_identifier=source)
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
-                    if "Withdrawn (according to DBLP)" in record.data.get(
-                        "warning", ""
-                    ):
-                        record.prescreen_exclude(reason="retracted")
-                        record.remove_field(key="warning")
-
-                else:
-                    # prep_operation.review_manager.logger.debug(
-                    #     f"dblp similarity: {similarity} "
-                    #     f"(<{prep_operation.retrieval_similarity})"
-                    # )
-                    pass
-
-        except (requests.exceptions.RequestException, UnicodeEncodeError):
-            pass
         return record
 
 

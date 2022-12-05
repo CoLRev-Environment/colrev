@@ -17,6 +17,7 @@ from pdfminer.pdfparser import PDFParser
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -32,6 +33,8 @@ import colrev.ui_cli.cli_colors as colors
 class PDFSearchSource(JsonSchemaMixin):
     """SearchSource for PDF directories (based on GROBID)"""
 
+    # pylint: disable=too-many-instance-attributes
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
     search_type = colrev.settings.SearchType.PDFS
@@ -40,7 +43,7 @@ class PDFSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
         self.pdf_preparation_operation = (
             source_operation.review_manager.get_pdf_prep_operation(
@@ -49,14 +52,14 @@ class PDFSearchSource(JsonSchemaMixin):
         )
 
         self.pdfs_path = source_operation.review_manager.path / Path(
-            self.settings.search_parameters["scope"]["path"]
+            self.search_source.search_parameters["scope"]["path"]
         )
         self.review_manager = source_operation.review_manager
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
-        if "subdir_pattern" in self.settings.search_parameters.get("scope", {}):
-            self.subdir_pattern = self.settings.search_parameters["scope"][
+        if "subdir_pattern" in self.search_source.search_parameters.get("scope", {}):
+            self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
             source_operation.review_manager.logger.info(
@@ -123,10 +126,10 @@ class PDFSearchSource(JsonSchemaMixin):
         #     "Checking for PDFs that no longer exist"
         # )
 
-        if not self.settings.filename.is_file():
+        if not self.search_source.filename.is_file():
             return
 
-        with open(self.settings.filename, encoding="utf8") as target_db:
+        with open(self.search_source.filename, encoding="utf8") as target_db:
 
             search_rd = search_operation.review_manager.dataset.load_records_dict(
                 load_str=target_db.read()
@@ -148,11 +151,13 @@ class PDFSearchSource(JsonSchemaMixin):
                         search_operation=search_operation,
                         record_dict=record_dict,
                         records=records,
-                        search_source=self.settings.filename,
+                        search_source=self.search_source.filename,
                     )
                     if updated:
                         continue
-                to_remove.append(f"{self.settings.filename.name}/{record_dict['ID']}")
+                to_remove.append(
+                    f"{self.search_source.filename.name}/{record_dict['ID']}"
+                )
                 files_removed.append(record_dict["file"])
 
         search_rd = {
@@ -163,7 +168,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
         if len(search_rd.values()) != 0:
             search_operation.review_manager.dataset.save_records_dict_to_file(
-                records=search_rd, save_path=self.settings.filename
+                records=search_rd, save_path=self.search_source.filename
             )
 
         if search_operation.review_manager.dataset.records_file.is_file():
@@ -348,7 +353,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
                 # add details based on path
                 record_dict = self.__update_fields_based_on_pdf_dirs(
-                    record_dict=record_dict, params=self.settings.search_parameters
+                    record_dict=record_dict, params=self.search_source.search_parameters
                 )
 
         except colrev_exceptions.TEIException:
@@ -356,36 +361,30 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def __skip_broken_filepaths(
+    def __is_broken_filepath(
         self,
-        search_operation: colrev.ops.search.Search,
-        pdfs_to_index: typing.List[Path],
-    ) -> typing.List[Path]:
-        broken_filepaths = [str(x) for x in pdfs_to_index if ";" in str(x)]
-        if len(broken_filepaths) > 0:
-            broken_filepath_str = "\n ".join(broken_filepaths)
-            search_operation.review_manager.logger.error(
-                f'skipping PDFs with ";" in filepath: \n{broken_filepath_str}'
-            )
-            pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
+        pdf_path: Path,
+    ) -> bool:
 
-        filepaths_to_skip = [
-            str(x)
-            for x in pdfs_to_index
-            if "_ocr.pdf" == str(x)[-8:]
-            or "_wo_cp.pdf" == str(x)[-10:]
-            or "_wo_lp.pdf" == str(x)[-10:]
-            or "_backup.pdf" == str(x)[-11:]
-        ]
-        if len(filepaths_to_skip) > 0:
-            fp_to_skip_str = "\n ".join(filepaths_to_skip)
-            search_operation.review_manager.logger.info(
-                f"Skipping PDFs with _ocr.pdf/_wo_cp.pdf: {fp_to_skip_str}"
+        if ";" in str(pdf_path):
+            self.review_manager.logger.error(
+                f'skipping PDF with ";" in filepath: \n{pdf_path}'
             )
-            pdfs_to_index = [
-                x for x in pdfs_to_index if str(x) not in filepaths_to_skip
-            ]
-        return pdfs_to_index
+            return True
+
+        if (
+            "_ocr.pdf" == str(pdf_path)[-8:]
+            or "_wo_cp.pdf" == str(pdf_path)[-10:]
+            or "_wo_lp.pdf" == str(pdf_path)[-10:]
+            or "_backup.pdf" == str(pdf_path)[-11:]
+        ):
+
+            self.review_manager.logger.info(
+                f"Skipping PDF with _ocr.pdf/_wo_cp.pdf: {pdf_path}"
+            )
+            return True
+
+        return False
 
     def validate_source(
         self,
@@ -448,82 +447,44 @@ class PDFSearchSource(JsonSchemaMixin):
         record_dict["md_string"] = str(fsize) + md_string
         return record_dict
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
 
         # pylint: disable=too-many-locals
 
-        feed_file = self.settings.filename
-
-        # TODO : TBD: this makes sense for curations
-        # (removing records/origins for which PDFs were removed).
+        # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
         # In these cases, we may simply print a warning instead of modifying/removing records?
-        self.__remove_records_if_pdf_no_longer_exists(search_operation=search_operation)
-
-        available_ids = {}
-        max_id = 1
-        if not feed_file.is_file():
-            pdf_feed_records = {}
-        else:
-            with open(feed_file, encoding="utf8") as bibtex_file:
-                pdf_feed_records = (
-                    search_operation.review_manager.dataset.load_records_dict(
-                        load_str=bibtex_file.read()
-                    )
-                )
-
-            available_ids = {
-                x["file"]: x["ID"] for x in pdf_feed_records.values() if "file" in x
-            }
-            max_id = (
-                max(
-                    [
-                        int(x["ID"])
-                        for x in pdf_feed_records.values()
-                        if x["ID"].isdigit()
-                    ]
-                    + [1]
-                )
-                + 1
+        if self.review_manager.settings.is_curated_masterdata_repo():
+            self.__remove_records_if_pdf_no_longer_exists(
+                search_operation=search_operation
             )
 
-        overall_pdfs = [
+        pdfs_dir_feed = connector_utils.GeneralOriginFeed(
+            source_operation=search_operation,
+            source=self.search_source,
+            feed_file=self.search_source.filename,
+            update_only=False,
+            key="file",
+        )
+        records = search_operation.review_manager.dataset.load_records_dict()
+        grobid_service = search_operation.review_manager.get_grobid_service()
+        grobid_service.start()
+
+        pdfs_to_index = [
             x.relative_to(search_operation.review_manager.path)
             for x in self.pdfs_path.glob("**/*.pdf")
         ]
 
-        pdfs_to_index = list(
-            set(overall_pdfs).difference({Path(x) for x in available_ids})
-        )
-
         # TODO : add parameter to switch the following on/off:
         # note: for curations, we want all pdfs indexed/merged separately,
         # in other projects, it is generally sufficient if the pdf is linked
-        records = search_operation.review_manager.dataset.load_records_dict()
-        linked_pdf_paths = [r["file"] for r in records.values() if "file" in r]
-        pdfs_to_index = list(
-            set(pdfs_to_index).difference({Path(x) for x in linked_pdf_paths})
-        )
+        linked_pdf_paths = [Path(r["file"]) for r in records.values() if "file" in r]
 
         if search_operation.review_manager.force_mode:  # i.e., reindex all
             search_operation.review_manager.logger.info("Reindex all")
-            pdfs_to_index = overall_pdfs
-
-        search_operation.review_manager.logger.info(
-            f"PDFs to index: {len(pdfs_to_index)}"
-        )
-
-        pdfs_to_index = self.__skip_broken_filepaths(
-            search_operation=search_operation, pdfs_to_index=pdfs_to_index
-        )
-
-        if len(pdfs_to_index) == 0:
-            search_operation.review_manager.logger.info("No additional PDFs to index")
-            return
-
-        grobid_service = search_operation.review_manager.get_grobid_service()
-        grobid_service.start()
 
         batch_size = 20
         pdf_batches = [
@@ -531,10 +492,23 @@ class PDFSearchSource(JsonSchemaMixin):
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
         for pdf_batch in pdf_batches:
-            for record in pdf_feed_records.values():
+
+            for record in pdfs_dir_feed.feed_records.values():
                 record = self.__add_md_string(record_dict=record)
 
             for pdf_path in pdf_batch:
+
+                if self.__is_broken_filepath(pdf_path=pdf_path):
+                    continue
+
+                if search_operation.review_manager.force_mode:
+                    # i.e., reindex all
+                    pass
+                else:
+                    if pdf_path in linked_pdf_paths:
+                        # Otherwise: skip linked PDFs
+                        continue
+
                 new_record = self.__index_pdf(
                     search_operation=search_operation, pdf_path=pdf_path
                 )
@@ -544,7 +518,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 # Note: identical md_string as a heuristic for duplicates
                 potential_duplicates = [
                     r
-                    for r in pdf_feed_records.values()
+                    for r in pdfs_dir_feed.feed_records.values()
                     if r["md_string"] == new_record["md_string"]
                     and not r["file"] == new_record["file"]
                 ]
@@ -556,21 +530,15 @@ class PDFSearchSource(JsonSchemaMixin):
                     )
                     continue
 
-                if new_record["file"] in available_ids:
-                    new_record["ID"] = available_ids[new_record["file"]]
-                    pdf_feed_records[available_ids[new_record["file"]]] = new_record
-                else:
-                    new_record["ID"] = f"{max_id}".rjust(10, "0")
-                    max_id += 1
-                    pdf_feed_records[new_record["ID"]] = new_record
+                pdfs_dir_feed.set_id(record_dict=new_record)
+                pdfs_dir_feed.add_record(
+                    record=colrev.record.Record(data=new_record),
+                )
 
-            for record in pdf_feed_records.values():
+            for record in pdfs_dir_feed.feed_records.values():
                 record.pop("md_string")
 
-            if len(pdf_feed_records) > 0:
-                search_operation.save_feed_file(
-                    records=pdf_feed_records, feed_file=self.settings.filename
-                )
+            pdfs_dir_feed.save_feed_file()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
