@@ -54,9 +54,9 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info("Copy PDFs to dir")
         records = self.review_manager.dataset.load_records_dict()
 
-        for record in records.values():
-            if "file" in record:
-                fpath = Path(record["file"])
+        for record_dict in records.values():
+            if "file" in record_dict:
+                fpath = Path(record_dict["file"])
                 new_fpath = fpath.absolute()
                 if fpath.is_symlink():
                     linked_file = fpath.resolve()
@@ -64,12 +64,13 @@ class PDFGet(colrev.operation.Operation):
                         fpath.unlink()
                         shutil.copyfile(linked_file, new_fpath)
                         self.review_manager.logger.info(
-                            f' {colors.GREEN}copied PDF for {record["ID"]} {colors.END}'
+                            f' {colors.GREEN}copied PDF for {record_dict["ID"]} {colors.END}'
                         )
+
                 elif new_fpath.is_file():
                     if self.review_manager.verbose_mode:
                         self.review_manager.logger.info(
-                            f'No need to copy PDF - already exits ({record["ID"]})'
+                            f'No need to copy PDF - already exits ({record_dict["ID"]})'
                         )
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
@@ -392,9 +393,15 @@ class PDFGet(colrev.operation.Operation):
         for record in records.values():
             if "file" not in record:
                 continue
+            if record[
+                "colrev_status"
+            ] not in colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_processed
+            ):
+                continue
 
             file = Path(record["file"])
-            new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
+            new_filename = file.parents[0] / Path(f"{record['ID']}{file.suffix}")
             # Possible option: move to top (pdfs) directory:
             # new_filename = self.review_manager.PDF_DIR_RELATIVE / Path(
             #     f"{record['ID']}.pdf"
@@ -404,13 +411,15 @@ class PDFGet(colrev.operation.Operation):
 
             record["file"] = new_filename
 
-            for value in record.get("colrev_masterdata_provenance", {}).values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
+            if "colrev_masterdata_provenance" in record:
+                for value in record["colrev_masterdata_provenance"].values():
+                    if str(file) == value.get("source", ""):
+                        value["source"] = str(new_filename)
 
-            for value in record.get("data_provenance", {}).values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
+            if "data_provenance" in record:
+                for value in record["data_provenance"].values():
+                    if str(file) == value.get("source", ""):
+                        value["source"] = str(new_filename)
 
             if pdfs_search_file.is_file():
                 colrev.env.utils.inplace_change(

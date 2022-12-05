@@ -19,8 +19,8 @@ colrev.ops.search.Search
       ~Search.add_source
       ~Search.check_precondition
       ~Search.main
-      ~Search.save_feed_file
       ~Search.setup_custom_script
+      ~Search.update_existing_record
       ~Search.view_sources
 
 

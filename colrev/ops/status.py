@@ -121,14 +121,16 @@ class StatusStats:
             if x.get("screening_criteria", "") not in ["", "NA"]
         ]
 
-        self.md_duplicates_removed = sum(
-            (len(x["colrev_origin"]) - 1) for x in self._record_header_list
-        )
+        self.md_duplicates_removed = 0
+        for item in self._record_header_list:
+            self.md_duplicates_removed += (
+                len([o for o in item["colrev_origin"] if not o.startswith("md_")]) - 1
+            )
 
         origin_list = [x["colrev_origin"] for x in self._record_header_list]
         self.record_links = 0
         for origin in origin_list:
-            self.record_links += len(origin)
+            self.record_links += len([o for o in origin if not o.startswith("md_")])
 
         criteria = list(review_manager.settings.screen.criteria.keys())
         self.screening_statistics = {crit: 0 for crit in criteria}
@@ -553,6 +555,9 @@ class StatusStats:
             bib_files = search_dir.glob("*.bib")
             number_search = 0
             for search_file in bib_files:
+                # Note : skip md-prep sources
+                if str(search_file.name).startswith("md_"):
+                    continue
                 number_search += self.status_stats.review_manager.dataset.get_nr_in_bib(
                     file_path=search_file
                 )

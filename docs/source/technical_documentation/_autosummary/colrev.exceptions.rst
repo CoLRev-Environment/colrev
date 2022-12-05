@@ -45,10 +45,12 @@ colrev.exceptions
       NotEnoughDataToIdentifyException
       NotTOCIdentifiableException
       OriginError
+      PDFHashError
       ParameterError
       PortAlreadyRegisteredException
       ProcessOrderViolation
       PropagatedIDChange
+      RecordNotFoundInPrepSourceException
       RecordNotInIndexException
       RecordNotInRepoException
       RecordNotIndexableException

@@ -11,6 +11,7 @@ from pathlib import Path
 
 import timeout_decorator
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -56,11 +57,12 @@ class PDFPrep(colrev.operation.Operation):
 
         record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data["file"])
-        record.data.update(
-            colrev_pdf_id=record.get_colrev_pdf_id(
-                review_manager=self.review_manager, pdf_path=pdf_path
+        if pdf_path.suffix == ".pdf":
+            record.data.update(
+                colrev_pdf_id=record.get_colrev_pdf_id(
+                    review_manager=self.review_manager, pdf_path=pdf_path
+                )
             )
-        )
 
         # colrev_status == pdf_imported : means successful
         # create *_backup.pdf if record["file"] was changed
@@ -126,7 +128,8 @@ class PDFPrep(colrev.operation.Operation):
             return record_dict
 
         record = colrev.record.Record(data=record_dict)
-        record.set_text_from_pdf(project_path=self.review_manager.path)
+        if record_dict["file"].endswith(".pdf"):
+            record.set_text_from_pdf(project_path=self.review_manager.path)
         original_filename = record_dict["file"]
 
         self.review_manager.logger.debug(f'Start PDF prep of {record_dict["ID"]}')
@@ -151,11 +154,14 @@ class PDFPrep(colrev.operation.Operation):
                 )
 
                 record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore
+            except colrev_exceptions.PDFHashError:
+                record.add_data_provenance_note(key="file", note="pdf-hash-error")
 
             except (
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
-                colrev.exceptions.InvalidPDFException,
+                colrev_exceptions.InvalidPDFException,
+                colrev_exceptions.TEIException,
             ) as err:
                 self.review_manager.logger.error(
                     f'Error for {record.data["ID"]} '  # type: ignore
@@ -208,7 +214,7 @@ class PDFPrep(colrev.operation.Operation):
 
         return record.get_data()
 
-    def __get_data(self, *, batch_size: int = 0) -> dict:
+    def __get_data(self, *, batch_size: int) -> dict:
 
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
@@ -232,7 +238,7 @@ class PDFPrep(colrev.operation.Operation):
             "items": [],
         }
 
-        if 0 == batch_size:
+        if batch_size == 0:
             batch_size = nr_tasks
         for ind, item in enumerate(items):
             if ind > batch_size:
@@ -348,7 +354,7 @@ class PDFPrep(colrev.operation.Operation):
         self,
         *,
         reprocess: bool = False,
-        batch_size: int = 0,
+        batch_size: int,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 

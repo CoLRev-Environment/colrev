@@ -99,6 +99,8 @@ class LocalIndex:
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
+        self.__index_tei = False
+
     def start_opensearch_docker_dashboards(self) -> None:
         """Start the local_index dashboard (opensearch dashboard Docker container)"""
 
@@ -256,28 +258,29 @@ class LocalIndex:
 
     def __store_record(self, *, paper_hash: str, record_dict: dict) -> None:
 
-        if "file" in record_dict:
-            try:
-                tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
-                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                if Path(record_dict["file"]).is_file():
-                    tei = colrev.env.tei_parser.TEIParser(
-                        environment_manager=self.environment_manager,
-                        pdf_path=Path(record_dict["file"]),
-                        tei_path=tei_path,
-                    )
+        if self.__index_tei:
+            if "file" in record_dict:
+                try:
+                    tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
+                    tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                    if Path(record_dict["file"]).is_file():
+                        tei = colrev.env.tei_parser.TEIParser(
+                            environment_manager=self.environment_manager,
+                            pdf_path=Path(record_dict["file"]),
+                            tei_path=tei_path,
+                        )
 
-                    record_dict["fulltext"] = tei.get_tei_str()
+                        record_dict["fulltext"] = tei.get_tei_str()
 
-                    self.__index_author(tei=tei, record_dict=record_dict)
+                        self.__index_author(tei=tei, record_dict=record_dict)
 
-            except (
-                colrev_exceptions.TEIException,
-                AttributeError,
-                SerializationError,
-                TransportError,
-            ):
-                pass
+                except (
+                    colrev_exceptions.TEIException,
+                    AttributeError,
+                    SerializationError,
+                    TransportError,
+                ):
+                    pass
 
         record = colrev.record.Record(data=record_dict)
 
@@ -588,7 +591,7 @@ class LocalIndex:
 
         return record
 
-    def __prep_record_for_return(
+    def __prepare_record_for_return(
         self,
         *,
         record_dict: dict,
@@ -641,6 +644,13 @@ class LocalIndex:
 
         record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
 
+        identifier_string = (
+            record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
+            + "#"
+            + record_dict["ID"]
+        )
+        record_dict["curation_ID"] = identifier_string
+
         return record_dict
 
     def search(self, *, query: dict) -> list[colrev.record.Record]:
@@ -671,7 +681,7 @@ class LocalIndex:
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
                 try:
-                    record_to_import = self.__prep_record_for_return(
+                    record_to_import = self.__prepare_record_for_return(
                         record_dict=record_to_import, include_file=False
                     )
                     records_to_return.append(
@@ -756,6 +766,11 @@ class LocalIndex:
 
         if "colrev_origin" in record_dict:
             del record_dict["colrev_origin"]
+
+        # Note : numbers of citations change regularly.
+        # They should be retrieved from sources like crossref/doi.org
+        if "cited_by" in record_dict:
+            del record_dict["cited_by"]
 
         # Note : file paths should be absolute when added to the LocalIndex
         if "file" in record_dict:
@@ -974,9 +989,11 @@ class LocalIndex:
         except (colrev_exceptions.InvalidSettingsError) as exc:
             print(exc)
 
-    def index(self) -> None:
+    def index(self, *, index_tei: bool = False) -> None:
         """Index all registered CoLRev projects"""
         # import shutil
+
+        self.__index_tei = index_tei
 
         # Note : this task takes long and does not need to run often
         session = requests_cache.CachedSession(
@@ -1114,7 +1131,7 @@ class LocalIndex:
                         id=str(paper_hash),
                     )
                     record_dict = res["_source"]  # type: ignore
-                    return self.__prep_record_for_return(
+                    return self.__prepare_record_for_return(
                         record_dict=record_dict, include_file=include_file
                     )
             except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
@@ -1172,7 +1189,7 @@ class LocalIndex:
         ):
             pass
         if retrieved_record_dict:
-            return self.__prep_record_for_return(
+            return self.__prepare_record_for_return(
                 record_dict=retrieved_record_dict,
                 include_file=include_file,
                 include_colrev_ids=include_colrev_ids,
@@ -1202,7 +1219,7 @@ class LocalIndex:
                 record_dict.get("ID", "no-key")
             )
 
-        return self.__prep_record_for_return(
+        return self.__prepare_record_for_return(
             record_dict=retrieved_record_dict,
             include_file=include_file,
             include_colrev_ids=include_colrev_ids,

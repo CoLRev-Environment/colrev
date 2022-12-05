@@ -8,6 +8,7 @@
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
 
 CoLRev is an open-source environment for collaborative reviews.
 To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
@@ -16,7 +17,7 @@ Compared to other environments, the following features stand out:
 - an **extensible and open platform** based on shared data and process standards
 - builds on **git** and its transparent collaboration model for the entire literature review process
 - offers a **self-explanatory, fault-tolerant, and configurable** user workflow
-- implements a **granular data provenance** model and a **robust identification** scheme
+- implements a **granular data provenance** model and **robust identification** schemes
 - uses **state-of-the-art algorithms** that provide end-to-end process support
 - enables **typological and methodological pluralism** throughout the process
 - operates a **built-in model for content curation** and reuse

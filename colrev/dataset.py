@@ -101,8 +101,6 @@ class Dataset:
     ) -> typing.Iterator[dict]:
         """Returns an iterator of the records_dict based on git history"""
 
-        parser = bibtex.Parser()
-
         # If the records are not in the commit (commit_sha), we note that the
         # commit_sha was foud, but that the records were not changed in that commit.
         # It means that we ignore the StopIterations and
@@ -117,6 +115,8 @@ class Dataset:
                 filecontents = (
                     commit.tree / str(self.RECORDS_FILE_RELATIVE)
                 ).data_stream.read()
+                # Note : reinitialize parser (otherwise, bib_data does not change)
+                parser = bibtex.Parser()
                 bib_data = parser.parse_string(filecontents.decode("utf-8"))
                 records_dict = self.parse_records_dict(records_dict=bib_data.entries)
             except StopIteration:
@@ -376,7 +376,7 @@ class Dataset:
         ]
 
     def load_records_dict(
-        self, *, load_str: str = None, header_only: bool = False
+        self, *, file_path: Path = None, load_str: str = None, header_only: bool = False
     ) -> dict:
         """Load the records
 
@@ -409,12 +409,16 @@ class Dataset:
 
         parser = bibtex.Parser()
 
+        if file_path:
+            with open(file_path, encoding="utf-8") as file:
+                load_str = file.read()
+
         if load_str:
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
         elif self.records_file.is_file():
-            bib_data = parser.parse_file(self.records_file)
+            bib_data = parser.parse_file(str(self.records_file))
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
         else:
             records_dict = {}

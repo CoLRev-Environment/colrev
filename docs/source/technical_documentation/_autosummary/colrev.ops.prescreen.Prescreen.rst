@@ -18,10 +18,12 @@ colrev.ops.prescreen.Prescreen
 
       ~Prescreen.check_precondition
       ~Prescreen.create_prescreen_split
+      ~Prescreen.exclude_records
       ~Prescreen.export_table
       ~Prescreen.get_data
       ~Prescreen.import_table
       ~Prescreen.include_all_in_prescreen
+      ~Prescreen.include_records
       ~Prescreen.main
       ~Prescreen.setup_custom_script
 

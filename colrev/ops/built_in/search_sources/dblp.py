@@ -8,6 +8,7 @@ import re
 import typing
 from dataclasses import dataclass
 from datetime import datetime
+from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
@@ -19,10 +20,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
+import colrev.settings
 import colrev.ui_cli.cli_colors as colors
-
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -41,12 +43,12 @@ class DBLPSearchSource(JsonSchemaMixin):
     __api_url = "https://dblp.org/search/publ/api?q="
     __api_url_venues = "https://dblp.org/search/venue/api?q="
 
-    # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{dblp_key}}"
     search_type = colrev.settings.SearchType.DB
+    __dblp_md_filename = Path("data/search/md_dblp.bib")
 
     @dataclass
-    class DBLPSearchSourceSettings(JsonSchemaMixin):
+    class DBLPSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
         """Settings for DBLPSearchSource"""
 
         # pylint: disable=duplicate-code
@@ -76,9 +78,37 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> None:
 
         if settings:
-            self.settings = from_dict(data_class=self.settings_class, data=settings)
+            # DBLP as a search_source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            # DBLP as an md-prep source
+            dblp_md_source_l = [
+                s
+                for s in source_operation.review_manager.settings.sources
+                if s.filename == self.__dblp_md_filename
+            ]
+            if dblp_md_source_l:
+                self.search_source = dblp_md_source_l[0]
+            else:
+                self.search_source = colrev.settings.SearchSource(
+                    endpoint="colrev_built_in.dblp",
+                    filename=self.__dblp_md_filename,
+                    search_type=colrev.settings.SearchType.OTHER,
+                    source_identifier=self.source_identifier,
+                    search_parameters={},
+                    load_conversion_package_endpoint={
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    comment="",
+                )
+        self.dblp_lock = Lock()
+        self.origin_prefix = self.search_source.get_origin_prefix()
 
-    def check_status(self, *, prep_operation: colrev.ops.prep.Prep) -> None:
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
         """Check status (availability) of DBLP API"""
 
         try:
@@ -99,8 +129,8 @@ class DBLPSearchSource(JsonSchemaMixin):
 
             query = "" + str(test_rec.get("title", "")).replace("-", "_")
 
-            dblp_record = self.retrieve_dblp_records(
-                review_manager=prep_operation.review_manager,
+            dblp_record = self.__retrieve_dblp_records(
+                review_manager=source_operation.review_manager,
                 query=query,
             )[0]
 
@@ -108,10 +138,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 assert dblp_record.data["title"] == test_rec["title"]
                 assert dblp_record.data["author"] == test_rec["author"]
             else:
-                if not prep_operation.force_mode:
+                if not source_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException as exc:
-            if not prep_operation.force_mode:
+            if not source_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
 
     def __get_dblp_venue(
@@ -194,7 +224,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 timeout=timeout,
             )
         if "title" in item:
-            retrieved_record["title"] = item["title"].rstrip(".")
+            retrieved_record["title"] = item["title"].rstrip(".").rstrip()
         if "year" in item:
             retrieved_record["year"] = item["year"]
         if "volume" in item:
@@ -236,7 +266,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
-    def retrieve_dblp_records(
+    def __retrieve_dblp_records(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
@@ -245,6 +275,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> list:
         """Retrieve records from DBLP based on a query"""
+
+        # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
         try:
             assert query is not None or url is not None
@@ -284,6 +316,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                 colrev.record.PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts
             ]
             for retrieved_record in retrieved_records:
+                # Note : DBLP provides number-of-pages (instead of pages start-end)
+                if "pages" in retrieved_record.data:
+                    del retrieved_record.data["pages"]
                 retrieved_record.add_provenance_all(
                     source=retrieved_record.data["dblp_key"]
                 )
@@ -296,82 +331,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             ) from exc
 
         return retrieved_records
-
-    def __retrieve_and_append_year_batch(
-        self,
-        *,
-        search_operation: colrev.ops.search.Search,
-        records_dict: typing.Dict[str, typing.Dict],
-        year: int,
-    ) -> typing.Dict[str, typing.Dict]:
-
-        search_operation.review_manager.logger.debug(f"Retrieve year {year}")
-        __api_url = "https://dblp.org/search/publ/api?q="
-
-        query = (
-            self.settings.search_parameters["scope"]["journal_abbreviated"]
-            + "+"
-            + str(year)
-        )
-        # query = params['scope']["venue_key"] + "+" + str(year)
-
-        available_ids = [
-            x["dblp_key"] for x in records_dict.values() if "dblp_key" in x
-        ]
-        max_id = (
-            max(
-                [int(x["ID"]) for x in records_dict.values() if x["ID"].isdigit()] + [1]
-            )
-            + 1
-        )
-
-        nr_retrieved = 0
-        batch_size = 250
-        while True:
-            url = (
-                __api_url
-                + query.replace(" ", "+")
-                + f"&format=json&h={batch_size}&f={nr_retrieved}"
-            )
-            nr_retrieved += batch_size
-            # search_operation.review_manager.logger.debug(url)
-
-            retrieved = False
-            for retrieved_record in self.retrieve_dblp_records(
-                review_manager=search_operation.review_manager, url=url
-            ):
-                if "colrev_data_provenance" in retrieved_record.data:
-                    del retrieved_record.data["colrev_data_provenance"]
-                if "colrev_masterdata_provenance" in retrieved_record.data:
-                    del retrieved_record.data["colrev_masterdata_provenance"]
-
-                retrieved = True
-
-                if (
-                    f"{self.settings.search_parameters['scope']['venue_key']}/"
-                    not in retrieved_record.data["dblp_key"]
-                ):
-                    continue
-
-                if retrieved_record.data["dblp_key"] not in available_ids:
-                    retrieved_record.data["ID"] = str(max_id).rjust(6, "0")
-                    if retrieved_record.data.get("ENTRYTYPE", "") not in [
-                        "article",
-                        "inproceedings",
-                    ]:
-                        continue
-                        # retrieved_record["ENTRYTYPE"] = "misc"
-                    if "pages" in retrieved_record.data:
-                        del retrieved_record.data["pages"]
-                    available_ids.append(retrieved_record.data["dblp_key"])
-
-                    records_dict[retrieved_record.data["ID"]] = retrieved_record.data
-                    max_id += 1
-
-            if not retrieved:
-                break
-
-        return records_dict
 
     def validate_source(
         self,
@@ -391,62 +350,211 @@ class DBLPSearchSource(JsonSchemaMixin):
             )
 
         # maybe : validate/assert that the venue_key is available
-        if "scope" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                "scope required in search_parameters"
+        if "scope" in source.search_parameters:
+            if "venue_key" not in source.search_parameters["scope"]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "venue_key required in search_parameters/scope"
+                )
+            if "journal_abbreviated" not in source.search_parameters["scope"]:
+                raise colrev_exceptions.InvalidQueryException(
+                    "journal_abbreviated required in search_parameters/scope"
+                )
+        elif "query" in source.search_parameters:
+            assert source.search_parameters["query"].startswith(
+                "https://dblp.org/search/publ/api?q="
             )
-        if "venue_key" not in source.search_parameters["scope"]:
+        elif source.is_md_source():
+            pass
+            # assert params empty
+        else:
             raise colrev_exceptions.InvalidQueryException(
-                "venue_key required in search_parameters/scope"
-            )
-        if "journal_abbreviated" not in source.search_parameters["scope"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "journal_abbreviated required in search_parameters/scope"
+                "scope or query required in search_parameters"
             )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
-        """Run a search of DBLP"""
+    def __run_md_search_update(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        dblp_feed: connector_utils.GeneralOriginFeed,
+    ) -> None:
 
-        # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
+        records = search_operation.review_manager.dataset.load_records_dict()
 
-        search_operation.review_manager.logger.debug(
-            f"Retrieve DBLP: {self.settings.search_parameters}"
-        )
+        nr_changed = 0
 
-        records: list = []
-        if self.settings.filename.is_file():
-            with open(self.settings.filename, encoding="utf8") as bibtex_file:
-                feed_rd = search_operation.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
+        for feed_record_dict in dblp_feed.feed_records.values():
+            feed_record = colrev.record.Record(data=feed_record_dict)
+            query = "" + feed_record.data.get("title", "").replace("-", "_")
+            for retrieved_record in self.__retrieve_dblp_records(
+                review_manager=search_operation.review_manager,
+                query=query,
+            ):
+                if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
+                    continue
+
+                dblp_feed.set_id(record_dict=retrieved_record.data)
+                prev_record_dict_version = {}
+                if retrieved_record.data["ID"] in dblp_feed.feed_records:
+                    prev_record_dict_version = dblp_feed.feed_records[
+                        retrieved_record.data["ID"]
+                    ]
+
+                dblp_feed.add_record(record=retrieved_record)
+                # TODO:
+                # if "Withdrawn (according to DBLP)" in record.data.get(
+                #     "warning", ""
+                # ):
+                #     record.prescreen_exclude(reason="retracted")
+                #     record.remove_field(key="warning")
+                changed = search_operation.update_existing_record(
+                    records=records,
+                    record_dict=retrieved_record.data,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
                 )
-                records = list(feed_rd.values())
+                if changed:
+                    nr_changed += 1
 
-        nr_retrieved = 0
+        if nr_changed > 0:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Updated {nr_changed} "
+                f"records based on DBLP{colors.END}"
+            )
+        else:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Records up-to-date with DBLP{colors.END}"
+            )
+
+        dblp_feed.save_feed_file()
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
+
+    def __run_parameter_search(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        dblp_feed: connector_utils.GeneralOriginFeed,
+    ) -> None:
+
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-nested-blocks
+        # pylint: disable=too-many-statements
+
+        records = search_operation.review_manager.dataset.load_records_dict()
 
         try:
-
             # Note : journal_abbreviated is the abbreviated venue_key
 
+            __api_url = "https://dblp.org/search/publ/api?q="
+            nr_retrieved, nr_added, nr_changed = 0, 0, 0
             start = 1980
-            if len(records) > 100 and not search_operation.review_manager.force_mode:
+            if (
+                len(dblp_feed.feed_records) > 100
+                and not search_operation.review_manager.force_mode
+            ):
                 start = datetime.now().year - 2
-            records_dict = {r["ID"]: r for r in records}
-            for year in range(start, datetime.now().year):
-                len_before = len(records_dict)
-                records_dict = self.__retrieve_and_append_year_batch(
-                    search_operation=search_operation,
-                    records_dict=records_dict,
-                    year=year,
-                )
-                nr_added = len(records_dict) - len_before
-                nr_retrieved += nr_added
 
-                search_operation.save_feed_file(
-                    records=records_dict, feed_file=self.settings.filename
+            for year in range(start, datetime.now().year):
+
+                search_operation.review_manager.logger.debug(f"Retrieve year {year}")
+
+                if "scope" in self.search_source.search_parameters:
+                    query = (
+                        __api_url
+                        + self.search_source.search_parameters["scope"][
+                            "journal_abbreviated"
+                        ]
+                        + "+"
+                        + str(year)
+                    )
+                    # query = params['scope']["venue_key"] + "+" + str(year)
+                elif "query" in self.search_source.search_parameters:
+                    query = (
+                        self.search_source.search_parameters["query"] + "+" + str(year)
+                    )
+
+                nr_retrieved = 0
+                batch_size = 250
+                while True:
+                    url = (
+                        query.replace(" ", "+")
+                        + f"&format=json&h={batch_size}&f={nr_retrieved}"
+                    )
+                    nr_retrieved += batch_size
+                    # search_operation.review_manager.logger.debug(url)
+
+                    retrieved = False
+                    for retrieved_record in self.__retrieve_dblp_records(
+                        review_manager=search_operation.review_manager, url=url
+                    ):
+                        if "colrev_data_provenance" in retrieved_record.data:
+                            del retrieved_record.data["colrev_data_provenance"]
+                        if "colrev_masterdata_provenance" in retrieved_record.data:
+                            del retrieved_record.data["colrev_masterdata_provenance"]
+
+                        retrieved = True
+
+                        if "scope" in self.search_source.search_parameters:
+                            if (
+                                f"{self.search_source.search_parameters['scope']['venue_key']}/"
+                                not in retrieved_record.data["dblp_key"]
+                            ):
+                                continue
+                        if retrieved_record.data.get("ENTRYTYPE", "") not in [
+                            "article",
+                            "inproceedings",
+                        ]:
+                            continue
+
+                        dblp_feed.set_id(record_dict=retrieved_record.data)
+                        prev_record_dict_version = {}
+                        if retrieved_record.data["ID"] in dblp_feed.feed_records:
+                            prev_record_dict_version = dblp_feed.feed_records[
+                                retrieved_record.data["ID"]
+                            ]
+
+                        added = dblp_feed.add_record(
+                            record=retrieved_record,
+                        )
+                        if added:
+                            nr_added += 1
+
+                        changed = search_operation.update_existing_record(
+                            records=records,
+                            record_dict=retrieved_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                        )
+                        if changed:
+                            nr_changed += 1
+
+                    if not retrieved:
+                        break
+
+                dblp_feed.save_feed_file()
+
+            if nr_retrieved > 0:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Retrieved {nr_added} new records{colors.END}"
+                )
+            else:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}No additional records retrieved{colors.END}"
+                )
+
+            if nr_changed > 0:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {nr_changed} "
+                    f"records based on DBLP{colors.END}"
+                )
+            else:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Records up-to-date with DBLP{colors.END}"
                 )
 
         except UnicodeEncodeError:
@@ -458,13 +566,33 @@ class DBLPSearchSource(JsonSchemaMixin):
         ):
             pass
 
-        if nr_retrieved > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
+        """Run a search of DBLP"""
+
+        search_operation.review_manager.logger.debug(
+            f"Retrieve DBLP: {self.search_source.search_parameters}"
+        )
+
+        dblp_feed = connector_utils.GeneralOriginFeed(
+            source_operation=search_operation,
+            source=self.search_source,
+            feed_file=self.search_source.filename,
+            update_only=update_only,
+            key="dblp_key",
+        )
+
+        if self.search_source.is_md_source():
+            self.__run_md_search_update(
+                search_operation=search_operation,
+                dblp_feed=dblp_feed,
             )
+
         else:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            self.__run_parameter_search(
+                search_operation=search_operation,
+                dblp_feed=dblp_feed,
             )
 
     @classmethod
@@ -492,6 +620,86 @@ class DBLPSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for DBLP"""
+
+        return record
+
+    def get_masterdata_from_dblp(
+        self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
+    ) -> colrev.record.Record:
+        """Retrieve masterdata from DBLP based on similarity with the record provided"""
+
+        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+            # Already linked to a crossref record
+            return record
+
+        same_record_type_required = (
+            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+        )
+
+        try:
+            query = "" + record.data.get("title", "").replace("-", "_")
+            # Note: queries combining title+author/journal do not seem to work any more
+            # if "author" in record:
+            #     query = query + "_" + record["author"].split(",")[0]
+            # if "booktitle" in record:
+            #     query = query + "_" + record["booktitle"]
+            # if "journal" in record:
+            #     query = query + "_" + record["journal"]
+            # if "year" in record:
+            #     query = query + "_" + record["year"]
+
+            for retrieved_record in self.__retrieve_dblp_records(
+                review_manager=prep_operation.review_manager,
+                query=query,
+            ):
+                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                    record_original=record,
+                    retrieved_record_original=retrieved_record,
+                    same_record_type_required=same_record_type_required,
+                )
+                if similarity > prep_operation.retrieval_similarity:
+                    # prep_operation.review_manager.logger.debug("Found matching record")
+                    # prep_operation.review_manager.logger.debug(
+                    #     f"dblp similarity: {similarity} "
+                    #     f"(>{prep_operation.retrieval_similarity})"
+                    # )
+
+                    self.dblp_lock.acquire(timeout=60)
+
+                    # Note : need to reload file because the object is not shared between processes
+                    dblp_feed = connector_utils.GeneralOriginFeed(
+                        source_operation=prep_operation,
+                        source=self.search_source,
+                        feed_file=self.__dblp_md_filename,
+                        update_only=False,
+                        key="dblp_key",
+                    )
+
+                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                    dblp_feed.add_record(record=retrieved_record)
+
+                    record.merge(
+                        merging_record=retrieved_record,
+                        default_source=retrieved_record.data["colrev_origin"][0],
+                    )
+                    record.set_masterdata_complete(
+                        source_identifier=retrieved_record.data["colrev_origin"][0]
+                    )
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                    if "Withdrawn (according to DBLP)" in record.data.get(
+                        "warning", ""
+                    ):
+                        record.prescreen_exclude(reason="retracted")
+                        record.remove_field(key="warning")
+
+                    dblp_feed.save_feed_file()
+                    self.dblp_lock.release()
+                    return record
+
+        except (requests.exceptions.RequestException, UnicodeEncodeError):
+            pass
 
         return record
 

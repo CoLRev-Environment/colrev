@@ -16,3 +16,16 @@ colrev.ops.built\_in.search\_sources.utils
       :nosignatures:
 
       json_to_record
+
+
+
+
+
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+
+      GeneralOriginFeed

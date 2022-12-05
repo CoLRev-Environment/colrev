@@ -17,6 +17,7 @@ colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
       :nosignatures:
 
       ~DBLPMetadataPrep.all_json_schemas
+      ~DBLPMetadataPrep.check_availability
       ~DBLPMetadataPrep.field_mapping
       ~DBLPMetadataPrep.from_dict
       ~DBLPMetadataPrep.from_json

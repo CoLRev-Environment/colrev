@@ -134,6 +134,9 @@ class PDFMetadataValidation(JsonSchemaMixin):
         ):
             return record.data
 
+        if not record.data["file"].endswith(".pdf"):
+            return record.data
+
         local_index = pdf_prep_operation.review_manager.get_local_index()
 
         try:

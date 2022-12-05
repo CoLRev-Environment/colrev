@@ -44,16 +44,23 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+        self.crossref_source = crossref_connector.CrossrefSearchSource(
+            source_operation=prep_operation
+        )
+
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
+        """Check status (availability) of the Crossref API"""
+        self.crossref_source.check_availability(source_operation=source_operation)
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare a record based on Crossref metadata"""
 
-        crossref_source = crossref_connector.CrossrefSourceSearchSource(
-            source_operation=prep_operation
-        )
-        crossref_source.get_masterdata_from_crossref(
+        self.crossref_source.get_masterdata_from_crossref(
             prep_operation=prep_operation, record=record
         )
         return record

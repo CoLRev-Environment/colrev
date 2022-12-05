@@ -17,6 +17,7 @@ colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
       :nosignatures:
 
       ~CrossrefMetadataPrep.all_json_schemas
+      ~CrossrefMetadataPrep.check_availability
       ~CrossrefMetadataPrep.field_mapping
       ~CrossrefMetadataPrep.from_dict
       ~CrossrefMetadataPrep.from_json

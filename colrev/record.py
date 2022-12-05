@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import dictdiffer
 import pandas as pd
+import pdfminer
 from nameparser import HumanName
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
@@ -334,6 +335,7 @@ class Record:
         source: str,
         note: str = "",
         keep_source_if_equal: bool = False,
+        append_edit: bool = True,
     ) -> None:
         """Update a record field (including provenance information)"""
         if keep_source_if_equal:
@@ -343,8 +345,26 @@ class Record:
         self.data[key] = value
         if key in self.identifying_field_keys:
             if not self.masterdata_is_curated():
+                if append_edit:
+                    source = "original|" + source
+                    if key in self.data.get("colrev_data_provenance", {}):
+                        source = (
+                            self.data["colrev_masterdata_provenance"][key]["source"]
+                            + "|"
+                            + source
+                        )
                 self.add_masterdata_provenance(key=key, source=source, note=note)
         else:
+            if append_edit:
+                if key in self.data.get("colrev_data_provenance", {}):
+                    source = (
+                        self.data["colrev_data_provenance"][key]["source"]
+                        + "|"
+                        + source
+                    )
+                else:
+                    source = "original|" + source
+
             self.add_data_provenance(key=key, source=source, note=note)
 
     def rename_field(self, *, key: str, new_key: str) -> None:
@@ -669,7 +689,9 @@ class Record:
 
                 elif preferred_masterdata_source_prefixes:
                     if merging_record_preferred:
-                        self.update_field(key=key, value=str(val), source=source)
+                        self.update_field(
+                            key=key, value=str(val), source=source, append_edit=False
+                        )
 
                 # Fuse best fields if none is curated
                 else:
@@ -684,12 +706,14 @@ class Record:
             # Part 2: other fields
             else:
                 # keep existing values per default
-                if key in self.data:
-                    # except for those that should be updated regularly
-                    if key in ["cited_by"]:
-                        self.update_field(key=key, value=str(val), source=source)
-                else:
-                    self.update_field(key=key, value=str(val), source=source, note=note)
+                self.update_field(
+                    key=key,
+                    value=str(val),
+                    source=source,
+                    note=note,
+                    keep_source_if_equal=True,
+                    append_edit=False,
+                )
 
     @classmethod
     def __select_best_author(
@@ -803,9 +827,11 @@ class Record:
                     preferred_sources=self.preferred_sources,
                 )
                 if self.data[key] != best_author:
-                    self.update_field(key=key, value=best_author, source=source)
+                    self.update_field(
+                        key=key, value=best_author, source=source, append_edit=False
+                    )
             else:
-                self.update_field(key=key, value=val, source=source)
+                self.update_field(key=key, value=val, source=source, append_edit=False)
 
         elif "pages" == key:
             if key in self.data:
@@ -813,10 +839,12 @@ class Record:
                     default=self.data[key], candidate=merging_record.data[key]
                 )
                 if self.data[key] != best_pages:
-                    self.update_field(key=key, value=best_pages, source=source)
+                    self.update_field(
+                        key=key, value=best_pages, source=source, append_edit=False
+                    )
 
             else:
-                self.update_field(key=key, value=val, source=source)
+                self.update_field(key=key, value=val, source=source, append_edit=False)
 
         elif "title" == key:
             if key in self.data:
@@ -824,10 +852,12 @@ class Record:
                     default=self.data[key], candidate=merging_record.data[key]
                 )
                 if self.data[key] != best_title:
-                    self.update_field(key=key, value=best_title, source=source)
+                    self.update_field(
+                        key=key, value=best_title, source=source, append_edit=False
+                    )
 
             else:
-                self.update_field(key=key, value=val, source=source)
+                self.update_field(key=key, value=val, source=source, append_edit=False)
 
         elif "journal" == key:
             if key in self.data:
@@ -836,7 +866,9 @@ class Record:
                     candidate=merging_record.data[key],
                 )
                 if self.data[key] != best_journal:
-                    self.update_field(key=key, value=best_journal, source=source)
+                    self.update_field(
+                        key=key, value=best_journal, source=source, append_edit=False
+                    )
             else:
                 self.update_field(key=key, value=val, source=source)
 
@@ -848,10 +880,12 @@ class Record:
                 )
                 if self.data[key] != best_booktitle:
                     # TBD: custom select_best_booktitle?
-                    self.update_field(key=key, value=best_booktitle, source=source)
+                    self.update_field(
+                        key=key, value=best_booktitle, source=source, append_edit=False
+                    )
 
             else:
-                self.update_field(key=key, value=val, source=source)
+                self.update_field(key=key, value=val, source=source, append_edit=False)
 
         elif "file" == key:
             if key in self.data:
@@ -862,34 +896,43 @@ class Record:
             if key in self.data:
                 if self.data[key].rstrip("/") != merging_record.data[key].rstrip("/"):
                     if "https" not in self.data[key]:
-                        self.update_field(key=key, value=val, source=source)
+                        self.update_field(
+                            key=key, value=val, source=source, append_edit=False
+                        )
 
         elif "UNKNOWN" == self.data.get(
             key, ""
         ) and "UNKNOWN" != merging_record.data.get(key, ""):
             self.data[key] = merging_record.data[key]
+
+            if key in self.identifying_field_keys:
+                self.add_masterdata_provenance(key=key, source=source)
+            else:
+                self.add_data_provenance(key=key, source=source)
+
         elif "UNKNOWN" == merging_record.data.get(key, "UNKNOWN"):
             pass
-        else:
-            try:
-                if key in self.identifying_field_keys:
-                    source = merging_record.data["colrev_masterdata_provenance"][key][
-                        "source"
-                    ]
-                else:
-                    source = merging_record.data["colrev_data_provenance"][key][
-                        "source"
-                    ]
-            except KeyError:
-                pass
-            if val != str(merging_record.data[key]):
-                self.update_field(
-                    key=key,
-                    value=str(merging_record.data[key]),
-                    source=source,
-                    note=note,
-                )
-            # self.update_field(key=key, value=val, source=source, note=note)
+        # Note : the following is deactivated to avoid frequent changes in merged records
+        # else:
+        #     try:
+        #         if key in self.identifying_field_keys:
+        #             source = merging_record.data["colrev_masterdata_provenance"][key][
+        #                 "source"
+        #             ]
+        #         else:
+        #             source = merging_record.data["colrev_data_provenance"][key][
+        #                 "source"
+        #             ]
+        #     except KeyError:
+        #         pass
+        # if val != str(merging_record.data[key]):
+        #     self.update_field(
+        #         key=key,
+        #         value=str(merging_record.data[key]),
+        #         source=source,
+        #         note=note,
+        #     )
+        # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
     def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
@@ -1150,6 +1193,7 @@ class Record:
                 md_p_dict[key]["note"] = note
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
+            md_p_dict[key]["source"] = source
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
@@ -1171,7 +1215,10 @@ class Record:
                 "colrev_id",
             ]:
                 continue
-            if key in self.identifying_field_keys:
+            if (
+                key in self.identifying_field_keys
+                and "CURATED" not in self.data["colrev_masterdata_provenance"]
+            ):
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
                 d_p_dict[key] = {"source": source, "note": ""}
@@ -1523,6 +1570,11 @@ class Record:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
+
+        # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
+        laparams = pdfminer.layout.LAParams()
+        setattr(laparams, "all_texts", True)
+
         with open(pdf_path, "rb") as pdf_file:
             try:
                 for page in PDFPage.get_pages(
@@ -1533,7 +1585,9 @@ class Record:
                 ):
                     resource_manager = PDFResourceManager()
                     fake_file_handle = io.StringIO()
-                    converter = TextConverter(resource_manager, fake_file_handle)
+                    converter = TextConverter(
+                        resource_manager, fake_file_handle, laparams=laparams
+                    )
                     page_interpreter = PDFPageInterpreter(resource_manager, converter)
                     page_interpreter.process_page(page)
 
@@ -1572,7 +1626,7 @@ class Record:
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Path
+        self, *, pages: list, project_path: Path, save_to_path: Path = None
     ) -> None:
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data["file"])
@@ -1587,7 +1641,8 @@ class Record:
 
         if save_to_path:
             writer_cp = PdfFileWriter()
-            writer_cp.addPage(pdf_reader.getPage(0))
+            for page in pages:
+                writer_cp.addPage(pdf_reader.getPage(page))
             filepath = Path(pdf_path)
             with open(save_to_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)
@@ -1608,23 +1663,7 @@ class Record:
         )
         return cpid1
 
-    def __get_source_identifier_string(self, *, source_identifier: str) -> str:
-        marker = re.search(r"\{\{(.*)\}\}", source_identifier)
-        source_identifier_string = source_identifier
-        if marker:
-            marker_string = marker.group(0)
-            key = marker_string[2:-2]
-
-            try:
-                marker_replacement = self.data[key]
-                source_identifier_string = source_identifier.replace(
-                    marker_string, marker_replacement
-                )
-            except KeyError as exc:
-                print(exc)
-        return source_identifier_string
-
-    def __set_initial_import_provenance(self, *, source_identifier_string: str) -> None:
+    def __set_initial_import_provenance(self) -> None:
         # Initialize colrev_masterdata_provenance
         colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
@@ -1632,7 +1671,7 @@ class Record:
             if key in Record.identifying_field_keys:
                 if key not in colrev_masterdata_provenance:
                     colrev_masterdata_provenance[key] = {
-                        "source": source_identifier_string,
+                        "source": self.data["colrev_origin"][0],
                         "note": "",
                     }
             elif key not in Record.provenance_keys and key not in [
@@ -1641,7 +1680,7 @@ class Record:
                 "ENTRYTYPE",
             ]:
                 colrev_data_provenance[key] = {
-                    "source": source_identifier_string,
+                    "source": self.data["colrev_origin"][0],
                     "note": "",
                 }
 
@@ -1705,17 +1744,11 @@ class Record:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        source_identifier: str,
     ) -> None:
         """Set the provenance for an imported record"""
 
         if not self.masterdata_is_curated():
-            source_identifier_string = self.__get_source_identifier_string(
-                source_identifier=source_identifier
-            )
-            self.__set_initial_import_provenance(
-                source_identifier_string=source_identifier_string
-            )
+            self.__set_initial_import_provenance()
             self.__set_initial_non_curated_import_provenance(
                 review_manager=review_manager
             )
@@ -2517,6 +2550,21 @@ class RecordState(Enum):
                 colrev.record.RecordState.rev_excluded,
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
+            ]
+        if state == RecordState.md_prepared:
+            return [
+                RecordState.md_prepared,
+                RecordState.md_processed,
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         if state == RecordState.md_processed:
             return [

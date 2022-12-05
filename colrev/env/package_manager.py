@@ -19,6 +19,7 @@ from zope.interface.verify import verifyObject
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+import colrev.settings
 
 
 class PackageEndpointType(Enum):
@@ -65,7 +66,9 @@ class SearchSourcePackageEndpointInterface(
     )
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation: colrev.ops.search.Search) -> None:  # type: ignore
+    def run_search(
+        search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:  # type: ignore
         """Run the search operation"""
 
     def validate_source(
@@ -278,7 +281,7 @@ class DefaultSettings(JsonSchemaMixin):
 
 
 @dataclass
-class DefaultSourceSettings(JsonSchemaMixin):
+class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     """Search source settings"""
 
     # pylint: disable=duplicate-code

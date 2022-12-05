@@ -29,18 +29,9 @@ class Search(colrev.operation.Operation):
 
         self.sources = review_manager.settings.sources
 
-    def save_feed_file(self, *, records: dict, feed_file: Path) -> None:
-        """Save the feed file"""
-
-        feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        records = {str(r["ID"]).replace(" ", ""): r for r in records.values()}
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=feed_file
-        )
-
     def __get_feed_config(self, *, query_dict: dict) -> dict:
 
-        load_conversion_package_endpoint = {"endpoint": "bibtex"}
+        load_conversion_package_endpoint = {"endpoint": "colrev_built_in.bibtex"}
 
         package_manager = self.review_manager.get_package_manager()
 
@@ -68,58 +59,128 @@ class Search(colrev.operation.Operation):
         """Add a new source"""
 
         saved_args = {"add": f'"{query}"'}
-        query_dict = json.loads(query)
+        if "pdfs" == query:
+            filename = Path("data/search/pdfs.bib")
+            # pylint: disable=no-value-for-parameter
+            add_source = colrev.settings.SearchSource(
+                {
+                    "endpoint": "colrev_built_in.pdfs_dir",
+                    "filename": filename,
+                    "search_type": colrev.settings.SearchType.PDFS,
+                    "source_identifier": "{{file}}",
+                    "search_parameters": {"scope": {"path": "data/pdfs"}},
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    "comment": "",
+                }
+            )
+        elif "https://dblp.org/search?q=" in query:
+            query = query.replace(
+                "https://dblp.org/search?q=", "https://dblp.org/search/publ/api?q="
+            )
 
-        assert "endpoint" in query_dict
+            # TODO : avoid  duplicate filenames
+            filename = Path("data/search/dblp.bib")
+            add_source = colrev.settings.SearchSource(
+                **{  # type: ignore
+                    "endpoint": "colrev_built_in.dblp",
+                    "filename": filename,
+                    "search_type": colrev.settings.SearchType.DB,
+                    "source_identifier": "{{dblp_key}}",
+                    "search_parameters": {"query": query},
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    "comment": "",
+                }
+            )
+        elif "https://search.crossref.org/?q=" in query:
+            query = (
+                query.replace("https://search.crossref.org/?q=", "")
+                .replace("&from_ui=yes", "")
+                .lstrip("+")
+            )
+            # TODO : avoid  duplicate filenames
+            # pylint: disable=import-outside-toplevel
+            # Note : import here to avoid circular imports
+            from colrev.ops.built_in.search_sources.crossref import CrossrefSearchSource
 
-        if "filename" in query_dict:
-            filename = query_dict["filename"]
+            crossref_search_source = CrossrefSearchSource
+
+            filename = Path(f"data/search/crossref_{query.replace(' ', '_')}.bib")
+            add_source = colrev.settings.SearchSource(
+                **{  # type: ignore
+                    "endpoint": "colrev_built_in.crossref",
+                    "filename": filename,
+                    "search_type": colrev.settings.SearchType.DB,
+                    "source_identifier": crossref_search_source.source_identifier,
+                    "search_parameters": {"query": query},
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    "comment": "",
+                }
+            )
         else:
-            filename = f"{query_dict['endpoint']}.bib"
-            i = 0
-            while filename in [x.filename for x in self.sources]:
-                i += 1
-                filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
-        feed_file_path = self.review_manager.path / Path(filename)
-        assert not feed_file_path.is_file()
-        query_dict["filename"] = feed_file_path
+            query_dict = json.loads(query)
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/68
-        # get search_type/source_identifier from the SearchSource
-        # query validation based on ops.built_in.search_source settings
-        # prevent duplicate sources (same endpoint and search_parameters)
-        if "search_type" not in query_dict:
-            query_dict["search_type"] = colrev.settings.SearchType.DB
-        else:
-            query_dict["search_type"] = colrev.settings.SearchType[
-                query_dict["search_type"]
-            ]
-        if "source_identifier" not in query_dict:
-            query_dict["source_identifier"] = "TODO"
+            assert "endpoint" in query_dict
 
-        if "load_conversion_package_endpoint" not in query_dict:
-            query_dict["load_conversion_package_endpoint"] = {"endpoint": "bibtex"}
-        if query_dict["search_type"] == colrev.settings.SearchType.DB:
-            feed_config = self.__get_feed_config(query_dict=query_dict)
-            query_dict["source_identifier"] = feed_config["source_identifier"]
-            query_dict["load_conversion_package_endpoint"] = feed_config[
-                "load_conversion_package_endpoint"
-            ]
+            if "filename" in query_dict:
+                filename = query_dict["filename"]
+            else:
+                filename = Path(
+                    f"{query_dict['endpoint'].replace('colrev_built_in.', '')}.bib"
+                )
+                i = 0
+                while filename in [x.filename for x in self.sources]:
+                    i += 1
+                    filename = Path(
+                        str(filename)[: str(filename).find("_query") + 6] + f"_{i}.bib"
+                    )
+            feed_file_path = self.review_manager.path / filename
+            assert not feed_file_path.is_file()
+            query_dict["filename"] = feed_file_path
 
-        # NOTE: for now, the parameters are limited to whole journals.
-        add_source = colrev.settings.SearchSource(
-            endpoint=query_dict["endpoint"],
-            filename=Path(
-                f"data/search/{filename}",
-            ),
-            search_type=colrev.settings.SearchType(query_dict["search_type"]),
-            source_identifier=query_dict["source_identifier"],
-            search_parameters=query_dict.get("search_parameters", {}),
-            load_conversion_package_endpoint=query_dict[
-                "load_conversion_package_endpoint"
-            ],
-            comment="",
-        )
+            # gh_issue https://github.com/geritwagner/colrev/issues/68
+            # get search_type/source_identifier from the SearchSource
+            # query validation based on ops.built_in.search_source settings
+            # prevent duplicate sources (same endpoint and search_parameters)
+            if "search_type" not in query_dict:
+                query_dict["search_type"] = colrev.settings.SearchType.DB
+            else:
+                query_dict["search_type"] = colrev.settings.SearchType[
+                    query_dict["search_type"]
+                ]
+            if "source_identifier" not in query_dict:
+                query_dict["source_identifier"] = "TODO"
+
+            if "load_conversion_package_endpoint" not in query_dict:
+                query_dict["load_conversion_package_endpoint"] = {
+                    "endpoint": "colrev_built_in.bibtex"
+                }
+            if query_dict["search_type"] == colrev.settings.SearchType.DB:
+                feed_config = self.__get_feed_config(query_dict=query_dict)
+                query_dict["source_identifier"] = feed_config["source_identifier"]
+                query_dict["load_conversion_package_endpoint"] = feed_config[
+                    "load_conversion_package_endpoint"
+                ]
+
+            # NOTE: for now, the parameters are limited to whole journals.
+            add_source = colrev.settings.SearchSource(
+                endpoint=query_dict["endpoint"],
+                filename=Path(
+                    f"data/search/{filename}",
+                ),
+                search_type=colrev.settings.SearchType(query_dict["search_type"]),
+                source_identifier=query_dict["source_identifier"],
+                search_parameters=query_dict.get("search_parameters", {}),
+                load_conversion_package_endpoint=query_dict[
+                    "load_conversion_package_endpoint"
+                ],
+                comment="",
+            )
 
         package_manager = self.review_manager.get_package_manager()
         endpoint_dict = package_manager.load_packages(
@@ -140,7 +201,7 @@ class Search(colrev.operation.Operation):
             saved_args=saved_args,
         )
 
-        self.main(selection_str="all")
+        self.main(selection_str="all", update_only=False)
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
 
@@ -190,7 +251,128 @@ class Search(colrev.operation.Operation):
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
-    def main(self, *, selection_str: str = None) -> None:
+    def update_existing_record(
+        self,
+        *,
+        records: dict,
+        record_dict: dict,
+        prev_record_dict_version: dict,
+        source: colrev.settings.SearchSource,
+    ) -> bool:
+        """Convenience function to update existing records (main data/records.bib)"""
+
+        # pylint: disable=too-many-branches
+
+        changed = False
+
+        def have_changed(record_a: dict, record_b: dict) -> bool:
+            # Note : record_a can have more keys (that's ok)
+            changed = False
+            for key, value in record_b.items():
+                if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
+                    continue
+                if key not in record_a:
+                    return True
+                if record_a[key] != value:
+                    return True
+            return changed
+
+        # TODO : notify on major changes!
+        # TBD: how to handle cases where changes are too significant?
+
+        origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
+        for main_record_dict in records.values():
+            if origin not in main_record_dict["colrev_origin"]:
+                continue
+            # TBD: in curated masterdata repositories?
+            if (
+                "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
+                and "md_curated.bib" != source.get_origin_prefix()
+            ):
+                continue
+
+            if "retracted" in record_dict.get("prescreen_exclusion", ""):
+
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Found paper retract: "
+                    f"{main_record_dict['ID']}{colors.END}"
+                )
+                record = colrev.record.Record(data=main_record_dict)
+                record.prescreen_exclude(reason="retracted", print_warning=True)
+                record.remove_field(key="warning")
+
+            if (
+                "forthcoming" == main_record_dict["year"]
+                and "forthcoming" != record_dict["year"]
+            ):
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Update published forthcoming paper: "
+                    f"{record.data['ID']}{colors.END}"
+                )
+                # prepared_record = crossref_prep.prepare(prep_operation, record)
+                main_record_dict["year"] = record_dict["year"]
+                record = colrev.record.PrepRecord(data=main_record_dict)
+
+                colrev_id = record.create_colrev_id(
+                    also_known_as_record=record.get_data()
+                )
+                record.data["colrev_id"] = colrev_id
+
+            for key, value in record_dict.items():
+                # TODO : integrate the following into source or update_existing_record?!
+                if key in ["curation_ID"]:
+                    continue
+
+                if key in colrev.record.Record.provenance_keys + ["ID"]:
+                    continue
+
+                if key not in main_record_dict:
+                    if key in main_record_dict.get("colrev_masterdata_provenance", {}):
+                        if (
+                            main_record_dict["colrev_masterdata_provenance"][key][
+                                "source"
+                            ]
+                            == "colrev_curation.masterdata_restrictions"
+                            and main_record_dict["colrev_masterdata_provenance"][key][
+                                "note"
+                            ]
+                            == "not_missing"
+                        ):
+                            continue
+                    main_record = colrev.record.Record(data=main_record_dict)
+                    main_record.update_field(
+                        key=key,
+                        value=value,
+                        source=origin,
+                        keep_source_if_equal=True,
+                        append_edit=False,
+                    )
+                else:
+                    if "md_curated.bib" != source.get_origin_prefix():
+                        if prev_record_dict_version.get(
+                            key, "NA"
+                        ) != main_record_dict.get(key, "OTHER"):
+                            continue
+                    main_record = colrev.record.Record(data=main_record_dict)
+                    main_record.update_field(
+                        key=key,
+                        value=value,
+                        source=origin,
+                        keep_source_if_equal=True,
+                        append_edit=False,
+                    )
+            if have_changed(main_record_dict, prev_record_dict_version):
+                changed = True
+
+        if have_changed(record_dict, prev_record_dict_version):
+            # Note : not (yet) in the main records but changed
+            changed = True
+        if changed:
+            self.review_manager.logger.info(f" check/update {origin}")
+
+        return changed
+
+    def main(self, *, selection_str: str = None, update_only: bool) -> None:
         """Search for records (main entrypoint)"""
 
         # Reload the settings because the search sources may have been updated
@@ -216,7 +398,7 @@ class Search(colrev.operation.Operation):
             endpoint = endpoint_dict[source.endpoint.lower()]
             endpoint.validate_source(search_operation=self, source=source)  # type: ignore
             endpoint.run_search(  # type: ignore
-                search_operation=self,
+                search_operation=self, update_only=update_only
             )
 
             if source.filename.is_file():

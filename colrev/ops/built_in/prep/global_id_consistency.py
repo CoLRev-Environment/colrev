@@ -57,7 +57,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         if "doi" in record.data:
             record_copy = record.copy_prep_rec()
 
-            crossref_search_source = crossref_connector.CrossrefSourceSearchSource(
+            crossref_search_source = crossref_connector.CrossrefSearchSource(
                 source_operation=prep_operation
             )
             crossref_md = crossref_search_source.get_masterdata_from_crossref(

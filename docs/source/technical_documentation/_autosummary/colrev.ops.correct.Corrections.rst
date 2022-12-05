@@ -16,8 +16,7 @@ colrev.ops.correct.Corrections
    .. autosummary::
       :nosignatures:
 
-      ~Corrections.apply_correction
-      ~Corrections.check_corrections_of_curated_records
+      ~Corrections.check_corrections_of_records
 
 
 

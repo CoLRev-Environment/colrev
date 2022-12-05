@@ -39,6 +39,17 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.open_library_connector = open_library_connector.OpenLibrarySearchSource(
+            source_operation=prep_operation
+        )
+
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
+        """Check status (availability) of the Crossref API"""
+        self.open_library_connector.check_availability(
+            source_operation=source_operation
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -48,8 +59,8 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
 
         if record.data.get("ENTRYTYPE", "NA") != "book":
             return record
-        OpenLibraryConnector = open_library_connector.OpenLibraryConnector
-        OpenLibraryConnector.get_masterdata_from_open_library(
+
+        self.open_library_connector.get_masterdata_from_open_library(
             prep_operation=prep_operation, record=record
         )
         return record

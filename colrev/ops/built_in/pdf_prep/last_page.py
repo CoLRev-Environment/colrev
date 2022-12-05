@@ -49,6 +49,9 @@ class PDFLastPage(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by removing additional materials (if any)"""
 
+        if not record.data["file"].endswith(".pdf"):
+            return record.data
+
         local_index = pdf_prep_operation.review_manager.get_local_index()
         lp_path = local_index.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
@@ -77,7 +80,7 @@ class PDFLastPage(JsonSchemaMixin):
                 return last_pages
 
             # Note : to generate hashes from a directory containing single-page PDFs:
-            # colrev pdf-prep --get_hashes path
+            # colrev pdf-prep --pdf_hash path
             last_page_hashes = [
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffff83ff83ff",
                 "ffff80038007ffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -86,6 +89,7 @@ class PDFLastPage(JsonSchemaMixin):
                 "ffff80038001ffff7fff7fff7fff7fff7fff7fff7fff7fffffffffffffffffff",
                 "ffff80008003ffffffffffffffffffffffffffffffffffffffffffffffffffff",
                 "ffff80038007ffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "ffff80018001ffffffffffffffffffffffffffffffffffffffffffffffffffff",
             ]
 
             if str(last_page_average_hash_16) in last_page_hashes:
@@ -117,6 +121,17 @@ class PDFLastPage(JsonSchemaMixin):
                 + "tbecopiedoremailedtomultiplesi"
                 + "tesorpostedtoalistservwithoutthecopyrightholder"
                 in last_page_text
+            ):
+                last_pages.append(last_page_nr - 1)
+
+            # CAIS last page / editorial board
+            if all(
+                x in last_page_text
+                for x in [
+                    "caisadvisoryboard",
+                    "caiseditorialboard",
+                    "caissenioreditors",
+                ]
             ):
                 last_pages.append(last_page_nr - 1)
 

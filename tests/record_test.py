@@ -106,7 +106,7 @@ def test_defects() -> None:
     assert set(R1.get_quality_defects()) == {"title", "author"}
     assert R1.has_quality_defects()
     review_manager = colrev.review_manager.ReviewManager()
-    R1.import_provenance(review_manager=review_manager, source_identifier="google")
+    R1.import_provenance(review_manager=review_manager)
     assert R1.data == {
         "ENTRYTYPE": "article",
         "ID": "R1",
@@ -117,15 +117,15 @@ def test_defects() -> None:
         "title": "EDITORIAL",
         "volume": "45",
         "year": "2020",
-        "colrev_data_provenance": {"url": {"note": "", "source": "google"}},
+        "colrev_data_provenance": {"url": {"note": "", "source": "orig1"}},
         "colrev_masterdata_provenance": {
-            "author": {"note": "quality_defect", "source": "google"},
-            "journal": {"note": "", "source": "google"},
-            "number": {"note": "", "source": "google"},
-            "pages": {"note": "", "source": "google"},
-            "title": {"note": "quality_defect", "source": "google"},
-            "volume": {"note": "", "source": "google"},
-            "year": {"note": "", "source": "google"},
+            "author": {"note": "quality_defect", "source": "orig1"},
+            "journal": {"note": "", "source": "orig1"},
+            "number": {"note": "", "source": "orig1"},
+            "pages": {"note": "", "source": "orig1"},
+            "title": {"note": "quality_defect", "source": "orig1"},
+            "volume": {"note": "", "source": "orig1"},
+            "year": {"note": "", "source": "orig1"},
         },
         "colrev_origin": "orig1",
         "colrev_status": colrev.record.RecordState.md_prepared,

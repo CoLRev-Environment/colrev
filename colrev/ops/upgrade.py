@@ -928,6 +928,57 @@ class Upgrade(colrev.operation.Operation):
 
         self.review_manager.settings = self.review_manager.load_settings()
 
+        prep_operation = self.review_manager.get_prep_operation(retrieval_similarity=0.9)
+
+        self.review_manager.logger.info("Create/link local-index metadata")
+        # pylint: disable=import-outside-toplevel
+        import colrev.ops.built_in.search_sources.local_index as local_index_connector
+
+        local_index_source = local_index_connector.LocalIndexSearchSource(
+            source_operation=prep_operation
+        )
+        records = self.review_manager.dataset.load_records_dict()
+        if not self.review_manager.settings.is_curated_masterdata_repo():
+            for record_dict in tqdm(records.values()):
+                if "CURATED" not in record_dict.get("colrev_masterdata_provenance", {}):
+                    pass
+                if not any(
+                    o.startswith("md_local_index.bib")
+                    for o in record_dict["colrev_origin"]
+                ):
+                    local_index_source.get_masterdata_from_local_index(
+                        prep_operation=prep_operation,
+                        record=colrev.record.Record(data=record_dict),
+                    )
+
+        self.review_manager.dataset.save_records_dict(records=records)
+
+        if any(
+            "colrev_built_in.get_masterdata_from_crossref" == x["endpoint"]
+            for r in self.review_manager.settings.prep.prep_rounds
+            for x in r.prep_package_endpoints
+        ):
+            # pylint: disable=import-outside-toplevel
+            import colrev.ops.built_in.search_sources.crossref as crossref_connector
+
+            crossref_source = crossref_connector.CrossrefSearchSource(
+                source_operation=prep_operation
+            )
+            # TODO : check provenance: if field values equal, set provenance!
+            self.review_manager.logger.info("Create/link crossref metadata")
+            for record_dict in tqdm(records.values()):
+                if "doi" in record_dict:
+                    if not any(
+                        o.startswith("md_crossref.bib/")
+                        for o in record_dict["colrev_origin"]
+                    ):
+                        crossref_source.get_masterdata_from_crossref(
+                            prep_operation=prep_operation,
+                            record=colrev.record.Record(data=record_dict),
+                        )
+
+        self.review_manager.dataset.save_records_dict(records=records)
+
         self.review_manager.update_status_yaml()
 
         for bib_file in self.review_manager.DATA_DIR_RELATIVE.glob("**/*.bib"):

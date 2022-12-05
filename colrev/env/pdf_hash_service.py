@@ -34,6 +34,12 @@ class PDFHashService:
         pdf_path = pdf_path.resolve()
         pdf_dir = pdf_path.parents[0]
 
+        if 0 == os.path.getsize(pdf_path):
+            self.review_manager.logger.error(
+                f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}"
+            )
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+
         command = (
             f'docker run --rm -v "{pdf_dir}:/home/docker" '
             f'{self.pdf_hash_image} python app.py "{pdf_path.name}" {page_nr} {hash_size}'
@@ -45,18 +51,13 @@ class PDFHashService:
             )
         except subprocess.CalledProcessError as exc:
 
-            if 0 == os.path.getsize(pdf_path):
-                self.review_manager.logger.error(
-                    f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}"
-                )
-
-            raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
         pdf_hash = ret.decode("utf-8").replace("\n", "")
 
         # when PDFs are not readable, the pdf-hash may consist of 0s
         if len(pdf_hash) * "0" == pdf_hash:
-            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+            raise colrev_exceptions.PDFHashError(path=pdf_path)
 
         return pdf_hash
 

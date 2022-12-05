@@ -80,6 +80,9 @@ class PDFCompletenessValidation(JsonSchemaMixin):
         ):
             return record.data
 
+        if not record.data["file"].endswith(".pdf"):
+            return record.data
+
         def __roman_to_int(*, s: str) -> int:
             s = s.lower()
             roman = {

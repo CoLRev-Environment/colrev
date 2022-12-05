@@ -39,7 +39,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> None:
 
         converters = {Path: Path, Enum: Enum}
-        self.settings = from_dict(
+        self.search_source = from_dict(
             data_class=self.settings_class,
             data=settings,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
@@ -64,28 +64,22 @@ class UnknownSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
+        # Note : source_identifier is not restricted
 
-        if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
-            )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
+        if "query_file" in source.search_parameters:
+            if not Path(source.search_parameters["query_file"]).is_file():
+                raise colrev_exceptions.InvalidQueryException(
+                    f"File does not exist: query_file {source.search_parameters['query_file']} "
+                    f"for ({source.filename})"
+                )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(self, search_operation: colrev.ops.search.Search) -> None:
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, update_only: bool
+    ) -> None:
         """Run a search of an unknown source"""
 
         search_operation.review_manager.logger.info(

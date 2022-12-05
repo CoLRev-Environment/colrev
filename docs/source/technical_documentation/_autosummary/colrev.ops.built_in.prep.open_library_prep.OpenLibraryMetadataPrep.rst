@@ -17,6 +17,7 @@ colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
       :nosignatures:
 
       ~OpenLibraryMetadataPrep.all_json_schemas
+      ~OpenLibraryMetadataPrep.check_availability
       ~OpenLibraryMetadataPrep.field_mapping
       ~OpenLibraryMetadataPrep.from_dict
       ~OpenLibraryMetadataPrep.from_json

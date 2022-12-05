@@ -20,4 +20,4 @@ colrev.ops.built\_in.search\_sources.open\_library
       :template: custom-class-template.rst
       :nosignatures:
 
-      OpenLibraryConnector
+      OpenLibrarySearchSource
