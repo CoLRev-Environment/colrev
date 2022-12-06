@@ -522,6 +522,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                             record=retrieved_record,
                         )
                         if added:
+                            search_operation.review_manager.logger.info(
+                                " retrieve " + retrieved_record.data["dblp_key"]
+                            )
                             nr_added += 1
 
                         changed = search_operation.update_existing_record(

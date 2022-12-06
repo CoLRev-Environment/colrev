@@ -48,6 +48,12 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
             source_operation=prep_operation
         )
 
+        self.crossref_prefixes = [
+            s.get_origin_prefix()
+            for s in prep_operation.review_manager.settings.sources
+            if s.endpoint == "colrev_built_in.crossref"
+        ]
+
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
@@ -59,6 +65,14 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare a record based on Crossref metadata"""
+
+        if any(
+            crossref_prefix in o
+            for crossref_prefix in self.crossref_prefixes
+            for o in record.data["colrev_origin"]
+        ):
+            # Already linked to a crossref record
+            return record
 
         self.crossref_source.get_masterdata_from_crossref(
             prep_operation=prep_operation, record=record

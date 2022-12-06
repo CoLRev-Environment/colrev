@@ -67,15 +67,6 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
-    ) -> None:
-        """Run a search of Wiley"""
-
-        search_operation.review_manager.logger.info(
-            "Automated search not (yet) supported."
-        )
-
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Wiley"""

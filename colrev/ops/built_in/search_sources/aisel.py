@@ -85,15 +85,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
-    ) -> None:
-        """Run a search of the AIS electronic Library (AISeL)"""
-
-        search_operation.review_manager.logger.info(
-            "Automated search not (yet) supported."
-        )
-
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

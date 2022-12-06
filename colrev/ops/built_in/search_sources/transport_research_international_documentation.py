@@ -68,15 +68,6 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
-    ) -> None:
-        """Run a search of Transport Research International Documentation"""
-
-        search_operation.review_manager.logger.info(
-            "Automated search not (yet) supported."
-        )
-
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Transport Research International Documentation"""

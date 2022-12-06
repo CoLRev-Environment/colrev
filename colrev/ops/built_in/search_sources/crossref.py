@@ -87,7 +87,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             self.crossref_lock = Lock()
 
-        self.origin_prefix = self.search_source.get_origin_prefix()
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
@@ -336,10 +335,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
-
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
-            # Already linked to a crossref record
-            return record
 
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
         if len(record.data.get("title", "")) < 35:
@@ -625,7 +620,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                 if added:
                     search_operation.review_manager.logger.info(
-                        " retrieved " + prep_record.data["doi"]
+                        " retrieve " + prep_record.data["doi"]
                     )
                     nr_retrieved += 1
                 else:

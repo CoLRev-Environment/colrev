@@ -928,7 +928,9 @@ class Upgrade(colrev.operation.Operation):
 
         self.review_manager.settings = self.review_manager.load_settings()
 
-        prep_operation = self.review_manager.get_prep_operation(retrieval_similarity=0.9)
+        prep_operation = self.review_manager.get_prep_operation(
+            retrieval_similarity=0.9
+        )
 
         self.review_manager.logger.info("Create/link local-index metadata")
         # pylint: disable=import-outside-toplevel

@@ -217,14 +217,17 @@ class SearchSource(JsonSchemaMixin):
         return exported_dict
 
     def __str__(self) -> str:
+        optional_comment = ""
+        if self.comment:
+            optional_comment = f"\n   comment:             {self.comment}"
         return (
             f"{self.endpoint} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
-            + f"   source identifier:   {self.source_identifier}\n"
-            + f"   search parameters:   {self.search_parameters}\n"
-            + "   load_conversion_package_endpoint:   "
-            + f"{self.load_conversion_package_endpoint['endpoint']}\n"
-            + f"   comment:             {self.comment}"
+            # + f"   source identifier:   {self.source_identifier}\n"
+            + f"   search parameters:   {self.search_parameters}"
+            # + "   load_conversion_package_endpoint:   "
+            # + f"{self.load_conversion_package_endpoint['endpoint']}"
+            + optional_comment
         )
 
 

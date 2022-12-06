@@ -75,9 +75,14 @@ class Search(colrev.operation.Operation):
                     "comment": "",
                 }
             )
-        elif "https://dblp.org/search?q=" in query:
+        elif (
+            "https://dblp.org/search?q=" in query
+            or "https://dblp.org/search/publ?q=" in query
+        ):
             query = query.replace(
                 "https://dblp.org/search?q=", "https://dblp.org/search/publ/api?q="
+            ).replace(
+                "https://dblp.org/search/publ?q=", "https://dblp.org/search/publ/api?q="
             )
 
             # TODO : avoid  duplicate filenames
@@ -191,7 +196,9 @@ class Search(colrev.operation.Operation):
         endpoint = endpoint_dict[add_source.endpoint.lower()]
         endpoint.validate_source(search_operation=self, source=add_source)  # type: ignore
 
-        self.review_manager.p_printer.pprint(add_source)
+        self.review_manager.logger.info(f"{colors.GREEN}Add source:{colors.END}")
+        # self.review_manager.p_printer.pprint(add_source)
+        print(add_source)
         self.review_manager.settings.sources.append(add_source)
         self.review_manager.save_settings()
 
@@ -200,6 +207,7 @@ class Search(colrev.operation.Operation):
             script_call="colrev search",
             saved_args=saved_args,
         )
+        print()
 
         self.main(selection_str="all", update_only=False)
 
@@ -384,11 +392,6 @@ class Search(colrev.operation.Operation):
 
         for source in self.__get_search_sources(selection_str=selection_str):
 
-            print()
-            self.review_manager.logger.info(
-                f"Retrieve from {source.endpoint} (results > data/search/{source.filename.name})"
-            )
-
             endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
@@ -397,6 +400,17 @@ class Search(colrev.operation.Operation):
 
             endpoint = endpoint_dict[source.endpoint.lower()]
             endpoint.validate_source(search_operation=self, source=source)  # type: ignore
+
+            run_search_function = getattr(endpoint, "run_search", None)
+            if not callable(run_search_function):
+                # Some sources do not support automated searches (e.g., unknown sources)
+                continue
+
+            print()
+            self.review_manager.logger.info(
+                f"Retrieve from {source.endpoint} (results > data/search/{source.filename.name})"
+            )
+
             endpoint.run_search(  # type: ignore
                 search_operation=self, update_only=update_only
             )

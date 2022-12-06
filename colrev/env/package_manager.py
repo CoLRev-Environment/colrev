@@ -65,11 +65,12 @@ class SearchSourcePackageEndpointInterface(
         """Main SearchType associated with the SearchSource"""
     )
 
+    # Note : optional method
     # pylint: disable=no-self-argument
-    def run_search(
-        search_operation: colrev.ops.search.Search, update_only: bool
-    ) -> None:  # type: ignore
-        """Run the search operation"""
+    # def run_search(
+    #     search_operation: colrev.ops.search.Search, update_only: bool
+    # ) -> None:  # type: ignore
+    #     """Run the search operation"""
 
     def validate_source(
         search_operation: colrev.ops.search.Search, source: colrev.settings.SearchSource

@@ -408,8 +408,7 @@ class Dedupe(colrev.operation.Operation):
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
             preferred_masterdata_source_prefixes = [
-                s.get_origin_prefix(review_manager=self.review_manager)
-                for s in preferred_masterdata_sources
+                s.get_origin_prefix() for s in preferred_masterdata_sources
             ]
 
         records = self.review_manager.dataset.load_records_dict()
