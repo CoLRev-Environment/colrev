@@ -1,10 +1,19 @@
 
-3. Collaboration
+Collaboration
 ==================================
+
+TODO
+
+- Start with collaboration between humans, between humans and machines/algorithms (need for validation/tracing/reset functionality, highlight that benchmarking "betwee-machines" is also important and supported)
+- The composition of human and algorithmic work varies throughout the steps. The init/prescreen/screen/data tend to be the steps where humans take the lead. Machines should take the lead on the more mechanical tasks (runnign the search/load/prep/dedupe/pdf-get/pdf-prep).
+- Explain how colrev/git support asynchronous (merge) and synchronous (example: data) collaboration
+- Mention that colrev can facilitate collaboration between users with different areas of expertise
+- Explain how to invite collaborators (link from colrev init)
+- Replace the following (git pull/push) by colrev pull/push, add clone
+- Distinguish within/beyond project collaboration
 
 Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
-TODO : replace by colrev pull/push
 
 .. code-block:: bash
 

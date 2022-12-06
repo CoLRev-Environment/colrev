@@ -6,7 +6,7 @@ Literature reviews with CoLRev
     :align: right
     :figwidth: 300px
 
-The CoLRev explains how to use the functionality of CoLRev when conducting a literature review. It covers the user workflow, the processing operations, as well as collaboration and curation.
+The manual explains how to use the functionality of CoLRev when conducting a literature review. It covers the user workflow, the processing operations, as well as collaboration and curation.
 It does not explain the design and architecture of CoLRev, which are covered in the `technical documentation <../foundations_governance/colrev.html>`_ and the `API reference <../technical_documentation/api.html>`_.
 Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
 
@@ -57,9 +57,21 @@ CoLRev relies on several fixed-version dependencies for reproducibility and venv
    :maxdepth: 2
    :caption: Overview
 
-   manual/1_workflow
+   manual/1_operations
 
-   manual/2_operations
+   manual/2_workflow
+
+   manual/2_1_problem_formulation
+
+   manual/2_2_metadata_retrieval
+
+   manual/2_3_metadata_prescreen
+
+   manual/2_3_metadata_prescreen
+
+   manual/2_5_screen
+
+   manual/2_6_data
 
    manual/3_collaboration
 

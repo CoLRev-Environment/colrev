@@ -1,6 +1,14 @@
 
-4. Curation
+Curation
 ==================================
+
+TODO
+
+- Heading: Networked/Next-generation/Beyond/...? This part may be broader than just "metadata curation".
+- The local_index should be mentioned/explained (that it facilitates cross-project data flows in each operation)
+- Curation: guidelines and levels (perfect agreement/reconciliation for metadata vs. additional alternative/narrative layers)
+- Mention the integrated functionality in pull/push (corrections), distribute, sync operations (hooks for non-colrev projects)
+- Mention search from local_index/from other colrev projects
 
 If you already completed a literature review project, it is very easy to set it up as a curation.
 Make your repository available to the intended audience (publicly or within a team), and set the curation fields in the settings.
@@ -19,8 +27,6 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
       colrev env --index
 
 See `reuse of community-curated data <../../foundations_governance/colrev.html>`_ for details.
-
-
 
 ..    This may become a separate chapter:
       Local review environments

@@ -7,9 +7,6 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
 Projects that power CoLRev and its extension scripts:
 
 
-
-
-
 .. |pybtexactivity| image:: https://img.shields.io/github/commit-activity/y/live-clones/pybtex?color=green&style=plastic
    :height: 12pt
 
