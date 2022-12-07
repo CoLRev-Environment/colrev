@@ -5,25 +5,20 @@ Python
 
 .. code-block:: python
 
-    import logging
-    from colrev.review_manager import ReviewManager
-    from colrev.operations import PrepProcess
+    import colrev.review_manager
 
     # Initialize the ReviewManager
-    REVIEW_MANAGER = ReviewManager()
+    review_manager = colrev.review_manager.ReviewManager()
 
-    # Initialize the process and notify the ReviewManager
-    PREP_PROCESS = PrepProcess(REVIEW_MANAGER)
-
-    REVIEW_DATASET = REVIEW_MANAGER.REVIEW_DATASET
+    # Get an operation and notify the ReviewManager
+    prep_operation = review_manager.get_prep_operation()
 
     # Load the records and apply changes
-    records = REVIEW_DATASET.load_records()
-    for record in records:
+    records = review_manger.dataset.load_records_dict()
+    for record in records.values():
         ....
-        self.report_logger.info('Applied changes...')
 
     # Save the changes, add them to git, and create commit
-    REVIEW_DATASET.save_records(records)
-    REVIEW_DATASET.add_record_changes()
-    REVIEW_MANAGER.create_commit("Pre-screening (extension X")
+    review_manager.dataset.save_records_dict(records=records)
+    review_manager.dataset.add_record_changes()
+    review_manager.create_commit("Pre-screening (extension X")

@@ -12,7 +12,7 @@ TODO
 - mention settings (but do not display complete settings.json, which is too long?)
 - TBD: mention the formulation of the scope and search strategy? (exploratory vs confirmatory searches, boolean operators...)
 - Include link to the available review types in the init page
-
+- Indicate that different forms of `data <2_6_data/data.html>`data analysis are activated by the selected review types  (per default)
 
 .. toctree::
    :maxdepth: 3
