@@ -167,43 +167,43 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
 
         if "inproceedings" == record.data["ENTRYTYPE"]:
-            if "ICIS" in record.data["booktitle"]:
+            if "ICIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="International Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "PACIS" in record.data["booktitle"]:
+            if "PACIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="Pacific-Asia Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "ECIS" in record.data["booktitle"]:
+            if "ECIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="European Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "AMCIS" in record.data["booktitle"]:
+            if "AMCIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="Americas Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "HICSS" in record.data["booktitle"]:
+            if "HICSS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="Hawaii International Conference on System Sciences",
                     source="prep_ais_source",
                 )
-            if "MCIS" in record.data["booktitle"]:
+            if "MCIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="Mediterranean Conference on Information Systems",
                     source="prep_ais_source",
                 )
-            if "ACIS" in record.data["booktitle"]:
+            if "ACIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
                     value="Australasian Conference on Information Systems",

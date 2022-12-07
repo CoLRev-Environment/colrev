@@ -27,5 +27,3 @@ Python
     REVIEW_DATASET.save_records(records)
     REVIEW_DATASET.add_record_changes()
     REVIEW_MANAGER.create_commit("Pre-screening (extension X")
-
-
