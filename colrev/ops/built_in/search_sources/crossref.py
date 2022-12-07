@@ -683,7 +683,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             key="doi",
         )
 
-        if self.search_source.is_md_source():
+        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
             self.__run_md_search_update(
                 search_operation=search_operation,
                 crossref_feed=crossref_feed,

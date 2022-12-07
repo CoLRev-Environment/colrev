@@ -329,6 +329,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
             ) from exc
+        except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "requests timed out "
+                "(possibly because the DBLP service is temporarily not available)"
+            ) from exc
 
         return retrieved_records
 
@@ -363,9 +368,8 @@ class DBLPSearchSource(JsonSchemaMixin):
             assert source.search_parameters["query"].startswith(
                 "https://dblp.org/search/publ/api?q="
             )
-        elif source.is_md_source():
-            pass
-            # assert params empty
+        elif source.is_md_source() or source.is_quasi_md_source():
+            pass  # No parameters required
         else:
             raise colrev_exceptions.InvalidQueryException(
                 "scope or query required in search_parameters"
@@ -586,7 +590,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             key="dblp_key",
         )
 
-        if self.search_source.is_md_source():
+        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
             self.__run_md_search_update(
                 search_operation=search_operation,
                 dblp_feed=dblp_feed,
@@ -605,6 +609,9 @@ class DBLPSearchSource(JsonSchemaMixin):
         result = {"confidence": 0.0}
         # Simple heuristic:
         if "bibsource = {dblp computer scienc" in data:
+            result["confidence"] = 1.0
+            return result
+        if "dblp_key" in data:
             result["confidence"] = 1.0
             return result
         return result

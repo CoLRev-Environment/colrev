@@ -58,6 +58,8 @@ class Search(colrev.operation.Operation):
     def add_source(self, *, query: str) -> None:
         """Add a new source"""
 
+        # pylint: disable=too-many-statements
+
         saved_args = {"add": f'"{query}"'}
         if "pdfs" == query:
             filename = Path("data/search/pdfs.bib")

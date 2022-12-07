@@ -202,6 +202,12 @@ class SearchSource(JsonSchemaMixin):
 
         return str(self.filename.name).startswith("md_")
 
+    def is_quasi_md_source(self) -> bool:
+        """Check whether the source is a quasi-metadata source
+        (when search files are added without search_parameters/queries)"""
+
+        return not bool(self.search_parameters)
+
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""
 
