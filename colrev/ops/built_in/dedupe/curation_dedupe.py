@@ -381,6 +381,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-nested-blocks
 
         dedupe_operation.review_manager.logger.info("Processing as a pdf source")
 
@@ -495,22 +496,40 @@ class CurationDedupe(JsonSchemaMixin):
                     # Note : make sure that we merge into the CURATED record
                     if "file" in rec1:
                         if tuple_to_process[0] not in [x["ID1"] for x in decision_list]:
-                            decision_list.append(
-                                {
-                                    "ID1": tuple_to_process[0],
-                                    "ID2": tuple_to_process[1],
-                                    "decision": "duplicate",
-                                }
-                            )
+                            if rec1["colrev_status"] < rec2["colrev_status"]:
+                                decision_list.append(
+                                    {
+                                        "ID1": tuple_to_process[1],
+                                        "ID2": tuple_to_process[0],
+                                        "decision": "duplicate",
+                                    }
+                                )
+                            else:
+                                decision_list.append(
+                                    {
+                                        "ID1": tuple_to_process[0],
+                                        "ID2": tuple_to_process[1],
+                                        "decision": "duplicate",
+                                    }
+                                )
                     else:
                         if tuple_to_process[1] not in [x["ID1"] for x in decision_list]:
-                            decision_list.append(
-                                {
-                                    "ID1": tuple_to_process[1],
-                                    "ID2": tuple_to_process[0],
-                                    "decision": "duplicate",
-                                }
-                            )
+                            if rec1["colrev_status"] < rec2["colrev_status"]:
+                                decision_list.append(
+                                    {
+                                        "ID1": tuple_to_process[1],
+                                        "ID2": tuple_to_process[0],
+                                        "decision": "duplicate",
+                                    }
+                                )
+                            else:
+                                decision_list.append(
+                                    {
+                                        "ID1": tuple_to_process[0],
+                                        "ID2": tuple_to_process[1],
+                                        "decision": "duplicate",
+                                    }
+                                )
         return decision_list
 
     def __pdf_source_selected(

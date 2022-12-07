@@ -11,7 +11,6 @@ import textwrap
 import typing
 from copy import deepcopy
 from difflib import SequenceMatcher
-from enum import auto
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -602,6 +601,15 @@ class Record:
             origins = self.data["colrev_origin"] + merging_record.data["colrev_origin"]
             self.data["colrev_origin"] = list(set(origins))
 
+    def __merge_status(self, *, merging_record: Record) -> None:
+        """Merge the status with the merging_record"""
+
+        # Set both status to the latter in the state model
+        if self.data["colrev_status"] < merging_record.data["colrev_status"]:
+            self.data["colrev_status"] = merging_record.data["colrev_status"]
+        else:
+            merging_record.data["colrev_status"] = self.data["colrev_status"]
+
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
 
@@ -649,6 +657,7 @@ class Record:
                 merging_record_preferred = True
 
         self.__merge_origins(merging_record=merging_record)
+        self.__merge_status(merging_record=merging_record)
 
         if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
             self.data["colrev_masterdata_provenance"] = merging_record.data[
@@ -2494,42 +2503,47 @@ class RecordState(Enum):
     # pylint: disable=invalid-name
 
     # without the md_retrieved state, we could not display the load transition
-    md_retrieved = auto()
+    md_retrieved = 1
     """Record is retrieved and stored in the ./search directory"""
-    md_imported = auto()
+    md_imported = 2
     """Record is imported into the RECORDS_FILE"""
-    md_needs_manual_preparation = auto()
+    md_needs_manual_preparation = 3
     """Record requires manual preparation
     (colrev_masterdata_provenance provides hints)"""
-    md_prepared = auto()
+    md_prepared = 4
     """Record is prepared (no missing or incomplete fields, inconsistencies checked)"""
-    md_processed = auto()
+    md_processed = 5
     """Record has been checked for duplicate associations
     with any record in RecordState md_processed or later"""
-    rev_prescreen_excluded = auto()
+    rev_prescreen_excluded = 6
     """Record was excluded in the prescreen (based on titles/abstracts)"""
-    rev_prescreen_included = auto()
+    rev_prescreen_included = 7
     """Record was included in the prescreen (based on titles/abstracts)"""
-    pdf_needs_manual_retrieval = auto()
+    pdf_needs_manual_retrieval = 8
     """Record marked for manual PDF retrieval"""
-    pdf_imported = auto()
+    pdf_imported = 9
     """PDF imported and marked for preparation"""
-    pdf_not_available = auto()
+    pdf_not_available = 10
     """PDF is not available"""
-    pdf_needs_manual_preparation = auto()
+    pdf_needs_manual_preparation = 11
     """PDF marked for manual preparation"""
-    pdf_prepared = auto()
+    pdf_prepared = 12
     """PDF prepared"""
-    rev_excluded = auto()
+    rev_excluded = 13
     """Record excluded in screen (full-text)"""
-    rev_included = auto()
+    rev_included = 14
     """Record included in screen (full-text)"""
-    rev_synthesized = auto()
+    rev_synthesized = 15
     """Record synthesized"""
     # Note : TBD: rev_coded
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def __lt__(self, other) -> bool:  # type: ignore
+        if self.__class__ == RecordState and other.__class__ == RecordState:
+            return self.value < other.value
+        return NotImplemented
 
     @classmethod
     def get_non_processed_states(cls) -> list:

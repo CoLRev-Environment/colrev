@@ -9,6 +9,7 @@ import subprocess
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
+import requests
 import timeout_decorator
 
 import colrev.exceptions as colrev_exceptions
@@ -162,6 +163,7 @@ class PDFPrep(colrev.operation.Operation):
                 timeout_decorator.timeout_decorator.TimeoutError,
                 colrev_exceptions.InvalidPDFException,
                 colrev_exceptions.TEIException,
+                requests.exceptions.ReadTimeout,
             ) as err:
                 self.review_manager.logger.error(
                     f'Error for {record.data["ID"]} '  # type: ignore

@@ -244,13 +244,23 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     valid_selection = True
                 elif ret.isdigit():
                     if int(ret) - 1 <= i:
-                        results["decision_list"].append(
-                            {
-                                "ID1": record.data["ID"],
-                                "ID2": same_toc_recs[int(ret) - 1]["ID"],
-                                "decision": "duplicate",
-                            }
-                        )
+                        rec2 = same_toc_recs[int(ret) - 1]
+                        if record.data["colrev_status"] < rec2["colrev_status"]:
+                            results["decision_list"].append(
+                                {
+                                    "ID1": rec2["ID"],
+                                    "ID2": record.data["ID"],
+                                    "decision": "duplicate",
+                                }
+                            )
+                        else:
+                            results["decision_list"].append(
+                                {
+                                    "ID1": record.data["ID"],
+                                    "ID2": rec2["ID"],
+                                    "decision": "duplicate",
+                                }
+                            )
 
                         valid_selection = True
             nr_recs_checked += 1
