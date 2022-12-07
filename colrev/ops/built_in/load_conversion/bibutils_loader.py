@@ -45,9 +45,9 @@ class BibutilsLoader(JsonSchemaMixin):
     ):
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-        self.bibutils_image = "bibutils:latest"
+        self.bibutils_image = "colrev/bibutils:latest"
         load_operation.review_manager.environment_manager.build_docker_image(
-            imagename=self.bibutils_image, image_path=Path("docker/bibutils")
+            imagename=self.bibutils_image
         )
 
     def load(
