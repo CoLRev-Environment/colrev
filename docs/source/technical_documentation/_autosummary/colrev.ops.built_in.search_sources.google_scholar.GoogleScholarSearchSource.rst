@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.load_fixes
       ~GoogleScholarSearchSource.prepare
       ~GoogleScholarSearchSource.register_field_encoders
-      ~GoogleScholarSearchSource.run_search
       ~GoogleScholarSearchSource.to_dict
       ~GoogleScholarSearchSource.to_json
       ~GoogleScholarSearchSource.validate_source

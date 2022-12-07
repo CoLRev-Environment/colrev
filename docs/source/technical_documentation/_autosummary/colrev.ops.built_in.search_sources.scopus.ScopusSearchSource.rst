@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.load_fixes
       ~ScopusSearchSource.prepare
       ~ScopusSearchSource.register_field_encoders
-      ~ScopusSearchSource.run_search
       ~ScopusSearchSource.to_dict
       ~ScopusSearchSource.to_json
       ~ScopusSearchSource.validate_source

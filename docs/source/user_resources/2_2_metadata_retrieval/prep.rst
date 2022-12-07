@@ -66,3 +66,24 @@ To trace an error (e.g., incorrect author names)
 - identify the ID of the record and search for it in the commit message for further details
 
 If the error was introduced in a 'prep' commit, the commit message will guide you to the source.
+
+The following options for prep are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['prep'],
+        title='Extensions: prep',
+        ) }}
+
+The following options for prep-man are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['prep_man'],
+        title='Extensions: prep_man',
+        ) }}

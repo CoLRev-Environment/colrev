@@ -1,5 +1,6 @@
-{
-    "colrev_built_in": {
+[
+    {
+        "module": "colrev",
         "url": "https://github.com/colrev/colrev"
-        }
     }
+]

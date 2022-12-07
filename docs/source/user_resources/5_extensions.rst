@@ -1,105 +1,35 @@
 
-Extension
+Extensions
 ==================================
 
-Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_. Guidelines on extension development and a few examples are summarized below.
-
-Extension development
-------------------
-
-Developing CoLRev extensions in Python/R is easy. Instructions and examples are provided below.
-
-**Recommendations**:
-
-- Get paths (as shown in :program:`colrev settings`) from REVIEW_MANAGER.paths
-- Use the logger (report vs tool/extension)
-    - colrev_report logger: log info that are helpful to examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available
-    - extension logger: log info on the progress. The output should be relatively short and allow users to see the progress and judge whether any errors occurred
-
-- `Add <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics>`_ the ```colrev-extension``` `topic tag on GitHub <https://github.com/topics/colrev-extension>`_ to allow others to find and use your work
+CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process.
+At the same time you can easily include other extensions or custom scripts (batteries are swappable).
+Everything is specified in the settings.json (simply add the extension/script name as the endpoint to any of the `scripts elements <https://github.com/geritwagner/colrev/blob/main/colrev/template/settings.json>`_):
 
 
-Python
-------------------
+.. code-block:: diff
 
-.. code-block:: python
+   ...
+    "screen": {
+        "criteria": [],
+        "scripts": [
+            {
+   -             "endpoint": "colrev_cli_screen"
+   +             "endpoint": "custom_screen_script"
+            }
+        ]
+    },
+    ...
 
-    import logging
-    from colrev.review_manager import ReviewManager
-    from colrev.operations import PrepProcess
-
-    # Initialize the ReviewManager
-    REVIEW_MANAGER = ReviewManager()
-
-    # Initialize the process and notify the ReviewManager
-    PREP_PROCESS = PrepProcess(REVIEW_MANAGER)
-
-    REVIEW_DATASET = REVIEW_MANAGER.REVIEW_DATASET
-
-    # Load the records and apply changes
-    records = REVIEW_DATASET.load_records()
-    for record in records:
-        ....
-        self.report_logger.info('Applied changes...')
-
-    # Save the changes, add them to git, and create commit
-    REVIEW_DATASET.save_records(records)
-    REVIEW_DATASET.add_record_changes()
-    REVIEW_MANAGER.create_commit("Pre-screening (extension X")
+The available (built-in) extensions are documented in the respective operations pages (`init <2_1_problem_formulation/init.html>`_, `search <2_2_metadata_retrieval/search.html>`_, `load <2_2_metadata_retrieval/load.html>`_, `prep <2_2_metadata_retrieval/prep.html>`_, `dedupe <2_2_metadata_retrieval/dedupe.html>`_, `prescreen <2_3_metadata_prescreen/prescreen.html>`_, `pdf_get <2_4_fulltext_retrieval/pdf_get.html>`_, `pdf_prep <2_4_fulltext_retrieval/pdf_prep.html>`_, `screen <2_5_screen/screen.html>`_, `data <2_6_data/data.html>`_).
 
 
-R
-------------------
+.. toctree::
+   :maxdepth: 3
+   :caption: Extension development resources
 
-For analytical extensions
-
-.. code-block:: R
-
-    # install.packages("bib2df")
-    library(bib2df)
-
-    df <- bib2df("references.bib")
-    df
-
-For extensions aimed at changing records
-
-.. code-block:: R
-
-    # install.packages("reticulate")
-    library(reticulate)
-    colrev <- reticulate::import("colrev")
-
-    # Initialize the ReviewManager
-    REVIEW_MANAGER <- colrev$review_manager$ReviewManager()
-
-    # Initialize the PrepProcess and notify about upcoming process
-    PREP_PROCESS <- colrev$process$PrepProcess(REVIEW_MANAGER)
-
-    REVIEW_DATASET = PREP_PROCESS$REVIEW_DATASET
-
-    # Load the records and apply changes
-    records = REVIEW_DATASET$load_records()
-
-
-Example: colrev_cml_assistant
-------------------
-
-Aimed at supporting crowdsourcing and machine-learning based on CoLRev datasets.
-
-Link to the repository: `colrev_cml_assistant <https://github.com/geritwagner/colrev_cml_assistant>`_.
-
-Custom script extensions
-------------------
-
-To develop a custom extension script, run the command for the respective operation:
-
-.. code-block::
-
-    colrev search -scs
-    colrev prep -scs
-    colrev prescreen -scs
-    colrev pdf-get -scs
-    colrev pdf-prep -scs
-    colrev pdf-prep -scs
-    colrev screen -scs
-    colrev data -scs
+   5_extensions/development
+   5_extensions/python
+   5_extensions/r
+   5_extensions/custom_extensions
+   5_extensions/example

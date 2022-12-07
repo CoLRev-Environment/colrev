@@ -29,5 +29,16 @@ TODO
 
     Load errors as highlighted in the spreadsheets (duplicates_to_validate.xlsx, non_duplicates_to_validate.xlsx) and fix them.
 
+The following options for dedupe are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['dedupe'],
+        title='Extensions: dedupe',
+        ) }}
+
+
 .. figure:: ../../../figures/duplicate_validation.png
    :alt: Validation of duplicates

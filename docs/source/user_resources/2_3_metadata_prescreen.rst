@@ -6,6 +6,7 @@ Step 4: Metadata prescreen
 
 TODO
 
+- add infos on how to skip the step (leave the package_endpoints empty)
 
 .. toctree::
    :maxdepth: 3

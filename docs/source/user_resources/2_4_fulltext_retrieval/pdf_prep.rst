@@ -20,3 +20,23 @@ When PDFs cannot be prepared automatically, :program:`colrev pdf-prep-man` provi
 .. code:: bash
 
 	colrev pdf-prep-man [options]
+
+The following options for pdf-prep are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['pdf_prep'],
+        title='Extensions: pdf_prep',
+        ) }}
+
+The following options for pdf-prep-man are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['pdf_prep_man'],
+        title='Extensions: pdf_prep_man',
+        ) }}

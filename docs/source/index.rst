@@ -33,19 +33,12 @@ Collaborative Literature Reviews
 
 .. toctree::
    :hidden:
-   :caption: Technical documentation
-   :maxdepth: 1
-
-   technical_documentation/api
-   technical_documentation/reference_implementation
-   technical_documentation/cli
-   Repository <https://github.com/geritwagner/colrev>
-
-.. toctree::
-   :hidden:
-   :caption: Foundations and governance
+   :caption: Documentation and governance
    :maxdepth: 1
 
    foundations_governance/colrev
+   technical_documentation/api
+   technical_documentation/cli
    foundations_governance/roadmap
+   Repository <https://github.com/geritwagner/colrev>
    foundations_governance/about

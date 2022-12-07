@@ -1873,6 +1873,12 @@ def __print_environment_status(
     help="Path of repository to remove from local registry.",
 )
 @click.option(
+    "--update_package_list",
+    is_flag=True,
+    default=False,
+    help="Update the package list (extensions).",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -1898,6 +1904,7 @@ def env(
     search: bool,
     register: bool,
     unregister: bool,
+    update_package_list: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1966,6 +1973,12 @@ def env(
             )
             logging.info("Removed from local registry: %s", unregister)
         return
+
+    if update_package_list:
+        import colrev.env.package_manager as p_manager
+
+        package_manager = p_manager.PackageManager()
+        package_manager.update_package_list()
 
     local_index = review_manager.get_local_index()
     if search:

@@ -30,6 +30,17 @@ TODO
 
     Complete the prescreen for the specified split.
 
+The following options for prescreen are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['prescreen'],
+        title='Extensions: prescreen',
+        ) }}
+
+
 ..
     The settings can be used to specify scope variables which are applied automatically before the manual prescreen:
 

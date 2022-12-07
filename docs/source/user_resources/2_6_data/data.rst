@@ -3,6 +3,17 @@
 colrev data
 ---------------------------------------------
 
+The following options for data are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['data'],
+        title='Extensions: data',
+        ) }}
+
+
 To set the data format, run any (combination) of the following:
 
 .. code:: bash

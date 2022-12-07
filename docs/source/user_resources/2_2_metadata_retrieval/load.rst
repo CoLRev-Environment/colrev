@@ -1,4 +1,4 @@
-.. Load:
+.. _Load:
 
 colrev load
 ==================================
@@ -23,3 +23,13 @@ Formats
 - Structured formats (csv, xlsx) are imported using standard Python libraries
 - Semi-structured formats are imported using bibtexparser or the zotero-translation services (see `supported import formats <https://www.zotero.org/support/kb/importing_standardized_formats>`_)
 - Unstructured formats are imported using Grobid (lists of references and pdf reference lists)
+
+The following options for load_conversion are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['load_conversion'],
+        title='Extensions: load_conversion',
+        ) }}

@@ -3,13 +3,23 @@
 colrev search
 ==================================
 
+
 :program:`colrev search` retrieves search results from
 
-- Crossref
-- DBLP
-- CoLRev projects (local or online)
-- Directories containing PDFs
-- Curated metadata repositories (through the local index)
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['search_source'],
+        title='Extensions: search_sources',
+        ) }}
+
+..
+    - Crossref
+    - DBLP
+    - CoLRev projects (local or online)
+    - Directories containing PDFs
+    - Curated metadata repositories (through the local index)
 
 .. code:: bash
 

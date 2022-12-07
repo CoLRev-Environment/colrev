@@ -353,6 +353,14 @@ dedupe = "*"
 future = "*"
 
 [[package]]
+name = "defusedxml"
+version = "0.7.1"
+description = "XML bomb protection for Python stdlib modules"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
 name = "dictdiffer"
 version = "0.9.0"
 description = "Dictdiffer is a library that helps you to diff and patch dictionaries."
@@ -820,6 +828,14 @@ python-versions = "*"
 
 [package.extras]
 test = ["pytest", "importlib-metadata"]
+
+[[package]]
+name = "pbr"
+version = "5.11.0"
+description = "Python Build Reasonableness"
+category = "dev"
+optional = false
+python-versions = ">=2.6"
 
 [[package]]
 name = "pdfminer.six"
@@ -1383,6 +1399,20 @@ test = ["pytest"]
 lint = ["docutils-stubs", "mypy", "flake8"]
 
 [[package]]
+name = "sphinxcontrib-runcmd"
+version = "0.2.0"
+description = "Sphinx \"runcmd\" extension"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+sphinx = "*"
+
+[package.extras]
+test = ["coverage", "pytest", "pytest-cov", "sphinx-testing"]
+
+[[package]]
 name = "sphinxcontrib-serializinghtml"
 version = "1.1.5"
 description = "sphinxcontrib-serializinghtml is a sphinx extension which outputs \"serialized\" HTML files (json and pickle)."
@@ -1392,6 +1422,25 @@ python-versions = ">=3.5"
 
 [package.extras]
 lint = ["flake8", "mypy", "docutils-stubs"]
+test = ["pytest"]
+
+[[package]]
+name = "sphinxcontrib.datatemplates"
+version = "0.9.2"
+description = "Sphinx extension for rendering data files as nice HTML"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+defusedxml = "*"
+pbr = "*"
+PyYAML = "*"
+Sphinx = "*"
+sphinxcontrib-runcmd = "*"
+
+[package.extras]
+linter = ["flake8"]
 test = ["pytest"]
 
 [[package]]
@@ -1654,7 +1703,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c4bc889e83776e821670b0140a24348817e1d94c2406bd890190c1911abba720"
+content-hash = "3da9b73ae1855bb66b104793834ef3378f10bae09834dd7cb143df0e82290fea"
 
 [metadata.files]
 affinegap = [
@@ -2099,6 +2148,10 @@ dedupe-variable-datetime = [
     {file = "dedupe-variable-datetime-0.1.5.tar.gz", hash = "sha256:3af618c39471b046e634db5f0c4aae9e92d65217f03c5cdfc0657e6f7a42c416"},
     {file = "dedupe_variable_datetime-0.1.5-py2-none-any.whl", hash = "sha256:975e16104ff62d0eb941880292789a70299514886d6a5d8a07b3a6b89591247c"},
     {file = "dedupe_variable_datetime-0.1.5-py3-none-any.whl", hash = "sha256:096d4bb2b8b61217f75b396cea8bcfb5525a2a902110ac98db08cd4bdb32bcd9"},
+]
+defusedxml = [
+    {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
+    {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
 ]
 dictdiffer = [
     {file = "dictdiffer-0.9.0-py2.py3-none-any.whl", hash = "sha256:442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595"},
@@ -2604,6 +2657,10 @@ patchelf = [
     {file = "patchelf-0.15.0.0-py2.py3-none-manylinux_2_5_i686.manylinux1_i686.musllinux_1_1_i686.whl", hash = "sha256:f3f87aee44d1d1b2209e38c4227b0316bb03538df68d20b3d96205aa87868d95"},
     {file = "patchelf-0.15.0.0-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:52e48c08110f2988a9761a5a383f7ae35b1e8e06a140e320d18386d3510697ed"},
     {file = "patchelf-0.15.0.0.tar.gz", hash = "sha256:0f8dcf0df0ba919ce37e8aef67a08bde5326897098451df94ab3a5eedc9e08d9"},
+]
+pbr = [
+    {file = "pbr-5.11.0-py2.py3-none-any.whl", hash = "sha256:db2317ff07c84c4c63648c9064a79fe9d9f5c7ce85a9099d4b6258b3db83225a"},
+    {file = "pbr-5.11.0.tar.gz", hash = "sha256:b97bc6695b2aff02144133c2e7399d5885223d42b7912ffaec2ca3898e673bfe"},
 ]
 "pdfminer.six" = [
     {file = "pdfminer.six-20220524-py3-none-any.whl", hash = "sha256:7e19b857ec76bcbd35665909ad8965a481ad48d9bdff6c45f8522ee66f8a7aab"},
@@ -3129,9 +3186,17 @@ sphinxcontrib-qthelp = [
     {file = "sphinxcontrib-qthelp-1.0.3.tar.gz", hash = "sha256:4c33767ee058b70dba89a6fc5c1892c0d57a54be67ddd3e7875a18d14cba5a72"},
     {file = "sphinxcontrib_qthelp-1.0.3-py2.py3-none-any.whl", hash = "sha256:bd9fc24bcb748a8d51fd4ecaade681350aa63009a347a8c14e637895444dfab6"},
 ]
+sphinxcontrib-runcmd = [
+    {file = "sphinxcontrib-runcmd-0.2.0.tar.gz", hash = "sha256:3551c389d9c5fe82d693c7222feb9658b1a1a5a1abcb0063e8385e5528c64c76"},
+    {file = "sphinxcontrib_runcmd-0.2.0-py2.py3-none-any.whl", hash = "sha256:7b739b68e27210b4c7c12ba16e5b3da7b313c49991401f896d29bea0f0771934"},
+]
 sphinxcontrib-serializinghtml = [
     {file = "sphinxcontrib-serializinghtml-1.1.5.tar.gz", hash = "sha256:aa5f6de5dfdf809ef505c4895e51ef5c9eac17d0f287933eb49ec495280b6952"},
     {file = "sphinxcontrib_serializinghtml-1.1.5-py2.py3-none-any.whl", hash = "sha256:352a9a00ae864471d3a7ead8d7d79f5fc0b57e8b3f95e9867eb9eb28999b92fd"},
+]
+"sphinxcontrib.datatemplates" = [
+    {file = "sphinxcontrib.datatemplates-0.9.2-py2.py3-none-any.whl", hash = "sha256:3a4b409a488f311e577005e11654d05292fa20757313e0174d5641984461c34f"},
+    {file = "sphinxcontrib.datatemplates-0.9.2.tar.gz", hash = "sha256:3c06038faa4662a8a3ef32841af48f7c17a8c721d88b4d1ed83e6b8f820301e7"},
 ]
 sqlalchemy = [
     {file = "SQLAlchemy-1.4.42-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:28e881266a172a4d3c5929182fde6bb6fba22ac93f137d5380cc78a11a9dd124"},

@@ -305,15 +305,15 @@ class PackageManager:
             "custom_class": "CustomReviewType",
             "operation_name": "operation",
         },
-        PackageEndpointType.load_conversion: {
-            "import_name": LoadConversionPackageEndpointInterface,
-            "custom_class": "CustomLoad",
-            "operation_name": "load_operation",
-        },
         PackageEndpointType.search_source: {
             "import_name": SearchSourcePackageEndpointInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
+        },
+        PackageEndpointType.load_conversion: {
+            "import_name": LoadConversionPackageEndpointInterface,
+            "custom_class": "CustomLoad",
+            "operation_name": "load_operation",
         },
         PackageEndpointType.prep: {
             "import_name": PrepPackageEndpointInterface,
@@ -398,12 +398,15 @@ class PackageManager:
         package_dict = json.loads(filedata.decode("utf-8"))
 
         packages = {}
-        for key, value in package_dict.items():
-            packages[PackageEndpointType[key]] = value
-            for package_identifier, package_path in value.items():
-                assert " " not in package_identifier
-                assert " " not in package_path
-                assert package_identifier.islower()
+        for key, package_list in package_dict.items():
+            packages[PackageEndpointType[key]] = {}
+            for package_item in package_list:
+                assert " " not in package_item["package_endpoint_identifier"]
+                assert " " not in package_item["endpoint"]
+                assert package_item["package_endpoint_identifier"].islower()
+                packages[PackageEndpointType[key]][
+                    package_item["package_endpoint_identifier"]
+                ] = {"endpoint": package_item["endpoint"]}
 
         # gh_issue https://github.com/geritwagner/colrev/issues/66
         # testing: validate the structure of packages.json
@@ -416,15 +419,15 @@ class PackageManager:
         return packages
 
     def __flag_installed_packages(self) -> None:
-        for package_type, package in self.packages.items():
-            for package_identifier, discovered_package in package.items():
+        for package_type, package_list in self.packages.items():
+            for package_identifier, package in package_list.items():
                 try:
                     self.load_package_endpoint(
                         package_type=package_type, package_identifier=package_identifier
                     )
-                    discovered_package["installed"] = True
+                    package["installed"] = True
                 except (AttributeError, ModuleNotFoundError):
-                    discovered_package["installed"] = False
+                    package["installed"] = False
 
     def __replace_path_by_str(self, *, orig_dict):  # type: ignore
         for key, value in orig_dict.items():
@@ -707,6 +710,84 @@ class PackageManager:
                 packages_dict[package_identifier] = package_class["endpoint"]
 
         return packages_dict
+
+    def update_package_list(self) -> None:
+        """Generates the template/package_endpoints.json based on the packages in template/packages.json
+        and the endpoints.json files in the top directory of each package."""
+
+        # TODO : check that we are in the colrev repo
+        import imp
+
+        filedata = colrev.env.utils.get_package_file_content(
+            file_path=Path("template/packages.json")
+        )
+        if not filedata:
+            raise colrev_exceptions.CoLRevException(
+                "Package index not available (colrev/template/package_endpoints.json)"
+            )
+
+        colrev_module = imp.find_module("colrev")
+        package_endpoints_json_file = Path(colrev_module[1]) / Path(
+            "template/package_endpoints.json"
+        )
+        if package_endpoints_json_file.is_file():
+            package_endpoints_json_file.unlink()
+
+        package_endpoints_json = {x.name: [] for x in self.package_type_overview}
+
+        packages = json.loads(filedata.decode("utf-8"))
+        for package in packages:
+            print(f'Loading package endpoints from {package["module"]}')
+            imported_module = imp.find_module(package["module"])
+            endpoints_path = Path(imported_module[1]).parent / Path("endpoints.json")
+            if not endpoints_path.is_file():
+                print(f"File does not exist: {endpoints_path}")
+                continue
+
+            try:
+                with open(endpoints_path) as file:
+                    package_endpoints = json.load(file)
+            except json.decoder.JSONDecodeError as exc:
+                print(f"Invalid json {exc}")
+                continue
+
+            for endpoint_type, endpoint_list in package_endpoints_json.items():
+                if endpoint_type in package_endpoints:
+                    package_list = "\n -  ".join(
+                        p["package_endpoint_identifier"]
+                        for p in package_endpoints[endpoint_type]
+                    )
+                    print(f" load {endpoint_type}: {package_list}")
+                    for endpoint_item in package_endpoints[endpoint_type]:
+                        ret = self.load_package_endpoint(
+                            package_type=PackageEndpointType[endpoint_type],
+                            package_identifier=endpoint_item[
+                                "package_endpoint_identifier"
+                            ],
+                        )
+                        # load short_description dynamically...
+                        short_description = ret.__doc__
+                        if "\n" in ret.__doc__:
+                            short_description = ret.__doc__.split("\n")[0]
+                        endpoint_item["short_description"] = short_description
+
+                        if hasattr(ret, "link"):
+                            link = ret.link
+                        else:
+                            link = (
+                                "https://github.com/geritwagner/colrev/blob/main/"
+                                + endpoint_item["endpoint"].replace(".", "/")
+                            )
+                            link = link[: link.rfind("/")]
+                            link += ".py"
+                        # Note: link format for the sphinx docs
+                        endpoint_item["link"] = f"`Link <{link}>`_"
+
+                    endpoint_list += package_endpoints[endpoint_type]
+
+        json_object = json.dumps(package_endpoints_json, indent=4)
+        with open(package_endpoints_json_file, "w") as file:
+            file.write(json_object)
 
 
 if __name__ == "__main__":

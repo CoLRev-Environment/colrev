@@ -20,6 +20,7 @@ colrev.env.package\_manager.PackageManager
       ~PackageManager.get_package_details
       ~PackageManager.load_package_endpoint
       ~PackageManager.load_packages
+      ~PackageManager.update_package_list
 
 
 

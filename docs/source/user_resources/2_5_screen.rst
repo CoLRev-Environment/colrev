@@ -6,6 +6,7 @@ Step 5: Fulltext screen
 
 TODO
 
+- add infos on how to skip the step (leave the package_endpoints empty)
 
 .. toctree::
    :maxdepth: 3

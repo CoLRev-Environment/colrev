@@ -1,5 +1,4 @@
 
-
 .. _Init:
 
 colrev init
@@ -10,9 +9,19 @@ colrev init
 
 .. code:: bash
 
-	colrev init [options]
+	colrev init --type REVIEW_TYPE
 
-.. TODO : include options for different types of reviews once available
+
+Available review types:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['review_type'],
+        title='Extensions: review_type',
+        ) }}
+
 
 Once the repository is set up, you can share it with your team (see `instructions <3_collaboration.html>`_).
 

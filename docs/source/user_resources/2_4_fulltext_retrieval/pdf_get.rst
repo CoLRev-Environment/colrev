@@ -28,3 +28,24 @@ Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy 
 .. code:: bash
 
 	colrev pdf-get-man [options]
+
+The following options for pdf-get are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['pdf_get'],
+        title='Extensions: pdf_get',
+        ) }}
+
+
+The following options for pdf-get-man are available:
+
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+    {{ make_list_table_from_mappings(
+        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        data['pdf_get_man'],
+        title='Extensions: pdf_get_man',
+        ) }}

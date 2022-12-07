@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.transport\_research\_international\_documen
       ~TransportResearchInternationalDocumentation.load_fixes
       ~TransportResearchInternationalDocumentation.prepare
       ~TransportResearchInternationalDocumentation.register_field_encoders
-      ~TransportResearchInternationalDocumentation.run_search
       ~TransportResearchInternationalDocumentation.to_dict
       ~TransportResearchInternationalDocumentation.to_json
       ~TransportResearchInternationalDocumentation.validate_source

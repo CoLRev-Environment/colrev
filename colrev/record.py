@@ -604,11 +604,12 @@ class Record:
     def __merge_status(self, *, merging_record: Record) -> None:
         """Merge the status with the merging_record"""
 
-        # Set both status to the latter in the state model
-        if self.data["colrev_status"] < merging_record.data["colrev_status"]:
-            self.data["colrev_status"] = merging_record.data["colrev_status"]
-        else:
-            merging_record.data["colrev_status"] = self.data["colrev_status"]
+        if "colrev_status" in merging_record.data:
+            # Set both status to the latter in the state model
+            if self.data["colrev_status"] < merging_record.data["colrev_status"]:
+                self.data["colrev_status"] = merging_record.data["colrev_status"]
+            else:
+                merging_record.data["colrev_status"] = self.data["colrev_status"]
 
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")

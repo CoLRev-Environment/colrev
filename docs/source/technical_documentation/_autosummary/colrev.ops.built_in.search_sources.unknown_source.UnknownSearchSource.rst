@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.load_fixes
       ~UnknownSearchSource.prepare
       ~UnknownSearchSource.register_field_encoders
-      ~UnknownSearchSource.run_search
       ~UnknownSearchSource.to_dict
       ~UnknownSearchSource.to_json
       ~UnknownSearchSource.validate_source
