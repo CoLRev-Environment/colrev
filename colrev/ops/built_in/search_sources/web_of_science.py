@@ -49,8 +49,14 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         if "UT_(Unique_WOS_ID) = {WOS:" in data:
             result["confidence"] = 0.7
             return result
-        if "@article{ WOS:" in data:
-            result["confidence"] = 1.0
+        if "@article{ WOS:" in data or "@article{WOS:" in data:
+            if data.count("{WOS:") > data.count("\n@"):
+                result["confidence"] = 1.0
+            elif data.count("{ WOS:") > data.count("\n@"):
+                result["confidence"] = 1.0
+            else:
+                result["confidence"] = 0.7
+
             return result
 
         return result

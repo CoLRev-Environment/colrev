@@ -608,12 +608,14 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
         # Simple heuristic:
-        if "bibsource = {dblp computer scienc" in data:
-            result["confidence"] = 1.0
-            return result
         if "dblp_key" in data:
             result["confidence"] = 1.0
             return result
+
+        if "dblp computer science bibliography" in data:
+            if data.count("dblp computer science bibliography") > data.count("\n@"):
+                result["confidence"] = 1.0
+
         return result
 
     def load_fixes(

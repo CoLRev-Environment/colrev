@@ -117,6 +117,30 @@
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.py>`_"
         },
         {
+            "package_endpoint_identifier": "colrev_built_in.ieee",
+            "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
+            "short_description": "SearchSource for IEEEXplore",
+            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.py>`_"
+        },
+        {
+            "package_endpoint_identifier": "colrev_built_in.psycinfo",
+            "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
+            "short_description": "SearchSource for PsycINFO",
+            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.py>`_"
+        },
+        {
+            "package_endpoint_identifier": "colrev_built_in.jstor",
+            "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
+            "short_description": "SearchSource for JSTOR",
+            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.py>`_"
+        },
+        {
+            "package_endpoint_identifier": "colrev_built_in.eric",
+            "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
+            "short_description": "SearchSource for ERIC",
+            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/eric.py>`_"
+        },
+        {
             "package_endpoint_identifier": "colrev_built_in.ais_library",
             "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
             "short_description": "SearchSource for the AIS electronic Library (AISeL)",

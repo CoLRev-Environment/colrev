@@ -369,10 +369,7 @@ class PackageManager:
 
     package: typing.Dict[str, typing.Dict[str, typing.Dict]]
 
-    def __init__(
-        self,
-    ) -> None:
-
+    def __init__(self) -> None:
         self.packages = self.__load_package_endpoints_index()
         self.__flag_installed_packages()
 
@@ -556,6 +553,7 @@ class PackageManager:
             raise colrev_exceptions.MissingDependencyError(
                 f"{package_identifier} ({package_type}) not available"
             )
+
         package_str = self.packages[package_type][package_identifier]["endpoint"]
         package_module = package_str.rsplit(".", 1)[0]
         package_class = package_str.rsplit(".", 1)[-1]
@@ -772,6 +770,10 @@ class PackageManager:
                     )
                     print(f" load {endpoint_type}: \n -  {package_list}")
                     for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+
+                        self.packages[PackageEndpointType[endpoint_type]][
+                            endpoint_item["package_endpoint_identifier"]
+                        ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
                         ret = self.load_package_endpoint(
                             package_type=PackageEndpointType[endpoint_type],
                             package_identifier=endpoint_item[

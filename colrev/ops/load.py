@@ -161,7 +161,14 @@ class Load(colrev.operation.Operation):
 
                 results_list.append(result_item)
 
-        if 0 == len(results_list):
+        # Reduce the results_list when there are results with very high confidence
+        if [r for r in results_list if r["confidence"] > 0.95]:
+            results_list = [r for r in results_list if r["confidence"] > 0.8]
+
+        if (
+            0 == len(results_list)
+            or len([r for r in results_list if r["confidence"] > 0.5]) == 0
+        ):
             source_candidate = colrev.settings.SearchSource(
                 endpoint="colrev_built_in.unknown_source",
                 filename=Path(filepath),
@@ -176,7 +183,7 @@ class Load(colrev.operation.Operation):
             results_list.append(
                 {
                     "source_candidate": source_candidate,
-                    "confidence": 1.0,  # type: ignore
+                    "confidence": 0.1,  # type: ignore
                 }
             )
 

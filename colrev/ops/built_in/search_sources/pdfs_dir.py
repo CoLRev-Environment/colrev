@@ -453,6 +453,8 @@ class PDFSearchSource(JsonSchemaMixin):
         """Run a search of a PDF directory (based on GROBID)"""
 
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)

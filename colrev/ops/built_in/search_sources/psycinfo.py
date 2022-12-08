@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Scopus"""
+"""SearchSource: PsycINFO"""
 from __future__ import annotations
 
 import typing
@@ -23,8 +23,8 @@ import colrev.record
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class ScopusSearchSource(JsonSchemaMixin):
-    """SearchSource for scopus"""
+class PsycINFOSearchSource(JsonSchemaMixin):
+    """SearchSource for PsycINFO"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{url}}"
@@ -34,21 +34,6 @@ class ScopusSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-
-    @classmethod
-    def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Scopus"""
-
-        result = {"confidence": 0.0}
-        if "source={Scopus}," in data:
-            result["confidence"] = 1.0
-            return result
-
-        if "www.scopus.com" in data:
-            if data.count("www.scopus.com") >= data.count("\n@"):
-                result["confidence"] = 1.0
-
-        return result
 
     def validate_source(
         self,
@@ -82,58 +67,30 @@ class ScopusSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for PsycINFO"""
+
+        result = {"confidence": 0.1}
+
+        # Note : no features in bib file for identification
+
+        return result
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
-        """Load fixes for Scopus"""
+        """Load fixes for PsycINFO"""
 
         return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
-        """Source-specific preparation for Scopus"""
-
-        if "document_type" in record.data:
-            if record.data["document_type"] == "Conference Paper":
-                record.data["ENTRYTYPE"] = "inproceedings"
-                if "journal" in record.data:
-                    record.rename_field(key="journal", new_key="booktitle")
-            elif record.data["document_type"] == "Conference Review":
-                record.data["ENTRYTYPE"] = "proceedings"
-                if "journal" in record.data:
-                    record.rename_field(key="journal", new_key="booktitle")
-
-            elif record.data["document_type"] == "Article":
-                record.data["ENTRYTYPE"] = "article"
-
-            record.remove_field(key="document_type")
-
-        if "Start_Page" in record.data and "End_Page" in record.data:
-            if record.data["Start_Page"] != "nan" and record.data["End_Page"] != "nan":
-                record.data["pages"] = (
-                    record.data["Start_Page"] + "--" + record.data["End_Page"]
-                )
-                record.data["pages"] = record.data["pages"].replace(".0", "")
-                record.remove_field(key="Start_Page")
-                record.remove_field(key="End_Page")
-
-        if "note" in record.data:
-            if "cited By " in record.data["note"]:
-                record.rename_field(key="note", new_key="cited_by")
-                record.data["cited_by"] = record.data["cited_by"].replace(
-                    "cited By ", ""
-                )
-
-        if "author" in record.data:
-            record.data["author"] = record.data["author"].replace("; ", " and ")
-
-        drop = ["source"]
-        for field_to_drop in drop:
-            record.remove_field(key=field_to_drop)
+        """Source-specific preparation for PsycINFO"""
 
         return record
 

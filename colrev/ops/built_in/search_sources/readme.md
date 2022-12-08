@@ -1,10 +1,5 @@
 # TODO
 
-- IEEEXplore
-- JSTOR
-- CINAHL
-- Psychinfo
-
 - VirtualHealthLibrary
 - BielefeldAcademicSearchEngine
 
@@ -13,6 +8,8 @@
 - ProQuest
 - ScienceDirect
 - OVID
+- Psychinfo
+- CINAHL
 
 - challenging:
 - ClinicalTrialsGov (no bibliographic data?!)

@@ -50,6 +50,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             result["confidence"] = 0.7
             return result
 
+        if "pmid " in data:
+            if data.count(" pmid ") > data.count("\n@"):
+                result["confidence"] = 1.0
+
         return result
 
     def validate_source(

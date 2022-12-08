@@ -469,7 +469,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def apply_correction(self, *, change_itemsets: list) -> None:
         """Apply a correction by opening a pull request in the original repository"""
 
-        # pylint: disabel=too-many-branches
+        # pylint: disable=too-many-branches
 
         local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
 
