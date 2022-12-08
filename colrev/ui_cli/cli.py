@@ -152,12 +152,13 @@ def init(
     try:
 
         if not type:
-            print(
-                "TODO: open review type selector (option to open settings editor next)"
-            )
-            # the review selector should simply call the init (with a review_type parameter)
-            # we may also pass the title/review objectives
-            return
+            # print(
+            #     "TODO: open review type selector (option to open settings editor next)"
+            # )
+            # # the review selector should simply call the init (with a review_type parameter)
+            # # we may also pass the title/review objectives
+            # return
+            type = "literature_review"
 
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
@@ -929,6 +930,12 @@ def screen(
 
 @main.command(help_priority=11)
 @click.option(
+    "--discard",
+    is_flag=True,
+    default=False,
+    help="Discard all missing PDFs as not_available",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -945,6 +952,7 @@ def screen(
 @click.pass_context
 def pdfs(
     ctx: click.core.Context,
+    discard: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -954,6 +962,15 @@ def pdfs(
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
         )
+
+        if discard:
+            pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
+            pdf_prep_man_operation.discard()
+
+            pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
+            pdf_get_man_operation.discard()
+
+            return
 
         pdf_get_operation = review_manager.get_pdf_get_operation(
             notify_state_transition_operation=True
