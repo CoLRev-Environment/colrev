@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import collections.abc
-import importlib
+import importlib.util
 import json
 import sys
 import typing
@@ -397,7 +397,7 @@ class PackageManager:
 
         package_dict = json.loads(filedata.decode("utf-8"))
 
-        packages = {}
+        packages: typing.Dict[PackageEndpointType, dict] = {}
         for key, package_list in package_dict.items():
             packages[PackageEndpointType[key]] = {}
             for package_item in package_list:
@@ -712,11 +712,21 @@ class PackageManager:
         return packages_dict
 
     def update_package_list(self) -> None:
-        """Generates the template/package_endpoints.json based on the packages in template/packages.json
+        """Generates the template/package_endpoints.json
+        based on the packages in template/packages.json
         and the endpoints.json files in the top directory of each package."""
 
-        # TODO : check that we are in the colrev repo
-        import imp
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+
+        colrev_spec = importlib.util.find_spec("colrev")
+
+        # Check that we are in the colrev repo
+        if colrev_spec is not None:
+            assert Path.cwd() == Path(colrev_spec.origin).parents[1]  # type: ignore
+        else:
+            print("Could not load colrev module")
+            return
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/packages.json")
@@ -726,39 +736,42 @@ class PackageManager:
                 "Package index not available (colrev/template/package_endpoints.json)"
             )
 
-        colrev_module = imp.find_module("colrev")
-        package_endpoints_json_file = Path(colrev_module[1]) / Path(
+        package_endpoints_json_file = Path(Path(colrev_spec.origin).parent) / Path(  # type: ignore
             "template/package_endpoints.json"
         )
         if package_endpoints_json_file.is_file():
             package_endpoints_json_file.unlink()
 
-        package_endpoints_json = {x.name: [] for x in self.package_type_overview}
+        package_endpoints_json: typing.Dict[str, list] = {
+            x.name: [] for x in self.package_type_overview
+        }
 
         packages = json.loads(filedata.decode("utf-8"))
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
-            imported_module = imp.find_module(package["module"])
-            endpoints_path = Path(imported_module[1]).parent / Path("endpoints.json")
+            module_spec = importlib.util.find_spec(package["module"])
+            endpoints_path = Path(module_spec.origin).parents[1] / Path(  # type:ignore
+                "endpoints.json"
+            )
             if not endpoints_path.is_file():
                 print(f"File does not exist: {endpoints_path}")
                 continue
 
             try:
-                with open(endpoints_path) as file:
+                with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
             except json.decoder.JSONDecodeError as exc:
                 print(f"Invalid json {exc}")
                 continue
 
             for endpoint_type, endpoint_list in package_endpoints_json.items():
-                if endpoint_type in package_endpoints:
+                if endpoint_type in package_endpoints["endpoints"]:
                     package_list = "\n -  ".join(
                         p["package_endpoint_identifier"]
-                        for p in package_endpoints[endpoint_type]
+                        for p in package_endpoints["endpoints"][endpoint_type]
                     )
-                    print(f" load {endpoint_type}: {package_list}")
-                    for endpoint_item in package_endpoints[endpoint_type]:
+                    print(f" load {endpoint_type}: \n -  {package_list}")
+                    for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
                         ret = self.load_package_endpoint(
                             package_type=PackageEndpointType[endpoint_type],
                             package_identifier=endpoint_item[
@@ -783,10 +796,10 @@ class PackageManager:
                         # Note: link format for the sphinx docs
                         endpoint_item["link"] = f"`Link <{link}>`_"
 
-                    endpoint_list += package_endpoints[endpoint_type]
+                    endpoint_list += package_endpoints["endpoints"][endpoint_type]
 
         json_object = json.dumps(package_endpoints_json, indent=4)
-        with open(package_endpoints_json_file, "w") as file:
+        with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
 
 
