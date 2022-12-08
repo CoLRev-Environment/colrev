@@ -398,9 +398,11 @@ class LocalIndex:
         internal_record_dict = deepcopy(record_dict)
         if all(x in internal_record_dict.keys() for x in ["volume", "number"]):
 
-            toc_key_full = colrev.record.Record(data=internal_record_dict).get_toc_key()
-
-            if "NA" == toc_key_full:
+            try:
+                toc_key_full = colrev.record.Record(
+                    data=internal_record_dict
+                ).get_toc_key()
+            except colrev_exceptions.NotTOCIdentifiableException:
                 return fields_to_remove
 
             open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
