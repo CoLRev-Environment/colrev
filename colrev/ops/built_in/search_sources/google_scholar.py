@@ -41,7 +41,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         """Source heuristic for GoogleScholar"""
 
         result = {"confidence": 0.0}
-        if "related = {https://scholar.google.com/scholar?q=relat" in data:
+        if "https://scholar.google.com/scholar?q=relat" in data:
             result["confidence"] = 0.7
             return result
         return result

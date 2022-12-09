@@ -36,6 +36,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
+    # For run_search, a Python SDK would be available:
+    # https://developer.ieee.org/Python_Software_Development_Kit
+
     def validate_source(
         self,
         search_operation: colrev.ops.search.Search,
