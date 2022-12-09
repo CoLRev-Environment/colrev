@@ -35,17 +35,19 @@ export default class PdfDataService {
     return settingsPdfGet;
   };
 
-  public pdfPrepFromSettings = (pdfPrep: PdfPrep, settingsPdfGet: any) => {
+  public pdfPrepFromSettings = (pdfPrep: PdfPrep, settingsPdfPrep: any) => {
+    pdfPrep.keepBackupOfPdfs = settingsPdfPrep.keep_backup_of_pdfs;
     pdfPrep.packages = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.pdf_prep_package_endpoints
+      settingsPdfPrep.pdf_prep_package_endpoints
     );
     pdfPrep.manPdfPrepPackages = this.packageDataService.packagesFromSettings(
-      settingsPdfGet.pdf_prep_man_package_endpoints
+      settingsPdfPrep.pdf_prep_man_package_endpoints
     );
   };
 
   public pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
     const settingsPdfPrep = {
+      keep_backup_of_pdfs: pdfPrep.keepBackupOfPdfs,
       pdf_prep_package_endpoints: this.packageDataService.packagesToSettings(
         pdfPrep.packages
       ),

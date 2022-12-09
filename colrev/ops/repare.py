@@ -136,7 +136,6 @@ class Repare(colrev.operation.Operation):
                 ] = colrev.record.RecordState.rev_prescreen_included
 
         except AttributeError:
-
             print("Could not read bibtex file")
 
         self.review_manager.dataset.save_records_dict(records=records)

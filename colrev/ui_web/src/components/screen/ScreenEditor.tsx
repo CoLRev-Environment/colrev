@@ -40,8 +40,9 @@ const ScreenEditor: React.FC<{
     let newName = name;
 
     while (true) {
+      let n = newName;
       const alreadyExists = screen.criteria.find(
-        (c) => c.name === newName && c !== criteria
+        (c) => c.name === n && c !== criteria
       );
       if (alreadyExists) {
         newName = newName + "2";
@@ -62,6 +63,7 @@ const ScreenEditor: React.FC<{
   const addCriteriaRoundHandler = () => {
     const newCriteria = new ScreenCriteria();
     newCriteria.name = getCriteriaUnqiqueName("new", newCriteria);
+    newCriteria.criterionType = criterionTypeOptions.at(0) ?? "";
     const newCriterias = [...screen.criteria, newCriteria];
     const newScreen = { ...screen, criteria: newCriterias };
     screenChanged(newScreen);

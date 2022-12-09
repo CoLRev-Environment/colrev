@@ -46,6 +46,7 @@ class Compare(colrev.operation.Operation):
         except colrev_exceptions.CoLRevException:
             # Use the references.bib if path is not a CoLRev project
             references_bib = Path(path) / Path("references.bib")
+
             if not references_bib.is_file():
                 return
 
@@ -57,6 +58,18 @@ class Compare(colrev.operation.Operation):
                     other_record[
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_synthesized
+
+            if references_bib.is_file():
+                with open(references_bib, encoding="utf8") as target_db:
+                    other_records = self.review_manager.dataset.load_records_dict(
+                        load_str=target_db.read()
+                    )
+                    for other_record in other_records.values():
+                        other_record[
+                            "colrev_status"
+                        ] = colrev.record.RecordState.rev_synthesized
+            else:
+                return
 
         current_only = str(self.review_manager.path.name)
         other_only = str(Path(path).name)
@@ -90,6 +103,7 @@ class Compare(colrev.operation.Operation):
 
             if record_id not in records:
                 venn_stats[other_only].append(record_id)
+
             elif records[record_id]["colrev_status"] not in included_states:
                 venn_stats[other_only].append(record_id)
 
