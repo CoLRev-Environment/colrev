@@ -197,9 +197,10 @@ class ReviewManager:
                 )
                 commit.update_report(msg_file=msg_file)
 
-        colrev.operation.CheckOperation(review_manager=self)  # to notify
-        corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
-        corrections_operation.check_corrections_of_records()
+        if not self.settings.is_curated_masterdata_repo():
+            colrev.operation.CheckOperation(review_manager=self)  # to notify
+            corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
+            corrections_operation.check_corrections_of_records()
 
         return {"msg": "TODO", "status": 0}
 
