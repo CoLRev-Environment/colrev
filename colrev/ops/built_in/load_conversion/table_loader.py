@@ -144,7 +144,12 @@ class CSVLoader(JsonSchemaMixin):
         records_value_list = data.to_dict("records")
 
         records_dict = TableLoadUtility.preprocess_records(records=records_value_list)
-        records = {r["ID"]: r for r in records_dict}
+
+        if not all("ID" in r for r in records_dict.values()):
+            for i, r in enumerate(records_dict.values()):
+                r["ID"] = str(i).rjust(6, "0")
+
+        records = {r["ID"]: r for r in records_dict.values()}
 
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,

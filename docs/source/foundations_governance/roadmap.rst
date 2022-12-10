@@ -14,7 +14,7 @@ Upcoming
 - Templates for review_types
 - Synchronous session support
 
-2022-12-01: v0.7.0 (expected)
+2023-01-01: v0.7.0 (expected)
 --------------------------------------
 
 - Unit tests

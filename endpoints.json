@@ -260,6 +260,9 @@
             {"package_endpoint_identifier": "colrev_built_in.eric",
              "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource"
             },
+            {"package_endpoint_identifier": "colrev_built_in.springer_link",
+             "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource"
+            },
             {"package_endpoint_identifier": "colrev_built_in.ais_library",
              "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource"
             },
