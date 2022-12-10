@@ -8,9 +8,9 @@ The following options for data are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['data'],
-        title='Extensions: data',
+        title='',
         ) }}
 
 
@@ -18,11 +18,10 @@ To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev data --add_endpoint MANUSCRIPT
-    colrev data --add_endpoint STRUCTURED
-    colrev data --add_endpoint PRISMA
-    colrev data --add_endpoint ZETTLR
-    colrev data --add_endpoint ENDNOTE
+    colrev data --add_endpoint colrev_built_in.manuscript
+    colrev data --add_endpoint colrev_built_in.structured
+    colrev data --add_endpoint colrev_built_in.prisma
+    ...
 
 Depending on the data format, the :program:`colrev data` command
 

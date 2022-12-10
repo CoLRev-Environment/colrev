@@ -4,22 +4,7 @@ colrev search
 ==================================
 
 
-:program:`colrev search` retrieves search results from
-
-.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
-
-    {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
-        data['search_source'],
-        title='Extensions: search_sources',
-        ) }}
-
-..
-    - Crossref
-    - DBLP
-    - CoLRev projects (local or online)
-    - Directories containing PDFs
-    - Curated metadata repositories (through the local index)
+:program:`colrev search` retrieves search results from different `SearchSources <../6_sources.html>`_.
 
 .. code:: bash
 
@@ -47,8 +32,3 @@ colrev search
 .. option:: --selected TEXT
 
     Run selected search
-
-Note:
-
-- The query syntax is based on `sqlite <https://www.sqlite.org/lang.html>`_ (pandasql). You can test and debug your queries `here <https://sqliteonline.com/>`_.
-- Journal ISSNs for crossref searches can be retrieved from the `ISSN Portal <https://portal.issn.org/>`_

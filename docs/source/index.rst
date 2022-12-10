@@ -28,6 +28,7 @@ Collaborative Literature Reviews
    user_resources/3_collaboration
    user_resources/4_curation
    user_resources/5_extensions
+   user_resources/6_sources
    user_resources/credits
    user_resources/help
 

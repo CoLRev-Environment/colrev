@@ -34,9 +34,9 @@ The following options for pdf-get are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("PDF get packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['pdf_get'],
-        title='Extensions: pdf_get',
+        title='',
         ) }}
 
 
@@ -45,7 +45,7 @@ The following options for pdf-get-man are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("PDF prep packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['pdf_get_man'],
-        title='Extensions: pdf_get_man',
+        title='',
         ) }}

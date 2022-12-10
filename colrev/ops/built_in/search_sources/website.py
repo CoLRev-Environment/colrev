@@ -24,6 +24,12 @@ if TYPE_CHECKING:
 class WebsiteConnector:
     """Connector for the Zotero translator for websites"""
 
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.todo
+    link = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/website.py"
+    )
+
     @classmethod
     def __update_record(
         cls,

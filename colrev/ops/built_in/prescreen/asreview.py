@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on ASReview"""
+"""ASReview-based prescreen"""
 from __future__ import annotations
 
 import csv
@@ -30,7 +30,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class ASReviewPrescreen(JsonSchemaMixin):
 
-    """Prescreen based on ASReview"""
+    """ASReview-based prescreen"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

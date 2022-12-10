@@ -52,6 +52,19 @@ class ReviewTypePackageEndpointInterface(
         return settings
 
 
+class SearchSourceHeuristicStatus(Enum):
+    """Status of the SearchSource heuristic"""
+
+    # pylint: disable=invalid-name
+    na = "not_applicable"
+    oni = "output_not_identifiable"
+    supported = "supported"
+    todo = "to_be_implemented"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
 class SearchSourcePackageEndpointInterface(
     zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
@@ -64,6 +77,12 @@ class SearchSourcePackageEndpointInterface(
     search_type = zope.interface.Attribute(
         """Main SearchType associated with the SearchSource"""
     )
+
+    heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
+        """The status of the SearchSource heuristic"""
+    )
+    short_name = zope.interface.Attribute("""Short name of the SearchSource""")
+    link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # Note : optional method
     # pylint: disable=no-self-argument
@@ -709,6 +728,70 @@ class PackageManager:
 
         return packages_dict
 
+    def __add_package_endpoints(
+        self, *, package_endpoints_json: dict, package_endpoints: dict
+    ) -> None:
+        for endpoint_type, endpoint_list in package_endpoints_json.items():
+            if endpoint_type not in package_endpoints["endpoints"]:
+                continue
+
+            package_list = "\n -  ".join(
+                p["package_endpoint_identifier"]
+                for p in package_endpoints["endpoints"][endpoint_type]
+            )
+            print(f" load {endpoint_type}: \n -  {package_list}")
+            for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+
+                self.packages[PackageEndpointType[endpoint_type]][
+                    endpoint_item["package_endpoint_identifier"]
+                ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
+                endpoint = self.load_package_endpoint(
+                    package_type=PackageEndpointType[endpoint_type],
+                    package_identifier=endpoint_item["package_endpoint_identifier"],
+                )
+
+                # Generate the contents displayed in the docs (see "datatemplate:json")
+                # load short_description dynamically...
+                short_description = endpoint.__doc__
+                if "\n" in endpoint.__doc__:
+                    short_description = endpoint.__doc__.split("\n")[0]
+                endpoint_item["short_description"] = short_description
+
+                code_link = (
+                    "https://github.com/geritwagner/colrev/blob/main/"
+                    + endpoint_item["endpoint"].replace(".", "/")
+                )
+                code_link = code_link[: code_link.rfind("/")]
+                code_link += ".py"
+                if hasattr(endpoint, "link"):
+                    link = endpoint.link
+                else:
+                    link = code_link
+                # Note: link format for the sphinx docs
+                endpoint_item["link"] = f"`Link <{link}>`_"
+                if (
+                    PackageEndpointType.search_source
+                    == PackageEndpointType[endpoint_type]
+                ):
+                    # Note : heuristic_status is mandatory (interface definition)
+                    endpoint_item["heuristic"] = (
+                        str(endpoint.heuristic_status)
+                        .replace("oni", "ONI")
+                        .replace("supported", "Supported")
+                        .replace("na", "NA")
+                    )
+
+                    if hasattr(endpoint, "run_search"):
+                        endpoint_item["api_search"] = "Supported"
+                    else:
+                        endpoint_item["api_search"] = "NA"
+                    endpoint_item[
+                        "link"
+                    ] = f"`{endpoint.short_name} <{endpoint.link}>`_"
+                    endpoint_item["instructions"] = f"`Instructions <{code_link}>`_"
+
+            endpoint_list += package_endpoints["endpoints"][endpoint_type]
+
     def update_package_list(self) -> None:
         """Generates the template/package_endpoints.json
         based on the packages in template/packages.json
@@ -762,43 +845,10 @@ class PackageManager:
                 print(f"Invalid json {exc}")
                 continue
 
-            for endpoint_type, endpoint_list in package_endpoints_json.items():
-                if endpoint_type in package_endpoints["endpoints"]:
-                    package_list = "\n -  ".join(
-                        p["package_endpoint_identifier"]
-                        for p in package_endpoints["endpoints"][endpoint_type]
-                    )
-                    print(f" load {endpoint_type}: \n -  {package_list}")
-                    for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
-
-                        self.packages[PackageEndpointType[endpoint_type]][
-                            endpoint_item["package_endpoint_identifier"]
-                        ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
-                        ret = self.load_package_endpoint(
-                            package_type=PackageEndpointType[endpoint_type],
-                            package_identifier=endpoint_item[
-                                "package_endpoint_identifier"
-                            ],
-                        )
-                        # load short_description dynamically...
-                        short_description = ret.__doc__
-                        if "\n" in ret.__doc__:
-                            short_description = ret.__doc__.split("\n")[0]
-                        endpoint_item["short_description"] = short_description
-
-                        if hasattr(ret, "link"):
-                            link = ret.link
-                        else:
-                            link = (
-                                "https://github.com/geritwagner/colrev/blob/main/"
-                                + endpoint_item["endpoint"].replace(".", "/")
-                            )
-                            link = link[: link.rfind("/")]
-                            link += ".py"
-                        # Note: link format for the sphinx docs
-                        endpoint_item["link"] = f"`Link <{link}>`_"
-
-                    endpoint_list += package_endpoints["endpoints"][endpoint_type]
+            self.__add_package_endpoints(
+                package_endpoints_json=package_endpoints_json,
+                package_endpoints=package_endpoints,
+            )
 
         json_object = json.dumps(package_endpoints_json, indent=4)
         with open(package_endpoints_json_file, "w", encoding="utf-8") as file:

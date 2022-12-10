@@ -49,9 +49,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
     __api_url = "https://api.crossref.org/works?"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    link = "https://www.crossref.org/"
+    short_name = "Crossref"
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 
     def __init__(

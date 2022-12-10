@@ -17,3 +17,14 @@ colrev.ops.built\_in.search\_sources.website.WebsiteConnector
       :nosignatures:
 
       ~WebsiteConnector.retrieve_md_from_website
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~WebsiteConnector.heuristic_status
+      ~WebsiteConnector.link

@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
 
    .. autosummary::
 
+      ~GoogleScholarSearchSource.heuristic_status
+      ~GoogleScholarSearchSource.link
       ~GoogleScholarSearchSource.search_type
+      ~GoogleScholarSearchSource.short_name
       ~GoogleScholarSearchSource.source_identifier

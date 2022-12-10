@@ -29,8 +29,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
-
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "ACM Digital Library"
+    link = "https://dl.acm.org/"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

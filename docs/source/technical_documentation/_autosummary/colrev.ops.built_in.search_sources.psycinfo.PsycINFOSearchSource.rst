@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
 
    .. autosummary::
 
+      ~PsycINFOSearchSource.heuristic_status
+      ~PsycINFOSearchSource.link
       ~PsycINFOSearchSource.search_type
+      ~PsycINFOSearchSource.short_name
       ~PsycINFOSearchSource.source_identifier

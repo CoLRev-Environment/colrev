@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
 
    .. autosummary::
 
+      ~PubMedSearchSource.heuristic_status
+      ~PubMedSearchSource.link
       ~PubMedSearchSource.search_type
+      ~PubMedSearchSource.short_name
       ~PubMedSearchSource.source_identifier

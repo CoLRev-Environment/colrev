@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
 
    .. autosummary::
 
+      ~WebOfScienceSearchSource.heuristic_status
+      ~WebOfScienceSearchSource.link
       ~WebOfScienceSearchSource.search_type
+      ~WebOfScienceSearchSource.short_name
       ~WebOfScienceSearchSource.source_identifier

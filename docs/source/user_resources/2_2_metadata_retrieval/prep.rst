@@ -72,9 +72,9 @@ The following options for prep are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Preparation packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['prep'],
-        title='Extensions: prep',
+        title='',
         ) }}
 
 The following options for prep-man are available:
@@ -83,7 +83,7 @@ The following options for prep-man are available:
 
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Manual preparation packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['prep_man'],
-        title='Extensions: prep_man',
+        title='',
         ) }}

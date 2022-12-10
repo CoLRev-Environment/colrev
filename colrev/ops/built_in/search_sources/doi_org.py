@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 class DOIConnector:
     """Connector for the DOI.org API"""
 
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+
     @classmethod
     def retrieve_doi_metadata(
         cls,

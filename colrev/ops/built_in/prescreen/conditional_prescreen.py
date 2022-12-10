@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class ConditionalPrescreen(JsonSchemaMixin):
 
-    """Prescreen based on a condition (currently: include all)"""
+    """Conditional prescreen (currently: include all)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

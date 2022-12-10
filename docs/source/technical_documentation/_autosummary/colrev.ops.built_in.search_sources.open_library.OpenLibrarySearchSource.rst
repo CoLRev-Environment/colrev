@@ -36,5 +36,8 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
 
    .. autosummary::
 
+      ~OpenLibrarySearchSource.heuristic_status
+      ~OpenLibrarySearchSource.link
       ~OpenLibrarySearchSource.search_type
+      ~OpenLibrarySearchSource.short_name
       ~OpenLibrarySearchSource.source_identifier

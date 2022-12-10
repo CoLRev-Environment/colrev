@@ -26,7 +26,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
 
-    """Prescreens records based on predefined rules (scope)"""
+    """Rule-based prescreen (scope)"""
 
     @dataclass
     class ScopePrescreenSettings(JsonSchemaMixin):

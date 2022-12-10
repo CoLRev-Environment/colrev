@@ -39,5 +39,8 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
 
    .. autosummary::
 
+      ~BackwardSearchSource.heuristic_status
+      ~BackwardSearchSource.link
       ~BackwardSearchSource.search_type
+      ~BackwardSearchSource.short_name
       ~BackwardSearchSource.source_identifier

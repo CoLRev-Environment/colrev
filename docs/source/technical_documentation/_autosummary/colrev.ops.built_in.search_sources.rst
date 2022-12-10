@@ -45,6 +45,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.pubmed
    colrev.ops.built_in.search_sources.scopus
    colrev.ops.built_in.search_sources.transport_research_international_documentation
+   colrev.ops.built_in.search_sources.trid
    colrev.ops.built_in.search_sources.unknown_source
    colrev.ops.built_in.search_sources.utils
    colrev.ops.built_in.search_sources.video_dir

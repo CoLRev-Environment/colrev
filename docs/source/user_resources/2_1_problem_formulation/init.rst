@@ -17,9 +17,9 @@ Available review types:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Review type", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['review_type'],
-        title='Extensions: review_type',
+        title='',
         ) }}
 
 

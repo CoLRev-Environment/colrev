@@ -37,7 +37,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_local_index"
     search_type = colrev.settings.SearchType.OTHER
-
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "LocalIndex"
+    link = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/local_index.py"
+    )
     __local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [

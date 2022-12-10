@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 
    .. autosummary::
 
+      ~ScopusSearchSource.heuristic_status
+      ~ScopusSearchSource.link
       ~ScopusSearchSource.search_type
+      ~ScopusSearchSource.short_name
       ~ScopusSearchSource.source_identifier

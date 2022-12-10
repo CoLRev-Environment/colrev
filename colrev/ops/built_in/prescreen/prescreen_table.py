@@ -29,7 +29,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class TablePrescreen(JsonSchemaMixin):
 
-    """Prescreen based on a table (exported and imported)"""
+    """Table-based prescreen (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

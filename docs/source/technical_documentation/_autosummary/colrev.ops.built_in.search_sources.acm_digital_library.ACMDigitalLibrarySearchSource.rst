@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
 
    .. autosummary::
 
+      ~ACMDigitalLibrarySearchSource.heuristic_status
+      ~ACMDigitalLibrarySearchSource.link
       ~ACMDigitalLibrarySearchSource.search_type
+      ~ACMDigitalLibrarySearchSource.short_name
       ~ACMDigitalLibrarySearchSource.source_identifier

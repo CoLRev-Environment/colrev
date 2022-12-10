@@ -24,3 +24,4 @@ colrev.env.package\_manager
       DefaultSourceSettings
       PackageEndpointType
       PackageManager
+      SearchSourceHeuristicStatus

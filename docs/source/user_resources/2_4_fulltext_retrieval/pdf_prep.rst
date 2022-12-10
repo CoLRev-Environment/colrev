@@ -26,9 +26,9 @@ The following options for pdf-prep are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Description", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['pdf_prep'],
-        title='Extensions: pdf_prep',
+        title='',
         ) }}
 
 The following options for pdf-prep-man are available:
@@ -36,7 +36,7 @@ The following options for pdf-prep-man are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Description", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['pdf_prep_man'],
-        title='Extensions: pdf_prep_man',
+        title='',
         ) }}

@@ -38,6 +38,9 @@ class PDFSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
     search_type = colrev.settings.SearchType.PDFS
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "PDF directory"
+    link = "https://github.com/kermitt2/grobid"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

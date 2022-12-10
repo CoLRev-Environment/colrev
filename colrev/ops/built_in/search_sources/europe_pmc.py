@@ -45,6 +45,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         "https://www.ebi.ac.uk/europepmc/webservices/rest/article/{{europe_pmc_id}}"
     )
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "Europe PMC"
+    link = "https://europepmc.org/"
 
     @dataclass
     class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):

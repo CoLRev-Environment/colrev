@@ -27,10 +27,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     """SearchSource for the AIS electronic Library (AISeL)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-
     source_identifier = "https://aisel.aisnet.org/"
-
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "AIS eLibrary"
+    link = "https://aisel.aisnet.org/"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

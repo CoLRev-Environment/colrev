@@ -42,5 +42,8 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
 
    .. autosummary::
 
+      ~CrossrefSearchSource.heuristic_status
+      ~CrossrefSearchSource.link
       ~CrossrefSearchSource.search_type
+      ~CrossrefSearchSource.short_name
       ~CrossrefSearchSource.source_identifier

@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
 
    .. autosummary::
 
+      ~UnknownSearchSource.heuristic_status
+      ~UnknownSearchSource.link
       ~UnknownSearchSource.search_type
+      ~UnknownSearchSource.short_name
       ~UnknownSearchSource.source_identifier

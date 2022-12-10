@@ -34,10 +34,14 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     """Performs a search in a CoLRev project"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-
     source_identifier = "colrev_project"
-
     search_type = colrev.settings.SearchType.OTHER
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "CoLRev project"
+    link = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/colrev_project.py"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

@@ -32,6 +32,12 @@ class VideoDirSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{file}}"
     search_type = colrev.settings.SearchType.OTHER
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "Video directory"
+    link = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/video_dir.py"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -127,7 +133,9 @@ class VideoDirSearchSource(JsonSchemaMixin):
         """Source heuristic for video directories"""
 
         result = {"confidence": 0.0}
-
+        if filename.suffix in [".mp4"]:
+            result["confidence"] = 1.0
+            return result
         return result
 
     def load_fixes(

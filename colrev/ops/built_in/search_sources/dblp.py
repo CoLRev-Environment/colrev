@@ -45,6 +45,9 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     source_identifier = "{{dblp_key}}"
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "DBLP"
+    link = "https://dblp.org/"
     __dblp_md_filename = Path("data/search/md_dblp.bib")
 
     @dataclass

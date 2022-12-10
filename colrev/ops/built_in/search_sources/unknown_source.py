@@ -33,6 +33,12 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev_built_in.unknown_source"
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    short_name = "Unknown Source"
+    link = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/unknown_source.py"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

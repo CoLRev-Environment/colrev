@@ -57,13 +57,13 @@
         {
             "package_endpoint_identifier": "colrev_built_in.qualitative_systematic_review",
             "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview",
-            "short_description": "Qualitative systematic review type",
+            "short_description": "Qualitative systematic review",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.meta_analysis",
             "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis",
-            "short_description": "Meta-analysis (review type)",
+            "short_description": "Meta-analysis",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.py>`_"
         },
         {
@@ -78,127 +78,190 @@
             "package_endpoint_identifier": "colrev_built_in.unknown_source",
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
             "short_description": "SearchSource for unknown search results",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_"
+            "link": "`Unknown Source <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_",
+            "heuristic": "NA",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.crossref",
             "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
             "short_description": "SearchSource for the Crossref API",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.py>`_"
+            "link": "`Crossref <https://www.crossref.org/>`_",
+            "heuristic": "ONI",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.dblp",
             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
             "short_description": "SearchSource for DBLP",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.py>`_"
+            "link": "`DBLP <https://dblp.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.europe_pmc",
             "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
             "short_description": "SearchSource for Europe PMC",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.py>`_"
+            "link": "`Europe PMC <https://europepmc.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.acm_digital_library",
             "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
             "short_description": "SearchSource for the ACM digital Library",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.py>`_"
+            "link": "`ACM Digital Library <https://dl.acm.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pubmed",
             "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
             "short_description": "SearchSource for Pubmed",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.py>`_"
+            "link": "`PubMed <https://pubmed.ncbi.nlm.nih.gov/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.wiley",
             "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
             "short_description": "SearchSource for Wiley",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.py>`_"
+            "link": "`Wiley <https://onlinelibrary.wiley.com/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.ieee",
             "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
             "short_description": "SearchSource for IEEEXplore",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.py>`_"
+            "link": "`IEEE Xplore <https://ieeexplore.ieee.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.psycinfo",
             "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
             "short_description": "SearchSource for PsycINFO",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.py>`_"
+            "link": "`PsycInfo (APA) <https://www.apa.org/pubs/databases/psycinfo>`_",
+            "heuristic": "ONI",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.jstor",
             "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
             "short_description": "SearchSource for JSTOR",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.py>`_"
+            "link": "`JSTOR <https://www.jstor.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.eric",
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
             "short_description": "SearchSource for ERIC",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/eric.py>`_"
+            "link": "`ERIC <https://eric.ed.gov/>`_",
+            "heuristic": "ONI",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/eric.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.ais_library",
             "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
             "short_description": "SearchSource for the AIS electronic Library (AISeL)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.py>`_"
+            "link": "`AIS eLibrary <https://aisel.aisnet.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.google_scholar",
             "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
             "short_description": "SearchSource for GoogleScholar",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.py>`_"
+            "link": "`GoogleScholar <https://scholar.google.de/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.web_of_science",
             "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
             "short_description": "SearchSource for Web of Science",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.py>`_"
+            "link": "`Web of Science <https://www.webofknowledge.com>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scopus",
             "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
             "short_description": "SearchSource for scopus",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.py>`_"
+            "link": "`Scopus <http://www.scopus.com>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pdfs_dir",
             "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
             "short_description": "SearchSource for PDF directories (based on GROBID)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.py>`_"
+            "link": "`PDF directory <https://github.com/kermitt2/grobid>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.video_dir",
             "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource",
             "short_description": "SearchSource for directory containing video files",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_"
+            "link": "`Video directory <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pdf_backward_search",
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
             "short_description": "Performs a backward search extracting references from PDFs using GROBID",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.py>`_"
+            "link": "`PDF backward search <https://github.com/kermitt2/grobid>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_project",
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
             "short_description": "Performs a search in a CoLRev project",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_"
+            "link": "`CoLRev project <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.local_index",
             "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
             "short_description": "Performs a search in the LocalIndex",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_"
+            "link": "`LocalIndex <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.transport_research_international_documentation",
-            "endpoint": "colrev.ops.built_in.search_sources.transport_research_international_documentation.TransportResearchInternationalDocumentation",
+            "package_endpoint_identifier": "colrev_built_in.trid",
+            "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation",
             "short_description": "SearchSource for Transport Research International Documentation",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/transport_research_international_documentation.py>`_"
+            "link": "`TRID <https://trid.trb.org/>`_",
+            "heuristic": "Supported",
+            "api_search": "NA",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/trid.py>`_"
         }
     ],
     "load_conversion": [
@@ -459,31 +522,31 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scope_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen",
-            "short_description": "Prescreens records based on predefined rules (scope)",
+            "short_description": "Rule-based prescreen (scope)",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
-            "short_description": "Prescreen based on a CLI interface",
+            "short_description": "CLI-based prescreen",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.asreview_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen",
-            "short_description": "Prescreen based on ASReview",
+            "short_description": "ASReview-based prescreen",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.conditional_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen",
-            "short_description": "Prescreen based on a condition (currently: include all)",
+            "short_description": "Conditional prescreen (currently: include all)",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.prescreen_table",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen",
-            "short_description": "Prescreen based on a table (exported and imported)",
+            "short_description": "Table-based prescreen (exported and imported)",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.py>`_"
         }
     ],

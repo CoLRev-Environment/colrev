@@ -29,7 +29,7 @@ The following options for load_conversion are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Link", "link")],
+        [("Load conversion packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
         data['load_conversion'],
-        title='Extensions: load_conversion',
+        title='',
         ) }}

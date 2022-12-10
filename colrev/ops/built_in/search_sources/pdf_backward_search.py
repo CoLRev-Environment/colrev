@@ -33,6 +33,9 @@ class BackwardSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{cited_by_file}} (references)"
     search_type = colrev.settings.SearchType.BACKWARD_SEARCH
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "PDF backward search"
+    link = "https://github.com/kermitt2/grobid"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

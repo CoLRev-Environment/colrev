@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
 
    .. autosummary::
 
+      ~WileyOnlineLibrarySearchSource.heuristic_status
+      ~WileyOnlineLibrarySearchSource.link
       ~WileyOnlineLibrarySearchSource.search_type
+      ~WileyOnlineLibrarySearchSource.short_name
       ~WileyOnlineLibrarySearchSource.source_identifier

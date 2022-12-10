@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class CoLRevCLIPrescreen(JsonSchemaMixin):
 
-    """Prescreen based on a CLI interface"""
+    """CLI-based prescreen"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
 

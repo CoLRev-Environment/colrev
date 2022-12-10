@@ -29,6 +29,9 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{url}}"
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "Wiley"
+    link = "https://onlinelibrary.wiley.com/"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

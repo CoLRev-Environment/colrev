@@ -8,7 +8,7 @@ Literature reviews with CoLRev
 
 The manual explains how to use the functionality of CoLRev when conducting a literature review. It covers the user workflow, the processing operations, as well as collaboration and curation.
 It does not explain the design and architecture of CoLRev, which are covered in the `technical documentation <../foundations_governance/colrev.html>`_ and the `API reference <../technical_documentation/api.html>`_.
-Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
+Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example, by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
 
 .. TODO : elaborate on prerequisites?
 
@@ -52,31 +52,5 @@ CoLRev relies on several fixed-version dependencies for reproducibility and venv
     # To activate (Windows)
     myenv\Scripts\activate.bat
 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Overview
-
-   manual/1_operations
-
-   manual/2_workflow
-
-   manual/2_1_problem_formulation
-
-   manual/2_2_metadata_retrieval
-
-   manual/2_3_metadata_prescreen
-
-   manual/2_3_metadata_prescreen
-
-   manual/2_5_screen
-
-   manual/2_6_data
-
-   manual/3_collaboration
-
-   manual/4_curation
-
-   manual/A_appendix
 
 The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.

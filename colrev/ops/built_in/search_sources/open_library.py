@@ -38,6 +38,9 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     source_identifier = "{{isbn}}"
     search_type = colrev.settings.SearchType.DB
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    short_name = "OpenLibrary"
+    link = "https://openlibrary.org/"
     __open_library_md_filename = Path("data/search/md_open_library.bib")
 
     def __init__(

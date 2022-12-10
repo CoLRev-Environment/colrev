@@ -38,5 +38,8 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
 
    .. autosummary::
 
+      ~JSTORSearchSource.heuristic_status
+      ~JSTORSearchSource.link
       ~JSTORSearchSource.search_type
+      ~JSTORSearchSource.short_name
       ~JSTORSearchSource.source_identifier
