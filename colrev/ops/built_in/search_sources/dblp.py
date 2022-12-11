@@ -43,7 +43,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     __api_url = "https://dblp.org/search/publ/api?q="
     __api_url_venues = "https://dblp.org/search/venue/api?q="
 
-    source_identifier = "{{dblp_key}}"
+    source_identifier = "dblp_key"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "DBLP"
@@ -59,7 +59,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         endpoint: str
         filename: Path
         search_type: colrev.settings.SearchType
-        source_identifier: str
         search_parameters: dict
         load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
@@ -99,7 +98,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                     endpoint="colrev_built_in.dblp",
                     filename=self.__dblp_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
-                    source_identifier=self.source_identifier,
                     search_parameters={},
                     load_conversion_package_endpoint={
                         "endpoint": "colrev_built_in.bibtex"
@@ -351,12 +349,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         # maybe : validate/assert that the venue_key is available
         if "scope" in source.search_parameters:
             if "venue_key" not in source.search_parameters["scope"]:
@@ -587,10 +579,8 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         dblp_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=update_only,
-            key="dblp_key",
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -684,10 +674,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                     # Note : need to reload file because the object is not shared between processes
                     dblp_feed = connector_utils.GeneralOriginFeed(
                         source_operation=prep_operation,
-                        source=self.search_source,
-                        feed_file=self.__dblp_md_filename,
+                        search_source_interface=self,
                         update_only=False,
-                        key="dblp_key",
                     )
 
                     dblp_feed.set_id(record_dict=retrieved_record.data)
@@ -698,7 +686,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                         default_source=retrieved_record.data["colrev_origin"][0],
                     )
                     record.set_masterdata_complete(
-                        source_identifier=retrieved_record.data["colrev_origin"][0]
+                        source=retrieved_record.data["colrev_origin"][0]
                     )
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared

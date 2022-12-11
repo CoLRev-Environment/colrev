@@ -36,7 +36,7 @@ class PDFSearchSource(JsonSchemaMixin):
     # pylint: disable=too-many-instance-attributes
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{file}}"
+    source_identifier = "file"
     search_type = colrev.settings.SearchType.PDFS
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"
@@ -400,12 +400,6 @@ class PDFSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [
                 "NA",
@@ -469,10 +463,8 @@ class PDFSearchSource(JsonSchemaMixin):
 
         pdfs_dir_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=False,
-            key="file",
         )
         records = search_operation.review_manager.dataset.load_records_dict()
         grobid_service = search_operation.review_manager.get_grobid_service()

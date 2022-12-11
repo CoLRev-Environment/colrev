@@ -28,7 +28,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     """SearchSource for Transport Research International Documentation"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{biburl}}"
+    source_identifier = "biburl"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "TRID"
@@ -49,12 +49,6 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
         search_operation.review_manager.logger.debug(
             f"Validate SearchSource {source.filename}"
         )
-
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
 
         if "query_file" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

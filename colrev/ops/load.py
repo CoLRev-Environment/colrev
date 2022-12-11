@@ -148,7 +148,6 @@ class Load(colrev.operation.Operation):
                     endpoint=endpoint,
                     filename=filepath,
                     search_type=search_type,
-                    source_identifier=endpoint_class.source_identifier,  # type: ignore
                     search_parameters={},
                     load_conversion_package_endpoint=res[
                         "load_conversion_package_endpoint"
@@ -173,7 +172,6 @@ class Load(colrev.operation.Operation):
                 endpoint="colrev_built_in.unknown_source",
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
-                source_identifier="NA",
                 search_parameters={},
                 load_conversion_package_endpoint=get_load_conversion_package_endpoint(
                     filepath=filepath
@@ -291,13 +289,6 @@ class Load(colrev.operation.Operation):
                 self.review_manager.logger.info(
                     "Could not detect source (using fallback: unknown_source)"
                 )
-                if heuristic_source["source_candidate"].source_identifier in [
-                    "",
-                    "NA",
-                ]:
-                    heuristic_source["source_candidate"].source_identifier = str(
-                        sfp_name.name
-                    )
 
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
@@ -314,10 +305,6 @@ class Load(colrev.operation.Operation):
                 print(
                     "Source name".ljust(25, " ")
                     + f": {heuristic_source['source_candidate'].endpoint}"
-                )
-                print(
-                    "Source identifier".ljust(25, " ")
-                    + f": {heuristic_source['source_candidate'].source_identifier}"
                 )
 
             heuristic_source["source_candidate"].comment = None

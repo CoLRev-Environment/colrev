@@ -58,7 +58,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         endpoint: str
         filename: Path
         search_type: colrev.settings.SearchType
-        source_identifier: str
         search_parameters: dict
         load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
@@ -251,7 +250,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
                         f"{retrieved_record.data['europe_pmc_id']}"
                     )
-                    retrieved_record.set_masterdata_complete(source_identifier=source)
+                    retrieved_record.set_masterdata_complete(source=source)
 
                     if not most_similar_only:
                         record_list.append(retrieved_record)
@@ -366,12 +365,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
@@ -394,10 +387,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         europe_pmc_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=False,
-            key="europe_pmc_id",
         )
 
         try:

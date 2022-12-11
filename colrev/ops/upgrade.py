@@ -916,6 +916,10 @@ class Upgrade(colrev.operation.Operation):
                             }
                         )
 
+        for search_source in settings["sources"]:
+            if "source_identifier" in search_source:
+                del search_source["source_identifier"]
+
         for prep_round in settings["prep"]["prep_rounds"]:
             # Note : moved to unknown_source prep
             prep_round["prep_package_endpoints"] = [

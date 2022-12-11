@@ -157,7 +157,7 @@ class PrepMan(colrev.operation.Operation):
         """Set data in the prep_man operation"""
 
         record = colrev.record.PrepRecord(data=record_dict)
-        record.set_masterdata_complete(source_identifier="prep_man")
+        record.set_masterdata_complete(source="prep_man")
         record.set_masterdata_consistent()
         record.set_fields_complete()
         record.set_status(target_state=colrev.record.RecordState.md_prepared)

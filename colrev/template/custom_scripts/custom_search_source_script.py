@@ -22,7 +22,7 @@ class CustomSearch:
     """Class for custom search scripts"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
-    source_identifier = "{{custom}}"
+    source_identifier = "custom"
 
     def __init__(
         self,

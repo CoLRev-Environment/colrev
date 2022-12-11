@@ -30,7 +30,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
     """SearchSource for directory containing video files"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{file}}"
+    source_identifier = "file"
     search_type = colrev.settings.SearchType.OTHER
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Video directory"
@@ -68,12 +68,6 @@ class VideoDirSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "path" not in source.search_parameters["scope"]:
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
@@ -99,10 +93,8 @@ class VideoDirSearchSource(JsonSchemaMixin):
 
         video_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=False,
-            key="file",
         )
 
         overall_files = [

@@ -162,7 +162,6 @@ class SearchSource(JsonSchemaMixin):
     endpoint: str
     filename: Path
     search_type: SearchType
-    source_identifier: str
     search_parameters: dict
     load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
@@ -229,7 +228,6 @@ class SearchSource(JsonSchemaMixin):
         return (
             f"{self.endpoint} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
-            # + f"   source identifier:   {self.source_identifier}\n"
             + f"   search parameters:   {self.search_parameters}"
             # + "   load_conversion_package_endpoint:   "
             # + f"{self.load_conversion_package_endpoint['endpoint']}"

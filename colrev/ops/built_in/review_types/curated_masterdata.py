@@ -54,7 +54,6 @@ class CuratedMasterdata(JsonSchemaMixin):
             endpoint="crossref",
             filename=Path("data/search/CROSSREF.bib"),
             search_type=colrev.settings.SearchType["DB"],
-            source_identifier="https://api.crossref.org/works/{{doi}}",
             search_parameters={},
             load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",

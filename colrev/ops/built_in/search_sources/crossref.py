@@ -49,7 +49,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
     __api_url = "https://api.crossref.org/works?"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "https://api.crossref.org/works/{{doi}}"
+    source_identifier = "doi"
+    # "https://api.crossref.org/works/{{doi}}"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     link = "https://www.crossref.org/"
@@ -79,7 +80,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     endpoint="colrev_built_in.crossref",
                     filename=self.__crossref_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
-                    source_identifier=self.source_identifier,
                     search_parameters={},
                     load_conversion_package_endpoint={
                         "endpoint": "colrev_built_in.bibtex"
@@ -303,7 +303,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
                 retrieved_record.add_provenance_all(source=source)
 
-                record.set_masterdata_complete(source_identifier=source)
+                record.set_masterdata_complete(source=source)
 
                 if jour_vol_iss_list:
                     record_list.append(retrieved_record)
@@ -384,10 +384,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 # Note : need to reload file because the object is not shared between processes
                 crossref_feed = connector_utils.GeneralOriginFeed(
                     source_operation=prep_operation,
-                    source=self.search_source,
-                    feed_file=self.search_source.filename,
+                    search_source_interface=self,
                     update_only=False,
-                    key="doi",
                 )
 
                 crossref_feed.set_id(record_dict=retrieved_record.data)
@@ -407,7 +405,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         record=record,
                     )
                     record.set_masterdata_complete(
-                        source_identifier=retrieved_record.data["colrev_origin"][0]
+                        source=retrieved_record.data["colrev_origin"][0]
                     )
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
@@ -445,12 +443,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation.review_manager.logger.debug(
             f"Validate SearchSource {source.filename}"
         )
-
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
 
         if source.filename.name != self.__crossref_md_filename.name:
 
@@ -679,10 +671,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=update_only,
-            key="doi",
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():

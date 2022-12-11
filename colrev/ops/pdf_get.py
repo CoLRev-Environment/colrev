@@ -200,7 +200,7 @@ class PDFGet(colrev.operation.Operation):
         corresponding_origin: str
         source_records: typing.List[typing.Dict] = []
         for source in self.review_manager.settings.sources:
-            if "{{file}}" != source.source_identifier:
+            if "colrev_built_in.pdfs_dir" != source.endpoint:
                 continue
 
             if not source.filename.is_file():

@@ -33,9 +33,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     """Performs a search in the LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
-
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "colrev_local_index"
+    source_identifier = "curation_ID"
     search_type = colrev.settings.SearchType.OTHER
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
@@ -87,7 +86,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     endpoint="colrev_built_in.local_index",
                     filename=self.__local_index_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
-                    source_identifier=self.source_identifier,
                     search_parameters={},
                     load_conversion_package_endpoint={
                         "endpoint": "colrev_built_in.bibtex"
@@ -112,12 +110,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         search_operation.review_manager.logger.debug(
             f"Validate SearchSource {source.filename}"
         )
-
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
 
         # if "query" not in source.search_parameters:
         # Note :  for md-sources, there is no query parameter.
@@ -297,10 +289,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_index_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=update_only,
-            key="curation_ID",
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -321,7 +311,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         """Source heuristic for local-index"""
 
         result = {"confidence": 0.0}
-        if "colrev_local_index" in data:
+        if "curation_ID" in data:
             result["confidence"] = 1
 
         return result
@@ -408,10 +398,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # Note : need to reload file because the object is not shared between processes
         local_index_feed = connector_utils.GeneralOriginFeed(
             source_operation=prep_operation,
-            source=self.search_source,
-            feed_file=self.__local_index_md_filename,
+            search_source_interface=self,
             update_only=False,
-            key="curation_ID",
         )
 
         # TODO : TBD - indices will not be identical across the review team...

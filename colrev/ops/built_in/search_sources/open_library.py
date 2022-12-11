@@ -36,7 +36,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
-    source_identifier = "{{isbn}}"
+    source_identifier = "isbn"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
@@ -67,7 +67,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                     endpoint="colrev_built_in.open_library",
                     filename=self.__open_library_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
-                    source_identifier=self.source_identifier,
                     search_parameters={},
                     load_conversion_package_endpoint={
                         "endpoint": "colrev_built_in.bibtex"
@@ -240,10 +239,8 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             self.open_library_lock.acquire(timeout=60)
             open_library_feed = connector_utils.GeneralOriginFeed(
                 source_operation=prep_operation,
-                source=self.search_source,
-                feed_file=self.__open_library_md_filename,
+                search_source_interface=self,
                 update_only=False,
-                key="isbn",
             )
 
             open_library_feed.set_id(record_dict=retrieved_record.data)

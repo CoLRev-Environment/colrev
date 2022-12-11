@@ -28,7 +28,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # Note : the ID contains the doi
-    source_identifier = "https://dl.acm.org/doi/{{ID}}"
+    # "https://dl.acm.org/doi/{{ID}}"
+    source_identifier = "doi"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "ACM Digital Library"
@@ -62,12 +63,6 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         search_operation.review_manager.logger.debug(
             f"Validate SearchSource {source.filename}"
         )
-
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
 
         if "query_file" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

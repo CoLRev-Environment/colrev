@@ -70,12 +70,6 @@ class PubMedSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "query_file" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 f"Source missing query_file search_parameter ({source.filename})"

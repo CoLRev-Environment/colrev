@@ -5,7 +5,6 @@ from __future__ import annotations
 import html
 import re
 import time
-from pathlib import Path
 from random import randint
 from typing import TYPE_CHECKING
 
@@ -188,30 +187,32 @@ class GeneralOriginFeed:
         self,
         *,
         source_operation: colrev.operation.Operation,
-        source: colrev.settings.SearchSource,
-        feed_file: Path,
+        search_source_interface: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
         update_only: bool,
-        key: str,
     ):
 
-        # Note: the key identifies records in the search feed.
+        self.source = search_source_interface.search_source
+        self.feed_file = search_source_interface.search_source.filename
+
+        # Note: the source_identifier identifies records in the search feed.
         # This could be a doi or link or database-specific ID (like WOS accession numbers)
-        # The key can be stored in the main records.bib (it does not have to)
-        # The record key (feed-specific) is used in search or other operations (like prep)
+        # The source_identifier can be stored in the main records.bib (it does not have to)
+        # The record source_identifier (feed-specific) is used in search
+        # or other operations (like prep)
         # In search operations, records are added/updated based on available_ids
-        # (which maps keys to IDs used to generate the colrev_origin)
+        # (which maps source_identifiers to IDs used to generate the colrev_origin)
         # In other operations, records are linked through colrev_origins,
-        # i.e., there is no need to store the key in the main records (redundantly)
-        self.key = key
+        # i.e., there is no need to store the source_identifier in the main records (redundantly)
+        self.source_identifier = search_source_interface.source_identifier
 
         self.update_only = update_only
 
         self.__available_ids = {}
         self.__max_id = 1
-        if not feed_file.is_file():
+        if not self.feed_file.is_file():
             self.feed_records = {}
         else:
-            with open(feed_file, encoding="utf8") as bibtex_file:
+            with open(self.feed_file, encoding="utf8") as bibtex_file:
                 self.feed_records = (
                     source_operation.review_manager.dataset.load_records_dict(
                         load_str=bibtex_file.read()
@@ -219,9 +220,9 @@ class GeneralOriginFeed:
                 )
 
             self.__available_ids = {
-                x[self.key]: x["ID"]
+                x[self.source_identifier]: x["ID"]
                 for x in self.feed_records.values()
-                if self.key in x
+                if self.source_identifier in x
             }
             self.__max_id = (
                 max(
@@ -235,9 +236,7 @@ class GeneralOriginFeed:
                 + 1
             )
         self.source_operation = source_operation
-        self.source = source
         self.origin_prefix = self.source.get_origin_prefix()
-        self.feed_file = feed_file
 
     def save_feed_file(self) -> None:
         """Save the feed file"""
@@ -270,11 +269,13 @@ class GeneralOriginFeed:
 
     def set_id(self, *, record_dict: dict) -> dict:
         """Set incremental record ID
-        If self.key is in record_dict, it is updated, otherwise, it is added as a new record.
+        If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
 
-        if record_dict[self.key] in self.__available_ids:
-            record_dict["ID"] = self.__available_ids[record_dict[self.key]]
+        if record_dict[self.source_identifier] in self.__available_ids:
+            record_dict["ID"] = self.__available_ids[
+                record_dict[self.source_identifier]
+            ]
         else:
             record_dict["ID"] = str(self.__max_id).rjust(6, "0")
 
@@ -286,7 +287,7 @@ class GeneralOriginFeed:
         # Feed:
         feed_record_dict = record.data.copy()
         added_new = True
-        if feed_record_dict[self.key] in self.__available_ids:
+        if feed_record_dict[self.source_identifier] in self.__available_ids:
             added_new = False
         else:
             self.__max_id += 1
@@ -301,7 +302,9 @@ class GeneralOriginFeed:
         if self.update_only and added_new:
             added_new = False
         else:
-            self.__available_ids[feed_record_dict[self.key]] = feed_record_dict["ID"]
+            self.__available_ids[
+                feed_record_dict[self.source_identifier]
+            ] = feed_record_dict["ID"]
             self.feed_records[feed_record_dict["ID"]] = feed_record_dict
 
         # Original record

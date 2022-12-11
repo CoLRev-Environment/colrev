@@ -71,8 +71,6 @@ class UnknownSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        # Note : source_identifier is not restricted
-
         if "query_file" in source.search_parameters:
             if not Path(source.search_parameters["query_file"]).is_file():
                 raise colrev_exceptions.InvalidQueryException(

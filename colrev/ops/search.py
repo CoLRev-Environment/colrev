@@ -29,32 +29,6 @@ class Search(colrev.operation.Operation):
 
         self.sources = review_manager.settings.sources
 
-    def __get_feed_config(self, *, query_dict: dict) -> dict:
-
-        load_conversion_package_endpoint = {"endpoint": "colrev_built_in.bibtex"}
-
-        package_manager = self.review_manager.get_package_manager()
-
-        available_search_package_endpoints = package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source
-        )
-
-        source_identifier = "TODO"
-        if query_dict["endpoint"] in available_search_package_endpoints:
-            search_script_packages = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-                selected_packages=[query_dict],
-                operation=self,
-            )
-            source_identifier = search_script_packages[  # type: ignore
-                query_dict["endpoint"]
-            ].source_identifier
-
-        return {
-            "source_identifier": source_identifier,
-            "load_conversion_package_endpoint": load_conversion_package_endpoint,
-        }
-
     def add_source(self, *, query: str) -> None:
         """Add a new source"""
 
@@ -69,7 +43,6 @@ class Search(colrev.operation.Operation):
                     "endpoint": "colrev_built_in.pdfs_dir",
                     "filename": filename,
                     "search_type": colrev.settings.SearchType.PDFS,
-                    "source_identifier": "{{file}}",
                     "search_parameters": {"scope": {"path": "data/pdfs"}},
                     "load_conversion_package_endpoint": {
                         "endpoint": "colrev_built_in.bibtex"
@@ -94,7 +67,6 @@ class Search(colrev.operation.Operation):
                     "endpoint": "colrev_built_in.dblp",
                     "filename": filename,
                     "search_type": colrev.settings.SearchType.DB,
-                    "source_identifier": "{{dblp_key}}",
                     "search_parameters": {"query": query},
                     "load_conversion_package_endpoint": {
                         "endpoint": "colrev_built_in.bibtex"
@@ -108,12 +80,8 @@ class Search(colrev.operation.Operation):
                 .replace("&from_ui=yes", "")
                 .lstrip("+")
             )
-            # TODO : avoid  duplicate filenames
-            # pylint: disable=import-outside-toplevel
-            # Note : import here to avoid circular imports
-            from colrev.ops.built_in.search_sources.crossref import CrossrefSearchSource
 
-            crossref_search_source = CrossrefSearchSource
+            # TODO : avoid  duplicate filenames
 
             filename = Path(f"data/search/crossref_{query.replace(' ', '_')}.bib")
             add_source = colrev.settings.SearchSource(
@@ -121,7 +89,6 @@ class Search(colrev.operation.Operation):
                     "endpoint": "colrev_built_in.crossref",
                     "filename": filename,
                     "search_type": colrev.settings.SearchType.DB,
-                    "source_identifier": crossref_search_source.source_identifier,
                     "search_parameters": {"query": query},
                     "load_conversion_package_endpoint": {
                         "endpoint": "colrev_built_in.bibtex"
@@ -151,7 +118,7 @@ class Search(colrev.operation.Operation):
             query_dict["filename"] = feed_file_path
 
             # gh_issue https://github.com/geritwagner/colrev/issues/68
-            # get search_type/source_identifier from the SearchSource
+            # get search_type from the SearchSource
             # query validation based on ops.built_in.search_source settings
             # prevent duplicate sources (same endpoint and search_parameters)
             if "search_type" not in query_dict:
@@ -160,16 +127,17 @@ class Search(colrev.operation.Operation):
                 query_dict["search_type"] = colrev.settings.SearchType[
                     query_dict["search_type"]
                 ]
-            if "source_identifier" not in query_dict:
-                query_dict["source_identifier"] = "TODO"
 
             if "load_conversion_package_endpoint" not in query_dict:
                 query_dict["load_conversion_package_endpoint"] = {
                     "endpoint": "colrev_built_in.bibtex"
                 }
             if query_dict["search_type"] == colrev.settings.SearchType.DB:
-                feed_config = self.__get_feed_config(query_dict=query_dict)
-                query_dict["source_identifier"] = feed_config["source_identifier"]
+                feed_config = {
+                    "load_conversion_package_endpoint": {
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                }
                 query_dict["load_conversion_package_endpoint"] = feed_config[
                     "load_conversion_package_endpoint"
                 ]
@@ -181,7 +149,6 @@ class Search(colrev.operation.Operation):
                     f"data/search/{filename}",
                 ),
                 search_type=colrev.settings.SearchType(query_dict["search_type"]),
-                source_identifier=query_dict["source_identifier"],
                 search_parameters=query_dict.get("search_parameters", {}),
                 load_conversion_package_endpoint=query_dict[
                     "load_conversion_package_endpoint"
@@ -445,7 +412,6 @@ class Search(colrev.operation.Operation):
             endpoint="custom_search_source_script",
             filename=Path("data/search/custom_search.bib"),
             search_type=colrev.settings.SearchType.DB,
-            source_identifier="TODO",
             search_parameters={},
             load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",

@@ -458,7 +458,7 @@ class Record:
         return False
 
     def set_masterdata_complete(
-        self, *, source_identifier: str, replace_source: bool = True
+        self, *, source: str, replace_source: bool = True
     ) -> None:
         """Set the masterdata to complete"""
         # pylint: disable=too-many-branches
@@ -488,10 +488,10 @@ class Record:
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["volume"][
                             "source"
-                        ] = source_identifier
+                        ] = source
                 else:
                     self.data["colrev_masterdata_provenance"]["volume"] = {
-                        "source": source_identifier,
+                        "source": source,
                         "note": "not_missing",
                     }
 
@@ -503,10 +503,10 @@ class Record:
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["number"][
                             "source"
-                        ] = source_identifier
+                        ] = source
                 else:
                     self.data["colrev_masterdata_provenance"]["number"] = {
-                        "source": source_identifier,
+                        "source": source,
                         "note": "not_missing",
                     }
 
@@ -2028,7 +2028,7 @@ class Record:
 
             if not missing_fields:
                 self.set_masterdata_complete(
-                    source_identifier="update_masterdata_provenance",
+                    source="update_masterdata_provenance",
                     replace_source=False,
                 )
 

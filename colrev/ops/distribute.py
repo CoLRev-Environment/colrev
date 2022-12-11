@@ -98,7 +98,6 @@ class Distribute(colrev.operation.Operation):
                         endpoint="colrev_built_in.unknown_source",
                         filename=Path("search") / target_bib_file.name,
                         search_type=colrev.settings.SearchType.OTHER,
-                        source_identifier="",
                         search_parameters={},
                         load_conversion_package_endpoint={},
                         comment="",

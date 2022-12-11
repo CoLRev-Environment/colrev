@@ -60,12 +60,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "scope required in search_parameters"
@@ -90,10 +84,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         colrev_project_search_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=update_only,
-            key="colrev_project_identifier",
         )
 
         project_review_manager = search_operation.review_manager.get_review_manager(

@@ -71,7 +71,7 @@ class DOIConnector:
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
                 retrieved_record.add_provenance_all(source=url)
                 record.merge(merging_record=retrieved_record, default_source=url)
-                record.set_masterdata_complete(source_identifier=url)
+                record.set_masterdata_complete(source=url)
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
                 if "retracted" in record.data.get("warning", ""):
                     record.prescreen_exclude(reason="retracted")

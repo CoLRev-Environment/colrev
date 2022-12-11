@@ -31,7 +31,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     """
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{cited_by_file}} (references)"
+    source_identifier = "bwsearch_ref"
     search_type = colrev.settings.SearchType.BACKWARD_SEARCH
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
@@ -77,12 +77,6 @@ class BackwardSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.source_identifier != self.source_identifier:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Invalid source_identifier: {source.source_identifier} "
-                f"(should be {self.source_identifier})"
-            )
-
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
@@ -116,10 +110,8 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         pdf_backward_search_feed = connector_utils.GeneralOriginFeed(
             source_operation=search_operation,
-            source=self.search_source,
-            feed_file=self.search_source.filename,
+            search_source_interface=self,
             update_only=False,
-            key="bwsearch_ref",
         )
 
         for record in records.values():

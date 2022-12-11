@@ -309,7 +309,6 @@ class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     endpoint: str
     filename: Path
     search_type: colrev.settings.SearchType
-    source_identifier: str
     search_parameters: dict
     load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
