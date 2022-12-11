@@ -70,14 +70,18 @@ class SourceSpecificPrep(JsonSchemaMixin):
         if "howpublished" in record.data and "url" not in record.data:
             if "url" in record.data["howpublished"]:
                 record.rename_field(key="howpublished", new_key="url")
-                record.data["url"] = (
-                    record.data["url"].replace("\\url{", "").rstrip("}")
+                record.update_field(
+                    key="url",
+                    value=record.data["url"].replace("\\url{", "").rstrip("}"),
+                    source="source_specific_prep",
                 )
 
         if "webpage" == record.data["ENTRYTYPE"].lower() or (
             "misc" == record.data["ENTRYTYPE"].lower() and "url" in record.data
         ):
-            record.data["ENTRYTYPE"] = "online"
+            record.update_field(
+                key="ENTRYTYPE", value="online", source="source_specific_prep"
+            )
 
         return record
 

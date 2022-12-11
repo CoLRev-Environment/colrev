@@ -22,7 +22,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.from_dict
       ~LocalIndexSearchSource.from_json
       ~LocalIndexSearchSource.from_object
-      ~LocalIndexSearchSource.get_masterdata_from_local_index
+      ~LocalIndexSearchSource.get_masterdata
       ~LocalIndexSearchSource.heuristic
       ~LocalIndexSearchSource.json_schema
       ~LocalIndexSearchSource.load_fixes

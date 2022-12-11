@@ -341,6 +341,7 @@ class Record:
             if key in self.data:
                 if self.data[key] == value:
                     return
+
         self.data[key] = value
         if key in self.identifying_field_keys:
             if not self.masterdata_is_curated():

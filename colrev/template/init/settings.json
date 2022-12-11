@@ -156,9 +156,6 @@
                         "endpoint": "colrev_built_in.prep_curated"
                     },
                     {
-                        "endpoint": "colrev_built_in.correct_recordtype"
-                    },
-                    {
                         "endpoint": "colrev_built_in.get_doi_from_urls"
                     },
                     {

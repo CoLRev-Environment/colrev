@@ -51,6 +51,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         vol_nr_dict: dict = {}
         records = prep_operation.review_manager.dataset.load_records_dict()
         for record in records.values():
+            # pylint: disable=duplicate-code
             if record[
                 "colrev_status"
             ] not in colrev.record.RecordState.get_post_x_states(

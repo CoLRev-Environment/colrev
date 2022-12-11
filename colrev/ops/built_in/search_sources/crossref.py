@@ -25,11 +25,11 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
-import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
+    import colrev.ops.search
     import colrev.ops.prep
 
 # pylint: disable=unused-argument
@@ -326,7 +326,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record_list
 
-    def get_masterdata_from_crossref(
+    def get_masterdata(
         self,
         *,
         prep_operation: colrev.ops.prep.Prep,

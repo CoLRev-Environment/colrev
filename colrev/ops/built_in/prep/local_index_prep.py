@@ -9,6 +9,7 @@ import timeout_decorator
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
@@ -47,9 +48,28 @@ class LocalIndexPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record metadata based on local-index"""
 
-        self.local_index_source.get_masterdata_from_local_index(
+        self.local_index_source.get_masterdata(
             prep_operation=prep_operation, record=record
         )
+
+        if "volume" in record.data and "number" in record.data:
+            # Note : cannot use local_index as an attribute of PrepProcess
+            # because it creates problems with multiprocessing
+            try:
+                fields_to_remove = (
+                    self.local_index_source.local_index.get_fields_to_remove(
+                        record_dict=record.get_data()
+                    )
+                )
+                for field_to_remove in fields_to_remove:
+                    if field_to_remove in record.data:
+                        record.remove_field(
+                            key=field_to_remove,
+                            not_missing_note=True,
+                            source="local_index",
+                        )
+            except TransportError:
+                pass
 
         return record
 

@@ -40,6 +40,9 @@ class PDFLastPage(JsonSchemaMixin):
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
+        # Note : to pull image if not available
+        pdf_prep_operation.review_manager.get_pdf_hash_service()
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,

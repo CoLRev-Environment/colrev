@@ -60,9 +60,10 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
         if record.data.get("ENTRYTYPE", "NA") != "book":
             return record
 
-        self.open_library_connector.get_masterdata_from_open_library(
+        self.open_library_connector.get_masterdata(
             prep_operation=prep_operation, record=record
         )
+
         return record
 
 

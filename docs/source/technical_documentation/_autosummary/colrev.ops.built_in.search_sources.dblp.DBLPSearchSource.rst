@@ -22,7 +22,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.from_dict
       ~DBLPSearchSource.from_json
       ~DBLPSearchSource.from_object
-      ~DBLPSearchSource.get_masterdata_from_dblp
+      ~DBLPSearchSource.get_masterdata
       ~DBLPSearchSource.heuristic
       ~DBLPSearchSource.json_schema
       ~DBLPSearchSource.load_fixes

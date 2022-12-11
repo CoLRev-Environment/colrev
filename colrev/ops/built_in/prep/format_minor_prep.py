@@ -58,6 +58,7 @@ class FormatMinorPrep(JsonSchemaMixin):
                 record.data[field] = re.sub(r"\s+", " ", record.data[field])
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 
+        # TODO : move this to load/import?
         if record.data.get("volume", "") == "ahead-of-print":
             record.remove_field(key="volume")
         if record.data.get("number", "") == "ahead-of-print":

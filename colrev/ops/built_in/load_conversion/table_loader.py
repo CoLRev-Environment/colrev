@@ -146,8 +146,8 @@ class CSVLoader(JsonSchemaMixin):
         records_dict = TableLoadUtility.preprocess_records(records=records_value_list)
 
         if not all("ID" in r for r in records_dict.values()):
-            for i, r in enumerate(records_dict.values()):
-                r["ID"] = str(i).rjust(6, "0")
+            for i, record in enumerate(records_dict.values()):
+                record["ID"] = str(i).rjust(6, "0")
 
         records = {r["ID"]: r for r in records_dict.values()}
 

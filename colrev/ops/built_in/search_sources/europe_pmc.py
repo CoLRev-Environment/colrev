@@ -282,7 +282,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         return record_list
 
-    def get_masterdata_from_europe_pmc(
+    def get_masterdata(
         self,
         *,
         prep_operation: colrev.ops.prep.Prep,

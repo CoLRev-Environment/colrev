@@ -463,12 +463,6 @@
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/remove_redundant_fields.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.correct_recordtype",
-            "endpoint": "colrev.ops.built_in.prep.correct_record_type_prep.CorrectRecordTypePrep",
-            "short_description": "Prepares records by correcting the record type (ENTRYTYPE)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/correct_record_type_prep.py>`_"
-        },
-        {
             "package_endpoint_identifier": "colrev_built_in.update_metadata_status",
             "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep",
             "short_description": "Prepares records by updating the metadata status",

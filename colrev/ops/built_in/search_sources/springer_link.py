@@ -97,6 +97,8 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for Springer Link"""
 
+        # pylint: disable=too-many-branches
+
         for record in records.values():
             if "item_title" in record:
                 record["title"] = record["item_title"]

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-lines
 
 
 class Upgrade(colrev.operation.Operation):
@@ -915,6 +916,17 @@ class Upgrade(colrev.operation.Operation):
                             }
                         )
 
+        for prep_round in settings["prep"]["prep_rounds"]:
+            # Note : moved to unknown_source prep
+            prep_round["prep_package_endpoints"] = [
+                s
+                for s in prep_round["prep_package_endpoints"]
+                if s["endpoint"]
+                not in [
+                    "colrev_built_in.correct_recordtype",
+                ]
+            ]
+
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
 
@@ -948,7 +960,7 @@ class Upgrade(colrev.operation.Operation):
                     o.startswith("md_local_index.bib")
                     for o in record_dict["colrev_origin"]
                 ):
-                    local_index_source.get_masterdata_from_local_index(
+                    local_index_source.get_masterdata(
                         prep_operation=prep_operation,
                         record=colrev.record.Record(data=record_dict),
                     )
@@ -974,7 +986,7 @@ class Upgrade(colrev.operation.Operation):
                         o.startswith("md_crossref.bib/")
                         for o in record_dict["colrev_origin"]
                     ):
-                        crossref_source.get_masterdata_from_crossref(
+                        crossref_source.get_masterdata(
                             prep_operation=prep_operation,
                             record=colrev.record.Record(data=record_dict),
                         )

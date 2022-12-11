@@ -57,6 +57,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
                     nr_non_latin += 1
             return nr_non_latin / len(str_to_check) > 0.75
 
+        # TB:D join or check independently?
         str_to_check = " ".join(
             [
                 record.data.get("title", ""),

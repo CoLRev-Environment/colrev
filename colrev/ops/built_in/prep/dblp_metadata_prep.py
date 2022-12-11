@@ -58,9 +58,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
 
-        self.dblp_source.get_masterdata_from_dblp(
-            prep_operation=prep_operation, record=record
-        )
+        self.dblp_source.get_masterdata(prep_operation=prep_operation, record=record)
 
         return record
 

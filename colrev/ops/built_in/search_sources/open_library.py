@@ -218,7 +218,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
-    def get_masterdata_from_open_library(
+    def get_masterdata(
         self,
         *,
         prep_operation: colrev.ops.prep.Prep,

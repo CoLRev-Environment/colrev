@@ -87,10 +87,7 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             complementary_materials_string == record.data.get("title", "").lower()
             for complementary_materials_string in complementary_materials_strings
         ):
-            record.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.rev_prescreen_excluded
-            record.data["prescreen_exclusion"] = "complementary material"
+            record.prescreen_exclude(reason="complementary material")
 
         return record
 

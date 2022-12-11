@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
@@ -55,23 +54,6 @@ class DropFieldsPrep(JsonSchemaMixin):
 
         if record.data.get("publisher", "") in ["researchgate.net"]:
             record.remove_field(key="publisher")
-
-        if "volume" in record.data.keys() and "number" in record.data.keys():
-            # Note : cannot use local_index as an attribute of PrepProcess
-            # because it creates problems with multiprocessing
-            try:
-                fields_to_remove = self.local_index.get_fields_to_remove(
-                    record_dict=record.get_data()
-                )
-                for field_to_remove in fields_to_remove:
-                    if field_to_remove in record.data:
-                        record.remove_field(
-                            key=field_to_remove,
-                            not_missing_note=True,
-                            source="local_index",
-                        )
-            except TransportError:
-                pass
 
         return record
 

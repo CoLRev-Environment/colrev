@@ -61,14 +61,23 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by resolving BiBTex crossref links (proceedings)"""
 
-        if "crossref" in record.data:
-            crossref_record = self.__get_crossref_record(
-                prep_operation=prep_operation, record_dict=record.data
-            )
-            if 0 != len(crossref_record):
-                for key, value in crossref_record.items():
-                    if key not in record.data:
-                        record.data[key] = value
+        if "crossref" not in record.data:
+            return record
+
+        crossref_record = self.__get_crossref_record(
+            prep_operation=prep_operation, record_dict=record.data
+        )
+        if not crossref_record:
+            return record
+
+        for key, value in crossref_record.items():
+            if key not in record.data:
+                record.update_field(
+                    key=key,
+                    value=value,
+                    source="crossref_resolution",
+                    append_edit=False,
+                )
 
         return record
 

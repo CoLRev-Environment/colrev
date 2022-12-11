@@ -352,7 +352,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def get_masterdata_from_local_index(
+    def get_masterdata(
         self,
         *,
         prep_operation: colrev.ops.prep.Prep,

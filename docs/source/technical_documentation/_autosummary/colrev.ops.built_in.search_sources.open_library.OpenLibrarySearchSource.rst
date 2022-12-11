@@ -22,7 +22,7 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.from_dict
       ~OpenLibrarySearchSource.from_json
       ~OpenLibrarySearchSource.from_object
-      ~OpenLibrarySearchSource.get_masterdata_from_open_library
+      ~OpenLibrarySearchSource.get_masterdata
       ~OpenLibrarySearchSource.json_schema
       ~OpenLibrarySearchSource.register_field_encoders
       ~OpenLibrarySearchSource.to_dict

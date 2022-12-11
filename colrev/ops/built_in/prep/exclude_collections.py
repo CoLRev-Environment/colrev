@@ -46,6 +46,7 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
 
         if "proceedings" == record.data["ENTRYTYPE"].lower():
             record.prescreen_exclude(reason="collection/proceedings")
+
         return record
 
 

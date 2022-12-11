@@ -48,7 +48,8 @@ class CuratedPrep(JsonSchemaMixin):
             if colrev.record.RecordState.md_imported == record.data.get(
                 "colrev_status", "NA"
             ):
-                record.data["colrev_status"] = colrev.record.RecordState.md_prepared
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+
         return record
 
 

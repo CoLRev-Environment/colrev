@@ -40,43 +40,51 @@ class CiteAsPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.same_record_type_required = (
+            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+        )
+        self.session = prep_operation.review_manager.get_cached_session()
+
+    def __cite_as_json_to_record(
+        self, *, json_str: str, url: str
+    ) -> colrev.record.PrepRecord:
+
+        retrieved_record: dict = {}
+        data = json.loads(json_str)
+
+        if "author" in data["metadata"]:
+            authors = data["metadata"]["author"]
+            authors_string = ""
+            for author in authors:
+                authors_string += author.get("family", "") + ", "
+                authors_string += author.get("given", "") + " "
+            authors_string = authors_string.lstrip().rstrip().replace("  ", " ")
+            retrieved_record.update(author=authors_string)
+        if "container-title" in data["metadata"]:
+            container_title = data["metadata"]["container-title"]
+            if isinstance(data["metadata"]["container-title"], list):
+                container_title = "".join(data["metadata"]["container-title"])
+            retrieved_record.update(title=container_title)
+        if "URL" in data["metadata"]:
+            retrieved_record.update(url=data["metadata"]["URL"])
+        if "note" in data["metadata"]:
+            retrieved_record.update(note=data["metadata"]["note"])
+        if "type" in data["metadata"]:
+            retrieved_record.update(ENTRYTYPE=data["metadata"]["type"])
+        if "year" in data["metadata"]:
+            retrieved_record.update(year=data["metadata"]["year"])
+        if "DOI" in data["metadata"]:
+            retrieved_record.update(doi=data["metadata"]["DOI"])
+
+        record = colrev.record.PrepRecord(data=retrieved_record)
+        record.add_provenance_all(source=url)
+        return record
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare the record based on citeas"""
-
-        def cite_as_json_to_record(*, data: dict, url: str) -> colrev.record.PrepRecord:
-            retrieved_record: dict = {}
-
-            if "author" in data["metadata"]:
-                authors = data["metadata"]["author"]
-                authors_string = ""
-                for author in authors:
-                    authors_string += author.get("family", "") + ", "
-                    authors_string += author.get("given", "") + " "
-                authors_string = authors_string.lstrip().rstrip().replace("  ", " ")
-                retrieved_record.update(author=authors_string)
-            if "container-title" in data["metadata"]:
-                container_title = data["metadata"]["container-title"]
-                if isinstance(data["metadata"]["container-title"], list):
-                    container_title = "".join(data["metadata"]["container-title"])
-                retrieved_record.update(title=container_title)
-            if "URL" in data["metadata"]:
-                retrieved_record.update(url=data["metadata"]["URL"])
-            if "note" in data["metadata"]:
-                retrieved_record.update(note=data["metadata"]["note"])
-            if "type" in data["metadata"]:
-                retrieved_record.update(ENTRYTYPE=data["metadata"]["type"])
-            if "year" in data["metadata"]:
-                retrieved_record.update(year=data["metadata"]["year"])
-            if "DOI" in data["metadata"]:
-                retrieved_record.update(doi=data["metadata"]["DOI"])
-
-            record = colrev.record.PrepRecord(data=retrieved_record)
-            record.add_provenance_all(source=url)
-            return record
 
         if record.data.get("ENTRYTYPE", "NA") not in ["misc", "software"]:
             return record
@@ -85,32 +93,24 @@ class CiteAsPrep(JsonSchemaMixin):
 
         try:
 
-            same_record_type_required = (
-                prep_operation.review_manager.settings.is_curated_masterdata_repo()
-            )
-
-            session = prep_operation.review_manager.get_cached_session()
             url = (
                 f"https://api.citeas.org/product/{record.data['title']}?"
                 + f"email={prep_operation.review_manager.email}"
             )
-            ret = session.request(
+            ret = self.session.request(
                 "GET",
                 url,
                 headers=prep_operation.requests_headers,
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            # prep_operation.review_manager.logger.debug(url)
 
-            data = json.loads(ret.text)
-
-            retrieved_record = cite_as_json_to_record(data=data, url=url)
+            retrieved_record = self.__cite_as_json_to_record(json_str=ret.text, url=url)
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=retrieved_record,
                 retrieved_record_original=retrieved_record,
-                same_record_type_required=same_record_type_required,
+                same_record_type_required=self.same_record_type_required,
             )
             if similarity > prep_operation.retrieval_similarity:
                 record.merge(merging_record=retrieved_record, default_source=url)

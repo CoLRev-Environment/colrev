@@ -50,6 +50,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             data=settings,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -98,12 +99,19 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for unknown sources"""
 
+        # pylint: disable=too-many-branches
+
+        if not record.has_inconsistent_fields() or record.masterdata_is_curated():
+            return record
+
         if (
             "colrev_built_in.md_to_bib"
             == source.load_conversion_package_endpoint["endpoint"]
         ):
             if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
-                record.data["ENTRYTYPE"] = "book"
+                record.update_field(
+                    key="ENTRYTYPE", value="book", source="unkown_source_prep"
+                )
             if record.data.get("year", "year") == record.data.get("date", "date"):
                 record.remove_field(key="date")
             if (
@@ -111,7 +119,81 @@ class UnknownSearchSource(JsonSchemaMixin):
                 and "chapter" not in record.data
                 and "title" in record.data
             ):
+                # TODO : check update_field/append_edit for rename_field?
                 record.rename_field(key="title", new_key="chapter")
+
+        # Prepare the record by heuristically correcting erroneous ENTRYTYPEs
+        padding = 40
+
+        if (
+            "dissertation" in record.data.get("fulltext", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("dissertation" in fulltext link)'
+            )
+
+        if (
+            "thesis" in record.data.get("fulltext", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("thesis" in fulltext link)'
+            )
+
+        if (
+            "This thesis" in record.data.get("abstract", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("thesis" in abstract)'
+            )
+
+        # Journal articles should not have booktitles/series set.
+        if "article" == record.data["ENTRYTYPE"]:
+            if "booktitle" in record.data:
+                if "journal" not in record.data:
+                    record.update_field(
+                        key="journal",
+                        value=record.data["booktitle"],
+                        source="unkown_source_prep",
+                    )
+                    record.remove_field(key="booktitle")
+            if "series" in record.data:
+                if "journal" not in record.data:
+                    record.update_field(
+                        key="journal",
+                        value=record.data["series"],
+                        source="unkown_source_prep",
+                    )
+                    record.remove_field(key="series")
+
+        if "article" == record.data["ENTRYTYPE"]:
+            if "journal" not in record.data:
+                if "series" in record.data:
+                    journal_string = record.data["series"]
+                    record.update_field(
+                        key="journal", value=journal_string, source="unkown_source_prep"
+                    )
+                    record.remove_field(key="series")
 
         return record
 

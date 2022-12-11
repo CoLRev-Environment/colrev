@@ -60,7 +60,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
             crossref_search_source = crossref_connector.CrossrefSearchSource(
                 source_operation=prep_operation
             )
-            crossref_md = crossref_search_source.get_masterdata_from_crossref(
+            crossref_md = crossref_search_source.get_masterdata(
                 prep_operation=prep_operation, record=record_copy
             )
             for key, value in crossref_md.data.items():
