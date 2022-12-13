@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -42,7 +41,9 @@ class BibliographyExport(JsonSchemaMixin):
     # It should have the modes incremental/replace
 
     @dataclass
-    class BibliographyExportSettings(JsonSchemaMixin):
+    class BibliographyExportSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for BibliographyExport"""
 
         endpoint: str
@@ -63,7 +64,7 @@ class BibliographyExport(JsonSchemaMixin):
         if "bib_format" not in settings:
             settings["bib_format"] = "endnote"
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         data_operation.review_manager.get_zotero_translation_service()
 

@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import docker
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
@@ -43,7 +42,7 @@ class BibutilsLoader(JsonSchemaMixin):
         load_operation: colrev.ops.load.Load,
         settings: dict,
     ):
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.bibutils_image = "colrev/bibutils:latest"
         load_operation.review_manager.environment_manager.build_docker_image(

@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -27,7 +26,7 @@ class MetaAnalysis(JsonSchemaMixin):
     def __init__(
         self, *, operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __str__(self) -> str:
         return "meta-analysis"

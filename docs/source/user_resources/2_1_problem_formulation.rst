@@ -12,7 +12,7 @@ This step may be informal and evolve throughout the review process, or be more f
    does not involve any records, but it can be updated throughout the process (e.g., after an exploratory search was completed)
 
 Methodological guidelines emphasize that the objectives and the review types, as well as the following methodological choices, should be coherent.
-It is therefore recommended to familiarize with the different types of review. An exemplary classification (`Paré et al. 2014 <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_) covers the following:
+It is therefore recommended to familiarize with the different types of review. An exemplary classification (`Paré et al. 2015 <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_) covers the following:
 
 - Narrative review
 - Descriptive review

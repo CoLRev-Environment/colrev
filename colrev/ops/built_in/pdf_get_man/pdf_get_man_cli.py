@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -39,7 +38,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.__get_from_downloads_folder = False
 

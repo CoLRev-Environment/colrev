@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -32,7 +31,7 @@ class TEIPDFPrep(JsonSchemaMixin):
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
         grobid_service.start()

@@ -7,6 +7,7 @@ TODO :
 - Include an overview figure
 - Cite methods papers
 - Add introductory paragraph and reduce options (link to the cli reference)
+- Emphasize that the process is highly iterative (feeding updates through the pipeline)
 
 Operations can lead records to transition between states as illustrated in the following.
 

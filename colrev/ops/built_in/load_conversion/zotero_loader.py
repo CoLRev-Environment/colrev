@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -38,7 +37,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
 
     def __init__(self, *, load_operation: colrev.ops.load.Load, settings: dict):
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.zotero_translation_service = (
             load_operation.review_manager.get_zotero_translation_service()

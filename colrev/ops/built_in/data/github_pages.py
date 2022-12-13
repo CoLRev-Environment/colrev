@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -26,7 +25,7 @@ class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
 
     @dataclass
-    class GHPagesSettings(JsonSchemaMixin):
+    class GHPagesSettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
         """Settings for GithubPages"""
 
         endpoint: str
@@ -56,7 +55,7 @@ class GithubPages(JsonSchemaMixin):
         if "auto_push" not in settings:
             settings["auto_push"] = True
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""

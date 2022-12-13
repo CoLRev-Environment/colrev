@@ -22,6 +22,7 @@ colrev.env.package\_manager.DefaultSettings
       ~DefaultSettings.from_json
       ~DefaultSettings.from_object
       ~DefaultSettings.json_schema
+      ~DefaultSettings.load_settings
       ~DefaultSettings.register_field_encoders
       ~DefaultSettings.to_dict
       ~DefaultSettings.to_json

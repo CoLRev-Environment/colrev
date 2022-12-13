@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from lingua.builder import LanguageDetectorBuilder
 
@@ -37,7 +36,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
         pdf_prep_operation.review_manager.environment_manager.build_docker_image(

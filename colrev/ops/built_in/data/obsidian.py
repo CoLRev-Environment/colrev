@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -26,7 +25,7 @@ class Obsidian(JsonSchemaMixin):
     """Export the sample into an Obsidian database"""
 
     @dataclass
-    class ObsidianSettings(JsonSchemaMixin):
+    class ObsidianSettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
         """Settings for Obsidian"""
 
         endpoint: str
@@ -51,7 +50,7 @@ class Obsidian(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.endpoint_path = (
             data_operation.review_manager.path / self.OBSIDIAN_PATH_RELATIVE

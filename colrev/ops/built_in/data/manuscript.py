@@ -12,11 +12,9 @@ from pathlib import Path
 from threading import Timer
 from typing import TYPE_CHECKING
 
-import dacite
 import docker
 import requests
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
@@ -56,7 +54,9 @@ class Manuscript(JsonSchemaMixin):
     NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
 
     @dataclass
-    class ManuscriptSettings(JsonSchemaMixin):
+    class ManuscriptSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Manuscript settings"""
 
         endpoint: str
@@ -93,12 +93,7 @@ class Manuscript(JsonSchemaMixin):
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
 
-        converters = {Path: Path}
-        self.settings = from_dict(
-            data_class=self.settings_class,
-            data=settings,
-            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
-        )
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.settings.paper_path = (
             data_operation.review_manager.data_dir / self.settings.paper_path

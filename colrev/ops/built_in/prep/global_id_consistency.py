@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 
@@ -39,7 +38,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(

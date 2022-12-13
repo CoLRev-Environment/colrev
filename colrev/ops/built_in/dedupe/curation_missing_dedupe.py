@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -38,7 +37,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __create_dedupe_source_stats(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe

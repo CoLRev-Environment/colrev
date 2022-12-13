@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -36,7 +35,7 @@ class TableScreen(JsonSchemaMixin):
         screen_operation: colrev.ops.screen.Screen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __create_screening_table(
         self, *, screen_operation: colrev.ops.screen.Screen, records: dict, split: list

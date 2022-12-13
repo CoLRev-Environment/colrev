@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import pycountry
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from lingua.builder import LanguageDetectorBuilder
 
@@ -34,7 +33,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py

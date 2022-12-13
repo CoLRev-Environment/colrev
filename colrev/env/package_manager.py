@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import collections.abc
+import dataclasses
 import importlib.util
 import json
 import sys
@@ -12,7 +13,9 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+import dacite
 import zope.interface
+from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from zope.interface.verify import verifyObject
 
@@ -20,6 +23,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
+
+
+# Inspiration for package descriptions:
+# https://github.com/rstudio/reticulate/blob/
+# 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
 
 class PackageEndpointType(Enum):
@@ -299,6 +307,31 @@ class DefaultSettings(JsonSchemaMixin):
 
     endpoint: str
 
+    @classmethod
+    def load_settings(cls, *, data: dict):
+        """Load the settings from dict"""
+
+        required_fields = [field.name for field in dataclasses.fields(cls)]
+        available_fields = list(data.keys())
+
+        converters = {Path: Path}
+        settings = from_dict(
+            data_class=cls,
+            data=data,
+            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
+        )
+
+        non_supported_fields = [f for f in available_fields if f not in required_fields]
+
+        if non_supported_fields:
+            raise colrev_exceptions.ParameterError(
+                parameter="non_supported_fields",
+                value=",".join(non_supported_fields),
+                options=[],
+            )
+
+        return settings
+
 
 @dataclass
 class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
@@ -393,15 +426,6 @@ class PackageManager:
 
     def __load_package_endpoints_index(self) -> dict:
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/66
-        # the list of packages should be curated
-        # (like CRAN: packages that meet *minimum* requirements)
-        # We should not load any package that matches the colrev* on PyPI
-        # (security/quality issues...)
-
-        # We can start by using/updating the following dictionary/json-file.
-        # At some point, we may decide to move it to a separate repo/index.
-
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_endpoints.json")
         )
@@ -422,14 +446,6 @@ class PackageManager:
                 packages[PackageEndpointType[key]][
                     package_item["package_endpoint_identifier"]
                 ] = {"endpoint": package_item["endpoint"]}
-
-        # gh_issue https://github.com/geritwagner/colrev/issues/66
-        # testing: validate the structure of packages.json
-        # and whether all endpoints are available
-
-        # Note : parsing to a dataclass may not have many advantages
-        # because the discover_packages and load_packages access the
-        # packages through strings anyway
 
         return packages
 

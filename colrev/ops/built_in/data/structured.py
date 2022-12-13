@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -29,7 +28,9 @@ class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a table)"""
 
     @dataclass
-    class StructuredDataSettings(JsonSchemaMixin):
+    class StructuredDataSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for StructuredData"""
 
         endpoint: str
@@ -51,7 +52,8 @@ class StructuredData(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+
+        self.settings = self.settings_class.load_settings(data=settings)
         self.data_path = (
             data_operation.review_manager.path / self.settings.data_path_relative
         )

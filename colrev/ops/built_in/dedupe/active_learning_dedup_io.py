@@ -15,7 +15,6 @@ import dedupe as dedupe_io
 import pandas as pd
 import psutil
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from dedupe._typing import RecordDictPair as TrainingExample
 from dedupe._typing import TrainingData
@@ -55,7 +54,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         logging.basicConfig()
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __setup_active_learning_dedupe(
         self,
@@ -439,7 +438,9 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     """Applies trained (active learning) model"""
 
     @dataclass
-    class ActiveLearningSettings(JsonSchemaMixin):
+    class ActiveLearningSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for ActiveLearning"""
 
         endpoint: str
@@ -462,7 +463,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         logging.basicConfig()
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         assert self.settings.merge_threshold >= 0.0
         assert self.settings.merge_threshold <= 1.0

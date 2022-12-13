@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from tqdm import tqdm
 
@@ -26,7 +25,9 @@ class ColrevCuration(JsonSchemaMixin):
     """CoLRev Curation"""
 
     @dataclass
-    class ColrevCurationSettings(JsonSchemaMixin):
+    class ColrevCurationSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Colrev Curation settings"""
 
         endpoint: str
@@ -49,10 +50,7 @@ class ColrevCuration(JsonSchemaMixin):
         if "version" not in settings:
             settings["version"] = "0.1"
 
-        self.settings = from_dict(
-            data_class=self.settings_class,
-            data=settings,
-        )
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.data_operation = data_operation
 

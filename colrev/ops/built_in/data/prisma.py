@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 import docker
 import pandas as pd
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
@@ -32,7 +31,7 @@ class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""
 
     @dataclass
-    class PRISMASettings(JsonSchemaMixin):
+    class PRISMASettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
         """PRISMA settings"""
 
         endpoint: str
@@ -57,7 +56,7 @@ class PRISMA(JsonSchemaMixin):
         else:
             settings["diagram_path"] = [Path("PRISMA.png")]
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.csv_path = data_operation.review_manager.output_dir / Path("PRISMA.csv")
         self.data_operation = data_operation

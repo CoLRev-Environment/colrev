@@ -117,9 +117,6 @@ class SettingsEditor:
             package_identifier = request.args.get("PackageIdentifier")
             # endpoint_version = request.args.get("EndpointVersion")
 
-            # gh_issue https://github.com/geritwagner/colrev/issues/66
-            # use endpoint_version
-
             package_type = colrev.env.package_manager.PackageEndpointType[
                 package_type_string
             ]

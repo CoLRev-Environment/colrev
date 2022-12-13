@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -41,7 +40,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
         self.dblp_source = dblp_connector.DBLPSearchSource(
             source_operation=prep_operation
         )

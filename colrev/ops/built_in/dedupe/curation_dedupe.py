@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -34,7 +33,9 @@ class CurationDedupe(JsonSchemaMixin):
     volumes/issues or years)"""
 
     @dataclass
-    class CurationDedupeSettings(JsonSchemaMixin):
+    class CurationDedupeSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for CurationDedupe"""
 
         endpoint: str
@@ -53,7 +54,7 @@ class CurationDedupe(JsonSchemaMixin):
         settings: dict,
     ):
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
 

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from opensearchpy.exceptions import TransportError
 
@@ -37,7 +36,7 @@ class LocalIndexPrep(JsonSchemaMixin):
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
         self.local_index_source = local_index_connector.LocalIndexSearchSource(
             source_operation=prep_operation
         )

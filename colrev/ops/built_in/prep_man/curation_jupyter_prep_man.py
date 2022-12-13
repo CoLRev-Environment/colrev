@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -31,7 +30,7 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
     def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -29,7 +28,9 @@ class ScopePrescreen(JsonSchemaMixin):
     """Rule-based prescreen (scope)"""
 
     @dataclass
-    class ScopePrescreenSettings(JsonSchemaMixin):
+    class ScopePrescreenSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for ScopePrescreen"""
 
         # pylint: disable=invalid-name
@@ -95,6 +96,7 @@ class ScopePrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+
         if "TimeScopeFrom" in settings:
             assert settings["TimeScopeFrom"] > 1900
         if "TimeScopeFrom" in settings:
@@ -106,7 +108,7 @@ class ScopePrescreen(JsonSchemaMixin):
         # gh_issue https://github.com/geritwagner/colrev/issues/64
         # validate values (assert, e.g., LanguageScope)
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.predatory_journals_beal = self.__load_predatory_journals_beal()
 

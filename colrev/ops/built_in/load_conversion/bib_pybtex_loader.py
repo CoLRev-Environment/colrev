@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -40,7 +39,7 @@ class BibPybtexLoader(JsonSchemaMixin):
         load_operation: colrev.ops.load.Load,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def __general_load_fixes(self, records: dict) -> dict:
 

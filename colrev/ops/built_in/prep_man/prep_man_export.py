@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import zope.interface
-from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
@@ -30,7 +29,9 @@ class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
     @dataclass
-    class ExportManPrepSettings:
+    class ExportManPrepSettings(
+        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for ExportManPrep"""
 
         endpoint: str
@@ -55,7 +56,7 @@ class ExportManPrep(JsonSchemaMixin):
             settings["pdf_handling_mode"] = "symlink"
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class.load_settings(data=settings)
 
         self.prep_man_path = prep_man_operation.review_manager.path / Path("prep_man")
         self.prep_man_path.mkdir(exist_ok=True)
