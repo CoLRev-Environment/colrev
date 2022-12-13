@@ -256,14 +256,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if added:
                 nr_retrieved += 1
 
-            changed = search_operation.update_existing_record(
-                records=records,
-                record_dict=retrieved_record_dict,
-                prev_record_dict_version=prev_record_dict_version,
-                source=self.search_source,
-            )
-            if changed:
-                nr_changed += 1
+            else:
+                changed = search_operation.update_existing_record(
+                    records=records,
+                    record_dict=retrieved_record_dict,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
+                )
+                if changed:
+                    nr_changed += 1
 
         local_index_feed.save_feed_file()
 

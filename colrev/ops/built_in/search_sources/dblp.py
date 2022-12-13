@@ -225,7 +225,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 timeout=timeout,
             )
         if "title" in item:
-            retrieved_record["title"] = item["title"].rstrip(".").rstrip()
+            retrieved_record["title"] = (
+                item["title"].rstrip(".").rstrip().replace("\n", " ")
+            )
+            retrieved_record["title"] = re.sub(r"\s+", " ", retrieved_record["title"])
         if "year" in item:
             retrieved_record["year"] = item["year"]
         if "volume" in item:
@@ -520,20 +523,23 @@ class DBLPSearchSource(JsonSchemaMixin):
                         added = dblp_feed.add_record(
                             record=retrieved_record,
                         )
+
                         if added:
                             search_operation.review_manager.logger.info(
                                 " retrieve " + retrieved_record.data["dblp_key"]
                             )
                             nr_added += 1
 
-                        changed = search_operation.update_existing_record(
-                            records=records,
-                            record_dict=retrieved_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                        )
-                        if changed:
-                            nr_changed += 1
+                        else:
+
+                            changed = search_operation.update_existing_record(
+                                records=records,
+                                record_dict=retrieved_record.data,
+                                prev_record_dict_version=prev_record_dict_version,
+                                source=self.search_source,
+                            )
+                            if changed:
+                                nr_changed += 1
 
                     if not retrieved:
                         break

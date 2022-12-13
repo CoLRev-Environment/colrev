@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 @dataclass
 class ZoteroTranslationLoader(JsonSchemaMixin):
 
-    """Loads bibliography files (based on pandas).
+    """Loads bibliography files (based on Zotero).
     Supports ris, rdf, json, mods, xml, marc, txt"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

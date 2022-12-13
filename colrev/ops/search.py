@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
+
+import requests
+from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -228,6 +232,48 @@ class Search(colrev.operation.Operation):
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
+    def __have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
+
+        # To ignore changes introduced by saving/loading the feed-records,
+        # we parse and load them in the following.
+        record_a = deepcopy(record_a_orig)
+        record_b = deepcopy(record_b_orig)
+
+        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
+            recs_dict_in={record_a["ID"]: record_a}
+        )
+        parser = bibtex.Parser()
+        bib_data = parser.parse_string(bibtex_str)
+        record_a = list(
+            self.review_manager.dataset.parse_records_dict(
+                records_dict=bib_data.entries
+            ).values()
+        )[0]
+
+        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
+            recs_dict_in={record_b["ID"]: record_b}
+        )
+        parser = bibtex.Parser()
+        bib_data = parser.parse_string(bibtex_str)
+        record_b = list(
+            self.review_manager.dataset.parse_records_dict(
+                records_dict=bib_data.entries
+            ).values()
+        )[0]
+
+        # Note : record_a can have more keys (that's ok)
+        changed = False
+        for key, value in record_b.items():
+            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
+                continue
+            if key not in record_a:
+                return True
+            if record_a[key] != value:
+                print(record_a[key])
+                print(value)
+                return True
+        return changed
+
     def update_existing_record(
         self,
         *,
@@ -241,18 +287,6 @@ class Search(colrev.operation.Operation):
         # pylint: disable=too-many-branches
 
         changed = False
-
-        def have_changed(record_a: dict, record_b: dict) -> bool:
-            # Note : record_a can have more keys (that's ok)
-            changed = False
-            for key, value in record_b.items():
-                if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
-                    continue
-                if key not in record_a:
-                    return True
-                if record_a[key] != value:
-                    return True
-            return changed
 
         # TODO : notify on major changes!
         # TBD: how to handle cases where changes are too significant?
@@ -338,10 +372,14 @@ class Search(colrev.operation.Operation):
                         keep_source_if_equal=True,
                         append_edit=False,
                     )
-            if have_changed(main_record_dict, prev_record_dict_version):
+            if self.__have_changed(
+                record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
+            ):
                 changed = True
 
-        if have_changed(record_dict, prev_record_dict_version):
+        if self.__have_changed(
+            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
+        ):
             # Note : not (yet) in the main records but changed
             changed = True
         if changed:
@@ -380,9 +418,14 @@ class Search(colrev.operation.Operation):
                 f"Retrieve from {source.endpoint} (results > data/search/{source.filename.name})"
             )
 
-            endpoint.run_search(  # type: ignore
-                search_operation=self, update_only=update_only
-            )
+            try:
+                endpoint.run_search(  # type: ignore
+                    search_operation=self, update_only=update_only
+                )
+            except requests.exceptions.ConnectionError as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    source.endpoint
+                ) from exc
 
             if source.filename.is_file():
                 if not self.review_manager.settings.search.retrieve_forthcoming:

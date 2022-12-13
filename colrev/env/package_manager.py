@@ -627,8 +627,12 @@ class PackageManager:
             # if package_identifier in cls.packages[package_type]
             if package_identifier in self.packages[package_type]:
                 if not self.packages[package_type][package_identifier]["installed"]:
-                    print(f"Cannot load {package_identifier} (not installed)")
-                    continue
+                    raise colrev_exceptions.MissingDependencyError(
+                        "Dependency "
+                        + f"{package_identifier} ({package_type}) not found. "
+                        "Please install it\n  pip install "
+                        f"{package_identifier.split('.')[0]}"
+                    )
 
                 if self.packages[package_type][package_identifier]["installed"]:
                     packages_dict[package_identifier][
@@ -650,9 +654,10 @@ class PackageManager:
                         del packages_dict[package_identifier]
                         continue
                     raise colrev_exceptions.MissingDependencyError(
-                        "Dependency " + f"{package_identifier} not found. "
+                        "Dependency "
+                        + f"{package_identifier} ({package_type}) not found. "
                         "Please install it\n  pip install "
-                        f"{package_type} {package_identifier}"
+                        f"{package_identifier.split('.')[0]}"
                     ) from exc
             # 3. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
@@ -714,6 +719,7 @@ class PackageManager:
             }
             if "search_source" == package_type:
                 del params["check_operation"]
+
             if "endpoint" not in package_class:
                 raise colrev_exceptions.MissingDependencyError(
                     f"{package_identifier} is not available"
