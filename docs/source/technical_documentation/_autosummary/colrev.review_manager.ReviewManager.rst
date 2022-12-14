@@ -25,7 +25,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_checker
       ~ReviewManager.get_clone_operation
       ~ReviewManager.get_colrev_versions
-      ~ReviewManager.get_compare_operation
       ~ReviewManager.get_completeness_condition
       ~ReviewManager.get_data_operation
       ~ReviewManager.get_dedupe_operation

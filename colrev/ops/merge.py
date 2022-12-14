@@ -242,17 +242,9 @@ class Merge(colrev.operation.Operation):
             f"\n{colors.ORANGE}Please add (git add .) and commit (git commit){colors.END}"
         )
 
-        # TODO : add and commit...
         # Note : cannot add/create commit yet - not yet supported by gitpython:
         # https://github.com/gitpython-developers/GitPython/issues/1185
         # our_index.write(ignore_extension_data=True)
-
-        # self.review_manager.dataset.add_record_changes()
-
-        # self.review_manager.create_commit(
-        #     msg="Reconcile and merge branches",
-        #     script_call="colrev merge"
-        # )
 
 
 if __name__ == "__main__":

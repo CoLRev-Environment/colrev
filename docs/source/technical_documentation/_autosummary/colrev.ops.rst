@@ -29,7 +29,6 @@ colrev.ops
    colrev.ops.built_in
    colrev.ops.clone
    colrev.ops.commit
-   colrev.ops.compare
    colrev.ops.correct
    colrev.ops.data
    colrev.ops.dedupe

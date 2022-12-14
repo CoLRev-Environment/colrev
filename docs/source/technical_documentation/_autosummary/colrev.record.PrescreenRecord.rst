@@ -24,6 +24,7 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.add_provenance_all
       ~PrescreenRecord.apply_restrictions
       ~PrescreenRecord.change_entrytype
+      ~PrescreenRecord.check_potential_retracts
       ~PrescreenRecord.cleanup_pdf_processing_fields
       ~PrescreenRecord.complete_provenance
       ~PrescreenRecord.copy

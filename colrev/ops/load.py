@@ -334,7 +334,7 @@ class Load(colrev.operation.Operation):
     def __check_bib_file(
         self, *, source: colrev.settings.SearchSource, records: dict
     ) -> None:
-        if len(records.items()) == 0:
+        if len(records.items()) <= 3:
             return
         if not any("author" in r for ID, r in records.items()):
             raise colrev_exceptions.ImportException(
@@ -502,6 +502,14 @@ class Load(colrev.operation.Operation):
             review_manager=self.review_manager,
         )
         record.set_status(target_state=colrev.record.RecordState.md_imported)
+
+        if record.check_potential_retracts():
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Found paper retract: "
+                f"{record.data['ID']}{colors.END}"
+            )
+            record.prescreen_exclude(reason="retracted", print_warning=True)
+            record.remove_field(key="warning")
 
         return record.get_data()
 

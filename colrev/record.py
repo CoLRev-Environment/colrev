@@ -374,9 +374,13 @@ class Record:
 
         if key in self.identifying_field_keys:
             value_provenance = self.data["colrev_masterdata_provenance"][key]
+            if "source" in value_provenance:
+                value_provenance["source"] += f"|rename-from:{key}"
             self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
             value_provenance = self.data["colrev_data_provenance"][key]
+            if "source" in value_provenance:
+                value_provenance["source"] += f"|rename-from:{key}"
             self.data["colrev_data_provenance"][new_key] = value_provenance
 
         self.remove_field(key=key)
@@ -2063,6 +2067,17 @@ class Record:
             if missing_fields or inconsistencies or incomplete_fields or defect_fields:
                 self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
+    def check_potential_retracts(self) -> bool:
+        """Check for potential retracts"""
+        # Note : we retrieved metadata in get_masterdata_from_crossref()
+        if self.data.get("crossmark", "") == "True":
+            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            return True
+        if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
+            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            return True
+        return False
+
 
 class PrepRecord(Record):
     """The PrepRecord class provides a range of convenience functions for record preparation"""
@@ -2295,22 +2310,6 @@ class PrepRecord(Record):
         for key in prior_keys:
             if key.lower() in mapping:
                 self.rename_field(key=key, new_key=mapping[key.lower()])
-
-    def check_potential_retracts(self) -> None:
-        """Check for potential retracts (indicated in the crossmark field)"""
-        # Note : we retrieved metadata in get_masterdata_from_crossref()
-        if self.data.get("crossmark", "") == "True":
-            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
-            if "note" in self.data:
-                self.data["note"] += ", crossmark_restriction_potential_retract"
-            else:
-                self.data["note"] = "crossmark_restriction_potential_retract"
-        if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
-            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
-            if "note" in self.data:
-                self.data["note"] += ", withdrawn (according to DBLP)"
-            else:
-                self.data["note"] = "withdrawn (according to DBLP)"
 
     def unify_pages_field(self) -> None:
         """Unify the format of the page field"""

@@ -174,9 +174,6 @@ class Corrections:
             return
 
         records = self.review_manager.dataset.load_records_dict()
-        # TODO : shouldn't we get the curated record from the local_index?
-        # TODO : when we use the local_index, it may be outdated,
-        # so we may have to check with the original repo before createing a pull-request
 
         prior_records_dict = next(
             self.review_manager.dataset.load_records_from_history()

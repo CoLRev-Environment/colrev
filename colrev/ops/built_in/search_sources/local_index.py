@@ -326,7 +326,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for record in records.values():
             curation_url = record["curation_ID"].split("#")[0]
-            # TODO : add full curation_ID to colrev_masterdata_provenance/CURATEd/source
+            # TODO : add full curation_ID to colrev_masterdata_provenance/CURATED/source
             # or leave it empty to avoid redundancy?
             record["colrev_masterdata_provenance"] = {
                 "CURATED": {"source": curation_url, "note": ""}

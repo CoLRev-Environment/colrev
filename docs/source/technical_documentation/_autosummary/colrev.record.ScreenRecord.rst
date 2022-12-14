@@ -24,6 +24,7 @@ colrev.record.ScreenRecord
       ~ScreenRecord.add_provenance_all
       ~ScreenRecord.apply_restrictions
       ~ScreenRecord.change_entrytype
+      ~ScreenRecord.check_potential_retracts
       ~ScreenRecord.cleanup_pdf_processing_fields
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.copy

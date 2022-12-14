@@ -24,6 +24,7 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.add_provenance_all
       ~PDFPrepManRecord.apply_restrictions
       ~PDFPrepManRecord.change_entrytype
+      ~PDFPrepManRecord.check_potential_retracts
       ~PDFPrepManRecord.cleanup_pdf_processing_fields
       ~PDFPrepManRecord.complete_provenance
       ~PDFPrepManRecord.copy

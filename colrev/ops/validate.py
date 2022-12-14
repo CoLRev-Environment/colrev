@@ -98,11 +98,13 @@ class Validate(colrev.operation.Operation):
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
-        # TODO : change_diff should also have a better data structure
+        # https://github.com/geritwagner/colrev/issues/57
+        # change_diff should also have a better data structure
         change_diff = []
         merged_records = False
         for record in records:
-            # TODO : allow users to validate all duplicates/non-duplicates (across commits)
+            # https://github.com/geritwagner/colrev/issues/57
+            # allow users to validate all duplicates/non-duplicates (across commits)
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
@@ -137,8 +139,9 @@ class Validate(colrev.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        # TODO : create the dataframes (like in the simple merge)
-        # TODO : Similarly: create dataframes of the latest prepared records
+        # https://github.com/geritwagner/colrev/issues/57
+        # create the dataframes (like in the simple merge)
+        # Similarly: create dataframes of the latest prepared records
         # to check FP merges efficiently
         with open(
             "merge_candidates_file.txt", "w", encoding="utf-8"

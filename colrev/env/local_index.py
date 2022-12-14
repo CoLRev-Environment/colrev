@@ -60,7 +60,6 @@ class LocalIndex:
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
     AUTHOR_INDEX = "author_index"
-    # TODO/implement:
     AUTHOR_RECORD_INDEX = "author_record_index"
     CITATIONS_INDEX = "citations_index"
 

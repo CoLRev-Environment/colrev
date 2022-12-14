@@ -77,7 +77,6 @@ class VideoDirSearchSource(JsonSchemaMixin):
 
     def __index_video(self, *, path: Path) -> dict:
         record_dict = {"ENTRYTYPE": "online", "file": path}
-        # TODO : extract based on metadata
         return record_dict
 
     def run_search(

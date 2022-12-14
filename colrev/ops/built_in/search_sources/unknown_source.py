@@ -117,7 +117,6 @@ class UnknownSearchSource(JsonSchemaMixin):
                 and "chapter" not in record.data
                 and "title" in record.data
             ):
-                # TODO : check update_field/append_edit for rename_field?
                 record.rename_field(key="title", new_key="chapter")
 
         # Prepare the record by heuristically correcting erroneous ENTRYTYPEs

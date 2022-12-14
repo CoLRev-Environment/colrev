@@ -24,6 +24,7 @@ colrev.record.Record
       ~Record.add_provenance_all
       ~Record.apply_restrictions
       ~Record.change_entrytype
+      ~Record.check_potential_retracts
       ~Record.cleanup_pdf_processing_fields
       ~Record.complete_provenance
       ~Record.copy

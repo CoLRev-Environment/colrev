@@ -403,8 +403,6 @@ class Dedupe(colrev.operation.Operation):
 
         # pylint: disable=too-many-branches
 
-        # TODO : we could set reasonable defaults for preferred_masterdata_sources
-        # e.g., prefer everything except for PDF/website sources?
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
             preferred_masterdata_source_prefixes = [

@@ -982,7 +982,7 @@ class Upgrade(colrev.operation.Operation):
             crossref_source = crossref_connector.CrossrefSearchSource(
                 source_operation=prep_operation
             )
-            # TODO : check provenance: if field values equal, set provenance!
+
             self.review_manager.logger.info("Create/link crossref metadata")
             for record_dict in tqdm(records.values()):
                 if "doi" in record_dict:

@@ -405,12 +405,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
 
                 dblp_feed.add_record(record=retrieved_record)
-                # TODO:
-                # if "Withdrawn (according to DBLP)" in record.data.get(
-                #     "warning", ""
-                # ):
-                #     record.prescreen_exclude(reason="retracted")
-                #     record.remove_field(key="warning")
                 changed = search_operation.update_existing_record(
                     records=records,
                     record_dict=retrieved_record.data,
@@ -460,7 +454,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             ):
                 start = datetime.now().year - 2
 
-            for year in range(start, datetime.now().year):
+            for year in range(start, datetime.now().year + 1):
 
                 search_operation.review_manager.logger.debug(f"Retrieve year {year}")
 
@@ -544,6 +538,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                         break
 
                 dblp_feed.save_feed_file()
+                search_operation.review_manager.dataset.save_records_dict(
+                    records=records
+                )
+                search_operation.review_manager.dataset.add_record_changes()
 
             if nr_retrieved > 0:
                 search_operation.review_manager.logger.info(

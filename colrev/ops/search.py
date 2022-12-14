@@ -35,6 +35,23 @@ class Search(colrev.operation.Operation):
 
         self.sources = review_manager.settings.sources
 
+    def __get_unique_filename(
+        self, file_path_string: str, suffix: str = ".bib"
+    ) -> Path:
+        file_path_string = file_path_string.replace("+", "_").replace(" ", "_")
+
+        filename = Path(f"data/search/{file_path_string}{suffix}")
+        existing_filenames = [x.filename for x in self.sources]
+        if filename not in existing_filenames:
+            return filename
+
+        i = 1
+        while filename in existing_filenames:
+            filename = Path(f"data/search/{file_path_string}_{i}{suffix}")
+            i += 1
+
+        return filename
+
     def add_source(self, *, query: str) -> None:
         """Add a new source"""
 
@@ -42,7 +59,8 @@ class Search(colrev.operation.Operation):
 
         saved_args = {"add": f'"{query}"'}
         if "pdfs" == query:
-            filename = Path("data/search/pdfs.bib")
+
+            filename = self.__get_unique_filename(file_path_string="pdfs")
             # pylint: disable=no-value-for-parameter
             add_source = colrev.settings.SearchSource(
                 {
@@ -66,8 +84,9 @@ class Search(colrev.operation.Operation):
                 "https://dblp.org/search/publ?q=", "https://dblp.org/search/publ/api?q="
             )
 
-            # TODO : avoid  duplicate filenames
-            filename = Path("data/search/dblp.bib")
+            filename = self.__get_unique_filename(
+                file_path_string=f"dblp_{query.replace('https://dblp.org/search/publ/api?q=', '')}"
+            )
             add_source = colrev.settings.SearchSource(
                 **{  # type: ignore
                     "endpoint": "colrev_built_in.dblp",
@@ -87,9 +106,7 @@ class Search(colrev.operation.Operation):
                 .lstrip("+")
             )
 
-            # TODO : avoid  duplicate filenames
-
-            filename = Path(f"data/search/crossref_{query.replace(' ', '_')}.bib")
+            filename = self.__get_unique_filename(file_path_string=f"crossref_{query}")
             add_source = colrev.settings.SearchSource(
                 **{  # type: ignore
                     "endpoint": "colrev_built_in.crossref",
@@ -108,7 +125,7 @@ class Search(colrev.operation.Operation):
 
             dst = self.review_manager.search_dir / Path(query).name
             shutil.copyfile(query, dst)
-            filename = Path(query).name
+            filename = self.__get_unique_filename(file_path_string=Path(query).name)
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev_built_in.unknown_source",
                 filename=Path(
@@ -126,10 +143,12 @@ class Search(colrev.operation.Operation):
             assert "endpoint" in query_dict
 
             if "filename" in query_dict:
-                filename = query_dict["filename"]
+                filename = self.__get_unique_filename(
+                    file_path_string=query_dict["filename"]
+                )
             else:
-                filename = Path(
-                    f"{query_dict['endpoint'].replace('colrev_built_in.', '')}.bib"
+                filename = self.__get_unique_filename(
+                    file_path_string=f"{query_dict['endpoint'].replace('colrev_built_in.', '')}"
                 )
                 i = 0
                 while filename in [x.filename for x in self.sources]:
@@ -139,7 +158,7 @@ class Search(colrev.operation.Operation):
                     )
             feed_file_path = self.review_manager.path / filename
             assert not feed_file_path.is_file()
-            query_dict["filename"] = feed_file_path
+            query_dict["filename"] = filename
 
             # gh_issue https://github.com/geritwagner/colrev/issues/68
             # get search_type from the SearchSource
@@ -169,9 +188,7 @@ class Search(colrev.operation.Operation):
             # NOTE: for now, the parameters are limited to whole journals.
             add_source = colrev.settings.SearchSource(
                 endpoint=query_dict["endpoint"],
-                filename=Path(
-                    f"data/search/{filename}",
-                ),
+                filename=filename,
                 search_type=colrev.settings.SearchType(query_dict["search_type"]),
                 search_parameters=query_dict.get("search_parameters", {}),
                 load_conversion_package_endpoint=query_dict[
@@ -289,8 +306,6 @@ class Search(colrev.operation.Operation):
             if key not in record_a:
                 return True
             if record_a[key] != value:
-                print(record_a[key])
-                print(value)
                 return True
         return changed
 
@@ -308,29 +323,24 @@ class Search(colrev.operation.Operation):
 
         changed = False
 
-        # TODO : notify on major changes!
-        # TBD: how to handle cases where changes are too significant?
-
         origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
         for main_record_dict in records.values():
+
             if origin not in main_record_dict["colrev_origin"]:
                 continue
+
             # TBD: in curated masterdata repositories?
-            if (
-                "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
-                and "md_curated.bib" != source.get_origin_prefix()
-            ):
-                continue
 
-            if "retracted" in record_dict.get("prescreen_exclusion", ""):
-
+            record = colrev.record.Record(data=record_dict)
+            if record.check_potential_retracts():
                 self.review_manager.logger.info(
                     f"{colors.GREEN}Found paper retract: "
                     f"{main_record_dict['ID']}{colors.END}"
                 )
-                record = colrev.record.Record(data=main_record_dict)
-                record.prescreen_exclude(reason="retracted", print_warning=True)
-                record.remove_field(key="warning")
+                main_record = colrev.record.Record(data=main_record_dict)
+                main_record.prescreen_exclude(reason="retracted", print_warning=True)
+                main_record.remove_field(key="warning")
+                changed = True
 
             if (
                 "forthcoming" == main_record_dict["year"]
@@ -349,8 +359,22 @@ class Search(colrev.operation.Operation):
                 )
                 record.data["colrev_id"] = colrev_id
 
+            if (
+                "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
+                and "md_curated.bib" != source.get_origin_prefix()
+            ):
+                continue
+
+            similarity_score = colrev.record.Record.get_record_similarity(
+                record_a=colrev.record.Record(data=record_dict),
+                record_b=colrev.record.Record(data=prev_record_dict_version),
+            )
+            dict_diff = colrev.record.Record(data=record_dict).get_diff(
+                other_record=colrev.record.Record(data=prev_record_dict_version)
+            )
+
             for key, value in record_dict.items():
-                # TODO : integrate the following into source or update_existing_record?!
+
                 if key in ["curation_ID"]:
                     continue
 
@@ -397,13 +421,24 @@ class Search(colrev.operation.Operation):
             ):
                 changed = True
 
-        if self.__have_changed(
-            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
-        ):
-            # Note : not (yet) in the main records but changed
-            changed = True
-        if changed:
-            self.review_manager.logger.info(f" check/update {origin}")
+            if self.__have_changed(
+                record_a_orig=record_dict, record_b_orig=prev_record_dict_version
+            ):
+                # Note : not (yet) in the main records but changed
+                changed = True
+            if changed:
+                if similarity_score > 0.98:
+                    self.review_manager.logger.info(f" check/update {origin}")
+                else:
+                    self.review_manager.logger.info(
+                        f" {colors.RED} check/update {origin} leads to substantial changes "
+                        f"({similarity_score}) in {main_record_dict['ID']}:{colors.END}"
+                    )
+                    self.review_manager.p_printer.pprint(
+                        [x for x in dict_diff if "change" == x[0]]
+                    )
+
+            break
 
         return changed
 

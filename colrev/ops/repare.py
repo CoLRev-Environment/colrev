@@ -65,8 +65,6 @@ class Repare(colrev.operation.Operation):
             records=separated_records, save_path=Path("extracted.bib")
         )
 
-        # TODO : save backup of records before?
-        # This may remove contents if the records file is broken...
         # fix file no longer available
         try:
             local_index = self.review_manager.get_local_index()
