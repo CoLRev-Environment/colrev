@@ -20,7 +20,6 @@ from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -385,9 +384,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             f"Retrieve Europe PMC: {self.search_source.search_parameters}"
         )
 
-        europe_pmc_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
+        europe_pmc_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
             update_only=False,
         )
 

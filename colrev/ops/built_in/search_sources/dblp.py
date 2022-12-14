@@ -20,7 +20,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -381,7 +380,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: connector_utils.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -439,7 +438,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: connector_utils.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         # pylint: disable=too-many-branches
@@ -583,10 +582,10 @@ class DBLPSearchSource(JsonSchemaMixin):
             f"Retrieve DBLP: {self.search_source.search_parameters}"
         )
 
-        dblp_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
-            update_only=update_only,
+        dblp_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=False,
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -678,9 +677,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                     self.dblp_lock.acquire(timeout=60)
 
                     # Note : need to reload file because the object is not shared between processes
-                    dblp_feed = connector_utils.GeneralOriginFeed(
-                        source_operation=prep_operation,
-                        search_source_interface=self,
+                    dblp_feed = self.search_source.get_feed(
+                        review_manager=prep_operation.review_manager,
+                        source_identifier=self.source_identifier,
                         update_only=False,
                     )
 

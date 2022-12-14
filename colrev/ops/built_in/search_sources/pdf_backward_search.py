@@ -13,7 +13,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 
@@ -108,9 +107,9 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        pdf_backward_search_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
+        pdf_backward_search_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
             update_only=False,
         )
 

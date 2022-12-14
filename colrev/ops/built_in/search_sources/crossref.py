@@ -382,9 +382,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.crossref_lock.acquire(timeout=60)
 
                 # Note : need to reload file because the object is not shared between processes
-                crossref_feed = connector_utils.GeneralOriginFeed(
-                    source_operation=prep_operation,
-                    search_source_interface=self,
+                crossref_feed = self.search_source.get_feed(
+                    review_manager=prep_operation.review_manager,
+                    source_identifier=self.source_identifier,
                     update_only=False,
                 )
 
@@ -510,7 +510,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: connector_utils.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -561,7 +561,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: connector_utils.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         # pylint: disable=too-many-branches
@@ -669,10 +669,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of Crossref"""
 
-        crossref_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
-            update_only=update_only,
+        crossref_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=False,
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():

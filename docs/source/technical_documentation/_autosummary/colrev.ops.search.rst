@@ -20,4 +20,5 @@ colrev.ops.search
       :template: custom-class-template.rst
       :nosignatures:
 
+      GeneralOriginFeed
       Search

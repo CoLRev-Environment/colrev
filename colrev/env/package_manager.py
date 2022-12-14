@@ -80,7 +80,9 @@ class SearchSourcePackageEndpointInterface(
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute(
-        """Source identifier for search and provenance"""
+        """Source identifier for search and provenance
+        Retrieved records are identified through the source_identifier
+        when they are added to/updated in the GeneralOriginFeed"""
     )
     search_type = zope.interface.Attribute(
         """Main SearchType associated with the SearchSource"""
@@ -308,7 +310,7 @@ class DefaultSettings(JsonSchemaMixin):
     endpoint: str
 
     @classmethod
-    def load_settings(cls, *, data: dict):
+    def load_settings(cls, *, data: dict):  # type: ignore
         """Load the settings from dict"""
 
         required_fields = [field.name for field in dataclasses.fields(cls)]

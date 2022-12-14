@@ -12,7 +12,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.ops.search
 import colrev.record
@@ -91,9 +90,9 @@ class VideoDirSearchSource(JsonSchemaMixin):
             f"(or authors and title){colors.END}"
         )
 
-        video_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
+        video_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
             update_only=False,
         )
 

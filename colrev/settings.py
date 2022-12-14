@@ -221,6 +221,21 @@ class SearchSource(JsonSchemaMixin):
 
         return exported_dict
 
+    def get_feed(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,
+        source_identifier: str,
+        update_only: bool,
+    ) -> colrev.ops.search.GeneralOriginFeed:
+        """Get a feed to add and update records"""
+
+        return colrev.ops.search.GeneralOriginFeed(
+            review_manager=review_manager,
+            search_source=self,
+            source_identifier=source_identifier,
+            update_only=update_only,
+        )
+
     def __str__(self) -> str:
         optional_comment = ""
         if self.comment:

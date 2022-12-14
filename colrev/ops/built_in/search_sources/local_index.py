@@ -16,7 +16,6 @@ from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -179,7 +178,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: connector_utils.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -234,7 +233,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: connector_utils.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -288,10 +287,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of local-index"""
 
-        local_index_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
-            update_only=update_only,
+        local_index_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=False,
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -397,9 +396,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.local_index_lock.acquire(timeout=60)
 
         # Note : need to reload file because the object is not shared between processes
-        local_index_feed = connector_utils.GeneralOriginFeed(
-            source_operation=prep_operation,
-            search_source_interface=self,
+        local_index_feed = self.search_source.get_feed(
+            review_manager=prep_operation.review_manager,
+            source_identifier=self.source_identifier,
             update_only=False,
         )
 

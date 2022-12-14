@@ -17,7 +17,6 @@ from pdfminer.pdfparser import PDFParser
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -461,11 +460,12 @@ class PDFSearchSource(JsonSchemaMixin):
                 search_operation=search_operation
             )
 
-        pdfs_dir_feed = connector_utils.GeneralOriginFeed(
-            source_operation=search_operation,
-            search_source_interface=self,
+        pdfs_dir_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
             update_only=False,
         )
+
         records = search_operation.review_manager.dataset.load_records_dict()
         grobid_service = search_operation.review_manager.get_grobid_service()
         grobid_service.start()

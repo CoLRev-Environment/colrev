@@ -23,6 +23,7 @@ colrev.settings.SearchSource
       ~SearchSource.from_object
       ~SearchSource.get_corresponding_bib_file
       ~SearchSource.get_dict
+      ~SearchSource.get_feed
       ~SearchSource.get_origin_prefix
       ~SearchSource.is_md_source
       ~SearchSource.is_quasi_md_source

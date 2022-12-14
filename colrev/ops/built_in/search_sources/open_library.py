@@ -14,7 +14,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 
 if TYPE_CHECKING:
@@ -237,9 +236,9 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             )
 
             self.open_library_lock.acquire(timeout=60)
-            open_library_feed = connector_utils.GeneralOriginFeed(
-                source_operation=prep_operation,
-                search_source_interface=self,
+            open_library_feed = self.search_source.get_feed(
+                review_manager=prep_operation.review_manager,
+                source_identifier=self.source_identifier,
                 update_only=False,
             )
 

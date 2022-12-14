@@ -1,7 +1,7 @@
-colrev.ops.built\_in.search\_sources.utils.GeneralOriginFeed
-============================================================
+colrev.ops.search.GeneralOriginFeed
+===================================
 
-.. currentmodule:: colrev.ops.built_in.search_sources.utils
+.. currentmodule:: colrev.ops.search
 
 .. autoclass:: GeneralOriginFeed
    :members:

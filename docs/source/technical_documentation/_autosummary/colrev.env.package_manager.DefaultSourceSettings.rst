@@ -23,6 +23,7 @@ colrev.env.package\_manager.DefaultSourceSettings
       ~DefaultSourceSettings.from_object
       ~DefaultSourceSettings.get_corresponding_bib_file
       ~DefaultSourceSettings.get_dict
+      ~DefaultSourceSettings.get_feed
       ~DefaultSourceSettings.get_origin_prefix
       ~DefaultSourceSettings.is_md_source
       ~DefaultSourceSettings.is_quasi_md_source
