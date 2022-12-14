@@ -102,6 +102,24 @@ class Search(colrev.operation.Operation):
                     "comment": "",
                 }
             )
+        elif Path(query).is_file():
+            # pylint: disable=import-outside-toplevel
+            import shutil
+
+            dst = self.review_manager.search_dir / Path(query).name
+            shutil.copyfile(query, dst)
+            filename = Path(query).name
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.unknown_source",
+                filename=Path(
+                    f"data/search/{filename}",
+                ),
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+
         else:
             query_dict = json.loads(query)
 
