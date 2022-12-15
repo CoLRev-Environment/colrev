@@ -17,7 +17,7 @@ The following SearchSources are covered
     {{ make_list_table_from_mappings(
         [("SearchSource", "link"), ("Identifier", "package_endpoint_identifier"), ("Heuristics", "heuristic"), ("API search", "api_search"), ("Search instructions", "instructions")],
         data['search_source'],
-        title='Extensions: search_sources',
+        title='',
         ) }}
 
     Notes:
