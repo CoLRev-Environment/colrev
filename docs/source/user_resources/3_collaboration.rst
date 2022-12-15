@@ -10,6 +10,7 @@ TODO
 - Mention that colrev can facilitate collaboration between users with different areas of expertise
 - Explain how to invite collaborators (link from colrev init)
 - Replace the following (git pull/push) by colrev pull/push, add clone
+- Mention colrev merge
 - Distinguish within/beyond project collaboration
 
 Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)

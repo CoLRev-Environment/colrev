@@ -48,6 +48,9 @@
                     },
                     {
                         "endpoint": "colrev_built_in.exclude_collections"
+                    },
+                    {
+                        "endpoint": "colrev_built_in.exclude_complementary_materials"
                     }
                 ]
             },

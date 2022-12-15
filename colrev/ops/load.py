@@ -442,6 +442,8 @@ class Load(colrev.operation.Operation):
         return list(search_records_dict.values())
 
     def __import_record(self, *, record_dict: dict) -> dict:
+        # pylint: disable=too-many-branches
+
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -491,6 +493,11 @@ class Load(colrev.operation.Operation):
         if "number" not in record_dict and "issue" in record_dict:
             record_dict.update(number=record_dict["issue"])
             del record_dict["issue"]
+
+        if record_dict.get("volume", "") == "ahead-of-print":
+            del record_dict["volume"]
+        if record_dict.get("number", "") == "ahead-of-print":
+            del record_dict["number"]
 
         record = colrev.record.Record(data=record_dict)
         if "doi" in record.data:

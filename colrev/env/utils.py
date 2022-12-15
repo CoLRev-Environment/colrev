@@ -109,5 +109,30 @@ def custom_asdict_factory(data) -> dict:  # type: ignore
     return {k: convert_value(v) for k, v in data}
 
 
+def load_complementary_material_keywords() -> list:
+    """Load the list of keywords identifying complementary materials"""
+    complementary_material_keywords = []
+    filedata = get_package_file_content(
+        file_path=Path("template/ops/complementary_material_keywords.txt")
+    )
+    if filedata:
+        complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
+
+    return complementary_material_keywords
+
+
+def load_complementary_material_strings() -> list:
+    """Load the list of exact strings identifying complementary materials"""
+
+    complementary_material_keywords = []
+    filedata = get_package_file_content(
+        file_path=Path("template/ops/complementary_material_strings.txt")
+    )
+    if filedata:
+        complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
+
+    return complementary_material_keywords
+
+
 if __name__ == "__main__":
     pass

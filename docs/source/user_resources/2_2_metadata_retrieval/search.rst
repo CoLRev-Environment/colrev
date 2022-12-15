@@ -16,6 +16,12 @@ colrev search
 
 .. code:: bash
 
+    Short-form examples:
+
+    colrev search -a https://dblp.org/search?q=microsourcing
+
+    colrev search -a https://search.crossref.org/?q=+microsourcing&from_ui=yes
+
     Examples:
 
     colrev search -a '{"endpoint": "colrev_built_in.crossref","search_parameters": {"query": "digital+platform"}}'
@@ -28,7 +34,7 @@ colrev search
 
     colrev search -a '{"endpoint": "colrev_built_in.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a '{"endpoint": "colrev_built_in.local_index","search_parameters": {"query": "digital AND (platform OR market)"}}'
+    colrev search -a '{"endpoint": "colrev_built_in.local_index","search_parameters": {"query": {"simple_query_string": {"query": "microsourcing"}}}}'
 
     colrev search -a '{"endpoint": "colrev_built_in.pdfs_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
 

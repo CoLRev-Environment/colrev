@@ -187,7 +187,7 @@ class Obsidian(JsonSchemaMixin):
                     if "highly_cited" in missing_record_entity["keywords"]:
                         paper_summary.write("highly_cited")
 
-        # TODO : export to csl-json
+        # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
         # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)

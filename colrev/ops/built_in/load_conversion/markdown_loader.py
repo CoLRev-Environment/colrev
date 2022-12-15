@@ -45,6 +45,10 @@ class MarkdownLoader(JsonSchemaMixin):
     ) -> dict:
         """Load records from the source"""
 
+        load_operation.review_manager.logger.info(
+            "Running GROBID to parse structured reference data"
+        )
+
         grobid_service = load_operation.review_manager.get_grobid_service()
 
         grobid_service.check_grobid_availability()

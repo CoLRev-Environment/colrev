@@ -73,23 +73,6 @@ class ScopePrescreen(JsonSchemaMixin):
 
     settings_class = ScopePrescreenSettings
 
-    title_complementary_materials_keywords = [
-        "about our authors",
-        "editorial board",
-        "author index",
-        "contents",
-        "index of authors",
-        "list of reviewers",
-        "issue information",
-        "call for papers",
-        "acknowledgments",
-        "back matter",
-        "front matter",
-        "volume information",
-        "research spotlights",
-        "acknowledgment of reviewers",
-    ]
-
     def __init__(
         self,
         *,
@@ -111,6 +94,10 @@ class ScopePrescreen(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.predatory_journals_beal = self.__load_predatory_journals_beal()
+
+        self.title_complementary_materials_keywords = (
+            colrev.env.utils.load_complementary_material_keywords()
+        )
 
     def __load_predatory_journals_beal(self) -> dict:
 

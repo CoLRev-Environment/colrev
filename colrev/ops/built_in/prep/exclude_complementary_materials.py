@@ -40,6 +40,15 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
+        self.complementary_materials_keywords = (
+            colrev.env.utils.load_complementary_material_keywords()
+        )
+
+        # for exact matches:
+        self.complementary_materials_strings = (
+            colrev.env.utils.load_complementary_material_strings()
+        )
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
@@ -48,43 +57,12 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the records by excluding complementary materials"""
 
-        # TODO : consolidate with scope.prescreen / title_complementary_materials_keywords
-
-        complementary_materials_keywords = [
-            "author index",
-            "call for papers",
-            "about authors",
-            "about our authors",
-            "subject index to volume",
-            "information for authors",
-            "instructions to authors",
-            "authors index to volume",
-            "acknowledgment of reviewers",
-            "acknowledgment to reviewers",
-        ]
-        # for exact matches:
-        complementary_materials_strings = [
-            "editorial board",
-            "calendar",
-            "announcement",
-            "announcements",
-            "events",
-            "international board of editors",
-            "index",
-            "subject index",
-            "issue information",
-            "keyword index",
-            "about the authors",
-            "thanks to reviewers",
-        ]
-        # TODO : allow users to override the default lists (based on settings)
-
         if any(
             complementary_materials_keyword in record.data.get("title", "").lower()
-            for complementary_materials_keyword in complementary_materials_keywords
+            for complementary_materials_keyword in self.complementary_materials_keywords
         ) or any(
             complementary_materials_string == record.data.get("title", "").lower()
-            for complementary_materials_string in complementary_materials_strings
+            for complementary_materials_string in self.complementary_materials_strings
         ):
             record.prescreen_exclude(reason="complementary material")
 

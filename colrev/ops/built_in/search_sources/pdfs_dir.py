@@ -475,9 +475,6 @@ class PDFSearchSource(JsonSchemaMixin):
             for x in self.pdfs_path.glob("**/*.pdf")
         ]
 
-        # TODO : add parameter to switch the following on/off:
-        # note: for curations, we want all pdfs indexed/merged separately,
-        # in other projects, it is generally sufficient if the pdf is linked
         linked_pdf_paths = [Path(r["file"]) for r in records.values() if "file" in r]
 
         if search_operation.review_manager.force_mode:  # i.e., reindex all
@@ -503,9 +500,12 @@ class PDFSearchSource(JsonSchemaMixin):
                     # i.e., reindex all
                     pass
                 else:
-                    if pdf_path in linked_pdf_paths:
-                        # Otherwise: skip linked PDFs
-                        continue
+                    # note: for curations, we want all pdfs indexed/merged separately,
+                    # in other projects, it is generally sufficient if the pdf is linked
+                    if not self.review_manager.settings.is_curated_masterdata_repo():
+                        if pdf_path in linked_pdf_paths:
+                            # Otherwise: skip linked PDFs
+                            continue
 
                     if pdf_path in [
                         Path(r["file"])
@@ -616,9 +616,6 @@ class PDFSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
-
-        # TODO : if curated_repo, load journal/booktitle
-        # from data package (in init() and compare in the following)
 
         # Typical error in old papers: title fields are equal to journal/booktitle fields
         if record.data.get("title", "no_title").lower() == record.data.get(

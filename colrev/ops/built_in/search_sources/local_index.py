@@ -361,9 +361,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
             try:
-                # Note: Records can be CURATED without being indexed
-                # TODO : simply remove the following?
-                # if not record.masterdata_is_curated():
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
                     record_dict=record.data,
                     similarity_threshold=prep_operation.retrieval_similarity,
@@ -381,8 +378,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         if "colrev_status" in retrieved_record.data:
             del retrieved_record.data["colrev_status"]
 
-        # TODO : restriction: (if we don't restrict to CURATED,
-        # we may have to rethink the LocalIndexSearchFeed.set_ids())
+        # restriction: if we don't restrict to CURATED,
+        # we may have to rethink the LocalIndexSearchFeed.set_ids()
         if "CURATED" not in retrieved_record.data["colrev_masterdata_provenance"]:
             return record
 
@@ -402,7 +399,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             update_only=False,
         )
 
-        # TODO : TBD - indices will not be identical across the review team...
         # lock: to prevent different records from having the same origin
         local_index_feed.set_id(record_dict=retrieved_record.data)
         local_index_feed.add_record(record=retrieved_record)
@@ -511,7 +507,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         self.review_manager.p_printer.pprint(change_item)
                 validated_changes.append(item)
 
-            # TODO TBD: we may offer the option to validate changes individually/on a granular level
             response = ""
             while True:
                 response = input("\nConfirm changes? (y/n)")

@@ -155,7 +155,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         else:
             pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
 
-        # TODO : derive from settings (and mkdir) instead of using simple heuristics
         # simple heuristics:
         vol_slash_nr_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
