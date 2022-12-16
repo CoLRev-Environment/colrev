@@ -1317,6 +1317,9 @@ class Record:
                 ):
                     defect_field_keys.append(key)
 
+                if ", " not in self.data[key]:
+                    defect_field_keys.append(key)
+
                 if str(self.data[key]).count(" and ") != (
                     str(self.data[key]).count(",") - 1
                 ):

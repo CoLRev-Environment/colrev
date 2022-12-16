@@ -283,9 +283,10 @@ class ColrevCuration(JsonSchemaMixin):
                 restrictions=applicable_restrictions
             )
 
-        self.__update_stats_in_readme(
-            records=records, review_manager=data_operation.review_manager
-        )
+        if self.settings.curated_masterdata:
+            self.__update_stats_in_readme(
+                records=records, review_manager=data_operation.review_manager
+            )
 
     def update_record_status_matrix(
         self,

@@ -75,7 +75,7 @@ class Obsidian(JsonSchemaMixin):
     def __get_obsidian_missing(self, *, included: list) -> list:
         in_obsidian = []
         for md_file in self.endpoint_paper_path.glob("*.md"):
-            # missing: if #todo in file
+            # missing: if todo in file
             if "#todo" not in md_file.read_text():
                 in_obsidian.append(str(md_file.name).replace(".md", ""))
         return [x for x in included if x not in in_obsidian]

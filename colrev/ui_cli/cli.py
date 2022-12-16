@@ -2624,6 +2624,18 @@ def merge(
     merge_operation.main(branch=branch)
 
 
+@main.command(help_priority=34)
+@click.pass_context
+def version(
+    ctx: click.core.Context,
+) -> None:
+    """Show colrev version."""
+
+    from importlib.metadata import version
+
+    print(f'colrev version {version("colrev")}')
+
+
 @main.command(hidden=True)
 @click.option(
     "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
