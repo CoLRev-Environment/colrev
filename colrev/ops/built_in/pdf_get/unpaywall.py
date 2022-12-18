@@ -117,12 +117,9 @@ class Unpaywall(JsonSchemaMixin):
                 with open(pdf_filepath, "wb") as file:
                     file.write(res.content)
                 if self.__is_pdf(path_to_file=pdf_filepath):
-                    pdf_get_operation.review_manager.report_logger.info(
+                    pdf_get_operation.review_manager.report_logger.debug(
                         "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
-                    # pdf_get_operation.review_manager.logger.debug(
-                    #     "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
-                    # )
                     source = (
                         f"https://api.unpaywall.org/v2/{record.data['doi']}"
                         + f"?email={pdf_get_operation.review_manager.email}"
