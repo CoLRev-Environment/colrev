@@ -36,6 +36,7 @@ For example, a theoretical review may involve an emergent data analysis and synt
 
 The review objective and additional details can be added to the ``data/paper.md`` file.
 This file may also serve as the review protocol and evolve into the final review manuscript.
+Once the CoLRev repository has been initialized, members of the review team can be provided with access to a shared remote repository as explained in the `collaboration section <3_collaboration.html>`_.
 
 ..
    - working hypothesis: differences between review types primarily manifest in the data stage (in the other steps, it is mostly a question of parameters)

@@ -226,7 +226,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, *, record: colrev.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
-            retrieved_record_dict["title"].lower(),
+            retrieved_record_dict.get("title", "NA").lower(),
             record.data.get("title", "").lower(),
         )
         container_similarity = fuzz.partial_ratio(

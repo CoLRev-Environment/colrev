@@ -2631,6 +2631,7 @@ def version(
 ) -> None:
     """Show colrev version."""
 
+    # pylint: disable=import-outside-toplevel
     from importlib.metadata import version
 
     print(f'colrev version {version("colrev")}')
