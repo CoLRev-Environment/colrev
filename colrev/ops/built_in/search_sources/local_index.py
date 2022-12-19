@@ -656,11 +656,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # gh_issue https://github.com/geritwagner/colrev/issues/63
             # deal with remove/merge
 
-        record = colrev.record.Record(data=record_dict)
-        record.add_colrev_ids(records=[record_dict])
-        cids = record.get_data()["colrev_id"]
-        record_dict["colrev_id"] = cids
-
         check_operation.review_manager.dataset.save_records_dict(records=records)
         check_operation.review_manager.dataset.add_record_changes()
         check_operation.review_manager.create_commit(

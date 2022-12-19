@@ -16,7 +16,6 @@ colrev.record.Record
    .. autosummary::
       :nosignatures:
 
-      ~Record.add_colrev_ids
       ~Record.add_data_provenance
       ~Record.add_data_provenance_note
       ~Record.add_masterdata_provenance

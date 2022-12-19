@@ -16,7 +16,6 @@ colrev.record.PrescreenRecord
    .. autosummary::
       :nosignatures:
 
-      ~PrescreenRecord.add_colrev_ids
       ~PrescreenRecord.add_data_provenance
       ~PrescreenRecord.add_data_provenance_note
       ~PrescreenRecord.add_masterdata_provenance

@@ -35,14 +35,6 @@ def test_add_colrev_ids() -> None:
         "pages": "1--3",
     }
 
-    R1 = colrev.record.Record(data=v1)
-    R2 = colrev.record.Record(data=v2)
-    R1.add_colrev_ids(records=[v1, v2])
-    assert [
-        "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial",
-        "colrev_id1:|a|misq|45|1|2020|rai|editorial",
-    ] == R1.data["colrev_id"]
-
 
 def test_provenance() -> None:
 

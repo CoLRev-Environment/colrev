@@ -354,11 +354,6 @@ class Search(colrev.operation.Operation):
                 main_record_dict["year"] = record_dict["year"]
                 record = colrev.record.PrepRecord(data=main_record_dict)
 
-                colrev_id = record.create_colrev_id(
-                    also_known_as_record=record.get_data()
-                )
-                record.data["colrev_id"] = colrev_id
-
             if (
                 "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
                 and "md_curated.bib" != source.get_origin_prefix()

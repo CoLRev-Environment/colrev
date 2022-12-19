@@ -61,7 +61,6 @@ class Prep(colrev.operation.Operation):
         "colrev_masterdata_provenance",
         "colrev_data_provenance",
         "colrev_pid",
-        "colrev_id",
         "author",
         "year",
         "title",

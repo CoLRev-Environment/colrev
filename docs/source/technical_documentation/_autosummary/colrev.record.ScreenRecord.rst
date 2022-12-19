@@ -16,7 +16,6 @@ colrev.record.ScreenRecord
    .. autosummary::
       :nosignatures:
 
-      ~ScreenRecord.add_colrev_ids
       ~ScreenRecord.add_data_provenance
       ~ScreenRecord.add_data_provenance_note
       ~ScreenRecord.add_masterdata_provenance

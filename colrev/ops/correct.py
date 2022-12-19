@@ -67,9 +67,6 @@ class Corrections:
     def __prep_for_change_item_creation(
         self, *, original_record: dict, corrected_record: dict
     ) -> None:
-        # original_record["colrev_id"] = colrev.record.Record(
-        #     data=original_record
-        # ).create_colrev_id()
 
         # Cast to string for persistence
         original_record = {k: str(v) for k, v in original_record.items()}

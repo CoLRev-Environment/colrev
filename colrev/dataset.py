@@ -467,7 +467,6 @@ class Dataset:
                 "colrev_status",
                 "colrev_masterdata_provenance",
                 "colrev_data_provenance",
-                "colrev_id",
                 "colrev_pdf_id",
                 "screening_criteria",
                 "file",  # Note : do not change this order (parsers rely on it)

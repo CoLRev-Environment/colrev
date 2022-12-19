@@ -98,7 +98,6 @@ class Record:
         "colrev_masterdata_provenance",
         "colrev_origin",
         "colrev_status",
-        "colrev_id",
         "colrev_data_provenance",
         "colrev_pdf_id",
         "MOVED_DUPE_ID",
@@ -108,7 +107,6 @@ class Record:
 
     # Fields that are stored as lists (items separated by newlines)
     list_fields_keys = [
-        "colrev_id",
         "colrev_origin",
         # "colrev_pdf_id",
         # "screening_criteria",
@@ -249,7 +247,7 @@ class Record:
                         element.lstrip().rstrip()
                         for element in data_copy[key].split(";")
                     ]
-                if key in ["colrev_id", "colrev_origin"]:
+                if key in ["colrev_origin"]:
                     data_copy[key] = sorted(list(set(data_copy[key])))
                 for ind, val in enumerate(data_copy[key]):
                     if len(val) > 0:
@@ -271,22 +269,10 @@ class Record:
     def get_data(self, *, stringify: bool = False) -> dict:
         """Get the record data (optionally: in stringified version, i.e., without lists/dicts)"""
 
-        if not isinstance(self.data.get("colrev_id", []), list):
-            print(self.data)
-        assert isinstance(self.data.get("colrev_id", []), list)
         if not isinstance(self.data.get("colrev_origin", []), list):
             print(self.data)
             self.data["colrev_origin"] = self.data["colrev_origin"].split(";")
         assert isinstance(self.data.get("colrev_origin", []), list)
-        if not all(x.startswith("colrev_id") for x in self.data.get("colrev_id", [])):
-            print(
-                list(
-                    x
-                    for x in self.data.get("colrev_id", [])
-                    if not x.startswith("colrev_id")
-                )
-            )
-        assert all(x.startswith("colrev_id") for x in self.data.get("colrev_id", []))
 
         if stringify:
             return self.__get_stringified_record()
@@ -300,19 +286,7 @@ class Record:
     def set_status(self, *, target_state: RecordState) -> None:
         """Set the record status"""
         if RecordState.md_prepared == target_state:
-            if self.masterdata_is_complete():
-                try:
-                    colrev_id = self.create_colrev_id()
-                    if "colrev_id" not in self.data:
-                        self.data["colrev_id"] = [colrev_id]
-                    elif colrev_id not in self.data["colrev_id"]:
-                        self.data["colrev_id"].append(colrev_id)
-
-                    # else should not happen because colrev_ids should only be
-                    # created once records are prepared (complete)
-                except colrev_exceptions.NotEnoughDataToIdentifyException:
-                    pass
-            else:
+            if not self.masterdata_is_complete():
                 target_state = RecordState.md_needs_manual_preparation
         self.data["colrev_status"] = target_state
 
@@ -447,21 +421,6 @@ class Record:
                 else:
                     if key in self.data.get("colrev_data_provenance", ""):
                         del self.data["colrev_data_provenance"][key]
-
-    def add_colrev_ids(self, *, records: list[dict]) -> None:
-        """Add colrev_ids based on a list of records"""
-        if "colrev_id" in self.data:
-            if isinstance(self.data["colrev_id"], str):
-                self.data["colrev_id"] = self.data["colrev_id"].split(";")
-        for record in records:
-            try:
-                colrev_id = self.create_colrev_id(also_known_as_record=record)
-                if "colrev_id" not in self.data:
-                    self.data["colrev_id"] = [colrev_id]
-                elif colrev_id not in self.data["colrev_id"]:
-                    self.data["colrev_id"].append(colrev_id)
-            except colrev_exceptions.NotEnoughDataToIdentifyException:
-                pass
 
     def masterdata_is_complete(self) -> bool:
         """Check if the masterdata is complete"""

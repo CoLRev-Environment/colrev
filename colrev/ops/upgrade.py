@@ -13,7 +13,6 @@ import yaml
 from tqdm import tqdm
 
 import colrev.env.utils
-import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
 if TYPE_CHECKING:
@@ -124,52 +123,6 @@ class Upgrade(colrev.operation.Operation):
                     active = False
                 if active:
                     print(line)
-
-    def __load_origin_records(self) -> dict:
-
-        origin_records: dict[str, typing.Any] = {}
-        sources = [x.filename for x in self.review_manager.settings.sources]
-        for source in sources:
-            source_file = self.review_manager.SEARCHDIR_RELATIVE / Path(source)
-            if source_file.is_file():
-                with open(source_file, encoding="utf8") as target_db:
-
-                    source_record_dict = self.review_manager.dataset.load_records_dict(
-                        load_str=target_db.read()
-                    )
-
-                    records_dict = {
-                        f"{source}/{r['ID']}": {r.items()}
-                        for r in source_record_dict.values()
-                    }
-                    origin_records = {**origin_records, **records_dict}
-
-        return origin_records
-
-    def __update_colrev_ids(self) -> None:
-
-        self.review_manager.logger.info("Create colrev_id list from origins")
-        recs_dict = self.review_manager.dataset.load_records_dict()
-        if len(recs_dict) > 0:
-            origin_records = self.__load_origin_records()
-            for rec in tqdm(recs_dict.values()):
-                record = colrev.record.Record(data=rec)
-                try:
-                    colrev_id = record.create_colrev_id()
-                    record.data["colrev_id"] = [colrev_id]
-                except colrev_exceptions.NotEnoughDataToIdentifyException:
-                    continue
-                origins = record.data.get("colrev_origins", [])
-                record.add_colrev_ids(
-                    records=[
-                        origin_records[origin]
-                        for origin in set(origins)
-                        if origin in origin_records
-                    ]
-                )
-
-            self.review_manager.dataset.save_records_dict(records=recs_dict)
-            self.review_manager.dataset.add_record_changes()
 
     def __migrate_0_4_0(self) -> bool:
         # pylint: disable=too-many-statements
@@ -376,7 +329,6 @@ class Upgrade(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
         # Note: the order is important in this case.
-        self.__update_colrev_ids()
 
         return True
 
@@ -810,8 +762,6 @@ class Upgrade(colrev.operation.Operation):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
 
-        self.__update_colrev_ids()
-
         if not Path("settings.json").is_file():
             filedata = colrev.env.utils.get_package_file_content(
                 file_path=Path("template/settings.json")
@@ -985,6 +935,10 @@ class Upgrade(colrev.operation.Operation):
 
             self.review_manager.logger.info("Create/link crossref metadata")
             for record_dict in tqdm(records.values()):
+                # for masterdata-curated repositories:
+                # record_dict["colrev_origin"] = [
+                #     o for o in record_dict["colrev_origin"] if not o.startswith("CROSSREF")
+                # ]
                 if "doi" in record_dict:
                     if not any(
                         o.startswith("md_crossref.bib/")
@@ -1000,6 +954,14 @@ class Upgrade(colrev.operation.Operation):
                             == record_dict["colrev_status"]
                         ):
                             record_dict["colrev_status"] = prev_status
+
+        for record_dict in records.values():
+            if "colrev_id" in record_dict:
+                del record_dict["colrev_id"]
+            if self.review_manager.settings.is_curated_masterdata_repo():
+                if "cited_by" in record_dict:
+                    record = colrev.record.Record(data=record_dict)
+                    record.remove_field(key="cited_by")
 
         self.review_manager.dataset.save_records_dict(records=records)
 

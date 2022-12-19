@@ -16,7 +16,6 @@ colrev.record.PDFPrepManRecord
    .. autosummary::
       :nosignatures:
 
-      ~PDFPrepManRecord.add_colrev_ids
       ~PDFPrepManRecord.add_data_provenance
       ~PDFPrepManRecord.add_data_provenance_note
       ~PDFPrepManRecord.add_masterdata_provenance
