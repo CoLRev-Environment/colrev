@@ -350,6 +350,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
+        # pylint: disable=too-many-branches
+
         if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
             # Already linked to a local-index record
             return record
@@ -390,45 +392,49 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     "CURATED"
                 ]["source"]
 
-        self.local_index_lock.acquire(timeout=60)
-
-        # Note : need to reload file because the object is not shared between processes
-        local_index_feed = self.search_source.get_feed(
-            review_manager=prep_operation.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=False,
-        )
-
-        # lock: to prevent different records from having the same origin
-        local_index_feed.set_id(record_dict=retrieved_record.data)
-        local_index_feed.add_record(record=retrieved_record)
-
-        retrieved_record.remove_field(key="curation_ID")
-        record.merge(
-            merging_record=retrieved_record,
-            default_source=default_source,
-        )
-
-        git_repo = prep_operation.review_manager.dataset.get_repo()
-        cur_project_source_paths = [str(prep_operation.review_manager.path)]
-        for remote in git_repo.remotes:
-            if remote.url:
-                shared_url = remote.url
-                shared_url = shared_url.rstrip(".git")
-                cur_project_source_paths.append(shared_url)
-                break
-
         try:
-            local_index_feed.save_feed_file()
-            # extend fields_to_keep (to retrieve all fields from the index)
-            for key in retrieved_record.data.keys():
-                if key not in prep_operation.fields_to_keep:
-                    prep_operation.fields_to_keep.append(key)
+            self.local_index_lock.acquire(timeout=60)
 
-        except OSError:
-            pass
+            # Note : need to reload file because the object is not shared between processes
+            local_index_feed = self.search_source.get_feed(
+                review_manager=prep_operation.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=False,
+            )
 
-        self.local_index_lock.release()
+            # lock: to prevent different records from having the same origin
+            local_index_feed.set_id(record_dict=retrieved_record.data)
+            local_index_feed.add_record(record=retrieved_record)
+
+            retrieved_record.remove_field(key="curation_ID")
+            record.merge(
+                merging_record=retrieved_record,
+                default_source=default_source,
+            )
+
+            git_repo = prep_operation.review_manager.dataset.get_repo()
+            cur_project_source_paths = [str(prep_operation.review_manager.path)]
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+                    shared_url = shared_url.rstrip(".git")
+                    cur_project_source_paths.append(shared_url)
+                    break
+
+            try:
+                local_index_feed.save_feed_file()
+                # extend fields_to_keep (to retrieve all fields from the index)
+                for key in retrieved_record.data.keys():
+                    if key not in prep_operation.fields_to_keep:
+                        prep_operation.fields_to_keep.append(key)
+
+            except OSError:
+                pass
+
+            self.local_index_lock.release()
+
+        except colrev_exceptions.InvalidMerge:
+            self.local_index_lock.release()
 
         return record
 

@@ -12,6 +12,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
 import colrev.record
 
@@ -185,7 +186,11 @@ class SemanticScholarPrep(JsonSchemaMixin):
             prep_operation.review_manager.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-        except (requests.exceptions.RequestException, KeyError):
+        except (
+            requests.exceptions.RequestException,
+            KeyError,
+            colrev_exceptions.InvalidMerge,
+        ):
             pass
         return record
 

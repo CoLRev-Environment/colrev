@@ -672,37 +672,43 @@ class DBLPSearchSource(JsonSchemaMixin):
                     #     f"(>{prep_operation.retrieval_similarity})"
                     # )
 
-                    self.dblp_lock.acquire(timeout=60)
+                    try:
+                        self.dblp_lock.acquire(timeout=60)
 
-                    # Note : need to reload file because the object is not shared between processes
-                    dblp_feed = self.search_source.get_feed(
-                        review_manager=prep_operation.review_manager,
-                        source_identifier=self.source_identifier,
-                        update_only=False,
-                    )
+                        # Note : need to reload file
+                        # because the object is not shared between processes
+                        dblp_feed = self.search_source.get_feed(
+                            review_manager=prep_operation.review_manager,
+                            source_identifier=self.source_identifier,
+                            update_only=False,
+                        )
 
-                    dblp_feed.set_id(record_dict=retrieved_record.data)
-                    dblp_feed.add_record(record=retrieved_record)
+                        dblp_feed.set_id(record_dict=retrieved_record.data)
+                        dblp_feed.add_record(record=retrieved_record)
 
-                    record.merge(
-                        merging_record=retrieved_record,
-                        default_source=retrieved_record.data["colrev_origin"][0],
-                    )
-                    record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0]
-                    )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
-                    if "Withdrawn (according to DBLP)" in record.data.get(
-                        "warning", ""
-                    ):
-                        record.prescreen_exclude(reason="retracted")
-                        record.remove_field(key="warning")
+                        record.merge(
+                            merging_record=retrieved_record,
+                            default_source=retrieved_record.data["colrev_origin"][0],
+                        )
+                        record.set_masterdata_complete(
+                            source=retrieved_record.data["colrev_origin"][0]
+                        )
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_prepared
+                        )
+                        if "Withdrawn (according to DBLP)" in record.data.get(
+                            "warning", ""
+                        ):
+                            record.prescreen_exclude(reason="retracted")
+                            record.remove_field(key="warning")
 
-                    dblp_feed.save_feed_file()
-                    self.dblp_lock.release()
-                    return record
+                        dblp_feed.save_feed_file()
+                        self.dblp_lock.release()
+                        return record
+
+                    except colrev_exceptions.InvalidMerge:
+                        self.dblp_lock.release()
+                        continue
 
         except (requests.exceptions.RequestException, UnicodeEncodeError):
             pass

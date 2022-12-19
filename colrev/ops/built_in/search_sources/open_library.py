@@ -256,12 +256,14 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         except (
             requests.exceptions.RequestException,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.InvalidMerge,
         ):
-            pass
+            self.open_library_lock.release()
         except UnicodeEncodeError:
             prep_operation.review_manager.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
+            self.open_library_lock.release()
 
         return record
 

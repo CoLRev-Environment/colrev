@@ -344,7 +344,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     # )
                     pass
 
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass
         except UnicodeEncodeError:
             prep_operation.review_manager.logger.error(

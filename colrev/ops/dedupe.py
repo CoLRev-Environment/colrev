@@ -415,64 +415,68 @@ class Dedupe(colrev.operation.Operation):
         record_to_merge = self.__get_records_to_merge(records=records, results=results)
         for (main_record, dupe_record, dupe) in record_to_merge:
 
-            if self.__cross_level_merge(
-                main_record=main_record, dupe_record=dupe_record
-            ):
-                self.review_manager.logger.debug(
-                    "Prevented cross-level merge: "
-                    f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                )
-                continue
+            try:
 
-            if self.__same_source_merge(
-                main_record=main_record, dupe_record=dupe_record
-            ):
-                self.__export_same_source_merge(
-                    main_record=main_record,
-                    dupe_record=dupe_record,
-                )
-
-                if (
-                    colrev.settings.SameSourceMergePolicy.prevent
-                    == self.review_manager.settings.dedupe.same_source_merges
+                if self.__cross_level_merge(
+                    main_record=main_record, dupe_record=dupe_record
                 ):
                     self.review_manager.logger.debug(
-                        "Prevented same-source merge: "
+                        "Prevented cross-level merge: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
-                    self.review_manager.logger.info(
-                        "To force merge use colrev dedupe --merge "
-                        f"{main_record.data['ID']},{dupe_record.data['ID']}"
+                    continue
+
+                if self.__same_source_merge(
+                    main_record=main_record, dupe_record=dupe_record
+                ):
+                    self.__export_same_source_merge(
+                        main_record=main_record,
+                        dupe_record=dupe_record,
                     )
 
-                    continue  # with next pair
-                self.review_manager.logger.debug(
-                    "Applying same-source merge: "
-                    f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                )
+                    if (
+                        colrev.settings.SameSourceMergePolicy.prevent
+                        == self.review_manager.settings.dedupe.same_source_merges
+                    ):
+                        self.review_manager.logger.debug(
+                            "Prevented same-source merge: "
+                            f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                        )
+                        self.review_manager.logger.info(
+                            "To force merge use colrev dedupe --merge "
+                            f"{main_record.data['ID']},{dupe_record.data['ID']}"
+                        )
 
-            self.review_manager.logger.debug(
-                f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
-            )
-            dupe_record.data["MOVED_DUPE_ID"] = main_record.data["ID"]
-            main_record.merge(
-                merging_record=dupe_record,
-                default_source="merged",
-                preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
-            )
-            removed_duplicates.append(dupe_record.data["ID"])
-
-            if "score" in dupe:
-                conf_details = (
-                    f"(confidence: {str(round(dupe['score'], 3))})"
-                    if "score" in dupe
-                    else ""
-                )
+                        continue  # with next pair
+                    self.review_manager.logger.debug(
+                        "Applying same-source merge: "
+                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                    )
 
                 self.review_manager.logger.debug(
-                    f"Removed duplicate{conf_details}: "
-                    + f'{main_record.data["ID"]} <- {dupe_record.data["ID"]}'
+                    f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
                 )
+                dupe_record.data["MOVED_DUPE_ID"] = main_record.data["ID"]
+                main_record.merge(
+                    merging_record=dupe_record,
+                    default_source="merged",
+                    preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
+                )
+                removed_duplicates.append(dupe_record.data["ID"])
+
+                if "score" in dupe:
+                    conf_details = (
+                        f"(confidence: {str(round(dupe['score'], 3))})"
+                        if "score" in dupe
+                        else ""
+                    )
+
+                    self.review_manager.logger.debug(
+                        f"Removed duplicate{conf_details}: "
+                        + f'{main_record.data["ID"]} <- {dupe_record.data["ID"]}'
+                    )
+            except colrev_exceptions.InvalidMerge:
+                continue
 
         for record in records.values():
             if "MOVED_DUPE_ID" in record:

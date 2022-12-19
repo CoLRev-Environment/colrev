@@ -379,41 +379,45 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 #     f"(>{prep_operation.retrieval_similarity})"
                 # )
 
-                self.crossref_lock.acquire(timeout=60)
+                try:
+                    self.crossref_lock.acquire(timeout=60)
 
-                # Note : need to reload file because the object is not shared between processes
-                crossref_feed = self.search_source.get_feed(
-                    review_manager=prep_operation.review_manager,
-                    source_identifier=self.source_identifier,
-                    update_only=False,
-                )
-
-                crossref_feed.set_id(record_dict=retrieved_record.data)
-                crossref_feed.add_record(record=retrieved_record)
-
-                record.merge(
-                    merging_record=retrieved_record,
-                    default_source=retrieved_record.data["colrev_origin"][0],
-                )
-
-                if "retracted" in record.data.get("warning", ""):
-                    record.prescreen_exclude(reason="retracted")
-                    record.remove_field(key="warning")
-                else:
-                    doi_connector.DOIConnector.get_link_from_doi(
+                    # Note : need to reload file because the object is not shared between processes
+                    crossref_feed = self.search_source.get_feed(
                         review_manager=prep_operation.review_manager,
-                        record=record,
-                    )
-                    record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0]
-                    )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
+                        source_identifier=self.source_identifier,
+                        update_only=False,
                     )
 
-                crossref_feed.save_feed_file()
-                self.crossref_lock.release()
-                return record
+                    crossref_feed.set_id(record_dict=retrieved_record.data)
+                    crossref_feed.add_record(record=retrieved_record)
+
+                    record.merge(
+                        merging_record=retrieved_record,
+                        default_source=retrieved_record.data["colrev_origin"][0],
+                    )
+
+                    if "retracted" in record.data.get("warning", ""):
+                        record.prescreen_exclude(reason="retracted")
+                        record.remove_field(key="warning")
+                    else:
+                        doi_connector.DOIConnector.get_link_from_doi(
+                            review_manager=prep_operation.review_manager,
+                            record=record,
+                        )
+                        record.set_masterdata_complete(
+                            source=retrieved_record.data["colrev_origin"][0]
+                        )
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_prepared
+                        )
+
+                    crossref_feed.save_feed_file()
+                    self.crossref_lock.release()
+                    return record
+                except colrev_exceptions.InvalidMerge:
+                    self.crossref_lock.release()
+                    return record
 
             prep_operation.review_manager.logger.debug(
                 f"crossref similarity: {similarity} "

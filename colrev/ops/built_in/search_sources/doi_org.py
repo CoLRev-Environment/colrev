@@ -77,10 +77,13 @@ class DOIConnector:
                     record.prescreen_exclude(reason="retracted")
                     record.remove_field(key="warning")
 
-            except (json.decoder.JSONDecodeError, TypeError) as exc:
+            except (
+                json.decoder.JSONDecodeError,
+                TypeError,
+                requests.exceptions.RequestException,
+                colrev_exceptions.InvalidMerge,
+            ) as exc:
                 print(exc)
-            except requests.exceptions.RequestException:
-                return record
             except OperationalError as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "sqlite, required for requests CachedSession "

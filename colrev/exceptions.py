@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.ui_cli.cli_colors as colors
+
+if TYPE_CHECKING:
+    import colrev.record
 
 
 class CoLRevException(Exception):
@@ -311,6 +315,16 @@ class DedupeError(CoLRevException):
 
     def __init__(self, message: str) -> None:
         self.message = message
+        super().__init__(self.message)
+
+
+class InvalidMerge(DedupeError):
+    """An invalid merge was attempted (rule-based)"""
+
+    def __init__(
+        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+    ) -> None:
+        self.message = f"attempted merge: {record_a.data['ID']} - {record_b.data['ID']}"
         super().__init__(self.message)
 
 

@@ -13,6 +13,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
@@ -107,7 +108,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
 
             record.merge(merging_record=retrieved_record, default_source=url)
 
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass
         return record
 

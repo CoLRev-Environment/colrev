@@ -638,6 +638,39 @@ class Record:
 
         return val
 
+    def __prevent_invalid_merges(self, *, merging_record: Record) -> None:
+        """Prevents invalid merges like ... part 1 / ... part 2"""
+
+        # maybe also mention commentary to../response to/...?
+        if any(
+            self.data.get("title", "").lower().startswith(k)
+            for k in ["erratum", "correction"]
+        ) and not any(
+            merging_record.data.get("title", "").lower().startswith(k)
+            for k in ["erratum", "correction"]
+        ):
+            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+
+        if self.data.get("title", "").lower().endswith(
+            "part 1"
+        ) and not merging_record.data.get("title", "").lower().endwith("part 1"):
+            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+
+        if self.data.get("title", "").lower().endswith(
+            "part 2"
+        ) and not merging_record.data.get("title", "").lower().endwith("part 2"):
+            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+
+        if self.data.get("title", "").lower().endswith(
+            "part a"
+        ) and not merging_record.data.get("title", "").lower().endwith("part a"):
+            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+
+        if self.data.get("title", "").lower().endswith(
+            "part b"
+        ) and not merging_record.data.get("title", "").lower().endwith("part b"):
+            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+
     def merge(
         self,
         *,
@@ -662,6 +695,7 @@ class Record:
             ):
                 merging_record_preferred = True
 
+        self.__prevent_invalid_merges(merging_record=merging_record)
         self.__merge_origins(merging_record=merging_record)
         self.__merge_status(merging_record=merging_record)
 
