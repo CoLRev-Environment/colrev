@@ -182,13 +182,8 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 # )
                 pass
 
-        except UnicodeEncodeError:
-            prep_operation.review_manager.logger.error(
-                "UnicodeEncodeError - this needs to be fixed at some time"
-            )
         except (
             requests.exceptions.RequestException,
-            KeyError,
             colrev_exceptions.InvalidMerge,
         ):
             pass

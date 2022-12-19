@@ -346,10 +346,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass
-        except UnicodeEncodeError:
-            prep_operation.review_manager.logger.error(
-                "UnicodeEncodeError - this needs to be fixed at some time"
-            )
 
         return record
 

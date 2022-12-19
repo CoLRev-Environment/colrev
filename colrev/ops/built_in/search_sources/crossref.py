@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 import typing
 import urllib
 from dataclasses import dataclass
@@ -431,9 +430,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             colrev_exceptions.RecordNotFoundInPrepSourceException,
         ):
             pass
-        # pylint: disable=duplicate-code
-        except KeyboardInterrupt:
-            sys.exit()
 
         return record
 

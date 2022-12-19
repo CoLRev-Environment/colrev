@@ -259,11 +259,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             colrev_exceptions.InvalidMerge,
         ):
             self.open_library_lock.release()
-        except UnicodeEncodeError:
-            prep_operation.review_manager.logger.error(
-                "UnicodeEncodeError - this needs to be fixed at some time"
-            )
-            self.open_library_lock.release()
 
         return record
 

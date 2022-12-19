@@ -562,13 +562,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     f"{colors.GREEN}Records up-to-date with DBLP{colors.END}"
                 )
 
-        except UnicodeEncodeError:
-            print("UnicodeEncodeError - this needs to be fixed at some time")
-        except (
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.HTTPError,
-            requests.exceptions.ConnectionError,
-        ):
+        except (requests.exceptions.RequestException,):
             pass
 
     def run_search(
@@ -710,7 +704,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                         self.dblp_lock.release()
                         continue
 
-        except (requests.exceptions.RequestException, UnicodeEncodeError):
+        except requests.exceptions.RequestException:
             pass
 
         return record
