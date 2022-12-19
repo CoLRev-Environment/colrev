@@ -163,9 +163,38 @@ class Record:
         """Update all data of a record object based on another record"""
         self.data = update_record.copy_prep_rec().get_data()
 
-    def get_diff(self, *, other_record: Record) -> list:
+    def get_diff(
+        self, *, other_record: Record, identifying_fields_only: bool = True
+    ) -> list:
         """Get diff between record objects"""
-        diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
+
+        # pylint: disable=too-many-branches
+
+        diff = []
+        if identifying_fields_only:
+            for selected_tuple in list(
+                dictdiffer.diff(self.get_data(), other_record.get_data())
+            ):
+                if "change" == selected_tuple[0]:
+                    if selected_tuple[1] in self.identifying_field_keys:
+                        diff.append(selected_tuple)
+                if "add" == selected_tuple[0]:
+                    addition_list: typing.Tuple = ("add", "", [])
+                    for addition_item in selected_tuple[2]:
+                        if addition_item[0] in self.identifying_field_keys:
+                            addition_list[2].append(addition_item)
+                    if addition_list[2]:
+                        diff.append(addition_list)
+                if "remove" == selected_tuple[0]:
+                    removal_list: typing.Tuple = ("remove", "", [])
+                    for removal_item in selected_tuple[2]:
+                        if removal_item[0] in self.identifying_field_keys:
+                            removal_list[2].append(removal_item)
+                    if removal_list[2]:
+                        diff.append(removal_list)
+        else:
+            diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
+
         return diff
 
     def format_bib_style(self) -> str:
@@ -832,6 +861,10 @@ class Record:
     def __select_best_title(cls, *, default: str, candidate: str) -> str:
         best_title = default
 
+        # Note : avoid switching titles
+        if default.replace(" - ", ": ") == candidate.replace(" - ", ": "):
+            return default
+
         default_upper = colrev.env.utils.percent_upper_chars(default)
         candidate_upper = colrev.env.utils.percent_upper_chars(candidate)
 
@@ -1062,7 +1095,11 @@ class Record:
             author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
             title_similarity = (
-                fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
+                fuzz.ratio(
+                    df_a["title"].lower().replace(":", "").replace("-", ""),
+                    df_b["title"].lower().replace(":", "").replace("-", ""),
+                )
+                / 100
             )
 
             # partial ratio (catching 2010-10 or 2001-2002)

@@ -34,6 +34,7 @@ colrev.exceptions
       FieldValueError
       GitConflictError
       ImportException
+      InvalidMerge
       InvalidPDFException
       InvalidQueryException
       InvalidSettingsError

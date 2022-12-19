@@ -409,6 +409,10 @@ class Search(colrev.operation.Operation):
                         ) != main_record_dict.get(key, "OTHER"):
                             continue
                     main_record = colrev.record.Record(data=main_record_dict)
+                    if value.replace(" - ", ": ") == main_record.data[key].replace(
+                        " - ", ": "
+                    ):
+                        continue
                     main_record.update_field(
                         key=key,
                         value=value,
@@ -541,7 +545,7 @@ class GeneralOriginFeed:
     ):
 
         self.source = search_source
-        self.feed_file = search_source.filename
+        self.feed_file = search_source.get_corresponding_bib_file()
 
         # Note: the source_identifier identifies records in the search feed.
         # This could be a doi or link or database-specific ID (like WOS accession numbers)

@@ -120,7 +120,12 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 predicted_language = self.lang_code_mapping[lang.name.lower()]
 
             if not set_most_likely_language:
-                record.data["language"] = predicted_language
+                record.update_field(
+                    key="language",
+                    value=predicted_language,
+                    source="LanguageDetector",
+                    note="",
+                )
                 set_most_likely_language = True
             if "eng" == predicted_language:
                 if conf > 0.95:
