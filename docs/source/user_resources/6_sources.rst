@@ -10,7 +10,7 @@ SearchSources are a key component of CoLRev. We keep track from which source the
 
 TODO : add an illustration of sources (how they enable active flows)
 
-The following SearchSources are covered
+The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/geritwagner/colrev/issues/106>`_):
 
 .. datatemplate:json:: ../../../colrev/template/package_endpoints.json
 

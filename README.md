@@ -17,8 +17,8 @@ Compared to other environments, the following features stand out:
 - an **extensible and open platform** based on shared data and process standards
 - builds on **git** and its transparent collaboration model for the entire literature review process
 - offers a **self-explanatory, fault-tolerant, and configurable** user workflow
-- implements a **granular data provenance** model and **robust identification** schemes
-- uses **state-of-the-art algorithms** that provide end-to-end process support
+- implements a granular **data provenance** model and **robust identification** schemes
+- provides **end-to-end process support** and allows you to **plug in state-of-the-art tools**
 - enables **typological and methodological pluralism** throughout the process
 - operates a **built-in model for content curation** and reuse
 
