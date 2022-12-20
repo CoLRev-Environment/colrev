@@ -60,7 +60,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                 source_operation=prep_operation
             )
             crossref_md = crossref_search_source.get_masterdata(
-                prep_operation=prep_operation, record=record_copy
+                prep_operation=prep_operation, record=record_copy, safe_feed=False
             )
             for key, value in crossref_md.data.items():
                 if key not in fields_to_check:

@@ -330,6 +330,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
+        safe_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Crossref based on similarity with the record provided"""
@@ -410,8 +411,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         record.set_status(
                             target_state=colrev.record.RecordState.md_prepared
                         )
-
-                    crossref_feed.save_feed_file()
+                    if safe_feed:
+                        crossref_feed.save_feed_file()
                     self.crossref_lock.release()
                     return record
                 except colrev_exceptions.InvalidMerge:
