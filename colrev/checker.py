@@ -279,17 +279,16 @@ class Checker:
             raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = list(itertools.chain(*status_data["origin_list"]))
+        origins = list(itertools.chain([x[1] for x in status_data["origin_list"]]))
         non_unique_origins = []
         for org in origins:
             if origins.count(org) > 1:
                 non_unique_origins.append(org)
+
         if non_unique_origins:
-            for _, org in status_data["origin_list"]:
-                if org in non_unique_origins:
-                    raise colrev_exceptions.OriginError(
-                        f'Non-unique origin: origin="{org}"'
-                    )
+            raise colrev_exceptions.OriginError(
+                f'Non-unique origins: {" , ".join(set(non_unique_origins))}'
+            )
 
     def check_fields(self, *, status_data: dict) -> None:
         """Check field values"""
@@ -425,7 +424,7 @@ class Checker:
             for name in files:
                 if any((x in name) or (x in root) for x in ignore_patterns):
                     continue
-                if prior_id in name:
+                if prior_id == str(Path(name).name):
                     msg = (
                         f"Old ID ({prior_id}, changed to {new_id} in the "
                         + f"RECORDS_FILE) found in filepath: {name}"
