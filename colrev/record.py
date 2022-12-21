@@ -1879,13 +1879,23 @@ class Record:
         """Get the record's toc-key"""
 
         if "article" == self.data["ENTRYTYPE"]:
-            toc_key = f"{self.data.get('journal', '-').replace(' ', '-').lower()}"
+            toc_key = (
+                self.data.get("journal", "-")
+                .replace(" ", "-")
+                .replace("\\", "")
+                .replace("&", "and")
+                .lower()
+            )
             toc_key += f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
             toc_key += f"|{self.data['number']}" if ("number" in self.data) else "|-"
 
         elif "inproceedings" == self.data["ENTRYTYPE"]:
             toc_key = (
-                f"{self.data.get('booktitle', '').replace(' ', '-').lower()}"
+                self.data.get("booktitle", "")
+                .replace(" ", "-")
+                .replace("\\", "")
+                .replace("&", "and")
+                .lower()
                 + f"|{self.data.get('year', '')}"
             )
         else:

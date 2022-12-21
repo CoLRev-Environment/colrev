@@ -837,6 +837,7 @@ class LocalIndex:
 
     def _add_record_to_index(self, *, record_dict: dict) -> None:
         cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
+        record_dict["colrev_id"] = cid_to_index
         paper_hash = self.__get_record_hash(record_dict=record_dict)
 
         try:
