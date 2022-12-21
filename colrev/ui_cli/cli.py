@@ -1564,12 +1564,11 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
 
 
 @main.command(help_priority=17)
+@click.argument("scope", nargs=1)
 @click.option(
-    "--scope",
-    type=click.Choice(
-        ["prepare", "dedupe", "merge", "all", "unspecified"], case_sensitive=False
-    ),
-    default="unspecified",
+    "--filter",
+    type=click.Choice(["prepare", "dedupe", "merge", "all"], case_sensitive=False),
+    default="all",
     help="prepare, merge, or all.",
 )
 @click.option(
@@ -1611,6 +1610,7 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
 def validate(
     ctx: click.core.Context,
     scope: str,
+    filter: str,
     threshold: float,
     properties: bool,
     commit: str,
@@ -1618,7 +1618,13 @@ def validate(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Validate changes"""
+    """Validate changes in the given commit (scope)
+
+    The validation scope argument can be
+    - a commit-sha,
+    - '.' for the latest commit,
+    - HEAD~4 for commit 4 before HEAD
+    """
 
     # pylint: disable=too-many-locals
 
@@ -1634,7 +1640,10 @@ def validate(
             input(commit)
 
         validation_details = validate_operation.main(
-            scope=scope, properties=properties, target_commit=commit
+            scope=scope,
+            filter_setting=filter,
+            properties=properties,
+            target_commit=commit,
         )
 
         if 0 == len(validation_details):
@@ -1662,11 +1671,11 @@ def validate(
             os.system("cls" if os.name == "nt" else "clear")
             if record_a["ID"] == record_b["ID"]:
                 print(
-                    f"similarity: {str(round(difference, 4))} record {record_a['ID']}"
+                    f"difference: {str(round(difference, 4))} record {record_a['ID']}"
                 )
             else:
                 print(
-                    f"similarity: {str(round(difference, 4))} "
+                    f"difference: {str(round(difference, 4))} "
                     f"record {record_a['ID']} - {record_b['ID']}"
                 )
 
@@ -1675,6 +1684,11 @@ def validate(
             )
 
             user_selection = input("Validate [y,n,d,q]?")
+
+            if "n" == user_selection:
+                review_manager.dataset.save_records_dict(
+                    records={record_a["ID"]: record_a}, partial=True
+                )
 
             if "q" == user_selection:
                 break

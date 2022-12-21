@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import re
 
 from tqdm import tqdm
 
@@ -125,13 +126,13 @@ class Validate(colrev.operation.Operation):
                         if any(el_2 == co for co in x["colrev_origin"])
                     ]
 
-                    similarity = colrev.record.Record.get_record_similarity(
+                    change_score = colrev.record.Record.get_record_change_score(
                         record_a=colrev.record.Record(data=record_1[0]),
                         record_b=colrev.record.Record(data=record_2[0]),
                     )
-                    change_diff.append([record_1[0], record_2[0], similarity])
+                    change_diff.append([record_1[0], record_2[0], change_score])
 
-        change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
+        change_diff = [[e1, e2, diff] for [e1, e2, diff] in change_diff if diff < 1]
 
         if 0 == len(change_diff):
             if merged_records:
@@ -366,32 +367,62 @@ class Validate(colrev.operation.Operation):
 
         return merge_validation
 
+    def __get_target_commit(self, *, scope: str) -> str:
+        commit = ""
+        git_repo = self.review_manager.dataset.get_repo()
+        if scope in ["HEAD", "."]:
+            scope = "HEAD~0"
+        if scope.startswith("HEAD~"):
+            assert scope.replace("HEAD~", "").isdigit()
+            back_count = int(scope.replace("HEAD~", ""))
+            for commit_item in git_repo.iter_commits():
+                if back_count == 0:
+                    commit = commit_item.hexsha
+                    break
+                back_count -= 1
+        else:
+            commit = scope
+        assert re.match(r"[0-9a-f]{5,40}", commit)
+        return commit
+
     def main(
-        self, *, scope: str, properties: bool = False, target_commit: str = ""
+        self,
+        *,
+        scope: str,
+        filter_setting: str,
+        properties: bool = False,
+        target_commit: str = "",
     ) -> list:
         """Validate a commit (main entrypoint)"""
         if properties:
             self.validate_properties(target_commit=target_commit)
             return []
 
-        # extension: filter for changes of contributor (git author)
+        target_commit = self.__get_target_commit(scope=scope)
+        if not target_commit:
+            print("Error")
+            return []
+
+        # extension: filter_setting for changes of contributor (git author)
         records = self.load_changed_records(target_commit=target_commit)
 
-        if target_commit == "" and "unspecified" == scope:
-            scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)
+        if target_commit == "" and "all" == filter_setting:
+            filter_setting = self.__set_scope_based_on_target_commit(
+                target_commit=target_commit
+            )
 
         validation_details = []
-        if scope in ["prepare", "all"]:
+        if filter_setting in ["prepare", "all"]:
             validation_details += self.validate_preparation_changes(
                 records=records, target_commit=target_commit
             )
 
-        if scope in ["dedupe", "all"]:
+        if filter_setting in ["dedupe", "all"]:
             validation_details += self.validate_dedupe_changes(
                 records=records, target_commit=target_commit
             )
 
-        if scope == "merge":
+        if filter_setting == "merge":
             validation_details += self.validate_merge_changes()
 
         # if 'unspecified' == scope:

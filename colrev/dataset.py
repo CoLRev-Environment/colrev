@@ -152,9 +152,12 @@ class Dataset:
         # determine which records have been changed (prepared or merged)
         # in the target_commit
         for record in records_dict.values():
-            prior_record = [
+            prior_record_l = [
                 rec for id, rec in prior_records_dict.items() if id == record["ID"]
-            ][0]
+            ]
+            if not prior_record_l:
+                continue
+            prior_record = prior_record_l[0]
             # Note: the following is an exact comparison of all fields
             if record != prior_record:
                 record.update(changed_in_target_commit="True")
