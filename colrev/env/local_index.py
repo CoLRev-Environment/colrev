@@ -562,8 +562,8 @@ class LocalIndex:
         return retrieved_record
 
     def __parse_record(self, *, record_dict: dict) -> dict:
-        # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
+        # pylint: disable=import-outside-toplevel
         import colrev.dataset
 
         # Note : we need to parse it through parse_records_dict (pybtex / parse_string)
@@ -1003,8 +1003,8 @@ class LocalIndex:
             backend="sqlite",
             expire_after=timedelta(days=30),
         )
-        # pylint: disable=unnecessary-lambda
         # Note : lambda is necessary to prevent immediate function call
+        # pylint: disable=unnecessary-lambda
         Timer(0.1, lambda: session.remove_expired_responses()).start()
 
         print("Start LocalIndex")
@@ -1108,7 +1108,7 @@ class LocalIndex:
                 toc_items = []
 
         # 2. get most similar record_dict
-        elif len(toc_items) > 0:
+        if len(toc_items) > 0:
             try:
 
                 record_colrev_id = colrev.record.Record(
@@ -1136,6 +1136,11 @@ class LocalIndex:
                     return self.__prepare_record_for_return(
                         record_dict=record_dict, include_file=include_file
                     )
+
+                raise colrev_exceptions.RecordNotInTOCException(
+                    record_id=record_dict["ID"], toc_key=toc_key
+                )
+
             except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
                 pass
 

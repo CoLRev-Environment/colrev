@@ -368,6 +368,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     similarity_threshold=prep_operation.retrieval_similarity,
                     include_file=False,
                 )
+            except colrev_exceptions.RecordNotInTOCException as exc:
+                record.prescreen_exclude(
+                    reason=f"record not in toc {exc.toc_key}",  # type : ignore
+                    print_warning=True,
+                )
+                return record
+
             except (
                 colrev_exceptions.RecordNotInIndexException,
                 colrev_exceptions.NotTOCIdentifiableException,
@@ -435,6 +442,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         except colrev_exceptions.InvalidMerge:
             self.local_index_lock.release()
+
+        record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
         return record
 

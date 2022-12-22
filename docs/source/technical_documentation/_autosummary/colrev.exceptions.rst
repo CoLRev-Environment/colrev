@@ -54,6 +54,7 @@ colrev.exceptions
       RecordNotFoundInPrepSourceException
       RecordNotInIndexException
       RecordNotInRepoException
+      RecordNotInTOCException
       RecordNotIndexableException
       RepoInitError
       RepoSetupError

@@ -483,6 +483,12 @@ class Load(colrev.operation.Operation):
                     .replace("{", "")
                     .replace("}", "")
                 )
+
+        if "UNKNOWN" != record_dict.get("title", "UNKNOWN"):
+            record_dict["title"] = (
+                re.sub(r"\s+", " ", record_dict["title"]).lstrip().rstrip().rstrip(".")
+            )
+
         if "pages" in record_dict:
             record_dict["pages"] = record_dict["pages"].replace("–", "--")
             if record_dict["pages"].count("-") == 1:

@@ -47,10 +47,8 @@ class LocalIndexPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record metadata based on local-index"""
 
-        self.local_index_source.get_masterdata(
-            prep_operation=prep_operation, record=record
-        )
-
+        # don't move to  jour_iss_number_year prep
+        # because toc-retrieval relies on adequate toc items!
         if "volume" in record.data and "number" in record.data:
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
@@ -69,6 +67,10 @@ class LocalIndexPrep(JsonSchemaMixin):
                         )
             except TransportError:
                 pass
+
+        self.local_index_source.get_masterdata(
+            prep_operation=prep_operation, record=record
+        )
 
         return record
 

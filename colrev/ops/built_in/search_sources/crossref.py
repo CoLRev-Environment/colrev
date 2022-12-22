@@ -147,7 +147,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for item in crossref_query_return:
             yield connector_utils.json_to_record(item=item)
 
-    def __query_doi(self, *, doi: str) -> dict:
+    def __query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
         # pylint: disable=import-outside-toplevel
@@ -155,7 +155,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         works = Works(etiquette=self.etiquette)
         crossref_query_return = works.doi(doi)
-        return connector_utils.json_to_record(item=crossref_query_return)
+        retrieved_record_dict = connector_utils.json_to_record(
+            item=crossref_query_return
+        )
+        retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+        return retrieved_record
 
     def __journal_query(self, *, journal_issn: str) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
@@ -339,25 +343,22 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # https://api.crossref.org/works/DOI
 
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-        if len(record.data.get("title", "")) < 35:
+        if len(record.data.get("title", "")) < 35 and "doi" not in record.data:
             return record
 
         try:
+            if "doi" in record.data:
+                retrieved_record = self.__query_doi(doi=record.data["doi"])
+                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                    record_original=record, retrieved_record_original=retrieved_record
+                )
+                if similarity < 0.8:
+                    self.review_manager.logger.error(
+                        f" record with mismatching doi metadata: {record.data['doi']}"
+                    )
+                    return record
 
-            retrieved_records = self.crossref_query(
-                review_manager=prep_operation.review_manager,
-                record_input=record,
-                jour_vol_iss_list=False,
-                timeout=timeout,
-            )
-            retrieved_record = retrieved_records.pop()
-
-            retries = 0
-            while (
-                not retrieved_record and retries < prep_operation.max_retries_on_error
-            ):
-                retries += 1
-
+            else:
                 retrieved_records = self.crossref_query(
                     review_manager=prep_operation.review_manager,
                     record_input=record,
@@ -366,18 +367,38 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
                 retrieved_record = retrieved_records.pop()
 
-            if 0 == len(retrieved_record.data):
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                retries = 0
+                while (
+                    not retrieved_record
+                    and retries < prep_operation.max_retries_on_error
+                ):
+                    retries += 1
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                record_original=record, retrieved_record_original=retrieved_record
-            )
-            if similarity > prep_operation.retrieval_similarity:
+                    retrieved_records = self.crossref_query(
+                        review_manager=prep_operation.review_manager,
+                        record_input=record,
+                        jour_vol_iss_list=False,
+                        timeout=timeout,
+                    )
+                    retrieved_record = retrieved_records.pop()
+
+                if 0 == len(retrieved_record.data):
+                    raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+
+                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                    record_original=record, retrieved_record_original=retrieved_record
+                )
                 # prep_operation.review_manager.logger.debug("Found matching record")
                 # prep_operation.review_manager.logger.debug(
                 #     f"crossref similarity: {similarity} "
                 #     f"(>{prep_operation.retrieval_similarity})"
                 # )
+                prep_operation.review_manager.logger.debug(
+                    f"crossref similarity: {similarity} "
+                    f"(<{prep_operation.retrieval_similarity})"
+                )
+                if similarity < prep_operation.retrieval_similarity:
+                    return record
 
                 try:
                     self.crossref_lock.acquire(timeout=60)
@@ -418,11 +439,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 except colrev_exceptions.InvalidMerge:
                     self.crossref_lock.release()
                     return record
-
-            prep_operation.review_manager.logger.debug(
-                f"crossref similarity: {similarity} "
-                f"(<{prep_operation.retrieval_similarity})"
-            )
 
         except (
             requests.exceptions.RequestException,
@@ -520,8 +536,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for feed_record_dict in crossref_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
 
-            retrieved_record_dict = self.__query_doi(doi=feed_record_dict["doi"])
-            retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+            retrieved_record = self.__query_doi(doi=feed_record_dict["doi"])
 
             if retrieved_record.data["doi"] != feed_record.data["doi"]:
                 continue

@@ -170,6 +170,7 @@ class Prep(colrev.operation.Operation):
         """Prepare a record (based on package_endpoints in the settings)"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         record: colrev.record.PrepRecord = item["record"]
 
@@ -236,17 +237,32 @@ class Prep(colrev.operation.Operation):
             if item["nr_items"] > 100:
                 progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(12, " ")
 
-            if record.preparation_save_condition():
+            if record.preparation_break_condition():
                 self.review_manager.logger.info(
-                    f" {progress}prepared {colors.GREEN}{record.data['ID']}{colors.END}"
+                    f" {progress}prescreen_excluded {colors.RED}{record.data['ID']} "
+                    f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} 🚨"
+                )
+            elif record.preparation_save_condition():
+                curation_addition = ""
+                if record.masterdata_is_curated():
+                    curation_addition = " ✔"  # 🌟
+                self.review_manager.logger.info(
+                    f" {progress}prepare {colors.GREEN}{record.data['ID']}{colors.END}"
+                    f"{curation_addition}"
                 )
             else:
                 self.review_manager.logger.info(
-                    f" {progress}prepared {record.data['ID']}"
+                    f" {progress}prepare {record.data['ID']}"
                 )
 
         if self.last_round:
             if record.status_to_prepare():
+                for key in list(record.data.keys()):
+                    if key not in self.fields_to_keep:
+                        record.remove_field(key=key)
+                        self.review_manager.report_logger.info(f"Dropped {key} field")
+                    elif record.data[key] in ["", "NA"]:
+                        record.remove_field(key=key)
                 record.update_by_record(update_record=preparation_record)
                 # Note: update_masterdata_provenance sets to md_needs_manual_preparation
                 record.update_masterdata_provenance()
@@ -753,7 +769,7 @@ class Prep(colrev.operation.Operation):
             )
             self.review_manager.logger.info(
                 "Records prescreen-excluded:".ljust(35)
-                + f"{colors.GREEN}{nr_recs}{colors.END}"
+                + f"{colors.RED}{nr_recs}{colors.END}"
             )
 
     def main(

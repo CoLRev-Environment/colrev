@@ -361,18 +361,6 @@
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.prep_curated",
-            "endpoint": "colrev.ops.built_in.prep.curated_records_prep.CuratedPrep",
-            "short_description": "Prepares records by setting records with curated masterdata to md_prepared",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/curated_records_prep.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.format",
-            "endpoint": "colrev.ops.built_in.prep.format_prep.FormatPrep",
-            "short_description": "Prepares records by formatting fields",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/format_prep.py>`_"
-        },
-        {
             "package_endpoint_identifier": "colrev_built_in.resolve_crossrefs",
             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
             "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings)",
@@ -433,34 +421,10 @@
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_record_from_local_index",
+            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_local_index",
             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
             "short_description": "Prepares records based on LocalIndex metadata",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.remove_nicknames",
-            "endpoint": "colrev.ops.built_in.prep.remove_nicknames.RemoveNicknamesPrep",
-            "short_description": "Prepares records by removing author nicknames",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/remove_nicknames.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.format_minor",
-            "endpoint": "colrev.ops.built_in.prep.format_minor_prep.FormatMinorPrep",
-            "short_description": "Prepares records by applying minor formatting changes",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/format_minor_prep.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.drop_fields",
-            "endpoint": "colrev.ops.built_in.prep.drop_fields_prep.DropFieldsPrep",
-            "short_description": "Prepares records by dropping fields that are not needed",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/drop_fields_prep.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.remove_redundant_fields",
-            "endpoint": "colrev.ops.built_in.prep.remove_redundant_fields.RemoveRedundantFieldPrep",
-            "short_description": "Prepares records by removing redundant fields",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/remove_redundant_fields.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.update_metadata_status",

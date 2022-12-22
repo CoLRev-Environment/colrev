@@ -623,6 +623,15 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for DBLP"""
 
+        if "UNKNOWN" != record.data.get("author", "UNKNOWN"):
+            # DBLP appends identifiers to non-unique authors
+            record.update_field(
+                key="author",
+                value=str(re.sub(r"[0-9]{4}", "", record.data["author"])),
+                source="dblp",
+                keep_source_if_equal=True,
+            )
+
         return record
 
     def get_masterdata(
@@ -637,6 +646,11 @@ class DBLPSearchSource(JsonSchemaMixin):
         same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
+
+        # if there is a dblp_key in the record already, we may use the data from
+        # https://dblp.org/rec/journals/cais/WagnerPS21.xml
+        # ie., simply append ".xml" to the dblp_key field
+        # instead of searching for the publication
 
         try:
             query = "" + record.data.get("title", "").replace("-", "_")

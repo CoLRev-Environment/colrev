@@ -47,7 +47,7 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
 
         # pylint: disable=invalid-name
         EuropePMCSearchSource = europe_pmc_connector.EuropePMCSearchSource(
-            source_operation=prep_operation, settings={"query": "NA"}
+            source_operation=prep_operation
         )
         EuropePMCSearchSource.get_masterdata(
             prep_operation=prep_operation, record=record

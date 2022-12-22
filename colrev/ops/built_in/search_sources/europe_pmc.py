@@ -6,6 +6,7 @@ import json
 import typing
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
@@ -40,13 +41,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     """SearchSource for Europe PMC"""
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = (
-        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/{{europe_pmc_id}}"
-    )
+    source_identifier = "europe_pmc_id"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
     link = "https://europepmc.org/"
+    __europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
 
     @dataclass
     class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
@@ -74,10 +74,36 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict,
+        settings: dict = None,
     ) -> None:
 
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        if settings:
+            # EuropePMC as a search_source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            # EuropePMC as an md-prep source
+            europe_pmc_md_source_l = [
+                s
+                for s in source_operation.review_manager.settings.sources
+                if s.filename == self.__europe_pmc_md_filename
+            ]
+            if europe_pmc_md_source_l:
+                self.search_source = europe_pmc_md_source_l[0]
+            else:
+                self.search_source = colrev.settings.SearchSource(
+                    endpoint="colrev_built_in.europe_pmc",
+                    filename=self.__europe_pmc_md_filename,
+                    search_type=colrev.settings.SearchType.OTHER,
+                    search_parameters={},
+                    load_conversion_package_endpoint={
+                        "endpoint": "colrev_built_in.bibtex"
+                    },
+                    comment="",
+                )
+
+            self.europe_pmc_lock = Lock()
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -221,7 +247,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             session = review_manager.get_cached_session()
 
             while url != "END":
-                review_manager.logger.info(url)
+                review_manager.logger.debug(url)
                 ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
                 if ret.status_code != 200:
@@ -290,22 +316,15 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
+
+        # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
+
         try:
 
             if len(record.data.get("title", "")) > 35:
 
-                retrieved_records = self.europe_pcmc_query(
-                    review_manager=prep_operation.review_manager,
-                    record_input=record,
-                    timeout=timeout,
-                )
-                retrieved_record = retrieved_records.pop()
-
                 retries = 0
-                while (
-                    not retrieved_record
-                    and retries < prep_operation.max_retries_on_error
-                ):
+                while retries < prep_operation.max_retries_on_error:
                     retries += 1
 
                     retrieved_records = self.europe_pcmc_query(
@@ -313,8 +332,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         record_input=record,
                         timeout=timeout,
                     )
-                    retrieved_record = retrieved_records.pop()
+                    if retrieved_records:
+                        retrieved_record = retrieved_records.pop()
+                        break
 
+                if not retrieved_records:
+                    return record
                 if 0 == len(retrieved_record.data):
                     return record
 
@@ -329,23 +352,36 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     #     f"(>{prep_operation.retrieval_similarity})"
                     # )
 
-                    # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
-                    source = (
-                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-                        f"{retrieved_record.data.get('europe_pmc_id', 'NO_ID')}"
+                    self.europe_pmc_lock.acquire(timeout=60)
+
+                    # Note : need to reload file because the object is not shared between processes
+                    europe_pmc_feed = self.search_source.get_feed(
+                        review_manager=prep_operation.review_manager,
+                        source_identifier=self.source_identifier,
+                        update_only=False,
                     )
 
-                    record.merge(merging_record=retrieved_record, default_source=source)
+                    europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                    europe_pmc_feed.add_record(record=retrieved_record)
 
-                else:
-                    # prep_operation.review_manager.logger.debug(
-                    #     f"europe_pmc similarity: {similarity} "
-                    #     f"(<{prep_operation.retrieval_similarity})"
-                    # )
-                    pass
+                    record.merge(
+                        merging_record=retrieved_record,
+                        default_source=retrieved_record.data["colrev_origin"][0],
+                    )
+
+                    record.set_masterdata_complete(
+                        source=retrieved_record.data["colrev_origin"][0]
+                    )
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+
+                    europe_pmc_feed.save_feed_file()
+                    self.europe_pmc_lock.release()
+                    return record
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
-            pass
+            self.europe_pmc_lock.release()
 
         return record
 

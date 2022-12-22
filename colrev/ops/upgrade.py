@@ -870,15 +870,52 @@ class Upgrade(colrev.operation.Operation):
             if "source_identifier" in search_source:
                 del search_source["source_identifier"]
 
-        for prep_round in settings["prep"]["prep_rounds"]:
-            # Note : moved to unknown_source prep
-            prep_round["prep_package_endpoints"] = [
-                s
-                for s in prep_round["prep_package_endpoints"]
-                if s["endpoint"]
-                not in [
-                    "colrev_built_in.correct_recordtype",
-                ]
+        if "curated_metadata" in str(self.review_manager.path):
+            settings["prep"]["prep_rounds"] = [
+                {
+                    "name": "prep",
+                    "similarity": 0.8,
+                    "prep_package_endpoints": [
+                        {"endpoint": "colrev_built_in.resolve_crossrefs"},
+                        {"endpoint": "colrev_built_in.source_specific_prep"},
+                        {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
+                        {"endpoint": "colrev_built_in.exclude_collections"},
+                        {"endpoint": "colrev_built_in.exclude_complementary_materials"},
+                        {"endpoint": "colrev_built_in.exclude_languages"},
+                        {"endpoint": "colrev_built_in.remove_urls_with_500_errors"},
+                        {"endpoint": "colrev_built_in.remove_broken_ids"},
+                        {"endpoint": "colrev_built_in.global_ids_consistency_check"},
+                        {"endpoint": "colrev_built_in.get_doi_from_urls"},
+                        {"endpoint": "colrev_built_in.get_year_from_vol_iss_jour"},
+                    ],
+                }
+            ]
+        else:
+            settings["prep"]["prep_rounds"] = [
+                {
+                    "name": "prep",
+                    "similarity": 0.8,
+                    "prep_package_endpoints": [
+                        {"endpoint": "colrev_built_in.resolve_crossrefs"},
+                        {"endpoint": "colrev_built_in.source_specific_prep"},
+                        {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
+                        {"endpoint": "colrev_built_in.exclude_collections"},
+                        {"endpoint": "colrev_built_in.exclude_complementary_materials"},
+                        {"endpoint": "colrev_built_in.get_masterdata_from_local_index"},
+                        {"endpoint": "colrev_built_in.exclude_languages"},
+                        {"endpoint": "colrev_built_in.remove_urls_with_500_errors"},
+                        {"endpoint": "colrev_built_in.remove_broken_ids"},
+                        {"endpoint": "colrev_built_in.global_ids_consistency_check"},
+                        {"endpoint": "colrev_built_in.get_doi_from_urls"},
+                        {"endpoint": "colrev_built_in.get_year_from_vol_iss_jour"},
+                        {"endpoint": "colrev_built_in.get_masterdata_from_crossref"},
+                        {"endpoint": "colrev_built_in.get_masterdata_from_europe_pmc"},
+                        {"endpoint": "colrev_built_in.get_masterdata_from_dblp"},
+                        {
+                            "endpoint": "colrev_built_in.get_masterdata_from_open_library"
+                        },
+                    ],
+                }
             ]
 
         with open("settings.json", "w", encoding="utf-8") as outfile:

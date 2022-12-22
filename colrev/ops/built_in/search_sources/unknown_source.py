@@ -2,6 +2,7 @@
 """SearchSource: Unknown source (default for all other sources)"""
 from __future__ import annotations
 
+import re
 import typing
 from dataclasses import dataclass
 from enum import Enum
@@ -11,6 +12,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -39,6 +41,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         "https://github.com/geritwagner/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.py"
     )
+
+    HTML_CLEANER = re.compile("<.*?>")
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -98,6 +102,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Source-specific preparation for unknown sources"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         if not record.has_inconsistent_fields() or record.masterdata_is_curated():
             return record
@@ -118,6 +123,38 @@ class UnknownSearchSource(JsonSchemaMixin):
                 and "title" in record.data
             ):
                 record.rename_field(key="title", new_key="chapter")
+
+        if "UNKNOWN" != record.data.get("author", "UNKNOWN"):
+
+            # fix name format
+            if (1 == len(record.data["author"].split(" ")[0])) or (
+                ", " not in record.data["author"]
+            ):
+                record.update_field(
+                    key="author",
+                    value=colrev.record.PrepRecord.format_author_field(
+                        input_string=record.data["author"]
+                    ),
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+
+        if "UNKNOWN" != record.data.get("title", "UNKNOWN"):
+            record.format_if_mostly_upper(key="title")
+
+        if "date" in record.data and "year" not in record.data:
+            year = re.search(r"\d{4}", record.data["date"])
+            if year:
+                record.update_field(
+                    key="year",
+                    value=year.group(0),
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+
+        if "UNKNOWN" != record.data.get("journal", "UNKNOWN"):
+            if len(record.data["journal"]) > 10 and "UNKNOWN" != record.data["journal"]:
+                record.format_if_mostly_upper(key="journal", case="title")
 
         # Prepare the record by heuristically correcting erroneous ENTRYTYPEs
         padding = 40
@@ -191,6 +228,108 @@ class UnknownSearchSource(JsonSchemaMixin):
                         key="journal", value=journal_string, source="unkown_source_prep"
                     )
                     record.remove_field(key="series")
+
+        if "booktitle" in record.data and "UNKNOWN" != record.data.get(
+            "booktitle", "UNKNOWN"
+        ):
+            if (
+                "UNKNOWN" != record.data["booktitle"]
+                and "inbook" != record.data["ENTRYTYPE"]
+            ):
+                record.format_if_mostly_upper(key="booktitle", case="title")
+
+                stripped_btitle = re.sub(r"\d{4}", "", record.data["booktitle"])
+                stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}nd", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}rd", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}st", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\([A-Z]{3,6}\)", "", stripped_btitle)
+                stripped_btitle = stripped_btitle.replace(
+                    "Proceedings of the", ""
+                ).replace("Proceedings", "")
+                stripped_btitle = stripped_btitle.lstrip().rstrip()
+                record.update_field(
+                    key="booktitle",
+                    value=stripped_btitle,
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+
+        record.unify_pages_field()
+        if (
+            not re.match(r"^\d*$", record.data["pages"])
+            and not re.match(r"^\d*--\d*$", record.data["pages"])
+            and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data["pages"])
+        ):
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}:'.ljust(padding, " ")
+                + f'Unusual pages: {record.data["pages"]}'
+            )
+
+        if "UNKNOWN" != record.data.get("volume", "UNKNOWN"):
+            record.update_field(
+                key="volume",
+                value=record.data["volume"].replace("Volume ", ""),
+                source="unkown_source_prep",
+                keep_source_if_equal=True,
+            )
+
+        if "url" in record.data and "fulltext" in record.data:
+            if record.data["url"] == record.data["fulltext"]:
+                record.remove_field(key="fulltext")
+
+        if "language" in record.data:
+            # gh_issue https://github.com/geritwagner/colrev/issues/64
+            # use https://pypi.org/project/langcodes/
+            record.update_field(
+                key="language",
+                value=record.data["language"]
+                .replace("English", "eng")
+                .replace("ENG", "eng"),
+                source="unkown_source_prep",
+                keep_source_if_equal=True,
+            )
+
+        for field in list(record.data.keys()):
+            # Note : some dois (and their provenance) contain html entities
+            if field in [
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "doi",
+            ]:
+                continue
+            if field in ["author", "title", "journal"]:
+                record.data[field] = re.sub(r"\s+", " ", record.data[field])
+                record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
+
+        if "article" == record.data["ENTRYTYPE"]:
+            if "journal" in record.data and "booktitle" in record.data:
+                if (
+                    fuzz.partial_ratio(
+                        record.data["journal"].lower(), record.data["booktitle"].lower()
+                    )
+                    / 100
+                    > 0.9
+                ):
+                    record.remove_field(key="booktitle")
+        if "inproceedings" == record.data["ENTRYTYPE"]:
+            if "journal" in record.data and "booktitle" in record.data:
+                if (
+                    fuzz.partial_ratio(
+                        record.data["journal"].lower(), record.data["booktitle"].lower()
+                    )
+                    / 100
+                    > 0.9
+                ):
+                    record.remove_field(key="journal")
+
+        if record.data.get("publisher", "") in ["researchgate.net"]:
+            record.remove_field(key="publisher")
+
+        # Replace nicknames in parentheses
+        if "author" in record.data:
+            record.data["author"] = re.sub(r"\([^)]*\)", "", record.data["author"])
+            record.data["author"] = record.data["author"].replace("  ", " ").rstrip()
 
         return record
 

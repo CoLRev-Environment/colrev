@@ -227,6 +227,16 @@ class NotTOCIdentifiableException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotInTOCException(CoLRevException):
+    """The record is not part of the table-of-contents (TOC)."""
+
+    def __init__(self, record_id: str, toc_key: str) -> None:
+        self.record_id = record_id
+        self.toc_key = toc_key
+        self.message = f"{record_id} not part of toc: {toc_key}"
+        super().__init__(self.message)
+
+
 class PropagatedIDChange(CoLRevException):
     """Changes in propagated records ID detected."""
 

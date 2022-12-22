@@ -38,6 +38,7 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
 
    .. autosummary::
 
+      ~UnknownSearchSource.HTML_CLEANER
       ~UnknownSearchSource.heuristic_status
       ~UnknownSearchSource.link
       ~UnknownSearchSource.search_type
