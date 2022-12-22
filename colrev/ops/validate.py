@@ -59,10 +59,9 @@ class Validate(colrev.operation.Operation):
         return {}
 
     def validate_preparation_changes(
-        self, *, records: list[dict], target_commit: str
+        self, *, records: list[dict], prior_records_dict: dict
     ) -> list:
         """Validate preparation changes"""
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
         self.review_manager.logger.debug("Calculating preparation differences...")
         change_diff = []
@@ -385,6 +384,15 @@ class Validate(colrev.operation.Operation):
         assert re.match(r"[0-9a-f]{5,40}", commit)
         return commit
 
+    def __deduplicated_records(
+        self, *, records: list[dict], prior_records_dict: dict
+    ) -> bool:
+
+        return {",".join(sorted(x)) for x in [r["colrev_origin"] for r in records]} != {
+            ",".join(sorted(x))
+            for x in [r["colrev_origin"] for r in prior_records_dict.values()]
+        }
+
     def main(
         self,
         *,
@@ -405,6 +413,7 @@ class Validate(colrev.operation.Operation):
 
         # extension: filter_setting for changes of contributor (git author)
         records = self.load_changed_records(target_commit=target_commit)
+        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
         if target_commit == "" and "all" == filter_setting:
             filter_setting = self.__set_scope_based_on_target_commit(
@@ -414,13 +423,15 @@ class Validate(colrev.operation.Operation):
         validation_details = []
         if filter_setting in ["prepare", "all"]:
             validation_details += self.validate_preparation_changes(
-                records=records, target_commit=target_commit
+                records=records, prior_records_dict=prior_records_dict
             )
-
         if filter_setting in ["dedupe", "all"]:
-            validation_details += self.validate_dedupe_changes(
-                records=records, target_commit=target_commit
-            )
+            if self.__deduplicated_records(
+                records=records, prior_records_dict=prior_records_dict
+            ):
+                validation_details += self.validate_dedupe_changes(
+                    records=records, target_commit=target_commit
+                )
 
         if filter_setting == "merge":
             validation_details += self.validate_merge_changes()
