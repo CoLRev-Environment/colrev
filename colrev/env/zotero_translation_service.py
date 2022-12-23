@@ -21,8 +21,22 @@ class ZoteroTranslationService:
 
         self.image_name = "zotero/translation-server:2.0.4"
         environment_manager.build_docker_image(imagename=self.image_name)
+
+        self.__stop_zotero_if_running()
         if not self.zotero_service_available():
             environment_manager.register_ports(ports=["1969"])
+
+    def __stop_zotero_if_running(self) -> None:
+        # Note : the zotero docker service needs to be restarted every time...
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if self.image_name in str(container.image):
+                    container.stop()
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Docker service not available ({exc}). Please install/start Docker."
+            ) from exc
 
     def start_zotero_translators(
         self, *, startup_without_waiting: bool = False
