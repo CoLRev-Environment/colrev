@@ -488,6 +488,18 @@ class PackageManager:
         settings_class = getattr(package_class, "settings_class", None)
         package_details = dict(settings_class.json_schema())  # type: ignore
 
+        # To address cases of inheritance, see:
+        # https://stackoverflow.com/questions/22689900/
+        # json-schema-allof-with-additionalproperties
+        if "allOf" in package_details:
+            selection = {}
+            for candidate in package_details["allOf"]:
+                selection = candidate
+                # prefer the one with properties
+                if "properties" in candidate:
+                    break
+            package_details = selection
+
         if settings_class is None:
             msg = f"{package_identifier} could not be loaded"
             raise colrev_exceptions.ServiceNotAvailableException(msg)
