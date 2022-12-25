@@ -22,8 +22,42 @@ class RepoSetupError(CoLRevException):
     The project files are not properly set up as a CoLRev project.
     """
 
-    def __init__(self, msg: str) -> None:
-        self.message = f" {msg}"
+    lr_docs = (
+        "https://github.com/geritwagner/colrev/blob/main/"
+        + "docs/source/user_resources/2_1_problem_formulation.rst"
+    )
+
+    def __init__(self, msg: str = None) -> None:
+        if not msg:
+            self.message = (
+                f"Not a CoLRev repository. To initialize, run:\n\n"
+                f"   {colors.ORANGE}colrev init --type literature_review{colors.END}\n\n"
+                f"Instead of {colors.ORANGE}literature_review{colors.END},"
+                " you can use any of the following REVIEW_TYPE:\n\n"
+                f"  - {colors.ORANGE}narrative_review{colors.END}              : "
+                "includes a manuscript\n"
+                f"  - {colors.ORANGE}scoping_review{colors.END}                : "
+                "includes a manuscript, and a prisma diagram\n"
+                f"  - {colors.ORANGE}descriptive_review{colors.END}            : "
+                "includes a manuscript, and a prisma diagram\n"
+                f"  - {colors.ORANGE}critical_review{colors.END}               : "
+                "includes a manuscript, and a prisma diagram\n"
+                f"  - {colors.ORANGE}theoretical_review{colors.END}            : "
+                "includes a manuscript\n"
+                f"  - {colors.ORANGE}conceptual_review{colors.END}             : "
+                "includes a manuscript\n"
+                f"  - {colors.ORANGE}qualitative_systematic_review{colors.END} : "
+                "includes a manuscript, data extraction tables, and a prisma diagram\n"
+                f"  - {colors.ORANGE}meta_analysis{colors.END}                 : "
+                "includes a manuscript, data extraction tables, and a prisma diagram\n"
+                f"  - {colors.ORANGE}scientometric{colors.END}                 : "
+                "includes a manuscript\n"
+                "\nMore details about the differences between REVIEW_TYPEs, e.g., in the "
+                f"synthesis steps, are available at\n{self.lr_docs}"
+            )
+        else:
+            self.message = f" {msg}"
+
         super().__init__(self.message)
 
 

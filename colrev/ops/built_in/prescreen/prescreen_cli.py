@@ -82,7 +82,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
             while ret not in ["y", "n", "s", "q"]:
                 ret = input(
                     f"({i}/{stat_len}) Include this record "
-                    "[enter y,n,q,s for yes,no,quit,skip]? "
+                    "[enter y,n,q,s for yes,no,quit,skip/prescreen later]? "
                 )
                 if "q" == ret:
                     quit_pressed = True
