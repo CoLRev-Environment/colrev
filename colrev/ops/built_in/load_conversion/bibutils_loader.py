@@ -63,7 +63,9 @@ class BibutilsLoader(JsonSchemaMixin):
 
             try:
                 client = docker.APIClient()
-                container = client.create_container("bibutils", script, stdin_open=True)
+                container = client.create_container(
+                    "colrev/bibutils", script, stdin_open=True
+                )
             except docker.errors.ImageNotFound as exc:
                 raise colrev_exceptions.ImportException(
                     "Docker images for bibutils not found"
