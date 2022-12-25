@@ -90,6 +90,8 @@ class Dedupe(colrev.operation.Operation):
     def prep_records(self, *, records_df: pd.DataFrame) -> dict:
         """Prepare records for dedupe"""
 
+        assert records_df.shape(0) > 0
+
         required_fields = [
             "journal",
             "journal",

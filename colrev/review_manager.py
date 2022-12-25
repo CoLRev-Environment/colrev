@@ -440,6 +440,7 @@ class ReviewManager:
         review_type: str,
         example: bool = False,
         local_pdf_collection: bool = False,
+        target_path: Path = None,
     ) -> colrev.ops.init.Initializer:
         """Get an init operation object"""
         import colrev.ops.init
@@ -448,6 +449,7 @@ class ReviewManager:
             review_type=review_type,
             example=example,
             local_pdf_collection=local_pdf_collection,
+            target_path=target_path,
         )
 
     @classmethod
