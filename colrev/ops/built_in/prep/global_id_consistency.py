@@ -32,6 +32,8 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
+    __fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
+
     def __init__(
         self,
         *,
@@ -40,9 +42,88 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
+        self.url_connector = website_connector.WebsiteConnector(
+            source_operation=prep_operation
+        )
+        self.prep_operation = prep_operation
+
+    def __validate_against_doi_metadata(self, *, record: colrev.record.Record) -> None:
+
+        if "doi" not in record.data:
+            return
+        if "md_curated.bib" in record.data["colrev_data_provenance"]["doi"]["source"]:
+            return
+
+        record_copy = record.copy_prep_rec()
+
+        crossref_search_source = crossref_connector.CrossrefSearchSource(
+            source_operation=self.prep_operation
+        )
+        crossref_md = crossref_search_source.get_masterdata(
+            prep_operation=self.prep_operation, record=record_copy, safe_feed=False
+        )
+        for key, value in crossref_md.data.items():
+            if key not in self.__fields_to_check:
+                continue
+            if not isinstance(value, str):
+                continue
+            if key in record.data:
+                if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
+                    continue
+                if (
+                    fuzz.partial_ratio(
+                        record.data[key].lower(), crossref_md.data[key].lower()
+                    )
+                    < 70
+                ):
+                    record.data[
+                        "colrev_status"
+                    ] = colrev.record.RecordState.md_needs_manual_preparation
+                    record.add_masterdata_provenance_note(
+                        key=key, note=f"disagreement with doi metadata ({value})"
+                    )
+
+    def __validate_against_url_metadata(self, *, record: colrev.record.Record) -> None:
+        if "url" not in record.data:
+            return
+
+        if "md_curated.bib" in record.data["colrev_data_provenance"]["url"]["source"]:
+            return
+
+        try:
+            url_record = record.copy_prep_rec()
+            self.url_connector.retrieve_md_from_website(
+                record=url_record, prep_operation=self.prep_operation
+            )
+            for key, value in url_record.data.items():
+                if key not in self.__fields_to_check:
+                    continue
+                if not isinstance(value, str):
+                    continue
+                if key in record.data:
+                    if len(url_record.data[key]) < 5 or len(record.data[key]) < 5:
+                        continue
+                    if (
+                        fuzz.partial_ratio(
+                            record.data[key].lower(), url_record.data[key].lower()
+                        )
+                        < 70
+                    ):
+                        record.data[
+                            "colrev_status"
+                        ] = colrev.record.RecordState.md_needs_manual_preparation
+                        record.add_masterdata_provenance_note(
+                            key=key,
+                            note=f"disagreement with website metadata ({value})",
+                        )
+        except AttributeError:
+            pass
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare records by removing IDs (DOIs/URLs) that do not match with the metadata
 
@@ -51,68 +132,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
 
-        fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
+        self.__validate_against_doi_metadata(record=record)
 
-        if "doi" in record.data:
-            record_copy = record.copy_prep_rec()
-
-            crossref_search_source = crossref_connector.CrossrefSearchSource(
-                source_operation=prep_operation
-            )
-            crossref_md = crossref_search_source.get_masterdata(
-                prep_operation=prep_operation, record=record_copy, safe_feed=False
-            )
-            for key, value in crossref_md.data.items():
-                if key not in fields_to_check:
-                    continue
-                if not isinstance(value, str):
-                    continue
-                if key in record.data:
-                    if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
-                        continue
-                    if (
-                        fuzz.partial_ratio(
-                            record.data[key].lower(), crossref_md.data[key].lower()
-                        )
-                        < 70
-                    ):
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
-                        record.add_masterdata_provenance_note(
-                            key=key, note=f"disagreement with doi metadata ({value})"
-                        )
-
-        if "url" in record.data:
-            try:
-                url_connector = website_connector.WebsiteConnector()
-                url_record = record.copy_prep_rec()
-                url_connector.retrieve_md_from_website(
-                    record=url_record, prep_operation=prep_operation
-                )
-                for key, value in url_record.data.items():
-                    if key not in fields_to_check:
-                        continue
-                    if not isinstance(value, str):
-                        continue
-                    if key in record.data:
-                        if len(url_record.data[key]) < 5 or len(record.data[key]) < 5:
-                            continue
-                        if (
-                            fuzz.partial_ratio(
-                                record.data[key].lower(), url_record.data[key].lower()
-                            )
-                            < 70
-                        ):
-                            record.data[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_needs_manual_preparation
-                            record.add_masterdata_provenance_note(
-                                key=key,
-                                note=f"disagreement with website metadata ({value})",
-                            )
-            except AttributeError:
-                pass
+        self.__validate_against_url_metadata(record=record)
 
         return record
 

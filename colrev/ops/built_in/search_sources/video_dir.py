@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
+from multiprocessing import Lock
 from pathlib import Path
 
 import zope.interface
@@ -27,6 +28,8 @@ import colrev.ui_cli.cli_colors as colors
 @dataclass
 class VideoDirSearchSource(JsonSchemaMixin):
     """SearchSource for directory containing video files"""
+
+    # pylint: disable=too-many-instance-attributes
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "file"
@@ -55,6 +58,10 @@ class VideoDirSearchSource(JsonSchemaMixin):
         )
         self.review_manager = source_operation.review_manager
         self.prep_operation = self.review_manager.get_prep_operation()
+        self.url_connector = website_connector.WebsiteConnector(
+            source_operation=self.prep_operation
+        )
+        self.zotero_lock = Lock()
 
     def validate_source(
         self,
@@ -144,9 +151,9 @@ class VideoDirSearchSource(JsonSchemaMixin):
         """Source-specific preparation for video directories"""
 
         if "url" in record.data:
-            url_connector = website_connector.WebsiteConnector()
+            self.zotero_lock = Lock()
             url_record = record.copy_prep_rec()
-            url_connector.retrieve_md_from_website(
+            self.url_connector.retrieve_md_from_website(
                 record=url_record, prep_operation=self.prep_operation
             )
             if url_record.data.get("author", "") != "":
@@ -157,6 +164,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
                 record.update_field(
                     key="title", value=url_record.data["title"], source="website"
                 )
+            self.zotero_lock.release()
 
         return record
 

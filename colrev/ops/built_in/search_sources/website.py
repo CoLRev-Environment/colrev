@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from multiprocessing import Lock
 from typing import TYPE_CHECKING
 
 import requests
@@ -29,6 +30,14 @@ class WebsiteConnector:
         "https://github.com/geritwagner/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/website.py"
     )
+
+    # pylint: disable=unused-argument
+
+    def __init__(
+        self, *, source_operation: colrev.operation.Operation, settings: dict = None
+    ) -> None:
+
+        self.zotero_lock = Lock()
 
     @classmethod
     def __update_record(
@@ -94,11 +103,12 @@ class WebsiteConnector:
                 keywords = ", ".join([k["tag"] for k in item["tags"]])
                 record.data["keywords"] = keywords
 
-    @classmethod
     def retrieve_md_from_website(
-        cls, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
+        self, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
     ) -> None:
         """Retrieve the metadata the associated website (url) based on Zotero"""
+
+        self.zotero_lock.acquire(timeout=60)
 
         zotero_translation_service = (
             prep_operation.review_manager.get_zotero_translation_service()
@@ -120,16 +130,21 @@ class WebsiteConnector:
             )
 
             if export.status_code != 200:
+                self.zotero_lock.release()
                 return
 
             items = json.loads(export.content.decode())
             if len(items) == 0:
+                self.zotero_lock.release()
                 return
             item = items[0]
             if "Shibboleth Authentication Request" == item["title"]:
+                self.zotero_lock.release()
                 return
 
-            cls.__update_record(prep_operation=prep_operation, record=record, item=item)
+            self.__update_record(
+                prep_operation=prep_operation, record=record, item=item
+            )
 
         except (
             json.decoder.JSONDecodeError,
@@ -138,6 +153,8 @@ class WebsiteConnector:
             KeyError,
         ):
             pass
+
+        self.zotero_lock.release()
 
 
 if __name__ == "__main__":

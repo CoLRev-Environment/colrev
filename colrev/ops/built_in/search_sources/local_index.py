@@ -599,7 +599,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             )
             return record_dict
         except colrev_exceptions.RecordNotInRepoException:
-            print(f"record not found: {original_record['colrev_id']}")
 
             matching_doi_rec_l = [
                 r
