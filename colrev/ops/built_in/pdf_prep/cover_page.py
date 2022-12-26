@@ -69,7 +69,7 @@ class PDFCoverPage(JsonSchemaMixin):
             except ValueError:
                 return coverpages
 
-            if pdf_reader.getNumPages() == 1:
+            if len(pdf_reader.pages) == 1:
                 return coverpages
 
             pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()

@@ -68,7 +68,7 @@ class PDFLastPage(JsonSchemaMixin):
             except ValueError:
                 return last_pages
 
-            last_page_nr = pdf_reader.getNumPages()
+            last_page_nr = len(pdf_reader.pages)
 
             pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
 

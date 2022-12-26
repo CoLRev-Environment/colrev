@@ -253,7 +253,7 @@ class PDFPrepMan(colrev.operation.Operation):
             writer_cp = PdfFileWriter()
             writer_cp.addPage(pdf_reader.getPage(0))
             writer = PdfFileWriter()
-            for i in range(1, pdf_reader.getNumPages()):
+            for i in range(1, len(pdf_reader.pages)):
                 writer.addPage(pdf_reader.getPage(i))
             with open(filepath, "wb") as outfile:
                 writer.write(outfile)
@@ -272,9 +272,9 @@ class PDFPrepMan(colrev.operation.Operation):
         try:
             pdf_reader = PdfFileReader(str(filepath), strict=False)
             writer_lp = PdfFileWriter()
-            writer_lp.addPage(pdf_reader.getPage(pdf_reader.getNumPages() - 1))
+            writer_lp.addPage(pdf_reader.getPage(len(pdf_reader.pages) - 1))
             writer = PdfFileWriter()
-            for i in range(0, pdf_reader.getNumPages() - 1):
+            for i in range(0, len(pdf_reader.pages) - 1):
                 writer.addPage(pdf_reader.getPage(i))
             with open(filepath, "wb") as outfile:
                 writer.write(outfile)
@@ -290,7 +290,7 @@ class PDFPrepMan(colrev.operation.Operation):
             pdf_reader = PdfFileReader(str(filepath), strict=False)
             pages_to_add = [
                 x
-                for x in list(range(0, pdf_reader.getNumPages()))
+                for x in list(range(0, len(pdf_reader.pages)))
                 if x not in pages_to_remove
             ]
             writer = PdfFileWriter()
