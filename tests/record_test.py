@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import colrev.review_manager
 
 
 def test_add_colrev_ids() -> None:
@@ -97,32 +98,6 @@ def test_defects() -> None:
     R1 = colrev.record.Record(data=v1)
     assert set(R1.get_quality_defects()) == {"title", "author"}
     assert R1.has_quality_defects()
-    review_manager = colrev.review_manager.ReviewManager()
-    R1.import_provenance(review_manager=review_manager)
-    assert R1.data == {
-        "ENTRYTYPE": "article",
-        "ID": "R1",
-        "author": "RAI",
-        "journal": "MIS Quarterly",
-        "number": "1",
-        "pages": "1--3",
-        "title": "EDITORIAL",
-        "volume": "45",
-        "year": "2020",
-        "colrev_data_provenance": {"url": {"note": "", "source": "orig1"}},
-        "colrev_masterdata_provenance": {
-            "author": {"note": "quality_defect", "source": "orig1"},
-            "journal": {"note": "", "source": "orig1"},
-            "number": {"note": "", "source": "orig1"},
-            "pages": {"note": "", "source": "orig1"},
-            "title": {"note": "quality_defect", "source": "orig1"},
-            "volume": {"note": "", "source": "orig1"},
-            "year": {"note": "", "source": "orig1"},
-        },
-        "colrev_origin": "orig1",
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "url": "www.test.com",
-    }
 
 
 def test_merge() -> None:
@@ -238,7 +213,7 @@ def test_parse_bib() -> None:
                 "volume": {"source": "source-1", "note": ""}
             },
             "colrev_status": colrev.record.RecordState.md_prepared,
-            "colrev_origin": "orig1",
+            "colrev_origin": ["orig1"],
             "title": "EDITORIAL",
             "author": "Rai, Arun",
             "journal": "MIS Quarterly",
