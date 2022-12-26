@@ -47,7 +47,7 @@ def test_init(tmp_path: Path) -> None:
 
     review_manager = colrev.review_manager.ReviewManager()
     prescreen_operation = review_manager.get_prescreen_operation()
-    prescreen_operation.include_all_in_prescreen()
+    prescreen_operation.include_all_in_prescreen(persist=False)
 
     review_manager = colrev.review_manager.ReviewManager()
     pdf_get_operation = review_manager.get_pdf_get_operation(
@@ -69,7 +69,7 @@ def test_init(tmp_path: Path) -> None:
 
     review_manager = colrev.review_manager.ReviewManager()
     screen_operation = review_manager.get_screen_operation()
-    screen_operation.include_all_in_screen()
+    screen_operation.include_all_in_screen(persist=False)
 
     review_manager = colrev.review_manager.ReviewManager()
     data_operation = review_manager.get_data_operation()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import os
 import shutil
 from pathlib import Path
@@ -31,6 +30,8 @@ def datadir(tmp_path: Path, request) -> Path:  # type: ignore
 
 def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
     # use the directory tmp_path
+
+    os.chdir(tmp_path)
 
     input_records_path = datadir / Path("input_records.bib")
     expected_records_path = datadir / Path("expected_records.bib")
