@@ -79,7 +79,7 @@ class ExportManPrep(JsonSchemaMixin):
 
                 if "copy_first_page" == self.settings.pdf_handling_mode:
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
-                    if pdf_reader.getNumPages() >= 1:
+                    if len(pdf_reader.pages) >= 1:
 
                         writer = PdfFileWriter()
                         writer.addPage(pdf_reader.getPage(0))

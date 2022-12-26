@@ -1218,7 +1218,7 @@ def __print_pdf_hashes(
         pdf_reader = PdfFileReader(str(pdf_hash), strict=False)
     except ValueError:
         return
-    last_page_nr = pdf_reader.getNumPages()
+    last_page_nr = len(pdf_reader.pages)
     last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
         pdf_path=Path(pdf_hash),
         page_nr=last_page_nr,

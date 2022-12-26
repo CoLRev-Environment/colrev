@@ -1680,7 +1680,7 @@ class Record:
         pdf_path = project_path / Path(self.data["file"])
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)
         writer = PdfFileWriter()
-        for i in range(0, pdf_reader.getNumPages()):
+        for i in range(0, len(pdf_reader.pages)):
             if i in pages:
                 continue
             writer.addPage(pdf_reader.getPage(i))
