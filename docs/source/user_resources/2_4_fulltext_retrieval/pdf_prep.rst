@@ -3,6 +3,8 @@
 colrev pdf-prep
 ==================================
 
+TODO : mention keep_backup_of_pdfs
+
 :program:`colrev pdf-prep` prepares PDFs for the screen and analysis as follows:
 
 - Check whether the PDF is machine readable and apply OCR if necessary

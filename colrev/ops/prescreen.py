@@ -55,8 +55,12 @@ class Prescreen(colrev.operation.Operation):
             import_table_path=import_table_path,
         )
 
-    def include_all_in_prescreen(self) -> None:
+    def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
+
+        if persist:
+            self.review_manager.settings.prescreen.prescreen_package_endpoints = []
+            self.review_manager.save_settings()
 
         endpoint = (
             colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
@@ -177,6 +181,7 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def __prescreen_include_all(self, *, records: dict) -> None:
+        # pylint: disable=duplicate-code
         self.review_manager.logger.info("Prescreen-including all records")
         for record in records.values():
             if record["colrev_status"] == colrev.record.RecordState.md_processed:

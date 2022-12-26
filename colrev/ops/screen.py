@@ -27,10 +27,12 @@ class Screen(colrev.operation.Operation):
 
         self.verbose = True
 
-    def include_all_in_screen(
-        self,
-    ) -> None:
+    def include_all_in_screen(self, *, persist: bool) -> None:
         """Include all records in the screen"""
+
+        if persist:
+            self.review_manager.settings.screen.screen_package_endpoints = []
+            self.review_manager.save_settings()
 
         records = self.review_manager.dataset.load_records_dict()
 

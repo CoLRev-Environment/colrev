@@ -241,7 +241,7 @@ class Service:
 
             self.logger.info("Running %s", item["name"])
             prescreen_operation = self.review_manager.get_prescreen_operation()
-            prescreen_operation.include_all_in_prescreen()
+            prescreen_operation.include_all_in_prescreen(persist=False)
 
         elif "colrev pdf-get" == item["cmd"]:
 
@@ -265,7 +265,7 @@ class Service:
 
             self.logger.info("Running %s", item["name"])
             screen_operation = self.review_manager.get_screen_operation()
-            screen_operation.include_all_in_screen()
+            screen_operation.include_all_in_screen(persist=False)
 
         elif "colrev data" == item["cmd"]:
 
