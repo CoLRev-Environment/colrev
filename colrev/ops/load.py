@@ -133,7 +133,7 @@ class Load(colrev.operation.Operation):
                         )
                         filepath.rename(new_filename)
                         self.review_manager.dataset.add_changes(
-                            path=filepath, remove=True
+                            path=new_filename, remove=True
                         )
                         filepath = new_filename
                         res["filename"] = filepath
@@ -275,7 +275,11 @@ class Load(colrev.operation.Operation):
                     )
 
                 while True:
-                    selection = input("select nr")
+                    if skip_query:
+                        # Use the last / unknown_source
+                        selection = str(len(heuristic_result_list))
+                    else:
+                        selection = input("select nr")
                     if not selection.isdigit():
                         continue
                     if int(selection) in range(1, len(heuristic_result_list) + 1):

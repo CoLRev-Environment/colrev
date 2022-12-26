@@ -155,6 +155,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         works = Works(etiquette=self.etiquette)
         crossref_query_return = works.doi(doi)
+        if not crossref_query_return:
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException()
         retrieved_record_dict = connector_utils.json_to_record(
             item=crossref_query_return
         )
@@ -329,6 +331,131 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record_list
 
+    def __get_masterdata_record(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        timeout: int,
+        safe_feed: bool,
+    ) -> colrev.record.Record:
+
+        try:
+
+            retrieved_records = self.crossref_query(
+                review_manager=self.review_manager,
+                record_input=record,
+                jour_vol_iss_list=False,
+                timeout=timeout,
+            )
+            retrieved_record = retrieved_records.pop()
+
+            retries = 0
+            while (
+                not retrieved_record and retries < prep_operation.max_retries_on_error
+            ):
+                retries += 1
+
+                retrieved_records = self.crossref_query(
+                    review_manager=self.review_manager,
+                    record_input=record,
+                    jour_vol_iss_list=False,
+                    timeout=timeout,
+                )
+                retrieved_record = retrieved_records.pop()
+
+            if 0 == len(retrieved_record.data):
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+
+            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                record_original=record, retrieved_record_original=retrieved_record
+            )
+            # prep_operation.review_manager.logger.debug("Found matching record")
+            # prep_operation.review_manager.logger.debug(
+            #     f"crossref similarity: {similarity} "
+            #     f"(>{prep_operation.retrieval_similarity})"
+            # )
+            self.review_manager.logger.debug(
+                f"crossref similarity: {similarity} "
+                f"(<{prep_operation.retrieval_similarity})"
+            )
+            if similarity < prep_operation.retrieval_similarity:
+                return record
+
+            try:
+                self.crossref_lock.acquire(timeout=60)
+
+                # Note : need to reload file because the object is not shared between processes
+                crossref_feed = self.search_source.get_feed(
+                    review_manager=self.review_manager,
+                    source_identifier=self.source_identifier,
+                    update_only=False,
+                )
+
+                crossref_feed.set_id(record_dict=retrieved_record.data)
+                crossref_feed.add_record(record=retrieved_record)
+
+                record.merge(
+                    merging_record=retrieved_record,
+                    default_source=retrieved_record.data["colrev_origin"][0],
+                )
+
+                if "retracted" in record.data.get("warning", ""):
+                    record.prescreen_exclude(reason="retracted")
+                    record.remove_field(key="warning")
+                else:
+                    doi_connector.DOIConnector.get_link_from_doi(
+                        review_manager=self.review_manager,
+                        record=record,
+                    )
+                    record.set_masterdata_complete(
+                        source=retrieved_record.data["colrev_origin"][0]
+                    )
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                if safe_feed:
+                    crossref_feed.save_feed_file()
+                self.crossref_lock.release()
+                return record
+            except colrev_exceptions.InvalidMerge:
+                self.crossref_lock.release()
+                return record
+
+        except (
+            requests.exceptions.RequestException,
+            OSError,
+            IndexError,
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+        ):
+            pass
+        return record
+
+    def __check_doi_masterdata(
+        self, record: colrev.record.Record
+    ) -> colrev.record.Record:
+
+        try:
+            retrieved_record = self.__query_doi(doi=record.data["doi"])
+            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                record_original=record, retrieved_record_original=retrieved_record
+            )
+            if similarity < 0.8:
+                self.review_manager.logger.error(
+                    f" record with mismatching doi metadata: {record.data['doi']}"
+                )
+                print(record)
+                print(retrieved_record)
+
+        except (
+            requests.exceptions.RequestException,
+            OSError,
+            IndexError,
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+        ):
+            pass
+
+        return record
+
     def get_masterdata(
         self,
         *,
@@ -346,107 +473,16 @@ class CrossrefSearchSource(JsonSchemaMixin):
         if len(record.data.get("title", "")) < 35 and "doi" not in record.data:
             return record
 
-        try:
-            if "doi" in record.data:
-                retrieved_record = self.__query_doi(doi=record.data["doi"])
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=record, retrieved_record_original=retrieved_record
-                )
-                if similarity < 0.8:
-                    self.review_manager.logger.error(
-                        f" record with mismatching doi metadata: {record.data['doi']}"
-                    )
-                    return record
+        if "doi" in record.data:
+            record = self.__check_doi_masterdata(record=record)
 
-            else:
-                retrieved_records = self.crossref_query(
-                    review_manager=prep_operation.review_manager,
-                    record_input=record,
-                    jour_vol_iss_list=False,
-                    timeout=timeout,
-                )
-                retrieved_record = retrieved_records.pop()
-
-                retries = 0
-                while (
-                    not retrieved_record
-                    and retries < prep_operation.max_retries_on_error
-                ):
-                    retries += 1
-
-                    retrieved_records = self.crossref_query(
-                        review_manager=prep_operation.review_manager,
-                        record_input=record,
-                        jour_vol_iss_list=False,
-                        timeout=timeout,
-                    )
-                    retrieved_record = retrieved_records.pop()
-
-                if 0 == len(retrieved_record.data):
-                    raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=record, retrieved_record_original=retrieved_record
-                )
-                # prep_operation.review_manager.logger.debug("Found matching record")
-                # prep_operation.review_manager.logger.debug(
-                #     f"crossref similarity: {similarity} "
-                #     f"(>{prep_operation.retrieval_similarity})"
-                # )
-                prep_operation.review_manager.logger.debug(
-                    f"crossref similarity: {similarity} "
-                    f"(<{prep_operation.retrieval_similarity})"
-                )
-                if similarity < prep_operation.retrieval_similarity:
-                    return record
-
-                try:
-                    self.crossref_lock.acquire(timeout=60)
-
-                    # Note : need to reload file because the object is not shared between processes
-                    crossref_feed = self.search_source.get_feed(
-                        review_manager=prep_operation.review_manager,
-                        source_identifier=self.source_identifier,
-                        update_only=False,
-                    )
-
-                    crossref_feed.set_id(record_dict=retrieved_record.data)
-                    crossref_feed.add_record(record=retrieved_record)
-
-                    record.merge(
-                        merging_record=retrieved_record,
-                        default_source=retrieved_record.data["colrev_origin"][0],
-                    )
-
-                    if "retracted" in record.data.get("warning", ""):
-                        record.prescreen_exclude(reason="retracted")
-                        record.remove_field(key="warning")
-                    else:
-                        doi_connector.DOIConnector.get_link_from_doi(
-                            review_manager=prep_operation.review_manager,
-                            record=record,
-                        )
-                        record.set_masterdata_complete(
-                            source=retrieved_record.data["colrev_origin"][0]
-                        )
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_prepared
-                        )
-                    if safe_feed:
-                        crossref_feed.save_feed_file()
-                    self.crossref_lock.release()
-                    return record
-                except colrev_exceptions.InvalidMerge:
-                    self.crossref_lock.release()
-                    return record
-
-        except (
-            requests.exceptions.RequestException,
-            OSError,
-            IndexError,
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-        ):
-            pass
+        else:
+            record = self.__get_masterdata_record(
+                prep_operation=prep_operation,
+                record=record,
+                timeout=timeout,
+                safe_feed=safe_feed,
+            )
 
         return record
 
@@ -536,7 +572,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for feed_record_dict in crossref_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
 
-            retrieved_record = self.__query_doi(doi=feed_record_dict["doi"])
+            try:
+                retrieved_record = self.__query_doi(doi=feed_record_dict["doi"])
+            except colrev_exceptions.RecordNotFoundInPrepSourceException:
+                continue
 
             if retrieved_record.data["doi"] != feed_record.data["doi"]:
                 continue

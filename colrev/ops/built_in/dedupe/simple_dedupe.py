@@ -335,6 +335,10 @@ class SimpleDedupe(JsonSchemaMixin):
         # additional record is compared to/merged with all prior records in
         # the queue)
 
+        if not dedupe_data["queue"]:
+            dedupe_operation.review_manager.logger.error("No records to dedupe")
+            return
+
         batch_data = self.__get_record_batch(
             dedupe_operation=dedupe_operation, dedupe_data=dedupe_data
         )

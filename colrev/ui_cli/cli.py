@@ -256,6 +256,23 @@ def retrieve(
         )
         review_manager.get_local_index(startup_without_waiting=True)
 
+        if not any(review_manager.search_dir.iterdir()) and not any(
+            review_manager.pdf_dir.iterdir()
+        ):
+            # Note : API-based searches automatically retrieve files
+            # when they are added, i.e., the following message should
+            # not be shown.
+            print(
+                "To retrieve search results,\n"
+                " - move files (*.bib, *.ris, *.xlsx, ...) "
+                f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
+                f" - move PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
+                " - add an API-based search, as described in the documentation:\n"
+                "https://github.com/geritwagner/colrev/blob/main/"
+                "docs/source/user_resources/2_2_metadata_retrieval/search.rst"
+            )
+            return
+
         search_operation = review_manager.get_search_operation()
         search_operation.main(update_only=False)
 

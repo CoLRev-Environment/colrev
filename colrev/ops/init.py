@@ -38,6 +38,7 @@ class Initializer:
         review_type: str,
         example: bool = False,
         local_pdf_collection: bool = False,
+        target_path: Path = None,
     ) -> None:
 
         if review_type is None:
@@ -53,8 +54,11 @@ class Initializer:
         if "." not in self.review_type:
             self.review_type = "colrev_built_in." + self.review_type
 
+        if target_path:
+            os.chdir(target_path)
+
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=True, navigate_to_home_dir=False
+            path_str=str(target_path), force_mode=True, navigate_to_home_dir=False
         )
 
         try:

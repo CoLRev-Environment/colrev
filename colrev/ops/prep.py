@@ -7,6 +7,8 @@ import multiprocessing as mp
 import time
 import typing
 from copy import deepcopy
+from datetime import datetime
+from datetime import timedelta
 from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
@@ -123,6 +125,48 @@ class Prep(colrev.operation.Operation):
 
         self.debug_mode = False
         self.pad = 0
+        self.__stats: typing.Dict[str, typing.List[timedelta]] = {}
+
+    def __add_stats(
+        self, *, prep_round_package_endpoint: dict, start_time: datetime
+    ) -> None:
+        if prep_round_package_endpoint["endpoint"] not in self.__stats:
+            self.__stats[prep_round_package_endpoint["endpoint"]] = [
+                datetime.now() - start_time
+            ]
+        else:
+            self.__stats[prep_round_package_endpoint["endpoint"]].append(
+                datetime.now() - start_time
+            )
+
+    def __print_stats(self) -> None:
+        if self.review_manager.verbose_mode:
+            print("Runtime statistics (averages)")
+            averaged_list = [
+                {
+                    "script": script,
+                    "average": sum(deltalist, timedelta(0)) / len(deltalist),
+                }
+                for script, deltalist in self.__stats.items()
+            ]
+            for item in sorted(
+                averaged_list,
+                key=lambda k: k["average"],  # type: ignore
+                reverse=True,
+            ):
+                average_time_str = (
+                    f"{item['average'].seconds}."  # type: ignore
+                    f"{item['average'].microseconds}"  # type: ignore
+                )
+                average_time = float(average_time_str)
+                average_time = round(average_time, 2)
+                average_time_str = f"{average_time:.2f}"
+                print(
+                    f"{item['script']} ".ljust(50, " ")
+                    + ":"
+                    + f"{average_time_str} s".rjust(10, " ")
+                )
+            print()
 
     def __print_diffs_for_debug(
         self,
@@ -200,7 +244,12 @@ class Prep(colrev.operation.Operation):
 
                 prior = preparation_record.copy_prep_rec()
 
+                start_time = datetime.now()
                 preparation_record = endpoint.prepare(self, preparation_record)
+                self.__add_stats(
+                    start_time=start_time,
+                    prep_round_package_endpoint=prep_round_package_endpoint,
+                )
 
                 self.__print_diffs_for_debug(
                     prior=prior,
@@ -219,11 +268,19 @@ class Prep(colrev.operation.Operation):
                     record.update_by_record(update_record=preparation_record)
                     break
             except (timeout_decorator.timeout_decorator.TimeoutError, ReadTimeout):
+                self.__add_stats(
+                    start_time=start_time,
+                    prep_round_package_endpoint=prep_round_package_endpoint,
+                )
                 self.review_manager.logger.error(
                     f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
                 )
             except colrev_exceptions.ServiceNotAvailableException as exc:
                 if self.review_manager.force_mode:
+                    self.__add_stats(
+                        start_time=start_time,
+                        prep_round_package_endpoint=prep_round_package_endpoint,
+                    )
                     self.review_manager.logger.error(exc)
                 else:
                     raise exc
@@ -240,7 +297,7 @@ class Prep(colrev.operation.Operation):
             if record.preparation_break_condition():
                 self.review_manager.logger.info(
                     f" {progress}prescreen_excluded {colors.RED}{record.data['ID']} "
-                    f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} 🚨"
+                    f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
                 )
             elif record.preparation_save_condition():
                 curation_addition = ""
@@ -857,6 +914,8 @@ class Prep(colrev.operation.Operation):
                 )
                 print()
             self.review_manager.reset_report_logger()
+
+            self.__print_stats()
 
         if not keep_ids and not self.debug_mode:
             self.review_manager.dataset.set_ids()

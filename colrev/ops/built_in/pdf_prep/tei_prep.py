@@ -26,6 +26,7 @@ class TEIPDFPrep(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    TEI_PATH_RELATIVE = Path("data/.tei")
 
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
@@ -35,7 +36,8 @@ class TEIPDFPrep(JsonSchemaMixin):
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
         grobid_service.start()
-        Path("data/.tei").mkdir(exist_ok=True)
+        self.tei_path = pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
+        self.tei_path.mkdir(exist_ok=True)
 
     @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(

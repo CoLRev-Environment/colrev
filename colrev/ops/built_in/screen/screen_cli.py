@@ -149,7 +149,10 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
             decision, ret = "NA", "NA"
             while ret not in ["y", "n", "q", "s"]:
-                ret = input(f"({self.__i}/{self.__stat_len}) Include [y,n,q,s]? ")
+                ret = input(
+                    f"({self.__i}/{self.__stat_len}) "
+                    "Include [y,n,q,s for yes, no, quit, skip/screen later]? "
+                )
                 if "q" == ret:
                     quit_pressed = True
                 elif "s" == ret:
