@@ -3,6 +3,9 @@
 colrev pdf-get
 ==================================
 
+TODO : mention pdf_required_for_screen_and_synthesis, rename_pdfs
+
+
 :program:`colrev pdf-get` retrieves PDFs based on
 
 - unpaywall.org
@@ -15,7 +18,7 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
 	colrev pdf-get [options]
 
-Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, set `PDF_PATH_TYPE=COPY` in settings.json.
+Per default, CoLRev creates symlinks (setting `pdf_path_type=symlink`). To copy PDFs to the repository per default, set `pdf_path_type=copy` in settings.json.
 
 .. link to justification of pdf handling (reuse/shared settings)
 .. the use of shared/team PDFs is built in (just clone and index!)

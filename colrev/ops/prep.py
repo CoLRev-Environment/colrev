@@ -25,7 +25,7 @@ import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 
-logging.getLogger("urllib3").setLevel(logging.ERROR)
+# logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 PREP_COUNTER = Value("i", 0)

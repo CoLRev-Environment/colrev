@@ -733,6 +733,12 @@ def dedupe(
     help="Include all records in prescreen",
 )
 @click.option(
+    "--include_all_always",
+    is_flag=True,
+    default=False,
+    help="Include all records in this and future prescreens",
+)
+@click.option(
     "--export_format",
     type=click.Choice(["CSV", "XLSX"], case_sensitive=False),
     help="Export table with the screening decisions",
@@ -791,6 +797,7 @@ def dedupe(
 def prescreen(
     ctx: click.core.Context,
     include_all: bool,
+    include_all_always: bool,
     export_format: str,
     import_table: str,
     create_split: int,
@@ -816,8 +823,8 @@ def prescreen(
         elif import_table:
             prescreen_operation.import_table(import_table_path=import_table)
 
-        elif include_all:
-            prescreen_operation.include_all_in_prescreen()
+        elif include_all or include_all_always:
+            prescreen_operation.include_all_in_prescreen(persist=include_all_always)
 
         elif create_split:
             splits = prescreen_operation.create_prescreen_split(
@@ -851,6 +858,12 @@ def prescreen(
     is_flag=True,
     default=False,
     help="Include all records in the screen",
+)
+@click.option(
+    "--include_all_always",
+    is_flag=True,
+    default=False,
+    help="Include all records in this and future screens",
 )
 @click.option(
     "-ac",
@@ -902,6 +915,7 @@ def prescreen(
 def screen(
     ctx: click.core.Context,
     include_all: bool,
+    include_all_always: bool,
     add_criterion: str,
     delete_criterion: str,
     create_split: int,
@@ -918,8 +932,8 @@ def screen(
         )
         screen_operation = review_manager.get_screen_operation()
 
-        if include_all:
-            screen_operation.include_all_in_screen()
+        if include_all or include_all_always:
+            screen_operation.include_all_in_screen(persist=include_all_always)
             return
         if add_criterion:
             screen_operation.add_criterion(criterion_to_add=add_criterion)

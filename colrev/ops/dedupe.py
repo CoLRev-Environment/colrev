@@ -750,6 +750,19 @@ class Dedupe(colrev.operation.Operation):
 
             endpoint.run_dedupe(self)  # type: ignore
 
+        if not self.review_manager.settings.prescreen.prescreen_package_endpoints:
+            self.review_manager.logger.info("Skipping prescreen/including all records")
+            records = self.review_manager.dataset.load_records_dict()
+            for record in records.values():
+                if colrev.record.RecordState.md_processed == record["colrev_status"]:
+                    record[
+                        "colrev_status"
+                    ] = colrev.record.RecordState.rev_prescreen_included
+
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
+            self.review_manager.create_commit(msg="Skip prescreen/include all")
+
 
 if __name__ == "__main__":
     pass
