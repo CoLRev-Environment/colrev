@@ -71,9 +71,7 @@ class Status(colrev.operation.Operation):
 
         return analytics_dict
 
-    def get_review_status_report(
-        self, *, commit_report: bool = False, colors: object = None
-    ) -> str:
+    def get_review_status_report(self, *, colors: object = None) -> str:
         """Get the review status report"""
 
         status_stats = self.review_manager.get_status_stats()
@@ -82,9 +80,6 @@ class Status(colrev.operation.Operation):
             template_path="template/ops/status.txt"
         )
         content = template.render(status_stats=status_stats, colors=colors)
-
-        if commit_report:
-            content = content.replace(" 🎉", "").replace("🎉", "")
 
         return content
 
