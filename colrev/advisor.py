@@ -443,26 +443,27 @@ class Advisor:
     def __append_pdf_issue_instructions(self, *, review_instructions: list) -> None:
 
         # Check pdf files
-        missing_files = self.__get_missing_files()
-        if len(missing_files) > 0:
-            review_instructions.append(
-                {
-                    "msg": "record with colrev_status requiring a PDF file but missing "
-                    + f"the path (file = ...): {missing_files}"
-                }
-            )
+        if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
+            missing_files = self.__get_missing_files()
+            if len(missing_files) > 0:
+                review_instructions.append(
+                    {
+                        "msg": "record with colrev_status requiring a PDF file but missing "
+                        + f"the path (file = ...): {missing_files}"
+                    }
+                )
 
-        if len(missing_files) > 0:
-            if len(missing_files) < 10:
-                non_existent_pdfs = ",".join(missing_files)
-            else:
-                non_existent_pdfs = ",".join(missing_files[0:10] + ["..."])
-            review_instructions.append(
-                {
-                    "msg": f"record with broken file link ({non_existent_pdfs})."
-                    " Use\n    colrev pdf-get --relink_files"
-                }
-            )
+            if len(missing_files) > 0:
+                if len(missing_files) < 10:
+                    non_existent_pdfs = ",".join(missing_files)
+                else:
+                    non_existent_pdfs = ",".join(missing_files[0:10] + ["..."])
+                review_instructions.append(
+                    {
+                        "msg": f"record with broken file link ({non_existent_pdfs})."
+                        " Use\n    colrev pdf-get --relink_files"
+                    }
+                )
 
         for record_dict in self.review_manager.dataset.load_records_dict(
             header_only=True
