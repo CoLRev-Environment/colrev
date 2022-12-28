@@ -462,62 +462,65 @@ class Load(colrev.operation.Operation):
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
         )
-        if colrev.record.RecordState.md_retrieved != record_dict["colrev_status"]:
-            return record_dict
 
-        # Consistently set keys to lower case
-        lower_keys = [k.lower() for k in list(record_dict.keys())]
-        for key, n_key in zip(list(record_dict.keys()), lower_keys):
-            if key in ["ID", "ENTRYTYPE"]:
-                continue
-            record_dict[n_key] = record_dict.pop(key)
+        if colrev.record.RecordState.md_retrieved == record_dict["colrev_status"]:
 
-        # pylint: disable=duplicate-code
-        # For better readability of the git diff:
-        fields_to_process = [
-            "author",
-            "year",
-            "title",
-            "journal",
-            "booktitle",
-            "series",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-            "abstract",
-        ]
-        for field in fields_to_process:
-            if field in record_dict:
-                record_dict[field] = (
-                    record_dict[field]
-                    .replace("\n", " ")
-                    .rstrip()
+            # Consistently set keys to lower case
+            lower_keys = [k.lower() for k in list(record_dict.keys())]
+            for key, n_key in zip(list(record_dict.keys()), lower_keys):
+                if key in ["ID", "ENTRYTYPE"]:
+                    continue
+                record_dict[n_key] = record_dict.pop(key)
+
+            # pylint: disable=duplicate-code
+            # For better readability of the git diff:
+            fields_to_process = [
+                "author",
+                "year",
+                "title",
+                "journal",
+                "booktitle",
+                "series",
+                "volume",
+                "number",
+                "pages",
+                "doi",
+                "abstract",
+            ]
+            for field in fields_to_process:
+                if field in record_dict:
+                    record_dict[field] = (
+                        record_dict[field]
+                        .replace("\n", " ")
+                        .rstrip()
+                        .lstrip()
+                        .replace("{", "")
+                        .replace("}", "")
+                    )
+
+            if "UNKNOWN" != record_dict.get("title", "UNKNOWN"):
+                record_dict["title"] = (
+                    re.sub(r"\s+", " ", record_dict["title"])
                     .lstrip()
-                    .replace("{", "")
-                    .replace("}", "")
+                    .rstrip()
+                    .rstrip(".")
                 )
 
-        if "UNKNOWN" != record_dict.get("title", "UNKNOWN"):
-            record_dict["title"] = (
-                re.sub(r"\s+", " ", record_dict["title"]).lstrip().rstrip().rstrip(".")
-            )
+            if "pages" in record_dict:
+                record_dict["pages"] = record_dict["pages"].replace("–", "--")
+                if record_dict["pages"].count("-") == 1:
+                    record_dict["pages"] = record_dict["pages"].replace("-", "--")
+                if "n.pag" == record_dict["pages"].lower():
+                    del record_dict["pages"]
 
-        if "pages" in record_dict:
-            record_dict["pages"] = record_dict["pages"].replace("–", "--")
-            if record_dict["pages"].count("-") == 1:
-                record_dict["pages"] = record_dict["pages"].replace("-", "--")
-            if "n.pag" == record_dict["pages"].lower():
-                del record_dict["pages"]
+            if "number" not in record_dict and "issue" in record_dict:
+                record_dict.update(number=record_dict["issue"])
+                del record_dict["issue"]
 
-        if "number" not in record_dict and "issue" in record_dict:
-            record_dict.update(number=record_dict["issue"])
-            del record_dict["issue"]
-
-        if record_dict.get("volume", "") == "ahead-of-print":
-            del record_dict["volume"]
-        if record_dict.get("number", "") == "ahead-of-print":
-            del record_dict["number"]
+            if record_dict.get("volume", "") == "ahead-of-print":
+                del record_dict["volume"]
+            if record_dict.get("number", "") == "ahead-of-print":
+                del record_dict["number"]
 
         record = colrev.record.Record(data=record_dict)
         if "doi" in record.data:
@@ -546,6 +549,15 @@ class Load(colrev.operation.Operation):
         record_list = []
         origin_prefix = source.get_origin_prefix()
         for record in search_records:
+            for key in colrev.record.Record.provenance_keys + [
+                "file",
+                "screening_criteria",
+            ]:
+                if "colrev_status" == key:
+                    continue
+                if key in record:
+                    del record[key]
+
             record.update(colrev_origin=[f"{origin_prefix}/{record['ID']}"])
 
             # Drop empty fields
