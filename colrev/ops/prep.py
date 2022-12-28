@@ -789,7 +789,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Records prepared:".ljust(25) + f"{colors.GREEN}{nr_recs}{colors.END}"
+            "Records prepared:".ljust(32) + f"{colors.GREEN}{nr_recs}{colors.END}"
         )
 
         nr_recs = len(
@@ -801,7 +801,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Curated records:".ljust(25) + f"{colors.GREEN}{nr_recs}{colors.END} "
+            "Curated records:".ljust(32) + f"{colors.GREEN}{nr_recs}{colors.END} "
             "( ✔ quality-assured by CoLRev community curators)"
         )
 
@@ -815,7 +815,7 @@ class Prep(colrev.operation.Operation):
         )
         if nr_recs > 0:
             self.review_manager.logger.info(
-                "Records to prepare manually:".ljust(25)
+                "Records to prepare manually:".ljust(32)
                 + f"{colors.ORANGE}{nr_recs}{colors.END}"
             )
 
@@ -833,7 +833,7 @@ class Prep(colrev.operation.Operation):
                 "(non-latin alphabet)"
             )
             self.review_manager.logger.info(
-                "Records prescreen-excluded:".ljust(25)
+                "Records prescreen-excluded:".ljust(32)
                 + f"{colors.RED}{nr_recs}{colors.END}"
             )
 
