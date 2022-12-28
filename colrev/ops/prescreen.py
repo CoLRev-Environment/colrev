@@ -219,7 +219,7 @@ class Prescreen(colrev.operation.Operation):
 
         for prescreen_package_endpoint in prescreen_package_endpoints:
 
-            self.review_manager.logger.info(
+            self.review_manager.logger.debug(
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )
             endpoint_dict = package_manager.load_packages(

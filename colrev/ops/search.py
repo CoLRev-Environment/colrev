@@ -444,12 +444,15 @@ class Search(colrev.operation.Operation):
     def main(self, *, selection_str: str = None, update_only: bool) -> None:
         """Search for records (main entrypoint)"""
 
+        self.review_manager.logger.info("Search")
+        self.review_manager.logger.info(
+            "Retrieve new records from an API or files (search sources)."
+        )
+
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
 
         package_manager = self.review_manager.get_package_manager()
-
-        self.review_manager.logger.info("Search")
 
         for source in self.__get_search_sources(selection_str=selection_str):
 
@@ -467,7 +470,8 @@ class Search(colrev.operation.Operation):
                 # Some sources do not support automated searches (e.g., unknown sources)
                 continue
 
-            print()
+            if not self.review_manager.high_level_operation:
+                print()
             self.review_manager.logger.info(
                 f"Retrieve from {source.endpoint} (results > data/search/{source.filename.name})"
             )

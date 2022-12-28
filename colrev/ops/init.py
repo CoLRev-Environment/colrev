@@ -100,6 +100,10 @@ class Initializer:
             for instruction in self.instructions:
                 self.review_manager.logger.info(instruction)
 
+        self.review_manager.logger.info(
+            "%sCompleted init operation%s", colors.GREEN, colors.END
+        )
+
     def __check_init_precondition(self) -> None:
         cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
         cur_content = [x for x in cur_content if not x.startswith("venv")]

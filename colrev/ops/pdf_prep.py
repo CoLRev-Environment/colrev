@@ -303,7 +303,8 @@ class PDFPrep(colrev.operation.Operation):
 
         self.not_prepared = self.to_prepare - self.pdf_prepared
 
-        print()
+        if not self.review_manager.high_level_operation:
+            print()
         prepared_string = "Prepared:    "
         if self.pdf_prepared == 0:
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
@@ -362,13 +363,21 @@ class PDFPrep(colrev.operation.Operation):
 
         saved_args = locals()
 
+        self.review_manager.logger.info("Prep PDFs")
+        self.review_manager.logger.info(
+            "Prepare PDFs, validating them against their metadata, "
+            "removing additional pages, ensuring machine readability."
+        )
+
         # temporary fix: remove all lines containing PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
         self.review_manager.logger.info(
-            f"Prepare PDFs ({colors.ORANGE}computationally intensive/may take time{colors.END})"
+            f"{colors.ORANGE}This operation is computationally "
+            f"intensive and may take time.{colors.END}"
         )
-        print()
+        if not self.review_manager.high_level_operation:
+            print()
 
         if reprocess:
             self.__set_to_reprocess()
@@ -378,7 +387,6 @@ class PDFPrep(colrev.operation.Operation):
         if self.review_manager.verbose_mode:
             for item in pdf_prep_data["items"]:
                 record = item["record"]
-                print()
                 record = self.prepare_pdf(item)
                 self.review_manager.dataset.save_records_dict(
                     records={record["ID"]: record}, partial=True
@@ -411,6 +419,9 @@ class PDFPrep(colrev.operation.Operation):
 
         self.review_manager.create_commit(
             msg="Prepare PDFs", script_call="colrev pdf-prep", saved_args=saved_args
+        )
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )
 
 

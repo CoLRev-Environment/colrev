@@ -559,8 +559,10 @@ class PDFGet(colrev.operation.Operation):
 
         saved_args = locals()
 
-        self.review_manager.report_logger.info("Get PDFs")
         self.review_manager.logger.info("Get PDFs")
+        self.review_manager.logger.info(
+            "Get PDFs of prescreen-included records from local and remote PDF sources."
+        )
 
         records = self.review_manager.dataset.load_records_dict()
         records = self.__set_status_if_file_linked(records=records)
@@ -595,6 +597,9 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.create_commit(
             msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
+        )
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed pdf-get operation{colors.END}"
         )
 
 

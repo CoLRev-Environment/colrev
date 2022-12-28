@@ -95,5 +95,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.path
       ~ReviewManager.force_mode
       ~ReviewManager.verbose_mode
+      ~ReviewManager.debug_mode
+      ~ReviewManager.high_level_operation
       ~ReviewManager.report_logger
       ~ReviewManager.logger

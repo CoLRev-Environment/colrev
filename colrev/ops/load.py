@@ -28,6 +28,7 @@ class Load(colrev.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
+        hide_load_explanation: bool = False,
     ) -> None:
 
         super().__init__(
@@ -37,6 +38,15 @@ class Load(colrev.operation.Operation):
         )
 
         self.package_manager = self.review_manager.get_package_manager()
+
+        if not hide_load_explanation:
+            self.review_manager.logger.info("Load")
+            self.review_manager.logger.info(
+                "Load converts search results stored in data/search"
+            )
+            self.review_manager.logger.info(
+                "and adds them to the shared data/records.bib"
+            )
 
     def __get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
@@ -202,7 +212,7 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info("No new search files...")
             return []
 
-        self.review_manager.logger.info("Load available search_source endpoints...")
+        self.review_manager.logger.debug("Load available search_source endpoints...")
 
         search_source_identifiers = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
@@ -216,7 +226,7 @@ class Load(colrev.operation.Operation):
             instantiate_objects=False,
         )
 
-        self.review_manager.logger.info("Load available load_conversion endpoints...")
+        self.review_manager.logger.debug("Load available load_conversion endpoints...")
         load_conversion_package_identifiers = self.package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
             installed_only=True,
@@ -248,7 +258,8 @@ class Load(colrev.operation.Operation):
             ]:
                 continue
 
-            print()
+            if not self.review_manager.high_level_operation:
+                print()
             self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
             # Assuming that all other search types are added by query
@@ -267,7 +278,9 @@ class Load(colrev.operation.Operation):
             if 1 == len(heuristic_result_list):
                 heuristic_source = heuristic_result_list[0]
             else:
-                print("\nSelect search source:")
+                if not self.review_manager.high_level_operation:
+                    print()
+                print("Select search source:")
                 for i, heuristic_source in enumerate(heuristic_result_list):
                     print(
                         f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
@@ -290,9 +303,6 @@ class Load(colrev.operation.Operation):
                 "colrev_built_in.unknown_source"
                 == heuristic_source["source_candidate"].endpoint
             ):
-                self.review_manager.logger.info(
-                    "Could not detect source (using fallback: unknown_source)"
-                )
 
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
@@ -769,7 +779,8 @@ class Load(colrev.operation.Operation):
                     sources.append(source)
             return sources
 
-        print()
+        if not self.review_manager.high_level_operation:
+            print()
         git_repo = self.review_manager.dataset.get_repo()
         for source in load_active_sources():
 
@@ -816,7 +827,8 @@ class Load(colrev.operation.Operation):
                 # 3. load and add records to data/records.bib
                 self.__load_source_records(source=source, keep_ids=keep_ids)
                 if 0 == getattr(source, "to_import", 0):
-                    print()
+                    if not self.review_manager.high_level_operation:
+                        print()
                     continue
 
                 # 4. validate load
@@ -830,7 +842,8 @@ class Load(colrev.operation.Operation):
                         saved_args=saved_args,
                     )
                 git_repo.git.stash("pop")
-                print()
+                if not self.review_manager.high_level_operation:
+                    print()
             except (colrev_exceptions.ImportException) as exc:
                 print(exc)
 
@@ -838,6 +851,10 @@ class Load(colrev.operation.Operation):
             self.review_manager.create_commit(
                 msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
             )
+
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed load operation{colors.END}"
+        )
 
 
 if __name__ == "__main__":

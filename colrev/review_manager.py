@@ -58,6 +58,8 @@ class ReviewManager:
         path_str: str = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
+        debug_mode: bool = False,
+        high_level_operation: bool = False,
         navigate_to_home_dir: bool = True,
     ) -> None:
 
@@ -65,6 +67,11 @@ class ReviewManager:
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode
         """Verbose mode variable (bool)"""
+        self.debug_mode = debug_mode
+        """Debug mode variable (bool)"""
+        self.high_level_operation = high_level_operation
+        """A high-level operation was called (bool)"""
+        # Note : mostly for formatting output
 
         if navigate_to_home_dir:
             self.path = self.__get_project_home_dir(path_str=path_str)
@@ -91,7 +98,7 @@ class ReviewManager:
             # Start LocalIndex to prevent waiting times
             self.get_local_index(startup_without_waiting=True)
 
-            if self.verbose_mode:
+            if self.debug_mode:
                 self.report_logger = colrev.logger.setup_report_logger(
                     review_manager=self, level=logging.DEBUG
                 )
@@ -120,7 +127,7 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
-                if verbose_mode:
+                if debug_mode:
                     self.logger.debug(exc)
             else:
                 raise exc
@@ -478,7 +485,9 @@ class ReviewManager:
         )
 
     def get_load_operation(
-        self, notify_state_transition_operation: bool = True
+        self,
+        notify_state_transition_operation: bool = True,
+        hide_load_explanation: bool = False,
     ) -> colrev.ops.load.Load:
         """Get a load operation object"""
         import colrev.ops.load
@@ -486,6 +495,7 @@ class ReviewManager:
         return colrev.ops.load.Load(
             review_manager=self,
             notify_state_transition_operation=notify_state_transition_operation,
+            hide_load_explanation=hide_load_explanation,
         )
 
     def get_prep_operation(

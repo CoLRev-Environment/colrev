@@ -252,7 +252,7 @@ def retrieve(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            verbose_mode=verbose, force_mode=force
+            verbose_mode=verbose, force_mode=force, high_level_operation=True
         )
         review_manager.get_local_index(startup_without_waiting=True)
 
@@ -273,18 +273,31 @@ def retrieve(
             )
             return
 
+        review_manager.logger.info("Retrieve")
+        review_manager.logger.info(
+            "Retrieve is a high-level operation consisting of search, load, prep, and dedupe."
+        )
+
+        print()
+
         search_operation = review_manager.get_search_operation()
         search_operation.main(update_only=False)
 
+        print()
+
         load_operation = review_manager.get_load_operation()
         new_sources = load_operation.get_new_sources(skip_query=True)
-        load_operation = review_manager.get_load_operation()
+        load_operation = review_manager.get_load_operation(hide_load_explanation=True)
         load_operation.main(
             new_sources=new_sources, keep_ids=False, combine_commits=False
         )
 
+        print()
+
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
+
+        print()
 
         dedupe_operation = review_manager.get_dedupe_operation()
         dedupe_operation.main()
@@ -441,7 +454,8 @@ def load(
             )
 
         # Note : reinitialize to load new scripts:
-        load_operation = review_manager.get_load_operation()
+        load_operation = review_manager.get_load_operation(hide_load_explanation=True)
+
         load_operation.main(
             new_sources=new_sources, keep_ids=keep_ids, combine_commits=combine_commits
         )
@@ -563,12 +577,6 @@ def prep(
             return
 
         prep_operation.main(keep_ids=keep_ids)
-
-        print()
-        print("Please check the changes (especially those with low_confidence)")
-        print("To reset record(s) based on their ID, run")
-        print("   colrev prep --reset_records ID1,ID2,...")
-        print()
 
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
@@ -844,7 +852,15 @@ def prescreen(
             print("Activated custom_prescreen_script.py.")
 
         else:
+            review_manager.logger.info("Prescreen")
+            review_manager.logger.info(
+                "Exclude irrelevant records based on metadata (titles/abstracts) "
+                "and provisionally retain the remaining records."
+            )
             prescreen_operation.main(split_str=split)
+            review_manager.logger.info(
+                "%sCompleted prescreen operation%s", colors.GREEN, colors.END
+            )
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -991,7 +1007,7 @@ def pdfs(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, high_level_operation=True
         )
 
         if discard:

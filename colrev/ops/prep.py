@@ -296,13 +296,13 @@ class Prep(colrev.operation.Operation):
 
             if record.preparation_break_condition():
                 self.review_manager.logger.info(
-                    f" {progress}prescreen_excluded {colors.RED}{record.data['ID']} "
+                    f" {progress}prescreen_exclude {colors.RED}{record.data['ID']} "
                     f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
                 )
             elif record.preparation_save_condition():
                 curation_addition = ""
                 if record.masterdata_is_curated():
-                    curation_addition = " ✔"  # 🌟
+                    curation_addition = " ✔"
                 self.review_manager.logger.info(
                     f" {progress}prepare {colors.GREEN}{record.data['ID']}{colors.END}"
                     f"{curation_addition}"
@@ -730,7 +730,9 @@ class Prep(colrev.operation.Operation):
 
         if self.debug_mode:
             print("\n\n")
-        self.review_manager.logger.info(f"Prepare ({prep_round.name})")
+
+        if len(self.review_manager.settings.prep.prep_rounds) > 1:
+            self.review_manager.logger.info(f"Prepare ({prep_round.name})")
 
         self.retrieval_similarity = prep_round.similarity  # type: ignore
         self.review_manager.report_logger.debug(
@@ -787,7 +789,20 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Records prepared:".ljust(35) + f"{colors.GREEN}{nr_recs}{colors.END}"
+            "Records prepared:".ljust(25) + f"{colors.GREEN}{nr_recs}{colors.END}"
+        )
+
+        nr_recs = len(
+            [
+                record
+                for record in prepared_records
+                if "CURATED" in record["colrev_masterdata_provenance"]
+            ]
+        )
+
+        self.review_manager.logger.info(
+            "Curated records:".ljust(25) + f"{colors.GREEN}{nr_recs}{colors.END} "
+            "( ✔ quality-assured by CoLRev community curators)"
         )
 
         nr_recs = len(
@@ -799,16 +814,9 @@ class Prep(colrev.operation.Operation):
             ]
         )
         if nr_recs > 0:
-            self.review_manager.report_logger.info(
-                f"Statistics: {nr_recs} records not prepared"
-            )
             self.review_manager.logger.info(
-                "Records to prepare manually:".ljust(35)
+                "Records to prepare manually:".ljust(25)
                 + f"{colors.ORANGE}{nr_recs}{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                "Records to prepare manually:".ljust(35) + f"{nr_recs}"
             )
 
         nr_recs = len(
@@ -825,7 +833,7 @@ class Prep(colrev.operation.Operation):
                 "(non-latin alphabet)"
             )
             self.review_manager.logger.info(
-                "Records prescreen-excluded:".ljust(35)
+                "Records prescreen-excluded:".ljust(25)
                 + f"{colors.RED}{nr_recs}{colors.END}"
             )
 
@@ -837,6 +845,15 @@ class Prep(colrev.operation.Operation):
         debug_file: Path = None,
     ) -> None:
         """Preparation of records (main entrypoint)"""
+
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
+        self.review_manager.logger.info("Prep")
+        self.review_manager.logger.info(
+            "Prep completes and corrects record metadata based on APIs and preparation rules."
+        )
 
         saved_args = locals()
 
@@ -884,8 +901,7 @@ class Prep(colrev.operation.Operation):
                 ]
                 if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
                     self.review_manager.logger.info(
-                        f"{colors.ORANGE}The language detector requires RAM and "
-                        f"may take longer{colors.END}"
+                        "Info: The language detector requires RAM and may take longer"
                     )
                     pool = Pool(mp.cpu_count() // 2)
                 else:
@@ -912,16 +928,36 @@ class Prep(colrev.operation.Operation):
                     script_call="colrev prep",
                     saved_args=saved_args,
                 )
-                print()
+                if not self.review_manager.high_level_operation:
+                    print()
             self.review_manager.reset_report_logger()
 
             self.__print_stats()
 
+        set_id_commit = False
         if not keep_ids and not self.debug_mode:
+            self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            self.review_manager.create_commit(
+            set_id_commit = self.review_manager.create_commit(
                 msg="Set IDs", script_call="colrev prep", saved_args=saved_args
             )
+
+        self.review_manager.logger.info("To validate the changes, use")
+        # TODO : if caller is retrieve, suggest colrev validate COMMIT-ID
+        if set_id_commit:
+            self.review_manager.logger.info(
+                f"{colors.ORANGE}colrev validate HEAD~1{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.ORANGE}colrev validate .{colors.END}"
+            )
+        if not self.review_manager.high_level_operation:
+            print()
+
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed prep operation{colors.END}"
+        )
 
 
 if __name__ == "__main__":

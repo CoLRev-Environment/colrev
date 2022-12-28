@@ -61,8 +61,6 @@ class Dedupe(colrev.operation.Operation):
             "source_comparison.xlsx"
         )
 
-        self.review_manager.logger.info("Dedupe")
-
     def __pre_process(self, *, key: str, value: str) -> str:
         if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
             return value
@@ -732,12 +730,13 @@ class Dedupe(colrev.operation.Operation):
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
 
+        self.review_manager.logger.info("Dedupe")
+
         package_manager = self.review_manager.get_package_manager()
         for (
             dedupe_package_endpoint
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
 
-            print()
             # Note : load package/script at this point because the same script
             # may run with different parameters
             endpoint_dict = package_manager.load_packages(
@@ -749,6 +748,8 @@ class Dedupe(colrev.operation.Operation):
             endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 
             endpoint.run_dedupe(self)  # type: ignore
+            if not self.review_manager.high_level_operation:
+                print()
 
         if not self.review_manager.settings.prescreen.prescreen_package_endpoints:
             self.review_manager.logger.info("Skipping prescreen/including all records")
@@ -762,6 +763,10 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")
+
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed dedupe operation{colors.END}"
+        )
 
 
 if __name__ == "__main__":

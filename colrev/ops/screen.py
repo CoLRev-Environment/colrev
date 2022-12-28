@@ -8,6 +8,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 class Screen(colrev.operation.Operation):
@@ -259,6 +260,12 @@ class Screen(colrev.operation.Operation):
     def main(self, *, split_str: str) -> None:
         """Screen records for inclusion (main entrypoint)"""
 
+        self.review_manager.logger.info("Screen")
+        self.review_manager.logger.info(
+            "In the screen, records are included or excluded "
+            "based on the full-text (PDF) and screening criteria."
+        )
+
         # pylint: disable=duplicate-code
         split = []
         if split_str != "NA":
@@ -286,6 +293,10 @@ class Screen(colrev.operation.Operation):
 
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
             records = endpoint.run_screen(self, records, split)  # type: ignore
+
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed screen operation{colors.END}"
+        )
 
 
 if __name__ == "__main__":

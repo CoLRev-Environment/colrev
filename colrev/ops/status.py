@@ -414,7 +414,7 @@ class StatusStats:
             valid_transitions = srec.get_valid_transitions()
             active_operations.extend(valid_transitions)
 
-        self.review_manager.logger.debug(f"active_operations: {active_operations}")
+        self.review_manager.logger.debug(f"active_operations: {set(active_operations)}")
         return active_operations
 
     def get_operation_in_progress(self, *, transitioned_records: list) -> list:

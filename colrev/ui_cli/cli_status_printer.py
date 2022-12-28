@@ -19,13 +19,19 @@ if TYPE_CHECKING:
 def print_review_instructions(review_instructions: dict) -> None:
     """Print the review instructions on cli"""
 
-    print("Review project\n")
+    print("Next operation")
 
     verbose = False
 
     # key_list = [list(x.keys()) for x in review_instructions]
     # keys = [item for sublist in key_list for item in sublist]
     # priority_item_set = "priority" in keys
+    if not review_instructions:
+        print(f"    {colors.GREEN}review iteration completed{colors.END}")
+        print(
+            f"    {colors.ORANGE}to start the next iteration, add new search results{colors.END}"
+        )
+        print()
 
     for review_instruction in review_instructions:
 
@@ -34,25 +40,40 @@ def print_review_instructions(review_instructions: dict) -> None:
         #     continue
 
         if "info" in review_instruction:
-            print("  " + review_instruction["info"])
+            print("    " + review_instruction["info"])
         if "msg" in review_instruction:
             if "cmd" in review_instruction:
                 if verbose:
-                    print("  " + review_instruction["msg"] + ", i.e., use ")
-                print(f'  {colors.ORANGE}{review_instruction["cmd"]}{colors.END}')
+                    print("    " + review_instruction["msg"] + ", i.e., use ")
+                print(f'    {colors.ORANGE}{review_instruction["cmd"]}{colors.END}')
             else:
-                print(f"  {colors.ORANGE}{review_instruction['msg']}{colors.END}")
+                print(f"    {colors.ORANGE}{review_instruction['msg']}{colors.END}")
         if "cmd_after" in review_instruction:
-            print("  Then use " + review_instruction["cmd_after"])
+            print("    Then use " + review_instruction["cmd_after"])
         print()
 
 
-def print_collaboration_instructions(collaboration_instructions: dict) -> None:
+def print_collaboration_instructions(
+    *, status_operation: colrev.ops.status.Status, collaboration_instructions: dict
+) -> None:
     """Print the collaboration instructions on cli"""
 
     # pylint: disable=too-many-branches
 
-    print("Versioning and collaboration\n")
+    if not status_operation.review_manager.verbose_mode:
+        if collaboration_instructions["items"]:
+            if (
+                "Project not yet shared"
+                == collaboration_instructions["items"][0]["title"]
+            ):
+                print(
+                    "More details (e.g., on collaboration)\n    "
+                    f"{colors.ORANGE}colrev status -v{colors.END}"
+                )
+
+        return
+
+    print("Versioning and collaboration")
 
     if "status" in collaboration_instructions:
         if "title" in collaboration_instructions["status"]:
@@ -128,7 +149,7 @@ def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
 
     for i in tqdm(
         range(100),
-        desc="  Progress:",
+        desc="    Progress:",
         bar_format="{desc} |{bar}|{percentage:.0f}%",
         ncols=40,
     ):
@@ -155,20 +176,24 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         advisor = status_operation.review_manager.get_advisor()
         instructions = advisor.get_instructions(status_stats=status_stats)
         print_review_instructions(instructions["review_instructions"])
-        print_collaboration_instructions(instructions["collaboration_instructions"])
+        print_collaboration_instructions(
+            status_operation=status_operation,
+            collaboration_instructions=instructions["collaboration_instructions"],
+        )
         print_environment_instructions(instructions["environment_instructions"])
 
     except colrev_exceptions.RepoSetupError as exc:
         print(f"Status failed ({exc})")
 
-    print("Checks\n")
-    try:
+    if status_operation.review_manager.verbose_mode:
+        print("Checks")
 
+    try:
         ret_check = status_operation.review_manager.check_repo()
     except colrev_exceptions.RepoSetupError as exc:
         ret_check = {"status": 1, "msg": exc}
 
-    if 0 == ret_check["status"]:
+    if 0 == ret_check["status"] and status_operation.review_manager.verbose_mode:
         print(
             "  ReviewManager.check_repo()  ...  "
             f'{colors.GREEN}{ret_check["msg"]}{colors.END}'
@@ -183,7 +208,8 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     except KeyError as exc:
         logging.error(exc)
         ret_f = {"status": 1, "msg": "KeyError"}
-    if 0 == ret_f["status"]:
+
+    if 0 == ret_f["status"] and status_operation.review_manager.verbose_mode:
         print(
             "  ReviewManager.format()      ...  "
             f'{colors.GREEN}{ret_f["msg"]}{colors.END}'
@@ -191,15 +217,18 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     if 1 == ret_f["status"]:
         print(f"  ReviewManager.format()      ...  {colors.RED}FAIL{colors.END}")
         print(f'\n    {ret_f["msg"]}\n')
-    if not status_operation.review_manager.in_virtualenv():
+    if (
+        not status_operation.review_manager.in_virtualenv()
+        and status_operation.review_manager.verbose_mode
+    ):
         print(
-            f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
+            f"\n  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
         )
         print(
             "  For instructions to set up a virtual environment, run\n"
             f"  {colors.ORANGE}colrev show venv{colors.END}"
         )
-    print()
+        print()
 
 
 if __name__ == "__main__":

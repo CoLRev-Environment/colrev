@@ -13,6 +13,29 @@ if TYPE_CHECKING:
     import colrev.ops.screen
 
 
+__FULL_SCREEN_EXPLANATION = (
+    "Explanation: Screening criteria can be used "
+    + """to include or exclude records based on specific reasons.
+Example 1:
+    - short name        : behavioral_treatment
+    - criterion type    : inclusion_criterion
+    - explanation       : Include records reporting on behavioral treatment
+
+Example 2:
+    - short name        : non_experimental_method
+    - criterion type    : exclusion_criterion
+    - explanation       : Exclude records reporting on non-experimental designs
+
+Add a screening criterion [y,n]?"""
+)
+
+
+def __get_add_screening_criterion_dialogue(*, screening_criteria: dict) -> str:
+    if not screening_criteria:
+        return __FULL_SCREEN_EXPLANATION
+    return "Add another screening criterion [y,n]?"
+
+
 def get_screening_criteria_from_user_input(
     *, screen_operation: colrev.ops.screen.Screen, records: dict
 ) -> dict:
@@ -31,9 +54,13 @@ def get_screening_criteria_from_user_input(
             ]
         ]
     ):
-
+        print()
         screening_criteria = {}
-        while "y" == input("Add screening criterion [y,n]?"):
+        while "y" == input(
+            __get_add_screening_criterion_dialogue(
+                screening_criteria=screening_criteria
+            )
+        ):
             short_name = input("Provide a short name: ")
             if "i" == input("Inclusion or exclusion criterion [i,e]?: "):
                 criterion_type = colrev.settings.ScreenCriterionType.inclusion_criterion
@@ -44,6 +71,7 @@ def get_screening_criteria_from_user_input(
             screening_criteria[short_name] = colrev.settings.ScreenCriterion(
                 explanation=explanation, criterion_type=criterion_type, comment=""
             )
+            print()
 
         screen_operation.set_screening_criteria(screening_criteria=screening_criteria)
 

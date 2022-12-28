@@ -43,6 +43,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def __print_screening_criteria(
         self, *, screen_operation: colrev.ops.screen.Screen
     ) -> None:
+        if not screen_operation.review_manager.settings.screen.criteria:
+            return
         print("\nIn the screen, the following criteria are applied:\n")
         for (
             criterion_name,
@@ -190,8 +192,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         screen_data = screen_operation.get_data()
         self.__pad = screen_data["PAD"]
         self.__stat_len = screen_data["nr_tasks"]
-
-        screen_operation.review_manager.logger.info("Start screen")
 
         if 0 == self.__stat_len:
             screen_operation.review_manager.logger.info("No records to prescreen")
