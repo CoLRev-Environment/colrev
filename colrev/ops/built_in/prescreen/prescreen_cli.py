@@ -95,6 +95,9 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 prescreen_operation.review_manager.logger.info("Stop prescreen")
                 break
 
+            if "s" == ret:
+                continue
+
             inclusion_decision = "yes" == inclusion_decision_str
             prescreen_record.prescreen(
                 review_manager=prescreen_operation.review_manager,
