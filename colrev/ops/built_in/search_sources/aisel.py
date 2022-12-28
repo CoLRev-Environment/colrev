@@ -46,11 +46,16 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # TBD: aisel does not return bibtex?!
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         nr_items = data.count("\n@")
-        if nr_items > 0:
+        if nr_items > 0 and "colrev_status" not in data:
             result["confidence"] = nr_ais_links / nr_items
 
-        if data.count("%U https://aisel.aisnet.org") > 0.9 * data.count("%T "):
-            result["confidence"] = 1.0
+        if "%T " in data and "colrev_status" not in data:
+            if data.count("%U https://aisel.aisnet.org") > 0.9 * data.count("%T "):
+                result["confidence"] = 1.0
+
+        if "@article" in data or "@inproc" in data and "colrev_status" not in data:
+            if data.count("%U https://aisel.aisnet.org") > 0.9 * data.count("\n@"):
+                result["confidence"] = 1.0
 
         return result
 
