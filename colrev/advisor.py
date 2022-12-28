@@ -333,6 +333,8 @@ class Advisor:
         status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
     ) -> None:
+        # pylint: disable=too-many-branches
+
         if status_stats.overall.md_retrieved == 0:
             if not Path(self.review_manager.search_dir).iterdir():
                 instruction = {
@@ -392,6 +394,28 @@ class Advisor:
                     ri["cmd"] for ri in review_instructions if "cmd" in ri
                 ]:
                     review_instructions.append(instruction)
+
+            if len(review_instructions) == 1:
+                if "colrev data" == review_instructions[0]["cmd"]:
+                    review_instructions.pop(0)
+
+                    package_manager = self.review_manager.get_package_manager()
+                    check_operation = colrev.operation.CheckOperation(
+                        review_manager=self.review_manager
+                    )
+                    for (
+                        data_package_endpoint
+                    ) in self.review_manager.settings.data.data_package_endpoints:
+
+                        endpoint_dict = package_manager.load_packages(
+                            package_type=colrev.env.package_manager.PackageEndpointType.data,
+                            selected_packages=[data_package_endpoint],
+                            operation=check_operation,
+                        )
+                        endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
+
+                        advice = endpoint.get_advice(self.review_manager)  # type: ignore
+                        review_instructions.append(advice)
 
     def __get_missing_files(self) -> list:
 

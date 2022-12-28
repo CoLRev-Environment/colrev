@@ -760,6 +760,18 @@ class Manuscript(JsonSchemaMixin):
             else:
                 print(f"Error: {syn_id} not int {synthesized_in_manuscript}")
 
+    def get_advice(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
+    ) -> dict:
+        """Get advice on the next steps (for display in the colrev status)"""
+
+        advice = {
+            "msg": "Edit the data/paper.md and rerun colrev data to build the manuscript",
+            "detailed_msg": "... with a link to the docs etc.",
+        }
+        return advice
+
 
 class ManuscriptRecordSourceTagError(Exception):
     """NEW_RECORD_SOURCE_TAG not found in paper.md"""

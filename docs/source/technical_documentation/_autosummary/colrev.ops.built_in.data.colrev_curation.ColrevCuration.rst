@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.colrev\_curation.ColrevCuration
       ~ColrevCuration.from_dict
       ~ColrevCuration.from_json
       ~ColrevCuration.from_object
+      ~ColrevCuration.get_advice
       ~ColrevCuration.get_default_setup
       ~ColrevCuration.json_schema
       ~ColrevCuration.register_field_encoders

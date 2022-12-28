@@ -321,6 +321,18 @@ class Zettlr(JsonSchemaMixin):
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
+    def get_advice(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
+    ) -> dict:
+        """Get advice on the next steps (for display in the colrev status)"""
+
+        advice = {
+            "msg": f"The zettlr project is updated at {self.ZETTLR_PATH_RELATIVE}",
+            "detailed_msg": "TODO",
+        }
+        return advice
+
 
 if __name__ == "__main__":
     pass

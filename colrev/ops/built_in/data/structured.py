@@ -229,6 +229,18 @@ class StructuredData(JsonSchemaMixin):
             else:
                 print(f"Error: {syn_id} not int " f"{synthesized_record_status_matrix}")
 
+    def get_advice(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
+    ) -> dict:
+        """Get advice on the next steps (for display in the colrev status)"""
+
+        advice = {
+            "msg": f"The data extraction sheed is at {self.settings.data_path_relative}",
+            "detailed_msg": "TODO",
+        }
+        return advice
+
 
 if __name__ == "__main__":
     pass

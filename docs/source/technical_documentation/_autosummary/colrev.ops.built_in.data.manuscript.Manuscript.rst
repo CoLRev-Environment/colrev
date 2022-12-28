@@ -22,6 +22,7 @@ colrev.ops.built\_in.data.manuscript.Manuscript
       ~Manuscript.from_dict
       ~Manuscript.from_json
       ~Manuscript.from_object
+      ~Manuscript.get_advice
       ~Manuscript.get_default_setup
       ~Manuscript.json_schema
       ~Manuscript.register_field_encoders

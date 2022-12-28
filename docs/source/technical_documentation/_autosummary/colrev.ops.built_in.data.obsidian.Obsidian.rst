@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.obsidian.Obsidian
       ~Obsidian.from_dict
       ~Obsidian.from_json
       ~Obsidian.from_object
+      ~Obsidian.get_advice
       ~Obsidian.get_default_setup
       ~Obsidian.json_schema
       ~Obsidian.register_field_encoders

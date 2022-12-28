@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.github\_pages.GithubPages
       ~GithubPages.from_dict
       ~GithubPages.from_json
       ~GithubPages.from_object
+      ~GithubPages.get_advice
       ~GithubPages.get_default_setup
       ~GithubPages.json_schema
       ~GithubPages.register_field_encoders

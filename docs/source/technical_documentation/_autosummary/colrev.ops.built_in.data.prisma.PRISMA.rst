@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.prisma.PRISMA
       ~PRISMA.from_dict
       ~PRISMA.from_json
       ~PRISMA.from_object
+      ~PRISMA.get_advice
       ~PRISMA.get_default_setup
       ~PRISMA.json_schema
       ~PRISMA.register_field_encoders

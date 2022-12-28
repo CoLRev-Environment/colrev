@@ -302,6 +302,11 @@ class DataPackageEndpointInterface(
         """Update the record status matrix,
         i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier"""
 
+    def get_advice(  # type: ignore
+        review_manager: colrev.review_manager.ReviewManager,
+    ) -> dict:
+        """Get advice on how to operate the data package endpoint"""
+
 
 @dataclass
 class DefaultSettings(JsonSchemaMixin):

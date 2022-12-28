@@ -225,6 +225,18 @@ class Obsidian(JsonSchemaMixin):
             else:
                 synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
+    def get_advice(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
+    ) -> dict:
+        """Get advice on the next steps (for display in the colrev status)"""
+
+        advice = {
+            "msg": "New records are added to the data/obsidian vault",
+            "detailed_msg": "TODO",
+        }
+        return advice
+
 
 if __name__ == "__main__":
     pass

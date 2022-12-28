@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.from_dict
       ~BibliographyExport.from_json
       ~BibliographyExport.from_object
+      ~BibliographyExport.get_advice
       ~BibliographyExport.get_default_setup
       ~BibliographyExport.json_schema
       ~BibliographyExport.register_field_encoders

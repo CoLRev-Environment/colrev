@@ -204,6 +204,21 @@ class GithubPages(JsonSchemaMixin):
         for syn_id in synthesized_record_status_matrix:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
 
+    def get_advice(
+        self,
+        review_manager: colrev.review_manager.ReviewManager,
+    ) -> dict:
+        """Get advice on the next steps (for display in the colrev status)"""
+
+        advice = {"msg": "TODO", "detailed_msg": "TODO"}
+        if "NA" == review_manager.dataset.get_remote_url():
+            advice["msg"] = (
+                "To make the repository available on Github pages, "
+                + "push it to a Github repository\nhttps://github.com/new"
+            )
+
+        return advice
+
 
 if __name__ == "__main__":
     pass

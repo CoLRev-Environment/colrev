@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.structured.StructuredData
       ~StructuredData.from_dict
       ~StructuredData.from_json
       ~StructuredData.from_object
+      ~StructuredData.get_advice
       ~StructuredData.get_default_setup
       ~StructuredData.json_schema
       ~StructuredData.register_field_encoders

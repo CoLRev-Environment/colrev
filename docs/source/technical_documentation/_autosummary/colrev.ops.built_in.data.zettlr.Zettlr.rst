@@ -21,6 +21,7 @@ colrev.ops.built\_in.data.zettlr.Zettlr
       ~Zettlr.from_dict
       ~Zettlr.from_json
       ~Zettlr.from_object
+      ~Zettlr.get_advice
       ~Zettlr.get_default_setup
       ~Zettlr.json_schema
       ~Zettlr.register_field_encoders
