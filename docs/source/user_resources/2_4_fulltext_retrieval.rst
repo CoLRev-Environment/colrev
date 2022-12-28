@@ -1,11 +1,11 @@
 
 .. _Fulltext retrieval:
 
-Step 4: Fulltext retrieval
+Step 4: Full-text retrieval
 ==================================
 
-The step of fulltext retrieval refers to the activities to acquire fulltext documents (PDFs) as well as to ascertain or improve their quality.
-It should ensure that fulltext documents correspond to their associated metadata (no mismatches), that they are machine readable (OCR and semantically anotated), that unnecessary materials (such as coverpages) are removed.
+The step of full-text retrieval refers to the activities to acquire full-text documents (PDFs) as well as to ascertain or improve their quality.
+It should ensure that full-text documents correspond to their associated metadata (no mismatches), that they are machine readable (OCR and semantically anotated), that unnecessary materials (such as coverpages) are removed.
 
 PDFs are stored in the ``data/pdfs`` directory.
 Per default, PDF documents are not versioned by git to ensure that CoLRev repositories can be published without violating copyright restrictions.
@@ -17,7 +17,7 @@ It is recommended to share PDFs through file synchronization clients and to crea
    - Explain state intermediate transitions
    - Mention that more detailed commands (prep, prep-man, ...) will be suggested if colrev retrieve does not result in all records transitioning to md_processed
 
-Fulltext retrieval consists of the following operations:
+Full-text retrieval consists of the following operations:
 
 - pdf-get operation:
    - Retrieves PDFs from sources like the local_index or unpaywall

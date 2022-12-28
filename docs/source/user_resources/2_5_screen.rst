@@ -1,10 +1,10 @@
 
 .. _PDF screen:
 
-Step 5: Fulltext screen
+Step 5: Full-text screen
 ---------------------------------------------
 
-The fulltext screen refers to the final inclusion or exclusion of records based on full-text documents.
+The full-text screen refers to the final inclusion or exclusion of records based on full-text documents.
 Screening criteria, which can be inclusion or exclusion criteria, are a means to making these decisions more transparent (e.g., in a PRISMA flow chart).
 Records are only included when none of the criteria is violated.
 

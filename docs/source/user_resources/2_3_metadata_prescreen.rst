@@ -6,7 +6,7 @@ Step 3: Metadata prescreen
 
 The metadata prescreen refers to the inclusion or exclusion of records based on titles and abstracts (if available).
 It's main purpose is to reduce the number of records by excluding those that are clearly irrelevant to the review objectives.
-When in doubt, records can be retained, i.e., included provisionally to decide in step 5, which is the screen based on fulltext documents.
+When in doubt, records can be retained, i.e., included provisionally to decide in step 5, which is the screen based on full-text documents.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).
 Each author can independently screen the selection of records on a separate git branch.
