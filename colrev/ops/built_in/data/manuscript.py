@@ -655,15 +655,19 @@ class Manuscript(JsonSchemaMixin):
             data_operation.review_manager.path
         )
 
-        if not data_operation.review_manager.dataset.has_changes(
-            relative_path=self.paper_relative_path
+        if (
+            not data_operation.review_manager.dataset.has_changes(
+                relative_path=self.paper_relative_path
+            )
+            and self.settings.paper_output.is_file()
         ):
-            # data_operation.review_manager.logger.debug(
-            #     "Skipping manuscript build (no changes)"
-            # )
+            data_operation.review_manager.logger.debug(
+                "Skipping manuscript build (no changes)"
+            )
             return
 
-        data_operation.review_manager.logger.info("Build manuscript")
+        if data_operation.review_manager.verbose_mode:
+            data_operation.review_manager.logger.info("Build manuscript")
 
         script = (
             f"{self.paper_relative_path} --filter pandoc-crossref --citeproc "
