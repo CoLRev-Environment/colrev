@@ -275,7 +275,7 @@ def retrieve(
 
         review_manager.logger.info("Retrieve")
         review_manager.logger.info(
-            "Retrieve is a high-level operation consisting of search, load, prep, and dedupe."
+            "Retrieve is a high-level operation consisting of search, load, prep, and dedupe:"
         )
 
         print()
@@ -858,9 +858,6 @@ def prescreen(
                 "and provisionally retain the remaining records."
             )
             prescreen_operation.main(split_str=split)
-            review_manager.logger.info(
-                "%sCompleted prescreen operation%s", colors.GREEN, colors.END
-            )
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -1018,6 +1015,12 @@ def pdfs(
             pdf_get_man_operation.discard()
 
             return
+
+        review_manager.logger.info("PDFs")
+        review_manager.logger.info(
+            "PDFs is a high-level operation consisting of pdf-get and pdf-prep:"
+        )
+        print()
 
         pdf_get_operation = review_manager.get_pdf_get_operation(
             notify_state_transition_operation=True

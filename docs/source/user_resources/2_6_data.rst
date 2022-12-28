@@ -15,7 +15,7 @@ TODO : explain principles (knowing whether all is completed, ...)
     To select the data format, please consult the best practices for different `types of reviews <./best_practices.html#types-of-literature-reviews>`_.
 
 
-The data extractoin and synthesis step corresponds to a single operation:
+The data extraction and synthesis step corresponds to a single operation:
 
 .. toctree::
    :maxdepth: 3

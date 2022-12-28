@@ -172,7 +172,7 @@ class Manuscript(JsonSchemaMixin):
             self.data_operation.review_manager.dataset.add_changes(
                 path=Path(csl_filename)
             )
-            self.data_operation.review_manager.logger.info(
+            self.data_operation.review_manager.logger.debug(
                 "Downloaded csl file for offline use"
             )
 

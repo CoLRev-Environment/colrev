@@ -175,12 +175,14 @@ class PDFGet(colrev.operation.Operation):
                 )
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
                 self.review_manager.logger.info(
-                    f" pdf-get {colors.GREEN}{record.data['ID']}{colors.END}"
+                    f" {colors.GREEN}{record.data['ID']}".ljust(46)
+                    + f"pdf_imported{colors.END}"
                 )
                 return record.get_data()
 
         self.review_manager.logger.info(
-            f" pdf-get {colors.RED}{record.data['ID']}{colors.END}"
+            f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+            + f"pdf_needs_manual_retrieval{colors.END}"
         )
 
         record.data.update(
@@ -485,30 +487,30 @@ class PDFGet(colrev.operation.Operation):
 
         self.not_retrieved = self.to_retrieve - self.retrieved
 
-        retrieved_string = "Retrieved: "
+        retrieved_string = "Retrieved".ljust(25)
         if self.retrieved == 0:
-            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += f"{self.retrieved}".rjust(15, " ")
             retrieved_string += " PDFs"
         elif self.retrieved == 1:
             retrieved_string += f"{colors.GREEN}"
-            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += f"{self.retrieved}".rjust(15, " ")
             retrieved_string += f"{colors.END} PDF"
         else:
             retrieved_string += f"{colors.GREEN}"
-            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += f"{self.retrieved}".rjust(15, " ")
             retrieved_string += f"{colors.END} PDFs"
 
-        not_retrieved_string = "Missing:   "
+        not_retrieved_string = "Needs manual retrieval".ljust(25)
         if self.not_retrieved == 0:
-            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
             not_retrieved_string += " PDFs"
         elif self.not_retrieved == 1:
             not_retrieved_string += f"{colors.ORANGE}"
-            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
             not_retrieved_string += f"{colors.END} PDF"
         else:
             not_retrieved_string += f"{colors.ORANGE}"
-            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
             not_retrieved_string += f"{colors.END} PDFs"
 
         self.review_manager.logger.info(retrieved_string)
@@ -581,12 +583,13 @@ class PDFGet(colrev.operation.Operation):
                 records={r["ID"]: r for r in retrieved_record_list}, partial=True
             )
 
+            self._print_stats(retrieved_record_list=retrieved_record_list)
+
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
             if self.review_manager.settings.pdf_get.rename_pdfs:
                 self.rename_pdfs()
 
-            self._print_stats(retrieved_record_list=retrieved_record_list)
         else:
             self.review_manager.logger.info("No additional pdfs to retrieve")
 

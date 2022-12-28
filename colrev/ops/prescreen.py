@@ -9,6 +9,7 @@ import colrev.operation
 import colrev.ops.built_in.prescreen.conditional_prescreen
 import colrev.ops.built_in.prescreen.prescreen_table
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class Prescreen(colrev.operation.Operation):
@@ -196,6 +197,52 @@ class Prescreen(colrev.operation.Operation):
             script_call="colrev prescreen",
         )
 
+    def __print_stats(self, *, selected_record_ids: list) -> None:
+
+        records = self.review_manager.dataset.load_records_dict(header_only=True)
+        prescreen_excluded = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.rev_prescreen_excluded == r["colrev_status"]
+            and r["ID"] in selected_record_ids
+        ]
+        prescreen_included = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.rev_prescreen_included == r["colrev_status"]
+            and r["ID"] in selected_record_ids
+        ]
+
+        if not prescreen_excluded and not prescreen_included:
+            return
+
+        print()
+        self.review_manager.logger.info("Statistics")
+        for record_dict in records.values():
+            if record_dict["ID"] in prescreen_excluded:
+                self.review_manager.logger.info(
+                    f" {record_dict['ID']}".ljust(45) + "rev_prescreen_excluded"
+                )
+            elif record_dict["ID"] in prescreen_included:
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}{record_dict['ID']}".ljust(50)
+                    + f"rev_prescreen_included{colors.END}"
+                )
+
+        nr_prescreen_excluded = len(prescreen_excluded)
+        nr_prescreen_included = len(prescreen_included)
+
+        self.review_manager.logger.info(
+            "Prescreen excluded".ljust(29)
+            + f"{nr_prescreen_excluded}".rjust(15, " ")
+            + " records"
+        )
+        self.review_manager.logger.info(
+            "Prescreen included".ljust(29)
+            + f"{nr_prescreen_included}".rjust(15, " ")
+            + " records"
+        )
+
     def main(self, *, split_str: str) -> None:
         """Prescreen records (main entrypoint)"""
 
@@ -228,7 +275,19 @@ class Prescreen(colrev.operation.Operation):
                 operation=self,
             )
             endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
-            records = endpoint.run_prescreen(self, records, split)  # type: ignore
+
+            selected_record_ids = [
+                r["ID"]
+                for r in records.values()
+                if colrev.record.RecordState.md_processed == r["colrev_status"]
+            ]
+            endpoint.run_prescreen(self, records, split)  # type: ignore
+
+            self.__print_stats(selected_record_ids=selected_record_ids)
+
+        self.review_manager.logger.info(
+            "%sCompleted prescreen operation%s", colors.GREEN, colors.END
+        )
 
 
 if __name__ == "__main__":

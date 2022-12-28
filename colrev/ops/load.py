@@ -42,10 +42,10 @@ class Load(colrev.operation.Operation):
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
             self.review_manager.logger.info(
-                "Load converts search results stored in data/search"
+                "Load converts search results and adds them to the shared data/records.bib."
             )
             self.review_manager.logger.info(
-                "and adds them to the shared data/records.bib"
+                "Search results are stored in the directory data/search"
             )
 
     def __get_new_search_files(self) -> list[Path]:

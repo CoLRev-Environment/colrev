@@ -165,8 +165,6 @@ class Initializer:
     def __setup_files(self, *, path: Path) -> None:
         # pylint: disable=too-many-locals
 
-        self.logger.info("Add files")
-
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/init/settings.json")

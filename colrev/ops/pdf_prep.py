@@ -123,8 +123,7 @@ class PDFPrep(colrev.operation.Operation):
         pdf_path = self.review_manager.path / Path(record_dict["file"])
         if not Path(pdf_path).is_file():
             self.review_manager.logger.error(
-                f'{record_dict["ID"]}'.ljust(pad, " ")
-                + "Linked file/pdf does not exist"
+                f'{record_dict["ID"]}'.ljust(46, " ") + "Linked file/pdf does not exist"
             )
             return record_dict
 
@@ -149,7 +148,7 @@ class PDFPrep(colrev.operation.Operation):
 
                 self.review_manager.logger.debug(
                     f'{endpoint.settings.endpoint}({record.data["ID"]}):'.ljust(  # type: ignore
-                        pad, " "
+                        50, " "
                     )
                     + "called"
                 )
@@ -179,9 +178,9 @@ class PDFPrep(colrev.operation.Operation):
             )
 
             if failed:
-                detailed_msgs.append(
-                    f"{colors.RED}{endpoint.settings.endpoint}{colors.END}"  # type: ignore
-                )
+                msg_str = f"{endpoint.settings.endpoint}"  # type: ignore
+                msg_str = msg_str.replace("colrev_built_in.", "")
+                detailed_msgs.append(f"{colors.ORANGE}{msg_str}{colors.END}")
 
             if failed:
                 break
@@ -199,12 +198,14 @@ class PDFPrep(colrev.operation.Operation):
 
         if successfully_prepared:
             self.review_manager.logger.info(
-                f" pdf-prep {colors.GREEN}{record_dict['ID']}{colors.END}"
+                f" {colors.GREEN}{record_dict['ID']}".ljust(46)
+                + f"pdf_prepared{colors.END}"
             )
         else:
             self.review_manager.logger.info(
-                f" pdf-prep {colors.RED}{record_dict['ID']} "
-                f"({', '.join(detailed_msgs)}{colors.END})"
+                f" {colors.ORANGE}{record_dict['ID']} ".ljust(46)
+                + f"pdf_needs_manual_preparation {colors.END}"
+                f"({', '.join(detailed_msgs)})"
             )
 
         if successfully_prepared:
@@ -305,22 +306,22 @@ class PDFPrep(colrev.operation.Operation):
 
         if not self.review_manager.high_level_operation:
             print()
-        prepared_string = "Prepared:    "
+        prepared_string = "Prepared".ljust(25)
         if self.pdf_prepared == 0:
-            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
             prepared_string += " PDFs"
         elif self.pdf_prepared == 1:
             prepared_string += f"{colors.GREEN}"
-            prepared_string += f"{self.pdf_prepared}".rjust(10, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
             prepared_string += f"{colors.END} PDF"
         else:
             prepared_string += f"{colors.GREEN}"
-            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
             prepared_string += f"{colors.END} PDFs"
 
-        not_prepared_string = "Not prepared:"
+        not_prepared_string = "Not prepared".ljust(25)
         if self.not_prepared == 0:
-            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(15, " ")
             not_prepared_string += " PDFs"
         elif self.not_prepared == 1:
             not_prepared_string += f"{colors.ORANGE}"
@@ -328,7 +329,7 @@ class PDFPrep(colrev.operation.Operation):
             not_prepared_string += f"{colors.END} PDF"
         else:
             not_prepared_string += f"{colors.ORANGE}"
-            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(15, " ")
             not_prepared_string += f"{colors.END} PDFs"
 
         self.review_manager.logger.info(prepared_string)

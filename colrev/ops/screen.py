@@ -257,6 +257,56 @@ class Screen(colrev.operation.Operation):
             script_call="colrev screen",
         )
 
+    def __print_stats(self, *, selected_record_ids: list) -> None:
+
+        records = self.review_manager.dataset.load_records_dict(header_only=True)
+        screen_excluded = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.rev_included == r["colrev_status"]
+            and r["ID"] in selected_record_ids
+        ]
+        screen_included = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.rev_excluded == r["colrev_status"]
+            and r["ID"] in selected_record_ids
+        ]
+
+        if not screen_excluded and not screen_included:
+            return
+
+        print()
+        self.review_manager.logger.info("Statistics")
+        for record_dict in records.values():
+            if record_dict["ID"] in screen_excluded:
+                reasons = record_dict.get("screening_criteria", "NA")
+                if "NA" == reasons:
+                    reasons = ""
+                self.review_manager.logger.info(
+                    f" {record_dict['ID']}".ljust(45)
+                    + f"excluded {colors.RED}({reasons}){colors.END}"
+                )
+            elif record_dict["ID"] in screen_included:
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}{record_dict['ID']}".ljust(50)
+                    + f"included{colors.END}"
+                )
+
+        nr_screen_excluded = len(screen_excluded)
+        nr_screen_included = len(screen_included)
+
+        self.review_manager.logger.info(
+            "Screen excluded".ljust(29)
+            + f"{nr_screen_excluded}".rjust(15, " ")
+            + " records"
+        )
+        self.review_manager.logger.info(
+            "Screen included".ljust(29)
+            + f"{nr_screen_included}".rjust(15, " ")
+            + " records"
+        )
+
     def main(self, *, split_str: str) -> None:
         """Screen records for inclusion (main entrypoint)"""
 
@@ -291,8 +341,15 @@ class Screen(colrev.operation.Operation):
                 operation=self,
             )
 
+            selected_record_ids = [
+                r["ID"]
+                for r in records.values()
+                if colrev.record.RecordState.pdf_prepared == r["colrev_status"]
+            ]
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
-            records = endpoint.run_screen(self, records, split)  # type: ignore
+            endpoint.run_screen(self, records, split)  # type: ignore
+
+            self.__print_stats(selected_record_ids=selected_record_ids)
 
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed screen operation{colors.END}"
