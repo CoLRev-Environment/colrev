@@ -1745,6 +1745,8 @@ def validate(
             # gh_issue https://github.com/geritwagner/colrev/issues/57
             # correct? if not, replace current record with old one
 
+        review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
+
         if not displayed:
             review_manager.logger.info("No preparation changes above threshold")
     except colrev_exceptions.CoLRevException as exc:

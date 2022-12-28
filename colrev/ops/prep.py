@@ -295,21 +295,32 @@ class Prep(colrev.operation.Operation):
                 progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(12, " ")
 
             if record.preparation_break_condition():
-                self.review_manager.logger.info(
-                    f" {progress}prescreen_exclude {colors.RED}{record.data['ID']} "
-                    f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
-                )
+                if (
+                    colrev.record.RecordState.rev_prescreen_excluded
+                    == record.data["colrev_status"]
+                ):
+                    self.review_manager.logger.info(
+                        f" {colors.RED}{record.data['ID']}".ljust(50)
+                        + f"{progress}rev_prescreen_excluded "
+                        f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
+                    )
+                else:
+                    self.review_manager.logger.info(
+                        f" {colors.ORANGE}{record.data['ID']}".ljust(50)
+                        + f"{progress}md_needs_man_prep{colors.END}"
+                    )
+
             elif record.preparation_save_condition():
-                curation_addition = ""
+                curation_addition = "   "
                 if record.masterdata_is_curated():
-                    curation_addition = " ✔"
+                    curation_addition = " ✔ "
                 self.review_manager.logger.info(
-                    f" {progress}prepare {colors.GREEN}{record.data['ID']}{colors.END}"
-                    f"{curation_addition}"
+                    f" {colors.GREEN}{record.data['ID']}".ljust(50)
+                    + f"{progress}md_prepared{colors.END} {curation_addition}"
                 )
             else:
                 self.review_manager.logger.info(
-                    f" {progress}prepare {record.data['ID']}"
+                    f" {record.data['ID']}".ljust(50) + f"{progress}md_prepared"
                 )
 
         if self.last_round:
@@ -789,7 +800,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Records prepared:".ljust(32) + f"{colors.GREEN}{nr_recs}{colors.END}"
+            "Records prepared:".ljust(42) + f"{colors.GREEN}{nr_recs}{colors.END}"
         )
 
         nr_recs = len(
@@ -801,7 +812,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Curated records:".ljust(32) + f"{colors.GREEN}{nr_recs}{colors.END} "
+            "Curated records:".ljust(42) + f"{colors.GREEN}{nr_recs}{colors.END} "
             "( ✔ quality-assured by CoLRev community curators)"
         )
 
@@ -815,7 +826,7 @@ class Prep(colrev.operation.Operation):
         )
         if nr_recs > 0:
             self.review_manager.logger.info(
-                "Records to prepare manually:".ljust(32)
+                "Records to prepare manually:".ljust(42)
                 + f"{colors.ORANGE}{nr_recs}{colors.END}"
             )
 
@@ -833,7 +844,7 @@ class Prep(colrev.operation.Operation):
                 "(non-latin alphabet)"
             )
             self.review_manager.logger.info(
-                "Records prescreen-excluded:".ljust(32)
+                "Records prescreen-excluded:".ljust(50)
                 + f"{colors.RED}{nr_recs}{colors.END}"
             )
 

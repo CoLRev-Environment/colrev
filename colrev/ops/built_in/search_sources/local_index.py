@@ -369,10 +369,17 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     include_file=False,
                 )
             except colrev_exceptions.RecordNotInTOCException as exc:
-                record.prescreen_exclude(
-                    reason=f"record not in toc {exc.toc_key}",  # type : ignore
-                    print_warning=True,
+                record.set_status(
+                    target_state=colrev.record.RecordState.md_needs_manual_preparation
                 )
+                if "journal" in record.data:
+                    record.add_masterdata_provenance_note(
+                        key="journal", note=f"record_not_in_toc {exc.toc_key}"
+                    )
+                elif "booktitle" in record.data:
+                    record.add_masterdata_provenance_note(
+                        key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
+                    )
                 return record
 
             except (

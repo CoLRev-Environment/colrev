@@ -2378,14 +2378,27 @@ class PrepRecord(Record):
             RecordState.md_prepared,
         ]:
             return True
-        if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
+
+        if any(
+            "disagreement with " in x["note"]
+            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+        ) or any(
+            "record_not_in_toc" in x["note"]
+            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+        ):
             return True
 
         return False
 
     def preparation_break_condition(self) -> bool:
         """Check whether the break condition for the prep operation is given"""
-        if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
+        if any(
+            "disagreement with " in x["note"]
+            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+        ) or any(
+            "record_not_in_toc" in x["note"]
+            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+        ):
             return True
 
         if self.data.get("colrev_status", "NA") in [
