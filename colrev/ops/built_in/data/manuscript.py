@@ -263,15 +263,14 @@ class Manuscript(JsonSchemaMixin):
 
                     for paper_id_added in paper_ids_added:
                         review_manager.logger.info(
-                            f" add {colors.GREEN}{paper_id_added}{colors.END}"
+                            f" {colors.GREEN}{paper_id_added}".ljust(45)
+                            + f"add to manuscript{colors.END}"
                         )
 
                     review_manager.logger.info(
-                        "Added %s%s records %s to %s",
-                        colors.GREEN,
-                        nr_records_added,
-                        colors.END,
-                        paper_path.name,
+                        f"Added to {paper_path.name}".ljust(24)
+                        + f"{nr_records_added}".rjust(15, " ")
+                        + " records"
                     )
 
                     # skip empty lines between to connect lists
@@ -455,8 +454,10 @@ class Manuscript(JsonSchemaMixin):
             #     f"All records included in {self.settings.paper_path.name}"
             # )
         else:
-            review_manager.report_logger.info("Updating manuscript")
-            review_manager.logger.info("Updating manuscript")
+            review_manager.report_logger.info("Update manuscript")
+            review_manager.logger.info(
+                f"Update manuscript ({self.settings.paper_path.name}"
+            )
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 missing_records=missing_records,
@@ -687,6 +688,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
+        silent_mode: bool,  # pylint: disable=unused-argument
     ) -> None:
         """Update the data/manuscript"""
 
@@ -770,8 +772,12 @@ class Manuscript(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [manuscript endpoint]: "
+
         advice = {
-            "msg": "Edit the data/paper.md and rerun colrev data to build the manuscript",
+            "msg": f"{data_endpoint}"
+            + "\n    - Edit the manuscript in the data/paper.md"
+            + "\n    - Run colrev data to build the manuscript",
             "detailed_msg": "... with a link to the docs etc.",
         }
         return advice

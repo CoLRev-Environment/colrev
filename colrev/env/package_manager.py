@@ -291,6 +291,7 @@ class DataPackageEndpointInterface(
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
+        silent_mode: bool,
     ) -> None:
         """Run the data operation (data extraction, analysis, synthesis)"""
 

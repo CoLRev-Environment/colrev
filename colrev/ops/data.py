@@ -8,6 +8,7 @@ import pandas as pd
 
 import colrev.operation
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class Data(colrev.operation.Operation):
@@ -218,8 +219,18 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def main(self) -> dict:
-        """Data operation (main entrypoint)"""
+    def main(self, *, silent_mode: bool = False) -> dict:
+        """Data operation (main entrypoint)
+
+        silent_mode: for review_manager checks
+        """
+
+        if not silent_mode:
+            self.review_manager.logger.info("Data")
+            self.review_manager.logger.info(
+                "The data operation covers different forms of data extraction, "
+                "analysis, and synthesis."
+            )
 
         no_endpoints_registered = 0 == len(
             self.review_manager.settings.data.data_package_endpoints
@@ -263,6 +274,11 @@ class Data(colrev.operation.Operation):
         for (
             data_package_endpoint
         ) in self.review_manager.settings.data.data_package_endpoints:
+            if not silent_mode:
+                print()
+                self.review_manager.logger.info(
+                    f"Data: {data_package_endpoint['endpoint'].replace('colrev_built_in.', '')}"
+                )
 
             endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.data,
@@ -271,7 +287,9 @@ class Data(colrev.operation.Operation):
             )
             endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
-            endpoint.update_data(self, records, synthesized_record_status_matrix)  # type: ignore
+            endpoint.update_data(  # type: ignore
+                self, records, synthesized_record_status_matrix, silent_mode=silent_mode
+            )
             endpoint.update_record_status_matrix(  # type: ignore
                 self,
                 synthesized_record_status_matrix,
@@ -313,6 +331,11 @@ class Data(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
+
+        if not silent_mode:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Completed data operation{colors.END}"
+            )
 
         return {
             "ask_to_commit": True,

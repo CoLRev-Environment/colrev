@@ -253,6 +253,7 @@ class ColrevCuration(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+        silent_mode: bool,  # pylint: disable=unused-argument
     ) -> None:
         """Update the CoLRev curation"""
 

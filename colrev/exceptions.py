@@ -375,6 +375,14 @@ class InvalidMerge(DedupeError):
 # Data
 
 
+class DataException(CoLRevException):
+    """Exception in the dat aoperation"""
+
+    def __init__(self, *, msg: str) -> None:
+        self.message = msg
+        super().__init__("DataException: " + self.message)
+
+
 class NoPaperEndpointRegistered(CoLRevException):
     """No paper endpoint registered in settings.json"""
 

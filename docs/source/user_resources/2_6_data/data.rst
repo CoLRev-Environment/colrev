@@ -18,9 +18,9 @@ To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev data --add_endpoint colrev_built_in.manuscript
-    colrev data --add_endpoint colrev_built_in.structured
-    colrev data --add_endpoint colrev_built_in.prisma
+    colrev data --add colrev_built_in.manuscript
+    colrev data --add colrev_built_in.structured
+    colrev data --add colrev_built_in.prisma
     ...
 
 Depending on the data format, the :program:`colrev data` command

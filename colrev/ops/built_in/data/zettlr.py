@@ -291,6 +291,7 @@ class Zettlr(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+        silent_mode: bool,  # pylint: disable=unused-argument
     ) -> None:
         """Update the data/zettlr notes"""
 

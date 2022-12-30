@@ -1488,9 +1488,9 @@ def pdf_prep_man(
 )
 @click.option(
     "-a",
-    "--add_endpoint",
+    "--add",
     type=str,
-    help="Add a data_format endpoint (e.g., MANUSCRIPT,STRUCTURED)",
+    help="Add a data_format endpoint (e.g., colrev_built_in.structured)",
 )
 @click.option(
     "-scs",
@@ -1518,7 +1518,7 @@ def data(
     ctx: click.core.Context,
     profile: bool,
     reading_heuristics: bool,
-    add_endpoint: str,
+    add: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -1547,12 +1547,12 @@ def data(
             print("Please update the data_format in settings.json and commit.")
             return
 
-        if add_endpoint:
+        if add:
 
             colrev.ui_cli.add_packages.add_data(
                 data_operation=data_operation,
                 review_manager=review_manager,
-                add_endpoint=add_endpoint,
+                add=add,
             )
 
             return
@@ -1568,13 +1568,13 @@ def data(
                 "No data format not specified. "
                 "To register a data endpoint, "
                 "use one (or several) of the following \n"
-                "    colrev data --add_endpoint colrev_built_in.manuscript\n"
-                "    colrev data --add_endpoint colrev_built_in.structured\n"
-                "    colrev data --add_endpoint colrev_built_in.bibliography_export\n"
-                "    colrev data --add_endpoint colrev_built_in.prisma\n"
-                "    colrev data --add_endpoint colrev_built_in.github_pages\n"
-                "    colrev data --add_endpoint colrev_built_in.zettlr\n"
-                "    colrev data --add_endpoint colrev_built_in.colrev_curation"
+                "    colrev data --add colrev_built_in.manuscript\n"
+                "    colrev data --add colrev_built_in.structured\n"
+                "    colrev data --add colrev_built_in.bibliography_export\n"
+                "    colrev data --add colrev_built_in.prisma\n"
+                "    colrev data --add colrev_built_in.github_pages\n"
+                "    colrev data --add colrev_built_in.zettlr\n"
+                "    colrev data --add colrev_built_in.colrev_curation"
             )
 
     except colrev_exceptions.CoLRevException as exc:

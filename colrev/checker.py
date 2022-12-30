@@ -712,7 +712,7 @@ class Checker:
         data_checks = [
             {
                 "script": data_operation.main,
-                "params": [],
+                "params": {"silent_mode": True},
             },
             {
                 "script": self.review_manager.update_status_yaml,

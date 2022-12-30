@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import csv
-import itertools
 import typing
+from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,11 +15,22 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 if TYPE_CHECKING:
     import colrev.ops.data
+
+
+@dataclass
+class Field(JsonSchemaMixin):
+    """Field definition"""
+
+    name: str
+    explanation: str
+    data_type: str
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -37,7 +48,8 @@ class StructuredData(JsonSchemaMixin):
         version: str
         # gh_issue https://github.com/geritwagner/colrev/issues/79
         # Field dataclass (name, explanation, data_type)
-        fields: dict
+        # TODO : use https://pypi.org/project/csv-schema/
+        fields: typing.List[Field]
         data_path_relative: Path = Path("data/data.csv")
 
         _details = {
@@ -46,6 +58,18 @@ class StructuredData(JsonSchemaMixin):
 
     settings_class = StructuredDataSettings
 
+    __FULL_DATA_FIELD_EXPLANATION = """Explanation: Data fields are used in the coding tables.
+Example 1:
+    - name           : summary
+    - explanation    : Brief summary of the principal findings
+    - data_type      : str
+
+Example 2:
+    - name           : sample_size
+    - explanation    : Sample size of the study
+    - data_type      : int
+    """
+
     def __init__(
         self,
         *,
@@ -53,60 +77,104 @@ class StructuredData(JsonSchemaMixin):
         settings: dict,
     ) -> None:
 
+        if "version" not in settings:
+            settings["version"] = "0.1"
+
+        if "fields" not in settings:
+            settings["fields"] = []
+        if "data_path_relative" not in settings:
+            settings["data_path_relative"] = Path("data/data.csv")
+
         self.settings = self.settings_class.load_settings(data=settings)
         self.data_path = (
             data_operation.review_manager.path / self.settings.data_path_relative
         )
+        self.review_manager = data_operation.review_manager
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""
+
+        # Note : add fields interactively upon update_data()
+
         structured_endpoint_details = {
             "endpoint": "colrev_built_in.structured",
             "version": "0.1",
-            "fields": [
-                {
-                    "name": "field name",
-                    "explanation": "explanation",
-                    "data_type": "data type",
-                }
-            ],
+            "fields": [],
+            # TODO : check if path exists / suggest other path
+            "data_path_relative": "data/data.csv",
         }
         return structured_endpoint_details
 
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/79
-        # implement the following:
-        # # Check whether there are duplicate IDs in data.csv
-        # if not data['ID'].is_unique:
-        #     raise some error (data[data.duplicated(['ID'])].ID.tolist())
+        if not self.data_path.is_file():
+            return
 
-        # # Check consistency: all IDs in data.csv in data/records.bib
-        # missing_IDs = [ID for
-        #                 ID in data['ID'].tolist()
-        #                 if ID not in IDs]
-        # if not len(missing_IDs) == 0:
-        #     raise some error ('IDs in data.csv not in RECORDS_FILE: ' +
-        #             str(set(missing_IDs)))
+        data_df = pd.read_csv(self.data_path, dtype=str)
 
-        # # Check consistency: data -> inclusion_2
-        # data_IDs = data['ID'].tolist()
-        # screen_IDs = \
-        #     screen['ID'][screen['inclusion_2'] == 'yes'].tolist()
-        # violations = [ID for ID in set(
-        #     data_IDs) if ID not in set(screen_IDs)]
-        # if len(violations) != 0:
-        #     raise some error ('IDs in DATA not coded as inclusion_2=yes: ' +
-        #           f'{violations}')
+        # Check for duplicate IDs
+        if not data_df["ID"].is_unique:
+            raise colrev_exceptions.DataException(
+                msg=f"duplicates in {self.settings.data_path_relative}: "
+                + ",".join(data_df[data_df.duplicated(["ID"])].ID.tolist())
+            )
+
+        # Check consistency: data -> inclusion_2
+        data_ids = data_df["ID"].tolist()
+        records = self.review_manager.dataset.load_records_dict()
+        for data_id in data_ids:
+            if data_id not in records:
+                raise colrev_exceptions.DataException(
+                    msg=f"{data_id} in {self.settings.data_path_relative} not in records"
+                )
+            if records[data_id]["colrev_status"] not in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]:
+                raise colrev_exceptions.DataException(
+                    msg=f"{data_id} in {self.settings.data_path_relative} "
+                    + "not in [rev_included, rev_synthesized]"
+                )
+
+        # Note : missing IDs are added through update_data
 
         return
+
+    def __set_fields(self) -> None:
+
+        self.review_manager.logger.info("Add fields for data extraction")
+
+        print(self.__FULL_DATA_FIELD_EXPLANATION)
+        while "y" == input("Add a data field [y,n]?"):
+            short_name = input("Provide a short name: ")
+            explanation = input("Provide a short explanation: ")
+            data_type = input("Provide the data type (str, int, double):")
+
+            self.settings.fields.append(
+                {"name": short_name, "explanation": explanation, "data_type": data_type}
+            )
+
+            print()
+
+        # Note : the following should be easier...
+        for i, candidate in enumerate(
+            self.review_manager.settings.data.data_package_endpoints
+        ):
+            if candidate.get("data_path_relative", "NA") == str(
+                self.settings.data_path_relative
+            ):
+                self.review_manager.settings.data.data_package_endpoints[i] = asdict(
+                    self.settings, dict_factory=colrev.env.utils.custom_asdict_factory
+                )
+        self.review_manager.save_settings()
 
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
+        silent_mode: bool,
     ) -> None:
         """Update the data/structured data extraction"""
 
@@ -118,52 +186,56 @@ class StructuredData(JsonSchemaMixin):
 
             if not self.data_path.is_file():
 
-                coding_dimensions_str = input(
-                    "\n\nEnter columns for data extraction (comma-separted)"
-                )
-                coding_dimensions = coding_dimensions_str.replace(" ", "_").split(",")
+                self.__set_fields()
 
-                data_list = []
-                for included_id in list(synthesized_record_status_matrix.keys()):
-                    item = [[included_id], ["TODO"] * len(coding_dimensions)]
-                    data_list.append(list(itertools.chain(*item)))
-
-                data_df = pd.DataFrame(data_list, columns=["ID"] + coding_dimensions)
+                field_names = [f["name"] for f in self.settings.fields]
+                data_df = pd.DataFrame([], columns=["ID"] + field_names)
                 data_df.sort_values(by=["ID"], inplace=True)
 
                 data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
-            else:
+            nr_records_added = 0
 
-                nr_records_added = 0
-
-                data_df = pd.read_csv(self.data_path, dtype=str)
-
-                for record_id in list(synthesized_record_status_matrix.keys()):
-                    # skip when already available
-                    if 0 < len(data_df[data_df["ID"].str.startswith(record_id)]):
-                        continue
-
-                    add_record = pd.DataFrame({"ID": [record_id]})
-                    add_record = add_record.reindex(
-                        columns=data_df.columns, fill_value="TODO"
-                    )
-                    data_df = pd.concat(
-                        [data_df, add_record], axis=0, ignore_index=True
-                    )
-                    nr_records_added = nr_records_added + 1
-
-                data_df.sort_values(by=["ID"], inplace=True)
-
-                data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
-
-                review_manager.report_logger.info(
-                    f"{nr_records_added} records added ({self.settings.data_path_relative})"
+            if not silent_mode:
+                self.review_manager.report_logger.info("Update structured data")
+                self.review_manager.logger.info(
+                    f"Update structured data ({self.settings.data_path_relative})"
                 )
+
+            data_df = pd.read_csv(self.data_path, dtype=str)
+
+            for record_id in list(synthesized_record_status_matrix.keys()):
+                # skip when already available
+                if 0 < len(data_df[data_df["ID"].str.startswith(record_id)]):
+                    continue
+
+                add_record = pd.DataFrame({"ID": [record_id]})
+                add_record = add_record.reindex(
+                    columns=data_df.columns, fill_value="TODO"
+                )
+                data_df = pd.concat([data_df, add_record], axis=0, ignore_index=True)
                 review_manager.logger.info(
-                    f"{nr_records_added} records added ({self.settings.data_path_relative})"
+                    f" {colors.GREEN}{record_id}".ljust(45)
+                    + f"add to structured_data{colors.END}"
+                )
+                nr_records_added = nr_records_added + 1
+
+            data_df.sort_values(by=["ID"], inplace=True)
+
+            data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
+
+            if not (0 == nr_records_added and silent_mode):
+                review_manager.logger.info(
+                    f"Added to {self.settings.data_path_relative}".ljust(24)
+                    + f"{nr_records_added}".rjust(15, " ")
+                    + " records"
                 )
 
+                review_manager.logger.info(
+                    f"Added to {self.settings.data_path_relative}".ljust(24)
+                    + f"{nr_records_added}".rjust(15, " ")
+                    + " records"
+                )
             return records
 
         self.validate_structured_data()
@@ -235,8 +307,12 @@ class StructuredData(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [structured data endpoint]: "
+
         advice = {
-            "msg": f"The data extraction sheed is at {self.settings.data_path_relative}",
+            "msg": f"{data_endpoint}"
+            + "\n    - Complete the data extraction in the {self.settings.data_path_relative}",
+            # TODO : # records to synthesize / of all
             "detailed_msg": "TODO",
         }
         return advice
