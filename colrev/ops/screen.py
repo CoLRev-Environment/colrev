@@ -263,13 +263,13 @@ class Screen(colrev.operation.Operation):
         screen_excluded = [
             r["ID"]
             for r in records.values()
-            if colrev.record.RecordState.rev_included == r["colrev_status"]
+            if colrev.record.RecordState.rev_excluded == r["colrev_status"]
             and r["ID"] in selected_record_ids
         ]
         screen_included = [
             r["ID"]
             for r in records.values()
-            if colrev.record.RecordState.rev_excluded == r["colrev_status"]
+            if colrev.record.RecordState.rev_included == r["colrev_status"]
             and r["ID"] in selected_record_ids
         ]
 
