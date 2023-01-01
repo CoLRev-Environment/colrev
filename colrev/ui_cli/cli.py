@@ -2475,7 +2475,7 @@ def show(  # type: ignore
 
     elif "prisma" == keyword:
         status_operation = review_manager.get_status_operation()
-        stats_report = status_operation.get_review_status_report(colors=colors)
+        stats_report = status_operation.get_review_status_report()
         print(stats_report)
 
 

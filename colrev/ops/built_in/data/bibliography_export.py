@@ -239,8 +239,11 @@ class BibliographyExport(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [bibliography export data endpoint]: "
+
         advice = {
-            "msg": f"The references are updated in the {self.endpoint_path}",
+            "msg": f"{data_endpoint}"
+            + f"\n    - The references are updated automatically ({self.endpoint_path})",
             "detailed_msg": "TODO",
         }
         return advice

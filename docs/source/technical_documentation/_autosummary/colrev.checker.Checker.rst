@@ -19,6 +19,8 @@ colrev.checker.Checker
       ~Checker.check_change_in_propagated_id
       ~Checker.check_fields
       ~Checker.check_repo
+      ~Checker.check_repo_basics
+      ~Checker.check_repo_extended
       ~Checker.check_repository_setup
       ~Checker.check_sources
       ~Checker.check_status_transitions

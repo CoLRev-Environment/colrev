@@ -20,4 +20,5 @@ colrev.ops.built\_in.data.structured
       :template: custom-class-template.rst
       :nosignatures:
 
+      Field
       StructuredData

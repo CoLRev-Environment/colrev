@@ -219,11 +219,13 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def main(self, *, silent_mode: bool = False) -> dict:
+    def main(self, *, records: dict = None, silent_mode: bool = False) -> dict:
         """Data operation (main entrypoint)
 
         silent_mode: for review_manager checks
         """
+
+        # pylint: disable=too-many-branches
 
         if not silent_mode:
             self.review_manager.logger.info("Data")
@@ -236,24 +238,15 @@ class Data(colrev.operation.Operation):
             self.review_manager.settings.data.data_package_endpoints
         )
 
-        records = self.review_manager.dataset.load_records_dict()
-        # if 0 == len(records):
-        #     return {
-        #         "ask_to_commit": False,
-        #         "no_endpoints_registered": no_endpoints_registered,
-        #     }
+        if not records:
+            records = self.review_manager.dataset.load_records_dict()
 
         self.__pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-        # if 0 == len(included) and self.review_manager.verbose_mode:
-        #     self.review_manager.report_logger.info("No records included yet")
-        #     self.review_manager.logger.info("No records included yet")
-
-        # else:
 
         # TBD: do we assume that records are not changed by the processes?
-        records = self.review_manager.dataset.load_records_dict()
+        # records = self.review_manager.dataset.load_records_dict()
 
         # synthesized_record_status_matrix (paper IDs x endpoint):
         # each endpoint sets synthesized = True/False
@@ -290,16 +283,18 @@ class Data(colrev.operation.Operation):
             endpoint.update_data(  # type: ignore
                 self, records, synthesized_record_status_matrix, silent_mode=silent_mode
             )
+
             endpoint.update_record_status_matrix(  # type: ignore
                 self,
                 synthesized_record_status_matrix,
                 data_package_endpoint["endpoint"],
             )
 
-            if self.review_manager.verbose_mode:
+            if self.review_manager.verbose_mode and not silent_mode:
                 msg = f"Updated {endpoint.settings.endpoint}"  # type: ignore
                 self.review_manager.logger.info(msg)
 
+        records_changed = False
         for (
             record_id,
             individual_status_dict,
@@ -318,19 +313,34 @@ class Data(colrev.operation.Operation):
                             f" {record_id}".ljust(self.__pad, " ")
                             + "set colrev_status to synthesized"
                         )
-                records[record_id].update(
-                    colrev_status=colrev.record.RecordState.rev_synthesized
-                )
+
+                if (
+                    colrev.record.RecordState.rev_synthesized
+                    != records[record_id]["colrev_status"]
+                ):
+                    records[record_id].update(
+                        colrev_status=colrev.record.RecordState.rev_synthesized
+                    )
+                    records_changed = True
             else:
-                records[record_id].update(
-                    colrev_status=colrev.record.RecordState.rev_included
-                )
+                if (
+                    colrev.record.RecordState.rev_included
+                    != records[record_id]["colrev_status"]
+                ):
+                    records[record_id].update(
+                        colrev_status=colrev.record.RecordState.rev_included
+                    )
+                    records_changed = True
 
         # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
+        if self.review_manager.verbose_mode and not silent_mode:
+            print()
+
+        if records_changed:
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
 
         if not silent_mode:
             self.review_manager.logger.info(

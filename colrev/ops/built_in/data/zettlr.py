@@ -328,8 +328,11 @@ class Zettlr(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [zettlr data endpoint]: "
+
         advice = {
-            "msg": f"The zettlr project is updated at {self.ZETTLR_PATH_RELATIVE}",
+            "msg": f"{data_endpoint}"
+            + f"\n    - The zettlr project is updated automatically ({self.ZETTLR_PATH_RELATIVE})",
             "detailed_msg": "TODO",
         }
         return advice

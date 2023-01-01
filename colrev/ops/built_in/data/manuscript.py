@@ -222,9 +222,11 @@ class Manuscript(JsonSchemaMixin):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         missing_records: list,
+        silent_mode: bool,
     ) -> None:
         # pylint: disable=consider-using-with
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
         # pylint: disable=too-many-locals
 
         temp = tempfile.NamedTemporaryFile()
@@ -262,16 +264,18 @@ class Manuscript(JsonSchemaMixin):
                     )
 
                     for paper_id_added in paper_ids_added:
-                        review_manager.logger.info(
-                            f" {colors.GREEN}{paper_id_added}".ljust(45)
-                            + f"add to manuscript{colors.END}"
-                        )
+                        if not silent_mode:
+                            review_manager.logger.info(
+                                f" {colors.GREEN}{paper_id_added}".ljust(45)
+                                + f"add to manuscript{colors.END}"
+                            )
 
-                    review_manager.logger.info(
-                        f"Added to {paper_path.name}".ljust(24)
-                        + f"{nr_records_added}".rjust(15, " ")
-                        + " records"
-                    )
+                    if not silent_mode:
+                        review_manager.logger.info(
+                            f"Added to {paper_path.name}".ljust(24)
+                            + f"{nr_records_added}".rjust(15, " ")
+                            + " records"
+                        )
 
                     # skip empty lines between to connect lists
                     line = reader.readline()
@@ -310,10 +314,11 @@ class Manuscript(JsonSchemaMixin):
                         # f" {missing_record}".ljust(self.__PAD, " ") + " added"
                         f" {missing_record} added"
                     )
-                    review_manager.logger.info(
-                        # f" {missing_record}".ljust(self.__PAD, " ") + " added"
-                        f" {missing_record} added"
-                    )
+                    if not silent_mode:
+                        review_manager.logger.info(
+                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                            f" {missing_record} added"
+                        )
 
     def __create_paper(
         self, review_manager: colrev.review_manager.ReviewManager
@@ -435,6 +440,7 @@ class Manuscript(JsonSchemaMixin):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         synthesized_record_status_matrix: dict,
+        silent_mode: bool,
     ) -> None:
 
         missing_records = self.__get_data_page_missing(
@@ -447,20 +453,23 @@ class Manuscript(JsonSchemaMixin):
         self.__check_new_record_source_tag()
 
         if 0 == len(missing_records):
-            review_manager.report_logger.info(
-                f"All records included in {self.settings.paper_path.name}"
-            )
+            if not silent_mode:
+                review_manager.report_logger.info(
+                    f"All records included in {self.settings.paper_path.name}"
+                )
             # review_manager.logger.debug(
             #     f"All records included in {self.settings.paper_path.name}"
             # )
         else:
-            review_manager.report_logger.info("Update manuscript")
-            review_manager.logger.info(
-                f"Update manuscript ({self.settings.paper_path.name}"
-            )
+            if not silent_mode:
+                review_manager.report_logger.info("Update manuscript")
+                review_manager.logger.info(
+                    f"Update manuscript ({self.settings.paper_path.name}"
+                )
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
                 missing_records=missing_records,
+                silent_mode=silent_mode,
             )
 
     def __append_to_non_sample_references(
@@ -560,6 +569,7 @@ class Manuscript(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
+        silent_mode: bool,
     ) -> typing.Dict:
         """Update the manuscript (add new records after the NEW_RECORD_SOURCE_TAG)"""
 
@@ -569,6 +579,7 @@ class Manuscript(JsonSchemaMixin):
         self.__add_missing_records(
             review_manager=review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
+            silent_mode=silent_mode,
         )
 
         self.__exclude_marked_records(
@@ -688,7 +699,7 @@ class Manuscript(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
-        silent_mode: bool,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the data/manuscript"""
 
@@ -699,12 +710,14 @@ class Manuscript(JsonSchemaMixin):
                 review_manager=data_operation.review_manager,
                 records=records,
                 synthesized_record_status_matrix=synthesized_record_status_matrix,
+                silent_mode=silent_mode,
             )
         else:
-            data_operation.review_manager.logger.warning(
-                f"{colors.RED}Skipping updates of "
-                f"{self.paper_relative_path} due to unstaged changes{colors.END}"
-            )
+            if not silent_mode:
+                data_operation.review_manager.logger.warning(
+                    f"{colors.RED}Skipping updates of "
+                    f"{self.paper_relative_path} due to unstaged changes{colors.END}"
+                )
 
         self.build_manuscript(data_operation=data_operation)
 
@@ -776,8 +789,10 @@ class Manuscript(JsonSchemaMixin):
 
         advice = {
             "msg": f"{data_endpoint}"
-            + "\n    - Edit the manuscript in the data/paper.md"
-            + "\n    - Run colrev data to build the manuscript",
+            + "\n    - Edit the manuscript (data/paper.md)"
+            + "\n    - Run colrev data to build the manuscript"
+            + "\n    - Run git add data/paper.md && "
+            + "git commit -m 'update manuscript' to create a version",
             "detailed_msg": "... with a link to the docs etc.",
         }
         return advice

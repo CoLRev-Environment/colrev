@@ -191,7 +191,7 @@ class Commit:
         status_operation = self.review_manager.get_status_operation()
 
         report = self.__get_commit_report_header()
-        report += status_operation.get_review_status_report()
+        report += status_operation.get_review_status_report(colors=False)
         report += self.__get_commit_report_details()
 
         return report

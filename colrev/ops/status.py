@@ -13,6 +13,7 @@ import yaml
 import colrev.env.utils
 import colrev.operation
 import colrev.record
+import colrev.ui_cli.cli_colors as colrev_colors
 
 
 class Status(colrev.operation.Operation):
@@ -71,15 +72,21 @@ class Status(colrev.operation.Operation):
 
         return analytics_dict
 
-    def get_review_status_report(self, *, colors: object = None) -> str:
+    def get_review_status_report(
+        self, *, records: dict = None, colors: bool = True
+    ) -> str:
         """Get the review status report"""
 
-        status_stats = self.review_manager.get_status_stats()
+        status_stats = self.review_manager.get_status_stats(records=records)
 
         template = colrev.env.utils.get_template(
             template_path="template/ops/status.txt"
         )
-        content = template.render(status_stats=status_stats, colors=colors)
+
+        if colors:
+            content = template.render(status_stats=status_stats, colors=colrev_colors)
+        else:
+            content = template.render(status_stats=status_stats, colors=None)
 
         return content
 
@@ -100,29 +107,31 @@ class StatusStats:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
+        records: dict = None,
     ) -> None:
 
         self.review_manager = review_manager
         colrev.operation.CheckOperation(review_manager=review_manager)
-        records_headers = self.review_manager.dataset.load_records_dict(
-            header_only=True
-        )
-        self._record_header_list = list(records_headers.values())
 
-        self.status_list = [x["colrev_status"] for x in self._record_header_list]
+        if records:
+            self.records = records
+        else:
+            self.records = self.review_manager.dataset.load_records_dict()
+
+        self.status_list = [x["colrev_status"] for x in self.records.values()]
         self.screening_criteria = [
             x["screening_criteria"]
-            for x in self._record_header_list
+            for x in self.records.values()
             if x.get("screening_criteria", "") not in ["", "NA"]
         ]
 
         self.md_duplicates_removed = 0
-        for item in self._record_header_list:
+        for item in self.records.values():
             self.md_duplicates_removed += (
                 len([o for o in item["colrev_origin"] if not o.startswith("md_")]) - 1
             )
 
-        origin_list = [x["colrev_origin"] for x in self._record_header_list]
+        origin_list = [x["colrev_origin"] for x in self.records.values()]
         self.record_links = 0
         for origin in origin_list:
             self.record_links += len([o for o in origin if not o.startswith("md_")])
@@ -167,7 +176,7 @@ class StatusStats:
 
         colrev_masterdata_items = [
             x["colrev_masterdata_provenance"]
-            for x in self._record_header_list
+            for x in self.records.values()
             if "colrev_masterdata_provenance" in x
         ]
 
@@ -404,7 +413,7 @@ class StatusStats:
         """Get the active processing functions"""
 
         active_operations = []
-        for state in current_origin_states_dict.values():
+        for state in set(current_origin_states_dict.values()):
             srec = colrev.record.RecordStateModel(state=state)
             valid_transitions = srec.get_valid_transitions()
             active_operations.extend(valid_transitions)

@@ -164,8 +164,7 @@ class ReviewManager:
 
     def in_virtualenv(self) -> bool:
         """Check whether CoLRev operates in a virtual environment"""
-        checker = colrev.checker.Checker(review_manager=self)
-        return checker.in_virtualenv()
+        return colrev.checker.Checker.in_virtualenv()
 
     def check_repository_setup(self) -> None:
         """Check the repository setup"""
@@ -260,10 +259,12 @@ class ReviewManager:
             else:
                 raise exc
 
-    def update_status_yaml(self, *, add_to_git: bool = True) -> None:
+    def update_status_yaml(
+        self, *, add_to_git: bool = True, records: dict = None
+    ) -> None:
         """Update the status.yaml"""
 
-        status_stats = self.get_status_stats()
+        status_stats = self.get_status_stats(records=records)
         exported_dict = asdict(status_stats)
         with open(self.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
@@ -333,12 +334,14 @@ class ReviewManager:
 
         return colrev.checker.Checker(review_manager=self)
 
-    def get_status_stats(self) -> colrev.ops.status.StatusStats:
+    def get_status_stats(
+        self, *, records: dict = None
+    ) -> colrev.ops.status.StatusStats:
         """Get a status stats object"""
 
         import colrev.ops.status
 
-        return colrev.ops.status.StatusStats(review_manager=self)
+        return colrev.ops.status.StatusStats(review_manager=self, records=records)
 
     def get_completeness_condition(self) -> bool:
         """Get the completeness condition"""

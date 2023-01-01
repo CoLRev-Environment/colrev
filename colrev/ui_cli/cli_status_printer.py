@@ -2,7 +2,8 @@
 """Scripts to print the CoLRev status (cli)."""
 from __future__ import annotations
 
-import logging
+import sys
+import typing
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -27,9 +28,10 @@ def print_review_instructions(review_instructions: dict) -> None:
     # keys = [item for sublist in key_list for item in sublist]
     # priority_item_set = "priority" in keys
     if not review_instructions:
-        print(f"    {colors.GREEN}review iteration completed{colors.END}")
+        print(f"    {colors.GREEN}Review iteration completed{colors.END}")
         print(
-            f"    {colors.ORANGE}to start the next iteration, add new search results{colors.END}"
+            f"    {colors.ORANGE}To start the next iteration of the review, "
+            f"add new search results (to data/search){colors.END}"
         )
         print()
 
@@ -66,10 +68,7 @@ def print_collaboration_instructions(
                 "Project not yet shared"
                 == collaboration_instructions["items"][0]["title"]
             ):
-                print(
-                    "More details (e.g., on collaboration)\n    "
-                    f"{colors.ORANGE}colrev status -v{colors.END}"
-                )
+                print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
 
         return
 
@@ -161,12 +160,34 @@ def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
 def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     """Print the project status on cli"""
 
+    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-branches
+
+    print("Load records...", end="\r")
+    sys.stdout.write("\033[K")
+
+    ret_check: typing.Dict[str, typing.Any] = {"status": 0}
+    failure_items = []
     try:
-        status_stats = status_operation.review_manager.get_status_stats()
-        status_report = status_operation.get_review_status_report(colors=colors)
+        checker = status_operation.review_manager.get_checker()
+        failure_items.extend(checker.check_repo_basics())
+    except colrev_exceptions.RepoSetupError as exc:
+        ret_check = {"status": 1, "msg": exc}
+        # TODO : what to do with the return value?!
+
+    try:
+        status_stats = status_operation.review_manager.get_status_stats(
+            records=checker.records
+        )
+        status_report = status_operation.get_review_status_report(
+            records=checker.records
+        )
         print(status_report)
 
-        if not status_stats.completeness_condition:
+        if (
+            not status_stats.completeness_condition
+            and status_operation.review_manager.verbose_mode
+        ):
             print_progress(
                 total_atomic_steps=status_stats.atomic_steps,
                 completed_steps=status_stats.completed_atomic_steps,
@@ -189,34 +210,26 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         print("Checks")
 
     try:
-        ret_check = status_operation.review_manager.check_repo()
+        failure_items.extend(checker.check_repo_extended())
     except colrev_exceptions.RepoSetupError as exc:
         ret_check = {"status": 1, "msg": exc}
+
+    if len(failure_items) > 0:
+        ret_check = {"status": 1, "msg": "  " + "\n  ".join(failure_items)}
 
     if 0 == ret_check["status"] and status_operation.review_manager.verbose_mode:
         print(
             "  ReviewManager.check_repo()  ...  "
-            f'{colors.GREEN}{ret_check["msg"]}{colors.END}'
+            f"{colors.GREEN}Everything ok.{colors.END}"
         )
     if 1 == ret_check["status"]:
         print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
         print(f'{ret_check["msg"]}\n')
         return
 
-    try:
-        ret_f = status_operation.review_manager.format_records_file()
-    except KeyError as exc:
-        logging.error(exc)
-        ret_f = {"status": 1, "msg": "KeyError"}
+    # To format:
+    status_operation.review_manager.dataset.save_records_dict(records=checker.records)
 
-    if 0 == ret_f["status"] and status_operation.review_manager.verbose_mode:
-        print(
-            "  ReviewManager.format()      ...  "
-            f'{colors.GREEN}{ret_f["msg"]}{colors.END}'
-        )
-    if 1 == ret_f["status"]:
-        print(f"  ReviewManager.format()      ...  {colors.RED}FAIL{colors.END}")
-        print(f'\n    {ret_f["msg"]}\n')
     if (
         not status_operation.review_manager.in_virtualenv()
         and status_operation.review_manager.verbose_mode
@@ -229,6 +242,12 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
             f"  {colors.ORANGE}colrev show venv{colors.END}"
         )
         print()
+
+    if status_operation.review_manager.verbose_mode:
+        print(
+            "Documentation: https://github.com/geritwagner/"
+            + "colrev/tree/main/docs/source/user_resources"
+        )
 
 
 if __name__ == "__main__":

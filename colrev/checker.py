@@ -2,7 +2,6 @@
 """Checkers for CoLRev repositories"""
 from __future__ import annotations
 
-import itertools
 import os
 import re
 import sys
@@ -41,6 +40,14 @@ class Checker:
     ) -> None:
 
         self.review_manager = review_manager
+
+        self.review_manager.notified_next_operation = (
+            colrev.operation.OperationsType.check
+        )
+
+        self.records: typing.Dict[str, typing.Any] = {}
+        if self.review_manager.dataset.records_file.is_file():
+            self.records = self.review_manager.dataset.load_records_dict()
 
     def get_colrev_versions(self) -> list[str]:
         """Get the colrev version as a list: (last-version, current-version)"""
@@ -133,7 +140,8 @@ class Checker:
         # 4. Pre-commit hooks up-to-date?
         self.__update_colrev_hooks()
 
-    def in_virtualenv(self) -> bool:
+    @classmethod
+    def in_virtualenv(cls) -> bool:
         """Check whether CoLRev operates in a virtual environment"""
 
         def get_base_prefix_compat() -> str:
@@ -268,24 +276,25 @@ class Checker:
                 f"Entries without origin: {', '.join(status_data['entries_without_origin'])}"
             )
 
-        # Check for broken origins
-        all_record_links = []
-        for bib_file in self.review_manager.search_dir.glob("*.bib"):
-            search_ids = self.__retrieve_ids_from_bib(file_path=bib_file)
-            for search_id in search_ids:
-                all_record_links.append(bib_file.name + "/" + search_id)
-        delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
-        if len(delta) > 0:
-            raise colrev_exceptions.OriginError(f"broken origins: {delta}")
+        if (
+            self.review_manager.dataset.records_changed()
+            or self.review_manager.verbose_mode
+        ):
+            # Check for broken origins
+            all_record_links = []
+            for bib_file in self.review_manager.search_dir.glob("*.bib"):
+                self.review_manager.logger.debug(bib_file)
+                search_ids = self.__retrieve_ids_from_bib(file_path=bib_file)
+                for search_id in search_ids:
+                    all_record_links.append(bib_file.name + "/" + search_id)
+            delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
+            if len(delta) > 0:
+                raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = list(itertools.chain([x[1] for x in status_data["origin_list"]]))
-        non_unique_origins = []
-        for org in origins:
-            if origins.count(org) > 1:
-                non_unique_origins.append(org)
-
-        if non_unique_origins:
+        origins = list(status_data["origin_list"].keys())
+        if len(origins) > len(set(origins)):
+            non_unique_origins = [org for org in origins if origins.count(org) > 1]
             raise colrev_exceptions.OriginError(
                 f'Non-unique origins: {" , ".join(set(non_unique_origins))}'
             )
@@ -479,22 +488,20 @@ class Checker:
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
-            if prior_origin not in [x[1] for x in status_data["origin_list"]]:
+            if prior_origin not in status_data["origin_list"]:
                 # Note: this does not catch origins removed before md_processed
                 raise colrev_exceptions.OriginError(f"origin removed: {prior_origin}")
-            for new_id, new_origin in status_data["origin_list"]:
-                if new_origin == prior_origin:
-                    if new_id != prior_id:
-                        notifications = self.check_change_in_propagated_id(
-                            prior_id=prior_id,
-                            new_id=new_id,
-                            project_context=self.review_manager.path,
-                        )
-                        notifications.append(
-                            "ID of processed record changed from "
-                            f"{prior_id} to {new_id}"
-                        )
-                        raise colrev_exceptions.PropagatedIDChange(notifications)
+            new_id = status_data["origin_list"][prior_origin]
+            if new_id != prior_id:
+                notifications = self.check_change_in_propagated_id(
+                    prior_id=prior_id,
+                    new_id=new_id,
+                    project_context=self.review_manager.path,
+                )
+                notifications.append(
+                    "ID of processed record changed from " f"{prior_id} to {new_id}"
+                )
+                raise colrev_exceptions.PropagatedIDChange(notifications)
 
     def check_sources(self) -> None:
         """Check the sources"""
@@ -565,7 +572,7 @@ class Checker:
                 status_transition[record_id] = proc_transition
         return status_transition
 
-    def __retrieve_status_data(self, *, prior: dict) -> dict:
+    def __retrieve_status_data(self, *, prior: dict, records: dict) -> dict:
 
         status_data: dict = {
             "pdf_not_exists": [],
@@ -577,17 +584,15 @@ class Checker:
             "entries_without_origin": [],
             "record_links_in_bib": [],
             "persisted_IDs": [],
-            "origin_list": [],
+            "origin_list": {},
             "invalid_state_transitions": [],
         }
 
-        for record_dict in self.review_manager.dataset.load_records_dict(
-            header_only=True
-        ).values():
+        for record_dict in records.values():
             status_data["IDs"].append(record_dict["ID"])
 
             for org in record_dict["colrev_origin"]:
-                status_data["origin_list"].append([record_dict["ID"], org])
+                status_data["origin_list"][org] = record_dict["ID"]
 
             post_md_processed_states = colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
@@ -599,7 +604,7 @@ class Checker:
                     )
 
             if "file" in record_dict:
-                if record_dict["file"].is_file():
+                if Path(record_dict["file"]).is_file():
                     status_data["pdf_not_exists"].append(record_dict["ID"])
 
             if [] != record_dict.get("colrev_origin", []):
@@ -630,16 +635,64 @@ class Checker:
 
         return status_data
 
-    def check_repo(self) -> dict:
-        """Check whether the repository is in a consistent state
-        Entrypoint for pre-commit hooks
-        """
+    def check_repo_basics(self) -> list:
+        """Calls data.main() to update the stats"""
+
+        data_operation = self.review_manager.get_data_operation(
+            notify_state_transition_operation=False
+        )
+        check_scripts: list[dict[str, typing.Any]] = []
+        data_checks = [
+            {
+                "script": data_operation.main,
+                "params": {"records": self.records, "silent_mode": True},
+            },
+            {
+                "script": self.review_manager.update_status_yaml,
+                "params": {"records": self.records},
+            },
+        ]
+
+        check_scripts.extend(data_checks)
+
+        failure_items = []
+        for check_script in check_scripts:
+            try:
+                # self.review_manager.logger.info(check_script["script"])
+                if not check_script["params"]:
+                    # self.review_manager.logger.debug(
+                    #     "%s() called", check_script["script"].__name__
+                    # )
+                    check_script["script"]()
+                else:
+                    # self.review_manager.logger.debug(
+                    #     "%s(params) called", check_script["script"].__name__
+                    # )
+                    if isinstance(check_script["params"], list):
+                        check_script["script"](*check_script["params"])
+                    else:
+                        check_script["script"](**check_script["params"])
+                # self.review_manager.logger.debug(
+                #     "%s: passed\n", check_script["script"].__name__
+                # )
+            except (
+                colrev_exceptions.MissingDependencyError,
+                colrev_exceptions.GitConflictError,
+                colrev_exceptions.PropagatedIDChange,
+                colrev_exceptions.DuplicateIDsError,
+                colrev_exceptions.OriginError,
+                colrev_exceptions.FieldValueError,
+                colrev_exceptions.StatusTransitionError,
+                colrev_exceptions.UnstagedGitChangesError,
+                colrev_exceptions.StatusFieldValueError,
+            ) as exc:
+                failure_items.append(f"{type(exc).__name__}: {exc}")
+        return failure_items
+
+    def check_repo_extended(self) -> list:
+        """Calls all checks that require prior data (take longer)"""
 
         # pylint: disable=not-a-mapping
-
-        self.review_manager.notified_next_operation = (
-            colrev.operation.OperationsType.check
-        )
 
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.
@@ -671,7 +724,7 @@ class Checker:
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
-            status_data = self.__retrieve_status_data(prior=prior)
+            status_data = self.__retrieve_status_data(prior=prior, records=self.records)
 
             main_refs_checks = [
                 {"script": self.check_sources, "params": []},
@@ -706,25 +759,10 @@ class Checker:
 
             check_scripts.extend(main_refs_checks)
 
-        data_operation = self.review_manager.get_data_operation(
-            notify_state_transition_operation=False
-        )
-        data_checks = [
-            {
-                "script": data_operation.main,
-                "params": {"silent_mode": True},
-            },
-            {
-                "script": self.review_manager.update_status_yaml,
-                "params": [],
-            },
-        ]
-
-        check_scripts.extend(data_checks)
-
         failure_items = []
         for check_script in check_scripts:
             try:
+                # self.review_manager.logger.info(check_script["script"])
                 if not check_script["params"]:
                     # self.review_manager.logger.debug(
                     #     "%s() called", check_script["script"].__name__
@@ -753,6 +791,16 @@ class Checker:
                 colrev_exceptions.StatusFieldValueError,
             ) as exc:
                 failure_items.append(f"{type(exc).__name__}: {exc}")
+        return failure_items
+
+    def check_repo(self) -> dict:
+        """Check whether the repository is in a consistent state
+        Entrypoint for pre-commit hooks
+        """
+
+        failure_items = []
+        failure_items.extend(self.check_repo_extended())
+        failure_items.extend(self.check_repo_basics())
 
         if len(failure_items) > 0:
             return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}

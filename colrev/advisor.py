@@ -358,66 +358,81 @@ class Advisor:
             }
             review_instructions.append(instruction)
 
-        else:
-            active_processing_functions = status_stats.get_active_operations(
-                current_origin_states_dict=current_origin_states_dict
-            )
+            if not self.review_manager.verbose_mode:
+                return
 
-            priority_processing_functions = status_stats.get_priority_operations(
-                current_origin_states_dict=current_origin_states_dict
-            )
-            for active_processing_function in active_processing_functions:
-                if active_processing_function in ["load", "prep", "dedupe"]:
-                    instruction = {
-                        "msg": self._next_step_description["retrieve"],
-                        "cmd": "colrev retrieve",
-                    }
-                if active_processing_function in ["pdf_get", "pdf_prep"]:
-                    instruction = {
-                        "msg": self._next_step_description["pdfs"],
-                        "cmd": "colrev pdfs",
-                    }
-                else:
-                    instruction = {
-                        "msg": self._next_step_description[active_processing_function],
-                        "cmd": f"colrev {active_processing_function.replace('_', '-')}",
-                    }
-                if active_processing_function in priority_processing_functions:
-                    # keylist = [list(x.keys()) for x in review_instructions]
-                    # keys = [item for sublist in keylist for item in sublist]
-                    # if "priority" not in keys:
-                    instruction["priority"] = "yes"
-                else:
-                    if self.review_manager.settings.project.delay_automated_processing:
-                        continue
-                if instruction["cmd"] not in [
-                    ri["cmd"] for ri in review_instructions if "cmd" in ri
-                ]:
-                    review_instructions.append(instruction)
+        active_processing_functions = status_stats.get_active_operations(
+            current_origin_states_dict=current_origin_states_dict
+        )
 
-            if len(review_instructions) == 1:
-                if "colrev data" == review_instructions[0]["cmd"]:
-                    review_instructions.pop(0)
+        priority_processing_functions = status_stats.get_priority_operations(
+            current_origin_states_dict=current_origin_states_dict
+        )
 
-                    package_manager = self.review_manager.get_package_manager()
-                    check_operation = colrev.operation.CheckOperation(
-                        review_manager=self.review_manager
+        for active_processing_function in active_processing_functions:
+            if active_processing_function in ["load", "prep", "dedupe"]:
+                instruction = {
+                    "msg": self._next_step_description["retrieve"],
+                    "cmd": "colrev retrieve",
+                }
+            if active_processing_function in ["pdf_get", "pdf_prep"]:
+                instruction = {
+                    "msg": self._next_step_description["pdfs"],
+                    "cmd": "colrev pdfs",
+                }
+            else:
+                instruction = {
+                    "msg": self._next_step_description[active_processing_function],
+                    "cmd": f"colrev {active_processing_function.replace('_', '-')}",
+                }
+            if active_processing_function in priority_processing_functions:
+                # keylist = [list(x.keys()) for x in review_instructions]
+                # keys = [item for sublist in keylist for item in sublist]
+                # if "priority" not in keys:
+                instruction["priority"] = "yes"
+            else:
+                if (
+                    self.review_manager.settings.project.delay_automated_processing
+                    and not self.review_manager.verbose_mode
+                ):
+                    continue
+            if instruction["cmd"] not in [
+                ri["cmd"] for ri in review_instructions if "cmd" in ri
+            ]:
+                review_instructions.append(instruction)
+
+        if len(review_instructions) == 1 or self.review_manager.verbose_mode:
+
+            if "colrev data" in [ri["cmd"] for ri in review_instructions]:
+
+                for item in review_instructions.copy():
+                    if item.get("cmd") == "colrev data":
+                        review_instructions.remove(item)
+                        break
+
+                # review_instructions.pop(0)
+
+                package_manager = self.review_manager.get_package_manager()
+                check_operation = colrev.operation.CheckOperation(
+                    review_manager=self.review_manager
+                )
+                for (
+                    data_package_endpoint
+                ) in self.review_manager.settings.data.data_package_endpoints:
+
+                    endpoint_dict = package_manager.load_packages(
+                        package_type=colrev.env.package_manager.PackageEndpointType.data,
+                        selected_packages=[data_package_endpoint],
+                        operation=check_operation,
                     )
-                    for (
-                        data_package_endpoint
-                    ) in self.review_manager.settings.data.data_package_endpoints:
+                    endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
-                        endpoint_dict = package_manager.load_packages(
-                            package_type=colrev.env.package_manager.PackageEndpointType.data,
-                            selected_packages=[data_package_endpoint],
-                            operation=check_operation,
-                        )
-                        endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
+                    advice = endpoint.get_advice(self.review_manager)  # type: ignore
+                    review_instructions.append(advice)
 
-                        advice = endpoint.get_advice(self.review_manager)  # type: ignore
-                        review_instructions.append(advice)
-
-    def __get_missing_files(self) -> list:
+    def __get_missing_files(
+        self, *, status_stats: colrev.ops.status.StatusStats
+    ) -> list:
 
         # excluding pdf_not_available
         file_required_status = [
@@ -429,9 +444,7 @@ class Advisor:
             colrev.record.RecordState.rev_synthesized,
         ]
         missing_files = []
-        for record_dict in self.review_manager.dataset.load_records_dict(
-            header_only=True
-        ).values():
+        for record_dict in status_stats.records.values():
             if (
                 record_dict["colrev_status"] in file_required_status
                 and "file" not in record_dict
@@ -440,11 +453,13 @@ class Advisor:
 
         return missing_files
 
-    def __append_pdf_issue_instructions(self, *, review_instructions: list) -> None:
+    def __append_pdf_issue_instructions(
+        self, *, status_stats: colrev.ops.status.StatusStats, review_instructions: list
+    ) -> None:
 
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
-            missing_files = self.__get_missing_files()
+            missing_files = self.__get_missing_files(status_stats=status_stats)
             if len(missing_files) > 0:
                 review_instructions.append(
                     {
@@ -465,9 +480,7 @@ class Advisor:
                     }
                 )
 
-        for record_dict in self.review_manager.dataset.load_records_dict(
-            header_only=True
-        ).values():
+        for record_dict in status_stats.records.values():
             if "file" in record_dict:
                 if not (self.review_manager.path / Path(record_dict["file"])).is_file():
                     review_instructions.append(
@@ -487,9 +500,9 @@ class Advisor:
         ):
             if not self.review_manager.dataset.has_untracked_search_records():
                 instruction = {
-                    "info": "Iteration completed.",
+                    "info": "Review iteration completed.",
                     "msg": "To start the next iteration of the review, "
-                    + "add new search results to ./search directory",
+                    + "add new search results (to data/search)",
                 }
                 review_instructions.append(instruction)
             else:
@@ -525,7 +538,9 @@ class Advisor:
             current_origin_states_dict=current_origin_states_dict,
         )
 
-        self.__append_pdf_issue_instructions(review_instructions=review_instructions)
+        self.__append_pdf_issue_instructions(
+            status_stats=status_stats, review_instructions=review_instructions
+        )
 
         self.__append_iteration_completed_instructions(
             review_instructions=review_instructions, status_stats=status_stats

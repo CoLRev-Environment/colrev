@@ -227,8 +227,12 @@ class PRISMA(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [obisdian data endpoint]: "
+
         advice = {
-            "msg": f"The PRISMA diagram is created in the {','.join(self.settings.diagram_path)}",
+            "msg": f"{data_endpoint}"
+            + "\n    - The PRISMA diagram is created automatically "
+            + f"({','.join(self.settings.diagram_path)})",
             "detailed_msg": "TODO",
         }
         return advice

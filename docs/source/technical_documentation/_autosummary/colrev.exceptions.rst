@@ -28,6 +28,7 @@ colrev.exceptions
       CoLRevUpgradeError
       CorrectionPreconditionException
       CuratedOutletNotUnique
+      DataException
       DedupeError
       DirtyRepoAfterProcessingError
       DuplicateIDsError

@@ -211,12 +211,18 @@ class GithubPages(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        advice = {"msg": "TODO", "detailed_msg": "TODO"}
+        data_endpoint = "data operation [github pages data endpoint]: "
+
+        advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
         if "NA" == review_manager.dataset.get_remote_url():
-            advice["msg"] = (
-                "To make the repository available on Github pages, "
+            advice["msg"] += (
+                "\n    - To make the repository available on Github pages, "
                 + "push it to a Github repository\nhttps://github.com/new"
             )
+        else:
+            advice[
+                "msg"
+            ] += "\n    - The page is updated automatically (gh-pages branch)"
 
         return advice
 

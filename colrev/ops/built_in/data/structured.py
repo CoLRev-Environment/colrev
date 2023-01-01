@@ -309,10 +309,10 @@ Example 2:
 
         data_endpoint = "data operation [structured data endpoint]: "
 
+        # TODO : return advice only if there are records in rev_included/synthesized
         advice = {
             "msg": f"{data_endpoint}"
-            + "\n    - Complete the data extraction in the {self.settings.data_path_relative}",
-            # TODO : # records to synthesize / of all
+            + f"\n    - Complete the data extraction ({self.settings.data_path_relative})",
             "detailed_msg": "TODO",
         }
         return advice

@@ -103,16 +103,16 @@ class Obsidian(JsonSchemaMixin):
         return keywords
 
     def __append_missing_records(
-        self,
-        *,
-        data_operation: colrev.ops.data.Data,
+        self, *, data_operation: colrev.ops.data.Data, records: dict, silent_mode: bool
     ) -> None:
 
-        records_dict = data_operation.review_manager.dataset.load_records_dict()
-        included = data_operation.get_record_ids_for_synthesis(records_dict)
+        included = data_operation.get_record_ids_for_synthesis(records)
         missing_records = self.__get_obsidian_missing(included=included)
         if len(missing_records) == 0:
-            print("All records included. Nothing to export.")
+            if not silent_mode:
+                data_operation.review_manager.logger.info(
+                    "All records included. Nothing to export."
+                )
             return
 
         # inbox_text = ""
@@ -131,9 +131,7 @@ class Obsidian(JsonSchemaMixin):
             paper_summary_path = self.endpoint_paper_path / Path(f"{missing_record}.md")
 
             missing_record_entities[paper_summary_path] = {
-                "keywords": self.__get_keywords(
-                    record_dict=records_dict[missing_record]
-                )
+                "keywords": self.__get_keywords(record_dict=records[missing_record])
             }
 
         all_keywords = [x["keywords"] for x in missing_record_entities.values()]
@@ -197,14 +195,14 @@ class Obsidian(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
-        silent_mode: bool,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the obsidian vault"""
 
-        data_operation.review_manager.logger.info("Export to obsidian endpoint")
+        data_operation.review_manager.logger.debug("Export to obsidian endpoint")
 
         self.__append_missing_records(
-            data_operation=data_operation,
+            data_operation=data_operation, records=records, silent_mode=silent_mode
         )
 
     def update_record_status_matrix(
@@ -215,9 +213,9 @@ class Obsidian(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
 
-        records_dict = data_operation.review_manager.dataset.load_records_dict()
-        included = data_operation.get_record_ids_for_synthesis(records_dict)
-        missing_records = self.__get_obsidian_missing(included=included)
+        missing_records = self.__get_obsidian_missing(
+            included=list(synthesized_record_status_matrix.keys())
+        )
 
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
@@ -232,8 +230,11 @@ class Obsidian(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        data_endpoint = "data operation [obisdian data endpoint]: "
+
         advice = {
-            "msg": "New records are added to the data/obsidian vault",
+            "msg": f"{data_endpoint}"
+            + "\n    - New records are added to the obsidian vault (data/obsidian)",
             "detailed_msg": "TODO",
         }
         return advice
