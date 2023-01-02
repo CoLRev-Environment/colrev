@@ -176,13 +176,13 @@ class PDFGet(colrev.operation.Operation):
                 record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
                 self.review_manager.logger.info(
                     f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                    + f"pdf_imported{colors.END}"
+                    + f"rev_prescreen_included → pdf_imported{colors.END}"
                 )
                 return record.get_data()
 
         self.review_manager.logger.info(
             f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-            + f"pdf_needs_manual_retrieval{colors.END}"
+            + f"rev_prescreen_included → pdf_needs_manual_retrieval{colors.END}"
         )
 
         record.data.update(
@@ -487,30 +487,30 @@ class PDFGet(colrev.operation.Operation):
 
         self.not_retrieved = self.to_retrieve - self.retrieved
 
-        retrieved_string = "Retrieved".ljust(25)
+        retrieved_string = "Overall pdf_imported".ljust(34)
         if self.retrieved == 0:
-            retrieved_string += f"{self.retrieved}".rjust(15, " ")
+            retrieved_string += f"{self.retrieved}".rjust(6, " ")
             retrieved_string += " PDFs"
         elif self.retrieved == 1:
             retrieved_string += f"{colors.GREEN}"
-            retrieved_string += f"{self.retrieved}".rjust(15, " ")
+            retrieved_string += f"{self.retrieved}".rjust(6, " ")
             retrieved_string += f"{colors.END} PDF"
         else:
             retrieved_string += f"{colors.GREEN}"
-            retrieved_string += f"{self.retrieved}".rjust(15, " ")
+            retrieved_string += f"{self.retrieved}".rjust(6, " ")
             retrieved_string += f"{colors.END} PDFs"
 
-        not_retrieved_string = "Needs manual retrieval".ljust(25)
+        not_retrieved_string = "Overall pdf_needs_manual_retrieval".ljust(34)
         if self.not_retrieved == 0:
-            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(6, " ")
             not_retrieved_string += " PDFs"
         elif self.not_retrieved == 1:
             not_retrieved_string += f"{colors.ORANGE}"
-            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(6, " ")
             not_retrieved_string += f"{colors.END} PDF"
         else:
             not_retrieved_string += f"{colors.ORANGE}"
-            not_retrieved_string += f"{self.not_retrieved}".rjust(15, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(6, " ")
             not_retrieved_string += f"{colors.END} PDFs"
 
         self.review_manager.logger.info(retrieved_string)

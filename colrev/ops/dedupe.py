@@ -402,6 +402,7 @@ class Dedupe(colrev.operation.Operation):
         # dedupe clustering routine
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
@@ -412,6 +413,7 @@ class Dedupe(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         removed_duplicates = []
+        duplicate_id_mappings = {}
         record_to_merge = self.__get_records_to_merge(records=records, results=results)
         for (main_record, dupe_record, dupe) in record_to_merge:
 
@@ -456,6 +458,15 @@ class Dedupe(colrev.operation.Operation):
                 self.review_manager.logger.debug(
                     f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
                 )
+                if main_record.data["ID"] not in duplicate_id_mappings:
+                    duplicate_id_mappings[main_record.data["ID"]] = [
+                        dupe_record.data["ID"]
+                    ]
+                else:
+                    duplicate_id_mappings[main_record.data["ID"]].append(
+                        dupe_record.data["ID"]
+                    )
+
                 dupe_record.data["MOVED_DUPE_ID"] = main_record.data["ID"]
                 main_record.merge(
                     merging_record=dupe_record,
@@ -485,17 +496,34 @@ class Dedupe(colrev.operation.Operation):
             if removed_duplicate in records:
                 del records[removed_duplicate]
 
-        if not removed_duplicates:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No duplicates to remove{colors.END}"
-            )
-
         if complete_dedupe:
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record in records.values():
                 if record["colrev_status"] == colrev.record.RecordState.md_prepared:
                     record["colrev_status"] = colrev.record.RecordState.md_processed
+
+        for record_id, duplicate_ids in duplicate_id_mappings.items():
+            if complete_dedupe:
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(46)
+                    + f"md_prepared →  md_processed{colors.END}"
+                )
+            else:
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(46)
+                    + f"md_prepared →  md_prepared{colors.END}"
+                )
+        if complete_dedupe:
+            for record in records.values():
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}{record['ID']}".ljust(46)
+                    + f"md_prepared →  md_processed{colors.END}"
+                )
+
+        self.review_manager.logger.info(
+            "Merged duplicates: ".ljust(39) + f"{len(removed_duplicates)} records"
+        )
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -731,6 +759,12 @@ class Dedupe(colrev.operation.Operation):
         """Dedupe records (main entrypoint)"""
 
         self.review_manager.logger.info("Dedupe")
+        self.review_manager.logger.info(
+            "Identifies duplicate records and merges them (keeping traces to their origins)."
+        )
+
+        if not self.review_manager.high_level_operation:
+            print()
 
         package_manager = self.review_manager.get_package_manager()
         for (
@@ -751,6 +785,10 @@ class Dedupe(colrev.operation.Operation):
             if not self.review_manager.high_level_operation:
                 print()
 
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Completed dedupe operation{colors.END}"
+        )
+
         if not self.review_manager.settings.prescreen.prescreen_package_endpoints:
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
@@ -763,10 +801,6 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")
-
-        self.review_manager.logger.info(
-            f"{colors.GREEN}Completed dedupe operation{colors.END}"
-        )
 
 
 if __name__ == "__main__":

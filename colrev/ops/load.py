@@ -45,7 +45,7 @@ class Load(colrev.operation.Operation):
                 "Load converts search results and adds them to the shared data/records.bib."
             )
             self.review_manager.logger.info(
-                "Search results are stored in the directory data/search"
+                "Original records (search results) are stored in the directory data/search"
             )
 
     def __get_new_search_files(self) -> list[Path]:
@@ -661,6 +661,11 @@ class Load(colrev.operation.Operation):
             source_record["ID"] = next_unique_id
             records[source_record["ID"]] = source_record
 
+            self.review_manager.logger.info(
+                f" {colors.GREEN}{source_record['ID']}".ljust(46)
+                + f"md_retrieved →  md_imported{colors.END}"
+            )
+
         self.__check_bib_file(source=source, records=records)
         self.review_manager.dataset.save_records_dict(records=records)
 
@@ -676,7 +681,7 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.logger.info(
-            f"New records loaded: {colors.GREEN}{source.to_import}{colors.END}"
+            "New records loaded".ljust(38) + f"{source.to_import} records"
         )
 
         self.review_manager.dataset.add_setting_changes()

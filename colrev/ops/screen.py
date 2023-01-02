@@ -286,23 +286,23 @@ class Screen(colrev.operation.Operation):
                 else:
                     reasons = f"({reasons})"
                 self.review_manager.logger.info(
-                    f" {record_dict['ID']}".ljust(45)
-                    + f"rev_excluded {colors.RED}{reasons}{colors.END}"
+                    f" {record_dict['ID']}".ljust(40)
+                    + f"pdf_prepared → rev_excluded {colors.RED}{reasons}{colors.END}"
                 )
             elif record_dict["ID"] in screen_included:
                 self.review_manager.logger.info(
-                    f" {colors.GREEN}{record_dict['ID']}".ljust(50)
-                    + f"rev_included{colors.END}"
+                    f" {colors.GREEN}{record_dict['ID']}".ljust(45)
+                    + f"pdf_prepared → rev_included{colors.END}"
                 )
 
         nr_screen_excluded = len(screen_excluded)
         nr_screen_included = len(screen_included)
 
         self.review_manager.logger.info(
-            "Excluded".ljust(29) + f"{nr_screen_excluded}".rjust(15, " ") + " records"
+            "Excluded".ljust(29) + f"{nr_screen_excluded}".rjust(10, " ") + " records"
         )
         self.review_manager.logger.info(
-            "Included".ljust(29) + f"{nr_screen_included}".rjust(15, " ") + " records"
+            "Included".ljust(29) + f"{nr_screen_included}".rjust(10, " ") + " records"
         )
 
     def main(self, *, split_str: str) -> None:

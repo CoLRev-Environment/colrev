@@ -302,13 +302,13 @@ class Prep(colrev.operation.Operation):
                 ):
                     self.review_manager.logger.info(
                         f" {colors.RED}{record.data['ID']}".ljust(46)
-                        + f"{progress}rev_prescreen_excluded "
+                        + f"{progress}md_imported → rev_prescreen_excluded "
                         f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
                     )
                 else:
                     self.review_manager.logger.info(
                         f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                        + f"{progress}md_needs_man_prep{colors.END}"
+                        + f"{progress}md_imported → md_needs_man_prep{colors.END}"
                     )
 
             elif record.preparation_save_condition():
@@ -317,12 +317,12 @@ class Prep(colrev.operation.Operation):
                     curation_addition = " ✔ "
                 self.review_manager.logger.info(
                     f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                    + f"{progress}md_prepared{colors.END} {curation_addition}"
+                    + f"{progress}md_imported →  md_prepared{colors.END} {curation_addition}"
                 )
             else:
                 self.review_manager.logger.info(
                     f" {record.data['ID']}".ljust(46)
-                    + f"{progress}md_needs_manual_preparation"
+                    + f"{progress}md_imported → md_needs_manual_preparation"
                 )
 
         if self.last_round:
@@ -802,7 +802,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Prepared".ljust(29)
+            "Overall md_prepared".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
             + " records"
         )
@@ -816,7 +816,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Curated".ljust(29)
+            "Overall curated".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
             + " records ( ✔ quality-assured by CoLRev community curators)"
         )
@@ -958,6 +958,9 @@ class Prep(colrev.operation.Operation):
             set_id_commit = self.review_manager.create_commit(
                 msg="Set IDs", script_call="colrev prep", saved_args=saved_args
             )
+
+        if not self.review_manager.high_level_operation:
+            print()
 
         self.review_manager.logger.info("To validate the changes, use")
         # TODO : if caller is retrieve, suggest colrev validate COMMIT-ID

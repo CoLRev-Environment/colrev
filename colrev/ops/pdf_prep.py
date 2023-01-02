@@ -199,12 +199,12 @@ class PDFPrep(colrev.operation.Operation):
         if successfully_prepared:
             self.review_manager.logger.info(
                 f" {colors.GREEN}{record_dict['ID']}".ljust(46)
-                + f"pdf_prepared{colors.END}"
+                + f"pdf_imported → pdf_prepared{colors.END}"
             )
         else:
             self.review_manager.logger.info(
                 f" {colors.ORANGE}{record_dict['ID']} ".ljust(46)
-                + f"pdf_needs_manual_preparation {colors.END}"
+                + f"pdf_imported → pdf_needs_manual_preparation {colors.END}"
                 f"({', '.join(detailed_msgs)})"
             )
 
@@ -306,30 +306,30 @@ class PDFPrep(colrev.operation.Operation):
 
         if not self.review_manager.high_level_operation:
             print()
-        prepared_string = "Prepared".ljust(25)
+        prepared_string = "Overall pdf_prepared".ljust(37)
         if self.pdf_prepared == 0:
-            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(3, " ")
             prepared_string += " PDFs"
         elif self.pdf_prepared == 1:
             prepared_string += f"{colors.GREEN}"
-            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(3, " ")
             prepared_string += f"{colors.END} PDF"
         else:
             prepared_string += f"{colors.GREEN}"
-            prepared_string += f"{self.pdf_prepared}".rjust(15, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(3, " ")
             prepared_string += f"{colors.END} PDFs"
 
-        not_prepared_string = "Not prepared".ljust(25)
+        not_prepared_string = "Overall pdf_needs_manual_preparation".ljust(37)
         if self.not_prepared == 0:
-            not_prepared_string += f"{self.not_prepared}".rjust(15, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(3, " ")
             not_prepared_string += " PDFs"
         elif self.not_prepared == 1:
             not_prepared_string += f"{colors.ORANGE}"
-            not_prepared_string += f"{self.not_prepared}".rjust(10, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(3, " ")
             not_prepared_string += f"{colors.END} PDF"
         else:
             not_prepared_string += f"{colors.ORANGE}"
-            not_prepared_string += f"{self.not_prepared}".rjust(15, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(3, " ")
             not_prepared_string += f"{colors.END} PDFs"
 
         self.review_manager.logger.info(prepared_string)

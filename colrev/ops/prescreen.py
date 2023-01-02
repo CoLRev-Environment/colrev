@@ -221,25 +221,27 @@ class Prescreen(colrev.operation.Operation):
         for record_dict in records.values():
             if record_dict["ID"] in prescreen_excluded:
                 self.review_manager.logger.info(
-                    f" {record_dict['ID']}".ljust(45) + "rev_prescreen_excluded"
+                    f" {record_dict['ID']}".ljust(41)
+                    + "md_processed → rev_prescreen_excluded"
                 )
             elif record_dict["ID"] in prescreen_included:
                 self.review_manager.logger.info(
-                    f" {colors.GREEN}{record_dict['ID']}".ljust(50)
-                    + f"rev_prescreen_included{colors.END}"
+                    f"{colors.GREEN}"
+                    + f" {record_dict['ID']}".ljust(41)
+                    + f"md_processed → rev_prescreen_included{colors.END}"
                 )
 
         nr_prescreen_excluded = len(prescreen_excluded)
         nr_prescreen_included = len(prescreen_included)
 
         self.review_manager.logger.info(
-            "Prescreen excluded".ljust(29)
-            + f"{nr_prescreen_excluded}".rjust(15, " ")
+            "Prescreen excluded".ljust(30)
+            + f"{nr_prescreen_excluded}".rjust(10, " ")
             + " records"
         )
         self.review_manager.logger.info(
-            "Prescreen included".ljust(29)
-            + f"{nr_prescreen_included}".rjust(15, " ")
+            "Prescreen included".ljust(30)
+            + f"{nr_prescreen_included}".rjust(10, " ")
             + " records"
         )
 

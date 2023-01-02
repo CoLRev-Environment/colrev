@@ -324,9 +324,11 @@ class SimpleDedupe(JsonSchemaMixin):
         # default='warn'
         pd.options.mode.chained_assignment = None  # type: ignore  # noqa
 
-        dedupe_operation.review_manager.logger.info("Simple duplicate identification")
         dedupe_operation.review_manager.logger.info(
-            "Pairwise identification of duplicates based on static similarity measure"
+            "Dedupe operation [colrev_built_in.simple_dedupe]"
+        )
+        dedupe_operation.review_manager.logger.info(
+            "Duplicate identification based on static similarity measure and record pairs"
         )
 
         dedupe_data = self.__get_dedupe_data(dedupe_operation=dedupe_operation)
@@ -365,7 +367,7 @@ class SimpleDedupe(JsonSchemaMixin):
         )
 
         dedupe_operation.review_manager.logger.info(
-            "Pairwise identification of potential duplicates based on static similarity measure"
+            "Potential duplicate identification based on static similarity measure and record pairs"
         )
         potential_duplicates = self.__process_potential_duplicates(
             dedupe_operation=dedupe_operation, dedupe_batch_results=dedupe_batch_results
