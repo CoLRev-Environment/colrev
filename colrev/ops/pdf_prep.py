@@ -374,8 +374,7 @@ class PDFPrep(colrev.operation.Operation):
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
         self.review_manager.logger.info(
-            f"{colors.ORANGE}This operation is computationally "
-            f"intensive and may take time.{colors.END}"
+            "INFO: This operation is computationally intensive and may take longer."
         )
         if not self.review_manager.high_level_operation:
             print()

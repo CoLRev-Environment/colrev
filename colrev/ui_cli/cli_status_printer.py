@@ -64,13 +64,11 @@ def print_collaboration_instructions(
 
     if not status_operation.review_manager.verbose_mode:
         if collaboration_instructions["items"]:
-            if (
-                "Project not yet shared"
-                == collaboration_instructions["items"][0]["title"]
-            ):
-                print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
-
-        return
+            if collaboration_instructions["items"][0]["title"] in [
+                "Project not yet shared",
+                "Up-to-date",
+            ]:
+                return
 
     print("Versioning and collaboration")
 
@@ -248,6 +246,8 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
             "Documentation: https://github.com/geritwagner/"
             + "colrev/tree/main/docs/source/user_resources"
         )
+    else:
+        print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
 
 
 if __name__ == "__main__":

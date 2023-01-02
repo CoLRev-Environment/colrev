@@ -259,7 +259,7 @@ class Initializer:
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
-        data_operation.main()
+        data_operation.main(silent_mode=True)
 
         files_to_add = [
             "readme.md",

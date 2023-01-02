@@ -201,6 +201,7 @@ class Zettlr(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         current_dt: datetime.datetime,
         zettlr_path: Path,
+        silent_mode: bool,
     ) -> None:
 
         records_dict = data_operation.review_manager.dataset.load_records_dict()
@@ -209,7 +210,8 @@ class Zettlr(JsonSchemaMixin):
             endpoint_path=self.endpoint_path, included=included
         )
         if len(missing_records) == 0:
-            print("All records included. Nothing to export.")
+            if not silent_mode:
+                print("All records included. Nothing to export.")
             return
 
         print(missing_records)
@@ -295,7 +297,8 @@ class Zettlr(JsonSchemaMixin):
     ) -> None:
         """Update the data/zettlr notes"""
 
-        data_operation.review_manager.logger.info("Export to zettlr endpoint")
+        if not silent_mode:
+            data_operation.review_manager.logger.info("Export to zettlr endpoint")
 
         current_dt = datetime.datetime.now()
         zettlr_path = self.__retrieve_setup(
@@ -306,6 +309,7 @@ class Zettlr(JsonSchemaMixin):
             data_operation=data_operation,
             current_dt=current_dt,
             zettlr_path=zettlr_path,
+            silent_mode=silent_mode,
         )
 
     def update_record_status_matrix(
@@ -328,7 +332,7 @@ class Zettlr(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "data operation [zettlr data endpoint]: "
+        data_endpoint = "Data operation [zettlr data endpoint]: "
 
         advice = {
             "msg": f"{data_endpoint}"

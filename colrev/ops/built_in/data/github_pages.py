@@ -211,7 +211,7 @@ class GithubPages(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "data operation [github pages data endpoint]: "
+        data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
         if "NA" == review_manager.dataset.get_remote_url():

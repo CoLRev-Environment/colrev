@@ -239,7 +239,7 @@ class BibliographyExport(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "data operation [bibliography export data endpoint]: "
+        data_endpoint = "Data operation [bibliography export data endpoint]: "
 
         advice = {
             "msg": f"{data_endpoint}"

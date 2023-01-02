@@ -230,7 +230,7 @@ class Obsidian(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "data operation [obisdian data endpoint]: "
+        data_endpoint = "Data operation [obisdian data endpoint]: "
 
         advice = {
             "msg": f"{data_endpoint}"

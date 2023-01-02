@@ -307,7 +307,7 @@ Example 2:
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "data operation [structured data endpoint]: "
+        data_endpoint = "Data operation [structured data endpoint]: "
 
         # TODO : return advice only if there are records in rev_included/synthesized
         advice = {
