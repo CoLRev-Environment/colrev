@@ -2,6 +2,7 @@
 """CoLRev prep operation: Prepare record metadata."""
 from __future__ import annotations
 
+import inspect
 import logging
 import multiprocessing as mp
 import time
@@ -869,6 +870,10 @@ class Prep(colrev.operation.Operation):
 
         saved_args = locals()
 
+        # Note: for unit testing, we use a simple loop (instead of parallel)
+        # to ensure that the IDs of feed records don't change
+        __unit_testing = "test_prep" == inspect.stack()[1][3]
+
         if self.debug_mode:
             print("\n\n\n")
             self.review_manager.logger.info("Start debug prep\n")
@@ -900,7 +905,7 @@ class Prep(colrev.operation.Operation):
                 print("No records to prepare.")
                 return
 
-            if self.debug_mode:
+            if self.debug_mode or __unit_testing:
                 # Note: preparation_data is not turned into a list of records.
                 prepared_records = []
                 for item in preparation_data:
