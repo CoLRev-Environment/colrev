@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
+# TODO : use https://pypi.org/project/csv-schema/
 @dataclass
 class Field(JsonSchemaMixin):
     """Field definition"""
@@ -46,9 +47,6 @@ class StructuredData(JsonSchemaMixin):
 
         endpoint: str
         version: str
-        # gh_issue https://github.com/geritwagner/colrev/issues/79
-        # Field dataclass (name, explanation, data_type)
-        # TODO : use https://pypi.org/project/csv-schema/
         fields: typing.List[Field]
         data_path_relative: Path = Path("data/data.csv")
 
