@@ -755,6 +755,46 @@ class Dedupe(colrev.operation.Operation):
         results = [{"ID1": merge_ids[0], "ID2": merge_ids[1], "decision": "duplicate"}]
         self.apply_merges(results=results)
 
+    def unmerge_records(self, *, record_ids: str) -> None:
+        """Unmerge the most recent duplicate decision of the records, as identified by their ids."""
+
+        ids_origins: typing.Dict[str, list] = {rid: [] for rid in record_ids.split(",")}
+
+        first_round = True
+        for records in self.review_manager.dataset.load_records_from_history():
+            if first_round:
+                for rid in ids_origins:
+                    ids_origins[rid] = records[rid]["colrev_origin"]
+                first_round = False
+
+        records = self.review_manager.dataset.load_records_dict()
+        for rid in ids_origins:
+            del records[rid]
+
+        unmerged, first = False, True
+        for recs in self.review_manager.dataset.load_records_from_history():
+            if first:
+                first = False
+                continue
+            for rid in list(ids_origins.keys()):
+                if rid not in recs:
+                    break
+
+                if ids_origins[rid] == recs[rid]:
+                    break
+
+                for record in recs.values():
+                    if any(
+                        orig in ids_origins[rid] for orig in record["colrev_origin"]
+                    ):
+                        records[record["ID"]] = record
+                        unmerged = True
+            if unmerged:
+                break
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
 

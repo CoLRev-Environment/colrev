@@ -2,8 +2,8 @@
 """Validates commits in a CoLRev project."""
 from __future__ import annotations
 
-import itertools
 import re
+import typing
 
 from tqdm import tqdm
 
@@ -82,10 +82,16 @@ class Validate(colrev.operation.Operation):
                         record_a=colrev.record.Record(data=record_dict),
                         record_b=colrev.record.Record(data=prior_record_dict),
                     )
-                    change_diff.append([prior_record_dict, record_dict, change_score])
+                    change_diff.append(
+                        {
+                            "prior_record_dict": prior_record_dict,
+                            "record_dict": record_dict,
+                            "change_score": change_score,
+                        }
+                    )
 
         # sort according to similarity
-        change_diff.sort(key=lambda x: x[2], reverse=True)
+        change_diff.sort(key=lambda x: x["change_score"], reverse=True)
 
         return change_diff
 
@@ -95,54 +101,64 @@ class Validate(colrev.operation.Operation):
         """Validate dedupe changes"""
 
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+
+        # at some point, we may allow users to validate
+        # all duplicates/non-duplicates (across commits)
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
-        # https://github.com/geritwagner/colrev/issues/57
-        # change_diff should also have a better data structure
         change_diff = []
         merged_records = False
         for record in records:
-            # https://github.com/geritwagner/colrev/issues/57
-            # allow users to validate all duplicates/non-duplicates (across commits)
+
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
-            if ";" in record["colrev_origin"]:
-                merged_records = True
-                duplicate_el_pairs = list(
-                    itertools.combinations(record["colrev_origin"], 2)
+
+            if len(record["colrev_origin"]) == 1:
+                continue
+            merged_records = True
+
+            merged_records_list = []
+
+            for prior_record in prior_records_dict.values():
+                if len(prior_record["colrev_origin"]) == 1:
+                    continue
+                if any(
+                    o in record["colrev_origin"] for o in prior_record["colrev_origin"]
+                ):
+                    merged_records_list.append(prior_record)
+
+            if len(merged_records_list) < 2:
+                # merged records not found
+                continue
+
+            reference_record = merged_records_list.pop(0)
+            # Note : should usually be only one merged_rec (but multiple-merges are possible)
+            for merged_rec in merged_records_list:
+                change_score = colrev.record.Record.get_record_change_score(
+                    record_a=colrev.record.Record(data=reference_record),
+                    record_b=colrev.record.Record(data=merged_rec),
                 )
-                for el_1, el_2 in duplicate_el_pairs:
-                    record_1 = [
-                        x
-                        for x in prior_records_dict.values()
-                        if any(el_1 == co for co in x["colrev_origin"])
-                    ]
-                    record_2 = [
-                        x
-                        for x in prior_records_dict.values()
-                        if any(el_2 == co for co in x["colrev_origin"])
-                    ]
+                change_diff.append(
+                    {
+                        "record": record,
+                        "prior_record_a": reference_record,
+                        "prior_record_b": merged_rec,
+                        "change_score": change_score,
+                    }
+                )
 
-                    change_score = colrev.record.Record.get_record_change_score(
-                        record_a=colrev.record.Record(data=record_1[0]),
-                        record_b=colrev.record.Record(data=record_2[0]),
-                    )
-                    change_diff.append([record_1[0], record_2[0], change_score])
-
-        change_diff = [[e1, e2, diff] for [e1, e2, diff] in change_diff if diff < 1]
-
+        change_diff = [
+            element for element in change_diff if element["change_score"] < 1
+        ]
         if 0 == len(change_diff):
             if merged_records:
                 self.review_manager.logger.info("No substantial differences found.")
             else:
                 self.review_manager.logger.info("No merged records")
 
-        # https://github.com/geritwagner/colrev/issues/57
-        # create the dataframes (like in the simple merge)
-        # Similarly: create dataframes of the latest prepared records
-        # to check FP merges efficiently
         with open(
             "merge_candidates_file.txt", "w", encoding="utf-8"
         ) as merge_candidates_file:
@@ -169,7 +185,7 @@ class Validate(colrev.operation.Operation):
                         )
 
         # sort according to similarity
-        change_diff.sort(key=lambda x: x[2], reverse=True)
+        change_diff.sort(key=lambda x: x["change_score"], reverse=True)
 
         return change_diff
 
@@ -256,7 +272,8 @@ class Validate(colrev.operation.Operation):
 
     def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
 
-        target_commit = self.review_manager.dataset.get_last_commit_sha()
+        if not target_commit:
+            target_commit = self.review_manager.dataset.get_last_commit_sha()
 
         git_repo = self.review_manager.dataset.get_repo()
 
@@ -267,6 +284,8 @@ class Validate(colrev.operation.Operation):
             )
             for commit in git_repo.iter_commits(paths="status.yaml")
         )
+        scope = "NA"
+        # Note : simple heuristic: commit messages
         for commit_id, msg in revlist:
             if commit_id == target_commit:
                 if "colrev prep" in msg:
@@ -275,6 +294,30 @@ class Validate(colrev.operation.Operation):
                     scope = "dedupe"
                 else:
                     scope = "unspecified"
+
+        # Otherwise: compare records
+        if "NA" == scope:
+            # detect transition types in the respective commit and
+            # use them to calculate the validation_details
+            records: typing.Dict[str, typing.Dict] = {}
+            hist_records: typing.Dict[str, typing.Dict] = {}
+            for recs in self.review_manager.dataset.load_records_from_history(
+                commit_sha=target_commit
+            ):
+                # continue
+                if not records:
+                    records = recs
+                    continue
+                if not hist_records:
+                    hist_records = recs
+                    break
+
+            # Note : still very simple heuristics...
+            if len(records) != len(hist_records):
+                scope = "dedupe"
+            else:
+                scope = "prepare"
+
         return scope
 
     def validate_merge_prescreen_screen(
@@ -400,48 +443,44 @@ class Validate(colrev.operation.Operation):
         filter_setting: str,
         properties: bool = False,
         target_commit: str = "",
-    ) -> list:
+    ) -> dict:
         """Validate a commit (main entrypoint)"""
         if properties:
             self.validate_properties(target_commit=target_commit)
-            return []
+            return {}
 
         target_commit = self.__get_target_commit(scope=scope)
         if not target_commit:
             print("Error")
-            return []
+            return {}
+
+        if "all" == filter_setting:
+            filter_setting = self.__set_scope_based_on_target_commit(
+                target_commit=target_commit
+            )
 
         # extension: filter_setting for changes of contributor (git author)
         records = self.load_changed_records(target_commit=target_commit)
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
-        if target_commit == "" and "all" == filter_setting:
-            filter_setting = self.__set_scope_based_on_target_commit(
-                target_commit=target_commit
-            )
-
-        validation_details = []
+        validation_details = {}
         if filter_setting in ["prepare", "all"]:
-            validation_details += self.validate_preparation_changes(
+            validation_details["prep"] = self.validate_preparation_changes(
                 records=records, prior_records_dict=prior_records_dict
             )
         if filter_setting in ["dedupe", "all"]:
+            # Note : the if-statement avoids time-consuming procedures when the
+            # origin-sets have not changed (no duplicates merged)
             if self.__deduplicated_records(
                 records=records, prior_records_dict=prior_records_dict
             ):
-                validation_details += self.validate_dedupe_changes(
+                validation_details["dedupe"] = self.validate_dedupe_changes(
                     records=records, target_commit=target_commit
                 )
 
+        # Note : merge for git branches
         if filter_setting == "merge":
-            validation_details += self.validate_merge_changes()
-
-        # if 'unspecified' == scope:
-        #     git_repo = self.review_manager.dataset.get_repo()
-        #     t = git_repo.head.commit.tree
-        #     print(git_repo.git.diff('HEAD~1'))
-        #     validation_details = {}
-        #     input('stop')
+            validation_details["merge"] = self.validate_merge_changes()
 
         return validation_details
 

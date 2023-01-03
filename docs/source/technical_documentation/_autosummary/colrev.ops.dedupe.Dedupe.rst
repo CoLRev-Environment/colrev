@@ -25,6 +25,7 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.prep_records
       ~Dedupe.read_data
       ~Dedupe.source_comparison
+      ~Dedupe.unmerge_records
 
 
 

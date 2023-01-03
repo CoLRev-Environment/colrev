@@ -321,8 +321,8 @@ class Prep(colrev.operation.Operation):
                 )
             else:
                 self.review_manager.logger.info(
-                    f" {record.data['ID']}".ljust(46)
-                    + f"{progress}md_imported → md_needs_manual_preparation"
+                    f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                    + f"{progress}md_imported → md_needs_manual_preparation{colors.END}"
                 )
 
         if self.last_round:

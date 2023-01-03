@@ -106,11 +106,17 @@ class Dataset:
         # It means that we ignore the StopIterations and
         # return the records from the next (prior) commit
         found_but_not_changed = False
+        skipped_prior_commits = False  # if no commit_sha provided
         for commit in self.__git_repo.iter_commits():
+
             if commit_sha:
-                if not found_but_not_changed:
-                    if commit_sha != commit.hexsha:
-                        continue
+                if not skipped_prior_commits:
+                    if not found_but_not_changed:
+                        if commit_sha == commit.hexsha:
+                            skipped_prior_commits = True
+                        else:
+                            continue
+
             try:
                 filecontents = (
                     commit.tree / str(self.RECORDS_FILE_RELATIVE)
@@ -119,7 +125,7 @@ class Dataset:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(filecontents.decode("utf-8"))
                 records_dict = self.parse_records_dict(records_dict=bib_data.entries)
-            except StopIteration:
+            except (StopIteration, KeyError):
                 found_but_not_changed = True
                 continue
             yield records_dict

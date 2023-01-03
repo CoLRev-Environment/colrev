@@ -17,6 +17,7 @@ import colrev.record
 import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
 import colrev.ui_cli.cli_status_printer
+import colrev.ui_cli.cli_validation
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -649,6 +650,12 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     required=False,
 )
 @click.option(
+    "-u",
+    "--unmerge",
+    help="Unmerge records by providing a comma-separated list of IDs (ID1,ID2).",
+    required=False,
+)
+@click.option(
     "-f",
     "--fix_errors",
     is_flag=True,
@@ -682,6 +689,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 def dedupe(
     ctx: click.core.Context,
     merge: str,
+    unmerge: str,
     fix_errors: bool,
     view: bool,
     source_comparison: bool,
@@ -691,8 +699,7 @@ def dedupe(
     """Deduplicate records"""
 
     try:
-        if merge:
-            force = True
+
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
         )
@@ -702,11 +709,14 @@ def dedupe(
         )
 
         if merge:
-            if force:
-                review_manager.settings.dedupe.same_source_merges = (
-                    colrev.settings.SameSourceMergePolicy.warn
-                )
+            review_manager.settings.dedupe.same_source_merges = (
+                colrev.settings.SameSourceMergePolicy.warn
+            )
             dedupe_operation.merge_records(merge=merge)
+            return
+
+        if unmerge:
+            dedupe_operation.unmerge_records(record_ids=unmerge)
             return
 
         if fix_errors:
@@ -1676,8 +1686,6 @@ def validate(
     - HEAD~4 for commit 4 before HEAD
     """
 
-    # pylint: disable=too-many-locals
-
     try:
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
@@ -1696,62 +1704,15 @@ def validate(
             target_commit=commit,
         )
 
-        if 0 == len(validation_details):
+        if validation_details:
+            colrev.ui_cli.cli_validation.validate(
+                validate_operation=validate_operation,
+                validation_details=validation_details,
+                threshold=threshold,
+            )
+        else:
             print("No substantial changes.")
             return
-
-        # pylint: disable=duplicate-code
-        keys = [
-            "author",
-            "title",
-            "journal",
-            "booktitle",
-            "year",
-            "volume",
-            "number",
-            "pages",
-        ]
-
-        displayed = False
-        for record_a, record_b, difference in validation_details:
-            if difference < threshold:
-                continue
-            displayed = True
-            # Escape sequence to clear terminal output for each new comparison
-            os.system("cls" if os.name == "nt" else "clear")
-            if record_a["ID"] == record_b["ID"]:
-                print(
-                    f"difference: {str(round(difference, 4))} record {record_a['ID']}"
-                )
-            else:
-                print(
-                    f"difference: {str(round(difference, 4))} "
-                    f"record {record_a['ID']} - {record_b['ID']}"
-                )
-
-            colrev.record.Record.print_diff_pair(
-                record_pair=[record_a, record_b], keys=keys
-            )
-
-            user_selection = input("Validate [y,n,d,q]?")
-
-            if "n" == user_selection:
-                review_manager.dataset.save_records_dict(
-                    records={record_a["ID"]: record_a}, partial=True
-                )
-
-            if "q" == user_selection:
-                break
-            if "y" == user_selection:
-                continue
-
-            # gh_issue https://github.com/geritwagner/colrev/issues/57
-            # TODO : merge correct? if not, undo
-            # TBD: different data structure needed?
-            # -> also: undo prescreen/screen?!
-
-        if not displayed:
-            review_manager.logger.info("No preparation changes above threshold")
 
         review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
 
