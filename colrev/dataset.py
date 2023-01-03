@@ -137,6 +137,7 @@ class Dataset:
             )
         )
         found = False
+        records_dict, prior_records_dict = {}, {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
                 prior_records_dict = self.review_manager.dataset.load_records_dict(

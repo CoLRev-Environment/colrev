@@ -1746,12 +1746,15 @@ def validate(
                 continue
 
             # gh_issue https://github.com/geritwagner/colrev/issues/57
-            # correct? if not, replace current record with old one
-
-        review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
+            # TODO : merge correct? if not, undo
+            # TBD: different data structure needed?
+            # -> also: undo prescreen/screen?!
 
         if not displayed:
             review_manager.logger.info("No preparation changes above threshold")
+
+        review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
+
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
             raise exc
