@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
+from colrev.exit_codes import ExitCodes
 
 
 if TYPE_CHECKING:
@@ -104,7 +105,7 @@ def print_collaboration_instructions(
 def print_environment_instructions(environment_instructions: dict) -> None:
     """Print the environment instructions on cli"""
 
-    if len(environment_instructions) == 0:
+    if not environment_instructions:
         return
 
     print("CoLRev environment\n")
@@ -164,13 +165,13 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     print("Load records...", end="\r")
     sys.stdout.write("\033[K")
 
-    ret_check: typing.Dict[str, typing.Any] = {"status": 0}
+    ret_check: typing.Dict[str, typing.Any] = {"status": ExitCodes.SUCCESS}
     failure_items = []
     try:
         checker = status_operation.review_manager.get_checker()
         failure_items.extend(checker.check_repo_basics())
     except colrev_exceptions.RepoSetupError as exc:
-        ret_check = {"status": 1, "msg": exc}
+        ret_check = {"status": ExitCodes.FAIL, "msg": exc}
         # TODO : what to do with the return value?!
 
     try:
@@ -210,17 +211,20 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     try:
         failure_items.extend(checker.check_repo_extended())
     except colrev_exceptions.RepoSetupError as exc:
-        ret_check = {"status": 1, "msg": exc}
+        ret_check = {"status": ExitCodes.FAIL, "msg": exc}
 
-    if len(failure_items) > 0:
-        ret_check = {"status": 1, "msg": "  " + "\n  ".join(failure_items)}
+    if failure_items:
+        ret_check = {"status": ExitCodes.FAIL, "msg": "  " + "\n  ".join(failure_items)}
 
-    if 0 == ret_check["status"] and status_operation.review_manager.verbose_mode:
+    if (
+        ExitCodes.SUCCESS == ret_check["status"]
+        and status_operation.review_manager.verbose_mode
+    ):
         print(
             "  ReviewManager.check_repo()  ...  "
             f"{colors.GREEN}Everything ok.{colors.END}"
         )
-    if 1 == ret_check["status"]:
+    if ExitCodes.FAIL == ret_check["status"]:
         print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
         print(f'{ret_check["msg"]}\n')
         return

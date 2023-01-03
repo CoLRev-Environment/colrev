@@ -20,12 +20,11 @@ from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+from colrev.exit_codes import ExitCodes
+
 
 if TYPE_CHECKING:
     import colrev.review_manager
-
-
-PASS, FAIL = 0, 1
 
 
 class Checker:
@@ -405,7 +404,7 @@ class Checker:
                             "Record with screening_criterion but before "
                             f"screen: {record_id}, {status}"
                         )
-        if len(field_errors) > 0:
+        if field_errors:
             raise colrev_exceptions.FieldValueError(
                 "\n    " + "\n    ".join(field_errors)
             )
@@ -802,9 +801,9 @@ class Checker:
         failure_items.extend(self.check_repo_extended())
         failure_items.extend(self.check_repo_basics())
 
-        if len(failure_items) > 0:
-            return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}
-        return {"status": PASS, "msg": "Everything ok."}
+        if failure_items:
+            return {"status": ExitCodes.FAIL, "msg": "  " + "\n  ".join(failure_items)}
+        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
 
 if __name__ == "__main__":

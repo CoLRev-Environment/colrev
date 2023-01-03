@@ -20,8 +20,7 @@ import colrev.logger
 import colrev.operation
 import colrev.record
 import colrev.settings
-
-PASS, FAIL = 0, 1
+from colrev.exit_codes import ExitCodes
 
 
 class ReviewManager:
@@ -224,7 +223,7 @@ class ReviewManager:
         """Format the records file Entrypoint for pre-commit hooks)"""
 
         if not self.dataset.records_file.is_file():
-            return {"status": PASS, "msg": "Everything ok."}
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
         try:
             colrev.operation.FormatOperation(review_manager=self)  # to notify
@@ -236,12 +235,12 @@ class ReviewManager:
             colrev_exceptions.UnstagedGitChangesError,
             colrev_exceptions.StatusFieldValueError,
         ) as exc:
-            return {"status": FAIL, "msg": f"{type(exc).__name__}: {exc}"}
+            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
 
         if changed:
-            return {"status": FAIL, "msg": "records file formatted"}
+            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
 
-        return {"status": PASS, "msg": "Everything ok."}
+        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
     def notify(
         self, *, operation: colrev.operation.Operation, state_transition: bool = True
