@@ -202,12 +202,21 @@
              "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian"
             },
             {"package_endpoint_identifier": "colrev_built_in.colrev_curation",
-             "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration"
+            "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration"
             }
         ],
         "search_source": [
             {"package_endpoint_identifier": "colrev_built_in.unknown_source",
              "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev_built_in.abi_inform_proquest",
+            "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev_built_in.taylor_and_francis",
+            "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource"
+            },
+                {"package_endpoint_identifier": "colrev_built_in.ebsco_host",
+            "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource"
             },
             {"package_endpoint_identifier": "colrev_built_in.crossref",
              "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource"

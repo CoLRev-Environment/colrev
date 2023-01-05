@@ -1120,7 +1120,11 @@ class LocalIndex:
                 },
                 size=2000,
             )
+
             retrieved_tocs = resp["hits"]["hits"]
+            if "hits" not in resp["hits"]:
+                raise colrev_exceptions.RecordNotInIndexException()
+
             toc_items = [
                 z
                 for x in retrieved_tocs

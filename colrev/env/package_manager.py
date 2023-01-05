@@ -891,6 +891,12 @@ class PackageManager:
                 package_endpoints=package_endpoints,
             )
 
+        for key in package_endpoints_json.keys():
+            package_endpoints_json[key] = sorted(
+                package_endpoints_json[key],
+                key=lambda d: d["package_endpoint_identifier"],
+            )
+
         json_object = json.dumps(package_endpoints_json, indent=4)
         with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
