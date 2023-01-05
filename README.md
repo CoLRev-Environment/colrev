@@ -104,24 +104,13 @@ The more records are curated, the more you can focus on the synthesis.
    :align: center
    :alt: Reuse vision -->
 
-
-## Usage and Documentation
-
-See the [documentation](docs/source/index.rst).
-
-Several resources are provided as part of the CoLRev project, including
-
-- The user [manual](docs/build/user_resources/manual.html) and [cheatsheet](docs/build/user_resources/cheatsheet.html)
-- The developer [api reference](docs/build/technical_documentation/api.html)
-- The scientific foundations of the [CoLRev framework](docs/build/technical_documentation/colrev.html) and the [architecture rationales](https://github.com/geritwagner/colrev-architecture-rationales)
-- Contributions are always welcome (see [help page](docs/build/user_resources/help.html) and [github repository](https://github.com/geritwagner/colrev))
-- Planned: resources for extension development, content curation, further educational materials (tutorials)
+Further information is provided in the [documentation](docs/source/index.rst), the developer [api reference](docs/build/technical_documentation/api.html), and the [CoLRev framework](docs/build/technical_documentation/colrev.html) summarizing the scientific foundations.
 
 ## Contributing, changes, and releases
 
 Contributions, code and features are always welcome
 
-- See [contributing guidelines](CONTRIBUTING.md).
+- See [contributing guidelines](CONTRIBUTING.md), [help page](docs/build/user_resources/help.html), and [github repository](https://github.com/geritwagner/colrev).
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
