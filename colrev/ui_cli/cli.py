@@ -249,7 +249,16 @@ def retrieve(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Retrieve, i.e., earch, load, prepare, and deduplicate metadata records"""
+    """Retrieve, a high-level operation, consists of search, load, prep, and dedupe.
+
+    \b
+    To retrieve search results
+    - copy files (*.bib, *.ris, *.xlsx, ...) to the directory data/search or
+    - copy PDF files to the directory data/pdfs or
+    - add an API-based search, as described in the documentation:
+
+    https://github.com/geritwagner/colrev/blob/main/docs/source/user_resources/2_2_metadata_retrieval/search.rst
+    """
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -265,9 +274,9 @@ def retrieve(
             # not be shown.
             print(
                 "To retrieve search results,\n"
-                " - move files (*.bib, *.ris, *.xlsx, ...) "
+                " - copy files (*.bib, *.ris, *.xlsx, ...) "
                 f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
-                f" - move PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
+                f" - copy PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
                 " - add an API-based search, as described in the documentation:\n"
                 "https://github.com/geritwagner/colrev/blob/main/"
                 "docs/source/user_resources/2_2_metadata_retrieval/search.rst"

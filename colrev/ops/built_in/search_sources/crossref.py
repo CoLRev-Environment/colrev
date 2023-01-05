@@ -437,14 +437,17 @@ class CrossrefSearchSource(JsonSchemaMixin):
         try:
             retrieved_record = self.__query_doi(doi=record.data["doi"])
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                record_original=record, retrieved_record_original=retrieved_record
+                record_original=record,
+                retrieved_record_original=retrieved_record,
+                same_record_type_required=False,
             )
-            if similarity < 0.8:
+            if similarity < 0.7:
                 self.review_manager.logger.error(
-                    f" record with mismatching doi metadata: {record.data['doi']}"
+                    f" mismatching metadata (record/doi-record): {record.data['doi']} "
+                    + f"(similarity: {similarity})"
                 )
-                print(record)
-                print(retrieved_record)
+                record.print_citation_format()
+                retrieved_record.print_citation_format()
 
         except (
             requests.exceptions.RequestException,

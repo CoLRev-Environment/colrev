@@ -81,7 +81,9 @@ class PRISMA(JsonSchemaMixin):
         }
         return prisma_endpoint_details
 
-    def __export_csv(self, data_operation: colrev.ops.data.Data) -> None:
+    def __export_csv(
+        self, data_operation: colrev.ops.data.Data, silent_mode: bool
+    ) -> None:
         csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
@@ -119,10 +121,12 @@ class PRISMA(JsonSchemaMixin):
         prisma_data.to_csv(self.csv_path, index=False)
         data_operation.review_manager.logger.debug(f"Exported {self.csv_path}")
 
-        if not status_stats.completeness_condition:
+        if not status_stats.completeness_condition and not silent_mode:
             print("Warning: review not (yet) complete")
 
-    def __export_diagram(self, data_operation: colrev.ops.data.Data) -> None:
+    def __export_diagram(
+        self, data_operation: colrev.ops.data.Data, silent_mode: bool
+    ) -> None:
         if not self.csv_path.is_file():
             data_operation.review_manager.logger.error(
                 "File %s does not exist.", self.csv_path
@@ -136,7 +140,8 @@ class PRISMA(JsonSchemaMixin):
             data_operation.review_manager.path
         )
 
-        data_operation.review_manager.logger.info("Create PRISMA diagram")
+        if not silent_mode:
+            data_operation.review_manager.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
             diagram_relative_path = diagram_path.relative_to(
@@ -169,8 +174,8 @@ class PRISMA(JsonSchemaMixin):
 
         # pylint: disable=duplicate-code
         try:
-            uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
-            gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
+            uid = os.stat(data_operation.review_manager.settings_path).st_uid
+            gid = os.stat(data_operation.review_manager.settings_path).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()
@@ -202,12 +207,12 @@ class PRISMA(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
-        silent_mode: bool,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the data/prisma diagram"""
 
-        self.__export_csv(data_operation=data_operation)
-        self.__export_diagram(data_operation=data_operation)
+        self.__export_csv(data_operation=data_operation, silent_mode=silent_mode)
+        self.__export_diagram(data_operation=data_operation, silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,

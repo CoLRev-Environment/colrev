@@ -23,6 +23,20 @@ class Load(colrev.operation.Operation):
 
     supported_extensions: typing.List[str]
 
+    __LATEX_SPECIAL_CHAR_MAPPING = {
+        '\\"u': "ü",
+        "\\&": "&",
+        '\\"o': "ö",
+        '\\"a': "ä",
+        '\\"A': "Ä",
+        '\\"O': "Ö",
+        '\\"U': "Ü",
+        "\\textendash": "–",
+        "\\textemdash": "—",
+        "\\~a": "ã",
+        "\\'o": "ó",
+    }
+
     def __init__(
         self,
         *,
@@ -142,9 +156,6 @@ class Load(colrev.operation.Operation):
                             f"(because the format is .enl){colors.END}"
                         )
                         filepath.rename(new_filename)
-                        self.review_manager.dataset.add_changes(
-                            path=new_filename, remove=True
-                        )
                         filepath = new_filename
                         res["filename"] = filepath
                         self.review_manager.dataset.add_changes(path=new_filename)
@@ -278,13 +289,17 @@ class Load(colrev.operation.Operation):
             if 1 == len(heuristic_result_list):
                 heuristic_source = heuristic_result_list[0]
             else:
-                if not self.review_manager.high_level_operation:
-                    print()
                 print("Select search source:")
                 for i, heuristic_source in enumerate(heuristic_result_list):
+                    highlight_color = ""
+                    if heuristic_source["confidence"] >= 0.7:
+                        highlight_color = colors.GREEN
+                    elif heuristic_source["confidence"] >= 0.5:
+                        highlight_color = colors.ORANGE
                     print(
-                        f"{i+1} (confidence: {round(heuristic_source['confidence'], 2)}):"
-                        f" {heuristic_source['source_candidate'].endpoint}"
+                        f"{highlight_color}{i+1} "
+                        f"(confidence: {round(heuristic_source['confidence'], 2)}):"
+                        f" {heuristic_source['source_candidate'].endpoint}{colors.END}"
                     )
 
                 while True:
@@ -315,11 +330,9 @@ class Load(colrev.operation.Operation):
                 else:
                     heuristic_source["source_candidate"].search_parameters = {}
 
-            else:
-                print(
-                    "Source name".ljust(25, " ")
-                    + f": {heuristic_source['source_candidate'].endpoint}"
-                )
+            self.review_manager.logger.info(
+                f"Source name: {heuristic_source['source_candidate'].endpoint}"
+            )
 
             heuristic_source["source_candidate"].comment = None
 
@@ -455,6 +468,15 @@ class Load(colrev.operation.Operation):
             )
         return list(search_records_dict.values())
 
+    def __unescape_latex(self, *, input_str: str) -> str:
+        # Based on
+        # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
+
+        for latex_char, repl_char in self.__LATEX_SPECIAL_CHAR_MAPPING.items():
+            input_str = input_str.replace(latex_char, repl_char)
+
+        return input_str
+
     def __import_record(self, *, record_dict: dict) -> dict:
         # pylint: disable=too-many-branches
 
@@ -487,8 +509,13 @@ class Load(colrev.operation.Operation):
                 "doi",
                 "abstract",
             ]
+
             for field in fields_to_process:
                 if field in record_dict:
+                    if "\\" in record_dict[field]:
+                        record_dict[field] = self.__unescape_latex(
+                            input_str=record_dict[field]
+                        )
                     record_dict[field] = (
                         record_dict[field]
                         .replace("\n", " ")

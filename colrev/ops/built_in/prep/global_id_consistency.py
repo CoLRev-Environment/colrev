@@ -87,6 +87,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         if "url" not in record.data:
             return
 
+        if any(x in record.data["url"] for x in ["search.ebscohost.com/login"]):
+            return
+
         if "md_curated.bib" in record.data["colrev_data_provenance"]["url"]["source"]:
             return
 
@@ -119,7 +122,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         except AttributeError:
             pass
 
-    @timeout_decorator.timeout(60, use_signals=False)
+    @timeout_decorator.timeout(20, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument

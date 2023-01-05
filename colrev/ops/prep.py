@@ -176,6 +176,10 @@ class Prep(colrev.operation.Operation):
         preparation_record: colrev.record.PrepRecord,
         prep_package_endpoint: colrev.env.package_manager.PrepPackageEndpointInterface,
     ) -> None:
+
+        if not self.debug_mode:
+            return
+
         diffs = prior.get_diff(other_record=preparation_record)
         if diffs:
             change_report = (
@@ -184,31 +188,27 @@ class Prep(colrev.operation.Operation):
                 " changed:\n"
                 f"{colors.ORANGE}{self.review_manager.p_printer.pformat(diffs)}{colors.END}\n"
             )
-            if self.review_manager.verbose_mode:
-                self.review_manager.logger.info(change_report)
 
-            if self.debug_mode:
-                self.review_manager.logger.info(change_report)
-                self.review_manager.logger.info(
-                    "To correct errors in the endpoint,"
-                    " open an issue at "
-                    "https://github.com/geritwagner/colrev/issues"
-                )
-                self.review_manager.logger.info(
-                    "To correct potential errors at source,"
-                    f" {prep_package_endpoint.source_correction_hint}"
-                )
-                input("Press Enter to continue")
-                print("\n")
+            self.review_manager.logger.info(change_report)
+            self.review_manager.logger.info(
+                "To correct errors in the endpoint,"
+                " open an issue at "
+                "https://github.com/geritwagner/colrev/issues"
+            )
+            self.review_manager.logger.info(
+                "To correct potential errors at source,"
+                f" {prep_package_endpoint.source_correction_hint}"
+            )
+            input("Press Enter to continue")
+            print("\n")
         else:
             self.review_manager.logger.debug(
                 f"{prep_package_endpoint}"
                 f' on {preparation_record.data["ID"]}'
                 " changed: -"
             )
-            if self.debug_mode:
-                print("\n")
-                time.sleep(0.1)
+            print("\n")
+            time.sleep(0.1)
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
@@ -273,9 +273,12 @@ class Prep(colrev.operation.Operation):
                     start_time=start_time,
                     prep_round_package_endpoint=prep_round_package_endpoint,
                 )
-                self.review_manager.logger.error(
-                    f"{colors.RED}{endpoint.settings.endpoint}(...) timed out{colors.END}"
-                )
+                if self.review_manager.verbose_mode:
+                    self.review_manager.logger.error(
+                        f" {colors.RED}{record.data['ID']}".ljust(45)
+                        + f"{endpoint.settings.endpoint}(...) timed out{colors.END}{colors.END}"
+                    )
+
             except colrev_exceptions.ServiceNotAvailableException as exc:
                 if self.review_manager.force_mode:
                     self.__add_stats(
@@ -300,15 +303,22 @@ class Prep(colrev.operation.Operation):
                     colrev.record.RecordState.rev_prescreen_excluded
                     == record.data["colrev_status"]
                 ):
+                    if self.review_manager.verbose_mode:
+                        self.review_manager.logger.info(
+                            f" {colors.RED}{record.data['ID']}".ljust(46)
+                            + f"Detected: {record.data.get('prescreen_exclusion', 'NA')}"
+                            + f"{colors.END}"
+                        )
+
                     self.review_manager.logger.info(
                         f" {colors.RED}{record.data['ID']}".ljust(46)
-                        + f"{progress}md_imported → rev_prescreen_excluded "
-                        f"({record.data.get('prescreen_exclusion', 'NA')}){colors.END} ❌"
+                        + f"{progress}md_imported →  rev_prescreen_excluded"
+                        + f"{colors.END}"
                     )
                 else:
                     self.review_manager.logger.info(
                         f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                        + f"{progress}md_imported → md_needs_man_prep{colors.END}"
+                        + f"{progress}md_imported →  md_needs_manual_preparation{colors.END}"
                     )
 
             elif record.preparation_save_condition():
@@ -317,12 +327,12 @@ class Prep(colrev.operation.Operation):
                     curation_addition = " ✔ "
                 self.review_manager.logger.info(
                     f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                    + f"{progress}md_imported →  md_prepared{colors.END} {curation_addition}"
+                    + f"{progress}md_imported →  md_prepared{colors.END}{curation_addition}"
                 )
             else:
                 self.review_manager.logger.info(
                     f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                    + f"{progress}md_imported → md_needs_manual_preparation{colors.END}"
+                    + f"{progress}md_imported →  md_needs_manual_preparation{colors.END}"
                 )
 
         if self.last_round:

@@ -1090,59 +1090,105 @@ class LocalIndex:
         record_dict: dict,
         similarity_threshold: float,
         include_file: bool = False,
+        search_across_tocs: bool = False,
     ) -> dict:
         """Retrieve a record from the toc (table-of-contents)"""
+
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+
         try:
             toc_key = colrev.record.Record(data=record_dict).get_toc_key()
         except colrev_exceptions.NotTOCIdentifiableException as exc:
-            raise colrev_exceptions.RecordNotInIndexException() from exc
+            if not search_across_tocs:
+                raise colrev_exceptions.RecordNotInIndexException() from exc
 
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
         # 1. get TOC
-        toc_items = []
-        if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
-            try:
-                res = self.__retrieve_toc_index(toc_key=toc_key)
-                toc_items = res.get("colrev_ids", [])  # type: ignore
-            except (TransportError, SerializationError):
-                toc_items = []
+        if search_across_tocs:
+            toc_items: typing.List[str] = []
+            partial_toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+            # pylint: disable=unexpected-keyword-arg
+            resp = self.open_search.search(
+                index=self.TOC_INDEX,
+                body={
+                    "query": {
+                        "match_phrase": {
+                            "toc_key": partial_toc_key.replace("|UNKNOWN", "") + "|"
+                        }
+                    }
+                },
+                size=2000,
+            )
+            retrieved_tocs = resp["hits"]["hits"]
+            toc_items = [
+                z
+                for x in retrieved_tocs
+                for y, z in x["_source"].items()
+                if y == "colrev_ids"
+            ]
+            toc_items = [item for sublist in toc_items for item in sublist]
+
+        else:
+            toc_items = []
+            if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
+                try:
+                    res = self.__retrieve_toc_index(toc_key=toc_key)
+                    toc_items = res.get("colrev_ids", [])  # type: ignore
+                except (TransportError, SerializationError):
+                    toc_items = []
+
+        if not toc_items:
+            raise colrev_exceptions.RecordNotInIndexException()
 
         # 2. get most similar record_dict
-        if len(toc_items) > 0:
-            try:
+        try:
+            if search_across_tocs:
+                record_colrev_id = colrev.record.Record(
+                    data=record_dict
+                ).create_colrev_id(assume_complete=True)
 
+            else:
                 record_colrev_id = colrev.record.Record(
                     data=record_dict
                 ).create_colrev_id()
-                sim_list = []
-                for toc_records_colrev_id in toc_items:
-                    # Note : using a simpler similarity measure
-                    # because the publication outlet parameters are already identical
-                    sim_value = (
-                        fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
-                    )
-                    sim_list.append(sim_value)
+            sim_list = []
 
-                if max(sim_list) > similarity_threshold:
-                    toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
-                    paper_hash = hashlib.sha256(
-                        toc_records_colrev_id.encode("utf-8")
-                    ).hexdigest()
-                    res = open_search_thread_instance.get(
-                        index=self.RECORD_INDEX,
-                        id=str(paper_hash),
-                    )
-                    record_dict = res["_source"]  # type: ignore
-                    return self.__prepare_record_for_return(
-                        record_dict=record_dict, include_file=include_file
-                    )
+            for toc_records_colrev_id in toc_items:
+                # Note : using a simpler similarity measure
+                # because the publication outlet parameters are already identical
+                sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
+                sim_list.append(sim_value)
 
-                raise colrev_exceptions.RecordNotInTOCException(
-                    record_id=record_dict["ID"], toc_key=toc_key
+            if max(sim_list) > similarity_threshold:
+                if search_across_tocs:
+                    second_highest = list(set(sim_list))[-2]
+                    # Require a minimum difference to the next most similar record
+                    if (max(sim_list) - second_highest) < 0.2:
+                        raise colrev_exceptions.RecordNotInIndexException()
+
+                toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
+                paper_hash = hashlib.sha256(
+                    toc_records_colrev_id.encode("utf-8")
+                ).hexdigest()
+                res = open_search_thread_instance.get(
+                    index=self.RECORD_INDEX,
+                    id=str(paper_hash),
+                )
+                record_dict = res["_source"]  # type: ignore
+                return self.__prepare_record_for_return(
+                    record_dict=record_dict, include_file=include_file
                 )
 
-            except (colrev_exceptions.NotEnoughDataToIdentifyException, KeyError):
-                pass
+            raise colrev_exceptions.RecordNotInTOCException(
+                record_id=record_dict["ID"], toc_key=toc_key
+            )
+
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            KeyError,
+        ):
+            pass
 
         raise colrev_exceptions.RecordNotInIndexException()
 

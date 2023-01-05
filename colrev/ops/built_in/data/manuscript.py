@@ -299,7 +299,7 @@ class Manuscript(JsonSchemaMixin):
             if not appended:
                 msg = (
                     f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
-                    + f"{paper_path.name}. Adding records at the end of "
+                    + f"{paper_path.name}. Add records at the end of "
                     + "the document."
                 )
                 review_manager.report_logger.warning(msg)
@@ -321,11 +321,11 @@ class Manuscript(JsonSchemaMixin):
                         )
 
     def __create_paper(
-        self, review_manager: colrev.review_manager.ReviewManager
+        self, review_manager: colrev.review_manager.ReviewManager, silent_mode: bool
     ) -> None:
-
-        review_manager.report_logger.info("Create manuscript")
-        review_manager.logger.info("Create manuscript")
+        if not silent_mode:
+            review_manager.report_logger.info("Create manuscript")
+            review_manager.logger.info("Create manuscript")
 
         title = "Manuscript template"
         readme_file = review_manager.readme
@@ -518,7 +518,7 @@ class Manuscript(JsonSchemaMixin):
             review_manager.dataset.add_changes(path=self.NON_SAMPLE_REFERENCES_RELATIVE)
 
     def __add_prisma_if_available(
-        self, *, review_manager: colrev.review_manager.ReviewManager
+        self, *, review_manager: colrev.review_manager.ReviewManager, silent_mode: bool
     ) -> None:
 
         prisma_endpoint_l = [
@@ -529,7 +529,8 @@ class Manuscript(JsonSchemaMixin):
         if prisma_endpoint_l:
 
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
-                review_manager.logger.info("Adding PRISMA diagram to manuscript")
+                if not silent_mode:
+                    review_manager.logger.info("Add PRISMA diagram to manuscript")
                 self.__append_to_non_sample_references(
                     review_manager=review_manager,
                     filepath=Path("template/prisma/prisma-refs.bib"),
@@ -560,8 +561,8 @@ class Manuscript(JsonSchemaMixin):
                             writer.write(filedata.decode("utf-8"))
 
                         line = reader.readline()
-
-                print()
+                if not silent_mode:
+                    print()
 
     def update_manuscript(
         self,
@@ -574,7 +575,7 @@ class Manuscript(JsonSchemaMixin):
         """Update the manuscript (add new records after the NEW_RECORD_SOURCE_TAG)"""
 
         if not self.settings.paper_path.is_file():
-            self.__create_paper(review_manager=review_manager)
+            self.__create_paper(review_manager=review_manager, silent_mode=silent_mode)
 
         self.__add_missing_records(
             review_manager=review_manager,
@@ -588,7 +589,9 @@ class Manuscript(JsonSchemaMixin):
             records=records,
         )
 
-        self.__add_prisma_if_available(review_manager=review_manager)
+        self.__add_prisma_if_available(
+            review_manager=review_manager, silent_mode=silent_mode
+        )
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
 
@@ -623,7 +626,7 @@ class Manuscript(JsonSchemaMixin):
                 image=self.pandoc_image,
                 command=script,
                 user=user,
-                volumes=[os.getcwd() + ":/data"],
+                volumes=[str(data_operation.review_manager.path) + ":/data"],
             )
 
         except docker.errors.ImageNotFound:

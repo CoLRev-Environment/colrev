@@ -44,8 +44,10 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         """Source heuristic for GoogleScholar"""
 
         result = {"confidence": 0.0}
-        if "https://scholar.google.com/scholar?q=relat" in data:
-            result["confidence"] = 0.7
+        if data.count("https://scholar.google.com/scholar?q=relat") > 0.9 * data.count(
+            "\n@"
+        ):
+            result["confidence"] = 1.0
             return result
         return result
 
@@ -89,6 +91,30 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for GoogleScholar"""
+        if "note" in record.data:
+            if (
+                "cites: https://scholar.google.com/scholar?cites="
+                in record.data["note"]
+            ):
+                note = record.data["note"]
+                source = record.data["colrev_data_provenance"]["note"]["source"]
+                record.rename_field(key="note", new_key="cited_by")
+                record.update_field(
+                    key="cited_by",
+                    value=record.data["cited_by"][
+                        : record.data["cited_by"].find(" cites: ")
+                    ],
+                    source="replace_link",
+                )
+                record.update_field(
+                    key="cited_by_link",
+                    value=note[note.find("cites: ") + 7 :],
+                    append_edit=False,
+                    source=source + "|extract-from-note",
+                )
+        if "abstract" in record.data:
+            # Note: abstracts provided by GoogleScholar are very incomplete
+            record.remove_field(key="abstract")
 
         return record
 

@@ -351,6 +351,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
             # Already linked to a local-index record
@@ -363,6 +364,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
             try:
+                # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
                     record_dict=record.data,
                     similarity_threshold=prep_operation.retrieval_similarity,
@@ -382,8 +384,18 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     )
                 return record
 
+            except colrev_exceptions.RecordNotInIndexException:
+                try:
+                    # Search across table-of-contents in local_index
+                    retrieved_record_dict = self.local_index.retrieve_from_toc(
+                        record_dict=record.data,
+                        similarity_threshold=prep_operation.retrieval_similarity,
+                        include_file=False,
+                        search_across_tocs=True,
+                    )
+                except colrev_exceptions.RecordNotInIndexException:
+                    return record
             except (
-                colrev_exceptions.RecordNotInIndexException,
                 colrev_exceptions.NotTOCIdentifiableException,
                 NotFoundError,
                 TransportError,

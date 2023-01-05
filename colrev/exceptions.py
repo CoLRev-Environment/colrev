@@ -28,12 +28,20 @@ class RepoSetupError(CoLRevException):
     )
 
     def __init__(self, msg: str = None) -> None:
-        if not msg:
+        if msg:
+            self.message = f" {msg}"
+        elif any(Path(Path.cwd()).iterdir()):
             self.message = (
-                f"Not a CoLRev repository. To initialize, run:\n\n"
+                "Not an empty directry. "
+                + "To create a CoLRev repository, navigate to an empty directory."
+            )
+
+        else:
+            self.message = (
+                f"Not (yet) a CoLRev repository. To initialize, run:\n\n"
                 f"   {colors.ORANGE}colrev init --type literature_review{colors.END}\n\n"
                 f"Instead of {colors.ORANGE}literature_review{colors.END},"
-                " you can use any of the following REVIEW_TYPE:\n\n"
+                " you can use any of the following review type:\n\n"
                 f"  - {colors.ORANGE}narrative_review{colors.END}              : "
                 "includes a manuscript\n"
                 f"  - {colors.ORANGE}scoping_review{colors.END}                : "
@@ -52,11 +60,9 @@ class RepoSetupError(CoLRevException):
                 "includes a manuscript, data extraction tables, and a prisma diagram\n"
                 f"  - {colors.ORANGE}scientometric{colors.END}                 : "
                 "includes a manuscript\n"
-                "\nMore details about the differences between REVIEW_TYPEs, e.g., in the "
-                f"synthesis steps, are available at\n{self.lr_docs}"
+                "\nMore details about the differences between review types "
+                f"are available at\n{self.lr_docs}"
             )
-        else:
-            self.message = f" {msg}"
 
         super().__init__(self.message)
 
@@ -264,7 +270,7 @@ class NotTOCIdentifiableException(CoLRevException):
 class RecordNotInTOCException(CoLRevException):
     """The record is not part of the table-of-contents (TOC)."""
 
-    def __init__(self, record_id: str, toc_key: str) -> None:
+    def __init__(self, *, record_id: str, toc_key: str) -> None:
         self.record_id = record_id
         self.toc_key = toc_key
         self.message = f"{record_id} not part of toc: {toc_key}"

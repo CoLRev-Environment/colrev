@@ -147,7 +147,7 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
-        self.review_manager.logger.info("Register repo")
+        self.review_manager.logger.info("Register CoLRev repository")
 
         environment_manager = self.review_manager.get_environment_manager()
         environment_manager.register_repo(path_to_register=Path.cwd())
@@ -261,6 +261,13 @@ class Initializer:
         )
         data_operation.main(silent_mode=True)
 
+        self.review_manager.logger.info("Set up %s", self.review_type)
+        for data_package_endpoint in settings.data.data_package_endpoints:
+            self.review_manager.logger.info(
+                " add %s",
+                data_package_endpoint["endpoint"].replace("colrev_built_in.", ""),
+            )
+
         files_to_add = [
             "readme.md",
             ".pre-commit-config.yaml",
@@ -339,7 +346,7 @@ class Initializer:
         for script_to_call in scripts_to_call:
             try:
                 if script_to_call["description"]:
-                    self.logger.info("%s...", script_to_call["description"])
+                    self.logger.debug("%s...", script_to_call["description"])
                 check_call(script_to_call["command"], stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "pre-commit autoupdate" == " ".join(script_to_call["command"]):
