@@ -2,6 +2,7 @@
 """CoLRev load operation: Load records from search sources into references.bib."""
 from __future__ import annotations
 
+import html
 import itertools
 import re
 import string
@@ -475,6 +476,15 @@ class Load(colrev.operation.Operation):
         for latex_char, repl_char in self.__LATEX_SPECIAL_CHAR_MAPPING.items():
             input_str = input_str.replace(latex_char, repl_char)
 
+        input_str = input_str.replace("\\emph", "")
+        input_str = input_str.replace("\\textit", "")
+
+        return input_str
+
+    def __unescape_html(self, *, input_str: str) -> str:
+        input_str = html.unescape(input_str)
+        if "<" in input_str:
+            input_str = re.sub(r"<.*?>", "", input_str)
         return input_str
 
     def __import_record(self, *, record_dict: dict) -> dict:
@@ -516,6 +526,12 @@ class Load(colrev.operation.Operation):
                         record_dict[field] = self.__unescape_latex(
                             input_str=record_dict[field]
                         )
+
+                    if "<" in record_dict[field]:
+                        record_dict[field] = self.__unescape_html(
+                            input_str=record_dict[field]
+                        )
+
                     record_dict[field] = (
                         record_dict[field]
                         .replace("\n", " ")
@@ -548,6 +564,28 @@ class Load(colrev.operation.Operation):
                 del record_dict["volume"]
             if record_dict.get("number", "") == "ahead-of-print":
                 del record_dict["number"]
+
+            if "language" in record_dict:
+                if len(record_dict["language"]) > 3:
+                    for long, short in [
+                        ("English", "eng"),
+                        ("Spanish", "esp"),
+                        ("Chinese", "zho"),
+                        ("Portuguese", "por"),
+                        ("German", "deu"),
+                        ("Hungarian", "hun"),
+                        ("French", "fra"),
+                        ("Russian", "rus"),
+                    ]:
+                        record_dict["language"] = record_dict["language"].replace(
+                            long, short
+                        )
+
+            if "url" in record_dict:
+                if "login?url=https" in record_dict["url"]:
+                    record_dict["url"] = record_dict["url"][
+                        record_dict["url"].find("login?url=https") + 10 :
+                    ]
 
         record = colrev.record.Record(data=record_dict)
         if "doi" in record.data:

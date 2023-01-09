@@ -393,7 +393,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         include_file=False,
                         search_across_tocs=True,
                     )
-                except colrev_exceptions.RecordNotInIndexException:
+                except (
+                    colrev_exceptions.RecordNotInIndexException,
+                    colrev_exceptions.RecordNotInTOCException,
+                ):
                     return record
             except (
                 colrev_exceptions.NotTOCIdentifiableException,

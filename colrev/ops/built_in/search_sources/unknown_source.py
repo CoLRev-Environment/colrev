@@ -229,9 +229,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     )
                     record.remove_field(key="series")
 
-        if "booktitle" in record.data and "UNKNOWN" != record.data.get(
-            "booktitle", "UNKNOWN"
-        ):
+        if "UNKNOWN" != record.data.get("booktitle", "UNKNOWN"):
             if (
                 "UNKNOWN" != record.data["booktitle"]
                 and "inbook" != record.data["ENTRYTYPE"]
@@ -256,15 +254,16 @@ class UnknownSearchSource(JsonSchemaMixin):
                 )
 
         record.unify_pages_field()
-        if (
-            not re.match(r"^\d*$", record.data["pages"])
-            and not re.match(r"^\d*--\d*$", record.data["pages"])
-            and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data["pages"])
-        ):
-            self.review_manager.report_logger.info(
-                f' {record.data["ID"]}:'.ljust(padding, " ")
-                + f'Unusual pages: {record.data["pages"]}'
-            )
+        if "pages" in record.data:
+            if (
+                not re.match(r"^\d*$", record.data["pages"])
+                and not re.match(r"^\d*--\d*$", record.data["pages"])
+                and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data["pages"])
+            ):
+                self.review_manager.report_logger.info(
+                    f' {record.data["ID"]}:'.ljust(padding, " ")
+                    + f'Unusual pages: {record.data["pages"]}'
+                )
 
         if "UNKNOWN" != record.data.get("volume", "UNKNOWN"):
             record.update_field(

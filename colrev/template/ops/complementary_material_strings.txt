@@ -10,3 +10,6 @@ issue information
 keyword index
 about the authors
 thanks to reviewers
+contents
+acknowledgments
+volume information

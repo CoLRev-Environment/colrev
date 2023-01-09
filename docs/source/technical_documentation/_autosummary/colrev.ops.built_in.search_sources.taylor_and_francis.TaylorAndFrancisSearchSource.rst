@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~TaylorAndFrancisSearchSource.all_json_schemas
       ~TaylorAndFrancisSearchSource.field_mapping
       ~TaylorAndFrancisSearchSource.from_dict
@@ -29,19 +29,17 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
       ~TaylorAndFrancisSearchSource.to_dict
       ~TaylorAndFrancisSearchSource.to_json
       ~TaylorAndFrancisSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~TaylorAndFrancisSearchSource.heuristic_status
       ~TaylorAndFrancisSearchSource.link
       ~TaylorAndFrancisSearchSource.search_type
       ~TaylorAndFrancisSearchSource.short_name
       ~TaylorAndFrancisSearchSource.source_identifier
-   
-   

@@ -228,6 +228,7 @@ class Prep(colrev.operation.Operation):
         # preparation_record changes with each endpoint and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
+        prior_state = record.data["colrev_status"]
 
         for prep_round_package_endpoint in deepcopy(
             item["prep_round_package_endpoints"]
@@ -312,13 +313,13 @@ class Prep(colrev.operation.Operation):
 
                     self.review_manager.logger.info(
                         f" {colors.RED}{record.data['ID']}".ljust(46)
-                        + f"{progress}md_imported →  rev_prescreen_excluded"
+                        + f"{progress}{prior_state} →  rev_prescreen_excluded"
                         + f"{colors.END}"
                     )
                 else:
                     self.review_manager.logger.info(
                         f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                        + f"{progress}md_imported →  md_needs_manual_preparation{colors.END}"
+                        + f"{progress}{prior_state} →  md_needs_manual_preparation{colors.END}"
                     )
 
             elif record.preparation_save_condition():
@@ -327,12 +328,12 @@ class Prep(colrev.operation.Operation):
                     curation_addition = " ✔ "
                 self.review_manager.logger.info(
                     f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                    + f"{progress}md_imported →  md_prepared{colors.END}{curation_addition}"
+                    + f"{progress}{prior_state} →  md_prepared{colors.END}{curation_addition}"
                 )
             else:
                 self.review_manager.logger.info(
                     f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                    + f"{progress}md_imported →  md_needs_manual_preparation{colors.END}"
+                    + f"{progress}{prior_state} →  md_needs_manual_preparation{colors.END}"
                 )
 
         if self.last_round:
@@ -571,14 +572,6 @@ class Prep(colrev.operation.Operation):
         )
         record_header_list = list(records_headers.values())
 
-        nr_tasks = len(
-            [
-                x
-                for x in record_header_list
-                if colrev.record.RecordState.md_imported == x["colrev_status"]
-            ]
-        )
-
         pad = (
             35
             if (0 == len(record_header_list))
@@ -587,24 +580,18 @@ class Prep(colrev.operation.Operation):
 
         r_states_to_prepare = [
             colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_prepared,
             colrev.record.RecordState.md_needs_manual_preparation,
         ]
-        items = self.review_manager.dataset.read_next_record(
-            conditions=[{"colrev_status": s} for s in r_states_to_prepare]
+        items = list(
+            self.review_manager.dataset.read_next_record(
+                conditions=[{"colrev_status": s} for s in r_states_to_prepare]
+            )
         )
 
-        prior_ids = [
-            x["ID"]
-            for x in record_header_list
-            if colrev.record.RecordState.md_imported == x["colrev_status"]
-        ]
-
         prep_data = {
-            "nr_tasks": nr_tasks,
+            "nr_tasks": len(items),
             "PAD": pad,
             "items": list(items),
-            "prior_ids": prior_ids,
         }
 
         return prep_data
@@ -719,13 +706,12 @@ class Prep(colrev.operation.Operation):
             )
 
         if len(records) == 0:
-            prep_data = {"nr_tasks": 0, "PAD": 0, "items": [], "prior_ids": []}
+            prep_data = {"nr_tasks": 0, "PAD": 0, "items": []}
         else:
             prep_data = {
                 "nr_tasks": len(debug_ids_list),
                 "PAD": len(debug_ids),
                 "items": records,
-                "prior_ids": [debug_ids_list],
             }
         return prep_data
 

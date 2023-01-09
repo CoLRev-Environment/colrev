@@ -1106,32 +1106,36 @@ class LocalIndex:
         open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
         # 1. get TOC
         if search_across_tocs:
-            toc_items: typing.List[str] = []
-            partial_toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-            # pylint: disable=unexpected-keyword-arg
-            resp = self.open_search.search(
-                index=self.TOC_INDEX,
-                body={
-                    "query": {
-                        "match_phrase": {
-                            "toc_key": partial_toc_key.replace("|UNKNOWN", "") + "|"
+            try:
+                toc_items: typing.List[str] = []
+                partial_toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+                # pylint: disable=unexpected-keyword-arg
+                resp = self.open_search.search(
+                    index=self.TOC_INDEX,
+                    body={
+                        "query": {
+                            "match_phrase": {
+                                "toc_key": partial_toc_key.replace("|UNKNOWN", "") + "|"
+                            }
                         }
-                    }
-                },
-                size=2000,
-            )
+                    },
+                    size=2000,
+                )
 
-            retrieved_tocs = resp["hits"]["hits"]
-            if "hits" not in resp["hits"]:
-                raise colrev_exceptions.RecordNotInIndexException()
+                retrieved_tocs = resp["hits"]["hits"]
+                if "hits" not in resp["hits"]:
+                    raise colrev_exceptions.RecordNotInIndexException()
 
-            toc_items = [
-                z
-                for x in retrieved_tocs
-                for y, z in x["_source"].items()
-                if y == "colrev_ids"
-            ]
-            toc_items = [item for sublist in toc_items for item in sublist]
+                toc_items = [
+                    z
+                    for x in retrieved_tocs
+                    for y, z in x["_source"].items()
+                    if y == "colrev_ids"
+                ]
+                toc_items = [item for sublist in toc_items for item in sublist]
+
+            except colrev_exceptions.NotTOCIdentifiableException as exc:
+                raise colrev_exceptions.RecordNotInIndexException() from exc
 
         else:
             toc_items = []

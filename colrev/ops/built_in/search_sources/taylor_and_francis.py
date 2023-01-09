@@ -55,8 +55,6 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        pass
-
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

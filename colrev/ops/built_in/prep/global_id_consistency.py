@@ -62,14 +62,18 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         crossref_md = crossref_search_source.get_masterdata(
             prep_operation=self.prep_operation, record=record_copy, safe_feed=False
         )
+
         for key, value in crossref_md.data.items():
             if key not in self.__fields_to_check:
                 continue
             if not isinstance(value, str):
                 continue
             if key in record.data:
-                if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
+                if "UNKNOWN" == crossref_md.data[key]:
                     continue
+                if key in ["author", "title", "journal"]:
+                    if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
+                        continue
                 if (
                     fuzz.partial_ratio(
                         record.data[key].lower(), crossref_md.data[key].lower()

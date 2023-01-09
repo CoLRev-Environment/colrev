@@ -1339,22 +1339,24 @@ class Record:
                 # that may result from grobid imports
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
                     defect_field_keys.append(key)
-                if len(self.data[key]) < 5:
+                elif len(self.data[key]) < 5:
                     defect_field_keys.append(key)
 
-                if str(self.data[key]).count(" ") > (
+                elif str(self.data[key]).count(" ") > (
                     4 * str(self.data[key]).count(",")
                 ):
                     defect_field_keys.append(key)
 
-                if ", " not in self.data[key]:
+                elif ", " not in self.data[key]:
                     defect_field_keys.append(key)
 
-                if str(self.data[key]).count(" and ") != (
+                elif str(self.data[key]).count(" and ") != (
                     str(self.data[key]).count(",") - 1
                 ):
                     defect_field_keys.append(key)
-                if "�" in str(self.data[key]):
+                elif "�" in str(self.data[key]):
+                    defect_field_keys.append(key)
+                elif "http" in str(self.data[key]):
                     defect_field_keys.append(key)
 
             if "title" == key:

@@ -55,8 +55,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        pass
-
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
@@ -72,7 +70,13 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
-        # TODO : replace "English" with eng
+        if "language" in record.data:
+            if record.data["language"] in ["ENG", "English"]:
+                record.update_field(
+                    key="language",
+                    value="eng",
+                    source="prep_abi_inform_proquest_source",
+                )
 
         return record
 
