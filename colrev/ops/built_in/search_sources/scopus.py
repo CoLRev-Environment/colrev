@@ -96,16 +96,13 @@ class ScopusSearchSource(JsonSchemaMixin):
 
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":
-                record.data["ENTRYTYPE"] = "inproceedings"
-                if "journal" in record.data:
-                    record.rename_field(key="journal", new_key="booktitle")
+                record.change_entrytype(new_entrytype="inproceedings")
+
             elif record.data["document_type"] == "Conference Review":
-                record.data["ENTRYTYPE"] = "proceedings"
-                if "journal" in record.data:
-                    record.rename_field(key="journal", new_key="booktitle")
+                record.change_entrytype(new_entrytype="proceedings")
 
             elif record.data["document_type"] == "Article":
-                record.data["ENTRYTYPE"] = "article"
+                record.change_entrytype(new_entrytype="article")
 
             record.remove_field(key="document_type")
 

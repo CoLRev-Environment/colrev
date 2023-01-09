@@ -391,6 +391,20 @@ class Record:
     def change_entrytype(self, *, new_entrytype: str) -> None:
         """Change the ENTRYTYPE"""
         self.data["ENTRYTYPE"] = new_entrytype
+        if "inproceedings" == new_entrytype:
+            if "UNKNOWN" == self.data.get("volume", ""):
+                self.remove_field(key="volume")
+            if "UNKNOWN" == self.data.get("number", ""):
+                self.remove_field(key="number")
+            if "journal" in self.data and "booktitle" not in self.data:
+                self.rename_field(key="journal", new_key="booktitle")
+        elif "article" == new_entrytype:
+            if "booktitle" in self.data:
+                self.rename_field(key="booktitle", new_key="journal")
+        elif "proceedings" == new_entrytype:
+            if "journal" in self.data:
+                self.rename_field(key="journal", new_key="booktitle")
+
         self.__apply_fields_keys_requirements()
 
     def remove_field(

@@ -120,9 +120,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 "All Sprouts Content",
             ]
         ):
-            record.data["ENTRYTYPE"] = "article"
-            if "journal" not in record.data and "booktitle" in record.data:
-                record.rename_field(key="booktitle", new_key="journal")
+
             if (
                 "journal" not in record.data
                 and "title" in record.data
@@ -132,13 +130,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key="chapter", new_key="title")
                 record.remove_field(key="publisher")
 
+            record.change_entrytype(new_entrytype="article")
+
         else:
-            record.data["ENTRYTYPE"] = "inproceedings"
+
             record.remove_field(key="publisher")
-            if record.data.get("volume", "") == "UNKNOWN":
-                record.remove_field(key="volume")
-            if record.data.get("number", "") == "UNKNOWN":
-                record.remove_field(key="number")
 
             if (
                 "booktitle" not in record.data
@@ -149,8 +145,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key="title", new_key="booktitle")
                 record.rename_field(key="chapter", new_key="title")
 
-            if "journal" in record.data and "booktitle" not in record.data:
-                record.rename_field(key="journal", new_key="booktitle")
+            record.change_entrytype(new_entrytype="inproceedings")
 
             if record.data.get("booktitle", "") in [
                 "Research-in-Progress Papers",
