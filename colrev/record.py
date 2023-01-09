@@ -10,7 +10,6 @@ import re
 import textwrap
 import typing
 from copy import deepcopy
-from difflib import SequenceMatcher
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -1972,8 +1971,11 @@ class Record:
                         and prev_val != ""
                         and rec[key] is not None
                     ):
-                        similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
-                    if similarity < 0.7 or key in [
+                        similarity = fuzz.partial_ratio(prev_val, rec[key]) / 100
+                        # Note : the fuzz.partial_ratio works better for partial substrings
+                        # from difflib import SequenceMatcher
+                        # similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
+                    if similarity < 0.8 or key in [
                         "volume",
                         "number",
                         "year",
