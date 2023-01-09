@@ -341,7 +341,6 @@ class Prep(colrev.operation.Operation):
                 for key in list(record.data.keys()):
                     if key not in self.fields_to_keep:
                         record.remove_field(key=key)
-                        self.review_manager.report_logger.info(f"Dropped {key} field")
                     elif record.data[key] in ["", "NA"]:
                         record.remove_field(key=key)
                 record.update_by_record(update_record=preparation_record)
