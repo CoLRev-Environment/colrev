@@ -38,6 +38,7 @@ colrev.ops.built\_in.data.obsidian.Obsidian
 
    .. autosummary::
 
+      ~Obsidian.GITIGNORE_LIST
       ~Obsidian.OBSIDIAN_INBOX_PATH_RELATIVE
       ~Obsidian.OBSIDIAN_PAPER_PATH_RELATIVE
       ~Obsidian.OBSIDIAN_PATH_RELATIVE
