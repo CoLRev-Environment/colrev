@@ -80,12 +80,15 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                     )
                     < 70
                 ):
-                    record.data[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
-                    record.add_masterdata_provenance_note(
-                        key=key, note=f"disagreement with doi metadata ({value})"
-                    )
+                    if record.masterdata_is_curated():
+                        record.remove_field(key="doi")
+                    else:
+                        record.data[
+                            "colrev_status"
+                        ] = colrev.record.RecordState.md_needs_manual_preparation
+                        record.add_masterdata_provenance_note(
+                            key=key, note=f"disagreement with doi metadata ({value})"
+                        )
 
     def __validate_against_url_metadata(self, *, record: colrev.record.Record) -> None:
         if "url" not in record.data:
@@ -116,13 +119,16 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                         )
                         < 70
                     ):
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
-                        record.add_masterdata_provenance_note(
-                            key=key,
-                            note=f"disagreement with website metadata ({value})",
-                        )
+                        if record.masterdata_is_curated():
+                            record.remove_field(key="url")
+                        else:
+                            record.data[
+                                "colrev_status"
+                            ] = colrev.record.RecordState.md_needs_manual_preparation
+                            record.add_masterdata_provenance_note(
+                                key=key,
+                                note=f"disagreement with website metadata ({value})",
+                            )
         except AttributeError:
             pass
 
