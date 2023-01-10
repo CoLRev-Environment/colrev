@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+import colrev.exceptions as colrev_exceptions
+
 if TYPE_CHECKING:
     import colrev.review_manager
 
@@ -43,31 +45,33 @@ def setup_report_logger(
 ) -> logging.Logger:
     """Setup the report logger (used for git commit report)"""
 
-    report_logger = logging.getLogger(
-        f"colrev_report{str(review_manager.path).replace('/', '_')}"
-    )
+    try:
+        report_logger = logging.getLogger(
+            f"colrev_report{str(review_manager.path).replace('/', '_')}"
+        )
 
-    if report_logger.handlers:
-        for handler in report_logger.handlers:
-            report_logger.removeHandler(handler)
+        if report_logger.handlers:
+            for handler in report_logger.handlers:
+                report_logger.removeHandler(handler)
 
-    report_logger.setLevel(level)
-    formatter = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+        report_logger.setLevel(level)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
 
-    report_file_handler = logging.FileHandler(review_manager.report_path, mode="a")
-    report_file_handler.setFormatter(formatter)
+        report_file_handler = logging.FileHandler(review_manager.report_path, mode="a")
+        report_file_handler.setFormatter(formatter)
 
-    report_logger.addHandler(report_file_handler)
+        report_logger.addHandler(report_file_handler)
 
-    if logging.DEBUG == level:
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        report_logger.addHandler(handler)
-    report_logger.propagate = False
-
+        if logging.DEBUG == level:
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+            report_logger.addHandler(handler)
+        report_logger.propagate = False
+    except FileNotFoundError as exc:
+        raise colrev_exceptions.RepoSetupError("Missing file") from exc
     return report_logger
 
 

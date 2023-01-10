@@ -198,11 +198,11 @@ class Obsidian(JsonSchemaMixin):
     def __ignore_paths(self, *, data_operation: colrev.ops.data.Data) -> None:
 
         gitignore_path = Path(data_operation.review_manager.path / ".gitignore")
-        git_ignore_content = gitignore_path.read_text()
+        git_ignore_content = gitignore_path.read_text(encoding="utf-8")
 
         for ignore_item in self.GITIGNORE_LIST:
             if ignore_item not in git_ignore_content:
-                with open(gitignore_path, "a") as file:
+                with open(gitignore_path, "a", encoding="utf-8") as file:
                     file.write(ignore_item + "\n")
             data_operation.review_manager.dataset.add_changes(path=gitignore_path)
 

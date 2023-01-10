@@ -202,7 +202,10 @@ class ReviewManager:
                 )
                 commit.update_report(msg_file=msg_file)
 
-        if not self.settings.is_curated_masterdata_repo():
+        if (
+            not self.settings.is_curated_masterdata_repo()
+            and self.dataset.records_changed()
+        ):
             colrev.operation.CheckOperation(review_manager=self)  # to notify
             corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
             corrections_operation.check_corrections_of_records()
@@ -223,6 +226,9 @@ class ReviewManager:
         """Format the records file Entrypoint for pre-commit hooks)"""
 
         if not self.dataset.records_file.is_file():
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
+
+        if not self.dataset.records_changed() and not self.force_mode:
             return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
         try:

@@ -87,11 +87,17 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             update_only=False,
         )
 
-        project_review_manager = search_operation.review_manager.get_review_manager(
-            path_str=self.search_source.search_parameters["scope"]["url"]
-        )
-
         project_identifier = self.search_source.search_parameters["scope"]["url"]
+        try:
+            project_review_manager = search_operation.review_manager.get_review_manager(
+                path_str=project_identifier
+            )
+        except colrev_exceptions.RepoSetupError as exc:
+            search_operation.review_manager.logger.error(
+                f"Error retrieving records from colrev project {project_identifier} ({exc})"
+            )
+            return
+
         remote_url = project_review_manager.dataset.get_remote_url()
         if "NA" != remote_url:
             project_identifier = remote_url.rstrip(".git")
