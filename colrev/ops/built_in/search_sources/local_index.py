@@ -11,8 +11,6 @@ import git
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from opensearchpy import NotFoundError
-from opensearchpy.exceptions import TransportError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -192,7 +190,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 retrieved_record_dict = self.local_index.retrieve(
                     record_dict=feed_record.get_data(), include_file=False
                 )
-            except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
+            except colrev_exceptions.RecordNotInIndexException:
                 continue
 
             local_index_feed.set_id(record_dict=retrieved_record_dict)
@@ -362,7 +360,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record_dict=record.get_data(), include_file=False
             )
 
-        except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
+        except colrev_exceptions.RecordNotInIndexException:
             try:
                 # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
@@ -398,11 +396,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     colrev_exceptions.RecordNotInTOCException,
                 ):
                     return record
-            except (
-                colrev_exceptions.NotTOCIdentifiableException,
-                NotFoundError,
-                TransportError,
-            ):
+            except colrev_exceptions.NotTOCIdentifiableException:
                 return record
 
         retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)

@@ -13,6 +13,7 @@ import yaml
 from tqdm import tqdm
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
 if TYPE_CHECKING:
@@ -920,6 +921,28 @@ class Upgrade(colrev.operation.Operation):
 
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
+
+        local_index = self.review_manager.get_local_index()
+        for search_source in self.review_manager.settings.sources:
+            if search_source.endpoint != "colrev_built_in.local_index":
+                continue
+            curation_recs = self.review_manager.dataset.load_records_dict(
+                file_path=search_source.filename
+            )
+            for record_id in list(curation_recs.keys()):
+                if "curation_ID" not in curation_recs[record_id]:
+                    try:
+                        retrieved_record_dict = local_index.retrieve(
+                            record_dict=curation_recs[record_id], include_file=False
+                        )
+                        del retrieved_record_dict["colrev_status"]
+                        curation_recs[record_id] = retrieved_record_dict
+                    except colrev_exceptions.RecordNotInIndexException:
+                        continue
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=curation_recs, save_path=search_source.filename
+            )
+            self.review_manager.dataset.add_changes(path=search_source.filename)
 
         colrev.env.utils.inplace_change(
             filename=Path("settings.json"),

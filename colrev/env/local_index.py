@@ -601,6 +601,8 @@ class LocalIndex:
     ) -> dict:
         """Prepare a record for return (from local index)"""
 
+        # pylint: disable=too-many-branches
+
         # Note : remove fulltext before parsing because it raises errors
         fulltext_backup = record_dict.get("fulltext", "NA")
         if "fulltext" in record_dict:
@@ -640,8 +642,12 @@ class LocalIndex:
         else:
             if "file" in record_dict:
                 del record_dict["file"]
-            if "colref_pdf_id" in record_dict:
-                del record_dict["colref_pdf_id"]
+            if "file" in record_dict.get("colrev_data_provenance", {}):
+                del record_dict["colrev_data_provenance"]["file"]
+            if "colrev_pdf_id" in record_dict:
+                del record_dict["colrev_pdf_id"]
+            if "colrev_pdf_id" in record_dict.get("colrev_data_provenance", {}):
+                del record_dict["colrev_data_provenance"]["colrev_pdf_id"]
 
         record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
 
@@ -762,7 +768,7 @@ class LocalIndex:
 
         # To fix pdf_hash fields that should have been renamed
         if "pdf_hash" in record_dict:
-            record_dict["colref_pdf_id"] = "cpid1:" + record_dict["pdf_hash"]
+            record_dict["colrev_pdf_id"] = "cpid1:" + record_dict["pdf_hash"]
             del record_dict["pdf_hash"]
 
         if "colrev_origin" in record_dict:
@@ -1134,7 +1140,10 @@ class LocalIndex:
                 ]
                 toc_items = [item for sublist in toc_items for item in sublist]
 
-            except colrev_exceptions.NotTOCIdentifiableException as exc:
+            except (
+                colrev_exceptions.NotTOCIdentifiableException,
+                TransportError,
+            ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException() from exc
 
         else:
@@ -1143,7 +1152,7 @@ class LocalIndex:
                 try:
                     res = self.__retrieve_toc_index(toc_key=toc_key)
                     toc_items = res.get("colrev_ids", [])  # type: ignore
-                except (TransportError, SerializationError):
+                except (TransportError, SerializationError, NotFoundError):
                     toc_items = []
 
         if not toc_items:
@@ -1195,6 +1204,8 @@ class LocalIndex:
         except (
             colrev_exceptions.NotEnoughDataToIdentifyException,
             KeyError,
+            NotFoundError,
+            TransportError,
         ):
             pass
 
