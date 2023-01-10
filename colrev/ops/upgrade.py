@@ -974,10 +974,13 @@ class Upgrade(colrev.operation.Operation):
                     o.startswith("md_local_index.bib")
                     for o in record_dict["colrev_origin"]
                 ):
+                    prev_status = record_dict["colrev_status"]
+
                     local_index_source.get_masterdata(
                         prep_operation=prep_operation,
                         record=colrev.record.Record(data=record_dict),
                     )
+                    record_dict["colrev_status"] = prev_status
 
         self.review_manager.dataset.save_records_dict(records=records)
 
