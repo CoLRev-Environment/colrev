@@ -331,7 +331,7 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
 @click.option(
     "-s",
     "--selected",
-    type=str,
+    type=click.Path(exists=True),
     help="Only retrieve search results for selected sources",
 )
 @click.option(
