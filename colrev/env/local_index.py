@@ -1248,6 +1248,7 @@ class LocalIndex:
             }
         }
 
+        # pylint: disable=unexpected-keyword-arg
         res = self.open_search.search(
             index=self.RECORD_INDEX,
             body=query,

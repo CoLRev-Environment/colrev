@@ -12,7 +12,7 @@ def console_duplicate_instance_label(
     record_pair: list,
     keys: list,
     manual: bool,
-    index_dupe_info: str,
+    curations_dupe_info: str,
     n_match: int,
     n_distinct: int,
     examples_buffer: list,
@@ -24,20 +24,20 @@ def console_duplicate_instance_label(
         colrev.record.Record.print_diff_pair(record_pair=record_pair, keys=keys)
 
     user_input = "unsure"
-    if "yes" == index_dupe_info:
+    if "yes" == curations_dupe_info:
         user_input = "y"
         if manual:
             print(f"{n_match} positive, {n_distinct} negative")
             print("#")
-            print("# index_dupe_info: yes/duplicate")
+            print("# curations_dupe_info: yes/duplicate")
             print("#")
             time.sleep(0.6)
-    elif "no" == index_dupe_info:
+    elif "no" == curations_dupe_info:
         user_input = "n"
         if manual:
             print(f"{n_match} positive, {n_distinct} negative")
             print("#")
-            print("# index_dupe_info: no duplicate")
+            print("# curations_dupe_info: no duplicate")
             print("#")
             time.sleep(0.6)
     else:

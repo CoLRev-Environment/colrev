@@ -61,17 +61,16 @@ class Dedupe(colrev.operation.Operation):
             "source_comparison.xlsx"
         )
 
-    def __pre_process(self, *, key: str, value: str) -> str:
+    def __pre_process(self, *, key: str, value: str) -> str | None:
         if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
             return value
 
         value = str(value)
         if any(
             value == x
-            for x in ["no issue", "no volume", "no pages", "no author", "nan"]
+            for x in ["no issue", "no volume", "no pages", "no author", "nan", ""]
         ):
-            value = ""
-            return value
+            return None
 
         # Note unidecode may be an alternative to rmdiacritics/remove_accents.
         # It would be important to operate on a per-character basis
@@ -196,8 +195,7 @@ class Dedupe(colrev.operation.Operation):
         records = {}
         for row in records_list:
             # Note: we need the ID to identify/remove duplicates in the RECORDS_FILE.
-            # It is ignored in the field-definitions by the deduper!
-            # clean_row = [(k, self.__pre_process(k, v)) for (k, v) in row.items() if k != "ID"]
+            # It is ignored in the field-definitions by the deduper
             clean_row = [
                 (k, self.__pre_process(key=str(k), value=v)) for (k, v) in row.items()
             ]
@@ -307,10 +305,27 @@ class Dedupe(colrev.operation.Operation):
         main_rec_sources = [x.split("/")[0] for x in main_record.data["colrev_origin"]]
         dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data["colrev_origin"]]
         same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
-        if len(same_sources) > 0:
-            return True
 
-        return False
+        if len(same_sources) == 0:
+            return False
+
+        # don't raise unproblematic same-source merges
+        # if same_sources start with md_... and have same IDs: no same-source merge.
+        if all(x.startswith("md_") for x in same_sources):
+            main_rec_same_source_origins = [
+                x
+                for x in main_record.data["colrev_origin"]
+                if x.split("/")[0] in same_sources
+            ]
+            dupe_rec_same_source_origins = [
+                x
+                for x in dupe_record.data["colrev_origin"]
+                if x.split("/")[0] in same_sources
+            ]
+            if set(main_rec_same_source_origins) == set(dupe_rec_same_source_origins):
+                return False
+            return True
+        return True
 
     def __export_same_source_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
@@ -679,14 +694,27 @@ class Dedupe(colrev.operation.Operation):
             return
 
         auto_dedupe = []
-        for id_1, id_2 in ids_to_merge:
-            auto_dedupe.append(
-                {
-                    "ID1": id_1,
-                    "ID2": id_2,
-                    "decision": "duplicate",
-                }
-            )
+        for id_list in ids_to_merge:
+            if 2 == len(id_list):
+                auto_dedupe.append(
+                    {
+                        "ID1": id_list[0],
+                        "ID2": id_list[1],
+                        "decision": "duplicate",
+                    }
+                )
+            else:
+                for i, idc in enumerate(id_list):
+                    if 0 == i:
+                        continue
+                    auto_dedupe.append(
+                        {
+                            "ID1": id_list[0],
+                            "ID2": idc,
+                            "decision": "duplicate",
+                        }
+                    )
+
         self.apply_merges(results=auto_dedupe, complete_dedupe=False)
 
     def fix_errors(self) -> None:

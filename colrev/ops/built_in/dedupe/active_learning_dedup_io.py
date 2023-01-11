@@ -91,7 +91,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             # Note: we have to make sure that when we sample for training,
             # the not-in-memory mode is used for duplicate clustering
             # otherwise, non-sampled duplicates will not be identified
-            max_training_sample_size = min(3000, len(list(data_d.keys())))
+            max_training_sample_size = min(1500, len(list(data_d.keys())))
             dedupe_operation.review_manager.logger.info(
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
@@ -135,6 +135,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "field": "title",
                 "type": "String",
                 #  "corpus": title_corpus()
+                "has missing": True,
                 "crf": True,
             },
             {
@@ -142,9 +143,15 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "variable name": "container_title",
                 "type": "ShortString",
                 # "corpus": container_corpus(),
+                "has missing": True,
                 "crf": True,
             },
-            {"field": "year", "variable name": "year", "type": "DateTime"},
+            {
+                "field": "year",
+                "variable name": "year",
+                "has missing": True,
+                "type": "DateTime",
+            },
             {
                 "field": "volume",
                 "variable name": "volume",
@@ -173,6 +180,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 ],
             },
         ]
+        # Consider using exists:
+        # https://docs.dedupe.io/en/latest/Variable-definition.html#exists
+
         # Interactions:
         # https://docs.dedupe.io/en/latest/Variable-definition.html
 
@@ -197,9 +207,12 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 f"{dedupe_operation.training_file.name} "
                 "and preparing data"
             )
+            dedupe_operation.review_manager.logger.info("Prepare training data")
             with open(dedupe_operation.training_file, "rb") as file:
                 self.deduper.prepare_training(data_d, file)
         else:
+            dedupe_operation.review_manager.logger.info("Prepare training data")
+            # TBD: maybe use the sample_size parameter here?
             self.deduper.prepare_training(data_d)
 
         del data_d
@@ -324,7 +337,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 user_input = "y"
             else:
                 # Check local_index for duplicate information
-                index_dupe_info = local_index.is_duplicate(
+                curations_dupe_info = local_index.is_duplicate(
                     record1_colrev_id=record_pair[0]["colrev_id"].split(";"),
                     record2_colrev_id=record_pair[1]["colrev_id"].split(";"),
                 )
@@ -334,7 +347,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                         record_pair,
                         keys,
                         manual,
-                        index_dupe_info,
+                        curations_dupe_info,
                         n_match,
                         n_distinct,
                         examples_buffer,
@@ -420,7 +433,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         """Run the console labeling to train the active learning model"""
 
         saved_args: dict = {}
-        in_memory = True
+        # Setting in-memory mode depending on system RAM
+        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
+        sample_size = len(list(records_headers.values()))
+        ram = psutil.virtual_memory().total
+        in_memory = sample_size * 5000000 < ram
 
         self.__setup_active_learning_dedupe(
             dedupe_operation=dedupe_operation, retrain=False, in_memory=in_memory
@@ -793,13 +812,10 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         )
 
         # Setting in-memory mode depending on system RAM
-
         records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
             header_only=True
         )
-        record_header_list = list(records_headers.values())
-        sample_size = len(record_header_list)
-
+        sample_size = len(list(records_headers.values()))
         ram = psutil.virtual_memory().total
         in_memory = sample_size * 5000000 < ram
 

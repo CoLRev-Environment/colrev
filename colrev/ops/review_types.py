@@ -27,8 +27,9 @@ class ReviewTypes:
             installed_only=True,
         )
 
-        packages_to_load = [{"endpoint": review_type}]
-        if not review_type:
+        if review_type:
+            packages_to_load = [{"endpoint": review_type}]
+        else:
             packages_to_load = [
                 {"endpoint": review_manager.settings.project.review_type}
             ]

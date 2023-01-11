@@ -750,7 +750,7 @@ class Dataset:
     def propagated_id(self, *, record_id: str) -> bool:
         """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
 
-        for record in self.load_records_dict(header_only=True):
+        for record in self.load_records_dict(header_only=True).values():
             if record["ID"] == record_id:
                 if record[
                     "colrev_status"
