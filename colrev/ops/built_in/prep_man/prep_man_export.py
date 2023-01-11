@@ -113,9 +113,9 @@ class ExportManPrep(JsonSchemaMixin):
     ) -> None:
 
         # pylint: disable=too-many-branches
-
         prep_man_operation.review_manager.logger.info(
-            f"Load import changes from {self.export_path}"
+            "Load import changes from "
+            f"{self.export_path.relative_to(prep_man_operation.review_manager.path)}"
         )
 
         with open(self.export_path, encoding="utf8") as target_bib:
@@ -180,7 +180,10 @@ class ExportManPrep(JsonSchemaMixin):
                 prep_man_operation=prep_man_operation, records=records
             )
         else:
-            if "y" == input(f"Import changes from {self.export_path} [y,n]?"):
+            if "y" == input(
+                "Import changes from "
+                f"{self.export_path.relative_to(prep_man_operation.review_manager.path)} [y,n]?"
+            ):
                 self.__import_prep_man(prep_man_operation=prep_man_operation)
 
         return records
