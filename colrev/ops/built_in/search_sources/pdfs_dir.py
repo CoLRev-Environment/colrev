@@ -297,16 +297,9 @@ class PDFSearchSource(JsonSchemaMixin):
 
             return record_dict
 
-    def __index_pdf(
+    def __get_grobid_metadata(
         self, *, search_operation: colrev.ops.search.Search, pdf_path: Path
     ) -> dict:
-
-        search_operation.review_manager.report_logger.info(
-            f" extract metadata from {pdf_path}"
-        )
-        search_operation.review_manager.logger.info(
-            f" extract metadata from {pdf_path}"
-        )
 
         record_dict: typing.Dict[str, typing.Any] = {
             "file": str(pdf_path),
@@ -470,6 +463,8 @@ class PDFSearchSource(JsonSchemaMixin):
         grobid_service = search_operation.review_manager.get_grobid_service()
         grobid_service.start()
 
+        local_index = search_operation.review_manager.get_local_index()
+
         pdfs_to_index = [
             x.relative_to(search_operation.review_manager.path)
             for x in self.pdfs_path.glob("**/*.pdf")
@@ -514,9 +509,34 @@ class PDFSearchSource(JsonSchemaMixin):
                     ]:
                         continue
 
-                new_record = self.__index_pdf(
-                    search_operation=search_operation, pdf_path=pdf_path
+                search_operation.review_manager.logger.info(
+                    f" extract metadata from {pdf_path}"
                 )
+                try:
+                    # retrieve_based_on_colrev_pdf_id
+                    pdf_hash_service = (
+                        search_operation.review_manager.get_pdf_hash_service()
+                    )
+                    colrev_pdf_id = pdf_hash_service.get_pdf_hash(
+                        pdf_path=Path(pdf_path),
+                        page_nr=1,
+                        hash_size=32,
+                    )
+                    new_record = local_index.retrieve_based_on_colrev_pdf_id(
+                        colrev_pdf_id="cpid1:" + colrev_pdf_id
+                    )
+                    new_record["file"] = str(pdf_path)
+                    # Note : an alternative to replacing all data with the curated version
+                    # is to just add the curation_ID
+                    # (and retrieve the curated metadata separately/non-redundantly)
+                except (
+                    colrev_exceptions.PDFHashError,
+                    colrev_exceptions.RecordNotInIndexException,
+                ):
+                    # otherwise, get metadata from grobid (indexing)
+                    new_record = self.__get_grobid_metadata(
+                        search_operation=search_operation, pdf_path=pdf_path
+                    )
 
                 new_record = self.__add_md_string(record_dict=new_record)
 

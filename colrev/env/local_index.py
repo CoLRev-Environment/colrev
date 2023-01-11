@@ -1233,6 +1233,39 @@ class LocalIndex:
             pass
         return res
 
+    def retrieve_based_on_colrev_pdf_id(self, *, colrev_pdf_id: str) -> dict:
+        """
+        Convenience function to retrieve the indexed record_dict metadata
+        based on a colrev_pdf_id
+        """
+
+        query = {
+            "query": {
+                "simple_query_string": {
+                    "query": colrev_pdf_id,
+                    "fields": ["colrev_pdf_id"],
+                },
+            }
+        }
+
+        res = self.open_search.search(
+            index=self.RECORD_INDEX,
+            body=query,
+            size=1,
+        )
+
+        record_dict = res["hits"]["hits"][0]["_source"]
+
+        if colrev_pdf_id != record_dict["colrev_pdf_id"]:
+            raise colrev_exceptions.RecordNotInIndexException()
+
+        record_to_import = self.__prepare_record_for_return(
+            record_dict=record_dict, include_file=True
+        )
+        if "file" in record_to_import:
+            del record_to_import["file"]
+        return record_to_import
+
     def retrieve(
         self,
         *,

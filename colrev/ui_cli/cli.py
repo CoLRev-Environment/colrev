@@ -1255,13 +1255,13 @@ def __print_pdf_hashes(
 
     first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
         pdf_path=Path(pdf_hash),
-        page_nr=0,
+        page_nr=1,
         hash_size=16,
     )
     print(f"first page: {first_page_average_hash_16}")
     first_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
         pdf_path=Path(pdf_hash),
-        page_nr=0,
+        page_nr=1,
         hash_size=32,
     )
     print(f"first page: {first_page_average_hash_32}")

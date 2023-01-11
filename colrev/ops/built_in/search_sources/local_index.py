@@ -142,7 +142,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         #     "query": {
         #         "simple_query_string": {
         #             "query": "...",
-        #             "fields": selected_fields,
+        #             "fields": ["title", ...],
         #         },
         #     }
         # }

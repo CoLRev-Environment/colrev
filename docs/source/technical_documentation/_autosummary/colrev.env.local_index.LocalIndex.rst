@@ -24,6 +24,7 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.index_record
       ~LocalIndex.is_duplicate
       ~LocalIndex.retrieve
+      ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
       ~LocalIndex.start_opensearch_docker
