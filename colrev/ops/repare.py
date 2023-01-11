@@ -241,6 +241,16 @@ class Repare(colrev.operation.Operation):
                                 key=key, source="manual", note=""
                             )
 
+                        for _, prov_details in record.data[
+                            "colrev_masterdata_provenance"
+                        ].items():
+                            if prov_details["source"] in record.data[
+                                "colrev_origin"
+                            ] + ["manual"]:
+                                continue
+                            # Note : simple heuristic
+                            prov_details["source"] = record.data["colrev_origin"][0]
+
                 else:
 
                     if key in record.data["colrev_data_provenance"]:
@@ -273,6 +283,58 @@ class Repare(colrev.operation.Operation):
 
                     if key not in record.data["colrev_data_provenance"]:
                         record.add_data_provenance(key=key, source="manual", note="")
+
+                    for _, prov_details in record.data[
+                        "colrev_data_provenance"
+                    ].items():
+                        if prov_details["source"] in record.data["colrev_origin"] + [
+                            "manual"
+                        ]:
+                            continue
+                        # Note : simple heuristic
+                        prov_details["source"] = record.data["colrev_origin"][0]
+
+    def __fix_curated_sources(self, *, records: dict) -> None:
+
+        local_index = self.review_manager.get_local_index()
+        for search_source in self.review_manager.settings.sources:
+            if search_source.endpoint != "colrev_built_in.local_index":
+                continue
+            curation_recs = self.review_manager.dataset.load_records_dict(
+                file_path=search_source.filename
+            )
+            for record_id in list(curation_recs.keys()):
+                if "curation_ID" not in curation_recs[record_id]:
+                    try:
+                        retrieved_record_dict = local_index.retrieve(
+                            record_dict=curation_recs[record_id], include_file=False
+                        )
+                        del retrieved_record_dict["colrev_status"]
+                        curation_recs[record_id] = retrieved_record_dict
+                    except colrev_exceptions.RecordNotInIndexException:
+                        main_record_origin = (
+                            search_source.get_origin_prefix() + "/" + record_id
+                        )
+                        main_record_l = [
+                            r
+                            for r in records.values()
+                            if main_record_origin in r["colrev_origin"]
+                        ]
+                        if not main_record_l:
+                            continue
+                        main_record_id = main_record_l[0]["ID"]
+                        if 1 == len(records[main_record_id]["colrev_origin"]):
+                            del records[main_record_id]
+                        else:
+                            records[main_record_id]["colrev_origin"].remove(
+                                main_record_origin
+                            )
+                        del curation_recs[record_id]
+
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=curation_recs, save_path=search_source.filename
+            )
+            self.review_manager.dataset.add_changes(path=search_source.filename)
 
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
@@ -317,6 +379,19 @@ class Repare(colrev.operation.Operation):
                 records = self.review_manager.dataset.load_records_dict()
             except AttributeError:
                 return
+
+        self.__fix_curated_sources(records=records)
+
+        # removing specific fields
+        # for record_dict in records.values():
+        #     if "colrev_status_backup" in record_dict:
+        #         colrev.record.Record(data=record_dict).remove_field(
+        #             key="colrev_status_backup"
+        #         )
+        #     if "colrev_local_index" in record_dict:
+        #         colrev.record.Record(data=record_dict).remove_field(
+        #             key="colrev_local_index"
+        #         )
 
         self.__fix_provenance(records=records)
 

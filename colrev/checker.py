@@ -424,6 +424,7 @@ class Checker:
             ".git",
             ".report.log",
             ".pre-commit-config.yaml",
+            "data/search",
         ]
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]

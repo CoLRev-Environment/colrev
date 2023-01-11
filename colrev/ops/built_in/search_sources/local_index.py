@@ -416,6 +416,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 ]["source"]
 
         try:
+            # lock: to prevent different records from having the same origin
             self.local_index_lock.acquire(timeout=60)
 
             # Note : need to reload file because the object is not shared between processes
@@ -425,7 +426,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 update_only=False,
             )
 
-            # lock: to prevent different records from having the same origin
             local_index_feed.set_id(record_dict=retrieved_record.data)
             local_index_feed.add_record(record=retrieved_record)
 

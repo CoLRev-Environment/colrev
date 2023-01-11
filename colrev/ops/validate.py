@@ -66,7 +66,6 @@ class Validate(colrev.operation.Operation):
         self.review_manager.logger.debug("Calculating preparation differences...")
         change_diff = []
         for record_dict in records:
-            # input(record)
             if "changed_in_target_commit" not in record_dict:
                 continue
             del record_dict["changed_in_target_commit"]
@@ -296,7 +295,7 @@ class Validate(colrev.operation.Operation):
                     scope = "unspecified"
 
         # Otherwise: compare records
-        if "NA" == scope:
+        if scope in ["NA", "unspecified"]:
             # detect transition types in the respective commit and
             # use them to calculate the validation_details
             records: typing.Dict[str, typing.Dict] = {}
@@ -458,6 +457,7 @@ class Validate(colrev.operation.Operation):
             filter_setting = self.__set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
+        self.review_manager.logger.info(f"Filter: {filter_setting} changes")
 
         # extension: filter_setting for changes of contributor (git author)
         records = self.load_changed_records(target_commit=target_commit)
