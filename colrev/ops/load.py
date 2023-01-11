@@ -615,7 +615,6 @@ class Load(colrev.operation.Operation):
         origin_prefix = source.get_origin_prefix()
         for record in search_records:
             for key in colrev.record.Record.provenance_keys + [
-                "file",
                 "screening_criteria",
             ]:
                 if "colrev_status" == key:
