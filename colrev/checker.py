@@ -291,9 +291,12 @@ class Checker:
                 raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = list(status_data["origin_list"].keys())
-        if len(origins) > len(set(origins)):
-            non_unique_origins = [org for org in origins if origins.count(org) > 1]
+        non_unique_origins = []
+        for origin, record_ids in status_data["origin_ID_list"].items():
+            if len(record_ids) > 1:
+                if not origin.startswith("md_"):
+                    non_unique_origins.append(f"{origin} - {','.join(record_ids)}")
+        if non_unique_origins:
             raise colrev_exceptions.OriginError(
                 f'Non-unique origins: {" , ".join(set(non_unique_origins))}'
             )
@@ -488,18 +491,19 @@ class Checker:
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
-            if prior_origin not in status_data["origin_list"]:
+            if prior_origin not in status_data["origin_ID_list"]:
                 # Note: this does not catch origins removed before md_processed
                 raise colrev_exceptions.OriginError(f"origin removed: {prior_origin}")
-            new_id = status_data["origin_list"][prior_origin]
-            if new_id != prior_id:
+            new_ids = status_data["origin_ID_list"][prior_origin]
+            if prior_id not in new_ids:
                 notifications = self.check_change_in_propagated_id(
                     prior_id=prior_id,
-                    new_id=new_id,
+                    new_id=",".join(new_ids),
                     project_context=self.review_manager.path,
                 )
                 notifications.append(
-                    "ID of processed record changed from " f"{prior_id} to {new_id}"
+                    "ID of processed record changed from "
+                    f"{prior_id} to {','.join(new_ids)}"
                 )
                 raise colrev_exceptions.PropagatedIDChange(notifications)
 
@@ -584,7 +588,7 @@ class Checker:
             "entries_without_origin": [],
             "record_links_in_bib": [],
             "persisted_IDs": [],
-            "origin_list": {},
+            "origin_ID_list": {},
             "invalid_state_transitions": [],
         }
 
@@ -592,7 +596,10 @@ class Checker:
             status_data["IDs"].append(record_dict["ID"])
 
             for org in record_dict["colrev_origin"]:
-                status_data["origin_list"][org] = record_dict["ID"]
+                if org in status_data["origin_ID_list"]:
+                    status_data["origin_ID_list"][org].append(record_dict["ID"])
+                else:
+                    status_data["origin_ID_list"][org] = [record_dict["ID"]]
 
             post_md_processed_states = colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
@@ -735,16 +742,12 @@ class Checker:
                 main_refs_checks.extend(
                     [
                         {
-                            "script": self.__check_change_in_propagated_ids,
-                            "params": {"prior": prior, "status_data": status_data},
-                        },
-                        {
                             "script": self.__check_colrev_origins,
                             "params": {"status_data": status_data},
                         },
                         {
-                            "script": self.check_fields,
-                            "params": {"status_data": status_data},
+                            "script": self.__check_change_in_propagated_ids,
+                            "params": {"prior": prior, "status_data": status_data},
                         },
                         {
                             "script": self.check_status_transitions,
@@ -752,6 +755,10 @@ class Checker:
                         },
                         {
                             "script": self.__check_records_screen,
+                            "params": {"status_data": status_data},
+                        },
+                        {
+                            "script": self.check_fields,
                             "params": {"status_data": status_data},
                         },
                     ]
