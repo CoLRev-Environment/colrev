@@ -268,6 +268,8 @@ class Initializer:
                 data_package_endpoint["endpoint"].replace("colrev_built_in.", ""),
             )
 
+        open("data/records.bib", mode="a").close()
+
         files_to_add = [
             "readme.md",
             ".pre-commit-config.yaml",
@@ -276,6 +278,7 @@ class Initializer:
             "settings.json",
             ".markdownlint.yaml",
             "LICENSE.txt",
+            "data/records.bib",
         ]
         for file_to_add in files_to_add:
             self.review_manager.dataset.add_changes(path=Path(file_to_add))
