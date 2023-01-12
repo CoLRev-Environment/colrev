@@ -5,8 +5,10 @@ from __future__ import annotations
 import collections
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from tqdm import tqdm
@@ -248,6 +250,44 @@ class ColrevCuration(JsonSchemaMixin):
         )
         review_manager.dataset.add_changes(path=review_manager.README_RELATIVE)
 
+    def __source_comparison(self) -> None:
+        """Exports a table to support analyses of records that are not
+        in all sources (for curated repositories)"""
+
+        source_comparison_xlsx = self.data_operation.review_manager.path / Path(
+            "source_comparison.xlsx"
+        )
+
+        source_filenames = [
+            x.filename for x in self.data_operation.review_manager.settings.sources
+        ]
+        print("sources: " + ",".join([str(x) for x in source_filenames]))
+
+        records = self.data_operation.review_manager.dataset.load_records_dict()
+        records = {
+            k: v
+            for k, v in records.items()
+            if not all(x in ";".join(v["colrev_origin"]) for x in str(source_filenames))
+        }
+        if len(records) == 0:
+            print("No records unmatched")
+            return
+
+        for record in records.values():
+            origins = record["colrev_origin"]
+            for source_filename in source_filenames:
+                if not any(source_filename in origin for origin in origins):
+                    record[source_filename] = ""
+                else:
+                    record[source_filename] = [
+                        origin for origin in origins if source_filename in origin
+                    ][0]
+            record["merge_with"] = ""
+
+        records_df = pd.DataFrame.from_records(list(records.values()))
+        records_df.to_excel(source_comparison_xlsx, index=False)
+        print(f"Exported {source_comparison_xlsx}")
+
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
@@ -288,6 +328,7 @@ class ColrevCuration(JsonSchemaMixin):
             self.__update_stats_in_readme(
                 records=records, review_manager=data_operation.review_manager
             )
+            self.__source_comparison()
 
     def update_record_status_matrix(
         self,

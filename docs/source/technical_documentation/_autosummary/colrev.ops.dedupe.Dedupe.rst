@@ -24,7 +24,6 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.merge_records
       ~Dedupe.prep_records
       ~Dedupe.read_data
-      ~Dedupe.source_comparison
       ~Dedupe.unmerge_records
 
 
@@ -35,12 +34,10 @@ colrev.ops.dedupe.Dedupe
 
    .. autosummary::
 
-      ~Dedupe.ACTIVE_LEARNING_DEDUPE
-      ~Dedupe.ACTIVE_LEARNING_NON_MEMORY_DEDUPE
-      ~Dedupe.SIMPLE_SIMILARITY_BASED_DEDUPE
-      ~Dedupe.training_file
-      ~Dedupe.settings_file
-      ~Dedupe.non_dupe_file_xlsx
-      ~Dedupe.dupe_file
+      ~Dedupe.DUPLICATES_TO_VALIDATE
+      ~Dedupe.NON_DUPLICATE_FILE_TXT
+      ~Dedupe.NON_DUPLICATE_FILE_XLSX
+      ~Dedupe.PREVENTED_SAME_SOURCE_MERGE_FILE
+      ~Dedupe.SAME_SOURCE_MERGE_FILE
       ~Dedupe.force_mode
       ~Dedupe.type

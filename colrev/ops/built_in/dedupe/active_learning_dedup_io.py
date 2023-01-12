@@ -38,6 +38,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     """Active learning: training phase (minimum sample size of 50 required)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    TRAINING_FILE_RELATIVE = Path(".records_dedupe_training.json")
+    SETTINGS_FILE_RELATIVE = Path(".records_learned_settings")
 
     deduper: dedupe_io.Deduper
 
@@ -55,6 +57,12 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
         self.settings = self.settings_class.load_settings(data=settings)
+        self.training_file = (
+            dedupe_operation.review_manager.path / self.TRAINING_FILE_RELATIVE
+        )
+        self.settings_file = (
+            dedupe_operation.review_manager.path / self.SETTINGS_FILE_RELATIVE
+        )
 
     def __setup_active_learning_dedupe(
         self,
@@ -74,9 +82,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         if retrain:
             # Note : removing the training_file would be to start from scratch...
             # self.training_file.unlink(missing_ok=True)
-            dedupe_operation.settings_file.unlink(missing_ok=True)
+            self.settings_file.unlink(missing_ok=True)
 
-        dedupe_operation.review_manager.logger.info("Importing data ...")
+        dedupe_operation.review_manager.logger.info("Import data ...")
 
         # Possible extension: in the read_data, we may want to append the colrev_status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
@@ -201,14 +209,14 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 f'[{{"endpoint":"colrev_built_in.simple_dedupe"}}]\'{colors.END}'
             )
 
-        if dedupe_operation.training_file.is_file():
+        if self.training_file.is_file():
             dedupe_operation.review_manager.logger.info(
                 "Reading pre-labeled training data from "
-                f"{dedupe_operation.training_file.name} "
+                f"{self.training_file.name} "
                 "and preparing data"
             )
             dedupe_operation.review_manager.logger.info("Prepare training data")
-            with open(dedupe_operation.training_file, "rb") as file:
+            with open(self.training_file, "rb") as file:
                 self.deduper.prepare_training(data_d, file)
         else:
             dedupe_operation.review_manager.logger.info("Prepare training data")
@@ -238,16 +246,14 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         # print(self.deduper.predicates)
 
         # When finished, save our training to disk
-        with open(dedupe_operation.training_file, "w", encoding="utf-8") as train_file:
+        with open(self.training_file, "w", encoding="utf-8") as train_file:
             self.deduper.write_training(train_file)
-        dedupe_operation.review_manager.dataset.add_changes(
-            path=dedupe_operation.training_file
-        )
+        dedupe_operation.review_manager.dataset.add_changes(path=self.training_file)
 
         # Save our weights and predicates to disk.  If the settings file
         # exists, we will skip all the training and learning next time we run
         # this file.
-        with open(dedupe_operation.settings_file, "wb") as sett_file:
+        with open(self.settings_file, "wb") as sett_file:
             self.deduper.write_settings(sett_file)
 
         dedupe_operation.review_manager.create_commit(
@@ -483,6 +489,11 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
         self.settings = self.settings_class.load_settings(data=settings)
+
+        self.settings_file = (
+            dedupe_operation.review_manager.path
+            / ActiveLearningDedupeTraining.SETTINGS_FILE_RELATIVE
+        )
 
         assert self.settings.merge_threshold >= 0.0
         assert self.settings.merge_threshold <= 1.0
@@ -819,7 +830,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         ram = psutil.virtual_memory().total
         in_memory = sample_size * 5000000 < ram
 
-        with open(dedupe_operation.settings_file, "rb") as sett_file:
+        with open(self.settings_file, "rb") as sett_file:
             deduper = dedupe_io.StaticDedupe(sett_file, num_cores=4)
 
         # `partition` will return sets of records that dedupe

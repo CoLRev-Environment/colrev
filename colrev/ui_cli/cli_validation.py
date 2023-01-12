@@ -45,7 +45,9 @@ def __validate_dedupe(
         user_selection = input("Validate [y,n,d,q]?")
 
         if "n" == user_selection:
-            dedupe_operation.unmerge_records(record_ids=validation_item["record"]["ID"])
+            dedupe_operation.unmerge_records(
+                current_record_ids=validation_item["record"]["ID"]
+            )
 
         if "q" == user_selection:
             break

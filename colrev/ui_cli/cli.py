@@ -675,12 +675,6 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 )
 @click.option("-v", "--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
-    "--source_comparison",
-    is_flag=True,
-    default=False,
-    help="Export a table for (non-matched) source comparison",
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -701,7 +695,6 @@ def dedupe(
     unmerge: str,
     fix_errors: bool,
     view: bool,
-    source_comparison: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -725,7 +718,7 @@ def dedupe(
             return
 
         if unmerge:
-            dedupe_operation.unmerge_records(record_ids=unmerge)
+            dedupe_operation.unmerge_records(current_record_ids=unmerge.split(","))
             return
 
         if fix_errors:
@@ -738,10 +731,6 @@ def dedupe(
 
         if view:
             __view_dedupe_details(dedupe_operation)
-            return
-
-        if source_comparison:
-            dedupe_operation.source_comparison()
             return
 
         dedupe_operation.main()
