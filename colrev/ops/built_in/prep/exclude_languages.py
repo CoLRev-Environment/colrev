@@ -132,9 +132,11 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             lang_1, conf_1 = confidence_values_part1[0]
             lang_2, conf_2 = confidence_values_part2[0]
 
+            predicted_language_1 = lang_1
             if lang_1.name.lower() in self.lang_code_mapping:
                 predicted_language_1 = self.lang_code_mapping[lang_1.name.lower()]
 
+            predicted_language_2 = lang_2
             if lang_2.name.lower() in self.lang_code_mapping:
                 predicted_language_2 = self.lang_code_mapping[lang_2.name.lower()]
 

@@ -56,6 +56,7 @@ class Search(colrev.operation.Operation):
         """Add a new source"""
 
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-branches
 
         saved_args = {"add": f'"{query}"'}
         if "pdfs" == query:
@@ -603,20 +604,22 @@ class GeneralOriginFeed:
             )
 
             while True:
-                search_operation.review_manager.load_settings()
-                if self.source.filename.name not in [
-                    s.filename.name
-                    for s in search_operation.review_manager.settings.sources
-                ]:
-                    search_operation.review_manager.settings.sources.append(self.source)
-                    search_operation.review_manager.save_settings()
-
                 try:
+                    search_operation.review_manager.load_settings()
+                    if self.source.filename.name not in [
+                        s.filename.name
+                        for s in search_operation.review_manager.settings.sources
+                    ]:
+                        search_operation.review_manager.settings.sources.append(
+                            self.source
+                        )
+                        search_operation.review_manager.save_settings()
+
                     search_operation.review_manager.dataset.add_changes(
                         path=self.feed_file
                     )
                     break
-                except (FileExistsError, OSError):
+                except (FileExistsError, OSError, json.decoder.JSONDecodeError):
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))
 

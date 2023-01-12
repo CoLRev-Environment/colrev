@@ -1975,7 +1975,7 @@ class Record:
                         # Note : the fuzz.partial_ratio works better for partial substrings
                         # from difflib import SequenceMatcher
                         # similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
-                    if similarity < 0.8 or key in [
+                    if similarity < 0.5 or key in [
                         "volume",
                         "number",
                         "year",

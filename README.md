@@ -37,7 +37,7 @@ colrev status
 ```
 
 **The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/user_resources/manual.html).
-After each step, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
+After each operation, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
 
 <p align="center">
 <img src="../../figures/workflow.svg" width="700">

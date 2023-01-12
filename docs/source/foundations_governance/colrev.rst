@@ -100,8 +100,6 @@ Guiding principles
 1. Design area: Methods
 ----------------------------------------------
 
-TODO : maybe add a generic model of the review process (across types)
-
 .. _research_framework:
 
 1.1 Framework for (reproducible) research

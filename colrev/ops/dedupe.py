@@ -730,7 +730,9 @@ class Dedupe(colrev.operation.Operation):
             c_to_correct = dupes.loc[dupes["error"] != "", "cluster_id"].to_list()
             dupes = dupes[dupes["cluster_id"].isin(c_to_correct)]
             previous_ids_to_unmerge = (
-                dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+                dupes.groupby(["cluster_id"], group_keys=False)["ID"]
+                .apply(list)
+                .tolist()
             )
 
             if previous_ids_to_unmerge:
@@ -747,7 +749,9 @@ class Dedupe(colrev.operation.Operation):
                 ].to_list()
                 non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
                 ids_to_merge = (
-                    non_dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+                    non_dupes.groupby(["cluster_id"], group_keys=False)["ID"]
+                    .apply(list)
+                    .tolist()
                 )
             if self.non_dupe_file_txt.is_file():
                 content = self.non_dupe_file_txt.read_text()

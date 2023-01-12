@@ -663,7 +663,7 @@ class Advisor:
                     "project (if available). \n  The most common journals in "
                     f"your project are {journals}.\n"
                     "  They may be available at "
-                    "https://github.com/topics/colrev-curated",
+                    "https://github.com/CoLRev-curations",
                 }
                 environment_instructions.append(instruction)
 

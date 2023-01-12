@@ -259,7 +259,7 @@ class ColrevCuration(JsonSchemaMixin):
         )
 
         source_filenames = [
-            x.filename for x in self.data_operation.review_manager.settings.sources
+            str(x.filename) for x in self.data_operation.review_manager.settings.sources
         ]
         print("sources: " + ",".join([str(x) for x in source_filenames]))
 
