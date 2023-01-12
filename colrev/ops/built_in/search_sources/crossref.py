@@ -442,12 +442,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 same_record_type_required=False,
             )
             if similarity < 0.7:
-                self.review_manager.logger.error(
-                    f" mismatching metadata (record/doi-record): {record.data['doi']} "
-                    + f"(similarity: {similarity})"
-                )
-                record.print_citation_format()
-                retrieved_record.print_citation_format()
+                # self.review_manager.logger.error(
+                #     f" mismatching metadata (record/doi-record): {record.data['doi']} "
+                #     + f"(similarity: {similarity})"
+                # )
+                record.remove_field(key="doi")
+                # record.print_citation_format()
+                # retrieved_record.print_citation_format()
 
         except (
             requests.exceptions.RequestException,

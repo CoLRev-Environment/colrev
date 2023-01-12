@@ -49,6 +49,11 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         ):
             result["confidence"] = 1.0
             return result
+
+        if data.count("{pop0") > 0.9 * data.count("\n@"):
+            result["confidence"] = 1.0
+            return result
+
         return result
 
     def validate_source(
