@@ -606,12 +606,10 @@ class Dedupe(colrev.operation.Operation):
     def __unmerge_current_record_ids_records(self, *, current_record_ids: list) -> dict:
         ids_origins: typing.Dict[str, list] = {rid: [] for rid in current_record_ids}
 
-        first_round = True
         for records in self.review_manager.dataset.load_records_from_history():
-            if first_round:
-                for rid in ids_origins:
-                    ids_origins[rid] = records[rid]["colrev_origin"]
-                first_round = False
+            for rid in ids_origins:
+                ids_origins[rid] = records[rid]["colrev_origin"]
+            break
 
         records = self.review_manager.dataset.load_records_dict()
         for rid in ids_origins:
@@ -653,39 +651,54 @@ class Dedupe(colrev.operation.Operation):
             )
         )
 
-        # Note : there could be more than two IDs in the list
-        filecontents = next(revlist)
-
-        prior_records_dict = self.review_manager.dataset.load_records_dict(
-            load_str=filecontents.decode("utf-8")
-        )
-
-        for id_list_to_unmerge in previous_id_lists:
-            self.review_manager.report_logger.info(
-                f'Undo merge: {",".join(id_list_to_unmerge)}'
+        unmerged = False
+        for filecontents in revlist:
+            prior_records_dict = self.review_manager.dataset.load_records_dict(
+                load_str=filecontents.decode("utf-8")
             )
 
-            # delete new record,
-            # add previous records (from history) to records
-            records = {k: v for k, v in records.items() if k not in id_list_to_unmerge}
-
-            if all(ID in prior_records_dict for ID in id_list_to_unmerge):
-                for record_dict in prior_records_dict.values():
-                    if record_dict["ID"] in id_list_to_unmerge:
-                        # add manual_dedupe/non_dupe decision to the records
-                        manual_non_duplicates = id_list_to_unmerge.copy()
-                        manual_non_duplicates.remove(record_dict["ID"])
-
-                        record_dict[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_processed
-                        r_dict = {record_dict["ID"]: record_dict}
-                        records[r_dict["ID"]] = r_dict
-                        self.review_manager.logger.info(f'Restored {record_dict["ID"]}')
-            else:
-                self.review_manager.logger.error(
-                    f"Could not retore {id_list_to_unmerge} - " "please fix manually"
+            for id_list_to_unmerge in previous_id_lists:
+                self.review_manager.report_logger.info(
+                    f'Undo merge: {",".join(id_list_to_unmerge)}'
                 )
+                self.review_manager.logger.info(
+                    f'Undo merge: {",".join(id_list_to_unmerge)}'
+                )
+
+                if all(rec_id in prior_records_dict for rec_id in id_list_to_unmerge):
+                    # delete new record,
+                    # add previous records (from history) to records
+                    records = {
+                        k: v for k, v in records.items() if k not in id_list_to_unmerge
+                    }
+
+                    for record_dict in prior_records_dict.values():
+                        if record_dict["ID"] in id_list_to_unmerge:
+                            # add manual_dedupe/non_dupe decision to the records
+                            manual_non_duplicates = id_list_to_unmerge.copy()
+                            manual_non_duplicates.remove(record_dict["ID"])
+
+                            # The followin may need to be set to the previous state of the
+                            # record that was erroneously merged (could be md_prepared)
+                            record_dict[
+                                "colrev_status"
+                            ] = colrev.record.RecordState.md_processed
+                            records[record_dict["ID"]] = record_dict
+                            self.review_manager.logger.info(
+                                f'Restored {record_dict["ID"]}'
+                            )
+                    unmerged = True
+
+                if unmerged:
+                    break
+            if unmerged:
+                break
+
+        if not unmerged:
+            self.review_manager.logger.error(
+                f"Could not retore {id_list_to_unmerge} - " "please fix manually"
+            )
+
         return records
 
     def unmerge_records(
