@@ -63,16 +63,27 @@ class Search(colrev.operation.Operation):
             filename = self.__get_unique_filename(file_path_string="pdfs")
             # pylint: disable=no-value-for-parameter
             add_source = colrev.settings.SearchSource(
-                {
-                    "endpoint": "colrev_built_in.pdfs_dir",
-                    "filename": filename,
-                    "search_type": colrev.settings.SearchType.PDFS,
-                    "search_parameters": {"scope": {"path": "data/pdfs"}},
-                    "load_conversion_package_endpoint": {
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
-                    "comment": "",
-                }
+                endpoint="colrev_built_in.pdfs_dir",
+                filename=filename,
+                search_type=colrev.settings.SearchType.PDFS,
+                search_parameters={"scope": {"path": "data/pdfs"}},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+        elif "backwardsearch" == query.replace("_", "").replace("-", ""):
+            filename = self.__get_unique_filename(
+                file_path_string="pdf_backward_search"
+            )
+            # pylint: disable=no-value-for-parameter
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.pdf_backward_search",
+                filename=filename,
+                search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
+                search_parameters={
+                    "scope": {"colrev_status": "rev_included|rev_synthesized"},
+                },
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
             )
         elif (
             "https://dblp.org/search?q=" in query
@@ -88,16 +99,12 @@ class Search(colrev.operation.Operation):
                 file_path_string=f"dblp_{query.replace('https://dblp.org/search/publ/api?q=', '')}"
             )
             add_source = colrev.settings.SearchSource(
-                **{  # type: ignore
-                    "endpoint": "colrev_built_in.dblp",
-                    "filename": filename,
-                    "search_type": colrev.settings.SearchType.DB,
-                    "search_parameters": {"query": query},
-                    "load_conversion_package_endpoint": {
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
-                    "comment": "",
-                }
+                endpoint="colrev_built_in.dblp",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
             )
         elif "https://search.crossref.org/?q=" in query:
             query = (
@@ -108,16 +115,12 @@ class Search(colrev.operation.Operation):
 
             filename = self.__get_unique_filename(file_path_string=f"crossref_{query}")
             add_source = colrev.settings.SearchSource(
-                **{  # type: ignore
-                    "endpoint": "colrev_built_in.crossref",
-                    "filename": filename,
-                    "search_type": colrev.settings.SearchType.DB,
-                    "search_parameters": {"query": query},
-                    "load_conversion_package_endpoint": {
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
-                    "comment": "",
-                }
+                endpoint="colrev_built_in.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
             )
         elif Path(query).is_file():
             # pylint: disable=import-outside-toplevel

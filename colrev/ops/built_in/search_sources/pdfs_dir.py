@@ -569,7 +569,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 if added:
                     nr_added += 1
 
-                elif self.review_manager.force_mode:
+                elif search_operation.review_manager.force_mode:
                     # Note : only re-index/update
                     changed = search_operation.update_existing_record(
                         records=records,
@@ -594,13 +594,13 @@ class PDFSearchSource(JsonSchemaMixin):
                 f"{colors.GREEN}No additional records retrieved{colors.END}"
             )
 
-        if self.review_manager.force_mode:
+        if search_operation.review_manager.force_mode:
             if nr_changed > 0:
-                self.review_manager.logger.info(
+                search_operation.review_manager.logger.info(
                     f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
                 )
             else:
-                self.review_manager.logger.info(
+                search_operation.review_manager.logger.info(
                     f"{colors.GREEN}Records up-to-date{colors.END}"
                 )
 

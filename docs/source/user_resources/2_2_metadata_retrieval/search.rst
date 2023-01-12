@@ -22,6 +22,8 @@ colrev search
 
     colrev search -a https://search.crossref.org/?q=+microsourcing&from_ui=yes
 
+    colrev search -a backward-search
+
     Examples:
 
     colrev search -a '{"endpoint": "colrev_built_in.crossref","search_parameters": {"query": "digital+platform"}}'

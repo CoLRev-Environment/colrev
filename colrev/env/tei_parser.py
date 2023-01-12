@@ -531,11 +531,11 @@ class TEIParser:
         title_string = ""
         if reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 title = analytic_node.find(self.ns["tei"] + "title")
         elif reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 title = monogr_node.find(self.ns["tei"] + "title")
 
         if title is not None:
@@ -548,15 +548,15 @@ class TEIParser:
         year_string = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     year = imprint_node.find(self.ns["tei"] + "date")
         elif reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     year = imprint_node.find(self.ns["tei"] + "date")
 
         if year is not None:
@@ -571,7 +571,7 @@ class TEIParser:
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
                 if imprint_node is not None:
                     page_list = imprint_node.findall(
@@ -579,9 +579,9 @@ class TEIParser:
                     )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     page_list = imprint_node.findall(
                         self.ns["tei"] + "biblScope[@unit='page']"
                     )
@@ -603,17 +603,17 @@ class TEIParser:
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     number_list = imprint_node.findall(
                         self.ns["tei"] + "biblScope[@unit='issue']"
                     )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     number_list = imprint_node.findall(
                         self.ns["tei"] + "biblScope[@unit='issue']"
                     )
@@ -629,17 +629,17 @@ class TEIParser:
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 imprint_node = monogr_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     volume_list = imprint_node.findall(
                         self.ns["tei"] + "biblScope[@unit='volume']"
                     )
         elif reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 imprint_node = analytic_node.find(self.ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     volume_list = imprint_node.findall(
                         self.ns["tei"] + "biblScope[@unit='volume']"
                     )
@@ -654,9 +654,9 @@ class TEIParser:
         journal_title = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 monogr_title = monogr_node.find(self.ns["tei"] + "title")
-                if monogr_title:
+                if monogr_title is not None:
                     if monogr_title.text is not None:
                         journal_title = monogr_title.text
 
@@ -666,7 +666,7 @@ class TEIParser:
         entrytype = "misc"
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
-            if monogr_node:
+            if monogr_node is not None:
                 title_node = monogr_node.find(self.ns["tei"] + "title")
                 if title_node is not None:
                     if "j" == title_node.get("level", "NA"):
@@ -684,15 +684,14 @@ class TEIParser:
             for reference in bibliography:
                 try:
                     entrytype = self.__get_entrytype(reference=reference)
+                    tei_id = self.__get_reference_bibliography_tei_id(
+                        reference=reference
+                    )
                     if "article" == entrytype:
                         ref_rec = {
-                            "ID": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
+                            "ID": tei_id,
                             "ENTRYTYPE": entrytype,
-                            "tei_id": self.__get_reference_bibliography_tei_id(
-                                reference=reference
-                            ),
+                            "tei_id": tei_id,
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -717,13 +716,9 @@ class TEIParser:
                         }
                     elif "book" == entrytype:
                         ref_rec = {
-                            "ID": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
+                            "ID": tei_id,
                             "ENTRYTYPE": entrytype,
-                            "tei_id": self.__get_reference_bibliography_tei_id(
-                                reference=reference
-                            ),
+                            "tei_id": tei_id,
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -736,13 +731,9 @@ class TEIParser:
                         }
                     elif "misc" == entrytype:
                         ref_rec = {
-                            "ID": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
+                            "ID": tei_id,
                             "ENTRYTYPE": entrytype,
-                            "tei_id": self.__get_reference_bibliography_tei_id(
-                                reference=reference
-                            ),
+                            "tei_id": tei_id,
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),

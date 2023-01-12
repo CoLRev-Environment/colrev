@@ -6,7 +6,6 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -15,6 +14,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -113,6 +113,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             update_only=False,
         )
 
+        nr_added, nr_changed = 0, 0
         for record in records.values():
             if not self.__bw_search_condition(record=record):
                 continue
@@ -128,44 +129,69 @@ class BackwardSearchSource(JsonSchemaMixin):
                 continue
 
             search_operation.review_manager.logger.info(
-                f'Running backward search for {record["ID"]} ({record["file"]})'
+                f'Run backward search for {record["ID"]} ({record["file"]})'
             )
 
-            # pylint: disable=consider-using-with
-            options = {"consolidateHeader": "0", "consolidateCitations": "0"}
-            ret = requests.post(
-                self.grobid_service.GROBID_URL + "/api/processReferences",
-                files={str(pdf_path): open(pdf_path, "rb", encoding="utf8")},
-                data=options,
-                headers={"Accept": "application/x-bibtex"},
-                timeout=30,
+            tei = search_operation.review_manager.get_tei(
+                pdf_path=pdf_path,
             )
+            new_records = tei.get_bibliography()
 
-            new_records_dict = (
-                search_operation.review_manager.dataset.load_records_dict(
-                    load_str=ret.text
-                )
-            )
-            new_records = list(new_records_dict.values())
             for new_record in new_records:
                 new_record["bwsearch_ref"] = (
                     record["ID"] + "_backward_search_" + new_record["ID"]
                 )
-                new_record["cited_by"] = record["ID"]
+                new_record["cited_by_IDs"] = record["ID"]
                 new_record["cited_by_file"] = record["file"]
                 pdf_backward_search_feed.set_id(record_dict=new_record)
-                pdf_backward_search_feed.add_record(
+
+                prev_record_dict_version = {}
+                if new_record["ID"] in pdf_backward_search_feed.feed_records:
+                    prev_record_dict_version = pdf_backward_search_feed.feed_records[
+                        new_record["ID"]
+                    ]
+
+                added = pdf_backward_search_feed.add_record(
                     record=colrev.record.Record(data=new_record),
                 )
 
+                if added:
+                    nr_added += 1
+                elif search_operation.review_manager.force_mode:
+                    # Note : only re-index/update
+                    changed = search_operation.update_existing_record(
+                        records=records,
+                        record_dict=new_record,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                    )
+                    if changed:
+                        nr_changed += 1
         pdf_backward_search_feed.save_feed_file()
+
+        if nr_added > 0:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+            )
+        else:
+            search_operation.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if search_operation.review_manager.force_mode:
+            if nr_changed > 0:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                )
+            else:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Records up-to-date{colors.END}"
+                )
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(
                 msg="Backward search", script_call="colrev search"
             )
-        else:
-            print("No new records added.")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
