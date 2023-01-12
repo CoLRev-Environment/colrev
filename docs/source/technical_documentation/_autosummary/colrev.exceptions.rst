@@ -45,6 +45,7 @@ colrev.exceptions
       NoSearchFeedRegistered
       NonEmptyDirectoryError
       NotEnoughDataToIdentifyException
+      NotFeedIdentifiableException
       NotTOCIdentifiableException
       OriginError
       PDFHashError

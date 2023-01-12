@@ -361,7 +361,11 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         update_only=False,
                     )
 
-                    europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                    try:
+                        europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                    except colrev_exceptions.NotFeedIdentifiableException:
+                        return record
+
                     europe_pmc_feed.add_record(record=retrieved_record)
 
                     record.merge(

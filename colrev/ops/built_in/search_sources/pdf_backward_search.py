@@ -101,6 +101,8 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
+        # pylint: disable=too-many-branches
+
         if not search_operation.review_manager.dataset.records_file.is_file():
             print("No records imported. Cannot run backward search yet.")
             return
@@ -143,7 +145,10 @@ class BackwardSearchSource(JsonSchemaMixin):
                 )
                 new_record["cited_by_IDs"] = record["ID"]
                 new_record["cited_by_file"] = record["file"]
-                pdf_backward_search_feed.set_id(record_dict=new_record)
+                try:
+                    pdf_backward_search_feed.set_id(record_dict=new_record)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
 
                 prev_record_dict_version = {}
                 if new_record["ID"] in pdf_backward_search_feed.feed_records:

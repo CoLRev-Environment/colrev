@@ -160,12 +160,15 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 k: v for k, v in record_to_import.items() if k not in keys_to_drop
             }
 
-            colrev_project_search_feed.set_id(record_dict=record_to_import)
-            added = colrev_project_search_feed.add_record(
-                record=colrev.record.Record(data=record_to_import),
-            )
-            if added:
-                nr_added += 1
+            try:
+                colrev_project_search_feed.set_id(record_dict=record_to_import)
+                added = colrev_project_search_feed.add_record(
+                    record=colrev.record.Record(data=record_to_import),
+                )
+                if added:
+                    nr_added += 1
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
 
         colrev_project_search_feed.save_feed_file()
         search_operation.review_manager.logger.info(

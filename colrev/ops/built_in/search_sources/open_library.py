@@ -253,11 +253,14 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             open_library_feed.save_feed_file()
             self.open_library_lock.release()
 
-        except colrev_exceptions.RecordNotFoundInPrepSourceException:
+        except (
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+            requests.exceptions.RequestException,
+        ):
             pass
         except (
-            requests.exceptions.RequestException,
             colrev_exceptions.InvalidMerge,
+            colrev_exceptions.NotFeedIdentifiableException,
         ):
             self.open_library_lock.release()
 

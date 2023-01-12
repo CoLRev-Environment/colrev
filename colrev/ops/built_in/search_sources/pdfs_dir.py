@@ -555,7 +555,10 @@ class PDFSearchSource(JsonSchemaMixin):
                     )
                     continue
 
-                pdfs_dir_feed.set_id(record_dict=new_record)
+                try:
+                    pdfs_dir_feed.set_id(record_dict=new_record)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
 
                 prev_record_dict_version = {}
                 if new_record["ID"] in pdfs_dir_feed.feed_records:

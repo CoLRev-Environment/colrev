@@ -112,7 +112,11 @@ class VideoDirSearchSource(JsonSchemaMixin):
 
             new_record = self.__index_video(path=file_to_add)
 
-            video_feed.set_id(record_dict=new_record)
+            try:
+                video_feed.set_id(record_dict=new_record)
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
+
             added = video_feed.add_record(
                 record=colrev.record.Record(data=new_record),
             )

@@ -417,7 +417,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     crossref_feed.save_feed_file()
                 self.crossref_lock.release()
                 return record
-            except colrev_exceptions.InvalidMerge:
+            except (
+                colrev_exceptions.InvalidMerge,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
                 self.crossref_lock.release()
                 return record
 
@@ -578,13 +581,17 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             try:
                 retrieved_record = self.__query_doi(doi=feed_record_dict["doi"])
-            except colrev_exceptions.RecordNotFoundInPrepSourceException:
+
+                if retrieved_record.data["doi"] != feed_record.data["doi"]:
+                    continue
+
+                crossref_feed.set_id(record_dict=retrieved_record.data)
+            except (
+                colrev_exceptions.RecordNotFoundInPrepSourceException,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
                 continue
 
-            if retrieved_record.data["doi"] != feed_record.data["doi"]:
-                continue
-
-            crossref_feed.set_id(record_dict=retrieved_record.data)
             prev_record_dict_version = {}
             if retrieved_record.data["ID"] in crossref_feed.feed_records:
                 prev_record_dict_version = crossref_feed.feed_records[
@@ -645,8 +652,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     "title", ""
                 ):
                     continue
+                try:
 
-                crossref_feed.set_id(record_dict=record_dict)
+                    crossref_feed.set_id(record_dict=record_dict)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
 
                 prev_record_dict_version = {}
                 if record_dict["ID"] in crossref_feed.feed_records:

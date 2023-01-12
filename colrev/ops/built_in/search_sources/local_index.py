@@ -190,10 +190,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 retrieved_record_dict = self.local_index.retrieve(
                     record_dict=feed_record.get_data(), include_file=False
                 )
-            except colrev_exceptions.RecordNotInIndexException:
+
+                local_index_feed.set_id(record_dict=retrieved_record_dict)
+            except (
+                colrev_exceptions.RecordNotInIndexException,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
                 continue
 
-            local_index_feed.set_id(record_dict=retrieved_record_dict)
             prev_record_dict_version = {}
             if retrieved_record_dict["ID"] in local_index_feed.feed_records:
                 prev_record_dict_version = local_index_feed.feed_records[
@@ -240,7 +244,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for retrieved_record_dict in self.__retrieve_from_index():
 
-            local_index_feed.set_id(record_dict=retrieved_record_dict)
+            try:
+                local_index_feed.set_id(record_dict=retrieved_record_dict)
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
+
             prev_record_dict_version = {}
             if retrieved_record_dict["ID"] in local_index_feed.feed_records:
                 prev_record_dict_version = local_index_feed.feed_records[
@@ -456,7 +464,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             self.local_index_lock.release()
 
-        except colrev_exceptions.InvalidMerge:
+        except (
+            colrev_exceptions.InvalidMerge,
+            colrev_exceptions.NotFeedIdentifiableException,
+        ):
             self.local_index_lock.release()
 
         record.set_status(target_state=colrev.record.RecordState.md_prepared)

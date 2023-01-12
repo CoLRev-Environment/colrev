@@ -625,6 +625,9 @@ class GeneralOriginFeed:
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
 
+        if self.source_identifier not in record_dict:
+            raise colrev_exceptions.NotFeedIdentifiableException()
+
         if record_dict[self.source_identifier] in self.__available_ids:
             record_dict["ID"] = self.__available_ids[
                 record_dict[self.source_identifier]

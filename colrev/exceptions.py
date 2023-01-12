@@ -328,6 +328,14 @@ class NoSearchFeedRegistered(CoLRevException):
         super().__init__("No search feed endpoints registered in settings.json")
 
 
+class NotFeedIdentifiableException(CoLRevException):
+    """The record does not contain the required source_identifier (cannot be added to the feed)."""
+
+    def __init__(self, msg: str = None) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Load
 
 

@@ -397,7 +397,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
                     continue
 
-                dblp_feed.set_id(record_dict=retrieved_record.data)
+                try:
+                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
+
                 prev_record_dict_version = {}
                 if retrieved_record.data["ID"] in dblp_feed.feed_records:
                     prev_record_dict_version = dblp_feed.feed_records[
@@ -506,7 +510,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                         ]:
                             continue
 
-                        dblp_feed.set_id(record_dict=retrieved_record.data)
+                        try:
+                            dblp_feed.set_id(record_dict=retrieved_record.data)
+                        except colrev_exceptions.NotFeedIdentifiableException:
+                            continue
+
                         prev_record_dict_version = {}
                         if retrieved_record.data["ID"] in dblp_feed.feed_records:
                             prev_record_dict_version = dblp_feed.feed_records[
@@ -714,7 +722,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                         self.dblp_lock.release()
                         return record
 
-                    except colrev_exceptions.InvalidMerge:
+                    except (
+                        colrev_exceptions.InvalidMerge,
+                        colrev_exceptions.NotFeedIdentifiableException,
+                    ):
                         self.dblp_lock.release()
                         continue
 
