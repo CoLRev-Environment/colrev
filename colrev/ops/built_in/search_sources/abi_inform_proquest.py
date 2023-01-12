@@ -2,6 +2,7 @@
 """SearchSource: ABI/INFORM (ProQuest)"""
 from __future__ import annotations
 
+import re
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,6 +63,35 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         records: typing.Dict,
     ) -> dict:
         """Load fixes for ABI/INFORM (ProQuest)"""
+
+        to_delete = []
+        for record in records.values():
+            if re.search(r"-\d{1,2}$", record["ID"]):
+
+                original_record_id = re.sub(r"-\d{1,2}$", "", record["ID"])
+                original_record = records[original_record_id]
+
+                # Note: between duplicate records, there are variations in spelling and completeness
+                if (
+                    colrev.record.Record.get_record_similarity(
+                        record_a=colrev.record.Record(data=record),
+                        record_b=colrev.record.Record(data=original_record),
+                    )
+                    < 0.9
+                ):
+                    continue
+
+                if original_record_id not in records:
+                    continue
+                to_delete.append(record["ID"])
+
+        for rid in to_delete:
+            load_operation.review_manager.logger.info(f" remove duplicate {rid}")
+            del records[rid]
+
+        load_operation.review_manager.dataset.save_records_dict_to_file(
+            records=records, save_path=source.filename
+        )
 
         return records
 

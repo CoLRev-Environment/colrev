@@ -89,8 +89,9 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
         )
         endpoint = endpoint_dict[source.endpoint]
 
-        records = endpoint.load_fixes(self, source=source, records=records)  # type: ignore
-
+        records = endpoint.load_fixes(  # type: ignore
+            load_operation, source=source, records=records
+        )
         return records
 
 
