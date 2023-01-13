@@ -65,6 +65,7 @@ class Validate(colrev.operation.Operation):
 
         self.review_manager.logger.debug("Calculating preparation differences...")
         change_diff = []
+        covered_ids = []
         for record_dict in records:
             if "changed_in_target_commit" not in record_dict:
                 continue
@@ -81,13 +82,15 @@ class Validate(colrev.operation.Operation):
                         record_a=colrev.record.Record(data=record_dict),
                         record_b=colrev.record.Record(data=prior_record_dict),
                     )
-                    change_diff.append(
-                        {
-                            "prior_record_dict": prior_record_dict,
-                            "record_dict": record_dict,
-                            "change_score": change_score,
-                        }
-                    )
+                    if record_dict["ID"] not in covered_ids:
+                        change_diff.append(
+                            {
+                                "prior_record_dict": prior_record_dict,
+                                "record_dict": record_dict,
+                                "change_score": change_score,
+                            }
+                        )
+                        covered_ids.append(record_dict["ID"])
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
