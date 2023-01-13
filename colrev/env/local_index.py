@@ -535,13 +535,12 @@ class LocalIndex:
                     return retrieved_record
             except (
                 IndexError,
+                KeyError,
                 NotFoundError,
                 TransportError,
                 SerializationError,
             ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException from exc
-            except KeyError:
-                pass
 
         raise colrev_exceptions.RecordNotInIndexException
 
@@ -676,31 +675,34 @@ class LocalIndex:
 
         old_scroll_id = res.get("_scroll_id", "NA")
         records_to_return = []
-        while len(res["hits"]["hits"]):
+        try:
+            while len(res["hits"]["hits"]):
 
-            for item in res["hits"]["hits"]:
-                record_to_import = item["_source"]  # type: ignore
-                if "fulltext" in record_to_import:
-                    del record_to_import["fulltext"]
+                for item in res["hits"]["hits"]:
+                    record_to_import = item["_source"]  # type: ignore
+                    if "fulltext" in record_to_import:
+                        del record_to_import["fulltext"]
 
-                record_to_import = {k: str(v) for k, v in record_to_import.items()}
-                record_to_import = {
-                    k: v for k, v in record_to_import.items() if "None" != v
-                }
-                try:
-                    record_to_import = self.__prepare_record_for_return(
-                        record_dict=record_to_import, include_file=False
-                    )
-                    records_to_return.append(
-                        colrev.record.Record(data=record_to_import)
-                    )
-                except (PrematureEOF, TokenRequired):
-                    pass
+                    record_to_import = {k: str(v) for k, v in record_to_import.items()}
+                    record_to_import = {
+                        k: v for k, v in record_to_import.items() if "None" != v
+                    }
+                    try:
+                        record_to_import = self.__prepare_record_for_return(
+                            record_dict=record_to_import, include_file=False
+                        )
+                        records_to_return.append(
+                            colrev.record.Record(data=record_to_import)
+                        )
+                    except (PrematureEOF, TokenRequired):
+                        pass
 
-            res = self.open_search.scroll(scroll_id=old_scroll_id, scroll="2s")
+                res = self.open_search.scroll(scroll_id=old_scroll_id, scroll="2s")
 
-            # Note : the scroll_id typically does not change (but it can)
-            old_scroll_id = res["_scroll_id"]
+                # Note : the scroll_id typically does not change (but it can)
+                old_scroll_id = res["_scroll_id"]
+        except KeyError:
+            pass
 
         return records_to_return
 
@@ -1143,6 +1145,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.NotTOCIdentifiableException,
                 TransportError,
+                KeyError,
             ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException() from exc
 
@@ -1254,11 +1257,13 @@ class LocalIndex:
             body=query,
             size=1,
         )
+        try:
+            record_dict = res["hits"]["hits"][0]["_source"]
 
-        record_dict = res["hits"]["hits"][0]["_source"]
-
-        if colrev_pdf_id != record_dict["colrev_pdf_id"]:
-            raise colrev_exceptions.RecordNotInIndexException()
+            if colrev_pdf_id != record_dict["colrev_pdf_id"]:
+                raise colrev_exceptions.RecordNotInIndexException()
+        except KeyError as exc:
+            raise colrev_exceptions.RecordNotInIndexException() from exc
 
         record_to_import = self.__prepare_record_for_return(
             record_dict=record_dict, include_file=True
