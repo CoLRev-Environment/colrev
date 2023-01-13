@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     import colrev.ops.dedupe
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-lines
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
@@ -229,6 +230,12 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             "Reading and preparation completed."
         )
 
+    def __get_nr_duplicates(self, *, result_list: list) -> int:
+        return len([i for i in result_list if "duplicate" == i["decision"]])
+
+    def __get_nr_non_duplicates(self, *, result_list: list) -> int:
+        return len([i for i in result_list if "no_duplicate" == i["decision"]])
+
     def __apply_active_learning(
         self,
         *,
@@ -239,22 +246,34 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         dedupe_operation.apply_merges(results=results, complete_dedupe=False)
 
-        # Using the examples we just labeled, train the deduper and learn
-        # blocking predicates
-        self.deduper.train(recall=0.9, index_predicates=True)
-        # print(self.deduper.data_model._field_comparators)
-        # print(self.deduper.predicates)
+        if (
+            self.__get_nr_duplicates(result_list=results) > 10
+            and self.__get_nr_non_duplicates(result_list=results) > 10
+        ):
+            dedupe_operation.review_manager.logger.info("Training deduper.")
 
-        # When finished, save our training to disk
-        with open(self.training_file, "w", encoding="utf-8") as train_file:
-            self.deduper.write_training(train_file)
-        dedupe_operation.review_manager.dataset.add_changes(path=self.training_file)
+            # Using the examples we just labeled, train the deduper and learn
+            # blocking predicates
+            self.deduper.train(recall=0.9, index_predicates=True)
+            # print(self.deduper.data_model._field_comparators)
+            # print(self.deduper.predicates)
 
-        # Save our weights and predicates to disk.  If the settings file
-        # exists, we will skip all the training and learning next time we run
-        # this file.
-        with open(self.settings_file, "wb") as sett_file:
-            self.deduper.write_settings(sett_file)
+            # When finished, save our training to disk
+            with open(self.training_file, "w", encoding="utf-8") as train_file:
+                self.deduper.write_training(train_file)
+            dedupe_operation.review_manager.dataset.add_changes(path=self.training_file)
+
+            # Save our weights and predicates to disk.  If the settings file
+            # exists, we will skip all the training and learning next time we run
+            # this file.
+            with open(self.settings_file, "wb") as sett_file:
+                self.deduper.write_settings(sett_file)
+            # self.cleanup_training()
+
+        else:
+            dedupe_operation.review_manager.logger.info(
+                "Not enough duplicates/non-duplicates to train deduper."
+            )
 
         dedupe_operation.review_manager.create_commit(
             msg="Labeling of duplicates (active learning)",
@@ -262,7 +281,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             script_call="colrev dedupe",
             saved_args=saved_args,
         )
-        # self.cleanup_training()
+
+        if (
+            self.__get_nr_duplicates(result_list=results) == 0
+            and self.__get_nr_non_duplicates(result_list=results) > 100
+        ):
+            pass
+            # TODO : ask use whether to set all remaining records to md_processed
 
     def __adapted_console_label(
         self,
@@ -399,10 +424,26 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
             elif user_input == "u":
                 examples_buffer.insert(0, (record_pair, "uncertain"))
+
             elif user_input == "f":
+                nr_duplicates = self.__get_nr_duplicates(
+                    result_list=manual_dedupe_decision_list
+                )
+                nr_non_duplicates = self.__get_nr_non_duplicates(
+                    result_list=manual_dedupe_decision_list
+                )
+
+                if not nr_duplicates > 30 or not nr_non_duplicates > 30:
+                    if "y" != input(
+                        "The machine-learning requires "
+                        "30 duplicates and 30 non-duplicates. "
+                        "Quit anyway [y,n]?"
+                    ):
+                        continue
                 os.system("cls" if os.name == "nt" else "clear")
                 print("Finished labeling")
                 finished = True
+
             elif user_input == "p":
                 use_previous = True
                 uncertain_pairs.append(record_pair)
@@ -945,6 +986,12 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         saved_args: dict = {}
         saved_args.update(merge_threshold=str(self.settings.merge_threshold))
         saved_args.update(partition_threshold=str(self.settings.partition_threshold))
+
+        if not self.settings_file.is_file():
+            dedupe_operation.review_manager.logger.info(
+                "No settings file. Skip ML-clustering."
+            )
+            return
 
         data_d = dedupe_operation.read_data()
 

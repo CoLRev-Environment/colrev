@@ -692,6 +692,9 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
+                            "reference_bibliography_id": self.__get_reference_bibliography_id(
+                                reference=reference
+                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -719,6 +722,9 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
+                            "reference_bibliography_id": self.__get_reference_bibliography_id(
+                                reference=reference
+                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -734,6 +740,9 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
+                            "reference_bibliography_id": self.__get_reference_bibliography_id(
+                                reference=reference
+                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),

@@ -696,7 +696,7 @@ class Dedupe(colrev.operation.Operation):
 
         if not unmerged:
             self.review_manager.logger.error(
-                f"Could not retore {id_list_to_unmerge} - " "please fix manually"
+                f"Could not restore {previous_id_lists} - " "please fix manually"
             )
 
         return records
