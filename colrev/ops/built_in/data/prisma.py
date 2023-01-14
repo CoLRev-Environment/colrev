@@ -122,7 +122,7 @@ class PRISMA(JsonSchemaMixin):
         data_operation.review_manager.logger.debug(f"Exported {self.csv_path}")
 
         if not status_stats.completeness_condition and not silent_mode:
-            print("Warning: review not (yet) complete")
+            data_operation.review_manager.logger.info("Review not (yet) complete")
 
     def __export_diagram(
         self, data_operation: colrev.ops.data.Data, silent_mode: bool

@@ -268,8 +268,8 @@ class Initializer:
                 data_package_endpoint["endpoint"].replace("colrev_built_in.", ""),
             )
 
-        # pylint: disable=consider-using-with
-        open("data/records.bib", mode="a", encoding="utf-8").close()
+        with open("data/records.bib", mode="w", encoding="utf-8") as file:
+            file.write("\n")
 
         files_to_add = [
             "readme.md",
