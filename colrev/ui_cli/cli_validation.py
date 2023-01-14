@@ -6,6 +6,7 @@ import os
 from typing import TYPE_CHECKING
 
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 if TYPE_CHECKING:
     import colrev.ops.status
@@ -136,7 +137,40 @@ def validate(
                 validation_details=details,
                 threshold=threshold,
             )
+        elif "properties" == key:
+            validate_operation.review_manager.logger.info(
+                " Traceability of records".ljust(32, " ")
+                + str(details["record_traceability"])
+            )
+            validate_operation.review_manager.logger.info(
+                " Consistency (based on hooks)".ljust(32, " ")
+                + str(details["consistency"])
+            )
+            validate_operation.review_manager.logger.info(
+                " Completeness of iteration".ljust(32, " ")
+                + str(details["completeness"])
+            )
+        elif "contributor_commits" == key:
+            validate_operation.review_manager.logger.info(
+                "Showing commits in which the contributor was involved as the author or committer."
+            )
 
+            print()
+            print("Commits to validate:")
+            print()
+            for item in details:
+                for _, item_values in item.items():
+                    print(item_values["msg"])
+                    print(f"  date      {item_values['date']}")
+                    print(
+                        f"  author    {item_values['author']} ({item_values['author_email']})"
+                    )
+                    print(
+                        f"  committer {item_values['committer']} ({item_values['committer_email']})"
+                    )
+                    print(f"  {colors.ORANGE}{item_values['validate']}{colors.END}")
+
+            print()
         else:
             print("Not yet implemented")
             print(validation_details)

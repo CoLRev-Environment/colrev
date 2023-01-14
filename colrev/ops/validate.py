@@ -2,8 +2,10 @@
 """Validates commits in a CoLRev project."""
 from __future__ import annotations
 
+import datetime
 import re
 import typing
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -161,9 +163,9 @@ class Validate(colrev.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        with open(
-            "merge_candidates_file.txt", "w", encoding="utf-8"
-        ) as merge_candidates_file:
+        merge_candidates_file = Path("merge_candidates_file.txt")
+
+        with open(merge_candidates_file, "w", encoding="utf-8") as file:
             for ref_rec_dict in tqdm(records):
                 ref_rec = colrev.record.Record(data=ref_rec_dict)
                 for comp_rec_dict in reversed(records):
@@ -178,13 +180,16 @@ class Validate(colrev.operation.Operation):
                     if similarity > 0.95:
                         print(f"{ref_rec_dict['ID']}-{comp_rec_dict['ID']}")
 
-                        merge_candidates_file.write(ref_rec.format_bib_style())
-                        merge_candidates_file.write("\n")
-                        merge_candidates_file.write(comp_rec.format_bib_style())
-                        merge_candidates_file.write("\n")
-                        merge_candidates_file.write(
+                        file.write(ref_rec.format_bib_style())
+                        file.write("\n")
+                        file.write(comp_rec.format_bib_style())
+                        file.write("\n")
+                        file.write(
                             f"colrev dedupe -m {ref_rec_dict['ID']},{comp_rec_dict['ID']}\n\n"
                         )
+
+        if "" == merge_candidates_file.read_text(encoding="utf-8"):
+            merge_candidates_file.unlink()
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -206,7 +211,7 @@ class Validate(colrev.operation.Operation):
 
         return changed_records
 
-    def validate_properties(self, *, target_commit: str = None) -> None:
+    def validate_properties(self, *, commit: str) -> dict:
         """Validate properties"""
 
         # option: --history: check all preceding commits (create a list...)
@@ -215,62 +220,39 @@ class Validate(colrev.operation.Operation):
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
-        self.review_manager.logger.info(
-            f" Current commit: {cur_sha} (branch {cur_branch})"
-        )
 
-        if not target_commit:
-            target_commit = cur_sha
-        if git_repo.is_dirty() and not target_commit == cur_sha:
+        validation_details: typing.Dict[str, bool] = {}
+
+        if git_repo.is_dirty() and not commit == cur_sha:
             self.review_manager.logger.error(
                 "Error: Need a clean repository to validate properties "
                 "of prior commit"
             )
-            return
-        if not target_commit == cur_sha:
-            self.review_manager.logger.info(
-                f"Check out target_commit = {target_commit}"
-            )
-            git_repo.git.checkout(target_commit)
+            return validation_details
+
+        if not commit == cur_sha:
+            self.review_manager.logger.info(f"Check out target_commit = {commit}")
+            git_repo.git.checkout(commit)
 
         ret = self.review_manager.check_repo()
         if 0 == ret["status"]:
-            self.review_manager.logger.info(
-                " Traceability of records".ljust(32, " ") + "YES (validated)"
-            )
-            self.review_manager.logger.info(
-                " Consistency (based on hooks)".ljust(32, " ") + "YES (validated)"
-            )
+            validation_details["record_traceability"] = True
+            validation_details["consistency"] = True
+
         else:
-            self.review_manager.logger.error(
-                "Traceability of records".ljust(32, " ") + "NO"
-            )
-            self.review_manager.logger.error(
-                "Consistency (based on hooks)".ljust(32, " ") + "NO"
-            )
+            validation_details["record_traceability"] = False
+            validation_details["consistency"] = False
 
         completeness_condition = self.review_manager.get_completeness_condition()
         if completeness_condition:
-            self.review_manager.logger.info(
-                " Completeness of iteration".ljust(32, " ") + "YES (validated)"
-            )
+            validation_details["completeness"] = True
+
         else:
-            self.review_manager.logger.error(
-                "Completeness of iteration".ljust(32, " ") + "NO"
-            )
+            validation_details["completeness"] = False
 
         git_repo.git.checkout(cur_branch, force=True)
 
-    def get_commit_from_tree_hash(self, tree_hash: str) -> str:
-        """Get the commit sha from a tree hash"""
-        valid_options = []
-        for commit in self.review_manager.dataset.get_repo().iter_commits():
-            if str(commit.tree) == tree_hash:
-                return commit.hexsha
-            valid_options.append(str(commit.tree))
-        raise colrev_exceptions.ParameterError(
-            parameter="validate.tree_hash", value=tree_hash, options=valid_options
-        )
+        return validation_details
 
     def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
 
@@ -412,6 +394,8 @@ class Validate(colrev.operation.Operation):
         return merge_validation
 
     def __get_target_commit(self, *, scope: str) -> str:
+        """Get the commit from commit sha or tree hash"""
+
         commit = ""
         git_repo = self.review_manager.dataset.get_repo()
         if scope in ["HEAD", "."]:
@@ -425,7 +409,54 @@ class Validate(colrev.operation.Operation):
                     break
                 back_count -= 1
         else:
-            commit = scope
+            valid_options = []
+
+            # def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
+            #     if value is None:
+            #         return value
+
+            #     # pylint: disable=import-outside-toplevel
+            #     import git
+
+            #     repo = git.Repo()
+            #     rev_list = list(repo.iter_commits())
+
+            #     if value in [x.hexsha for x in rev_list]:
+            #         return value
+
+            #     print("Error: Invalid value for '--commit': not a git commit id\n")
+            #     print("Select any of the following commit ids:\n")
+            #     print("commit-id".ljust(41, " ") + "date".ljust(24, " ") + "commit message")
+            #     commits_for_checking = []
+            #     for commit in reversed(list(rev_list)):
+            #         commits_for_checking.append(commit)
+            #     for commit in rev_list:
+            #         print(
+            #             commit.hexsha,
+            #             datetime.datetime.fromtimestamp(commit.committed_date),
+            #             " - ",
+            #             str(commit.message).split("\n", maxsplit=1)[0],
+            #         )
+            #     print("\n")
+            #     raise click.BadParameter("not a git commit id")
+
+            try:
+                commit_object = git_repo.commit(scope)
+                commit = commit_object.hexsha
+            except ValueError:
+
+                for commit_candidate in git_repo.iter_commits():
+                    if str(commit_candidate.tree) == scope:
+                        commit = commit_candidate.hexsha
+                        break
+                    valid_options.append(str(commit_candidate.tree))
+
+                if "" == commit:
+                    # pylint: disable=raise-missing-from
+                    raise colrev_exceptions.ParameterError(
+                        parameter="validate.scope", value=scope, options=valid_options
+                    )
+
         assert re.match(r"[0-9a-f]{5,40}", commit)
         return commit
 
@@ -438,23 +469,72 @@ class Validate(colrev.operation.Operation):
             for x in [r["colrev_origin"] for r in prior_records_dict.values()]
         }
 
+    def __get_contributor_validation(self, *, contributor: str) -> dict:
+        validation_details: typing.Dict[str, typing.Any] = {"contributor_commits": []}
+        valid_options = []
+        git_repo = self.review_manager.dataset.get_repo()
+        for commit in git_repo.iter_commits():
+            if any(
+                x == contributor
+                for x in [
+                    commit.author.email,
+                    commit.author.name,
+                    commit.committer.email,
+                    commit.committer.name,
+                ]
+            ):
+                validation_details["contributor_commits"].append(
+                    {
+                        commit.hexsha: {
+                            "msg": commit.message.split("\n", maxsplit=1)[0],
+                            "date": datetime.datetime.fromtimestamp(
+                                commit.committed_date
+                            ),
+                            "author": commit.author.name,
+                            "author_email": commit.author.email,
+                            "committer": commit.committer.name,
+                            "committer_email": commit.committer.email,
+                            "validate": f"colrev validate {commit.hexsha}",
+                        }
+                    }
+                )
+
+            if not self.review_manager.verbose_mode:
+                if "script" in commit.author.name:
+                    continue
+            if commit.author.name not in valid_options:
+                valid_options.append(commit.author.name)
+            if commit.author.email not in valid_options:
+                valid_options.append(commit.author.email)
+
+        if not validation_details["contributor_commits"]:
+            raise colrev_exceptions.ParameterError(
+                parameter="validate.contributor",
+                value=contributor,
+                options=valid_options,
+            )
+        return validation_details
+
     def main(
         self,
         *,
         scope: str,
         filter_setting: str,
         properties: bool = False,
-        target_commit: str = "",
     ) -> dict:
         """Validate a commit (main entrypoint)"""
-        if properties:
-            self.validate_properties(target_commit=target_commit)
-            return {}
+
+        if "HEAD" not in scope and not re.match(r"[0-9a-f]{5,40}", scope):
+            return self.__get_contributor_validation(contributor=scope)
 
         target_commit = self.__get_target_commit(scope=scope)
-        if not target_commit:
-            print("Error")
-            return {}
+
+        validation_details: typing.Dict[str, typing.Any] = {}
+        if properties:
+            validation_details["properties"] = self.validate_properties(
+                commit=target_commit
+            )
+            return validation_details
 
         if "all" == filter_setting:
             filter_setting = self.__set_scope_based_on_target_commit(
@@ -466,7 +546,6 @@ class Validate(colrev.operation.Operation):
         records = self.load_changed_records(target_commit=target_commit)
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
-        validation_details = {}
         if filter_setting in ["prepare", "all"]:
             validation_details["prep"] = self.validate_preparation_changes(
                 records=records, prior_records_dict=prior_records_dict

@@ -2,7 +2,6 @@
 """Command-line interface for CoLRev."""
 from __future__ import annotations
 
-import datetime
 import logging
 import os
 import typing
@@ -1591,36 +1590,6 @@ def data(
         print(exc)
 
 
-def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
-    if value is None:
-        return value
-
-    # pylint: disable=import-outside-toplevel
-    import git
-
-    repo = git.Repo()
-    rev_list = list(repo.iter_commits())
-
-    if value in [x.hexsha for x in rev_list]:
-        return value
-
-    print("Error: Invalid value for '--commit': not a git commit id\n")
-    print("Select any of the following commit ids:\n")
-    print("commit-id".ljust(41, " ") + "date".ljust(24, " ") + "commit message")
-    commits_for_checking = []
-    for commit in reversed(list(rev_list)):
-        commits_for_checking.append(commit)
-    for commit in rev_list:
-        print(
-            commit.hexsha,
-            datetime.datetime.fromtimestamp(commit.committed_date),
-            " - ",
-            str(commit.message).split("\n", maxsplit=1)[0],
-        )
-    print("\n")
-    raise click.BadParameter("not a git commit id")
-
-
 @main.command(help_priority=17)
 @click.argument("scope", nargs=1)
 @click.option(
@@ -1636,19 +1605,7 @@ def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
     help="Change score threshold for changes to display.",
 )
 @click.option(
-    "--properties", is_flag=True, default=False, help="Git commit id to validate."
-)
-@click.option(
-    "--commit",
-    help="Git commit id to validate.",
-    default=None,
-    callback=__validate_commit,  # type: ignore  # noqa
-)
-@click.option(
-    "-t",
-    "--tree_hash",
-    help="Git tree hash to validate.",
-    default=None,
+    "--properties", is_flag=True, default=False, help="Git tree hash to validate."
 )
 @click.option(
     "-v",
@@ -1671,8 +1628,6 @@ def validate(
     filter: str,
     threshold: float,
     properties: bool,
-    commit: str,
-    tree_hash: str,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1680,8 +1635,10 @@ def validate(
 
     The validation scope argument can be
     - a commit-sha,
+    - a commit tree,
     - '.' for the latest commit,
     - HEAD~4 for commit 4 before HEAD
+    - a contributor name
     """
 
     try:
@@ -1690,16 +1647,10 @@ def validate(
         )
         validate_operation = review_manager.get_validate_operation()
 
-        if tree_hash:
-            assert not commit
-            commit = validate_operation.get_commit_from_tree_hash(tree_hash=tree_hash)
-            input(commit)
-
         validation_details = validate_operation.main(
             scope=scope,
             filter_setting=filter,
             properties=properties,
-            target_commit=commit,
         )
 
         if validation_details:

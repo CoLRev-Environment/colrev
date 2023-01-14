@@ -1,25 +1,24 @@
 <br><br>
 {% if commit_details.records_committed %}
 Properties<br>
-   - Traceability of records        YES<br>
-   - Consistency (based on hooks)   YES<br>
-   - Completeness of iteration      
+    Traceability of records        YES<br>
+    Consistency (based on hooks)   YES<br>
+    Completeness of iteration      
 {% if commit_details.completeness_condition %}YES
 {% else %}NO{% endif %}<br>
-   To check tree_hash use           git log --pretty=raw -1<br>
-   To validate use                  colrev validate --properties \<br>
-                                    --tree_hash {{ commit_details.tree_hash }}
+    To check tree_hash use         git log --pretty=raw -1<br>
+    To validate use                colrev validate {{ commit_details.tree_hash }} --properties<br>
+
 {% endif %}
 <br>
-<br>
 Software<br>
-   - colrev:                        {{ commit_details.colrev_version }}<br>
-   - Python:                        {{ commit_details.python_version }}<br>
-   - Git:                           {{ commit_details.git_version }}<br>
-   - Docker:                        {{ commit_details.docker_version }}<br>
+    colrev                         {{ commit_details.colrev_version }}<br>
+    Python                         {{ commit_details.python_version }}<br>
+    Git                            {{ commit_details.git_version }}<br>
+    Docker                         {{ commit_details.docker_version }}<br>
 
 {% if commit_details.ext_script_name != "" %}
-   - {{ commit_details.ext_script_name }}:                        {{ commit_details.ext_script_version }}<br>
+    {{ commit_details.ext_script_name }}:                        {{ commit_details.ext_script_version }}<br>
 {% endif %}
 
 <br>
