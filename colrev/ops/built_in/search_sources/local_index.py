@@ -186,7 +186,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                # TODO: this should be based on the curation_ID!?
                 retrieved_record_dict = self.local_index.retrieve(
                     record_dict=feed_record.get_data(), include_file=False
                 )
@@ -332,8 +331,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for record in records.values():
             curation_url = record["curation_ID"].split("#")[0]
-            # TODO : add full curation_ID to colrev_masterdata_provenance/CURATED/source
-            # or leave it empty to avoid redundancy?
             record["colrev_masterdata_provenance"] = {
                 "CURATED": {"source": curation_url, "note": ""}
             }
@@ -480,10 +477,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if "CURATED" in item["original_record"].get(
                 "colrev_masterdata_provenance", {}
             ):
-                # TODO : strip the ID at the end if we add an ID...
                 repo_path = item["original_record"]["colrev_masterdata_provenance"][
                     "CURATED"
                 ]["source"]
+                assert "#" not in repo_path
+                # otherwise: strip the ID at the end if we add an ID...
                 base_repos.append(repo_path)
 
         base_repos = list(set(base_repos))
@@ -511,10 +509,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if "CURATED" in item["original_record"].get(
                     "colrev_masterdata_provenance", {}
                 ):
-                    # TODO : strip the ID at the end if we add an ID...
                     repo_path = item["original_record"]["colrev_masterdata_provenance"][
                         "CURATED"
                     ]["source"]
+                    assert "#" not in repo_path
+                    # otherwise: strip the ID at the end if we add an ID...
 
                 if repo_path != local_base_repo:
                     continue

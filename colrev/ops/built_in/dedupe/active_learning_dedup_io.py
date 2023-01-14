@@ -244,12 +244,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         saved_args: dict,
     ) -> None:
 
-        dedupe_operation.apply_merges(results=results, complete_dedupe=False)
-
         if (
             self.__get_nr_duplicates(result_list=results) > 10
             and self.__get_nr_non_duplicates(result_list=results) > 10
         ):
+
+            dedupe_operation.apply_merges(results=results, complete_dedupe=False)
+
             dedupe_operation.review_manager.logger.info("Training deduper.")
 
             # Using the examples we just labeled, train the deduper and learn
@@ -286,8 +287,14 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             self.__get_nr_duplicates(result_list=results) == 0
             and self.__get_nr_non_duplicates(result_list=results) > 100
         ):
-            pass
-            # TODO : ask use whether to set all remaining records to md_processed
+            if "y" == input("Set remaining records to md_processed (no duplicates)?"):
+                dedupe_operation.apply_merges(results=results, complete_dedupe=True)
+                dedupe_operation.review_manager.create_commit(
+                    msg="Set remaining records to non-duplicated",
+                    manual_author=True,
+                    script_call="colrev dedupe",
+                    saved_args=saved_args,
+                )
 
     def __adapted_console_label(
         self,

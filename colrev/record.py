@@ -865,7 +865,13 @@ class Record:
         return best_journal
 
     def __fuse_best_field(
-        self, *, merging_record: Record, key: str, val: str, source: str, note: str
+        self,
+        *,
+        merging_record: Record,
+        key: str,
+        val: str,
+        source: str,
+        note: str,  # pylint: disable=unused-argument
     ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors

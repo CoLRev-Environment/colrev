@@ -428,7 +428,8 @@ class Advisor:
                     endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
                     advice = endpoint.get_advice(self.review_manager)  # type: ignore
-                    review_instructions.append(advice)
+                    if advice:
+                        review_instructions.append(advice)
 
     def __get_missing_files(
         self, *, status_stats: colrev.ops.status.StatusStats

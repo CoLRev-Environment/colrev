@@ -28,11 +28,12 @@ class RepoSetupError(CoLRevException):
     )
 
     def __init__(self, msg: str = None) -> None:
+        Path(".report.log").unlink()
         if msg:
             self.message = f" {msg}"
         elif any(Path(Path.cwd()).iterdir()):
             self.message = (
-                "Not an empty directry. "
+                "Not an empty directory. "
                 + "To create a CoLRev repository, navigate to an empty directory."
             )
 

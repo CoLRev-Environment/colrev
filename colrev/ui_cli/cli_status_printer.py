@@ -172,7 +172,6 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         failure_items.extend(checker.check_repo_basics())
     except colrev_exceptions.RepoSetupError as exc:
         ret_check = {"status": ExitCodes.FAIL, "msg": exc}
-        # TODO : what to do with the return value?!
 
     try:
         status_stats = status_operation.review_manager.get_status_stats(

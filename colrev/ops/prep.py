@@ -886,6 +886,8 @@ class Prep(colrev.operation.Operation):
         if "NA" != debug_ids:
             self.debug_mode = True
 
+        prep_commit_id = "HEAD"
+
         for i, prep_round in enumerate(self.review_manager.settings.prep.prep_rounds):
 
             self.__setup_prep_round(i=i, prep_round=prep_round)
@@ -940,17 +942,19 @@ class Prep(colrev.operation.Operation):
                     script_call="colrev prep",
                     saved_args=saved_args,
                 )
+                prep_commit_id = (
+                    self.review_manager.dataset.get_repo().head.commit.hexsha
+                )
                 if not self.review_manager.high_level_operation:
                     print()
             self.review_manager.reset_report_logger()
 
             self.__print_stats()
 
-        set_id_commit = False
         if not keep_ids and not self.debug_mode:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            set_id_commit = self.review_manager.create_commit(
+            self.review_manager.create_commit(
                 msg="Set IDs", script_call="colrev prep", saved_args=saved_args
             )
 
@@ -958,15 +962,10 @@ class Prep(colrev.operation.Operation):
             print()
 
         self.review_manager.logger.info("To validate the changes, use")
-        # TODO : if caller is retrieve, suggest colrev validate COMMIT-ID
-        if set_id_commit:
-            self.review_manager.logger.info(
-                f"{colors.ORANGE}colrev validate HEAD~1{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.ORANGE}colrev validate .{colors.END}"
-            )
+
+        self.review_manager.logger.info(
+            f"{colors.ORANGE}colrev validate {prep_commit_id}{colors.END}"
+        )
         if not self.review_manager.high_level_operation:
             print()
 

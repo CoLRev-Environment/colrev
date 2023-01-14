@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
-# TODO : use https://pypi.org/project/csv-schema/
+# an option: https://pypi.org/project/csv-schema/
 @dataclass
 class Field(JsonSchemaMixin):
     """Field definition"""
@@ -98,7 +98,6 @@ Example 2:
             "endpoint": "colrev_built_in.structured",
             "version": "0.1",
             "fields": [],
-            # TODO : check if path exists / suggest other path
             "data_path_relative": "data/data.csv",
         }
         return structured_endpoint_details
@@ -307,12 +306,14 @@ Example 2:
 
         data_endpoint = "Data operation [structured data endpoint]: "
 
-        # TODO : return advice only if there are records in rev_included/synthesized
-        advice = {
-            "msg": f"{data_endpoint}"
-            + f"\n    - Complete the data extraction ({self.settings.data_path_relative})",
-            "detailed_msg": "TODO",
-        }
+        if self.settings.data_path_relative.is_file():
+            advice = {
+                "msg": f"{data_endpoint}"
+                + f"\n    - Complete the data extraction ({self.settings.data_path_relative})",
+                "detailed_msg": "TODO",
+            }
+        else:
+            advice = {}
         return advice
 
 

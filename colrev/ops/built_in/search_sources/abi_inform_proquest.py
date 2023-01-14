@@ -27,7 +27,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     """SearchSource for ABI/INFORM (ProQuest)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "{{ID}}"  # TODO : check
+    source_identifier = "{{ID}}"
     search_type = colrev.settings.SearchType.DB
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
