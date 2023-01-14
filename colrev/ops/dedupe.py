@@ -311,7 +311,7 @@ class Dedupe(colrev.operation.Operation):
             return False
 
         # don't raise unproblematic same-source merges
-        # if same_sources start with md_... and have same IDs: no same-source merge.
+        # if same_sources start with md_... AND have same IDs: no same-source merge.
         if all(x.startswith("md_") for x in same_sources):
             main_rec_same_source_origins = [
                 x

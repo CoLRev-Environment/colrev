@@ -5,9 +5,12 @@ colrev prep
 
 TODO
 
+- define: prep: not violating quality rules (completeness of fields/based on external sources, completeness of field values (.../and others), consistency between fields, format consistency (all caps, pages, dois), consistency between metadata associated with ids (e.g., doi/url/...)) or curated
+    -> explain the rules/criteria (with examples) in the architecture rationales (or the colrev framework)
+
 - describe the state transitions (md_processed, md_needs_manual_preparation, rev_prescreen_excluded)
 - describe rounds/confidence values
-- describe metadata-sources/rule-bsed approaches/source-specific rules (the always-apply rationale),
+- describe metadata-sources/rule-based approaches/source-specific rules (the always-apply rationale),
 - explain debugging, reset/validate
 - expain the benefits of curated metadata, mention corrections (polishing?)
 - Link to methods papers/rationales (e.g., general deduplication papers mentioning the need for preprocessing)

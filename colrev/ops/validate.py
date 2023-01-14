@@ -389,8 +389,6 @@ class Validate(colrev.operation.Operation):
                 )
                 merge_validation.append(prescreen_validation)
 
-            # self.review_manager.p_printer.pprint(merge_validation)
-
         return merge_validation
 
     def __get_target_commit(self, *, scope: str) -> str:
@@ -410,35 +408,6 @@ class Validate(colrev.operation.Operation):
                 back_count -= 1
         else:
             valid_options = []
-
-            # def __validate_commit(ctx: click.core.Context, param: str, value: str) -> str:
-            #     if value is None:
-            #         return value
-
-            #     # pylint: disable=import-outside-toplevel
-            #     import git
-
-            #     repo = git.Repo()
-            #     rev_list = list(repo.iter_commits())
-
-            #     if value in [x.hexsha for x in rev_list]:
-            #         return value
-
-            #     print("Error: Invalid value for '--commit': not a git commit id\n")
-            #     print("Select any of the following commit ids:\n")
-            #     print("commit-id".ljust(41, " ") + "date".ljust(24, " ") + "commit message")
-            #     commits_for_checking = []
-            #     for commit in reversed(list(rev_list)):
-            #         commits_for_checking.append(commit)
-            #     for commit in rev_list:
-            #         print(
-            #             commit.hexsha,
-            #             datetime.datetime.fromtimestamp(commit.committed_date),
-            #             " - ",
-            #             str(commit.message).split("\n", maxsplit=1)[0],
-            #         )
-            #     print("\n")
-            #     raise click.BadParameter("not a git commit id")
 
             try:
                 commit_object = git_repo.commit(scope)
@@ -483,13 +452,12 @@ class Validate(colrev.operation.Operation):
                     commit.committer.name,
                 ]
             ):
+                commit_date = datetime.datetime.fromtimestamp(commit.committed_date)
                 validation_details["contributor_commits"].append(
                     {
                         commit.hexsha: {
                             "msg": commit.message.split("\n", maxsplit=1)[0],
-                            "date": datetime.datetime.fromtimestamp(
-                                commit.committed_date
-                            ),
+                            "date": commit_date,
                             "author": commit.author.name,
                             "author_email": commit.author.email,
                             "committer": commit.committer.name,

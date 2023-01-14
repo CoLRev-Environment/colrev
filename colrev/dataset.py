@@ -160,7 +160,9 @@ class Dataset:
         # in the target_commit
         for record in records_dict.values():
             prior_record_l = [
-                rec for id, rec in prior_records_dict.items() if id == record["ID"]
+                rec
+                for rec in prior_records_dict.values()
+                if any(x in record["colrev_origin"] for x in rec["colrev_origin"])
             ]
             if not prior_record_l:
                 continue
