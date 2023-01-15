@@ -1,2 +1,4 @@
 # pylint: disable=missing-module-docstring
-__version__ = "0.0.0"
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("colrev").version
