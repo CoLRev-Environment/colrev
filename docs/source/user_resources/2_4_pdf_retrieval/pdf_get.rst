@@ -4,6 +4,7 @@ colrev pdf-get
 ==================================
 
 TODO : mention pdf_required_for_screen_and_synthesis, rename_pdfs
+- Mention discard
 
 
 :program:`colrev pdf-get` retrieves PDFs based on

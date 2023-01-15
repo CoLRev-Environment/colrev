@@ -5,14 +5,14 @@
 Step 1: Problem formulation
 ==================================
 
-Literature reviews begin with the problem formulation step in which reviewers **specify the objective, the review type and its characteristics, the focal concepts, and the plans for how the review team will conduct the review**.
-This step may be informal and evolve throughout the review process, or be more formal and even involve a review protocol.
+Literature reviews begin with the problem formulation step in which reviewers **specify the objective, the review type, and the plans for how the review team will conduct the review**.
+This step may be informal and evolve throughout the review process, or be more formal.
 
 ..
    does not involve any records, but it can be updated throughout the process (e.g., after an exploratory search was completed)
 
-Methodological guidelines emphasize that the objectives and the review types, as well as the following methodological choices, should be coherent.
-It is therefore recommended to familiarize with the different types of review. An exemplary classification (`Paré et al. 2015 <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_) covers the following:
+Literature review guidelines emphasize that the objectives and the review types, as well as the subsequent choices, should be methodologically coherent.
+It is therefore recommended to familiarize with the different types of review. Exemplary classifications cover the following:
 
 - Narrative review
 - Descriptive review
@@ -27,22 +27,32 @@ It is therefore recommended to familiarize with the different types of review. A
 ..
    (**TODO: link to resources/classifications/ideally a database overview**).
 
+It can also be useful to check prior (related) reviews. This can help to justify the need for a new review paper and it can inform several decisions, such as the search terms and databases to be covered.
 
-Once the objective, review type, etc. are specified, the CoLRev project can be initialized.
-With the ``colrev init`` operation, the required directories and files, including the git history, are set up.
-Ideally, the selected review type is passed as a parameter (as described `here <2_1_problem_formulation/init.html>`_).
-With this parameter, ``colrev init`` creates a ``settings.json`` file containing reasonable defaults for the review type.
-For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis will involve a structured data extraction and a PRISMA flow chart for transparent reporting.
+Once the initial objectives and review type are specified, the CoLRev project can be initialized using the ``colrev init`` operation.
 
-The review objective and additional details can be added to the ``data/paper.md`` file.
-This file may also serve as the review protocol and evolve into the final review manuscript.
-Once the CoLRev repository has been initialized, members of the review team can be provided with access to a shared remote repository as explained in the `collaboration section <3_collaboration.html>`_.
+In most cases, activities related to the problem formulation step will continue after initializing the repository.
+The specification of plans for the review project may lead to the development of a review protocol.
+As a best practice recommendation, we suggest to keep notes on he review objective etc. in the ``data/paper.md`` file.
+This document may also serve as the review protocol and evolve into the final review manuscript.
+Review protocols often involve the following:
+
+- Sharing the repository with your team (see `instructions <3_collaboration.html>`_).
+- Refining the review objectives and the characteristics of the review.
+- Defining focal concepts of the review.
+- Developing a search strategy and testing it.
+- If prior reviews were found, make plans to add their samples to the review project.
 
 ..
    - working hypothesis: differences between review types primarily manifest in the data stage (in the other steps, it is mostly a question of parameters)
    - Indicate that different forms of `data <2_6_data/data.html>`data analysis are activated by the selected review types  (per default)
    - mention settings (but do not display complete settings.json, which is too long?)
 
+.. collapse:: References
+
+   **Classifications of literature review types**
+
+   Paré, G., Trudel, M. C., Jaana, M., & Kitsiou, S. (2015). Synthesizing information systems knowledge: A typology of literature reviews. Information & Management, 52(2), 183-199. `link <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_
 
 .. toctree::
    :maxdepth: 3

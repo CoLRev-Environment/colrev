@@ -51,6 +51,7 @@ extensions = [
     "sphinx_click",
     "m2r2",
     "sphinxcontrib.datatemplates",
+    "sphinx_collapse",
 ]
 
 source_suffix = [".rst", ".md"]

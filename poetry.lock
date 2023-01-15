@@ -1310,6 +1310,21 @@ docutils = "*"
 sphinx = ">=2.0"
 
 [[package]]
+name = "sphinx-collapse"
+version = "0.1.2"
+description = "Collapse extension for Sphinx."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+sphinx = ">=3"
+
+[package.extras]
+doc = ["alabaster"]
+test = ["pre-commit", "pytest"]
+
+[[package]]
 name = "sphinx-rtd-theme"
 version = "1.0.0"
 description = "Read the Docs theme for Sphinx"
@@ -1703,7 +1718,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "6ff62a7e088a49f2d2ebcdb5c70fe8fb663f8983c700902deeea6a21b62964db"
+content-hash = "ee6da88662623c85aa9c233a601eee3befc9fe8efd0a8eaf884c77464ff72843"
 
 [metadata.files]
 affinegap = [
@@ -3157,6 +3172,10 @@ sphinx-autodoc-typehints = [
 sphinx-click = [
     {file = "sphinx-click-4.3.0.tar.gz", hash = "sha256:bd4db5d3c1bec345f07af07b8e28a76cfc5006d997984e38ae246bbf8b9a3b38"},
     {file = "sphinx_click-4.3.0-py3-none-any.whl", hash = "sha256:23e85a3cb0b728a421ea773699f6acadefae171d1a764a51dd8ec5981503ccbe"},
+]
+sphinx-collapse = [
+    {file = "sphinx_collapse-0.1.2-py3-none-any.whl", hash = "sha256:7a2082da3c779916cc4c4d44832db3522a3a8bfbd12598ef01fb9eb523a164d0"},
+    {file = "sphinx_collapse-0.1.2.tar.gz", hash = "sha256:a186000bf3fdac8ac0e8a99979f720ae790de15a5efc1435d4816f79a3d377c2"},
 ]
 sphinx-rtd-theme = [
     {file = "sphinx_rtd_theme-1.0.0-py2.py3-none-any.whl", hash = "sha256:4d35a56f4508cfee4c4fb604373ede6feae2a306731d533f409ef5c3496fdbd8"},

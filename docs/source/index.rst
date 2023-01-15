@@ -22,8 +22,8 @@ Collaborative Literature Reviews
    user_resources/2_1_problem_formulation
    user_resources/2_2_metadata_retrieval
    user_resources/2_3_metadata_prescreen
-   user_resources/2_4_fulltext_retrieval
-   user_resources/2_5_screen
+   user_resources/2_4_pdf_retrieval
+   user_resources/2_5_pdf_screen
    user_resources/2_6_data
    user_resources/3_collaboration
    user_resources/4_curation
@@ -41,5 +41,13 @@ Collaborative Literature Reviews
    technical_documentation/api
    technical_documentation/cli
    foundations_governance/roadmap
-   Repository <https://github.com/geritwagner/colrev>
    foundations_governance/about
+
+
+.. toctree::
+   :hidden:
+   :caption: Links
+   :maxdepth: 1
+
+   Github repository <https://github.com/geritwagner/colrev>
+   PyPI <https://pypi.org/project/colrev/>

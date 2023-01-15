@@ -2,14 +2,17 @@
 Workflow
 ==================================
 
-This chapter will teach you how to use the CoLRev workflow.
-Conducting a literature review is very challenging, requiring authors to keep track of individual papers, steps, and collaborative changes.
-In CoLRev, you should only have to know the colrev status command and ...
+The three-step **workflow** is designed as an intuitive cognitive tool for users to navigate the literature review process.
+Repeatedly calling ``colrev status`` should guide you through the different steps and operations, help you to keep track of individual papers, use different tools, and collaborate with the team.
 
-Mention agreement on a shared data structure and steps of the literature review
+..
+   Mention agreement on a shared data structure and steps of the literature review
+   This chapter will teach you how to use the CoLRev workflow.
+   In CoLRev, you should only have to know the colrev status command and ...
 
 .. The main purpose of the three-step workflow is to make your work easier.
 
+The workflow, as illustrated in the following, consists of a three-step cycle that iterates from colrev status to a colrev operation to colrev validate and back to colrev status:
 
 .. figure:: ../../figures/workflow.svg
    :width: 600
@@ -23,14 +26,6 @@ CoLRev status
 The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
 It consists of the following (as shown below):
 
-- The **status section**, which provides an overview of the review project and reports the state of the records in the process
-
-- The **instructions section**, which provides situational instructions on the next steps of the review project (highlighted in yellow), versioning and collaboration, and the local CoLRev environment
-
-- The **checks section**, which checks consistency of file formats and structure
-
-
-`colrev status` should provide all necessary instructions for your project.
 
 .. code-block:: bash
 
@@ -42,91 +37,79 @@ It consists of the following (as shown below):
     PDF screen                  49 included     [716 excluded]
     Data synthesis              49 synthesized
 
-      Progress: |██████████████████▊    |82%
-
-   Review project
-
+   Next operation
      colrev dedupe
 
-   Versioning and collaboration
+   For more details: colrev status -v
 
-     Up-to-date
+- The **status** section, which provides an overview of the review project and reports the state of the records in the process
 
+- The **next operation** section, which provides situational instructions on the next steps of the review project (highlighted in yellow), versioning and collaboration, and the local CoLRev environment
 
-   Checks
-
-     ReviewManager.check_repo()  ...  Everything ok.
-     ReviewManager.format()      ...  Everything ok.
+In the background, colrev status also checks consistency of file formats and structure.
+Like all other operations, it also offers the possibility to display more detailed information (simply add ``-v``).
 
 
 CoLRev operation
 -------------------------------
 
-The status provides an overview of the six steps and corresponding operations.
-The sequence of steps and operations as well as the corresponding state transitions of records are standardized across CoLRev projects.
-Within this standardized structure, each operation can be configured.
-Through the settings, it is possible to rely on the default configuration (the CoLRev reference implementation with reasonable parameters), to adapt selected parameters, to plug in CoLRev packages (community packages or custom built ones).
-
-Step Problem formulation
-   - Operation: init
-Step Metadata retrieval
-   - Operation: search
-   - Operation: load
-   - Operation: prep
-   - Operation: dedupe
-Step Metadata prescreen
-   - Operation: prescreen
-Step PDFs
-   - Operation: pdf-get
-   - Operation: pdf-prep
-Step PDF screen
-   - Operation: screen
-Step Data
-   - Operation: data
-
-Detailed information on the steps and operations is available in `part 2 <2_operations>`_
+The methodological steps of the literature review are completed through the CoLRev operations (as illustrated `earlier <1_operations.html>`_).
+Once completed, operations can create new commits (versions).
+Detailed information on the steps and operations are provided on the following pages.
 
 CoLRev validate
 -------------------------------
 
-After each step, check and validate the changes using
+After each step, you can check and validate the changes using
 
 .. code-block:: bash
 
-      colrev validate
+      colrev validate .
 
-TODO : include example of colrev validate
+This operation displays the most substantial changes for the selected commit and allows users to undo selected changes efficiently.
+The following figure illustrates the validation for a prep operation:
+
+.. figure:: ../../figures/cli-validate.png
+   :width: 600
+   :align: center
+   :alt: Validation (prep)
+
+Validate is a general operation that allows users to validate changes in different types of commits (prep, dedupe, ...), but also changes of particular users, properties of the review or other (see `docs <technical_documentation/cli.html#colrev-validate>`_).
+
+Alternatively, you can also rely on git diff, or git GUIs such as gitk to validate all changes that were committed.
+If necessary, whole versions can be undone through git clients.
+CoLRev ensures that the data is always formated consistently and that diffs are readable (through pre-commit hooks).
+An overview of git GUI clients is available `here <https://git-scm.com/downloads/guis>`_.
 
 ..
    Using git, you can validate the individual changes and the commit report for each version.
    Instructions on how to correct and trace errors are available in the guidelines for the respective step.
 
-CoLRev also ensures that the git-diffs are readable:
+   CoLRev also ensures that the git-diffs are readable:
 
-TODO : update (e.g., colrev_origin, provenance fields)
 
-.. code-block:: diff
+..
+   .. code-block:: diff
 
-   @inproceedings{BurtchWattalGhose2012,
-      origin              = {scopus.bib/Burtch20123329},
-   -  status              = {md_imported},
-   +  status              = {md_prepared},
-   -  metadata_source     = {ORIGINAL},
-   +  metadata_source     = {CURATED},
-   -  author              = {Burtch, G. and Wattal, S. and Ghose, A.},
-   +  author              = {Burtch, Gordon and Ghose, Anindya and Wattal, Sunil},
-   -  booktitle           = {International Conference on Information Systems, ICIS 2012},
-   +  booktitle           = {International Conference on Information Systems},
-   -  title               = {An Empirical Examination of Cultural Biases in Interpersonal Economic Exchange},
-   +  title               = {An empirical examination of cultural biases in interpersonal economic exchange},
-      year                = {2012},
-      pages               = {3329--3346},
-      volume              = {4},
-      note                = {cited By 4},
-   +  url                 = {http://aisel.aisnet.org/icis2012/proceedings/GlobalIssues/6},
-   }
+      @inproceedings{BurtchWattalGhose2012,
+         colrev_origin                = {scopus.bib/Burtch20123329},
+      -  colrev_status              = {md_imported},
+      +  colrev_status              = {md_prepared},
+      -  colrev_masterdata_provenance     = {ORIGINAL},
+      +  colrev_masterdata_provenance     = {CURATED},
+      -  author              = {Burtch, G. and Wattal, S. and Ghose, A.},
+      +  author              = {Burtch, Gordon and Ghose, Anindya and Wattal, Sunil},
+      -  booktitle           = {International Conference on Information Systems, ICIS 2012},
+      +  booktitle           = {International Conference on Information Systems},
+      -  title               = {An Empirical Examination of Cultural Biases in Interpersonal Economic Exchange},
+      +  title               = {An empirical examination of cultural biases in interpersonal economic exchange},
+         year                = {2012},
+         pages               = {3329--3346},
+         volume              = {4},
+         note                = {cited By 4},
+      +  url                 = {http://aisel.aisnet.org/icis2012/proceedings/GlobalIssues/6},
+      }
 
-Note: you can also use a `git client of your choice <https://git-scm.com/downloads/guis>`_.
 
 ..
       A git commit report provides a higher-level overview of the repository's state:

@@ -5,7 +5,12 @@ colrev init
 -------------------------------
 
 
-:program:`colrev init` initializes a new CoLRev project. It should be called in an empty directory.
+:program:`colrev init` initializes a new CoLRev project. It requires an empty directory.
+With this operation, the directories and files, including the git history, are set up.
+Ideally, the selected review type is passed as a parameter.
+With this parameter, the ``settings.json`` file is created with reasonable defaults for the selected review type.
+For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
+The specific setup of the review types is available in the following table (currently pointing to the respective code that will be executed).
 
 .. code:: bash
 
@@ -22,14 +27,6 @@ Available review types:
         title='',
         ) }}
 
-
-Once the repository is set up, you can share it with your team (see `instructions <3_collaboration.html>`_).
-
-Instead of initializing a new repository, you can also pull an existing one:
-
-.. code:: bash
-
-	colrev pull https://github.com/u_name/repo_name.git
 
 ..
    Settings

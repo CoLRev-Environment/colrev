@@ -11,7 +11,7 @@ TODO : mention keep_backup_of_pdfs
 - Identify and remove additional pages and decorations (may interfere with machine learning tools)
 - Validate whether the PDF matches the record metadata and whether the PDF is complete (matches the number of pages)
 - Create unique PDF identifiers (pdf hashes) that can be used for retrieval and validation (e.g., in crowdsourcing)
-
+- Mention discard
 
 .. code:: bash
 

@@ -14,7 +14,7 @@ colrev search
 
 	colrev search [options]
 
-.. code:: bash
+.. code-block:: bash
 
     Short-form examples:
 

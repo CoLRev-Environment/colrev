@@ -492,7 +492,11 @@ class Validate(colrev.operation.Operation):
     ) -> dict:
         """Validate a commit (main entrypoint)"""
 
-        if "HEAD" not in scope and not re.match(r"[0-9a-f]{5,40}", scope):
+        if (
+            "HEAD" not in scope
+            and not re.match(r"[0-9a-f]{5,40}", scope)
+            and "." != scope
+        ):
             return self.__get_contributor_validation(contributor=scope)
 
         target_commit = self.__get_target_commit(scope=scope)

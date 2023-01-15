@@ -1,10 +1,10 @@
 
 .. _PDF screen:
 
-Step 5: Full-text screen
+Step 5: PDF screen
 ---------------------------------------------
 
-The full-text screen refers to the final inclusion or exclusion of records based on full-text documents.
+The PDF screen refers to the final inclusion or exclusion of records based on PDF documents.
 Screening criteria, which can be inclusion or exclusion criteria, are a means to making these decisions more transparent (e.g., in a PRISMA flow chart).
 Records are only included when none of the criteria is violated.
 
@@ -22,10 +22,8 @@ For example, this can be done using the `EXCLUDE annotation <https://github.com/
 Similar to the prescreen, it is possible to skip the screen temporarily (``colrev screen --include_all``) or permanently (``colrev screen --include_all_always``).
 This may be particularly useful in scientometric studies.
 
-The screen step corresponds to a single operation:
-
 .. toctree::
    :maxdepth: 3
    :caption: Operations
 
-   2_5_screen/screen
+   2_5_pdf_screen/screen

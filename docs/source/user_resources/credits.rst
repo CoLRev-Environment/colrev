@@ -2,9 +2,8 @@
 Credits
 ==================================
 
-The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
-
-Projects that power CoLRev and its extension scripts:
+The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements.
+Projects that power CoLRev:
 
 
 .. |pybtexactivity| image:: https://img.shields.io/github/commit-activity/y/live-clones/pybtex?color=green&style=plastic
@@ -55,6 +54,7 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
    * - Load
      - License
@@ -69,8 +69,9 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
-   * - Preparation
+   * - Preparation (metadata sources)
      - Field
      - Size
    * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
@@ -95,6 +96,7 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
    * - Dedupe
      - License
@@ -106,6 +108,7 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
    * - Prescreen
      - License
@@ -117,8 +120,9 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
-   * - PDF Retrieval
+   * - PDF retrieval
      - Field
      - Size
    * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
@@ -131,8 +135,9 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
-   * - PDF Preparation
+   * - PDF preparation
      - License
      - Activity
    * - `PDFMiner.six <https://github.com/pdfminer/pdfminer.six>`_ : PDF management
@@ -151,6 +156,7 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
    * - Data & analysis
      - License
@@ -165,6 +171,7 @@ Projects that power CoLRev and its extension scripts:
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
+   :class: fullwidthtable
 
    * - Core functionality
      - License

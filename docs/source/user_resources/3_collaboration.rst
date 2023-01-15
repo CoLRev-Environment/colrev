@@ -12,6 +12,12 @@ Giving team members access to a CoLRev repository
 
 Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
+Users can pull an existing one (with the url provided by the project manager):
+
+.. code:: bash
+
+	colrev pull https://github.com/u_name/repo_name.git
+
 
 Coordinating different modes of collaboration
 -----------------------------------------------------

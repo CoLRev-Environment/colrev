@@ -43,7 +43,7 @@ def __validate_dedupe(
             keys=keys,
         )
 
-        user_selection = input("Validate [y,n,d,q]?")
+        user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
         if "n" == user_selection:
             dedupe_operation.unmerge_records(
@@ -93,7 +93,7 @@ def __validate_prep(
             keys=keys,
         )
 
-        user_selection = input("Validate [y,n,d,q]?")
+        user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
         if "n" == user_selection:
             validate_operation.review_manager.dataset.save_records_dict(

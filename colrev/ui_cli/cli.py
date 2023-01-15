@@ -1597,7 +1597,10 @@ def data(
     help="Change score threshold for changes to display.",
 )
 @click.option(
-    "--properties", is_flag=True, default=False, help="Git tree hash to validate."
+    "--properties",
+    is_flag=True,
+    default=False,
+    help="Flag indicating whether to validate the review properties.",
 )
 @click.option(
     "-v",
@@ -1625,6 +1628,7 @@ def validate(
 ) -> None:
     """Validate changes in the given commit (scope)
 
+    \b
     The validation scope argument can be
     - a commit-sha,
     - a commit tree,
