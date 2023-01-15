@@ -283,7 +283,6 @@ class ReviewManager:
         manual_author: bool = False,
         script_call: str = "",
         saved_args: dict = None,
-        realtime_override: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
@@ -294,7 +293,6 @@ class ReviewManager:
             manual_author=manual_author,
             script_name=script_call,
             saved_args=saved_args,
-            realtime_override=realtime_override,
         )
         ret = commit.create()
         return ret

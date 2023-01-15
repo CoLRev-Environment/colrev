@@ -73,9 +73,7 @@ class Service:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
 
-        # assert "realtime" == review_manager.settings.project.review_type
-
-        print("Starting realtime CoLRev service...")
+        print("Starting CoLRev service...")
 
         self.review_manager = review_manager
 

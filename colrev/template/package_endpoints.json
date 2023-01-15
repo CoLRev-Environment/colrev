@@ -49,12 +49,6 @@
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.realtime",
-            "endpoint": "colrev.ops.built_in.review_types.realtime.RealTimeReview",
-            "short_description": "Realtime review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/realtime.py>`_"
-        },
-        {
             "package_endpoint_identifier": "colrev_built_in.scientometric",
             "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview",
             "short_description": "Scientometric study",

@@ -34,12 +34,10 @@ class Commit:
         manual_author: bool,
         script_name: str,
         saved_args: dict = None,
-        realtime_override: bool = False,
     ) -> None:
 
         self.review_manager = review_manager
         self.manual_author = manual_author
-        self.realtime_override = realtime_override
 
         self.msg = msg
         self.script_name = self.__parse_script_name(script_name=script_name)
@@ -198,12 +196,6 @@ class Commit:
 
     def create(self) -> bool:
         """Create a commit (including the commit message and details)"""
-
-        if (
-            "realtime" == self.review_manager.settings.project.review_type
-            and not self.realtime_override
-        ):
-            return False
 
         if self.review_manager.dataset.has_changes():
             self.review_manager.logger.debug("Prepare commit: checks and updates")

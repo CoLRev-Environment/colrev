@@ -34,7 +34,6 @@ colrev.ops.built\_in.review\_types
    colrev.ops.built_in.review_types.meta_analysis
    colrev.ops.built_in.review_types.narrative_review
    colrev.ops.built_in.review_types.qualitative_systematic_review
-   colrev.ops.built_in.review_types.realtime
    colrev.ops.built_in.review_types.scientometric
    colrev.ops.built_in.review_types.scoping_review
    colrev.ops.built_in.review_types.theoretical_review

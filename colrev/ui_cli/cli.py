@@ -106,7 +106,8 @@ def main(ctx: click.core.Context) -> None:
 @click.option(
     "--type",
     type=str,
-    help="Review type (e.g., literature_review (default), curated_masterdata, realtime)",
+    default="literature_review",
+    help="Review type (e.g., literature_review (default), scoping_review, theoretical_review)",
 )
 @click.option(
     "--example",
@@ -150,15 +151,6 @@ def init(
     import colrev.ui_web.settings_editor
 
     try:
-
-        if not type:
-            # print(
-            #     "TODO: open review type selector (option to open settings editor next)"
-            # )
-            # # the review selector should simply call the init (with a review_type parameter)
-            # # we may also pass the title/review objectives
-            # return
-            type = "literature_review"
 
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
@@ -2330,9 +2322,7 @@ def service(
 
     if review_manager.dataset.has_changes():
         if "y" == input("Commit current changes (y/n)?"):
-            review_manager.create_commit(
-                msg="Update (work on realtime review)", realtime_override=True
-            )
+            review_manager.create_commit(msg="Update (using CoLRev service)")
     else:
         print("No changes to commit")
 

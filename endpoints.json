@@ -286,9 +286,6 @@
             {"package_endpoint_identifier": "colrev_built_in.curated_masterdata",
              "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata"
             },
-            {"package_endpoint_identifier": "colrev_built_in.realtime",
-             "endpoint": "colrev.ops.built_in.review_types.realtime.RealTimeReview"
-            },
             {"package_endpoint_identifier": "colrev_built_in.literature_review",
              "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview"
             },

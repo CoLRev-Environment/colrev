@@ -131,10 +131,7 @@ class Operation:
     def check_precondition(self) -> None:
         """Check the operation precondition"""
 
-        if (
-            self.force_mode
-            or "realtime" == self.review_manager.settings.project.review_type
-        ):
+        if self.force_mode:
             return
 
         if OperationsType.load == self.type:
