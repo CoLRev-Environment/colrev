@@ -650,12 +650,13 @@ class LocalIndex:
 
         record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
 
-        identifier_string = (
-            record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
-            + "#"
-            + record_dict["ID"]
-        )
-        record_dict["curation_ID"] = identifier_string
+        if "CURATED" in record_dict["colrev_masterdata_provenance"]:
+            identifier_string = (
+                record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
+                + "#"
+                + record_dict["ID"]
+            )
+            record_dict["curation_ID"] = identifier_string
 
         return record_dict
 
@@ -964,26 +965,24 @@ class LocalIndex:
                 for x in check_operation.review_manager.settings.data.data_package_endpoints
                 if x["endpoint"] == "colrev_built_in.colrev_curation"
             ]
-            if not curation_endpoints:
-                return
-            curation_endpoint = curation_endpoints[0]
+            if curation_endpoints:
+                curation_endpoint = curation_endpoints[0]
+                # Set masterdata_provenace to CURATED:{url}
+                curation_url = curation_endpoint["curation_url"]
+                if check_operation.review_manager.settings.is_curated_masterdata_repo():
+                    for record in records.values():
+                        record.update(
+                            colrev_masterdata_provenance=f"CURATED:{curation_url};;"
+                        )
 
-            # Set masterdata_provenace to CURATED:{url}
-            curation_url = curation_endpoint["curation_url"]
-            if check_operation.review_manager.settings.is_curated_masterdata_repo():
-                for record in records.values():
-                    record.update(
-                        colrev_masterdata_provenance=f"CURATED:{curation_url};;"
-                    )
+                # Add curation_url to curated fields (provenance)
+                curated_fields = curation_endpoint["curated_fields"]
+                for curated_field in curated_fields:
 
-            # Add curation_url to curated fields (provenance)
-            curated_fields = curation_endpoint["curated_fields"]
-            for curated_field in curated_fields:
-
-                for record_dict in records.values():
-                    colrev.record.Record(data=record_dict).add_data_provenance(
-                        key=curated_field, source=f"CURATED:{curation_url}"
-                    )
+                    for record_dict in records.values():
+                        colrev.record.Record(data=record_dict).add_data_provenance(
+                            key=curated_field, source=f"CURATED:{curation_url}"
+                        )
 
             # Set absolute file paths (for simpler retrieval)
             for record in records.values():
