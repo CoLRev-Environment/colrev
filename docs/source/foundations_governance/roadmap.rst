@@ -15,7 +15,17 @@ Upcoming
 - Synchronous session support
 - `Additional SearchSources <https://github.com/geritwagner/colrev/issues/106>`_
 
-2023-01-01: v0.7.0 (expected)
+2023-04-01: v0.8.0 (expected)
+--------------------------------------
+
+- User tests
+- Unit tests (extension and efficiency)
+- Documentation (methods)
+- Advanced validation options (e.g., for prescreen)
+- Data endpoint for bibliography exports
+- R package
+
+2023-01-16: v0.7.0
 --------------------------------------
 
 - Unit tests

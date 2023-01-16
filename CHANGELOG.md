@@ -15,6 +15,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+### [0.7.0] - 2023-01-16
+
+### Added
+
+- Add retrieve and pdfs as high-level operations
+- Metadata preparation can add records to separate origin feeds
+- Initial package manager functionality (registering packages and displaying them in the docs)
+- Search: update of records and propagation of changes
+- Several SearchSources (including SearchSource query validation)
+- Revisions of CLI (verbose mode, user feedback)
+- Colrev merge (reconciliation coding when merging git branches)
+- dedupe --merge/--unmerge
+- Integrated colrev pre-commit hooks
+- PRISMA diagram (data endpoint)
+- Obsidian (data endpoint)
+- Preparation: not-in-toc exception/warning
+- Setup of pytests
+
+### Changed
+
+- Curated records are now explicitly identified through curation_IDs
+- Revise colrev validate (commits, users, properties)
+- Detailed advisor (using get_advice() for data endpoints)
+- Performance improvements and simplification of status (cli)
+- Moved correction functionality to SearchSources (refactored correction path)
+- Preparation: simplified preparation rounds (default settings)
+- Retrieve TEIs through local_index (if available) instead of recreating it
+- Replace pathos by Threadpool
+- Revise the documentation
+- Revise and extend exceptions
+
+### Removed
+
+- Remove persistent colrev-ids
+- Remove realtime review
+- Dependencies ansiwrap and p-tqdm
+
+### Fixed
+
+- **kwargs calls in ReviewManager
+- Indexing of non-curated records
+- Address special cases in dedupe (active learning)
+
 ### [0.6.0] - 2022-10-12
 
 ### Added

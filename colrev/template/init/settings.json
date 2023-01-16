@@ -8,7 +8,7 @@
         "id_pattern": "three_authors_year",
         "share_stat_req": "processed",
         "delay_automated_processing": true,
-        "colrev_version": "0.6.0"
+        "colrev_version": "0.7.0"
     },
     "sources": [
         {

@@ -60,7 +60,8 @@ class Upgrade(colrev.operation.Operation):
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"from": "0.4.0", "to": "0.5.0", "script": self.__migrate_0_4_0},
             {"from": "0.5.0", "to": "0.6.0", "script": self.__migrate_0_5_0},
-            {"from": "0.6.0", "to": upcoming_version, "script": self.__migrate_0_6_0},
+            {"from": "0.6.0", "to": "0.7.0", "script": self.__migrate_0_6_0},
+            {"from": "0.7.0", "to": upcoming_version, "script": self.__migrate_0_7_0},
         ]
 
         # Start with the first step if the version is older:
@@ -1037,6 +1038,9 @@ class Upgrade(colrev.operation.Operation):
                 new_string="CURATED:https://github.com/CoLRev-curations",
             )
             self.review_manager.dataset.add_changes(path=bib_file)
+
+    def __migrate_0_7_0(self) -> None:
+        pass
 
 
 if __name__ == "__main__":

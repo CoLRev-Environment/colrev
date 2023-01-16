@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.6.0" # automatically injected by poetry-dynamic-versioning
+version = "0.7.0" # automatically injected by poetry-dynamic-versioning
 description = "Core engine for CoLRev (colaborative literature reviews)"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
