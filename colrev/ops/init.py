@@ -89,7 +89,8 @@ class Initializer:
 
         self.__create_commit(saved_args=saved_args)
         if not example:
-            self.__register_repo()
+            if "pytest" not in os.getcwd():
+                self.__register_repo()
         if local_pdf_collection:
             self.__create_local_pdf_collection()
 
