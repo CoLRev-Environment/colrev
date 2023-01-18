@@ -23,6 +23,17 @@ To set the data format, run any (combination) of the following:
     colrev data --add colrev_built_in.prisma
     ...
 
+To export the bibliography in different formats, run any of the following:
+
+.. code:: bash
+
+    colrev data --add endnote
+    colrev data --add zotero
+    colrev data --add jabref
+    colrev data --add mendeley
+    colrev data --add citavi
+    colrev data --add rdf_bibliontology
+
 Depending on the data format, the :program:`colrev data` command
 
 - adds new records to the manuscript (paper.md, after the <!-- NEW_RECORD_SOURCE --> marker)
