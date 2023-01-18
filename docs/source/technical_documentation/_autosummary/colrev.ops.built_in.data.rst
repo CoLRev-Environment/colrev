@@ -33,4 +33,3 @@ colrev.ops.built\_in.data
    colrev.ops.built_in.data.obsidian
    colrev.ops.built_in.data.prisma
    colrev.ops.built_in.data.structured
-   colrev.ops.built_in.data.zettlr

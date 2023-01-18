@@ -668,12 +668,6 @@
             "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
             "short_description": "Summarize the literature in a structured data extraction (a table)",
             "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/structured.py>`_"
-        },
-        {
-            "package_endpoint_identifier": "colrev_built_in.zettlr",
-            "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr",
-            "short_description": "Export the sample into a Zettlr database",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/zettlr.py>`_"
         }
     ]
 }

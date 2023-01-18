@@ -195,9 +195,6 @@
             {"package_endpoint_identifier": "colrev_built_in.github_pages",
              "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages"
             },
-            {"package_endpoint_identifier": "colrev_built_in.zettlr",
-             "endpoint": "colrev.ops.built_in.data.zettlr.Zettlr"
-            },
             {"package_endpoint_identifier": "colrev_built_in.obsidian",
              "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian"
             },
