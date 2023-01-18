@@ -26,3 +26,8 @@ colrev.ops.built\_in.data.bibliography\_export.BibFormats
    .. autosummary::
 
       ~BibFormats.endnote
+      ~BibFormats.zotero
+      ~BibFormats.jabref
+      ~BibFormats.mendeley
+      ~BibFormats.citavi
+      ~BibFormats.rdf_bibliontology

@@ -2,6 +2,7 @@
 """Scripts to add packages using the cli."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import requests
@@ -12,12 +13,11 @@ import colrev.env.package_manager
 def add_data(
     *,
     data_operation: colrev.ops.data.Data,
-    review_manager: colrev.review_manager.ReviewManager,
     add: str,
 ) -> None:
     """Add a data package_endpoint"""
 
-    package_manager = review_manager.get_package_manager()
+    package_manager = data_operation.review_manager.get_package_manager()
     available_data_endpoints = package_manager.discover_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data
     )
@@ -70,11 +70,28 @@ def add_data(
         )
 
         # Note : reload updated settings
-        review_manager = colrev.review_manager.ReviewManager(force_mode=True)
-        data_operation = colrev.ops.data.Data(review_manager=review_manager)
+    elif add in ["endnote", "jabref", "mendeley"]:
+        package_endpoints = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.data,
+            selected_packages=[{"endpoint": "colrev_built_in.bibliography_export"}],
+            operation=data_operation,
+        )
+        endpoint = package_endpoints["colrev_built_in.bibliography_export"]
+        default_endpoint_conf = endpoint.get_default_setup()
+        default_endpoint_conf["bib_format"] = add
+        data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
+        data_operation.review_manager.create_commit(
+            msg="Add data endpoint",
+            script_call="colrev data",
+        )
+
     else:
         print("Data format not available")
+        return
 
+    review_manager = colrev.review_manager.ReviewManager(force_mode=True)
+    data_operation = colrev.ops.data.Data(review_manager=review_manager)
+    # TODO : run only the added endpoints (selection_str like in search?)
     data_ret = data_operation.main()
     if data_ret["ask_to_commit"]:
         if "y" == input("Create commit (y/n)?"):
