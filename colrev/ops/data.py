@@ -219,13 +219,20 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def main(self, *, records: dict = None, silent_mode: bool = False) -> dict:
+    def main(
+        self,
+        *,
+        selection_list: list = None,
+        records: dict = None,
+        silent_mode: bool = False,
+    ) -> dict:
         """Data operation (main entrypoint)
 
         silent_mode: for review_manager checks
         """
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         if not silent_mode:
             self.review_manager.logger.info("Data")
@@ -267,6 +274,12 @@ class Data(colrev.operation.Operation):
         for (
             data_package_endpoint
         ) in self.review_manager.settings.data.data_package_endpoints:
+            if selection_list:
+                if not any(
+                    x in data_package_endpoint["endpoint"] for x in selection_list
+                ):
+                    continue
+
             if not silent_mode:
                 print()
                 self.review_manager.logger.info(

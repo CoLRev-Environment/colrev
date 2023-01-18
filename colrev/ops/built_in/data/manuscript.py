@@ -464,7 +464,7 @@ class Manuscript(JsonSchemaMixin):
             if not silent_mode:
                 review_manager.report_logger.info("Update manuscript")
                 review_manager.logger.info(
-                    f"Update manuscript ({self.settings.paper_path.name}"
+                    f"Update manuscript ({self.settings.paper_path.name})"
                 )
             self.__add_missing_records_to_manuscript(
                 review_manager=review_manager,
