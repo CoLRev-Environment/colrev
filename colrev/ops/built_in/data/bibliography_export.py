@@ -2,6 +2,7 @@
 """Export of references in different bibliographical formats as a data operation"""
 from __future__ import annotations
 
+import copy
 import json
 from dataclasses import dataclass
 from enum import Enum
@@ -39,7 +40,12 @@ class BibFormats(Enum):
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
 
-    ZOTERO_FORMATS = [BibFormats.endnote, BibFormats.mendeley]
+    ZOTERO_FORMATS = [
+        BibFormats.endnote,
+        BibFormats.mendeley,
+        BibFormats.rdf_bibliontology,
+    ]
+    PYBTEX_FORMATS = [BibFormats.citavi, BibFormats.jabref, BibFormats.zotero]
 
     @dataclass
     class BibliographyExportSettings(
@@ -49,23 +55,23 @@ class BibliographyExport(JsonSchemaMixin):
 
         endpoint: str
         version: str
-        incremental: bool
         bib_format: BibFormats
+
+    # A challenge for the incremental mode is that data is run every time
+    # the status runs (potentially creating very small increments)
 
     settings_class = BibliographyExportSettings
 
     def __init__(
         self,
         *,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
 
         if "bib_format" not in settings:
             settings["bib_format"] = "endnote"
         settings["bib_format"] = BibFormats[settings["bib_format"]]
-        if "incremental" not in settings:
-            settings["incremental"] = False
         if "version" not in settings:
             settings["version"] = "0.1"
 
@@ -73,11 +79,8 @@ class BibliographyExport(JsonSchemaMixin):
 
         data_operation.review_manager.get_zotero_translation_service()
 
-        # TODO : update the following:
-        self.endpoint_path = data_operation.review_manager.output_dir / Path("endnote")
+        self.endpoint_path = data_operation.review_manager.output_dir
 
-    # gh_issue https://github.com/geritwagner/colrev/issues/70
-    # change to DefaultSettings structure...
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         endnote_endpoint_details = {
@@ -87,29 +90,45 @@ class BibliographyExport(JsonSchemaMixin):
         }
         return endnote_endpoint_details
 
-    def __zotero_conversion(
+    def __pybtex_conversion(
         self, *, data_operation: colrev.ops.data.Data, selected_records: list
     ) -> None:
+        data_operation.review_manager.logger.info(
+            f"Export {self.settings.bib_format.name}"
+        )
 
-        # TODO : check if file already available / incremental
+        if self.settings.bib_format is BibFormats.zotero:
+            export_filepath = self.endpoint_path / Path("zotero.bib")
 
-        # Strange: comparing BibFormats.endnote to self.settings.bib_format
-        # does not work...
+        elif self.settings.bib_format is BibFormats.jabref:
+            export_filepath = self.endpoint_path / Path("jabref.bib")
+
+        elif self.settings.bib_format is BibFormats.citavi:
+            export_filepath = self.endpoint_path / Path("citavi.bib")
+
+        data_operation.review_manager.dataset.save_records_dict_to_file(
+            records=selected_records, save_path=export_filepath
+        )
+        data_operation.review_manager.dataset.add_changes(path=export_filepath)
+        data_operation.review_manager.create_commit(
+            msg=f"Create {self.settings.bib_format.name} bibliography",
+            script_call="colrev data",
+        )
+
+    def __zotero_conversion(
+        self, *, data_operation: colrev.ops.data.Data, selected_records: dict
+    ) -> None:
+
+        data_operation.review_manager.logger.info(
+            f"Export {self.settings.bib_format.name}"
+        )
+
         # https://github.com/zotero/translation-server/blob/master/src/formats.js
-        if "endnote" == self.settings.bib_format.name:
-            export_filepath = self.endpoint_path / Path("export_part.enl")
+        if self.settings.bib_format is BibFormats.endnote:
+            export_filepath = self.endpoint_path / Path("endnote.enl")
             selected_format = "refer"
 
-        elif "zotero" == self.settings.bib_format.name:
-            export_filepath = self.endpoint_path / Path("zotero.bib")
-            # TODO : IDs are not preserved when using bilatex conversion through zotero
-            selected_format = "biblatex"
-
-        elif "jabref" == self.settings.bib_format.name:
-            export_filepath = self.endpoint_path / Path("jabref.bib")
-            selected_format = "biblatex"
-
-        elif "mendeley" == self.settings.bib_format.name:
+        elif self.settings.bib_format is BibFormats.mendeley:
             export_filepath = self.endpoint_path / Path("mendeley.ris")
             selected_format = "ris"
 
@@ -149,9 +168,15 @@ class BibliographyExport(JsonSchemaMixin):
                 json=json_content,
                 timeout=30,
             )
+            # overwrite the file if it exists
             with open(export_filepath, "w", encoding="utf-8") as export_file:
                 export_file.write(export.content.decode("utf-8"))
             data_operation.review_manager.dataset.add_changes(path=export_filepath)
+
+            data_operation.review_manager.create_commit(
+                msg=f"Create {self.settings.bib_format.name} bibliography",
+                script_call="colrev data",
+            )
 
         except Exception as exc:
             raise colrev_exceptions.ImportException(
@@ -169,9 +194,7 @@ class BibliographyExport(JsonSchemaMixin):
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 
-        data_operation.review_manager.logger.info("Export all")
-
-        selected_records = {
+        selected_records_original = {
             ID: r
             for ID, r in records.items()
             if r["colrev_status"]
@@ -180,9 +203,26 @@ class BibliographyExport(JsonSchemaMixin):
                 colrev.record.RecordState.rev_synthesized,
             ]
         }
+        selected_records = copy.deepcopy(selected_records_original)
+        for record in selected_records.values():
+            for key_candidate in list(record.keys()):
+                if key_candidate not in colrev.record.Record.identifying_field_keys + [
+                    "ENTRYTYPE",
+                    "ID",
+                    "file",
+                    "link",
+                    "url",
+                ]:
+                    del record[key_candidate]
+            # TBD: maybe resolve file paths (symlinks to absolute paths)?
 
-        if self.settings.bib_format in self.ZOTERO_FORMATS:
+        if any(self.settings.bib_format is x for x in self.ZOTERO_FORMATS):
             self.__zotero_conversion(
+                data_operation=data_operation, selected_records=selected_records
+            )
+
+        elif any(self.settings.bib_format is x for x in self.PYBTEX_FORMATS):
+            self.__pybtex_conversion(
                 data_operation=data_operation, selected_records=selected_records
             )
 
@@ -190,62 +230,6 @@ class BibliographyExport(JsonSchemaMixin):
             data_operation.review_manager.logger.info(
                 f"Not yet implemented ({self.settings.bib_format})"
             )
-
-    # if not any(Path(self.endpoint_path).iterdir()):
-    #     self.__export_bibliography_full(
-    #         data_operation=data_operation, records=records
-    #     )
-
-    # else:
-    #     self.__export_bibliography_incremental(
-    #         data_operation=data_operation, records=records
-    #     )
-
-    # def __export_bibliography_incremental(
-    #     self, *, data_operation: colrev.ops.data.Data, records: dict
-    # ) -> None:
-
-    #     file_numbers, exported_ids = [], []
-    #     for enl_file_path in self.endpoint_path.glob("*.enl"):
-    #         file_numbers.append(int(re.findall(r"\d+", str(enl_file_path.name))[0]))
-    #         with open(enl_file_path, encoding="utf-8") as enl_file:
-    #             for line in enl_file:
-    #                 if "%F" == line[:2]:
-    #                     record_id = line[3:].lstrip().rstrip()
-    #                     exported_ids.append(record_id)
-
-    #     data_operation.review_manager.logger.info(
-    #         "IDs that have already been exported (in the other export files):"
-    #         f" {exported_ids}"
-    #     )
-
-    #     selected_records = {
-    #         ID: r
-    #         for ID, r in records.items()
-    #         if r["colrev_status"]
-    #         in [
-    #             colrev.record.RecordState.rev_included,
-    #             colrev.record.RecordState.rev_synthesized,
-    #         ]
-    #     }
-
-    #     if len(selected_records) > 0:
-
-    #         enl_data = self.__zotero_conversion(
-    #             data_operation=data_operation, selected_records=selected_records
-    #         )
-
-    #         next_file_number = str(max(file_numbers) + 1)
-    #         export_filepath = self.endpoint_path / Path(
-    #             f"export_part{next_file_number}.enl"
-    #         )
-    #         print(export_filepath)
-    #         with open(export_filepath, "w", encoding="utf-8") as file:
-    #             file.write(enl_data.decode("utf-8"))
-    #         data_operation.review_manager.dataset.add_changes(path=export_filepath)
-
-    #     else:
-    #         data_operation.review_manager.logger.info("No additional records to export")
 
     def update_record_status_matrix(
         self,

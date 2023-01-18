@@ -2,12 +2,13 @@
 """Scripts to add packages using the cli."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import requests
 
 import colrev.env.package_manager
+import colrev.ops.built_in.data.bibliography_export
+import colrev.ui_cli.cli_colors as colors
 
 
 def add_data(
@@ -21,7 +22,7 @@ def add_data(
     available_data_endpoints = package_manager.discover_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data
     )
-
+    data_operation.review_manager.logger.info(f"Add {add} data endpoint")
     if add in available_data_endpoints:
         package_endpoints = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.data,
@@ -69,8 +70,9 @@ def add_data(
             script_call="colrev data",
         )
 
-        # Note : reload updated settings
-    elif add in ["endnote", "jabref", "mendeley"]:
+    elif add in [
+        e.value for e in colrev.ops.built_in.data.bibliography_export.BibFormats
+    ]:
         package_endpoints = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.data,
             selected_packages=[{"endpoint": "colrev_built_in.bibliography_export"}],
@@ -81,21 +83,23 @@ def add_data(
         default_endpoint_conf["bib_format"] = add
         data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
         data_operation.review_manager.create_commit(
-            msg="Add data endpoint",
+            msg=f"Add {add} data endpoint",
             script_call="colrev data",
         )
-
     else:
         print("Data format not available")
         return
 
+    # Note : reload updated settings
     review_manager = colrev.review_manager.ReviewManager(force_mode=True)
     data_operation = colrev.ops.data.Data(review_manager=review_manager)
-    # TODO : run only the added endpoints (selection_str like in search?)
-    data_ret = data_operation.main()
-    if data_ret["ask_to_commit"]:
-        if "y" == input("Create commit (y/n)?"):
-            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+
+    data_operation.main(
+        selection_list=["colrev_built_in.bibliography_export"], silent_mode=True
+    )
+    data_operation.review_manager.logger.info(
+        f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
+    )
 
 
 if __name__ == "__main__":

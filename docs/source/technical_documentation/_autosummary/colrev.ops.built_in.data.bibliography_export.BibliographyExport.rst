@@ -38,4 +38,5 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
 
    .. autosummary::
 
+      ~BibliographyExport.PYBTEX_FORMATS
       ~BibliographyExport.ZOTERO_FORMATS
