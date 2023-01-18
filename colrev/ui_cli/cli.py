@@ -373,7 +373,13 @@ def search(
         search_operation = review_manager.get_search_operation()
 
         if add:
-            search_operation.add_source(query=add)
+            # pylint: disable=import-outside-toplevel
+            import colrev.ui_cli.add_packages
+
+            colrev.ui_cli.add_packages.add_search_source(
+                search_operation=search_operation,
+                query=add,
+            )
             return
         if view:
             search_operation.view_sources()
