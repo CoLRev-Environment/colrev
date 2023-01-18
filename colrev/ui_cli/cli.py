@@ -1553,13 +1553,10 @@ def data(
             return
 
         if add:
-
             colrev.ui_cli.add_packages.add_data(
                 data_operation=data_operation,
-                review_manager=review_manager,
                 add=add,
             )
-
             return
 
         ret = data_operation.main()

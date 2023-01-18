@@ -29,3 +29,14 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.to_json
       ~BibliographyExport.update_data
       ~BibliographyExport.update_record_status_matrix
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~BibliographyExport.PYBTEX_FORMATS
+      ~BibliographyExport.ZOTERO_FORMATS
