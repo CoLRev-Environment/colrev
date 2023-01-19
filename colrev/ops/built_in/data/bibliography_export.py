@@ -91,7 +91,7 @@ class BibliographyExport(JsonSchemaMixin):
         return endnote_endpoint_details
 
     def __pybtex_conversion(
-        self, *, data_operation: colrev.ops.data.Data, selected_records: list
+        self, *, data_operation: colrev.ops.data.Data, selected_records: dict
     ) -> None:
         data_operation.review_manager.logger.info(
             f"Export {self.settings.bib_format.name}"

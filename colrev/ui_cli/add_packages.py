@@ -14,7 +14,7 @@ import colrev.ui_cli.cli_colors as colors
 
 def add_search_source(
     *,
-    search_operation: colrev.ops.search.search,
+    search_operation: colrev.ops.search.Search,
     query: str,
 ) -> None:
     """Add a search source package_endpoint"""
@@ -238,7 +238,7 @@ def add_data(
             operation=data_operation,
         )
         endpoint = package_endpoints["colrev_built_in.bibliography_export"]
-        default_endpoint_conf = endpoint.get_default_setup()
+        default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
         default_endpoint_conf["bib_format"] = add
         data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
         data_operation.review_manager.create_commit(
