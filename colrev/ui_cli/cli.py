@@ -366,6 +366,9 @@ def search(
 ) -> None:
     """Search for records"""
 
+    # pylint: disable=import-outside-toplevel
+    import colrev.ui_cli.add_packages
+
     try:
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose
@@ -373,24 +376,21 @@ def search(
         search_operation = review_manager.get_search_operation()
 
         if add:
-            # pylint: disable=import-outside-toplevel
-            import colrev.ui_cli.add_packages
-
             colrev.ui_cli.add_packages.add_search_source(
                 search_operation=search_operation,
                 query=add,
             )
-            return
-        if view:
+
+        elif view:
             search_operation.view_sources()
-            return
-        if setup_custom_script:
+
+        elif setup_custom_script:
             search_operation.setup_custom_script()
             print("Activated custom_search_script.py.")
             print("Please update the source in settings.json and commit.")
-            return
 
-        search_operation.main(selection_str=selected, update_only=update_only)
+        else:
+            search_operation.main(selection_str=selected, update_only=update_only)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
@@ -2547,7 +2547,6 @@ def man(
     """Show the CoLRev manual."""
 
     # pylint: disable=import-outside-toplevel
-
     import webbrowser
 
     webbrowser.open(
