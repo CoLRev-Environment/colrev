@@ -16,18 +16,18 @@ if TYPE_CHECKING:
 __FULL_SCREEN_EXPLANATION = (
     "Explanation: Screening criteria can be used "
     + """to include or exclude records based on specific reasons.
-Example 1:
+Example:
     - short name        : behavioral_treatment
-    - criterion type    : inclusion_criterion
+    - criterion type    : inclusion_criterion or exclusion_criterion
     - explanation       : Include records reporting on behavioral treatment
-
-Example 2:
-    - short name        : non_experimental_method
-    - criterion type    : exclusion_criterion
-    - explanation       : Exclude records reporting on non-experimental designs
 
 Add a screening criterion [y,n]?"""
 )
+
+# Example 2:
+#     - short name        : non_experimental_method
+#     - criterion type    : exclusion_criterion
+#     - explanation       : Exclude records reporting on non-experimental designs
 
 
 def __get_add_screening_criterion_dialogue(*, screening_criteria: dict) -> str:

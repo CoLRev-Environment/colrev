@@ -2483,32 +2483,31 @@ class PrescreenRecord(Record):
 
     def __str__(self) -> str:
 
-        ret_str = (
-            f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
-            f"{self.data.get('author', 'no-author')}\n"
+        ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
+        ret_str += (
+            f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
+            f"\n  {self.data.get('author', 'no-author')}"
         )
         if "article" == self.data["ENTRYTYPE"]:
             ret_str += (
-                f"{self.data.get('journal', 'no-journal')} "
+                f"\n  {self.data.get('journal', 'no-journal')} "
                 f"({self.data.get('year', 'no-year')}) "
                 f"{self.data.get('volume', 'no-volume')}"
-                f"({self.data.get('number', '')})\n"
+                f"({self.data.get('number', '')})"
             )
         elif "inproceedings" == self.data["ENTRYTYPE"]:
-            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
+            ret_str += f"\n  {self.data.get('booktitle', 'no-booktitle')}"
         if "abstract" in self.data:
             lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
             if lines:
-                ret_str += f"\nAbstract: {lines.pop(0)}\n"
-                ret_str += "\n".join(lines) + "\n"
+                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
+                ret_str += "\n  ".join(lines) + ""
 
         if "url" in self.data:
-            ret_str += f"\nurl: {self.data['url']}\n"
+            ret_str += f"\n  url: {self.data['url']}"
 
         if "file" in self.data:
-            ret_str += f"\nfile: {self.data['file']}\n"
-
-        ret_str += f"\n{self.data['ID']} ({self.data['ENTRYTYPE']})\n"
+            ret_str += f"\n  file: {self.data['file']}"
 
         return ret_str
 

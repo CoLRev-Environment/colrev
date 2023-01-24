@@ -859,8 +859,8 @@ def prescreen(
         else:
             review_manager.logger.info("Prescreen")
             review_manager.logger.info(
-                "Exclude irrelevant records based on metadata (titles/abstracts) "
-                "and provisionally retain the remaining records."
+                "Exclude irrelevant records based on metadata (i.e., titles and abstracts). "
+                "Remaining records are retained provisionally."
             )
             prescreen_operation.main(split_str=split)
 

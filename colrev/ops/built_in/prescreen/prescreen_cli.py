@@ -72,16 +72,16 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                     continue
 
             prescreen_record = colrev.record.PrescreenRecord(data=record_dict)
-
-            print("\n\n")
-            print(prescreen_record)
-
             ret, inclusion_decision_str = "NA", "NA"
             i += 1
 
+            print("\n\n")
+            print(f"Record {i} (of {stat_len})\n")
+            print(prescreen_record)
+
             while ret not in ["y", "n", "s", "q"]:
                 ret = input(
-                    f"({i}/{stat_len}) Include this record "
+                    "\nInclude this record "
                     "[enter y,n,q,s for yes,no,quit,skip to decide later]? "
                 )
                 if "q" == ret:

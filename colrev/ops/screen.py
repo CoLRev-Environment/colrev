@@ -311,7 +311,7 @@ class Screen(colrev.operation.Operation):
         self.review_manager.logger.info("Screen")
         self.review_manager.logger.info(
             "In the screen, records are included or excluded "
-            "based on the full-text (PDF) and screening criteria."
+            "based on the PDFs and screening criteria."
         )
 
         # pylint: disable=duplicate-code

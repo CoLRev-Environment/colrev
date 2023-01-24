@@ -563,7 +563,10 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.logger.info("Get PDFs")
         self.review_manager.logger.info(
-            "Get PDFs of prescreen-included records from local and remote PDF sources."
+            "Get PDFs of prescreen-included records from local and remote sources."
+        )
+        self.review_manager.logger.info(
+            f"PDFs are stored in the directory {colors.ORANGE}data/pdfs{colors.END}"
         )
 
         records = self.review_manager.dataset.load_records_dict()
@@ -573,6 +576,9 @@ class PDFGet(colrev.operation.Operation):
         pdf_get_data = self.__get_data()
 
         if pdf_get_data["nr_tasks"] > 0:
+            self.review_manager.logger.info(
+                "PDFs to get".ljust(38) + f'{pdf_get_data["nr_tasks"]} PDFs'
+            )
 
             pool = Pool(4)
             retrieved_record_list = pool.map(self.get_pdf, pdf_get_data["items"])
