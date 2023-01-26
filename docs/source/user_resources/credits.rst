@@ -91,7 +91,7 @@ Projects that power CoLRev:
      - > 20,000,000
    * - `CiteAs.org <https://citeas.org/>`_ (metadata on research software, datasets, etc.)
      - Cross-disciplinary
-     - ?
+     - Unknown
 
 .. list-table::
    :widths: 54 24 22
