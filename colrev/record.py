@@ -115,6 +115,8 @@ class Record:
         "colrev_data_provenance",
     ]
 
+    time_variant_fields = ["cited_by"]
+
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, *, data: dict) -> None:

@@ -84,7 +84,7 @@ class Search(colrev.operation.Operation):
         )
         print()
 
-        self.main(selection_str="all", update_only=False)
+        self.main(selection_str="all", rerun=False)
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
 
@@ -181,10 +181,12 @@ class Search(colrev.operation.Operation):
         record_dict: dict,
         prev_record_dict_version: dict,
         source: colrev.settings.SearchSource,
+        update_time_variant_fields: bool,
     ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
 
         changed = False
 
@@ -234,6 +236,12 @@ class Search(colrev.operation.Operation):
             )
 
             for key, value in record_dict.items():
+
+                if (
+                    not update_time_variant_fields
+                    and key in colrev.record.Record.time_variant_fields
+                ):
+                    continue
 
                 if key in ["curation_ID"]:
                     continue
@@ -306,7 +314,7 @@ class Search(colrev.operation.Operation):
 
         return changed
 
-    def main(self, *, selection_str: str = None, update_only: bool) -> None:
+    def main(self, *, selection_str: str = None, rerun: bool) -> None:
         """Search for records (main entrypoint)"""
 
         self.review_manager.logger.info("Search")
@@ -342,9 +350,7 @@ class Search(colrev.operation.Operation):
             )
 
             try:
-                endpoint.run_search(  # type: ignore
-                    search_operation=self, update_only=update_only
-                )
+                endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
             except requests.exceptions.ConnectionError as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     source.endpoint
@@ -422,6 +428,7 @@ class GeneralOriginFeed:
         # i.e., there is no need to store the source_identifier in the main records (redundantly)
         self.source_identifier = source_identifier
 
+        # Note: corresponds to rerun (in search.main() and run_search())
         self.update_only = update_only
         self.review_manager = review_manager
         self.origin_prefix = self.source.get_origin_prefix()
@@ -525,6 +532,19 @@ class GeneralOriginFeed:
             self.__available_ids[
                 feed_record_dict[self.source_identifier]
             ] = feed_record_dict["ID"]
+
+            if self.update_only:
+                # ignore time_variant_fields
+                # (otherwise, fields in recent records would be more up-to-date)
+                for key in colrev.record.Record.time_variant_fields:
+                    if key in self.feed_records[feed_record_dict["ID"]]:
+                        feed_record_dict[key] = self.feed_records[
+                            feed_record_dict["ID"]
+                        ][key]
+                    else:
+                        if key in feed_record_dict:
+                            del feed_record_dict[key]
+
             self.feed_records[feed_record_dict["ID"]] = feed_record_dict
 
         # Original record

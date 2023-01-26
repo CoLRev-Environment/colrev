@@ -7,6 +7,8 @@ colrev search
 - mention how to add papers suggested by colleagues (as recommended by methodologists)
 - Illustrate the different options: API (Crossref, Pubmed, ...), reference files (bibtex, enl, ris, ...), spreadsheets (xlsx, csv, ...), papers (PDFs), lists of references (md file or PDF reference sections), local-index, other colrev projects
 - types of sources should correspond to SearchSourceType
+- Per default, API-based searches only retrieve/add the most recent records. A full search and update of all records can be started with the --rerun flag.
+
 
 :program:`colrev search` retrieves search results from different `SearchSources <../6_sources.html>`_.
 

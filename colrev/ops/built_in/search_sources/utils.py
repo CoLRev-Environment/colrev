@@ -42,11 +42,11 @@ def json_to_record(*, item: dict) -> dict:
             retrieved_title = item["title"]
 
         if retrieved_title:
-            retrieved_title = retrieved_title.replace("\n", " ").rstrip().lstrip()
+            retrieved_title = retrieved_title.replace("\n", " ")
             retrieved_title = retrieved_title.replace("<scp>", "{")
             retrieved_title = retrieved_title.replace("</scp>", "}")
             retrieved_title = re.sub(r"<\/?[^>]*>", " ", retrieved_title)
-            retrieved_title = re.sub(r"\s+", " ", retrieved_title)
+            retrieved_title = re.sub(r"\s+", " ", retrieved_title).rstrip().lstrip()
             record_dict.update(title=retrieved_title)
 
     container_title = ""

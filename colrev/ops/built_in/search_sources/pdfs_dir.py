@@ -137,9 +137,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 load_str=target_db.read()
             )
 
-        records = {}
-        if search_operation.review_manager.dataset.records_file.is_file():
-            records = search_operation.review_manager.dataset.load_records_dict()
+        records = search_operation.review_manager.dataset.load_records_dict()
 
         to_remove: typing.List[str] = []
         files_removed = []
@@ -173,7 +171,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 records=search_rd, save_path=self.search_source.filename
             )
 
-        if search_operation.review_manager.dataset.records_file.is_file():
+        if records:
             for record_dict in records.values():
                 for origin_to_remove in to_remove:
                     if origin_to_remove in record_dict["colrev_origin"]:
@@ -437,7 +435,7 @@ class PDFSearchSource(JsonSchemaMixin):
         return record_dict
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
 
@@ -456,7 +454,7 @@ class PDFSearchSource(JsonSchemaMixin):
         pdfs_dir_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -579,6 +577,7 @@ class PDFSearchSource(JsonSchemaMixin):
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
+                        update_time_variant_fields=rerun,
                     )
                     if changed:
                         nr_changed += 1
@@ -603,9 +602,10 @@ class PDFSearchSource(JsonSchemaMixin):
                     f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
                 )
             else:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Records up-to-date{colors.END}"
-                )
+                if records:
+                    search_operation.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

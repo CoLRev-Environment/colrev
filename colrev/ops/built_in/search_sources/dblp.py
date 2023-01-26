@@ -414,6 +414,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     record_dict=retrieved_record.data,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
+                    update_time_variant_fields=True,
                 )
                 if changed:
                     nr_changed += 1
@@ -424,9 +425,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 f"records based on DBLP{colors.END}"
             )
         else:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Records up-to-date with DBLP{colors.END}"
-            )
+            if records:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date with DBLP{colors.END}"
+                )
 
         dblp_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
@@ -437,6 +439,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         *,
         search_operation: colrev.ops.search.Search,
         dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
     ) -> None:
 
         # pylint: disable=too-many-branches
@@ -450,12 +453,9 @@ class DBLPSearchSource(JsonSchemaMixin):
             # Note : journal_abbreviated is the abbreviated venue_key
 
             __api_url = "https://dblp.org/search/publ/api?q="
-            nr_retrieved, nr_added, nr_changed = 0, 0, 0
+            nr_retrieved, nr_changed = 0, 0
             start = 1980
-            if (
-                len(dblp_feed.feed_records) > 100
-                and not search_operation.review_manager.force_mode
-            ):
+            if len(dblp_feed.feed_records) > 100 and not rerun:
                 start = datetime.now().year - 2
 
             for year in range(start, datetime.now().year + 1):
@@ -478,13 +478,14 @@ class DBLPSearchSource(JsonSchemaMixin):
                     )
 
                 nr_retrieved = 0
+                batch_size_cumulative = 0
                 batch_size = 250
                 while True:
                     url = (
                         query.replace(" ", "+")
-                        + f"&format=json&h={batch_size}&f={nr_retrieved}"
+                        + f"&format=json&h={batch_size}&f={batch_size_cumulative}"
                     )
-                    nr_retrieved += batch_size
+                    batch_size_cumulative += batch_size
                     # search_operation.review_manager.logger.debug(url)
 
                     retrieved = False
@@ -529,7 +530,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                             search_operation.review_manager.logger.info(
                                 " retrieve " + retrieved_record.data["dblp_key"]
                             )
-                            nr_added += 1
+                            nr_retrieved += 1
 
                         else:
 
@@ -538,6 +539,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                                 record_dict=retrieved_record.data,
                                 prev_record_dict_version=prev_record_dict_version,
                                 source=self.search_source,
+                                update_time_variant_fields=rerun,
                             )
                             if changed:
                                 nr_changed += 1
@@ -553,7 +555,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
             if nr_retrieved > 0:
                 search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Retrieved {nr_added} new records{colors.END}"
+                    f"{colors.GREEN}Retrieved {nr_retrieved} new records{colors.END}"
                 )
             else:
                 search_operation.review_manager.logger.info(
@@ -566,15 +568,16 @@ class DBLPSearchSource(JsonSchemaMixin):
                     f"records based on DBLP{colors.END}"
                 )
             else:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Records up-to-date with DBLP{colors.END}"
-                )
+                if records:
+                    search_operation.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date with DBLP{colors.END}"
+                    )
 
         except (requests.exceptions.RequestException,):
             pass
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of DBLP"""
 
@@ -585,7 +588,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         dblp_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -598,6 +601,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             self.__run_parameter_search(
                 search_operation=search_operation,
                 dblp_feed=dblp_feed,
+                rerun=rerun,
             )
 
     @classmethod

@@ -6,6 +6,7 @@ import json
 import re
 import typing
 import urllib
+from copy import deepcopy
 from dataclasses import dataclass
 from importlib.metadata import version
 from multiprocessing import Lock
@@ -605,6 +606,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
+                update_time_variant_fields=True,
             )
             if changed:
                 nr_changed += 1
@@ -615,9 +617,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 f"records based on Crossref{colors.END}"
             )
         else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Records up-to-date with Crossref{colors.END}"
-            )
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date with Crossref{colors.END}"
+                )
 
         crossref_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
@@ -628,11 +631,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
         *,
         search_operation: colrev.ops.search.Search,
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
     ) -> None:
 
         # pylint: disable=too-many-branches
 
-        if search_operation.review_manager.force_mode:
+        if rerun:
             search_operation.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
@@ -660,9 +664,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                 prev_record_dict_version = {}
                 if record_dict["ID"] in crossref_feed.feed_records:
-                    prev_record_dict_version = crossref_feed.feed_records[
-                        record_dict["ID"]
-                    ]
+                    prev_record_dict_version = deepcopy(
+                        crossref_feed.feed_records[record_dict["ID"]]
+                    )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
                 doi_connector.DOIConnector.get_link_from_doi(
@@ -692,12 +696,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         record_dict=prep_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
+                        update_time_variant_fields=rerun,
                     )
                     if changed:
                         nr_changed += 1
 
-                # Note : only retrieve/update the latest deposits (unless in foce_mode)
-                if not added and not search_operation.review_manager.force_mode:
+                # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                if not added and not rerun:
+                    # problem: some publishers don't necessarily
+                    # deposit papers chronologically
                     break
 
             if nr_retrieved > 0:
@@ -714,9 +721,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
                 )
             else:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records up-to-date{colors.END}"
-                )
+                if records:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
 
             crossref_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
@@ -734,14 +742,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Crossref"""
 
         crossref_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -754,6 +762,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self.__run_parameter_search(
                 search_operation=search_operation,
                 crossref_feed=crossref_feed,
+                rerun=rerun,
             )
 
     @classmethod

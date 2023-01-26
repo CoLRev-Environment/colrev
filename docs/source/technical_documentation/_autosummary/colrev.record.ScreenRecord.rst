@@ -95,4 +95,5 @@ colrev.record.ScreenRecord
       ~ScreenRecord.provenance_keys
       ~ScreenRecord.record_field_inconsistencies
       ~ScreenRecord.record_field_requirements
+      ~ScreenRecord.time_variant_fields
       ~ScreenRecord.data

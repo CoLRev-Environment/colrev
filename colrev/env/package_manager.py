@@ -97,9 +97,11 @@ class SearchSourcePackageEndpointInterface(
     # Note : optional method
     # pylint: disable=no-self-argument
     # def run_search(
-    #     search_operation: colrev.ops.search.Search, update_only: bool
+    #     search_operation: colrev.ops.search.Search, rerun: bool
     # ) -> None:  # type: ignore
-    #     """Run the search operation"""
+    #     """Run the search operation
+    #       rerun: retrieve and update all records again (default: only receive recent ones)
+    #       """
 
     def validate_source(
         search_operation: colrev.ops.search.Search, source: colrev.settings.SearchSource

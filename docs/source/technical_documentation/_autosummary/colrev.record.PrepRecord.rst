@@ -103,4 +103,5 @@ colrev.record.PrepRecord
       ~PrepRecord.provenance_keys
       ~PrepRecord.record_field_inconsistencies
       ~PrepRecord.record_field_requirements
+      ~PrepRecord.time_variant_fields
       ~PrepRecord.data

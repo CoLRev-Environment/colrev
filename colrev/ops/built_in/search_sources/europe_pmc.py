@@ -410,7 +410,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         )
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Europe PMC"""
 
@@ -423,7 +423,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         europe_pmc_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         try:

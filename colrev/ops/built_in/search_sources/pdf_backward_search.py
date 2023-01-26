@@ -97,22 +97,22 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
         # pylint: disable=too-many-branches
 
-        if not search_operation.review_manager.dataset.records_file.is_file():
+        records = search_operation.review_manager.dataset.load_records_dict()
+
+        if not records:
             print("No records imported. Cannot run backward search yet.")
             return
-
-        records = search_operation.review_manager.dataset.load_records_dict()
 
         pdf_backward_search_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         nr_added, nr_changed = 0, 0
@@ -162,13 +162,14 @@ class BackwardSearchSource(JsonSchemaMixin):
 
                 if added:
                     nr_added += 1
-                elif search_operation.review_manager.force_mode:
+                elif rerun:
                     # Note : only re-index/update
                     changed = search_operation.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
+                        update_time_variant_fields=rerun,
                     )
                     if changed:
                         nr_changed += 1
@@ -183,15 +184,16 @@ class BackwardSearchSource(JsonSchemaMixin):
                 f"{colors.GREEN}No additional records retrieved{colors.END}"
             )
 
-        if search_operation.review_manager.force_mode:
+        if rerun:
             if nr_changed > 0:
                 search_operation.review_manager.logger.info(
                     f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
                 )
             else:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Records up-to-date{colors.END}"
-                )
+                if records:
+                    search_operation.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(

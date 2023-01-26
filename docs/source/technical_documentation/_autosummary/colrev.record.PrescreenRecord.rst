@@ -94,4 +94,5 @@ colrev.record.PrescreenRecord
       ~PrescreenRecord.provenance_keys
       ~PrescreenRecord.record_field_inconsistencies
       ~PrescreenRecord.record_field_requirements
+      ~PrescreenRecord.time_variant_fields
       ~PrescreenRecord.data

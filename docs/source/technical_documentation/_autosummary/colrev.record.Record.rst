@@ -93,4 +93,5 @@ colrev.record.Record
       ~Record.provenance_keys
       ~Record.record_field_inconsistencies
       ~Record.record_field_requirements
+      ~Record.time_variant_fields
       ~Record.data

@@ -93,4 +93,5 @@ colrev.record.PDFPrepManRecord
       ~PDFPrepManRecord.provenance_keys
       ~PDFPrepManRecord.record_field_inconsistencies
       ~PDFPrepManRecord.record_field_requirements
+      ~PDFPrepManRecord.time_variant_fields
       ~PDFPrepManRecord.data

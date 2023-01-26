@@ -212,6 +212,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record_dict=retrieved_record_dict,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
+                update_time_variant_fields=True,
             )
             if changed:
                 nr_changed += 1
@@ -222,9 +223,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 f"records based on LocalIndex{colors.END}"
             )
         else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Records up-to-date with LocalIndex{colors.END}"
-            )
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) "
+                    f"up-to-date with LocalIndex{colors.END}"
+                )
 
         local_index_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
@@ -235,6 +238,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         *,
         search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
     ) -> None:
 
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -266,6 +270,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     record_dict=retrieved_record_dict,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
+                    update_time_variant_fields=rerun,
                 )
                 if changed:
                     nr_changed += 1
@@ -283,19 +288,21 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 f"records based on LocalIndex{colors.END}"
             )
         else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Records up-to-date with LocalIndex{colors.END}"
-            )
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) "
+                    f"up-to-date with LocalIndex{colors.END}"
+                )
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, update_only: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of local-index"""
 
         local_index_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
-            update_only=False,
+            update_only=(not rerun),
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
@@ -309,6 +316,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             self.__run_parameter_search(
                 search_operation=search_operation,
                 local_index_feed=local_index_feed,
+                rerun=rerun,
             )
 
     @classmethod

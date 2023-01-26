@@ -282,7 +282,7 @@ def retrieve(
         print()
 
         search_operation = review_manager.get_search_operation()
-        search_operation.main(update_only=False)
+        search_operation.main(rerun=False)
 
         print()
 
@@ -326,11 +326,19 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
     help="Only retrieve search results for selected sources",
 )
 @click.option(
-    "-u",
-    "--update_only",
+    "-r",
+    "--rerun",
     is_flag=True,
     default=False,
-    help="Update existing records without retrieving additional ones",
+    help="Rerun API-based searches, retrieving and updating all records "
+    + "(not just the most recent ones)",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
 )
 @click.option(
     "-scs",
@@ -359,7 +367,7 @@ def search(
     add: str,
     view: bool,
     selected: str,
-    update_only: bool,
+    rerun: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -390,7 +398,7 @@ def search(
             print("Please update the source in settings.json and commit.")
 
         else:
-            search_operation.main(selection_str=selected, update_only=update_only)
+            search_operation.main(selection_str=selected, rerun=rerun)
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
