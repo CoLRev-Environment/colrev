@@ -88,11 +88,13 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             )
             screen_record.data["abstract"] = tei.get_abstract()
 
-        print("\n\n")
-        print(screen_record)
-
         self.__i += 1
         quit_pressed, skip_pressed = False, False
+
+        print("\n\n")
+        print(f"Record {self.__i} (of {self.__stat_len})")
+        print(screen_record)
+
         if self.criteria_available:
             decisions = []
 
@@ -109,10 +111,11 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
                     ret = input(
                         # is relevant / should be in the sample / should be retained
-                        f"({self.__i}/{self.__stat_len}) Record should be included according to"
+                        # ({self.__i}/{self.__stat_len})
+                        f"Record should be included according to"
                         f" {criterion_settings.criterion_type}"
                         f" {color}{criterion_name}{colors.END}"
-                        " [y,n,q,s]? "
+                        " [y,n,q,s for yes,no,quit,skip to decide later]? "
                     )
                     if "q" == ret:
                         quit_pressed = True
