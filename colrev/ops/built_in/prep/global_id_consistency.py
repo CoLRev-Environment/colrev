@@ -49,10 +49,16 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
 
     def __validate_against_doi_metadata(self, *, record: colrev.record.Record) -> None:
 
+        # pylint: disable=too-many-branches
+
         if "doi" not in record.data:
             return
-        if "md_curated.bib" in record.data["colrev_data_provenance"]["doi"]["source"]:
-            return
+        if "doi" in record.data["colrev_data_provenance"]:
+            if (
+                "md_curated.bib"
+                in record.data["colrev_data_provenance"]["doi"]["source"]
+            ):
+                return
 
         record_copy = record.copy_prep_rec()
 
