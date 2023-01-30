@@ -271,17 +271,32 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 self.deduper.write_settings(sett_file)
             # self.cleanup_training()
 
+            dedupe_operation.review_manager.create_commit(
+                msg="Labeling of duplicates (active learning)",
+                manual_author=True,
+                script_call="colrev dedupe",
+                saved_args=saved_args,
+            )
+
         else:
             dedupe_operation.review_manager.logger.info(
                 "Not enough duplicates/non-duplicates to train deduper."
             )
-
-        dedupe_operation.review_manager.create_commit(
-            msg="Labeling of duplicates (active learning)",
-            manual_author=True,
-            script_call="colrev dedupe",
-            saved_args=saved_args,
-        )
+            if self.__get_nr_duplicates(result_list=results) > 0:
+                print([x for x in results if "duplicate" == x["decision"]])
+            if self.__get_nr_non_duplicates(result_list=results) > 30:
+                if "y" == input(
+                    "Set remaining records to non-duplicated "
+                    "(at least 50 non-duplicates recommended) (y,n)?"
+                ):
+                    dedupe_operation.apply_merges(results=results, complete_dedupe=True)
+                    dedupe_operation.review_manager.create_commit(
+                        msg="Set remaining records to non-duplicated (not enough to train ML)",
+                        manual_author=True,
+                        script_call="colrev dedupe",
+                        saved_args=saved_args,
+                    )
+                    return
 
         if (
             self.__get_nr_duplicates(result_list=results) == 0
