@@ -526,26 +526,23 @@ class GeneralOriginFeed:
         if "colrev_status" in feed_record_dict:
             del feed_record_dict["colrev_status"]
 
-        if self.update_only and added_new:
-            added_new = False
-        else:
-            self.__available_ids[
-                feed_record_dict[self.source_identifier]
-            ] = feed_record_dict["ID"]
+        self.__available_ids[
+            feed_record_dict[self.source_identifier]
+        ] = feed_record_dict["ID"]
 
-            if self.update_only:
-                # ignore time_variant_fields
-                # (otherwise, fields in recent records would be more up-to-date)
-                for key in colrev.record.Record.time_variant_fields:
-                    if key in self.feed_records[feed_record_dict["ID"]]:
-                        feed_record_dict[key] = self.feed_records[
-                            feed_record_dict["ID"]
-                        ][key]
-                    else:
-                        if key in feed_record_dict:
-                            del feed_record_dict[key]
+        if self.update_only:
+            # ignore time_variant_fields
+            # (otherwise, fields in recent records would be more up-to-date)
+            for key in colrev.record.Record.time_variant_fields:
+                if key in self.feed_records[feed_record_dict["ID"]]:
+                    feed_record_dict[key] = self.feed_records[feed_record_dict["ID"]][
+                        key
+                    ]
+                else:
+                    if key in feed_record_dict:
+                        del feed_record_dict[key]
 
-            self.feed_records[feed_record_dict["ID"]] = feed_record_dict
+        self.feed_records[feed_record_dict["ID"]] = feed_record_dict
 
         # Original record
         colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
