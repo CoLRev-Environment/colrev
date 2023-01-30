@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing
+import webbrowser
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -798,6 +799,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             )
 
             if "github.com" in remote.url:
+                webbrowser.open(remote.url, new=2)
                 pull_request_msgs.append(
                     "\nTo create a pull request for your changes go "
                     f"to \n{colors.ORANGE}{str(remote.url).rstrip('.git')}/"
