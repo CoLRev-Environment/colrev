@@ -80,6 +80,17 @@ def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
 
     # assert for each record (for better error reporting)
     for expected_record in expected_records.values():
-        assert expected_record == records[expected_record["ID"]]
+        try:
+            assert expected_record == records[expected_record["ID"]]
+        except AssertionError as exc:
+            expected_records_path = Path(colrev.__file__).parent.parent / Path(
+                "tests/prep_test/expected_records.bib"
+            )
+            review_manager.dataset.save_records_dict_to_file(
+                records=records, save_path=expected_records_path
+            )
+            print("Replaced the tests/prep_test/expected_records.bib.")
+            print("Discard changes or add them to update the expected values.")
+            raise AssertionError from exc
 
     print(review_manager.path)
