@@ -2376,6 +2376,7 @@ def show(  # type: ignore
     callback=__validate_show,
 ) -> None:
     """Show aspects (sample, ...)"""
+    # pylint: disable=too-many-locals
 
     # pylint: disable=import-outside-toplevel
     import colrev.operation
@@ -2399,6 +2400,49 @@ def show(  # type: ignore
         status_operation = review_manager.get_status_operation()
         stats_report = status_operation.get_review_status_report()
         print(stats_report)
+
+    elif "cmd_history" == keyword:
+        cmds = []
+        colrev.operation.CheckOperation(review_manager=review_manager)
+        revlist = review_manager.dataset.get_repo().iter_commits()
+
+        for commit in reversed(list(revlist)):
+            try:
+                cmsg = str(commit.message)
+                formatted_date = time.strftime(
+                    "%Y-%m-%d %H:%M",
+                    time.gmtime(commit.committed_date),
+                )
+                if not all(x in cmsg for x in ["Command", "Status"]):
+                    cmsg = "UNKNOWN"
+                # min(cmsg.find("Status"), cmsg.find("On commit"))
+                if "On commit" in cmsg:
+                    cmsg = cmsg[: cmsg.find("On commit")]
+                if "Status" in cmsg:
+                    cmsg = cmsg[: cmsg.find("Status")]
+                commit_message_first_line = (
+                    cmsg[cmsg.find("Command") + 8 :]
+                    .lstrip()
+                    .rstrip()
+                    .replace("\n", " ")
+                )
+                if len(commit_message_first_line) > 800:
+                    cmsg = "UNKNOWN"
+                cmds.append(
+                    {
+                        "date": formatted_date,
+                        "committer": commit.committer.name,
+                        "commit_id": commit.hexsha,
+                        "cmd": commit_message_first_line,
+                    }
+                )
+            except KeyError:
+                continue
+        for cmd in cmds:
+            print(
+                f"{cmd['date']} ({cmd['committer']}, {cmd['commit_id']}):    "
+                f"{colors.ORANGE}{cmd['cmd']}{colors.END}"
+            )
 
 
 @main.command(help_priority=28)
