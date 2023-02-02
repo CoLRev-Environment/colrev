@@ -44,7 +44,7 @@ release = colrev_version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinxcontrib.bibtex",
+    "sphinxcontrib-bibtex",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
