@@ -47,7 +47,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> None:
 
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-
+        self.review_manager = source_operation.review_manager
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
@@ -123,16 +123,23 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         headers: typing.Dict[str, str] = {}
 
         ret = requests.get(url, headers=headers)
-        for doi in [x["citing"] for x in json.loads(ret.text)]:
-            works = Works(etiquette=self.etiquette)
-            crossref_query_return = works.doi(doi)
-            if not crossref_query_return:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-            retrieved_record_dict = connector_utils.json_to_record(
-                item=crossref_query_return
+        try:
+            items = json.loads(ret.text)
+
+            for doi in [x["citing"] for x in items]:
+                works = Works(etiquette=self.etiquette)
+                crossref_query_return = works.doi(doi)
+                if not crossref_query_return:
+                    raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                retrieved_record_dict = connector_utils.json_to_record(
+                    item=crossref_query_return
+                )
+                retrieved_record_dict["ID"] = retrieved_record_dict["doi"]
+                forward_citations.append(retrieved_record_dict)
+        except json.decoder.JSONDecodeError:
+            self.review_manager.logger.info(
+                f"Error retrieving citations from Opencitations for {record_dict['ID']}"
             )
-            retrieved_record_dict["ID"] = retrieved_record_dict["doi"]
-            forward_citations.append(retrieved_record_dict)
 
         return forward_citations
 
