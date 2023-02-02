@@ -240,6 +240,13 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 
+        if (
+            "multimedia appendix"
+            in record.data.get("title", "").lower()
+            + record.data.get("journal", "").lower()
+        ):
+            record.prescreen_exclude(reason="grobid-error")
+
         if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
             record.data["ENTRYTYPE"] = "book"
 
