@@ -1,5 +1,5 @@
 <p align="center">
-<img src="../../figures/logo_small.png" width="400">
+<img src="https://raw.githubusercontent.com/geritwagner/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
 
 # Collaborative Literature Reviews (CoLRev)
@@ -40,7 +40,7 @@ colrev status
 After each operation, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
 
 <p align="center">
-<img src="../../figures/workflow.svg" width="700">
+<img src="https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg" width="700">
 </p>
 
 <!-- .. figure:: docs/figures/workflow.svg
@@ -76,7 +76,7 @@ For each operation, the **colrev settings** document the tools and parameters. Y
 
 
 <p align="center">
-<img src="../../figures/settings.svg" width="700">
+<img src="https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.svg" width="700">
 </p>
 
 <!-- .. figure:: ../figures/settings.svg
@@ -96,7 +96,7 @@ The more records are curated, the more you can focus on the synthesis.
 
 
 <p align="center">
-<img src="../../figures/reuse-vision_loop.svg" width="800">
+<img src="https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/reuse-vision_loop.svg" width="800">
 </p>
 
 <!-- .. figure:: ../figures/reuse-vision_loop.svg
