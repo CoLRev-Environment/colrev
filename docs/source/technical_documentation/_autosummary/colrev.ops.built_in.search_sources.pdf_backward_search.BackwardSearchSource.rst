@@ -21,6 +21,7 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
       ~BackwardSearchSource.from_dict
       ~BackwardSearchSource.from_json
       ~BackwardSearchSource.from_object
+      ~BackwardSearchSource.get_default_source
       ~BackwardSearchSource.heuristic
       ~BackwardSearchSource.json_schema
       ~BackwardSearchSource.load_fixes

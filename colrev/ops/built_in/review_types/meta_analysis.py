@@ -8,6 +8,12 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search
 import colrev.record
+from colrev.ops.built_in.search_sources.open_citations_forward_search import (
+    OpenCitationsSearchSource,
+)
+from colrev.ops.built_in.search_sources.pdf_backward_search import (
+    BackwardSearchSource,
+)
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -36,12 +42,15 @@ class MetaAnalysis(JsonSchemaMixin):
     ) -> colrev.settings.Settings:
         """Initialize a meta-analysis"""
 
+        settings.sources.append(OpenCitationsSearchSource.get_default_source())
+        settings.sources.append(BackwardSearchSource.get_default_source())
+
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev_built_in.prisma", "version": "1.0"},
             {
                 "endpoint": "colrev_built_in.structured",
                 "version": "1.0",
-                "fields": {},
+                "fields": [],
             },
             {
                 "endpoint": "colrev_built_in.manuscript",

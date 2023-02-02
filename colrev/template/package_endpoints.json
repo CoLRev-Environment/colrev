@@ -186,6 +186,15 @@
             "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_"
         },
         {
+            "package_endpoint_identifier": "colrev_built_in.open_citations_forward_search",
+            "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
+            "short_description": "Performs a forward search based on OpenCitations",
+            "link": "`OpenCitations forward search <https://opencitations.net/>`_",
+            "heuristic": "Supported",
+            "api_search": "Supported",
+            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.py>`_"
+        },
+        {
             "package_endpoint_identifier": "colrev_built_in.pdf_backward_search",
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
             "short_description": "Performs a backward search extracting references from PDFs using GROBID",

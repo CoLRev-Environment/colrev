@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from git.exc import GitCommandError
 
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
-
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -139,8 +139,12 @@ Example 2:
         return
 
     def __set_fields(self) -> None:
-
         self.review_manager.logger.info("Add fields for data extraction")
+        try:
+            git_repo = self.review_manager.dataset.get_repo()
+            print(list(git_repo.iter_commits("HEAD")))
+        except GitCommandError:
+            return
 
         print(self.__FULL_DATA_FIELD_EXPLANATION)
         while "y" == input("Add a data field [y,n]?"):

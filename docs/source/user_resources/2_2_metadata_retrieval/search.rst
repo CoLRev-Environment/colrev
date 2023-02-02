@@ -26,6 +26,8 @@ colrev search
 
     colrev search -a backward-search
 
+    colrev search -a forward-search
+
     Examples:
 
     colrev search -a '{"endpoint": "colrev_built_in.crossref","search_parameters": {"query": "digital+platform"}}'

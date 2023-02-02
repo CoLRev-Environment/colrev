@@ -262,9 +262,15 @@ class Initializer:
         data_operation.main(silent_mode=True)
 
         self.review_manager.logger.info("Set up %s", self.review_type)
+
+        for source in settings.sources:
+            self.review_manager.logger.info(
+                " add search %s", source.endpoint.replace("colrev_built_in.", "")
+            )
+
         for data_package_endpoint in settings.data.data_package_endpoints:
             self.review_manager.logger.info(
-                " add %s",
+                " add data   %s",
                 data_package_endpoint["endpoint"].replace("colrev_built_in.", ""),
             )
 

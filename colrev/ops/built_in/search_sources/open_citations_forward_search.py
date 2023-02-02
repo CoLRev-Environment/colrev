@@ -1,17 +1,23 @@
 #! /usr/bin/env python
-"""SearchSource: backward search (based on PDFs and GROBID)"""
+"""SearchSource: OpenCitations"""
 from __future__ import annotations
 
+import json
 import typing
 from dataclasses import dataclass
+from importlib.metadata import version
 from pathlib import Path
 
+import requests
 import zope.interface
+from crossref.restful import Etiquette
+from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -24,35 +30,38 @@ import colrev.ui_cli.cli_colors as colors
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class BackwardSearchSource(JsonSchemaMixin):
-    """Performs a backward search extracting references from PDFs using GROBID
+class OpenCitationsSearchSource(JsonSchemaMixin):
+    """Performs a forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "bwsearch_ref"
-    search_type = colrev.settings.SearchType.BACKWARD_SEARCH
+    source_identifier = "fwsearch_ref"
+    search_type = colrev.settings.SearchType.FORWARD_SEARCH
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
-    short_name = "PDF backward search"
-    link = "https://github.com/kermitt2/grobid"
+    short_name = "OpenCitations forward search"
+    link = "https://opencitations.net/"
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
 
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.grobid_service = source_operation.review_manager.get_grobid_service()
-        self.grobid_service.start()
-        self.review_manager = source_operation.review_manager
+
+        self.etiquette = Etiquette(
+            "CoLRev",
+            version("colrev"),
+            "https://github.com/geritwagner/colrev",
+            source_operation.review_manager.email,
+        )
 
     @classmethod
     def get_default_source(cls) -> colrev.settings.SearchSource:
         """Get the default SearchSource settings"""
-
         return colrev.settings.SearchSource(
-            endpoint="colrev_built_in.pdf_backward_search",
-            filename=Path("data/search/pdf_backward_search.bib"),
-            search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
+            endpoint="colrev_built_in.open_citations_forward_search",
+            filename=Path("data/search/forward_search.bib"),
+            search_type=colrev.settings.SearchType.FORWARD_SEARCH,
             search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"}
             },
@@ -76,22 +85,22 @@ class BackwardSearchSource(JsonSchemaMixin):
                 "Scope required in the search_parameters"
             )
 
-        if source.search_parameters["scope"].get("file", "") == "paper.md":
-            pass
-        else:
-            if (
-                source.search_parameters["scope"]["colrev_status"]
-                != "rev_included|rev_synthesized"
-            ):
-                raise colrev_exceptions.InvalidQueryException(
-                    "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
-                )
+        if (
+            source.search_parameters["scope"]["colrev_status"]
+            != "rev_included|rev_synthesized"
+        ):
+            raise colrev_exceptions.InvalidQueryException(
+                "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
+            )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
 
-    def __bw_search_condition(self, *, record: dict) -> bool:
+    def __fw_search_condition(self, *, record: dict) -> bool:
+        if "doi" not in record:
+            return False
+
         # rev_included/rev_synthesized
         if "colrev_status" in self.search_source.search_parameters["scope"]:
             if (
@@ -103,34 +112,44 @@ class BackwardSearchSource(JsonSchemaMixin):
             ]:
                 return False
 
-        # Note: this is for peer_reviews
-        if "file" in self.search_source.search_parameters["scope"]:
-            if (
-                self.search_source.search_parameters["scope"]["file"] == "paper.pdf"
-            ) and "data/pdfs/paper.pdf" != record.get("file", ""):
-                return False
-
-        pdf_path = self.review_manager.path / Path(record["file"])
-        if not Path(pdf_path).is_file():
-            self.review_manager.logger.error(f'File not found for {record["ID"]}')
-            return False
-
         return True
+
+    def __get_forward_search_records(self, *, record_dict: dict) -> list:
+
+        forward_citations = []
+
+        url = f"https://opencitations.net/index/coci/api/v1/citations/{record_dict['doi']}"
+        # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
+        headers: typing.Dict[str, str] = {}
+
+        ret = requests.get(url, headers=headers)
+        for doi in [x["citing"] for x in json.loads(ret.text)]:
+            works = Works(etiquette=self.etiquette)
+            crossref_query_return = works.doi(doi)
+            if not crossref_query_return:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+            retrieved_record_dict = connector_utils.json_to_record(
+                item=crossref_query_return
+            )
+            retrieved_record_dict["ID"] = retrieved_record_dict["doi"]
+            forward_citations.append(retrieved_record_dict)
+
+        return forward_citations
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
-        """Run a search of PDFs (backward search based on GROBID)"""
+        """Run a forward search based on OpenCitations"""
 
         # pylint: disable=too-many-branches
 
         records = search_operation.review_manager.dataset.load_records_dict()
 
         if not records:
-            print("No records imported. Cannot run backward search yet.")
+            print("No records imported. Cannot run forward search yet.")
             return
 
-        pdf_backward_search_feed = self.search_source.get_feed(
+        forward_search_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -138,40 +157,33 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         nr_added, nr_changed = 0, 0
         for record in records.values():
-            if not self.__bw_search_condition(record=record):
+            if not self.__fw_search_condition(record=record):
                 continue
 
-            # Note: IDs generated by GROBID for cited references may change across grobid versions
-            # -> challenge for key-handling/updating searches...
-
             search_operation.review_manager.logger.info(
-                f'Run backward search for {record["ID"]} ({record["file"]})'
+                f'Run forward search for {record["ID"]}'
             )
 
-            pdf_path = self.review_manager.path / Path(record["file"])
-            tei = search_operation.review_manager.get_tei(
-                pdf_path=pdf_path,
-            )
-            new_records = tei.get_bibliography()
+            new_records = self.__get_forward_search_records(record_dict=record)
 
             for new_record in new_records:
-                new_record["bwsearch_ref"] = (
-                    record["ID"] + "_backward_search_" + new_record["ID"]
+                new_record["fwsearch_ref"] = (
+                    record["ID"] + "_forward_search_" + new_record["ID"]
                 )
-                new_record["cited_by_IDs"] = record["ID"]
-                new_record["cited_by_file"] = record["file"]
+                new_record["cites_IDs"] = record["ID"]
+
                 try:
-                    pdf_backward_search_feed.set_id(record_dict=new_record)
+                    forward_search_feed.set_id(record_dict=new_record)
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
                 prev_record_dict_version = {}
-                if new_record["ID"] in pdf_backward_search_feed.feed_records:
-                    prev_record_dict_version = pdf_backward_search_feed.feed_records[
+                if new_record["ID"] in forward_search_feed.feed_records:
+                    prev_record_dict_version = forward_search_feed.feed_records[
                         new_record["ID"]
                     ]
 
-                added = pdf_backward_search_feed.add_record(
+                added = forward_search_feed.add_record(
                     record=colrev.record.Record(data=new_record),
                 )
 
@@ -188,7 +200,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                     )
                     if changed:
                         nr_changed += 1
-        pdf_backward_search_feed.save_feed_file()
+        forward_search_feed.save_feed_file()
 
         if nr_added > 0:
             search_operation.review_manager.logger.info(
@@ -212,17 +224,15 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(
-                msg="Backward search", script_call="colrev search"
+                msg="Forward search", script_call="colrev search"
             )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for PDF backward searches (GROBID)"""
+        """Source heuristic for forward searches (OpenCitations)"""
 
         result = {"confidence": 0.0}
-        if str(filename).endswith("_ref_list.pdf"):
-            result["confidence"] = 1.0
-            return result
+
         return result
 
     def load_fixes(
@@ -231,18 +241,14 @@ class BackwardSearchSource(JsonSchemaMixin):
         source: colrev.settings.SearchSource,
         records: typing.Dict,
     ) -> dict:
-        """Load fixes for PDF backward searches (GROBID)"""
+        """Load fixes for forward searches (OpenCitations)"""
 
         return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
-        """Source-specific preparation for PDF backward searches (GROBID)"""
-
-        if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
-            record.data["ENTRYTYPE"] = "book"
-
+        """Source-specific preparation for forward searches (OpenCitations)"""
         return record
 
 
