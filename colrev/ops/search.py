@@ -528,13 +528,14 @@ class GeneralOriginFeed:
             # ignore time_variant_fields
             # (otherwise, fields in recent records would be more up-to-date)
             for key in colrev.record.Record.time_variant_fields:
-                if key in self.feed_records[feed_record_dict["ID"]]:
-                    feed_record_dict[key] = self.feed_records[feed_record_dict["ID"]][
-                        key
-                    ]
-                else:
-                    if key in feed_record_dict:
-                        del feed_record_dict[key]
+                if feed_record_dict["ID"] in self.feed_records:
+                    if key in self.feed_records[feed_record_dict["ID"]]:
+                        feed_record_dict[key] = self.feed_records[
+                            feed_record_dict["ID"]
+                        ][key]
+                    else:
+                        if key in feed_record_dict:
+                            del feed_record_dict[key]
 
         self.feed_records[feed_record_dict["ID"]] = feed_record_dict
 
