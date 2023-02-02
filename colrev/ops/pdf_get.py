@@ -440,6 +440,7 @@ class PDFGet(colrev.operation.Operation):
 
             record["file"] = str(new_filename)
             self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
+            record["colrev_status"] = colrev.record.RecordState.pdf_imported
 
         self.review_manager.dataset.save_records_dict(records=records)
 
