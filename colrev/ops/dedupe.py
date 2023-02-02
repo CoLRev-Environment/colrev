@@ -799,7 +799,6 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
-                script_call="colrev dedupe",
             )
         if not (
             self.dupe_file.is_file()

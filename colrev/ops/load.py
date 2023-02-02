@@ -434,7 +434,6 @@ class Load(colrev.operation.Operation):
             )
             self.review_manager.create_commit(
                 msg=f"Save original search file: {source.get_corresponding_bib_file().name}",
-                script_call="colrev load",
             )
 
             for old_id, new_id in ids_to_update:
@@ -845,9 +844,7 @@ class Load(colrev.operation.Operation):
     ) -> None:
         """Load records (main entrypoint)"""
 
-        saved_args = locals()
-        if not keep_ids:
-            del saved_args["keep_ids"]
+        # TODO : provide -s option
 
         def load_active_sources() -> list:
             checker = self.review_manager.get_checker()
@@ -863,11 +860,11 @@ class Load(colrev.operation.Operation):
         if not self.review_manager.high_level_operation:
             print()
         git_repo = self.review_manager.dataset.get_repo()
+        part_exact_call = self.review_manager.exact_call
         for source in load_active_sources():
 
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
-                saved_args["file"] = source.filename.name
 
                 # Add to settings (if new filename)
                 if source.filename not in [
@@ -917,10 +914,11 @@ class Load(colrev.operation.Operation):
 
                 git_repo.git.stash("push", "--keep-index")
                 if not combine_commits:
+                    self.review_manager.exact_call = (
+                        f"{part_exact_call} -s {source.filename.name}"
+                    )
                     self.review_manager.create_commit(
-                        msg=f"Load {saved_args['file']}",
-                        script_call="colrev load",
-                        saved_args=saved_args,
+                        msg=f"Load {source.filename.name}",
                     )
                 git_repo.git.stash("pop")
                 if not self.review_manager.high_level_operation:
@@ -929,9 +927,7 @@ class Load(colrev.operation.Operation):
                 print(exc)
 
         if combine_commits and self.review_manager.dataset.has_changes():
-            self.review_manager.create_commit(
-                msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
-            )
+            self.review_manager.create_commit(msg="Load (multiple)")
 
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed load operation{colors.END}"

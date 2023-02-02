@@ -60,6 +60,7 @@ class ReviewManager:
         debug_mode: bool = False,
         high_level_operation: bool = False,
         navigate_to_home_dir: bool = True,
+        exact_call: str = "",
     ) -> None:
 
         self.force_mode = force_mode
@@ -86,6 +87,7 @@ class ReviewManager:
         self.status = self.path / self.STATUS_RELATIVE
         self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
         self.data_dir = self.path / self.DATA_DIR_RELATIVE
+        self.exact_call = exact_call
 
         try:
             if self.settings_path.is_file():
@@ -287,6 +289,9 @@ class ReviewManager:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
 
+        if self.exact_call and script_call == "":
+            script_call = self.exact_call
+
         commit = colrev.ops.commit.Commit(
             review_manager=self,
             msg=msg,
@@ -447,6 +452,7 @@ class ReviewManager:
 
         return colrev.env.resources.Resources()
 
+    # pylint: disable=too-many-arguments
     @classmethod
     def get_init_operation(
         cls,
@@ -454,6 +460,7 @@ class ReviewManager:
         example: bool = False,
         local_pdf_collection: bool = False,
         target_path: Path = None,
+        exact_call: str = "",
     ) -> colrev.ops.init.Initializer:
         """Get an init operation object"""
         import colrev.ops.init
@@ -463,6 +470,7 @@ class ReviewManager:
             example=example,
             local_pdf_collection=local_pdf_collection,
             target_path=target_path,
+            exact_call=exact_call,
         )
 
     @classmethod

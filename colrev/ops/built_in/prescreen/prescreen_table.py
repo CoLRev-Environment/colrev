@@ -221,7 +221,6 @@ class TablePrescreen(JsonSchemaMixin):
                 prescreen_operation.review_manager.create_commit(
                     msg="Pre-screen (table)",
                     manual_author=True,
-                    script_call="colrev prescreen",
                 )
         return records
 

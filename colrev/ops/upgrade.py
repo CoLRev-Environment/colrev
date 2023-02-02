@@ -99,7 +99,6 @@ class Upgrade(colrev.operation.Operation):
         if self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(
                 msg=f"Upgrade to CoLRev {upcoming_version}",
-                script_call="colrev upgrade",
             )
             self.__print_release_notes(selected_version=upcoming_version)
         else:

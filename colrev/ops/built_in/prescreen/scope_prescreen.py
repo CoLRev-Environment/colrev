@@ -208,8 +208,6 @@ class ScopePrescreen(JsonSchemaMixin):
     ) -> dict:
         """Prescreen records based on the scope parameters"""
 
-        saved_args = locals()
-
         for record_dict in records.values():
             self.__conditional_prescreen(
                 prescreen_operation=prescreen_operation, record_dict=record_dict
@@ -220,8 +218,6 @@ class ScopePrescreen(JsonSchemaMixin):
         prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (scope)",
             manual_author=False,
-            script_call="colrev prescreen",
-            saved_args=saved_args,
         )
         return records
 

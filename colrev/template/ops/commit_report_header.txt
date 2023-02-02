@@ -1,12 +1,10 @@
 <br><br>
-Report<br><br>
-
 Command<br>
    {{ commit_details.script_name }}<br>
 {% if commit_details.saved_args != "" %}
 {{ commit_details.saved_args }}<br>{% endif %}
 {% if commit_details.last_commit_sha != "" %}   On commit 
-{{ commit_details.last_commit_sha }}{% endif %}
-<br>
+{{ commit_details.last_commit_sha }}<br>
+{% endif %}
 <br>
 <br>

@@ -236,7 +236,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 return records
 
         screen_operation.review_manager.create_commit(
-            msg="Screening (manual)", manual_author=True, saved_args=None
+            msg="Screening (manual)", manual_author=True
         )
         return records
 

@@ -168,10 +168,10 @@ class ASReviewPrescreen(JsonSchemaMixin):
             # with open(result_json_path) as json_str:
             #     json_data = json.loads(json_str.read())
 
-            # saved_args = {
+            # prescreen.review_manager.report_logger.info({
             #     "version": json_data["version"],
             #     "software_version": json_data["software_version"],
-            # }
+            # })
             # prescreen.review_manager.report_logger.info(
             #     "asreview settings: "
             # f"\n{prescreen.review_manager.p_printer.pformat(json_data['settings'])}"
@@ -198,13 +198,10 @@ class ASReviewPrescreen(JsonSchemaMixin):
 
         # gh_issue https://github.com/geritwagner/colrev/issues/74
         # add version
-        saved_args = {"software": "asreview"}
 
         prescreen_operation.review_manager.create_commit(
             msg="Pre-screening (manual, with asreview)",
             manual_author=True,
-            script_call="colrev prescreen",
-            saved_args=saved_args,
         )
 
     def run_prescreen(
@@ -262,7 +259,6 @@ class ASReviewPrescreen(JsonSchemaMixin):
                     prescreen_operation.review_manager.create_commit(
                         msg="Pre-screen (asreview)",
                         manual_author=True,
-                        script_call="colrev prescreen",
                     )
 
         return records

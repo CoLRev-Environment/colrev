@@ -265,7 +265,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     ) -> dict:
         """Get the PDF manually based on a cli"""
 
-        saved_args = locals()
         pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")
         pdf_get_operation = pdf_get_man_operation.review_manager.get_pdf_get_operation()
         pdf_dir = pdf_get_man_operation.review_manager.pdf_dir
@@ -306,7 +305,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                 pdf_get_man_operation.review_manager.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
-                    saved_args=saved_args,
                 )
         else:
             pdf_get_man_operation.review_manager.logger.info(

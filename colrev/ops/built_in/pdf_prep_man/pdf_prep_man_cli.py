@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import platform
-import pprint
 import re
 import subprocess
 from dataclasses import dataclass
@@ -104,9 +103,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         """Prepare PDF manually based on a cli"""
 
         # pylint: disable=too-many-statements
-
-        _pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-
         to_skip = 0
 
         def man_pdf_prep(
@@ -237,8 +233,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
             return records
 
-        saved_args = locals()
-
         pdf_prep_man_operation.review_manager.logger.info(
             "Loading data for pdf_prep_man"
         )
@@ -264,7 +258,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 pdf_prep_man_operation.review_manager.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,
-                    saved_args=saved_args,
                 )
         else:
             pdf_prep_man_operation.review_manager.logger.info(

@@ -276,8 +276,6 @@ class CurationDedupe(JsonSchemaMixin):
                     f"{self.settings.selected_source} "
                     "to md_processed)"
                 ),
-                script_call="colrev dedupe",
-                saved_args={},
             )
         else:
             dedupe_operation.review_manager.logger.info(
@@ -621,8 +619,6 @@ class CurationDedupe(JsonSchemaMixin):
 
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
-            script_call="colrev dedupe",
-            saved_args={},
         )
 
 

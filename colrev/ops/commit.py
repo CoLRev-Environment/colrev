@@ -91,15 +91,8 @@ class Commit:
         if "MANUAL" == script_name:
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
-            script_name = (
-                script_name.replace("colrev", "colrev")
-                .replace("colrev cli", "colrev")
-                .replace("prescreen_cli", "prescreen")
-            )
-            script_name = (
-                script_name.split(" ")[0]
-                + " "
-                + script_name.split(" ")[1].replace("_", "-")
+            script_name = script_name.replace("colrev cli", "colrev").replace(
+                "prescreen_cli", "prescreen"
             )
         return script_name
 

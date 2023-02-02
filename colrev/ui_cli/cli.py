@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import logging
 import os
+import subprocess
+import sys
+import time
 import typing
 from pathlib import Path
 
@@ -23,9 +26,10 @@ import colrev.ui_cli.cli_validation
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
 # pylint: disable=unused-argument
-
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
+
+EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -156,6 +160,7 @@ def init(
             review_type=type,
             example=example,
             local_pdf_collection=local_pdf_collection,
+            exact_call=EXACT_CALL,
         )
 
     except colrev_exceptions.CoLRevException as exc:
@@ -197,7 +202,7 @@ def status(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         status_operation = review_manager.get_status_operation()
 
@@ -379,7 +384,7 @@ def search(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         search_operation = review_manager.get_search_operation()
 
@@ -455,7 +460,7 @@ def load(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         # already start LocalIndex (for set_ids)
         review_manager.get_local_index(startup_without_waiting=True)
@@ -561,7 +566,7 @@ def prep(
     try:
 
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         prep_operation = review_manager.get_prep_operation()
 
@@ -631,7 +636,7 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         prep_man_operation = review_manager.get_prep_man_operation()
 
@@ -708,7 +713,7 @@ def dedupe(
     try:
 
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         state_transition_operation = not view
         dedupe_operation = review_manager.get_dedupe_operation(
@@ -834,7 +839,7 @@ def prescreen(
     # pylint: disable=too-many-locals
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         prescreen_operation = review_manager.get_prescreen_operation()
 
@@ -954,7 +959,7 @@ def screen(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         screen_operation = review_manager.get_screen_operation()
 
@@ -1017,7 +1022,10 @@ def pdfs(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, high_level_operation=True
+            force_mode=force,
+            verbose_mode=verbose,
+            high_level_operation=True,
+            exact_call=EXACT_CALL,
         )
 
         if discard:
@@ -1107,7 +1115,7 @@ def pdf_get(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
 
         state_transition_operation = not relink_files and not setup_custom_script
@@ -1177,7 +1185,7 @@ def pdf_get_man(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
@@ -1349,7 +1357,7 @@ def pdf_prep(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
@@ -1458,7 +1466,7 @@ def pdf_prep_man(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
@@ -1543,7 +1551,7 @@ def data(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         data_operation = review_manager.get_data_operation()
 
@@ -1650,7 +1658,7 @@ def validate(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         validate_operation = review_manager.get_validate_operation()
 
@@ -1709,7 +1717,7 @@ def trace(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         trace_operation = review_manager.get_trace_operation()
         trace_operation.main(record_id=id)
@@ -2049,7 +2057,7 @@ def settings(
     import colrev.review_manager
 
     review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
     if update_hooks:
 
@@ -2071,9 +2079,7 @@ def settings(
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
 
         review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
-        review_manager.create_commit(
-            msg="Update pre-commit hooks", script_call="colrev settings --update"
-        )
+        review_manager.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2100,9 +2106,7 @@ def settings(
             json.dump(project_settings, outfile, indent=4)
 
         review_manager.dataset.add_changes(path=Path("settings.json"))
-        review_manager.create_commit(
-            msg="Change settings", manual_author=True, saved_args=None
-        )
+        review_manager.create_commit(msg="Change settings", manual_author=True)
         return
 
     import colrev.ui_web.settings_editor
@@ -2196,7 +2200,7 @@ def pull(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         pull_operation = review_manager.get_pull_operation()
 
@@ -2288,7 +2292,7 @@ def push(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         push_operation = review_manager.get_push_operation()
 
@@ -2328,7 +2332,7 @@ def service(
     try:
 
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose
+            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         review_manager.get_service_operation()
 

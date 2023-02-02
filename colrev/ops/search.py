@@ -52,15 +52,11 @@ class Search(colrev.operation.Operation):
 
         return filename
 
-    def add_source(
-        self, *, add_source: colrev.settings.SearchSource, query: str
-    ) -> None:
+    def add_source(self, *, add_source: colrev.settings.SearchSource) -> None:
         """Add a new source"""
 
         # pylint: disable=too-many-statements
         # pylint: disable=too-many-branches
-
-        saved_args = {"add": f'"{query}"'}
 
         package_manager = self.review_manager.get_package_manager()
         endpoint_dict = package_manager.load_packages(
@@ -72,19 +68,16 @@ class Search(colrev.operation.Operation):
         endpoint.validate_source(search_operation=self, source=add_source)  # type: ignore
 
         self.review_manager.logger.info(f"{colors.GREEN}Add source:{colors.END}")
-        # self.review_manager.p_printer.pprint(add_source)
         print(add_source)
         self.review_manager.settings.sources.append(add_source)
         self.review_manager.save_settings()
 
-        self.review_manager.create_commit(
-            msg=f"Add search source {add_source.filename}",
-            script_call="colrev search",
-            saved_args=saved_args,
-        )
         print()
 
-        self.main(selection_str="all", rerun=False)
+        self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
+        self.review_manager.create_commit(
+            msg=f"Add search source {add_source.filename}",
+        )
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
 
@@ -314,7 +307,9 @@ class Search(colrev.operation.Operation):
 
         return changed
 
-    def main(self, *, selection_str: str = None, rerun: bool) -> None:
+    def main(
+        self, *, selection_str: str = None, rerun: bool, skip_commit: bool = False
+    ) -> None:
         """Search for records (main entrypoint)"""
 
         self.review_manager.logger.info("Search")
@@ -361,9 +356,8 @@ class Search(colrev.operation.Operation):
                     self.__remove_forthcoming(source=source)
 
                 self.review_manager.dataset.add_changes(path=source.filename)
-                self.review_manager.create_commit(
-                    msg="Run search", script_call="colrev search"
-                )
+                if not skip_commit:
+                    self.review_manager.create_commit(msg="Run search")
 
     def setup_custom_script(self) -> None:
         """Setup a custom search script"""

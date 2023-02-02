@@ -116,7 +116,6 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.create_commit(
             msg=msg,
             manual_author=False,
-            script_call="colrev prescreen",
         )
 
     def get_data(self) -> dict:
@@ -194,7 +193,6 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
-            script_call="colrev prescreen",
         )
 
     def __print_stats(self, *, selected_record_ids: list) -> None:

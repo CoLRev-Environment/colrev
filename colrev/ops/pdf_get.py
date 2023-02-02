@@ -291,9 +291,7 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
 
         self.review_manager.dataset.add_record_changes()
-        self.review_manager.create_commit(
-            msg="Relink PDFs", script_call="colrev pdf-get"
-        )
+        self.review_manager.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
         self,
@@ -559,8 +557,6 @@ class PDFGet(colrev.operation.Operation):
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 
-        saved_args = locals()
-
         self.review_manager.logger.info("Get PDFs")
         self.review_manager.logger.info(
             "Get PDFs of prescreen-included records from local and remote sources."
@@ -604,9 +600,7 @@ class PDFGet(colrev.operation.Operation):
             if self.review_manager.settings.pdf_get.rename_pdfs:
                 self.rename_pdfs()
 
-        self.review_manager.create_commit(
-            msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
-        )
+        self.review_manager.create_commit(msg="Get PDFs")
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-get operation{colors.END}"
         )

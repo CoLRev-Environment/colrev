@@ -241,7 +241,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         results: list,
-        saved_args: dict,
     ) -> None:
 
         if (
@@ -274,8 +273,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             dedupe_operation.review_manager.create_commit(
                 msg="Labeling of duplicates (active learning)",
                 manual_author=True,
-                script_call="colrev dedupe",
-                saved_args=saved_args,
             )
 
         else:
@@ -293,8 +290,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                     dedupe_operation.review_manager.create_commit(
                         msg="Set remaining records to non-duplicated (not enough to train ML)",
                         manual_author=True,
-                        script_call="colrev dedupe",
-                        saved_args=saved_args,
                     )
                     return
 
@@ -307,8 +302,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 dedupe_operation.review_manager.create_commit(
                     msg="Set remaining records to non-duplicated",
                     manual_author=True,
-                    script_call="colrev dedupe",
-                    saved_args=saved_args,
                 )
 
     def __adapted_console_label(
@@ -316,7 +309,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         manual: bool,
-        saved_args: dict,
         max_associations_to_check: int = 1000,
     ) -> None:
         """
@@ -495,13 +487,11 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         self.__apply_active_learning(
             dedupe_operation=dedupe_operation,
             results=manual_dedupe_decision_list,
-            saved_args=saved_args,
         )
 
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Run the console labeling to train the active learning model"""
 
-        saved_args: dict = {}
         # Setting in-memory mode depending on system RAM
         records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
             header_only=True
@@ -515,9 +505,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         )
 
         dedupe_io.console_label = self.__adapted_console_label
-        dedupe_io.console_label(
-            dedupe_operation=dedupe_operation, manual=True, saved_args=saved_args
-        )
+        dedupe_io.console_label(dedupe_operation=dedupe_operation, manual=True)
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
@@ -917,8 +905,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             #     dedupe_operation.apply_merges(results=[], complete_dedupe=True)
             #     dedupe_operation.review_manager.create_commit(
             #         msg="Merge duplicate records (no duplicates detected)",
-            #         script_call="colrev dedupe",
-            #         saved_args=saved_args,
             #     )
             #     dedupe_operation.review_manager.logger.info(
             #         "If there are errors, it could be necessary to remove the "
@@ -1005,10 +991,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Cluster potential duplicates, merge, and export validation tables"""
 
-        saved_args: dict = {}
-        saved_args.update(merge_threshold=str(self.settings.merge_threshold))
-        saved_args.update(partition_threshold=str(self.settings.partition_threshold))
-
         if not self.settings_file.is_file():
             dedupe_operation.review_manager.logger.info(
                 "No settings file. Skip ML-clustering."
@@ -1036,7 +1018,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records (based on active-learning clusters)",
             script_call="colrev dedupe",
-            saved_args=saved_args,
         )
 
         dedupe_operation.review_manager.logger.info(

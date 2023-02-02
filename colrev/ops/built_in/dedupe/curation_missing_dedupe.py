@@ -325,8 +325,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
             dedupe_operation.review_manager.create_commit(
                 msg="Merge duplicate records",
-                script_call="colrev dedupe",
-                saved_args={},
             )
 
         if len(ret["add_records_to_md_processed_list"]) > 0:
@@ -352,8 +350,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
             dedupe_operation.review_manager.create_commit(
                 msg="Add non-duplicate records",
-                script_call="colrev dedupe",
-                saved_args={},
             )
 
         self.__create_dedupe_source_stats(dedupe_operation=dedupe_operation)

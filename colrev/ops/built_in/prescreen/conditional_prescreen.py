@@ -44,8 +44,6 @@ class ConditionalPrescreen(JsonSchemaMixin):
     ) -> dict:
         """Prescreen records based on predefined conditions (rules)"""
 
-        saved_args = locals()
-        saved_args["include_all"] = ""
         pad = 50
         for record in records.values():
             if record["colrev_status"] != colrev.record.RecordState.md_processed:
@@ -63,8 +61,6 @@ class ConditionalPrescreen(JsonSchemaMixin):
         prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
-            script_call="colrev prescreen",
-            saved_args=saved_args,
         )
         return records
 

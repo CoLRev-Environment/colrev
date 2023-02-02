@@ -39,8 +39,6 @@ class CoLRevCLIManPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare records manually based on cli"""
 
-        # saved_args = locals()
-
         md_prep_man_data = prep_man_operation.get_data()
         stat_len = md_prep_man_data["nr_tasks"]
 
@@ -60,7 +58,6 @@ class CoLRevCLIManPrep(JsonSchemaMixin):
         #         prep_man_operation.review_manager.create_commit(
         #            msg= "Manual preparation of records",
         #             manual_author=True,
-        #             saved_args=saved_args,
         #         )
         #     else:
         #         input("Press Enter to exit.")

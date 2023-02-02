@@ -363,7 +363,6 @@ class SimpleDedupe(JsonSchemaMixin):
 
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
-            script_call="colrev dedupe",
         )
 
         dedupe_operation.review_manager.logger.info(
@@ -381,7 +380,6 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_operation.review_manager.create_commit(
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
-            script_call="colrev dedupe",
         )
 
 

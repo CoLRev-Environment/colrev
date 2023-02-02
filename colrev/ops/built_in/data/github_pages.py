@@ -131,9 +131,7 @@ class GithubPages(JsonSchemaMixin):
         )
         data_operation.review_manager.dataset.add_changes(path=data_file)
 
-        data_operation.review_manager.create_commit(
-            msg="Update sample", script_call="colrev data"
-        )
+        data_operation.review_manager.create_commit(msg="Update sample")
 
     def __push_branch(
         self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo

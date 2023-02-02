@@ -167,7 +167,7 @@ def add_search_source(
             comment="",
         )
 
-    search_operation.add_source(add_source=add_source, query=query)
+    search_operation.add_source(add_source=add_source)
 
 
 def add_data(

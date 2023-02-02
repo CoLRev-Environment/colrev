@@ -221,7 +221,7 @@ class TableScreen(JsonSchemaMixin):
         if screen_operation.review_manager.dataset.has_changes():
             if "y" == input("create commit [y,n]?"):
                 screen_operation.review_manager.create_commit(
-                    msg="Screen", manual_author=True, script_call="colrev screen"
+                    msg="Screen", manual_author=True
                 )
         return records
 

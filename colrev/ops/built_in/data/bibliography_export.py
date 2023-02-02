@@ -112,7 +112,6 @@ class BibliographyExport(JsonSchemaMixin):
         data_operation.review_manager.dataset.add_changes(path=export_filepath)
         data_operation.review_manager.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
-            script_call="colrev data",
         )
 
     def __zotero_conversion(
@@ -175,7 +174,6 @@ class BibliographyExport(JsonSchemaMixin):
 
             data_operation.review_manager.create_commit(
                 msg=f"Create {self.settings.bib_format.name} bibliography",
-                script_call="colrev data",
             )
 
         except Exception as exc:

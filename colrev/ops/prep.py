@@ -463,13 +463,10 @@ class Prep(colrev.operation.Operation):
 
         self.__reset(record_list=records_to_reset)
 
-        saved_args = {"reset_records": ",".join(reset_ids)}
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Reset metadata for manual preparation",
-            script_call="colrev prep",
-            saved_args=saved_args,
         )
 
     def set_ids(self) -> None:
@@ -522,8 +519,6 @@ class Prep(colrev.operation.Operation):
 
         self.review_manager.create_commit(
             msg="Set IDs",
-            script_call="colrev prep -sid",
-            saved_args={},
         )
 
     def reset_ids(self) -> None:
@@ -863,8 +858,6 @@ class Prep(colrev.operation.Operation):
             "Prep completes and corrects record metadata based on APIs and preparation rules."
         )
 
-        saved_args = locals()
-
         # Note: for unit testing, we use a simple loop (instead of parallel)
         # to ensure that the IDs of feed records don't change
         __unit_testing = "test_prep" == inspect.stack()[1][3]
@@ -880,9 +873,6 @@ class Prep(colrev.operation.Operation):
             input("\nPress Enter to continue")
             print("\n\n")
 
-        if not keep_ids:
-            del saved_args["keep_ids"]
-
         if "NA" != debug_ids:
             self.debug_mode = True
 
@@ -891,7 +881,6 @@ class Prep(colrev.operation.Operation):
         for i, prep_round in enumerate(self.review_manager.settings.prep.prep_rounds):
 
             self.__setup_prep_round(i=i, prep_round=prep_round)
-            saved_args["similarity"] = self.retrieval_similarity
 
             preparation_data = self.__get_preparation_data(
                 prep_round=prep_round, debug_file=debug_file, debug_ids=debug_ids
@@ -939,8 +928,6 @@ class Prep(colrev.operation.Operation):
 
                 self.review_manager.create_commit(
                     msg=f"Prepare records ({prep_round.name})",
-                    script_call="colrev prep",
-                    saved_args=saved_args,
                 )
                 prep_commit_id = (
                     self.review_manager.dataset.get_repo().head.commit.hexsha
@@ -954,9 +941,7 @@ class Prep(colrev.operation.Operation):
         if not keep_ids and not self.debug_mode:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            self.review_manager.create_commit(
-                msg="Set IDs", script_call="colrev prep", saved_args=saved_args
-            )
+            self.review_manager.create_commit(msg="Set IDs")
 
         if not self.review_manager.high_level_operation:
             print()

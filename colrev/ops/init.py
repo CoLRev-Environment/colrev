@@ -39,6 +39,7 @@ class Initializer:
         example: bool = False,
         local_pdf_collection: bool = False,
         target_path: Path = None,
+        exact_call: str = "",
     ) -> None:
 
         if review_type is None:
@@ -85,7 +86,7 @@ class Initializer:
         if example:
             self.__create_example_repo()
 
-        self.review_manager = colrev.review_manager.ReviewManager()
+        self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
         self.__create_commit(saved_args=saved_args)
         if not example:
@@ -159,8 +160,6 @@ class Initializer:
         self.review_manager.create_commit(
             msg="Initial commit",
             manual_author=True,
-            script_call="colrev init",
-            saved_args=saved_args,
         )
 
     def __setup_files(self, *, path: Path) -> None:

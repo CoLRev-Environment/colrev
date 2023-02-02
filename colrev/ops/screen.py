@@ -61,8 +61,6 @@ class Screen(colrev.operation.Operation):
         self.review_manager.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
-            script_call="colrev screen",
-            saved_args=saved_args,
         )
 
     def get_screening_criteria(self) -> list:
@@ -149,7 +147,6 @@ class Screen(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg=f"Add screening criterion: {criterion_name}",
-            script_call="colrev screen",
         )
 
     def delete_criterion(self, *, criterion_to_delete: str) -> None:
@@ -203,7 +200,6 @@ class Screen(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg=f"Removed screening criterion: {criterion_to_delete}",
-            script_call="colrev screen",
         )
 
     def create_screen_split(self, *, create_split: int) -> list:
@@ -254,7 +250,6 @@ class Screen(colrev.operation.Operation):
         self.review_manager.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
-            script_call="colrev screen",
         )
 
     def __print_stats(self, *, selected_record_ids: list) -> None:

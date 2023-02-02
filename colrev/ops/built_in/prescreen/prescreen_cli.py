@@ -139,7 +139,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 return records
 
         prescreen_operation.review_manager.create_commit(
-            msg="Pre-screening (manual)", manual_author=True, saved_args=None
+            msg="Pre-screening (manual)", manual_author=True
         )
         return records
 

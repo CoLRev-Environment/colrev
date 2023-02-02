@@ -288,9 +288,7 @@ class PDFPrep(colrev.operation.Operation):
         records = {r["ID"]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
-        self.review_manager.create_commit(
-            msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
-        )
+        self.review_manager.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
 
@@ -362,8 +360,6 @@ class PDFPrep(colrev.operation.Operation):
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
-        saved_args = locals()
-
         self.review_manager.logger.info("Prep PDFs")
         self.review_manager.logger.info(
             "Prepare PDFs, validating them against their metadata, "
@@ -421,9 +417,7 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
-        self.review_manager.create_commit(
-            msg="Prepare PDFs", script_call="colrev pdf-prep", saved_args=saved_args
-        )
+        self.review_manager.create_commit(msg="Prepare PDFs")
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )

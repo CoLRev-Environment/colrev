@@ -166,9 +166,7 @@ class ExportManPrep(JsonSchemaMixin):
         prep_man_operation.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
 
         prep_man_operation.review_manager.dataset.set_ids(selected_ids=imported_records)
-        prep_man_operation.review_manager.create_commit(
-            msg="Set IDs", script_call="colrev prep", saved_args={}
-        )
+        prep_man_operation.review_manager.create_commit(msg="Set IDs")
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
