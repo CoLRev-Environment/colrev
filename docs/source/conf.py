@@ -30,7 +30,7 @@ sys.path.insert(
 # -- Project information -----------------------------------------------------
 
 project = "CoLRev"
-copyright = "2022, Gerit Wagner and Julian Prester"
+copyright = "2023, Gerit Wagner and Julian Prester"
 author = "Gerit Wagner and Julian Prester"
 
 # The full version, including alpha/beta/rc tags
@@ -44,19 +44,14 @@ release = colrev_version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinxcontrib.bibtex",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx_click",
-    "m2r2",
     "sphinxcontrib.datatemplates",
     "sphinx_collapse",
 ]
 
-source_suffix = [".rst", ".md"]
-
-m2r_parse_relative_links = True
 
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
 autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
@@ -69,8 +64,6 @@ add_module_names = False  # Remove namespaces from class/method signatures
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
-bibtex_bibfiles = ["references.bib"]
 
 # -- Options for HTML output -------------------------------------------------
 
