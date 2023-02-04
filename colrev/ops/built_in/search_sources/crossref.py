@@ -484,13 +484,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
         if "doi" in record.data:
             record = self.__check_doi_masterdata(record=record)
 
-        else:
-            record = self.__get_masterdata_record(
-                prep_operation=prep_operation,
-                record=record,
-                timeout=timeout,
-                safe_feed=safe_feed,
-            )
+        record = self.__get_masterdata_record(
+            prep_operation=prep_operation,
+            record=record,
+            timeout=timeout,
+            safe_feed=safe_feed,
+        )
 
         return record
 

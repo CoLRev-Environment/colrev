@@ -81,7 +81,12 @@ def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
     # assert for each record (for better error reporting)
     for expected_record in expected_records.values():
         try:
-            assert expected_record == records[expected_record["ID"]]
+            prepared_record_dict = records[expected_record["ID"]]
+            for time_variant_field in colrev.record.Record.time_variant_fields:
+                if time_variant_field in prepared_record_dict:
+                    prepared_record = colrev.record.Record(data=prepared_record_dict)
+                    prepared_record.remove_field(key=time_variant_field)
+            assert expected_record == prepared_record_dict
         except AssertionError as exc:
             expected_records_path = Path(colrev.__file__).parent.parent / Path(
                 "tests/prep_test/expected_records.bib"

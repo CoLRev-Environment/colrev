@@ -680,6 +680,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 review_manager=prep_operation.review_manager,
                 query=query,
             ):
+                if "dblp_key" in record.data:
+                    if retrieved_record.data["dblp_key"] != record.data["dblp_key"]:
+                        continue
+
                 similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                     record_original=record,
                     retrieved_record_original=retrieved_record,
