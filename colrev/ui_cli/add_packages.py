@@ -20,6 +20,8 @@ def add_search_source(
     """Add a search source package_endpoint"""
 
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-locals
 
     if "pdfs" == query:
 
@@ -103,6 +105,79 @@ def add_search_source(
             load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",
         )
+    elif "aisel.aisnet.org" in query:
+
+        peer_reviewed = "peer_reviewed=true" in query
+        start_date = ""
+        if "start_date=" in query:
+            start_date = query[query.find("start_date=") + 11 :]
+            start_date = start_date[: start_date.find("&")]
+            start_date = start_date.replace("%2F", "/")
+        end_date = ""
+        if "end_date=" in query:
+            end_date = query[query.find("end_date=") + 9 :]
+            end_date = end_date[: end_date.find("&")]
+            end_date = end_date.replace("%2F", "/")
+
+        query = query[query.find("?q=") + 3 : query.find("&start")]
+        query_parts = query.split("%20")
+
+        search_terms = []
+        query_parts_merged = []
+        parenthesis_expression = ""
+        for query_part in query_parts:
+            if query_part not in ["(", ")"] and "" == parenthesis_expression:
+                query_parts_merged.append(query_part)
+            elif "(" == query_part:
+                parenthesis_expression += "("
+            elif ")" == query_part:
+                parenthesis_expression = parenthesis_expression.rstrip().replace(
+                    "(", ""
+                )
+                query_parts_merged.append(parenthesis_expression)
+                parenthesis_expression = ""
+            else:
+                parenthesis_expression = parenthesis_expression + query_part + " "
+
+        term_no = 1
+        operator = ""
+
+        file_query = ""
+        for query_part in query_parts_merged:
+            if query_part in ["OR", "AND", "NOT"]:
+                operator = query_part
+                file_query += "_" + query_part + "_"
+                continue
+
+            field = "All fields"
+            if "%3A" in query_part:
+                field, query_part = query_part.split("%3A")
+            search_term = {"operator": operator, "term": query_part, "field": field}
+            file_query += "_" + query_part + "_"
+
+            search_terms.append(search_term)
+            term_no += 1
+
+        params = {"search_terms": search_terms, "peer_reviewed": peer_reviewed}
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+
+        file_query = "aisel_" + file_query.lstrip("_").rstrip("_").replace("__", "_")
+
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"ais_{file_query}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev_built_in.ais_library",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": params},
+            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            comment="",
+        )
+
     elif Path(query).is_file():
         # pylint: disable=import-outside-toplevel
         import shutil

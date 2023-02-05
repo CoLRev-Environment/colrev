@@ -2,10 +2,15 @@
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
 
+import json
+import re
 import typing
+import urllib.parse
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,6 +19,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -37,6 +43,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -70,19 +77,199 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if "query_file" not in source.search_parameters:
+        if (
+            "query_file" not in source.search_parameters
+            and "query" not in source.search_parameters
+        ):
             raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
+                f"Source missing query_file or query search_parameter ({source.filename})"
             )
 
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
+        if "query_file" in source.search_parameters:
+            if not Path(source.search_parameters["query_file"]).is_file():
+                raise colrev_exceptions.InvalidQueryException(
+                    f"File does not exist: query_file {source.search_parameters['query_file']} "
+                    f"for ({source.filename})"
+                )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
+        )
+
+    def __get_ais_query_return(self) -> list:
+        def query_from_params(params: dict) -> str:
+            final = ""
+            for i in params["search_terms"]:
+                final = f"{final} {i['operator']} {i['field']}:{i['term']}".strip()
+                final = final.replace("All fields:", "")
+
+            if "start_date" in params["search_terms"]:
+                final = f"{final}&start_date={params['search_terms']['start_date']}"
+
+            if "end_date" in params["search_terms"]:
+                final = f"{final}&end_date={params['search_terms']['end_date']}"
+
+            if "peer_reviewed" in params["search_terms"]:
+                final = f"{final}&peer_reviewed=true"
+
+            return urllib.parse.quote(final)
+
+        params = self.search_source.search_parameters["query"]
+        final_q = query_from_params(params)
+        query_string = (
+            "https://aisel.aisnet.org/do/search/results/refer?"
+            + "start=0&context=509156&sort=score&facet=&dlt=Export122204"
+        )
+        query_string = f"{query_string}&q={final_q}"
+
+        response = requests.get(query_string)
+
+        zotero_translation_service = (
+            self.review_manager.get_zotero_translation_service()
+        )
+        zotero_translation_service.start_zotero_translators()
+
+        headers = {"Content-type": "text/plain"}
+        ret = requests.post(
+            "http://127.0.0.1:1969/import",
+            headers=headers,
+            data=response.content,
+            timeout=30,
+        )
+        headers = {"Content-type": "application/json"}
+
+        try:
+            json_content = json.loads(ret.content)
+            export = requests.post(
+                "http://127.0.0.1:1969/export?format=bibtex",
+                headers=headers,
+                json=json_content,
+                timeout=30,
+            )
+
+        except Exception as exc:
+            raise colrev_exceptions.ImportException(
+                f"Zotero translators failed ({exc})"
+            )
+
+        records = self.review_manager.dataset.load_records_dict(
+            load_str=export.content.decode("utf-8")
+        )
+
+        return list(records.values())
+
+    def __run_parameter_search(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        ais_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
+    ) -> None:
+
+        # pylint: disable=too-many-branches
+
+        if rerun:
+            search_operation.review_manager.logger.info(
+                "Performing a search of the full history (may take time)"
+            )
+
+        records = search_operation.review_manager.dataset.load_records_dict()
+        nr_retrieved, nr_changed = 0, 0
+
+        try:
+
+            for record_dict in self.__get_ais_query_return():
+                # Note : discard "empty" records
+                if "" == record_dict.get("author", "") and "" == record_dict.get(
+                    "title", ""
+                ):
+                    continue
+
+                try:
+                    ais_feed.set_id(record_dict=record_dict)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
+
+                prev_record_dict_version = {}
+                if record_dict["ID"] in ais_feed.feed_records:
+                    prev_record_dict_version = deepcopy(
+                        ais_feed.feed_records[record_dict["ID"]]
+                    )
+
+                prep_record = colrev.record.PrepRecord(data=record_dict)
+
+                if "colrev_data_provenance" in prep_record.data:
+                    del prep_record.data["colrev_data_provenance"]
+
+                added = ais_feed.add_record(record=prep_record)
+
+                if added:
+                    search_operation.review_manager.logger.info(
+                        " retrieve " + prep_record.data["url"]
+                    )
+                    nr_retrieved += 1
+                else:
+                    changed = search_operation.update_existing_record(
+                        records=records,
+                        record_dict=prep_record.data,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=rerun,
+                    )
+                    if changed:
+                        nr_changed += 1
+
+            if nr_retrieved > 0:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+                )
+            else:
+                search_operation.review_manager.logger.info(
+                    f"{colors.GREEN}No additional records retrieved{colors.END}"
+                )
+
+            if nr_changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                )
+            else:
+                if records:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
+
+            ais_feed.save_feed_file()
+            search_operation.review_manager.dataset.save_records_dict(records=records)
+            search_operation.review_manager.dataset.add_record_changes()
+
+        except (requests.exceptions.JSONDecodeError) as exc:
+            # watch github issue:
+            # https://github.com/fabiobatalha/crossrefapi/issues/46
+            if "504 Gateway Time-out" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Crossref (check https://status.crossref.org/)"
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref (check https://status.crossref.org/) ({exc})"
+            )
+
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, rerun: bool
+    ) -> None:
+        """Run a search of AISeLibrary"""
+
+        ais_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        #  Note: not (yet) supported: self.search_source.is_md_source()
+
+        self.__run_parameter_search(
+            search_operation=search_operation,
+            ais_feed=ais_feed,
+            rerun=rerun,
         )
 
     def load_fixes(
@@ -204,6 +391,30 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     value="Australasian Conference on Information Systems",
                     source="prep_ais_source",
                 )
+        if "https://aisel.aisnet.org/hicss" in record.data.get("url", ""):
+            record.update_field(
+                key="booktitle",
+                value="Hawaii International Conference on System Sciences",
+                source="prep_ais_source",
+            )
+        elif "https://aisel.aisnet.org/amcis" in record.data.get("url", ""):
+            record.update_field(
+                key="booktitle",
+                value="Americas Conference on Information Systems",
+                source="prep_ais_source",
+            )
+        elif "https://aisel.aisnet.org/ecis" in record.data.get("url", ""):
+            record.update_field(
+                key="booktitle",
+                value="European Conference on Information Systems",
+                source="prep_ais_source",
+            )
+        elif "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
+            record.update_field(
+                key="journal",
+                value="Business & Information Systems Engineering",
+                source="prep_ais_source",
+            )
 
         if "abstract" in record.data:
             if "N/A" == record.data["abstract"]:
@@ -215,6 +426,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 source="prep_ais_source",
                 keep_source_if_equal=True,
             )
+
+        if re.match(
+            r"MISQ Volume \d{1,2}, Issue \d Table of Contents",
+            record.data.get("title", ""),
+        ):
+            record.prescreen_exclude(reason="complementary material")
 
         return record
 
