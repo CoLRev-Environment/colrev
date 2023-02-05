@@ -391,6 +391,9 @@ class Record:
 
     def change_entrytype(self, *, new_entrytype: str) -> None:
         """Change the ENTRYTYPE"""
+        for value in self.data.get("colrev_masterdata_provenance", {}).values():
+            if "inconsistent with entrytype" in value["note"]:
+                value["note"] = ""
         self.data["ENTRYTYPE"] = new_entrytype
         if "inproceedings" == new_entrytype:
             if "UNKNOWN" == self.data.get("volume", ""):
