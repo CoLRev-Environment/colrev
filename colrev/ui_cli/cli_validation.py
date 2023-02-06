@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from typing import TYPE_CHECKING
 
 import colrev.record
@@ -171,6 +172,16 @@ def validate(
                     print(f"  {colors.ORANGE}{item_values['validate']}{colors.END}")
 
             print()
+        elif "general" == key:
+            validate_operation.review_manager.logger.info("Starting general validation")
+            if "commit_relative" in details:
+                subprocess.run(
+                    ["gitk", f"--select-commit={details['commit_relative']}"],
+                    check=False,
+                )
+            else:
+                subprocess.run(["gitk"], check=False)
+
         else:
             print("Not yet implemented")
             print(validation_details)

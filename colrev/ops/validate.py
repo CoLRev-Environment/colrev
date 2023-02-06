@@ -256,6 +256,8 @@ class Validate(colrev.operation.Operation):
 
     def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
 
+        # pylint: disable=too-many-branches
+
         if not target_commit:
             target_commit = self.review_manager.dataset.get_last_commit_sha()
 
@@ -266,9 +268,10 @@ class Validate(colrev.operation.Operation):
                 commit.hexsha,
                 commit.message,
             )
-            for commit in git_repo.iter_commits(paths="status.yaml")
+            for commit in git_repo.iter_commits()
         )
-        scope = "NA"
+
+        scope = ""
         # Note : simple heuristic: commit messages
         for commit_id, msg in revlist:
             if commit_id == target_commit:
@@ -276,11 +279,25 @@ class Validate(colrev.operation.Operation):
                     scope = "prepare"
                 elif "colrev dedupe" in msg:
                     scope = "dedupe"
+                elif any(
+                    x in msg
+                    for x in [
+                        "colrev init",
+                        "colrev load",
+                        "colrev pdf-get",
+                        "colrev pdf-prep",
+                        "colrev screen",
+                        "colrev prescreen",
+                    ]
+                ):
+                    scope = "general"
                 else:
-                    scope = "unspecified"
+                    scope = "general"
+            if scope != "":
+                break
 
         # Otherwise: compare records
-        if scope in ["NA", "unspecified"]:
+        if scope in ["general"]:
             # detect transition types in the respective commit and
             # use them to calculate the validation_details
             records: typing.Dict[str, typing.Dict] = {}
@@ -424,7 +441,12 @@ class Validate(colrev.operation.Operation):
                         parameter="validate.scope", value=scope, options=valid_options
                     )
 
-        assert re.match(r"[0-9a-f]{5,40}", commit)
+        if not re.match(r"[0-9a-f]{5,40}", commit):
+            raise colrev_exceptions.ParameterError(
+                parameter="commit",
+                value=scope,
+                options=[x.hexsha for x in git_repo.iter_commits()],
+            )
         return commit
 
     def __deduplicated_records(
@@ -481,6 +503,17 @@ class Validate(colrev.operation.Operation):
             )
         return validation_details
 
+    def __get_relative_commit(self, target_commit: str) -> str:
+        git_repo = self.review_manager.dataset.get_repo()
+
+        relative_to_head = 0
+        for commit in git_repo.iter_commits():
+            if target_commit == commit.hexsha:
+                return f"HEAD~{relative_to_head}"
+            relative_to_head += 1
+
+        return target_commit
+
     def main(
         self,
         *,
@@ -510,7 +543,13 @@ class Validate(colrev.operation.Operation):
             filter_setting = self.__set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
-        if "NA" == filter_setting:
+        if "general" == filter_setting:
+            validation_details["general"] = {
+                "commit": target_commit,
+                "commit_relative": self.__get_relative_commit(
+                    target_commit=target_commit
+                ),
+            }
             return validation_details
 
         self.review_manager.logger.info(f"Filter: {filter_setting} changes")
