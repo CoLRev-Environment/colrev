@@ -359,7 +359,8 @@ class ColrevCuration(JsonSchemaMixin):
         if records_missing_languages:
             advice = {
                 "msg": "Curation: Add language field to all records",
-                "detailed_msg": f"records missing language field: ({','.join(records_missing_languages)})",
+                "detailed_msg": "records missing language field: "
+                + f"({','.join(records_missing_languages)})",
             }
         return advice
 

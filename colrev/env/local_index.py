@@ -995,7 +995,7 @@ class LocalIndex:
                 except colrev_exceptions.RecordNotIndexableException:
                     pass
 
-        except (colrev_exceptions.InvalidSettingsError) as exc:
+        except (colrev_exceptions.CoLRevException) as exc:
             print(exc)
 
     def index(self, *, index_tei: bool = False) -> None:
