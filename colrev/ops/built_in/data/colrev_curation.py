@@ -343,14 +343,24 @@ class ColrevCuration(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
+        review_manager: colrev.review_manager.ReviewManager,
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
+        records = review_manager.dataset.load_records_dict()
         advice = {
             "msg": "TODO (add curation-specific advice...)",
             "detailed_msg": "TODO",
         }
+
+        records_missing_languages = [
+            r["ID"] for r in records.values() if "language" not in r
+        ]
+        if records_missing_languages:
+            advice = {
+                "msg": "Curation: Add language field to all records",
+                "detailed_msg": f"records missing language field: ({','.join(records_missing_languages)})",
+            }
         return advice
 
 
