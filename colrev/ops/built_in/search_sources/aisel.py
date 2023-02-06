@@ -6,7 +6,6 @@ import json
 import re
 import typing
 import urllib.parse
-from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -190,11 +189,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-                prev_record_dict_version = {}
-                if record_dict["ID"] in ais_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        ais_feed.feed_records[record_dict["ID"]]
-                    )
+                # prev_record_dict_version = {}
+                # if record_dict["ID"] in ais_feed.feed_records:
+                #     prev_record_dict_version = deepcopy(
+                #         ais_feed.feed_records[record_dict["ID"]]
+                #     )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
 
@@ -208,16 +207,16 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         " retrieve " + prep_record.data["url"]
                     )
                     nr_retrieved += 1
-                else:
-                    changed = search_operation.update_existing_record(
-                        records=records,
-                        record_dict=prep_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        nr_changed += 1
+                # else:
+                #     changed = search_operation.update_existing_record(
+                #         records=records,
+                #         record_dict=prep_record.data,
+                #         prev_record_dict_version=prev_record_dict_version,
+                #         source=self.search_source,
+                #         update_time_variant_fields=rerun,
+                #     )
+                #     if changed:
+                #         nr_changed += 1
 
             if nr_retrieved > 0:
                 search_operation.review_manager.logger.info(
