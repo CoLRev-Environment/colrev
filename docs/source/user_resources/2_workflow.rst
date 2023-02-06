@@ -19,6 +19,11 @@ The workflow, as illustrated in the following, consists of a three-step cycle th
    :align: center
    :alt: Workflow cycle
 
+Although the validation step is generally recommended, it is more important for some operations than for others.
+For example, users may skip the validation for operations like init, or operations that do not create new versions (such as push or show).
+
+The use of CoLRev operations ensures that the data is always formated consistently and that diffs are readable.
+It is also possible to create verisons through git commands, which automatically trigger CoLRev's pre-commit hooks.
 
 CoLRev status
 -------------------------------
@@ -74,12 +79,23 @@ The following figure illustrates the validation for a prep operation:
    :align: center
    :alt: Validation (prep)
 
-Validate is a general operation that allows users to validate changes in different types of commits (prep, dedupe, ...), but also changes of particular users, properties of the review or other (see `docs <technical_documentation/cli.html#colrev-validate>`_).
+Validate is a general operation that allows users to validate changes in different types of commits (prep, dedupe, ...),
+but also changes of particular users, properties of the review or other (see `docs <technical_documentation/cli.html#colrev-validate>`_).
+For some operations (such as prep and dedupe), CoLRev provides custom validation functionality, which displays the most substantial changes first.
+In other cases, CoLRev opens gitk, which displays all committed changes.
+If necessary, whole versions can be undone through git clients (for an overview of git GUI clients, see `here <https://git-scm.com/downloads/guis>`_).
 
-Alternatively, you can also rely on git diff, or git GUIs such as gitk to validate all changes that were committed.
-If necessary, whole versions can be undone through git clients.
-CoLRev ensures that the data is always formated consistently and that diffs are readable (through pre-commit hooks).
-An overview of git GUI clients is available `here <https://git-scm.com/downloads/guis>`_.
+It is also possible to validate previous versions.
+This could be done to validate the changes introduced by algorithms and teammates, and it facilitates validation of any CoLRev project by external authors.
+To validate commits going back in history, run:
+
+.. code-block:: bash
+
+      colrev validate HEAD
+      colrev validate HEAD~1
+      colrev validate HEAD~2
+      colrev validate HEAD~3
+      ...
 
 ..
    Using git, you can validate the individual changes and the commit report for each version.
