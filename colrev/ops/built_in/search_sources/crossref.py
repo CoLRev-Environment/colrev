@@ -481,8 +481,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
         if len(record.data.get("title", "")) < 35 and "doi" not in record.data:
             return record
 
-        if "doi" in record.data:
-            record = self.__check_doi_masterdata(record=record)
+        if "doi" not in record.data:
+            return record
+
+        record = self.__check_doi_masterdata(record=record)
 
         record = self.__get_masterdata_record(
             prep_operation=prep_operation,
