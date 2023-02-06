@@ -401,9 +401,16 @@ class Advisor:
             ]:
                 review_instructions.append(instruction)
 
-        if len(review_instructions) == 1 or self.review_manager.verbose_mode:
+        if (
+            len(review_instructions) == 1
+            or self.review_manager.verbose_mode
+            or self.review_manager.settings.is_curated_masterdata_repo()
+        ):
 
-            if "colrev data" in [ri["cmd"] for ri in review_instructions]:
+            if (
+                "colrev data" in [ri["cmd"] for ri in review_instructions]
+                or self.review_manager.settings.is_curated_masterdata_repo()
+            ):
 
                 for item in review_instructions.copy():
                     if item.get("cmd") == "colrev data":
