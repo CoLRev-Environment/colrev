@@ -1675,8 +1675,8 @@ def validate(
                 threshold=threshold,
             )
         else:
-            print("No substantial changes.")
-            return
+            validate_operation.review_manager.logger.info("Starting general validation")
+            subprocess.run(["gitk"])
 
         review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
 

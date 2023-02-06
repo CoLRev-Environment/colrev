@@ -299,8 +299,6 @@ class Validate(colrev.operation.Operation):
             # Note : still very simple heuristics...
             if len(records) != len(hist_records):
                 scope = "dedupe"
-            else:
-                scope = "prepare"
 
         return scope
 
@@ -512,6 +510,9 @@ class Validate(colrev.operation.Operation):
             filter_setting = self.__set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
+        if "NA" == filter_setting:
+            return validation_details
+
         self.review_manager.logger.info(f"Filter: {filter_setting} changes")
 
         # extension: filter_setting for changes of contributor (git author)
