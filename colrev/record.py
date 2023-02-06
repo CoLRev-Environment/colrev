@@ -728,21 +728,23 @@ class Record:
             source = field_provenance["source"]
             note = field_provenance["note"]
 
+            # Always update from curated merging_records
+            if merging_record.masterdata_is_curated():
+                self.data[key] = merging_record.data[key]
+                if key not in Record.identifying_field_keys + ["ENTRYTYPE"]:
+                    self.add_data_provenance(key=key, source=source, note=note)
+
+            # Do not change if MERGING_RECORD is not curated
+            elif (
+                self.masterdata_is_curated()
+                and not merging_record.masterdata_is_curated()
+            ):
+                continue
+
             # Part 1: identifying fields
             if key in Record.identifying_field_keys:
 
-                # Always update from curated merging_records
-                if merging_record.masterdata_is_curated():
-                    self.data[key] = merging_record.data[key]
-
-                # Do not change if MERGING_RECORD is not curated
-                elif (
-                    self.masterdata_is_curated()
-                    and not merging_record.masterdata_is_curated()
-                ):
-                    continue
-
-                elif preferred_masterdata_source_prefixes:
+                if preferred_masterdata_source_prefixes:
                     if merging_record_preferred:
                         self.update_field(
                             key=key, value=str(val), source=source, append_edit=False
