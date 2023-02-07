@@ -477,7 +477,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                         self.search_source.search_parameters["query"] + "+" + str(year)
                     )
 
-                nr_retrieved = 0
                 batch_size_cumulative = 0
                 batch_size = 250
                 while True:
