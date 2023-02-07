@@ -2,6 +2,7 @@
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
+import subprocess
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +16,6 @@ from PyPDF2 import PdfFileWriter
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-
 
 if TYPE_CHECKING:
     import colrev.ops.prep_man
@@ -107,12 +107,16 @@ class ExportManPrep(JsonSchemaMixin):
         )
         if any("file" in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
+        # os.system('%s %s' % (os.getenv('EDITOR'), self.export_path))
+        subprocess.call(["xdg-open", str(self.export_path)])
 
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
     ) -> None:
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+
         prep_man_operation.review_manager.logger.info(
             "Load import changes from "
             f"{self.export_path.relative_to(prep_man_operation.review_manager.path)}"
@@ -159,6 +163,30 @@ class ExportManPrep(JsonSchemaMixin):
                         record.add_data_provenance(
                             key=k, source="man_prep", note="not_missing"
                         )
+            colrev_data_provenance_keys_to_drop = []
+            for key, items in record.data.get("colrev_data_provenance", {}).items():
+                if key not in record.data and "not_missing" not in items["note"]:
+                    colrev_data_provenance_keys_to_drop.append(key)
+            for (
+                colrev_data_provenance_key_to_drop
+            ) in colrev_data_provenance_keys_to_drop:
+                del record.data["colrev_data_provenance"][
+                    colrev_data_provenance_key_to_drop
+                ]
+
+            colrev_masterdata_provenance_keys_to_drop = []
+            for key, items in record.data.get(
+                "colrev_masterdata_provenance", {}
+            ).items():
+                if key not in record.data and "not_missing" not in items["note"]:
+                    colrev_masterdata_provenance_keys_to_drop.append(key)
+            for (
+                colrev_masterdata_provenance_key_to_drop
+            ) in colrev_masterdata_provenance_keys_to_drop:
+                del record.data["colrev_masterdata_provenance"][
+                    colrev_masterdata_provenance_key_to_drop
+                ]
+
             records[record_id] = record.get_data()
 
         prep_man_operation.review_manager.dataset.save_records_dict(records=records)
