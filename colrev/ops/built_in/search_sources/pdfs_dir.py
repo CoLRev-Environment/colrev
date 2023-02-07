@@ -5,9 +5,12 @@ from __future__ import annotations
 import re
 import typing
 from dataclasses import dataclass
+from importlib.metadata import version
 from pathlib import Path
 
 import zope.interface
+from crossref.restful import Etiquette
+from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from pdfminer.pdfdocument import PDFDocument
@@ -17,6 +20,7 @@ from pdfminer.pdfparser import PDFParser
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
+import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -40,6 +44,8 @@ class PDFSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"
     link = "https://github.com/kermitt2/grobid"
+
+    __doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -73,6 +79,13 @@ class PDFSearchSource(JsonSchemaMixin):
                 self.r_subdir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
             if "volume" == self.subdir_pattern:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
+
+        self.etiquette = Etiquette(
+            "CoLRev",
+            version("colrev"),
+            "https://github.com/geritwagner/colrev",
+            source_operation.review_manager.email,
+        )
 
     def __update_if_pdf_renamed(
         self,
@@ -570,6 +583,16 @@ class PDFSearchSource(JsonSchemaMixin):
                 if added:
                     nr_added += 1
 
+                    if "doi" not in new_record:
+                        record = colrev.record.Record(data=new_record)
+                        record.set_text_from_pdf(
+                            project_path=search_operation.review_manager.path
+                        )
+                        res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
+                        if res:
+                            record["doi"] = res[0]
+                        del record.data["text_from_pdf"]
+
                 elif search_operation.review_manager.force_mode:
                     # Note : only re-index/update
                     changed = search_operation.update_existing_record(
@@ -632,6 +655,23 @@ class PDFSearchSource(JsonSchemaMixin):
         for record in records.values():
             if "grobid-version" in record:
                 del record["grobid-version"]
+
+            if "doi" in record:
+                works = Works(etiquette=self.etiquette)
+                crossref_query_return = works.doi(record["doi"])
+                retrieved_record_dict = connector_utils.json_to_record(
+                    item=crossref_query_return
+                )
+                for key in [
+                    "journal",
+                    "booktitle",
+                    "volume",
+                    "number",
+                    "year",
+                    "pages",
+                ]:
+                    if key in retrieved_record_dict:
+                        record[key] = retrieved_record_dict[key]
 
         return records
 
