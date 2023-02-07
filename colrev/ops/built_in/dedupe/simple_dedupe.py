@@ -64,50 +64,41 @@ class SimpleDedupe(JsonSchemaMixin):
         assert self.settings.merging_dup_threshold >= 0.0
         assert self.settings.merging_dup_threshold <= 1.0
 
-    def __calculate_similarities_record(
+    def __get_maximum_similarity_record(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
-        records_df: pd.DataFrame,
-    ) -> pd.DataFrame:
+        records_batch: list,
+    ) -> dict:
 
-        # Note: per definition, similarities are needed relative to the last row.
-        records_df["similarity"] = 0
-        records_df["details"] = 0
-        sim_col = records_df.columns.get_loc("similarity")  # type: ignore
-        details_col = records_df.columns.get_loc("details")  # type: ignore
-        for base_record_i in range(0, records_df.shape[0]):
+        max_similarity_record = {
+            "reference_record": records_batch[len(records_batch) - 1]["ID"],
+            "record_id": "NA",
+            "similarity": 0,
+        }
+        for i in range(0, len(records_batch) - 1):
+
             sim_details = colrev.record.Record.get_similarity_detailed(
-                df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
+                record_a=records_batch[i],
+                record_b=records_batch[len(records_batch) - 1],
             )
-            # dedupe_operation.review_manager.report_logger.debug(
-            #     f"Similarity score: {sim_details['score']}"
-            # )
-            # dedupe_operation.review_manager.report_logger.debug(sim_details["details"])
 
-            records_df.iloc[base_record_i, sim_col] = sim_details["score"]
-            records_df.iloc[base_record_i, details_col] = sim_details["details"]
-        # Note: return all other records (not the comparison record/first row)
-        # and restrict it to the ID, similarity and details
-        id_col = records_df.columns.get_loc("ID")  # type: ignore
-        sim_col = records_df.columns.get_loc("similarity")  # type: ignore
-        details_col = records_df.columns.get_loc("details")  # type: ignore
-        return records_df.iloc[:, [id_col, sim_col, details_col]]
+            if sim_details["score"] > max_similarity_record["similarity"]:
+                max_similarity_record["similarity"] = sim_details["score"]
+                max_similarity_record["record_id"] = records_batch[i]["ID"]
+                max_similarity_record["details"] = sim_details["details"]
+
+        return max_similarity_record
 
     def __append_merges(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
     ) -> dict:
 
-        # dedupe_operation.review_manager.logger.debug(
-        #     f'__append_merges {batch_item["record"]}'
-        # )
-
-        records_df = batch_item["queue"]
+        records_batch = batch_item["queue"]
 
         # if the record is the first one added to the records
         # (in a preceding processing step), it can be propagated
-        # if len(batch_item["queue"]) < 2:
-        if len(records_df.index) < 2:
+        if len(records_batch) < 2:
             return {
                 "ID1": batch_item["record"],
                 "ID2": "NA",
@@ -116,15 +107,11 @@ class SimpleDedupe(JsonSchemaMixin):
             }
 
         # df to get_similarities for each other record
-        records_df = self.__calculate_similarities_record(
-            dedupe_operation=dedupe_operation, records_df=records_df
+        similarity_dict = self.__get_maximum_similarity_record(
+            dedupe_operation=dedupe_operation, records_batch=records_batch
         )
-        # drop the first row (similarities are calculated relative to the last row)
-        records_df = records_df.iloc[:-1, :]
-        # if batch_item['record'] == 'AdamsNelsonTodd1992':
-        #     records_df.to_csv('last_similarities.csv')
 
-        max_similarity = records_df.similarity.max()
+        max_similarity = similarity_dict["similarity"]
 
         ret = {}
         if max_similarity <= self.settings.merging_non_dup_threshold:
@@ -134,7 +121,7 @@ class SimpleDedupe(JsonSchemaMixin):
             #     f"max_similarity ({max_similarity})"
             # )
             ret = {
-                "ID1": batch_item["record"],
+                "ID1": similarity_dict["reference_record"],
                 "ID2": "NA",
                 "similarity": max_similarity,
                 "decision": "no_duplicate",
@@ -146,21 +133,21 @@ class SimpleDedupe(JsonSchemaMixin):
             < self.settings.merging_dup_threshold
         ):
 
-            other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
+            other_id = similarity_dict["record_id"]
             # dedupe_operation.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             # )
-            details = records_df.loc[records_df["similarity"].idxmax()]["details"]
+            details = similarity_dict["details"]
             # dedupe_operation.review_manager.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (
-                f'{batch_item["record"]} - {other_id}'.ljust(35, " ")
+                f'{similarity_dict["reference_record"]} - {other_id}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
             )
             # dedupe_operation.review_manager.report_logger.info(msg)
             dedupe_operation.review_manager.logger.info(msg)
             ret = {
-                "ID1": batch_item["record"],
+                "ID1": similarity_dict["reference_record"],
                 "ID2": other_id,
                 "similarity": max_similarity,
                 "decision": "potential_duplicate",
@@ -170,20 +157,22 @@ class SimpleDedupe(JsonSchemaMixin):
             # note: the following status will not be saved in the bib file but
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
-            other_id = records_df.loc[records_df["similarity"].idxmax()]["ID"]
+            other_id = similarity_dict["record_id"]
+
             # dedupe_operation.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             # )
-            details = records_df.loc[records_df["similarity"].idxmax()]["details"]
+            details = similarity_dict["details"]
+
             # dedupe_operation.review_manager.logger.debug(details)
             msg = (
-                f'Dropped duplicate: {batch_item["record"]} (duplicate of {other_id})'
+                f'Dropped duplicate: {similarity_dict["reference_record"]} (duplicate of {other_id})'
                 + f" (similarity: {max_similarity})\nDetails: {details}"
             )
             dedupe_operation.review_manager.report_logger.info(msg)
             dedupe_operation.review_manager.logger.info(msg)
             ret = {
-                "ID1": batch_item["record"],
+                "ID1": similarity_dict["reference_record"],
                 "ID2": other_id,
                 "similarity": max_similarity,
                 "decision": "duplicate",
@@ -253,15 +242,15 @@ class SimpleDedupe(JsonSchemaMixin):
         records_df_queue = pd.DataFrame.from_records(records_queue)
         records = dedupe_operation.prep_records(records_df=records_df_queue)
         # dedupe.review_manager.p_printer.pprint(records.values())
-        records_df = pd.DataFrame(records.values())
 
         items_start = dedupe_data["items_start"]
+        items_start = 0
         batch_data = []
         for i in range(items_start, len(dedupe_data["queue"])):  # type: ignore
             batch_data.append(
                 {
                     "record": dedupe_data["queue"][i],  # type: ignore
-                    "queue": records_df.iloc[: i + 1],
+                    "queue": list(records.values())[: i + 1],
                 }
             )
         return batch_data
@@ -347,9 +336,10 @@ class SimpleDedupe(JsonSchemaMixin):
 
         dedupe_batch_results = []
         for item in batch_data:
-            dedupe_batch_results.append(
-                self.__append_merges(dedupe_operation=dedupe_operation, batch_item=item)
+            merge_item = self.__append_merges(
+                dedupe_operation=dedupe_operation, batch_item=item
             )
+            dedupe_batch_results.append(merge_item)
 
         # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
 

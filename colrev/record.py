@@ -1068,50 +1068,59 @@ class Record:
         return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
 
     @classmethod
-    def get_similarity(cls, *, df_a: pd.Series, df_b: pd.Series) -> float:
-        """Dtermine the similarity between two records (represented by pandas Series)"""
-        details = Record.get_similarity_detailed(df_a=df_a, df_b=df_b)
+    def get_similarity(cls, *, df_a: dict, df_b: dict) -> float:
+        """Determine the similarity between two records"""
+
+        details = Record.get_similarity_detailed(record_a=df_a, record_b=df_b)
         return details["score"]
 
     @classmethod
-    def get_similarity_detailed(cls, *, df_a: pd.Series, df_b: pd.Series) -> dict:
-        """Determine the detailed similarities between records (pandas Series)"""
+    def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
+        """Determine the detailed similarities between records"""
         try:
-            author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
+
+            author_similarity = fuzz.ratio(record_a["author"], record_b["author"]) / 100
 
             title_similarity = (
                 fuzz.ratio(
-                    df_a["title"].lower().replace(":", "").replace("-", ""),
-                    df_b["title"].lower().replace(":", "").replace("-", ""),
+                    record_a["title"].lower().replace(":", "").replace("-", ""),
+                    record_b["title"].lower().replace(":", "").replace("-", ""),
                 )
                 / 100
             )
 
             # partial ratio (catching 2010-10 or 2001-2002)
-            year_similarity = fuzz.ratio(str(df_a["year"]), str(df_b["year"])) / 100
+            year_similarity = (
+                fuzz.ratio(str(record_a["year"]), str(record_b["year"])) / 100
+            )
 
             outlet_similarity = 0.0
-            if df_b["container_title"] != "" and df_a["container_title"] != "":
+            if record_b["container_title"] and record_a["container_title"]:
                 outlet_similarity = (
-                    fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
+                    fuzz.ratio(record_a["container_title"], record_b["container_title"])
+                    / 100
                 )
 
-            if str(df_a["journal"]) != "nan":
+            if str(record_a["journal"]) != "nan":
                 # Note: for journals papers, we expect more details
-                volume_similarity = 1 if (df_a["volume"] == df_b["volume"]) else 0
+                volume_similarity = (
+                    1 if (record_a["volume"] == record_b["volume"]) else 0
+                )
 
-                number_similarity = 1 if (df_a["number"] == df_b["number"]) else 0
+                number_similarity = (
+                    1 if (record_a["number"] == record_b["number"]) else 0
+                )
 
                 # page similarity is not considered at the moment.
                 #
                 # sometimes, only the first page is provided.
-                # if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
+                # if str(record_a["pages"]) == "nan" or str(record_b["pages"]) == "nan":
                 #     pages_similarity = 1
                 # else:
-                #     if df_a["pages"] == df_b["pages"]:
+                #     if record_a["pages"] == record_b["pages"]:
                 #         pages_similarity = 1
                 #     else:
-                #         if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
+                #         if record_a["pages"].split("-")[0] == record_b["pages"].split("-")[0]:
                 #             pages_similarity = 1
                 #         else:
                 #            pages_similarity = 0
@@ -1120,7 +1129,7 @@ class Record:
                 # ie., non-distinctive
                 # The list is based on a large export of distinct papers, tabulated
                 # according to titles and sorted by frequency
-                if [df_a["title"], df_b["title"]] in [
+                if [record_a["title"], record_b["title"]] in [
                     ["editorial", "editorial"],
                     ["editorial introduction", "editorial introduction"],
                     ["editorial notes", "editorial notes"],
