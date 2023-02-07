@@ -117,10 +117,10 @@
         "rename_pdfs": true,
         "pdf_get_package_endpoints": [
             {
-                "endpoint": "colrev_built_in.unpaywall"
+                "endpoint": "colrev_built_in.local_index"
             },
             {
-                "endpoint": "colrev_built_in.local_index"
+                "endpoint": "colrev_built_in.unpaywall"
             },
             {
                 "endpoint": "colrev_built_in.website_screenshot"
