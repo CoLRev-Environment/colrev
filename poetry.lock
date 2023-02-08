@@ -2622,6 +2622,26 @@ files = [
 ]
 
 [[package]]
+name = "repoze-sphinx-autointerface"
+version = "1.0.0"
+description = "Sphinx extension: auto-generates API docs from Zope interfaces"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "repoze.sphinx.autointerface-1.0.0-py3-none-any.whl", hash = "sha256:b706d72b38d7720b21a17cbdd4dd80dade9688f1eb5e48d33ef335978a6ce852"},
+    {file = "repoze.sphinx.autointerface-1.0.0.tar.gz", hash = "sha256:486bf1423a4696b9153e488cef9d326c496ffc16ddeb14b0c9887b46c60e28a1"},
+]
+
+[package.dependencies]
+setuptools = "*"
+Sphinx = ">=4.0"
+"zope.interface" = "*"
+
+[package.extras]
+test = ["zope.testrunner"]
+
+[[package]]
 name = "requests"
 version = "2.28.2"
 description = "Python HTTP for Humans."
@@ -3575,4 +3595,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "80d782b09a1951a5113dbd0d53e3db14968e87c00216ef9bdea985c551706c12"
+content-hash = "535eaca87fbd3e63d1e6f81db7f3f87e8c33e6a15eecbec6a9e045dbf39c72ea"

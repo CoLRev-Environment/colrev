@@ -127,6 +127,7 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
    foundations_governance/colrev
    technical_documentation/api
    technical_documentation/cli
+   technical_documentation/extensions
    foundations_governance/roadmap
    foundations_governance/about
 

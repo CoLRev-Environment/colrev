@@ -13,8 +13,7 @@ API Reference
    :alt: Logo
 
 
-TODO : autodocs summary of zope interfaces (for extensions): `interface definitions (endpoints) <https://github.com/geritwagner/colrev/blob/8fba8d94f513ae87c1fad49fc2357665fb2989bf/colrev/process.py#L426>`_
-
+The extension interfaces are documented `here <extensions.html>`_.
 
 .. autosummary::
    :toctree: _autosummary

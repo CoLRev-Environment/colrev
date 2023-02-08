@@ -50,6 +50,7 @@ extensions = [
     "sphinx_click",
     "sphinxcontrib.datatemplates",
     "sphinx_collapse",
+    "repoze.sphinx.autointerface",
 ]
 
 
