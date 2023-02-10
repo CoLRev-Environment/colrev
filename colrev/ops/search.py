@@ -202,10 +202,9 @@ class Search(colrev.operation.Operation):
                 main_record.remove_field(key="warning")
                 changed = True
 
-            if (
-                "forthcoming" == main_record_dict["year"]
-                and "forthcoming" != record_dict["year"]
-            ):
+            if "forthcoming" == main_record_dict.get(
+                "year", ""
+            ) and "forthcoming" != record_dict.get("year", ""):
                 self.review_manager.logger.info(
                     f"{colors.GREEN}Update published forthcoming paper: "
                     f"{record.data['ID']}{colors.END}"

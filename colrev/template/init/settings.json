@@ -71,6 +71,9 @@
                         "endpoint": "colrev_built_in.get_masterdata_from_crossref"
                     },
                     {
+                        "endpoint": "colrev_built_in.get_masterdata_from_pubmed"
+                    },
+                    {
                         "endpoint": "colrev_built_in.get_masterdata_from_europe_pmc"
                     },
                     {

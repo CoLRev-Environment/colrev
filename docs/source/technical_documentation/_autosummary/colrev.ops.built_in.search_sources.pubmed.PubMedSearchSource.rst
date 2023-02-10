@@ -17,15 +17,18 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
       :nosignatures:
 
       ~PubMedSearchSource.all_json_schemas
+      ~PubMedSearchSource.check_availability
       ~PubMedSearchSource.field_mapping
       ~PubMedSearchSource.from_dict
       ~PubMedSearchSource.from_json
       ~PubMedSearchSource.from_object
+      ~PubMedSearchSource.get_masterdata
       ~PubMedSearchSource.heuristic
       ~PubMedSearchSource.json_schema
       ~PubMedSearchSource.load_fixes
       ~PubMedSearchSource.prepare
       ~PubMedSearchSource.register_field_encoders
+      ~PubMedSearchSource.run_search
       ~PubMedSearchSource.to_dict
       ~PubMedSearchSource.to_json
       ~PubMedSearchSource.validate_source

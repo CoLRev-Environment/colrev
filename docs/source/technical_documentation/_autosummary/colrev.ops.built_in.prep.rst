@@ -40,6 +40,7 @@ colrev.ops.built\_in.prep
    colrev.ops.built_in.prep.global_id_consistency
    colrev.ops.built_in.prep.local_index_prep
    colrev.ops.built_in.prep.open_library_prep
+   colrev.ops.built_in.prep.pubmed_metadata_prep
    colrev.ops.built_in.prep.remove_broken_ids
    colrev.ops.built_in.prep.remove_error500_urls
    colrev.ops.built_in.prep.semantic_scholar_prep

@@ -105,6 +105,25 @@ def add_search_source(
             load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
             comment="",
         )
+    elif "pubmed.ncbi.nlm.nih.gov" in query:
+        query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
+
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"pubmed_{query}"
+        )
+        query = (
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
+            + query
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev_built_in.pubmed",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": query},
+            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            comment="",
+        )
+
     elif "aisel.aisnet.org" in query:
 
         peer_reviewed = "peer_reviewed=true" in query
