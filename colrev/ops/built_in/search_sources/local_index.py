@@ -2,6 +2,7 @@
 """SearchSource: LocalIndex"""
 from __future__ import annotations
 
+import difflib
 import typing
 import webbrowser
 from dataclasses import dataclass
@@ -511,8 +512,23 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
 
+        def print_diff(change: tuple) -> str:
+            diff = difflib.Differ()
+            letters = list(diff.compare(change[1], change[0]))
+            for i, letter in enumerate(letters):
+                if letter.startswith("  "):
+                    letters[i] = letters[i][-1]
+                elif letter.startswith("+ "):
+                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                elif letter.startswith("- "):
+                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+            res = "".join(letters).replace("\n", " ")
+            return res
+
         for local_base_repo in local_base_repos:
             validated_changes = []
+            print()
+            self.review_manager.logger.info(f"Base repository: {local_base_repo}")
             for item in change_itemsets:
                 repo_path = "NA"
                 if "CURATED" in item["original_record"].get(
@@ -527,12 +543,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if repo_path != local_base_repo:
                     continue
 
-                self.review_manager.logger.info(
-                    f"Base repository: {local_base_repos[repo_path]}"
-                )
-
-                print()
-                self.review_manager.p_printer.pprint(item["original_record"])
+                # self.review_manager.p_printer.pprint(item["original_record"])
+                colrev.record.Record(
+                    data=item["original_record"]
+                ).print_citation_format()
                 for change_item in item["changes"]:
                     if "change" == change_item[0]:
                         edit_type, field, values = change_item
@@ -544,14 +558,22 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                             + " " * max(len(prefix), 30 - len(prefix))
                             + f": {values[0]}"
                         )
-                        print(" " * max(len(prefix), 30) + f"  {values[1]}")
+                        print(
+                            " " * max(len(prefix), 30)
+                            + f"  {colors.ORANGE}{values[1]}{colors.END}"
+                        )
+                        print(
+                            " " * max(len(prefix), 30)
+                            + f"  {print_diff((values[0], values[1]))}"
+                        )
+
                     elif "add" == change_item[0]:
                         edit_type, field, values = change_item
                         prefix = f"{edit_type} {values[0][0]}"
                         print(
                             prefix
                             + " " * max(len(prefix), 30 - len(prefix))
-                            + f": {values[0][1]}"
+                            + f": {colors.GREEN}{values[0][1]}{colors.END}"
                         )
                     else:
                         self.review_manager.p_printer.pprint(change_item)
@@ -653,8 +675,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record_dict = matching_url_rec_l[0]
                 return record_dict
 
-        print(f'Record not found: {original_record["ID"]}')
-        return {}
+        self.review_manager.logger.error(
+            f'{colors.RED}Record not found: {original_record["ID"]}{colors.END}'
+        )
+        raise colrev_exceptions.RecordNotInIndexException()
 
     def __create_correction_branch(
         self, *, git_repo: git.Repo, record_dict: dict
@@ -751,66 +775,73 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         check_operation: colrev.operation.Operation,
         source_url: str,
         change_list: list,
-    ) -> None:
+    ) -> bool:
 
         git_repo = check_operation.review_manager.dataset.get_repo()
         records = check_operation.review_manager.dataset.load_records_dict()
 
+        success = False
         pull_request_msgs = []
         for change_item in change_list:
 
-            record_dict = self.__retrieve_record_for_correction(
-                records=records,
-                change_item=change_item,
-            )
-            if not record_dict:
-                continue
-
-            record_branch_name = self.__create_correction_branch(
-                git_repo=git_repo, record_dict=record_dict
-            )
-            prev_branch_name = git_repo.active_branch.name
-
-            remote = git_repo.remote()
-            for head in git_repo.heads:
-                if head.name == record_branch_name:
-                    head.checkout()
-
-            rec_for_reset = record_dict.copy()
-
-            self.__apply_record_correction(
-                check_operation=check_operation,
-                records=records,
-                record_dict=record_dict,
-                change_item=change_item,
-            )
-
-            self.__push_corrections_and_reset_branch(
-                git_repo=git_repo,
-                record_branch_name=record_branch_name,
-                prev_branch_name=prev_branch_name,
-                source_url=source_url,
-            )
-
-            self.__reset_record_after_correction(
-                record_dict=record_dict,
-                rec_for_reset=rec_for_reset,
-                change_item=change_item,
-            )
-
-            if "github.com" in remote.url:
-                webbrowser.open(remote.url, new=2)
-                pull_request_msgs.append(
-                    "\nTo create a pull request for your changes go "
-                    f"to \n{colors.ORANGE}{str(remote.url).rstrip('.git')}/"
-                    f"compare/{record_branch_name}{colors.END}"
+            try:
+                record_dict = self.__retrieve_record_for_correction(
+                    records=records,
+                    change_item=change_item,
                 )
+                if not record_dict:
+                    continue
+
+                record_branch_name = self.__create_correction_branch(
+                    git_repo=git_repo, record_dict=record_dict
+                )
+                prev_branch_name = git_repo.active_branch.name
+
+                remote = git_repo.remote()
+                for head in git_repo.heads:
+                    if head.name == record_branch_name:
+                        head.checkout()
+
+                rec_for_reset = record_dict.copy()
+
+                self.__apply_record_correction(
+                    check_operation=check_operation,
+                    records=records,
+                    record_dict=record_dict,
+                    change_item=change_item,
+                )
+
+                self.__push_corrections_and_reset_branch(
+                    git_repo=git_repo,
+                    record_branch_name=record_branch_name,
+                    prev_branch_name=prev_branch_name,
+                    source_url=source_url,
+                )
+
+                self.__reset_record_after_correction(
+                    record_dict=record_dict,
+                    rec_for_reset=rec_for_reset,
+                    change_item=change_item,
+                )
+
+                if "github.com" in remote.url:
+                    webbrowser.open(remote.url, new=2)
+                    pull_request_msgs.append(
+                        "\nTo create a pull request for your changes go "
+                        f"to \n{colors.ORANGE}{str(remote.url).rstrip('.git')}/"
+                        f"compare/{record_branch_name}{colors.END}"
+                    )
+                webbrowser.open(remote.url)
+                success = True
+            except colrev_exceptions.RecordNotInIndexException:
+                pass
 
         for pull_request_msg in pull_request_msgs:
             print(pull_request_msg)
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
         # gh_issue https://github.com/geritwagner/colrev/issues/63
         # handle cases where update branch already exists
+        return success
 
     def __apply_correction(self, *, source_url: str, change_list: list) -> None:
         """Apply a (list of) corrections"""
@@ -846,16 +877,17 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             "Precondition for correction (pull-request) checked."
         )
 
-        self.__apply_change_item_correction(
+        success = self.__apply_change_item_correction(
             check_operation=check_operation,
             source_url=source_url,
             change_list=change_list,
         )
 
-        print(
-            f"\n{colors.GREEN}Thank you for supporting other researchers "
-            f"by sharing your corrections ❤{colors.END}\n"
-        )
+        if success:
+            print(
+                f"\n{colors.GREEN}Thank you for supporting other researchers "
+                f"by sharing your corrections ❤{colors.END}\n"
+            )
 
 
 if __name__ == "__main__":

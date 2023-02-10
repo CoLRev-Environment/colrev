@@ -35,17 +35,21 @@ class Corrections:
     ]
 
     keys_to_ignore = [
+        "ID",
         "screening_criteria",
         "colrev_status",
         "source_url",
         "metadata_source_repository_paths",
-        "ID",
         "grobid-version",
         "colrev_pdf_id",
         "file",
         "colrev_origin",
         "colrev_data_provenance",
+        "colrev_masterdata_provenance",
         "sem_scholar_id",
+        "cited_by",
+        "abstract",
+        "pages",
     ]
 
     def __init__(
@@ -95,23 +99,34 @@ class Corrections:
             corrected_record=corrected_record,
         )
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/63
-        # export only essential changes?
         changes = diff(original_record, corrected_record)
 
         selected_change_items = []
         for change_item in list(changes):
             change_type, key, val = change_item
+
+            if not isinstance(key, str):
+                continue
+
+            if "add" != change_type and "" == key:
+                continue
+
+            if key.split(".")[0] in self.keys_to_ignore:
+                continue
+
             if "add" == change_type:
                 for add_item in val:
                     add_item_key, add_item_val = add_item
-                    if add_item_key not in self.keys_to_ignore:
-                        selected_change_items.append(
-                            ("add", "", [(add_item_key, add_item_val)])
-                        )
+                    if not isinstance(add_item_key, str):
+                        break
+                    if add_item_key.split(".")[0] in self.keys_to_ignore:
+                        break
+                    selected_change_items.append(
+                        ("add", "", [(add_item_key, add_item_val)])
+                    )
+
             elif "change" == change_type:
-                if key not in self.keys_to_ignore:
-                    selected_change_items.append(change_item)
+                selected_change_items.append(change_item)
 
         if len(selected_change_items) == 0:
             return
