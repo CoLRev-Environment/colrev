@@ -638,12 +638,19 @@ class Load(colrev.operation.Operation):
                 record.update(colrev_status=colrev.record.RecordState.md_retrieved)
 
             if "doi" in record:
-                record.update(
-                    doi=record["doi"].replace("http://dx.doi.org/", "").upper()
+                formatted_doi = (
+                    record["doi"]
+                    .lower()
+                    .replace("https://", "http://")
+                    .replace("dx.doi.org", "doi.org")
+                    .replace("http://doi.org/", "")
+                    .upper()
                 )
+                record.update(doi=formatted_doi)
                 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
                 doi_match = re.match(r"^10.\d{4,9}\/", record["doi"])
                 if not doi_match:
+                    self.review_manager.logger.info("remove doi (not matching regex)")
                     del record["doi"]
 
             self.review_manager.logger.debug(
