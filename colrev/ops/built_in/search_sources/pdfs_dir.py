@@ -659,6 +659,8 @@ class PDFSearchSource(JsonSchemaMixin):
             if "doi" in record:
                 works = Works(etiquette=self.etiquette)
                 crossref_query_return = works.doi(record["doi"])
+                if not crossref_query_return:
+                    continue
                 retrieved_record_dict = connector_utils.json_to_record(
                     item=crossref_query_return
                 )
