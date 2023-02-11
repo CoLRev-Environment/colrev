@@ -888,7 +888,8 @@ class Prep(colrev.operation.Operation):
             previous_preparation_data = deepcopy(preparation_data)
 
             if len(preparation_data) == 0:
-                print("No records to prepare.")
+                self.review_manager.logger.info("No records to prepare.")
+                print()
                 return
 
             if self.debug_mode or __unit_testing:

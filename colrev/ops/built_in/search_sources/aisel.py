@@ -76,13 +76,18 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if (
-            "query_file" not in source.search_parameters
-            and "query" not in source.search_parameters
-        ):
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file or query search_parameter ({source.filename})"
-            )
+        if "query" in source.search_parameters:
+            if not source.search_parameters["query"].startswith(
+                "https://aisel.aisnet.org/"
+            ):
+                raise colrev_exceptions.InvalidQueryException(
+                    "query parameter does not start with https://aisel.aisnet.org/"
+                )
+
+        # Note : can simply add files downloaded from AIS
+        # raise colrev_exceptions.InvalidQueryException(
+        #     f"Source missing query_file or query search_parameter ({source.filename})"
+        # )
 
         if "query_file" in source.search_parameters:
             if not Path(source.search_parameters["query_file"]).is_file():
@@ -264,12 +269,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         #  Note: not (yet) supported: self.search_source.is_md_source()
-
-        self.__run_parameter_search(
-            search_operation=search_operation,
-            ais_feed=ais_feed,
-            rerun=rerun,
-        )
+        if "query" in self.search_source.search_parameters:
+            self.__run_parameter_search(
+                search_operation=search_operation,
+                ais_feed=ais_feed,
+                rerun=rerun,
+            )
 
     def load_fixes(
         self,

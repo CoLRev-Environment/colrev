@@ -992,7 +992,7 @@ class LocalIndex:
                     pass
 
         except (colrev_exceptions.CoLRevException) as exc:
-            raise exc
+            print(exc)
 
     def index(self, *, index_tei: bool = False) -> None:
         """Index all registered CoLRev projects"""
