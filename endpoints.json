@@ -212,6 +212,9 @@
             {"package_endpoint_identifier": "colrev_built_in.abi_inform_proquest",
             "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource"
             },
+            {"package_endpoint_identifier": "colrev_built_in.systematic_review_datasets",
+            "endpoint": "colrev.ops.built_in.search_sources.systematic_review_datasets.SystematicReviewDatasetsSearchSource"
+            },
             {"package_endpoint_identifier": "colrev_built_in.taylor_and_francis",
             "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource"
             },

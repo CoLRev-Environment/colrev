@@ -48,6 +48,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.pubmed
    colrev.ops.built_in.search_sources.scopus
    colrev.ops.built_in.search_sources.springer_link
+   colrev.ops.built_in.search_sources.systematic_review_datasets
    colrev.ops.built_in.search_sources.taylor_and_francis
    colrev.ops.built_in.search_sources.trid
    colrev.ops.built_in.search_sources.unknown_source

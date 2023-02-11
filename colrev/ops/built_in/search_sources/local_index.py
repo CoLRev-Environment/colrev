@@ -777,6 +777,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         change_list: list,
     ) -> bool:
 
+        # pylint: disable=too-many-locals
+
         git_repo = check_operation.review_manager.dataset.get_repo()
         records = check_operation.review_manager.dataset.load_records_dict()
 

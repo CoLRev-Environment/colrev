@@ -962,6 +962,7 @@ class Upgrade(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
+        # pylint: disable=duplicate-code
         local_index = self.review_manager.get_local_index()
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev_built_in.local_index":

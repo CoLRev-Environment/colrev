@@ -44,8 +44,9 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if data.count("www.proquest.com") >= data.count("\n@"):
-            result["confidence"] = 1.0
+        if data.count("\n@") > 1:
+            if data.count("www.proquest.com") >= data.count("\n@"):
+                result["confidence"] = 1.0
 
         return result
 

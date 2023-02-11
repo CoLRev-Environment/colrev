@@ -43,8 +43,9 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if data.count("eprint = { \n    \n    ") >= data.count("\n@"):
-            result["confidence"] = 1.0
+        if data.count("\n@") > 1:
+            if data.count("eprint = { \n    \n    ") >= data.count("\n@"):
+                result["confidence"] = 1.0
 
         return result
 

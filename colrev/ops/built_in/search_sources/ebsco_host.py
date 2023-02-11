@@ -47,8 +47,9 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if data.count("search.ebscohost.com") >= data.count("\n@"):
-            result["confidence"] = 1.0
+        if data.count("\n@") > 1:
+            if data.count("search.ebscohost.com") >= data.count("\n@"):
+                result["confidence"] = 1.0
 
         return result
 

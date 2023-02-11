@@ -166,7 +166,8 @@ class SimpleDedupe(JsonSchemaMixin):
 
             # dedupe_operation.review_manager.logger.debug(details)
             msg = (
-                f'Dropped duplicate: {similarity_dict["reference_record"]} (duplicate of {other_id})'
+                "Dropped duplicate: "
+                f'{similarity_dict["reference_record"]} (duplicate of {other_id})'
                 + f" (similarity: {max_similarity})\nDetails: {details}"
             )
             dedupe_operation.review_manager.report_logger.info(msg)
