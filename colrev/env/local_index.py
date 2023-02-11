@@ -302,88 +302,92 @@ class LocalIndex:
 
     def __amend_record(self, *, paper_hash: str, record_dict: dict) -> None:
 
-        try:
-            saved_record_response = self.open_search.get(
-                index=self.RECORD_INDEX,
-                id=paper_hash,
+        # pylint: disable=too-many-locals
+
+        saved_record_response = self.open_search.get(
+            index=self.RECORD_INDEX,
+            id=paper_hash,
+        )
+        saved_record_dict = saved_record_response["_source"]
+
+        # Create fulltext backup to prevent bibtext parsing issues
+        fulltext_backup = saved_record_dict.get("fulltext", "NA")
+        if "fulltext" in saved_record_dict:
+            del saved_record_dict["fulltext"]
+
+        parsed_record_dict = self.__parse_record(record_dict=saved_record_dict)
+        saved_record = colrev.record.Record(data=parsed_record_dict)
+        record = colrev.record.Record(data=record_dict)
+
+        # combine metadata_source_repository_paths in a semicolon-separated list
+        metadata_source_repository_paths = record.data[
+            "metadata_source_repository_paths"
+        ]
+        saved_record.data["metadata_source_repository_paths"] += (
+            "\n" + metadata_source_repository_paths
+        )
+
+        record_dict = record.get_data()
+
+        save_record_curated = "CURATED" in saved_record_dict.get(
+            "colrev_masterdata_provenance"
+        )
+
+        # amend saved record
+        for key, value in record_dict.items():
+            # Note : the record from the first repository should take precedence)
+            if key in saved_record.data or key in ["colrev_status"]:
+                continue
+            if save_record_curated and key in saved_record.data:
+                continue
+
+            field_provenance = colrev.record.Record(
+                data=record_dict
+            ).get_field_provenance(
+                key=key,
+                default_source=record.data.get(
+                    "metadata_source_repository_paths", "None"
+                ),
             )
-            saved_record_dict = saved_record_response["_source"]
 
-            # Create fulltext backup to prevent bibtext parsing issues
-            fulltext_backup = saved_record_dict.get("fulltext", "NA")
-            if "fulltext" in saved_record_dict:
-                del saved_record_dict["fulltext"]
-
-            parsed_record_dict = self.__parse_record(record_dict=saved_record_dict)
-            saved_record = colrev.record.Record(data=parsed_record_dict)
-            record = colrev.record.Record(data=record_dict)
-
-            # combine metadata_source_repository_paths in a semicolon-separated list
-            metadata_source_repository_paths = record.data[
-                "metadata_source_repository_paths"
-            ]
-            saved_record.data["metadata_source_repository_paths"] += (
-                "\n" + metadata_source_repository_paths
+            saved_record.update_field(
+                key=key,
+                value=value,
+                source=field_provenance.get("source_info", "NA"),
             )
 
-            record_dict = record.get_data()
+        saved_record_dict = saved_record.get_data(stringify=True)
 
-            # amend saved record
-            for key, value in record_dict.items():
-                # Note : the record from the first repository should take precedence)
-                if key in saved_record.data or key in ["colrev_status"]:
-                    continue
+        # Important: full-texts should be added after get_data (parsing records)
+        # to avoid error-printouts by pybtex
+        if "NA" != fulltext_backup:
+            saved_record.data["fulltext"] = fulltext_backup
+        elif "file" in record_dict:
+            try:
+                tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
+                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                if Path(record_dict["file"]).is_file():
+                    tei = colrev.env.tei_parser.TEIParser(
+                        environment_manager=self.environment_manager,
+                        pdf_path=Path(record_dict["file"]),
+                        tei_path=tei_path,
+                    )
+                    saved_record.data["fulltext"] = tei.get_tei_str()
+            except (
+                colrev_exceptions.TEIException,
+                AttributeError,
+                SerializationError,
+                TransportError,
+            ):
+                pass
 
-                field_provenance = colrev.record.Record(
-                    data=record_dict
-                ).get_field_provenance(
-                    key=key,
-                    default_source=record.data.get(
-                        "metadata_source_repository_paths", "None"
-                    ),
-                )
-
-                saved_record.update_field(
-                    key=key, value=value, source=field_provenance["source_info"]
-                )
-
-            saved_record_dict = saved_record.get_data(stringify=True)
-
-            # Important: full-texts should be added after get_data (parsing records)
-            # to avoid error-printouts by pybtex
-            if "NA" != fulltext_backup:
-                saved_record.data["fulltext"] = fulltext_backup
-            elif "file" in record_dict:
-                try:
-                    tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
-                    tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                    if Path(record_dict["file"]).is_file():
-                        tei = colrev.env.tei_parser.TEIParser(
-                            environment_manager=self.environment_manager,
-                            pdf_path=Path(record_dict["file"]),
-                            tei_path=tei_path,
-                        )
-                        saved_record.data["fulltext"] = tei.get_tei_str()
-                except (
-                    colrev_exceptions.TEIException,
-                    AttributeError,
-                    SerializationError,
-                    TransportError,
-                ):
-                    pass
-
-            # Note : update(...) accepts the timeout keyword
-            # https://opensearch-project.github.io/opensearch-py/
-            # api-ref/client.html#opensearchpy.OpenSearch.update
-            # pylint: disable=unexpected-keyword-arg
-            self.open_search.update(
-                index=self.RECORD_INDEX,
-                id=paper_hash,
-                body={"doc": saved_record_dict},
-                timeout=self.request_timeout,
-            )
-        except (NotFoundError, KeyError):
-            pass
+        # pylint: disable=unexpected-keyword-arg
+        self.open_search.update(
+            index=self.RECORD_INDEX,
+            id=paper_hash,
+            body={"doc": saved_record_dict},
+            request_timeout=self.request_timeout,
+        )
 
     def get_fields_to_remove(self, *, record_dict: dict) -> list:
         """Compares the record to available toc items and
@@ -666,10 +670,9 @@ class LocalIndex:
         # Resource for other query types:
         # https://github.com/aiven/demo-opensearch-python/blob/main/search.py
 
-        # pylint: disable=unexpected-keyword-arg
-
         # https://opensearch.org/docs/latest/opensearch/ux/#scroll-search
         # Code based on: https://t1p.de/vbyc3
+        # pylint: disable=unexpected-keyword-arg
         res = self.open_search.search(
             index=self.RECORD_INDEX, body=query, size=100, scroll="10m"
         )
@@ -698,6 +701,7 @@ class LocalIndex:
                     except (PrematureEOF, TokenRequired):
                         pass
 
+                # pylint: disable=unexpected-keyword-arg
                 res = self.open_search.scroll(scroll_id=old_scroll_id, scroll="2s")
 
                 # Note : the scroll_id typically does not change (but it can)
@@ -854,12 +858,13 @@ class LocalIndex:
             retrieved_record = self.retrieve(
                 record_dict=record_dict, include_colrev_ids=True
             )
+
             retrieved_record_cid = colrev.record.Record(
                 data=retrieved_record
             ).get_colrev_id()
 
             # if colrev_ids not identical (but overlapping): amend
-            if not set(retrieved_record_cid).isdisjoint([cid_to_index]):
+            if not set(retrieved_record_cid).isdisjoint({cid_to_index}):
                 # Note: we need the colrev_id of the retrieved_record
                 # (may be different from record)
                 self.__amend_record(
@@ -867,11 +872,7 @@ class LocalIndex:
                     record_dict=record_dict,
                 )
                 return
-        except (
-            colrev_exceptions.RecordNotInIndexException,
-            TransportError,
-            SerializationError,
-        ):
+        except colrev_exceptions.RecordNotInIndexException:
             pass
 
         while True:
@@ -913,12 +914,7 @@ class LocalIndex:
         record_dict = self._prepare_record_for_indexing(record_dict=record_dict)
         try:
             self._add_record_to_index(record_dict=record_dict)
-        except (
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-            TransportError,
-            SerializationError,
-            KeyError,
-        ) as exc:
+        except (colrev_exceptions.NotEnoughDataToIdentifyException,) as exc:
             if self.verbose_mode:
                 print(exc)
                 print(record_dict)
@@ -996,7 +992,7 @@ class LocalIndex:
                     pass
 
         except (colrev_exceptions.CoLRevException) as exc:
-            print(exc)
+            raise exc
 
     def index(self, *, index_tei: bool = False) -> None:
         """Index all registered CoLRev projects"""

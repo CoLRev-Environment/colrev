@@ -184,7 +184,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_changed = 0
-        for feed_record_dict in local_index_feed.feed_records.values():
+        for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
+            feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
@@ -346,6 +347,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             }
             record["colrev_status"] = colrev.record.RecordState.md_prepared
             del curation_url
+
         return records
 
     def prepare(
@@ -647,7 +649,25 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records: dict,
         change_item: dict,
     ) -> dict:
+
         original_record = change_item["original_record"]
+
+        local_index_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=True,
+        )
+
+        try:
+            md_curated_origin_id = [
+                x for x in original_record["colrev_origin"] if "md_curated.bib/" in x
+            ][0].replace("md_curated.bib/", "")
+            curation_origin_record = local_index_feed.feed_records[md_curated_origin_id]
+            curation_id = curation_origin_record["curation_ID"]
+            curation_id = curation_id[curation_id.find("#") + 1 :]
+            return records[curation_id]
+        except KeyError:
+            pass
 
         try:
             record_dict = self.__retrieve_by_colrev_id(
@@ -784,6 +804,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         success = False
         pull_request_msgs = []
+        pull_request_links = []
         for change_item in change_list:
 
             try:
@@ -827,19 +848,25 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 )
 
                 if "github.com" in remote.url:
-                    webbrowser.open(remote.url, new=2)
+                    link = (
+                        str(remote.url).rstrip(".git")
+                        + "/compare/"
+                        + record_branch_name
+                    )
+                    pull_request_links.append(link)
                     pull_request_msgs.append(
                         "\nTo create a pull request for your changes go "
-                        f"to \n{colors.ORANGE}{str(remote.url).rstrip('.git')}/"
-                        f"compare/{record_branch_name}{colors.END}"
+                        f"to \n{colors.ORANGE}{link}{colors.END}"
                     )
-                webbrowser.open(remote.url)
                 success = True
             except colrev_exceptions.RecordNotInIndexException:
                 pass
 
         for pull_request_msg in pull_request_msgs:
             print(pull_request_msg)
+        for pull_request_link in pull_request_links:
+            webbrowser.open(pull_request_link, new=2)
+
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
         # gh_issue https://github.com/geritwagner/colrev/issues/63
         # handle cases where update branch already exists
