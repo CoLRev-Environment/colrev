@@ -364,7 +364,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
                 retrieved_record = retrieved_records.pop()
 
-            if 0 == len(retrieved_record.data):
+            if 0 == len(retrieved_record.data) or "doi" not in retrieved_record.data:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException()
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(

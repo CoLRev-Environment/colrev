@@ -101,6 +101,9 @@ class DOIConnector:
     ) -> None:
         """Get the website link from DOI resolution API"""
 
+        if "doi" not in record.data:
+            return
+
         doi_url = f"https://www.doi.org/{record.data['doi']}"
 
         def meta_redirect(*, content: bytes) -> str:
