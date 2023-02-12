@@ -23,7 +23,7 @@ class RepoSetupError(CoLRevException):
     """
 
     lr_docs = (
-        "https://github.com/geritwagner/colrev/blob/main/"
+        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
         + "docs/source/user_resources/2_1_problem_formulation.rst"
     )
 

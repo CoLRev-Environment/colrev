@@ -51,7 +51,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
-            "https://github.com/geritwagner/colrev",
+            "https://github.com/CoLRev-Ecosystem/colrev",
             source_operation.review_manager.email,
         )
 

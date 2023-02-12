@@ -569,7 +569,7 @@ class PackageManager:
                             "options"
                         ] = settings_class._details[parameter]["options"]
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/66
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/66
         # apply validation when parsing settings during package init (based on _details)
         # later : package version?
 
@@ -814,7 +814,7 @@ class PackageManager:
                 endpoint_item["short_description"] = short_description
 
                 code_link = (
-                    "https://github.com/geritwagner/colrev/blob/main/"
+                    "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
                     + endpoint_item["endpoint"].replace(".", "/")
                 )
                 code_link = code_link[: code_link.rfind("/")]

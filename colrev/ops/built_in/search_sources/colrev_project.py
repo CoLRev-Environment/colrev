@@ -38,7 +38,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
     link = (
-        "https://github.com/geritwagner/colrev/blob/main/"
+        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/colrev_project.py"
     )
 

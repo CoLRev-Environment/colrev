@@ -95,7 +95,7 @@ class CuratedMasterdata(JsonSchemaMixin):
         ]
         settings.pdf_get.pdf_get_package_endpoints = []
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
         # Deactivate languages, ...
         # exclusion and add a complementary exclusion built-in script
 

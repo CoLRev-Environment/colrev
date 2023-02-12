@@ -4,67 +4,67 @@
             "package_endpoint_identifier": "colrev_built_in.conceptual_review",
             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
             "short_description": "Conceptual review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.critical_review",
             "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview",
             "short_description": "Critical review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.curated_masterdata",
             "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata",
             "short_description": "Curated masterdata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.descriptive_review",
             "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview",
             "short_description": "Descriptive review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.literature_review",
             "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview",
             "short_description": "Literature review (simple)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.meta_analysis",
             "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis",
             "short_description": "Meta-analysis",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.narrative_review",
             "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview",
             "short_description": "Narrative review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.qualitative_systematic_review",
             "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview",
             "short_description": "Qualitative systematic review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scientometric",
             "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview",
             "short_description": "Scientometric study",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/scientometric.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/scientometric.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scoping_review",
             "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview",
             "short_description": "Scoping review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.theoretical_review",
             "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview",
             "short_description": "Theoretical review",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.py>`_"
         }
     ],
     "search_source": [
@@ -75,7 +75,7 @@
             "link": "`ABI/INFORM (ProQuest) <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.acm_digital_library",
@@ -84,7 +84,7 @@
             "link": "`ACM Digital Library <https://dl.acm.org/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.ais_library",
@@ -93,16 +93,16 @@
             "link": "`AIS eLibrary <https://aisel.aisnet.org/>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_project",
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
             "short_description": "Performs a search in a CoLRev project",
-            "link": "`CoLRev project <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_",
+            "link": "`CoLRev project <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.crossref",
@@ -111,7 +111,7 @@
             "link": "`Crossref <https://www.crossref.org/>`_",
             "heuristic": "ONI",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.dblp",
@@ -120,7 +120,7 @@
             "link": "`DBLP <https://dblp.org/>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.ebsco_host",
@@ -129,7 +129,7 @@
             "link": "`EBSCOHost <https://search.ebscohost.com/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.eric",
@@ -138,7 +138,7 @@
             "link": "`ERIC <https://eric.ed.gov/>`_",
             "heuristic": "ONI",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/eric.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/eric.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.europe_pmc",
@@ -147,7 +147,7 @@
             "link": "`Europe PMC <https://europepmc.org/>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.google_scholar",
@@ -156,7 +156,7 @@
             "link": "`GoogleScholar <https://scholar.google.de/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.ieee",
@@ -165,7 +165,7 @@
             "link": "`IEEE Xplore <https://ieeexplore.ieee.org/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.jstor",
@@ -174,16 +174,16 @@
             "link": "`JSTOR <https://www.jstor.org/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.local_index",
             "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
             "short_description": "Performs a search in the LocalIndex",
-            "link": "`LocalIndex <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_",
+            "link": "`LocalIndex <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.open_citations_forward_search",
@@ -192,7 +192,7 @@
             "link": "`OpenCitations forward search <https://opencitations.net/>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pdf_backward_search",
@@ -201,7 +201,7 @@
             "link": "`PDF backward search <https://github.com/kermitt2/grobid>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pdfs_dir",
@@ -210,7 +210,7 @@
             "link": "`PDF directory <https://github.com/kermitt2/grobid>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.psycinfo",
@@ -219,7 +219,7 @@
             "link": "`PsycInfo (APA) <https://www.apa.org/pubs/databases/psycinfo>`_",
             "heuristic": "ONI",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pubmed",
@@ -228,7 +228,7 @@
             "link": "`PubMed <https://pubmed.ncbi.nlm.nih.gov/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scopus",
@@ -237,7 +237,7 @@
             "link": "`Scopus <http://www.scopus.com>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.springer_link",
@@ -246,7 +246,7 @@
             "link": "`Springer Link <https://link.springer.com/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.systematic_review_datasets",
@@ -255,7 +255,7 @@
             "link": "`systematic-review-datasets <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.taylor_and_francis",
@@ -264,7 +264,7 @@
             "link": "`Taylor and Francis <https://www.tandfonline.com/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.trid",
@@ -273,25 +273,25 @@
             "link": "`TRID <https://trid.trb.org/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/trid.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/trid.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.unknown_source",
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
             "short_description": "SearchSource for unknown search results",
-            "link": "`Unknown Source <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_",
+            "link": "`Unknown Source <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_",
             "heuristic": "NA",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.video_dir",
             "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource",
             "short_description": "SearchSource for directory containing video files",
-            "link": "`Video directory <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_",
+            "link": "`Video directory <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_",
             "heuristic": "Supported",
             "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.web_of_science",
@@ -300,7 +300,7 @@
             "link": "`Web of Science <https://www.webofknowledge.com>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.wiley",
@@ -309,7 +309,7 @@
             "link": "`Wiley <https://onlinelibrary.wiley.com/>`_",
             "heuristic": "Supported",
             "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.py>`_"
+            "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.py>`_"
         }
     ],
     "load_conversion": [
@@ -317,37 +317,37 @@
             "package_endpoint_identifier": "colrev_built_in.bibtex",
             "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
             "short_description": "Loads BibTeX files (based on pybtex)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/bib_pybtex_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/bib_pybtex_loader.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.bibutils",
             "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
             "short_description": "Loads bibliography files (based on bibutils)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/bibutils_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/bibutils_loader.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.csv",
             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.CSVLoader",
             "short_description": "Loads csv files (based on pandas)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.excel",
             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.ExcelLoader",
             "short_description": "Loads Excel (xls, xlsx) files (based on pandas)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.md_to_bib",
             "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
             "short_description": "Loads reference strings from text (md) files (based on GROBID)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/markdown_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/markdown_loader.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.zotero_translate",
             "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
             "short_description": "Loads bibliography files (based on Zotero).",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/load_conversion/zotero_loader.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/zotero_loader.py>`_"
         }
     ],
     "prep": [
@@ -355,127 +355,127 @@
             "package_endpoint_identifier": "colrev_built_in.exclude_collections",
             "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep",
             "short_description": "Prepares records by excluding collection entries (e.g., proceedings)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/exclude_collections.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_collections.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_complementary_materials",
             "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep",
             "short_description": "Prepares records by excluding complementary materials",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/exclude_complementary_materials.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_complementary_materials.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_languages",
             "endpoint": "colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep",
             "short_description": "Prepares records by excluding ones that are not in the languages_to_include",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_non_latin_alphabets",
             "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep",
             "short_description": "Prepares records by excluding ones that have a non-latin alphabet",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_doi_from_sem_scholar",
             "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep",
             "short_description": "Prepares records based on SemanticScholar metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/semantic_scholar_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/semantic_scholar_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_doi_from_urls",
             "endpoint": "colrev.ops.built_in.prep.doi_from_urls_prep.DOIFromURLsPrep",
             "short_description": "Prepares records by retrieving its DOI from the website (URL)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/doi_from_urls_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/doi_from_urls_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_citeas",
             "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep",
             "short_description": "Prepares records based on citeas.org metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/citeas_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/citeas_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_crossref",
             "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
             "short_description": "Prepares records based on crossref.org metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/crossref_metadata_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/crossref_metadata_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_dblp",
             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
             "short_description": "Prepares records based on dblp.org metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/dblp_metadata_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/dblp_metadata_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_doi",
             "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep",
             "short_description": "Prepares records based on doi.org metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/doi_metadata_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/doi_metadata_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_europe_pmc",
             "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
             "short_description": "Prepares records based on Europe PCM metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/europe_pmc_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/europe_pmc_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_local_index",
             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
             "short_description": "Prepares records based on LocalIndex metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_open_library",
             "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
             "short_description": "Prepares records based on openlibrary.org metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/open_library_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/open_library_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_pubmed",
             "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
             "short_description": "Prepares records based on Pubmed metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/pubmed_metadata_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/pubmed_metadata_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.get_year_from_vol_iss_jour",
             "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep",
             "short_description": "Prepares records based on year-volume-issue dependency",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.global_ids_consistency_check",
             "endpoint": "colrev.ops.built_in.prep.global_id_consistency.GlobalIDConsistencyPrep",
             "short_description": "Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.remove_broken_ids",
             "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep",
             "short_description": "Prepares records by removing invalid IDs DOIs/ISBNs",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/remove_broken_ids.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/remove_broken_ids.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.remove_urls_with_500_errors",
             "endpoint": "colrev.ops.built_in.prep.remove_error500_urls.RemoveError500URLsPrep",
             "short_description": "Prepares records by removing urls that are not available",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.resolve_crossrefs",
             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
             "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/bibtex_crossref_resolution.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/bibtex_crossref_resolution.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.source_specific_prep",
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
             "short_description": "Prepares records based on the prepare scripts specified by the SearchSource",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/source_specific_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/source_specific_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.update_metadata_status",
             "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep",
             "short_description": "Prepares records by updating the metadata status",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep/update_masterdata_status.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/update_masterdata_status.py>`_"
         }
     ],
     "prep_man": [
@@ -483,19 +483,19 @@
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_man_prep",
             "endpoint": "colrev.ops.built_in.prep_man.prep_man_cli.CoLRevCLIManPrep",
             "short_description": "Manual preparation using the CLI (Not yet implemented)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_cli.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_cli.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.export_man_prep",
             "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep",
             "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_export.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_export.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.prep_man_curation_jupyter",
             "endpoint": "colrev.ops.built_in.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep",
             "short_description": "Manual preparation based on a Jupyter Notebook",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prep_man/curation_jupyter_prep_man.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep_man/curation_jupyter_prep_man.py>`_"
         }
     ],
     "dedupe": [
@@ -503,31 +503,31 @@
             "package_endpoint_identifier": "colrev_built_in.active_learning_automated",
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated",
             "short_description": "Applies trained (active learning) model",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.active_learning_training",
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining",
             "short_description": "Active learning: training phase (minimum sample size of 50 required)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.curation_full_outlet_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
             "short_description": "Deduplication endpoint for curations with full journals/proceedings",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.curation_missing_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_missing_dedupe.CurationMissingDedupe",
             "short_description": "Deduplication of remaining records in a curated metadata repository",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/dedupe/curation_missing_dedupe.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/curation_missing_dedupe.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.simple_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe",
             "short_description": "Simple duplicate identification (for small sample sizes)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/dedupe/simple_dedupe.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/simple_dedupe.py>`_"
         }
     ],
     "prescreen": [
@@ -535,31 +535,31 @@
             "package_endpoint_identifier": "colrev_built_in.asreview_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen",
             "short_description": "ASReview-based prescreen",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
             "short_description": "CLI-based prescreen",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.conditional_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen",
             "short_description": "Conditional prescreen (currently: include all)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.prescreen_table",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen",
             "short_description": "Table-based prescreen (exported and imported)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scope_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen",
             "short_description": "Rule-based prescreen (scope)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.py>`_"
         }
     ],
     "pdf_get": [
@@ -567,19 +567,19 @@
             "package_endpoint_identifier": "colrev_built_in.local_index",
             "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
             "short_description": "Get PDFs from LocalIndex",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_get/local_index_pdf_get.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/local_index_pdf_get.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.unpaywall",
             "endpoint": "colrev.ops.built_in.pdf_get.unpaywall.Unpaywall",
             "short_description": "Get PDFs from unpaywall.org",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_get/unpaywall.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/unpaywall.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.website_screenshot",
             "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot",
             "short_description": "Get PDFs from webisite screenshot (for \"online\" ENTRYTYPES)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_get/website_screenshot.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/website_screenshot.py>`_"
         }
     ],
     "pdf_get_man": [
@@ -587,7 +587,7 @@
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_get_man",
             "endpoint": "colrev.ops.built_in.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan",
             "short_description": "Get PDFs manually based on a CLI",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_get_man/pdf_get_man_cli.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get_man/pdf_get_man_cli.py>`_"
         }
     ],
     "pdf_prep": [
@@ -595,37 +595,37 @@
             "package_endpoint_identifier": "colrev_built_in.create_tei",
             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep",
             "short_description": "Prepare PDFs by creating an annotated TEI document",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/tei_prep.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/tei_prep.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.pdf_check_ocr",
             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR",
             "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/check_ocr.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/check_ocr.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.remove_coverpage",
             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage",
             "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/cover_page.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/cover_page.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.remove_last_page",
             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage",
             "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/last_page.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/last_page.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.validate_completeness",
             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation",
             "short_description": "Prepare PDFs by validating its completeness (based on the number of pages)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/completeness_validation.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/completeness_validation.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.validate_pdf_metadata",
             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation",
             "short_description": "Prepare PDFs by validating it against its associated metadata",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep/metadata_validation.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/metadata_validation.py>`_"
         }
     ],
     "pdf_prep_man": [
@@ -633,7 +633,7 @@
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_prep_man",
             "endpoint": "colrev.ops.built_in.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep",
             "short_description": "Manually prepare PDFs based on a CLI (not yet implemented)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/pdf_prep_man/pdf_prep_man_cli.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep_man/pdf_prep_man_cli.py>`_"
         }
     ],
     "screen": [
@@ -641,13 +641,13 @@
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_screen",
             "endpoint": "colrev.ops.built_in.screen.screen_cli.CoLRevCLIScreen",
             "short_description": "Screen documents using a CLI",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/screen/screen_cli.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/screen/screen_cli.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.screen_table",
             "endpoint": "colrev.ops.built_in.screen.screen_table.TableScreen",
             "short_description": "Screen documents using tables (exported and imported)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/screen/screen_table.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/screen/screen_table.py>`_"
         }
     ],
     "data": [
@@ -655,43 +655,43 @@
             "package_endpoint_identifier": "colrev_built_in.bibliography_export",
             "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
             "short_description": "Export the sample references in Endpoint format",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/bibliography_export.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/bibliography_export.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_curation",
             "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration",
             "short_description": "CoLRev Curation",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/colrev_curation.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/colrev_curation.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.github_pages",
             "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
             "short_description": "Export the literature review into a Github Page",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/github_pages.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/github_pages.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.manuscript",
             "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript",
             "short_description": "Synthesize the literature in a manuscript",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/manuscript.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/manuscript.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.obsidian",
             "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian",
             "short_description": "Export the sample into an Obsidian database",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/obsidian.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/obsidian.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.prisma",
             "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
             "short_description": "Create a PRISMA diagram",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/prisma.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/prisma.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.structured",
             "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
             "short_description": "Summarize the literature in a structured data extraction (a table)",
-            "link": "`Link <https://github.com/geritwagner/colrev/blob/main/colrev/ops/built_in/data/structured.py>`_"
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/structured.py>`_"
         }
     ]
 }

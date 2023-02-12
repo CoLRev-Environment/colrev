@@ -38,7 +38,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
     link = (
-        "https://github.com/geritwagner/colrev/blob/main/"
+        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.py"
     )
 
@@ -278,7 +278,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.remove_field(key="fulltext")
 
         if "language" in record.data:
-            # gh_issue https://github.com/geritwagner/colrev/issues/64
+            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
             # use https://pypi.org/project/langcodes/
             record.update_field(
                 key="language",

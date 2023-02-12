@@ -13,7 +13,7 @@ Upcoming
 - Extension backward_search
 - Templates for review_types
 - Synchronous session support
-- `Additional SearchSources <https://github.com/geritwagner/colrev/issues/106>`_
+- `Additional SearchSources <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_
 
 2023-04-01: v0.8.0 (expected)
 --------------------------------------

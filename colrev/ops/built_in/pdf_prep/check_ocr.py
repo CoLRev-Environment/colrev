@@ -117,7 +117,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         if not record.data["file"].endswith(".pdf"):
             return record.data
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
         # allow for other languages in this and the following if statement
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             pdf_prep_operation.review_manager.report_logger.info(

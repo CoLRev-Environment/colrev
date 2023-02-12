@@ -1,13 +1,13 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/geritwagner/colrev/main/docs/figures/logo_small.png" width="400">
+<img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
 
 # Collaborative Literature Reviews (CoLRev)
 
-[![License](https://img.shields.io/github/license/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
+[![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
+[![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
 
 CoLRev is an open-source environment for collaborative reviews.
@@ -28,11 +28,11 @@ See the [documentation](https://colrev.readthedocs.io/en/latest/) for more detai
 
 Contributions, code and features are always welcome
 
-- See [contributing guidelines](CONTRIBUTING.md), [help page](docs/build/user_resources/help.html), and [github repository](https://github.com/geritwagner/colrev).
-- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev/issues) and let us know.
+- See [contributing guidelines](CONTRIBUTING.md), [help page](docs/build/user_resources/help.html), and [github repository](https://github.com/CoLRev-Ecosystem/colrev).
+- Bug reports or feedback? Please use the [issue tracker](https://github.com/CoLRev-Ecosystem/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev/releases).
+For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/CoLRev-Ecosystem/colrev/releases).
 
 ## License
 
@@ -43,4 +43,4 @@ If you contribute to the project, you agree to share your contribution following
 
 Please [cite](docs/_static/colrev_citation.bib) the project as follows:
 
-Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev.
+Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Ecosystem/colrev.

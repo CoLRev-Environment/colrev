@@ -53,7 +53,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         prescreen_package_endpoints = (
             prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
         )
-        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
         # set as settings parameter?
         languages_to_include = ["eng"]
         if "scope_prescreen" in [s["endpoint"] for s in prescreen_package_endpoints]:

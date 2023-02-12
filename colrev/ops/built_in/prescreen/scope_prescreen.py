@@ -88,7 +88,7 @@ class ScopePrescreen(JsonSchemaMixin):
             assert settings["TimeScopeTo"] > 1900
         if "TimeScopeTo" in settings:
             assert settings["TimeScopeTo"] < 2100
-        # gh_issue https://github.com/geritwagner/colrev/issues/64
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
         # validate values (assert, e.g., LanguageScope)
 
         self.settings = self.settings_class.load_settings(data=settings)

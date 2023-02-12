@@ -10,7 +10,7 @@ SearchSources are a key component of CoLRev. We keep track from which source the
 
 TODO : add an illustration of sources (how they enable active flows)
 
-The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/geritwagner/colrev/issues/106>`_):
+The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_):
 
 .. datatemplate:json:: ../../../colrev/template/package_endpoints.json
 
@@ -25,4 +25,4 @@ The following SearchSources are covered (additional ones are on the `SearchSourc
      - Heuristics enable automated detection of the SearchSources upon load
      - ONI: Output not identifiable (e.g., BibTeX/RIS files lack unique features to identify the original SearchSource)
      - NA: Not applicable
-     - For updates, fixes, and additions of SearchSources, check the `Github issues <https://github.com/geritwagner/colrev/labels/search_source>`_.
+     - For updates, fixes, and additions of SearchSources, check the `Github issues <https://github.com/CoLRev-Ecosystem/colrev/labels/search_source>`_.

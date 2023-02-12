@@ -1,6 +1,6 @@
 # {{project_title}}
 
-This curated repository is based on the [ColRev](https://github.com/geritwagner/colrev) standard.
+This curated repository is based on the [ColRev](https://github.com/CoLRev-Ecosystem/colrev) standard.
 
 - It provides curated metadata and PDF hashes.
 - Additional metadata should be curated in derivative repositories

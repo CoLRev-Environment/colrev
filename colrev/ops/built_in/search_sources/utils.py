@@ -141,7 +141,7 @@ def json_to_record(*, item: dict) -> dict:
         if item["language"] not in ["ng"]:
             record_dict["language"] = item["language"]
             # convert to ISO 639-3
-            # gh_issue https://github.com/geritwagner/colrev/issues/64
+            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
             # other languages/more systematically
             if "en" == record_dict["language"]:
                 record_dict["language"] = record_dict["language"].replace("en", "eng")

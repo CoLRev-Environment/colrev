@@ -459,7 +459,7 @@ class Dataset:
 
             if "language" in record_dict:
                 # convert to ISO 639-3
-                # gh_issue https://github.com/geritwagner/colrev/issues/64
+                # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
                 # other languages/more systematically
                 # (see database_connectors) > in record.py?
                 if "en" == record_dict["language"]:

@@ -2,7 +2,7 @@
 Collaborative Literature Reviews
 ========================================
 
-.. figure:: https://raw.githubusercontent.com/geritwagner/colrev/main/docs/figures/logo_small.png
+.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png
    :width: 400
    :align: center
    :alt: Logo
@@ -38,7 +38,7 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 **The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/user_resources/manual.html).
 After each operation, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
 
-.. figure:: https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
+.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
    :width: 600
    :align: center
    :alt: Workflow cycle
@@ -69,7 +69,7 @@ After each operation, [validate the changes](docs/build/user_resources/manual/1_
 
 For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
 
-.. figure:: https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.svg
+.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.svg
    :width: 600
    :align: center
    :alt: Settings
@@ -85,7 +85,7 @@ It can substantially reduce required efforts and improve richness, e.g., through
 The more records are curated, the more you can focus on the synthesis.
 
 
-.. figure:: https://raw.githubusercontent.com/geritwagner/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/reuse-vision_loop.svg
+.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/reuse-vision_loop.svg
    :width: 800
    :align: center
    :alt: Reuse vision
@@ -137,5 +137,5 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
    :caption: Links
    :maxdepth: 1
 
-   Github repository <https://github.com/geritwagner/colrev>
+   Github repository <https://github.com/CoLRev-Ecosystem/colrev>
    PyPI <https://pypi.org/project/colrev/>

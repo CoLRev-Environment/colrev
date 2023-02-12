@@ -50,7 +50,7 @@ class TablePrescreen(JsonSchemaMixin):
     ) -> None:
         """Export a prescreen table"""
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/73
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/73
         # add delta (records not yet in the table)
         # instead of overwriting
         # export_table_format as a settings parameter

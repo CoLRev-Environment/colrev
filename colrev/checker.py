@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class Checker:
     """The CoLRev checker makes sure the project setup is ok"""
 
-    __COLREV_HOOKS_URL = "https://github.com/geritwagner/colrev-hooks"
+    __COLREV_HOOKS_URL = "https://github.com/CoLRev-Ecosystem/colrev-hooks"
 
     def __init__(
         self,

@@ -240,7 +240,7 @@ def add_search_source(
         assert not feed_file_path.is_file()
         query_dict["filename"] = filename
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/68
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/68
         # get search_type from the SearchSource
         # query validation based on ops.built_in.search_source settings
         # prevent duplicate sources (same endpoint and search_parameters)

@@ -102,7 +102,7 @@ def main(ctx: click.core.Context) -> None:
 
     Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
-    Documentation:  https://github.com/geritwagner/colrev/docs
+    Documentation:  https://github.com/CoLRev-Ecosystem/colrev/docs
     """
 
 
@@ -253,7 +253,7 @@ def retrieve(
     - copy PDF files to the directory data/pdfs or
     - add an API-based search, as described in the documentation:
 
-    https://github.com/geritwagner/colrev/blob/main/docs/source/user_resources/2_2_metadata_retrieval/search.rst
+    https://github.com/CoLRev-Ecosystem/colrev/blob/main/docs/source/user_resources/2_2_metadata_retrieval/search.rst
     """
 
     try:
@@ -274,7 +274,7 @@ def retrieve(
                 f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
                 f" - copy PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
                 " - add an API-based search, as described in the documentation:\n"
-                "https://github.com/geritwagner/colrev/blob/main/"
+                "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
                 "docs/source/user_resources/2_2_metadata_retrieval/search.rst"
             )
             return
@@ -2069,7 +2069,7 @@ def settings(
                 "pre-commit",
                 "autoupdate",
                 "--repo",
-                "https://github.com/geritwagner/colrev-hooks",
+                "https://github.com/CoLRev-Ecosystem/colrev-hooks",
             ],
         ]
         for script_to_call in scripts_to_call:

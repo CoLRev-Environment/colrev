@@ -152,7 +152,7 @@ class Corrections:
             #         ]
             #     }
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
         # cover non-masterdata corrections
         if "colrev_masterdata_provenance" not in original_record:
             return
@@ -173,7 +173,7 @@ class Corrections:
         with open(filepath, "w", encoding="utf8") as corrections_file:
             json.dump(dict_to_save, corrections_file, indent=4)
 
-        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
         # combine merge-record corrections
 
     def check_corrections_of_records(self) -> None:
@@ -192,11 +192,11 @@ class Corrections:
         prior_records_dict = next(
             self.review_manager.dataset.load_records_from_history()
         )
-        # gh_issue https://github.com/geritwagner/colrev/issues/63
+        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
         # The following code should be much simpler...
         for record_dict in records.values():
 
-            # gh_issue https://github.com/geritwagner/colrev/issues/63
+            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
             # use origin-indexed dict (discarding changes during merges)
 
             # identify curated records for which essential metadata is changed
