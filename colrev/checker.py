@@ -8,14 +8,9 @@ import sys
 import typing
 from importlib.metadata import version
 from pathlib import Path
-from subprocess import check_call
-from subprocess import DEVNULL
-from subprocess import STDOUT
 from typing import TYPE_CHECKING
 
-import git
 import yaml
-from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
@@ -29,8 +24,6 @@ if TYPE_CHECKING:
 
 class Checker:
     """The CoLRev checker makes sure the project setup is ok"""
-
-    __COLREV_HOOKS_URL = "https://github.com/CoLRev-Ecosystem/colrev-hooks"
 
     def __init__(
         self,
@@ -76,47 +69,6 @@ class Checker:
                 sys.version_info,
             )
 
-    def __lsremote(self, *, url: str) -> dict:
-        remote_refs = {}
-        git_repo = git.cmd.Git()
-        for ref in git_repo.ls_remote(url).split("\n"):
-            hash_ref_list = ref.split("\t")
-            remote_refs[hash_ref_list[1]] = hash_ref_list[0]
-        return remote_refs
-
-    def __colrev_hook_up_to_date(self) -> bool:
-
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-
-        local_hooks_version = ""
-        for repository in pre_commit_config["repos"]:
-            if repository["repo"] == self.__COLREV_HOOKS_URL:
-                local_hooks_version = repository["rev"]
-
-        refs = self.__lsremote(url=self.__COLREV_HOOKS_URL)
-        remote_sha = refs["HEAD"]
-        if remote_sha == local_hooks_version:
-            return True
-        return False
-
-    def __update_colrev_hooks(self) -> None:
-        if self.__COLREV_HOOKS_URL not in self.__get_installed_repos():
-            return
-        try:
-            if not self.__colrev_hook_up_to_date():
-                self.review_manager.logger.info("Updating pre-commit hooks")
-                check_call(["pre-commit", "autoupdate"], stdout=DEVNULL, stderr=STDOUT)
-                self.review_manager.dataset.add_changes(
-                    path=Path(".pre-commit-config.yaml")
-                )
-        except GitCommandError:
-            self.review_manager.logger.warning(
-                "No Internet connection, cannot check remote "
-                "colrev-hooks repository for updates."
-            )
-        return
-
     def check_repository_setup(self) -> None:
         """Check the repository setup"""
 
@@ -135,9 +87,6 @@ class Checker:
 
         # 3. Pre-commit hooks installed?
         self.__require_colrev_hooks_installed()
-
-        # 4. Pre-commit hooks up-to-date?
-        self.__update_colrev_hooks()
 
     @classmethod
     def in_virtualenv(cls) -> bool:
@@ -188,14 +137,6 @@ class Checker:
         for repository in pre_commit_config["repos"]:
             installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
         return installed_hooks
-
-    def __get_installed_repos(self) -> list:
-        installed_repos = []
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-        for repository in pre_commit_config["repos"]:
-            installed_repos.append(repository["repo"])
-        return installed_repos
 
     def __require_colrev_hooks_installed(self) -> bool:
         required_hooks = [
