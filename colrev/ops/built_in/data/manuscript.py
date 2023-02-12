@@ -76,6 +76,8 @@ class Manuscript(JsonSchemaMixin):
 
     settings_class = ManuscriptSettings
 
+    __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+
     def __init__(
         self,
         *,
@@ -118,6 +120,7 @@ class Manuscript(JsonSchemaMixin):
         self.paper_relative_path = self.settings.paper_path.relative_to(
             data_operation.review_manager.path
         )
+        self.__temp_path.mkdir(exist_ok=True)
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""
@@ -229,7 +232,7 @@ class Manuscript(JsonSchemaMixin):
         # pylint: disable=too-many-statements
         # pylint: disable=too-many-locals
 
-        temp = tempfile.NamedTemporaryFile()
+        temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
@@ -392,7 +395,7 @@ class Manuscript(JsonSchemaMixin):
 
         # pylint: disable=consider-using-with
 
-        temp = tempfile.NamedTemporaryFile()
+        temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
@@ -537,7 +540,7 @@ class Manuscript(JsonSchemaMixin):
                 )
 
                 # pylint: disable=consider-using-with
-                temp = tempfile.NamedTemporaryFile()
+                temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
                 paper_path.rename(temp.name)

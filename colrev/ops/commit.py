@@ -26,6 +26,8 @@ class Commit:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
+    __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+
     def __init__(
         self,
         *,
@@ -72,6 +74,7 @@ class Commit:
                     self.ext_script_version = f"version {script_version}"
                 except importlib.metadata.PackageNotFoundError:
                     pass
+        self.__temp_path.mkdir(exist_ok=True)
 
     def __parse_saved_args(self, *, saved_args: dict = None) -> str:
         saved_args_str = ""
@@ -133,7 +136,9 @@ class Commit:
                 "[('change', 'booktitle',",
             ]
 
-            with tempfile.NamedTemporaryFile(mode="r+b", delete=False) as temp:
+            with tempfile.NamedTemporaryFile(
+                dir=self.__temp_path, mode="r+b", delete=False
+            ) as temp:
                 with open(self.review_manager.report_path, "r+b") as file:
                     shutil.copyfileobj(file, temp)
             # self.report_path.rename(temp.name)
