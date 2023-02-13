@@ -372,12 +372,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # Already linked to a local-index record
             return record
 
+        retrieved_record_dict = {}
         try:
             retrieved_record_dict = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
             )
-
-        except colrev_exceptions.RecordNotInIndexException:
+        except (
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+        ):
             try:
                 # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
@@ -422,7 +425,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
-        if "CURATED" not in retrieved_record.data["colrev_masterdata_provenance"]:
+        if "CURATED" not in retrieved_record.data.get(
+            "colrev_masterdata_provenance", ""
+        ):
             return record
 
         default_source = "LOCAL_INDEX"

@@ -1535,15 +1535,17 @@ class Record:
             ]:
                 if len(also_known_as_record) != 0:
                     raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                        "cannot determine field requirements "
-                        "(e.g., volume/number for journal articles)"
+                        msg="cannot determine field requirements "
+                        "(e.g., volume/number for journal articles)",
+                        missing_fields=["colrev_status/field_requirements"],
                     )
             # Make sure that colrev_ids are not generated when
             # identifying_field_keys are UNKNOWN but possibly required
             for identifying_field_key in self.identifying_field_keys:
                 if "UNKNOWN" == self.data.get(identifying_field_key, ""):
                     raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                        f"{identifying_field_key} unknown (maybe required)"
+                        msg=f"{identifying_field_key} unknown (maybe required)",
+                        missing_fields=[identifying_field_key],
                     )
 
         if len(also_known_as_record) == 0:
@@ -1560,7 +1562,8 @@ class Record:
             ]
             if len(missing_field_keys) > 0:
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                    "Missing fields:" + ",".join(missing_field_keys)
+                    msg="Missing fields:" + ",".join(missing_field_keys),
+                    missing_fields=missing_field_keys,
                 )
             record_dict = also_known_as_record
 
@@ -1596,7 +1599,7 @@ class Record:
             author = format_author_field_for_cid(record_dict["author"])
             if "" == author.replace("-", ""):
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                    "author field format error"
+                    msg="Missing field:", missing_fields=["author"]
                 )
             srep = robust_append(input_string=srep, to_append=author)
             srep = robust_append(input_string=srep, to_append=record_dict["title"])
@@ -1608,7 +1611,7 @@ class Record:
             if "ENTRYTYPE" in str(exc):
                 print(f"Missing ENTRYTYPE in {record_dict['ID']}")
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                "Missing field:" + str(exc)
+                msg="Missing field:" + str(exc), missing_fields=["ENTRYTYPE"]
             )
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list

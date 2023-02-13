@@ -16,19 +16,15 @@ colrev.env.local\_index.LocalIndex
    .. autosummary::
       :nosignatures:
 
-      ~LocalIndex.check_opensearch_docker_available
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_year_from_toc
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
-      ~LocalIndex.index_record
       ~LocalIndex.is_duplicate
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
-      ~LocalIndex.start_opensearch_docker
-      ~LocalIndex.start_opensearch_docker_dashboards
 
 
 
@@ -38,16 +34,13 @@ colrev.env.local\_index.LocalIndex
 
    .. autosummary::
 
-      ~LocalIndex.AUTHOR_INDEX
-      ~LocalIndex.AUTHOR_RECORD_INDEX
-      ~LocalIndex.CITATIONS_INDEX
-      ~LocalIndex.OPENSEARCH_URL
+      ~LocalIndex.RECORDS_INDEX_KEYS
       ~LocalIndex.RECORD_INDEX
+      ~LocalIndex.SQLITE_PATH
       ~LocalIndex.TOC_INDEX
       ~LocalIndex.annotators_path
       ~LocalIndex.global_keys
       ~LocalIndex.local_environment_path
       ~LocalIndex.max_len_sha256
-      ~LocalIndex.opensearch_index
       ~LocalIndex.request_timeout
       ~LocalIndex.teiind_path

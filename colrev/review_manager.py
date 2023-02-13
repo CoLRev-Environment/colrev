@@ -97,7 +97,7 @@ class ReviewManager:
                 self.output_dir.mkdir(exist_ok=True)
 
             # Start LocalIndex to prevent waiting times
-            self.get_local_index(startup_without_waiting=True)
+            self.get_local_index()
 
             if self.debug_mode:
                 self.report_logger = colrev.logger.setup_report_logger(
@@ -358,15 +358,13 @@ class ReviewManager:
 
     @classmethod
     def get_local_index(
-        cls, *, startup_without_waiting: bool = False, verbose_mode: bool = False
+        cls, *, verbose_mode: bool = False
     ) -> colrev.env.local_index.LocalIndex:
         """Get a local-index object"""
 
         import colrev.env.local_index
 
-        return colrev.env.local_index.LocalIndex(
-            startup_without_waiting=startup_without_waiting, verbose_mode=verbose_mode
-        )
+        return colrev.env.local_index.LocalIndex(verbose_mode=verbose_mode)
 
     @classmethod
     def get_package_manager(  # type: ignore
