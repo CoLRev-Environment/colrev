@@ -34,6 +34,18 @@ class TableLoadUtility:
         next_id = 1
         for record_dict in records:
 
+            if "type" in record_dict:
+                record_dict["ENTRYTYPE"] = record_dict["type"]
+                del record_dict["type"]
+                if "inproceedings" == record_dict["ENTRYTYPE"]:
+                    if "journal" in record_dict and "booktitle" not in record_dict:
+                        record_dict["booktitle"] = record_dict["journal"]
+                        del record_dict["journal"]
+                if "article" == record_dict["ENTRYTYPE"]:
+                    if "booktitle" in record_dict and "journal" not in record_dict:
+                        record_dict["journal"] = record_dict["booktitle"]
+                        del record_dict["booktitle"]
+
             if "ENTRYTYPE" not in record_dict:
                 if "" != record_dict.get("journal", ""):
                     record_dict["ENTRYTYPE"] = "article"
@@ -48,6 +60,12 @@ class TableLoadUtility:
                 else:
                     record_dict["ID"] = next_id
                     next_id += 1
+
+            if "issue" in record_dict and "number" not in record_dict:
+                record_dict["number"] = record_dict["issue"]
+                if "no issue" == record_dict["number"]:
+                    del record_dict["number"]
+                del record_dict["issue"]
 
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
