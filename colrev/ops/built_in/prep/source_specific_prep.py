@@ -47,6 +47,8 @@ class SourceSpecificPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by applying source-specific fixes"""
 
+        # Note : we take the first origin (ie., the source-specific prep should
+        # be one of the first in the prep-list)
         origin_source = record.data["colrev_origin"][0].split("/")[0]
 
         sources = [
