@@ -15,6 +15,7 @@ from threading import Timer
 
 import requests_cache
 from pybtex.database.input import bibtex
+from thefuzz import fuzz
 from tqdm import tqdm
 
 import colrev.dataset
@@ -162,10 +163,10 @@ class LocalIndex:
                         pass
 
     # def __amend_record(self, *, paper_hash: str, record_dict: dict) -> None:
+    #     # TODO
 
     #     # pylint: disable=too-many-locals
 
-    #     # TODO
     #     saved_record_response = self.open_search.get(
     #         index=self.RECORD_INDEX,
     #         id=paper_hash,
@@ -243,7 +244,6 @@ class LocalIndex:
     #         ):
     #             pass
 
-    #     # TODO
     #     # pylint: disable=unexpected-keyword-arg
     #     self.open_search.update(
     #         index=self.RECORD_INDEX,
@@ -347,11 +347,37 @@ class LocalIndex:
                 # print(exc)
                 collisions.append(item)
 
+        self.__sqlite_connection.commit()
+
         # TODO : collisions (duplicate ids)
         # for collision in collisions:
         # ...
-
-        self.__sqlite_connection.commit()
+        # while True:
+        #     # if not self.open_search.exists(index=self.RECORD_INDEX, id=hash):
+        #     stored = self.__store_record(paper_hash=paper_hash, record_dict=record_dict)
+        #     if stored:
+        #         break
+        #     # selected_row = self.__retrieve_by_id_from_sqlite(table_name="records", )
+        #     saved_record_response = self.open_search.get(
+        #         index=self.RECORD_INDEX,
+        #         id=paper_hash,
+        #     )
+        #     saved_record = saved_record_response["_source"]
+        #     saved_record_cid = colrev.record.Record(data=saved_record).create_colrev_id(
+        #         assume_complete=True
+        #     )
+        #     if saved_record_cid == cid_to_index:
+        #         # ok - no collision, update the record
+        #         # Note : do not update (the record from the first repository
+        #         # should take precedence - reset the index to update)
+        #         self.__amend_record(paper_hash=paper_hash, record_dict=record_dict)
+        #         break
+        #     # to handle the collision:
+        #     print(f"Collision: {paper_hash}")
+        #     print(cid_to_index)
+        #     print(saved_record_cid)
+        #     print(saved_record)
+        #     paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
     def __get_record_from_row(self, *, row: dict) -> dict:
         parser = bibtex.Parser()
@@ -461,54 +487,27 @@ class LocalIndex:
 
     def search(self, *, query: dict) -> list[colrev.record.Record]:
         """Run a search for records"""
-        print("search not implemented")
-        return []
 
-        # Resource for other query types:
-        # https://github.com/aiven/demo-opensearch-python/blob/main/search.py
+        self.__thread_lock.acquire(timeout=60)
+        thread_connection = sqlite3.connect(self.SQLITE_PATH)
+        thread_connection.row_factory = self.__dict_factory
+        cur = thread_connection.cursor()
+        selected_row = None
+        records_to_return = []
 
-        # https://opensearch.org/docs/latest/opensearch/ux/#scroll-search
-        # Code based on: https://t1p.de/vbyc3
-        # pylint: disable=unexpected-keyword-arg
-        # TODO
-        # res = self.open_search.search(
-        #     index=self.RECORD_INDEX, body=query, size=100, scroll="10m"
-        # )
+        cur.execute(f"SELECT * FROM {self.RECORD_INDEX} WHERE {query}")
+        for row in cur.fetchall():
+            selected_row = row
+            retrieved_record = self.__get_record_from_row(row=selected_row)
 
-        # old_scroll_id = res.get("_scroll_id", "NA")
-        # records_to_return = []
-        # try:
-        #     while len(res["hits"]["hits"]):
+            retrieved_record = self.__prepare_record_for_return(
+                record_dict=retrieved_record, include_file=False
+            )
+            records_to_return.append(colrev.record.Record(data=retrieved_record))
 
-        #         for item in res["hits"]["hits"]:
-        #             record_to_import = item["_source"]  # type: ignore
-        #             if "fulltext" in record_to_import:
-        #                 del record_to_import["fulltext"]
+        self.__thread_lock.release()
 
-        #             record_to_import = {k: str(v) for k, v in record_to_import.items()}
-        #             record_to_import = {
-        #                 k: v for k, v in record_to_import.items() if "None" != v
-        #             }
-        #             try:
-        #                 record_to_import = self.__prepare_record_for_return(
-        #                     record_dict=record_to_import, include_file=False
-        #                 )
-        #                 records_to_return.append(
-        #                     colrev.record.Record(data=record_to_import)
-        #                 )
-        #             except (PrematureEOF, TokenRequired):
-        #                 pass
-
-        #         # pylint: disable=unexpected-keyword-arg
-        #         # TODO
-        #         res = self.open_search.scroll(scroll_id=old_scroll_id, scroll="2s")
-
-        #         # Note : the scroll_id typically does not change (but it can)
-        #         old_scroll_id = res["_scroll_id"]
-        # except KeyError:
-        #     pass
-
-        # return records_to_return
+        return records_to_return
 
     def __outlets_duplicated(self) -> bool:
 
@@ -646,63 +645,6 @@ class LocalIndex:
                         del record.data["colrev_masterdata_provenance"][provenance_key]
 
         return record.get_data()
-
-    # def _add_record_to_index(self, *, record_dict: dict) -> None:
-    #     cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
-    #     record_dict["colrev_id"] = cid_to_index
-    #     paper_hash = self.__get_record_hash(record_dict=record_dict)
-
-    #     try:
-    #         # check if the record is already indexed (based on d)
-    #         retrieved_record = self.retrieve(
-    #             record_dict=record_dict, include_colrev_ids=True
-    #         )
-
-    #         retrieved_record_cid = colrev.record.Record(
-    #             data=retrieved_record
-    #         ).get_colrev_id()
-
-    #         # if colrev_ids not identical (but overlapping): amend
-    #         if not set(retrieved_record_cid).isdisjoint({cid_to_index}):
-    #             # Note: we need the colrev_id of the retrieved_record
-    #             # (may be different from record)
-    #             self.__amend_record(
-    #                 paper_hash=self.__get_record_hash(record_dict=retrieved_record),
-    #                 record_dict=record_dict,
-    #             )
-    #             return
-    #     except colrev_exceptions.RecordNotInIndexException:
-    #         pass
-
-    #     while True:
-    #         # TODO
-    #         # if not self.open_search.exists(index=self.RECORD_INDEX, id=hash):
-    #         stored = self.__store_record(paper_hash=paper_hash, record_dict=record_dict)
-    #         if stored:
-    #             break
-    #         # TODO
-    #         # TODO : move open_search.get to a function (table + id-name/value)
-    #         # selected_row = self.__retrieve_by_id_from_sqlite(table_name="records", )
-    #         saved_record_response = self.open_search.get(
-    #             index=self.RECORD_INDEX,
-    #             id=paper_hash,
-    #         )
-    #         saved_record = saved_record_response["_source"]
-    #         saved_record_cid = colrev.record.Record(data=saved_record).create_colrev_id(
-    #             assume_complete=True
-    #         )
-    #         if saved_record_cid == cid_to_index:
-    #             # ok - no collision, update the record
-    #             # Note : do not update (the record from the first repository
-    #             # should take precedence - reset the index to update)
-    #             self.__amend_record(paper_hash=paper_hash, record_dict=record_dict)
-    #             break
-    #         # to handle the collision:
-    #         print(f"Collision: {paper_hash}")
-    #         print(cid_to_index)
-    #         print(saved_record_cid)
-    #         print(saved_record)
-    #         paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
     def __get_index_record(self, *, record_dict: dict) -> dict:
 
@@ -843,11 +785,8 @@ class LocalIndex:
             return
 
         print(f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}")
-        # TODO : reactivate
-        # if self.teiind_path.is_dir():
-        #     shutil.rmtree(self.teiind_path)
+        # Note : the tei-directory should be removed manually.
 
-        # TODO : other indices
         Path(self.SQLITE_PATH).unlink()
         self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
         cur = self.__sqlite_connection.cursor()
@@ -884,7 +823,7 @@ class LocalIndex:
         print("get_year_from_toc currently not implemented")
         return "NOT_IMPLEMENTED"
 
-        # open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
+        # TODO
 
         # try:
         #     toc_key = colrev.record.Record(data=record_dict).get_toc_key()
@@ -945,17 +884,29 @@ class LocalIndex:
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
 
-        print("retrieve_from_toc currently not implemented")
-        return {}
+        try:
+            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+        except colrev_exceptions.NotTOCIdentifiableException as exc:
+            # if not search_across_tocs:
+            raise colrev_exceptions.RecordNotInIndexException() from exc
+
+        # 1. get TOC
+        toc_items = []
+        if not self.__toc_exists(toc_item=toc_key):
+            # TODO : search-across-tocs?
+            raise colrev_exceptions.RecordNotInIndexException()
 
         # try:
-        #     toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-        # except colrev_exceptions.NotTOCIdentifiableException as exc:
-        #     if not search_across_tocs:
-        #         raise colrev_exceptions.RecordNotInIndexException() from exc
+        res = self.__get_from_index_exact_match(
+            index_name=self.TOC_INDEX, key="toc_key", value=toc_key
+        )
+        toc_items = res.get("colrev_ids", [])  # type: ignore
 
-        # open_search_thread_instance = OpenSearch(self.OPENSEARCH_URL)
-        # 1. get TOC
+        # TODO
+
+        # print("retrieve_from_toc currently not implemented")
+        # return {}
+
         # if search_across_tocs:
         #     try:
         #         toc_items: typing.List[str] = []
@@ -991,71 +942,58 @@ class LocalIndex:
         #     ) as exc:
         #         raise colrev_exceptions.RecordNotInIndexException() from exc
 
-        # else:
-        #     toc_items = []
-        #     if open_search_thread_instance.exists(index=self.TOC_INDEX, id=toc_key):
-        #         try:
-        #             res = self.__get_from_index_exact_match(index_name=self.TOC_INDEX,
-        #                               key="toc_key", value=toc_key)
-        #             toc_items = res.get("colrev_ids", [])  # type: ignore
-        #         except (TransportError, SerializationError, NotFoundError):
-        #             toc_items = []
-
         # if not toc_items:
         #     raise colrev_exceptions.RecordNotInIndexException()
 
-        # # 2. get most similar record_dict
-        # try:
-        #     if search_across_tocs:
-        #         record_colrev_id = colrev.record.Record(
-        #             data=record_dict
-        #         ).create_colrev_id(assume_complete=True)
+        # 2. get most similar record_dict
+        try:
+            if search_across_tocs:
+                record_colrev_id = colrev.record.Record(
+                    data=record_dict
+                ).create_colrev_id(assume_complete=True)
 
-        #     else:
-        #         record_colrev_id = colrev.record.Record(
-        #             data=record_dict
-        #         ).create_colrev_id()
-        #     sim_list = []
+            else:
+                record_colrev_id = colrev.record.Record(
+                    data=record_dict
+                ).create_colrev_id()
+            sim_list = [0.0]
 
-        #     for toc_records_colrev_id in toc_items:
-        #         # Note : using a simpler similarity measure
-        #         # because the publication outlet parameters are already identical
-        #         sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
-        #         sim_list.append(sim_value)
+            for toc_records_colrev_id in toc_items:
+                # Note : using a simpler similarity measure
+                # because the publication outlet parameters are already identical
+                sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
+                sim_list.append(sim_value)
 
-        #     if max(sim_list) > similarity_threshold:
-        #         if search_across_tocs:
-        #             second_highest = list(set(sim_list))[-2]
-        #             # Require a minimum difference to the next most similar record
-        #             if (max(sim_list) - second_highest) < 0.2:
-        #                 raise colrev_exceptions.RecordNotInIndexException()
+            if max(sim_list) > similarity_threshold:
+                if search_across_tocs:
+                    second_highest = list(set(sim_list))[-2]
+                    # Require a minimum difference to the next most similar record
+                    if (max(sim_list) - second_highest) < 0.2:
+                        raise colrev_exceptions.RecordNotInIndexException()
 
-        #         toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
-        #         paper_hash = hashlib.sha256(
-        #             toc_records_colrev_id.encode("utf-8")
-        #         ).hexdigest()
-        #         res = open_search_thread_instance.get(
-        #             index=self.RECORD_INDEX,
-        #             id=str(paper_hash),
-        #         )
-        #         record_dict = res["_source"]  # type: ignore
-        #         return self.__prepare_record_for_return(
-        #             record_dict=record_dict, include_file=include_file
-        #         )
+                toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
 
-        #     raise colrev_exceptions.RecordNotInTOCException(
-        #         record_id=record_dict["ID"], toc_key=toc_key
-        #     )
+                record_dict = self.__get_from_index_exact_match(
+                    index_name=self.RECORD_INDEX,
+                    key="colrev_id",
+                    value=toc_records_colrev_id,
+                )
 
-        # except (
-        #     colrev_exceptions.NotEnoughDataToIdentifyException,
-        #     KeyError,
-        #     NotFoundError,
-        #     TransportError,
-        # ):
-        #     pass
+                return self.__prepare_record_for_return(
+                    record_dict=record_dict, include_file=include_file
+                )
 
-        # raise colrev_exceptions.RecordNotInIndexException()
+            raise colrev_exceptions.RecordNotInTOCException(
+                record_id=record_dict["ID"], toc_key=toc_key
+            )
+
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            KeyError,
+        ):
+            pass
+
+        raise colrev_exceptions.RecordNotInIndexException()
 
     def __get_from_index_exact_match(
         self, *, index_name: str, key: str, value: str

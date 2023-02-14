@@ -197,6 +197,21 @@ def add_search_source(
             comment="",
         )
 
+    elif query.startswith("local_index:"):
+        query = query.replace("local_index:", "")
+
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"local_index_{query}".replace("%", "").replace("'", "")
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev_built_in.local_index",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": query},
+            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            comment="",
+        )
+
     elif Path(query).is_file():
         # pylint: disable=import-outside-toplevel
         import shutil
