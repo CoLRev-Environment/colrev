@@ -77,11 +77,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         if "query" in source.search_parameters:
-            if not source.search_parameters["query"].startswith(
-                "https://aisel.aisnet.org/"
-            ):
+            if "search_terms" not in source.search_parameters["query"]:
                 raise colrev_exceptions.InvalidQueryException(
-                    "query parameter does not start with https://aisel.aisnet.org/"
+                    "query parameter does not contain search_terms"
                 )
 
         # Note : can simply add files downloaded from AIS
