@@ -52,6 +52,7 @@ def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
         comment="",
     )
     review_manager.settings.sources.append(ais_source)
+    review_manager.save_settings()
 
     prep_operation = review_manager.get_prep_operation(
         notify_state_transition_operation=False, retrieval_similarity=0.8

@@ -65,15 +65,15 @@ class ScopusSearchSource(JsonSchemaMixin):
         )
 
         if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
+            print(
+                f"Warning: Source missing query_file search_parameter ({source.filename})"
             )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
+        else:
+            if not Path(source.search_parameters["query_file"]).is_file():
+                raise colrev_exceptions.InvalidQueryException(
+                    f"File does not exist: query_file {source.search_parameters['query_file']} "
+                    f"for ({source.filename})"
+                )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
