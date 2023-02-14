@@ -75,7 +75,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
             if not isinstance(value, str):
                 continue
             if key in record.data:
-                if "UNKNOWN" == crossref_md.data[key]:
+                if "UNKNOWN" == record.data[key]:
                     continue
                 if key in ["author", "title", "journal"]:
                     if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
