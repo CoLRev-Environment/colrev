@@ -114,6 +114,12 @@ def main(ctx: click.core.Context) -> None:
     help="Review type (e.g., literature_review (default), scoping_review, theoretical_review)",
 )
 @click.option(
+    "--light",
+    is_flag=True,
+    default=False,
+    help="Setup a lightweight repository (not requiring Docker services)",
+)
+@click.option(
     "--example",
     is_flag=True,
     default=False,
@@ -145,6 +151,7 @@ def init(
     ctx: click.core.Context,
     type: str,
     example: bool,
+    light: bool,
     local_pdf_collection: bool,
     verbose: bool,
     force: bool,
@@ -159,6 +166,7 @@ def init(
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
             example=example,
+            light=light,
             local_pdf_collection=local_pdf_collection,
             exact_call=EXACT_CALL,
         )

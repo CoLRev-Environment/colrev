@@ -37,6 +37,7 @@ class Initializer:
         *,
         review_type: str,
         example: bool = False,
+        light: bool = False,
         local_pdf_collection: bool = False,
         target_path: Path = None,
         exact_call: str = "",
@@ -50,6 +51,7 @@ class Initializer:
             raise colrev_exceptions.RepoInitError(
                 msg="Cannot initialize local_pdf_collection repository with example data."
             )
+        self.light = light
 
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         if "." not in self.review_type:
@@ -254,6 +256,21 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize()
                 + f": A {r_type_suffix} protocol",
             )
+
+        if self.light:
+            if [
+                x
+                for x in settings.data.data_package_endpoints
+                if x["endpoint"] in ["colrev_built_in.manuscript"]
+            ]:
+                settings.data.data_package_endpoints = [
+                    x
+                    for x in settings.data.data_package_endpoints
+                    if x["endpoint"] not in ["colrev_built_in.manuscript"]
+                ]
+        # TODO : also remove other references to Docker containers
+
+        self.review_manager.save_settings()
 
         # Note : to avoid file setup at colrev status (calls data_operation.main)
         data_operation = self.review_manager.get_data_operation(

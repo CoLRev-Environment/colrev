@@ -456,6 +456,7 @@ class ReviewManager:
         cls,
         review_type: str,
         example: bool = False,
+        light: bool = False,
         local_pdf_collection: bool = False,
         target_path: Path = None,
         exact_call: str = "",
@@ -466,6 +467,7 @@ class ReviewManager:
         return colrev.ops.init.Initializer(
             review_type=review_type,
             example=example,
+            light=light,
             local_pdf_collection=local_pdf_collection,
             target_path=target_path,
             exact_call=exact_call,
