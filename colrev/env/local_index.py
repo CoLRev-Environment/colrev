@@ -488,22 +488,25 @@ class LocalIndex:
     def search(self, *, query: dict) -> list[colrev.record.Record]:
         """Run a search for records"""
 
-        self.__thread_lock.acquire(timeout=60)
-        thread_connection = sqlite3.connect(self.SQLITE_PATH)
-        thread_connection.row_factory = self.__dict_factory
-        cur = thread_connection.cursor()
-        selected_row = None
-        records_to_return = []
+        try:
+            self.__thread_lock.acquire(timeout=60)
+            thread_connection = sqlite3.connect(self.SQLITE_PATH)
+            thread_connection.row_factory = self.__dict_factory
+            cur = thread_connection.cursor()
+            selected_row = None
+            records_to_return = []
 
-        cur.execute(f"SELECT * FROM {self.RECORD_INDEX} WHERE {query}")
-        for row in cur.fetchall():
-            selected_row = row
-            retrieved_record = self.__get_record_from_row(row=selected_row)
+            cur.execute(f"SELECT * FROM {self.RECORD_INDEX} WHERE {query}")
+            for row in cur.fetchall():
+                selected_row = row
+                retrieved_record = self.__get_record_from_row(row=selected_row)
 
-            retrieved_record = self.__prepare_record_for_return(
-                record_dict=retrieved_record, include_file=False
-            )
-            records_to_return.append(colrev.record.Record(data=retrieved_record))
+                retrieved_record = self.__prepare_record_for_return(
+                    record_dict=retrieved_record, include_file=False
+                )
+                records_to_return.append(colrev.record.Record(data=retrieved_record))
+        except sqlite3.OperationalError:
+            pass
 
         self.__thread_lock.release()
 
@@ -858,19 +861,24 @@ class LocalIndex:
 
     def __toc_exists(self, *, toc_item: str) -> bool:
 
-        self.__thread_lock.acquire(timeout=60)
-        thread_connection = sqlite3.connect(self.SQLITE_PATH)
-        thread_connection.row_factory = self.__dict_factory
-        cur = thread_connection.cursor()
-        selected_row = None
-        cur.execute(f"SELECT * FROM {self.TOC_INDEX} WHERE toc_key='{toc_item}'")
-        for row in cur.fetchall():
-            selected_row = row
-            break
-        self.__thread_lock.release()
-        if not selected_row:
-            return False
-        return True
+        try:
+            self.__thread_lock.acquire(timeout=60)
+            thread_connection = sqlite3.connect(self.SQLITE_PATH)
+            thread_connection.row_factory = self.__dict_factory
+            cur = thread_connection.cursor()
+            selected_row = None
+            cur.execute(f"SELECT * FROM {self.TOC_INDEX} WHERE toc_key='{toc_item}'")
+            for row in cur.fetchall():
+                selected_row = row
+                break
+            self.__thread_lock.release()
+            if not selected_row:
+                return False
+            return True
+        except sqlite3.OperationalError:
+            self.__thread_lock.release()
+
+        return False
 
     def retrieve_from_toc(
         self,
@@ -1007,40 +1015,47 @@ class LocalIndex:
 
         retrieved_record = {}
 
-        self.__thread_lock.acquire(timeout=60)
-        thread_connection = sqlite3.connect(self.SQLITE_PATH)
-        thread_connection.row_factory = self.__dict_factory
-        cur = thread_connection.cursor()
+        try:
+            self.__thread_lock.acquire(timeout=60)
+            thread_connection = sqlite3.connect(self.SQLITE_PATH)
+            thread_connection.row_factory = self.__dict_factory
+            cur = thread_connection.cursor()
 
-        # TODO : handle collisions
-        # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
-        # Collision
-        # paper_hash = self.__increment_hash(paper_hash=paper_hash)
+            # TODO : handle collisions
+            # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
+            # Collision
+            # paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
-        selected_row = None
-        cur.execute(f"SELECT * FROM {index_name} WHERE {key}='{value}'")
-        for row in cur.fetchall():
-            selected_row = row
-            break
-        self.__thread_lock.release()
+            selected_row = None
+            cur.execute(f"SELECT * FROM {index_name} WHERE {key}='{value}'")
+            for row in cur.fetchall():
+                selected_row = row
+                break
+            self.__thread_lock.release()
 
-        if not selected_row:
-            raise colrev_exceptions.RecordNotInIndexException()
-
-        if self.RECORD_INDEX == index_name:
-            retrieved_record = self.__get_record_from_row(row=selected_row)
-        else:
-            retrieved_record = selected_row
-
-        if "colrev_id" == key:
-            if value != colrev.record.Record(data=retrieved_record).create_colrev_id():
-                raise colrev_exceptions.RecordNotInIndexException()
-        else:
-            if key not in retrieved_record:
+            if not selected_row:
                 raise colrev_exceptions.RecordNotInIndexException()
 
-            if value != retrieved_record[key]:
-                raise colrev_exceptions.RecordNotInIndexException()
+            if self.RECORD_INDEX == index_name:
+                retrieved_record = self.__get_record_from_row(row=selected_row)
+            else:
+                retrieved_record = selected_row
+
+            if "colrev_id" == key:
+                if (
+                    value
+                    != colrev.record.Record(data=retrieved_record).create_colrev_id()
+                ):
+                    raise colrev_exceptions.RecordNotInIndexException()
+            else:
+                if key not in retrieved_record:
+                    raise colrev_exceptions.RecordNotInIndexException()
+
+                if value != retrieved_record[key]:
+                    raise colrev_exceptions.RecordNotInIndexException()
+        except sqlite3.OperationalError as exc:
+            self.__thread_lock.release()
+            raise colrev_exceptions.RecordNotInIndexException() from exc
 
         return retrieved_record
 
