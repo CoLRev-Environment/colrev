@@ -20,4 +20,4 @@ or in general (using ``colrev prescreen --include_all_always``).
    :maxdepth: 3
    :caption: Operations
 
-   2_3_metadata_prescreen/prescreen
+   metadata_prescreen/prescreen

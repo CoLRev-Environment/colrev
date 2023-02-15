@@ -26,4 +26,4 @@ This may be particularly useful in scientometric studies.
    :maxdepth: 3
    :caption: Operations
 
-   2_5_pdf_screen/screen
+   pdf_screen/screen

@@ -301,7 +301,7 @@ related to preparation:
 
 Record with **non-curated masterdata**: *colrev_masterdata* indicates that fields were fused from multiple sources
 
-.. code-block:: BibTeX
+.. code-block::
    :emphasize-lines: 4,5
 
    @article{Webster2002,
@@ -330,7 +330,7 @@ Record with **non-curated masterdata**: *colrev_masterdata* indicates that field
 
 Record with **curated masterdata**: *colrev_masterdata* indicates the location of the repository containing the curated masterdata
 
-.. code-block:: BibTeX
+.. code-block::
    :emphasize-lines: 4
 
    @article{Webster2002,

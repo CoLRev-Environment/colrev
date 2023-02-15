@@ -10,7 +10,6 @@ Upcoming
 --------------------------------------
 
 - Extension colrev_cml_assistant
-- Extension backward_search
 - Templates for review_types
 - Synchronous session support
 - `Additional SearchSources <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_
