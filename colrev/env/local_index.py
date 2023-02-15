@@ -956,7 +956,8 @@ class LocalIndex:
                 record_colrev_id = colrev.record.Record(
                     data=record_dict
                 ).create_colrev_id()
-            sim_list = [0.0]
+
+            sim_list = []
 
             for toc_records_colrev_id in toc_items:
                 # Note : using a simpler similarity measure
@@ -964,27 +965,32 @@ class LocalIndex:
                 sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
                 sim_list.append(sim_value)
 
-            if max(sim_list) > similarity_threshold:
-                if search_across_tocs:
-                    second_highest = list(set(sim_list))[-2]
-                    # Require a minimum difference to the next most similar record
-                    if (max(sim_list) - second_highest) < 0.2:
-                        raise colrev_exceptions.RecordNotInIndexException()
-
-                toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
-
-                record_dict = self.__get_from_index_exact_match(
-                    index_name=self.RECORD_INDEX,
-                    key="colrev_id",
-                    value=toc_records_colrev_id,
+            if not sim_list:
+                raise colrev_exceptions.RecordNotInTOCException(
+                    record_id=record_dict["ID"], toc_key=toc_key
                 )
 
-                return self.__prepare_record_for_return(
-                    record_dict=record_dict, include_file=include_file
+            if max(sim_list) < similarity_threshold:
+                raise colrev_exceptions.RecordNotInTOCException(
+                    record_id=record_dict["ID"], toc_key=toc_key
                 )
 
-            raise colrev_exceptions.RecordNotInTOCException(
-                record_id=record_dict["ID"], toc_key=toc_key
+            if search_across_tocs:
+                second_highest = list(set(sim_list))[-2]
+                # Require a minimum difference to the next most similar record
+                if (max(sim_list) - second_highest) < 0.2:
+                    raise colrev_exceptions.RecordNotInIndexException()
+
+            toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
+
+            record_dict = self.__get_from_index_exact_match(
+                index_name=self.RECORD_INDEX,
+                key="colrev_id",
+                value=toc_records_colrev_id,
+            )
+
+            return self.__prepare_record_for_return(
+                record_dict=record_dict, include_file=include_file
             )
 
         except (
