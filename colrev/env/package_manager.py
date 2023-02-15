@@ -23,6 +23,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 
 
 # Inspiration for package descriptions:
@@ -763,6 +764,7 @@ class PackageManager:
 
         package_details = self.package_type_overview[package_type]
         endpoint_class = package_details["import_name"]  # type: ignore
+        to_remove = []
         for package_identifier, package_class in packages_dict.items():
             params = {
                 package_details["operation_name"]: operation,
@@ -777,10 +779,25 @@ class PackageManager:
                 )
 
             if instantiate_objects:
-                packages_dict[package_identifier] = package_class["endpoint"](**params)
-                verifyObject(endpoint_class, packages_dict[package_identifier])
+                try:
+                    packages_dict[package_identifier] = package_class["endpoint"](
+                        **params
+                    )
+                    verifyObject(endpoint_class, packages_dict[package_identifier])
+                except colrev_exceptions.ServiceNotAvailableException as sna_exc:
+                    if "docker" == sna_exc.dep:
+                        print(
+                            f"{colors.ORANGE}Docker not available. Deactivating "
+                            f"{package_identifier}{colors.END}"
+                        )
+                        to_remove.append(package_identifier)
+                    else:
+                        raise sna_exc
             else:
                 packages_dict[package_identifier] = package_class["endpoint"]
+
+        for i_to_remove in to_remove:
+            del packages_dict[i_to_remove]
 
         return packages_dict
 

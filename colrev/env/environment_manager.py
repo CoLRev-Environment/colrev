@@ -158,7 +158,8 @@ class EnvironmentManager:
                     client.images.pull(imagename)
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
-                f"Docker service not available ({exc}). Please install/start Docker."
+                dep="docker"
+                f"Docker service not available ({exc}). Please install/start Docker.",
             ) from exc
 
     def check_git_installed(self) -> None:
