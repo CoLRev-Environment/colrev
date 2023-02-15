@@ -787,7 +787,7 @@ class PackageManager:
                 except colrev_exceptions.ServiceNotAvailableException as sna_exc:
                     if "docker" == sna_exc.dep:
                         print(
-                            f"{colors.ORANGE}Docker not available. Deactivating "
+                            f"{colors.ORANGE}Docker not available. Deactivate "
                             f"{package_identifier}{colors.END}"
                         )
                         to_remove.append(package_identifier)

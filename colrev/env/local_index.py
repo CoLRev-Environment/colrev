@@ -135,32 +135,36 @@ class LocalIndex:
 
     def __index_tei_document(self, *, recs_to_index: list) -> None:
 
-        if self.__index_tei:
-            for record_dict in recs_to_index:
-                if "file" in record_dict:
-                    try:
-                        paper_hash = record_dict["id"]
-                        tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
-                        tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                        if Path(record_dict["file"]).is_file():
-                            if not tei_path.is_file():
-                                print(f"Create tei for {record_dict['file']}")
-                            tei = colrev.env.tei_parser.TEIParser(
-                                environment_manager=self.environment_manager,
-                                pdf_path=Path(record_dict["file"]),
-                                tei_path=tei_path,
-                            )
+        if not self.__index_tei:
+            return
+        for record_dict in recs_to_index:
+            if "file" not in record_dict:
+                continue
 
-                            record_dict["tei"] = str(tei_path)
-                            record_dict["fulltext"] = tei.get_tei_str()
+            try:
+                paper_hash = record_dict["id"]
+                tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
+                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                if not Path(record_dict["file"]).is_file():
+                    continue
+                if not tei_path.is_file():
+                    print(f"Create tei for {record_dict['file']}")
+                tei = colrev.env.tei_parser.TEIParser(
+                    environment_manager=self.environment_manager,
+                    pdf_path=Path(record_dict["file"]),
+                    tei_path=tei_path,
+                )
 
-                            # self.__index_author(tei=tei, record_dict=record_dict)
+                record_dict["tei"] = str(tei_path)
+                record_dict["fulltext"] = tei.get_tei_str()
 
-                    except (
-                        colrev_exceptions.TEIException,
-                        AttributeError,
-                    ):
-                        pass
+                # self.__index_author(tei=tei, record_dict=record_dict)
+
+            except (
+                colrev_exceptions.TEIException,
+                AttributeError,
+            ):
+                pass
 
     # def __amend_record(self, *, paper_hash: str, record_dict: dict) -> None:
     #     # TODO
