@@ -97,6 +97,7 @@ def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
             )
             print("Replaced the tests/prep_test/expected_records.bib.")
             print("Discard changes or add them to update the expected values.")
+            print(tmp_path)
             raise AssertionError from exc
 
     print(review_manager.path)

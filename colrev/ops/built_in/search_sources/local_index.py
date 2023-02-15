@@ -117,21 +117,22 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         #     )
 
         if "query" in source.search_parameters:
-            if "simple_query_string" in source.search_parameters["query"]:
-                if "query" in source.search_parameters["query"]["simple_query_string"]:
-                    pass
-                else:
-                    raise colrev_exceptions.InvalidQueryException(
-                        "Source missing query/simple_query_string/query "
-                        f"search_parameter ({source.filename})"
-                    )
+            pass
+            # if "simple_query_string" in source.search_parameters["query"]:
+            #     if "query" in source.search_parameters["query"]["simple_query_string"]:
+            #         pass
+            #     else:
+            #         raise colrev_exceptions.InvalidQueryException(
+            #             "Source missing query/simple_query_string/query "
+            #             f"search_parameter ({source.filename})"
+            #         )
 
-            elif "url" in source.search_parameters["query"]:
-                pass
-            else:
-                raise colrev_exceptions.InvalidQueryException(
-                    f"Source missing query/query search_parameter ({source.filename})"
-                )
+            # elif "url" in source.search_parameters["query"]:
+            #     pass
+            # # else:
+            #     raise colrev_exceptions.InvalidQueryException(
+            #         f"Source missing query/query search_parameter ({source.filename})"
+            #     )
 
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
@@ -148,7 +149,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         #         },
         #     }
         # }
-        query = params
+        query = params["query"]
 
         returned_records = self.local_index.search(query=query)
 
@@ -160,12 +161,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             "screening_criteria",
         ]
         for record_dict in records_to_import:
-            identifier_string = (
-                record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
-                + "#"
-                + record_dict["ID"]
-            )
-            record_dict["curation_ID"] = identifier_string
             record_dict = {
                 key: value
                 for key, value in record_dict.items()
@@ -372,12 +367,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # Already linked to a local-index record
             return record
 
+        retrieved_record_dict = {}
         try:
             retrieved_record_dict = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
             )
-
-        except colrev_exceptions.RecordNotInIndexException:
+        except (
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+        ):
             try:
                 # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
@@ -422,7 +420,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
-        if "CURATED" not in retrieved_record.data["colrev_masterdata_provenance"]:
+        if "CURATED" not in retrieved_record.data.get(
+            "colrev_masterdata_provenance", ""
+        ):
             return record
 
         default_source = "LOCAL_INDEX"

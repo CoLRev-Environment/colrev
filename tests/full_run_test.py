@@ -53,7 +53,6 @@ def test_full_run(tmp_path: Path) -> None:
     review_manager.save_settings()
 
     review_manager.logger.info("Start load")
-    review_manager.get_local_index(startup_without_waiting=True)
     load_operation = review_manager.get_load_operation()
 
     load_operation = review_manager.get_load_operation()

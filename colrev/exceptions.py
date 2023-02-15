@@ -253,8 +253,9 @@ class DuplicateIDsError(CoLRevException):
 class NotEnoughDataToIdentifyException(CoLRevException):
     """The meta-data is not sufficiently complete to identify the record."""
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, *, msg: str = None, missing_fields: list = None) -> None:
         self.message = msg
+        self.missing_fields = missing_fields
         super().__init__(self.message)
 
 
@@ -497,11 +498,14 @@ class RecordNotInIndexException(CoLRevException):
 class RecordNotIndexableException(CoLRevException):
     """The requested record could not be added to the LocalIndex."""
 
-    def __init__(self, record_id: str = None) -> None:
-        if id is not None:
-            self.message = f"Record cannot be indexed ({record_id})"
+    def __init__(self, record_id: str = None, missing_key: str = None) -> None:
+        self.missing_key = missing_key
+        if missing_key is None:
+            missing_key = "-"
+        if record_id is not None:
+            self.message = f"Record cannot be indexed ({record_id}): {missing_key}"
         else:
-            self.message = "Record cannot be indexed"
+            self.message = f"Record cannot be indexed: {missing_key}"
         super().__init__(self.message)
 
 

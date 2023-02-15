@@ -260,7 +260,6 @@ def retrieve(
         review_manager = colrev.review_manager.ReviewManager(
             verbose_mode=verbose, force_mode=force, high_level_operation=True
         )
-        review_manager.get_local_index(startup_without_waiting=True)
 
         if not any(review_manager.search_dir.iterdir()) and not any(
             review_manager.pdf_dir.iterdir()
@@ -462,7 +461,6 @@ def load(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         # already start LocalIndex (for set_ids)
-        review_manager.get_local_index(startup_without_waiting=True)
         load_operation = review_manager.get_load_operation()
 
         new_sources = load_operation.get_new_sources(skip_query=skip_query)
@@ -1922,12 +1920,9 @@ def env(
 ) -> None:
     """Manage the environment"""
 
-    # pylint: disable=import-outside-toplevel
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
-
-    import webbrowser
 
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -1987,6 +1982,7 @@ def env(
         return
 
     if update_package_list:
+        # pylint: disable=import-outside-toplevel
         import colrev.env.package_manager as p_manager
 
         package_manager = p_manager.PackageManager()
@@ -1994,9 +1990,7 @@ def env(
 
     local_index = review_manager.get_local_index()
     if search:
-        local_index.start_opensearch_docker_dashboards()
-        print("Started.")
-        webbrowser.open("http://localhost:5601/app/home#/", new=2)
+        print("open ~/colrev/sqlite_index.db")
 
     elif index:
         local_index.index()

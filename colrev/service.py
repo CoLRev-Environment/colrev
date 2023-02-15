@@ -179,8 +179,6 @@ class Service:
         print()
         if "colrev retrieve" == item["cmd"]:
 
-            self.review_manager.get_local_index(startup_without_waiting=True)
-
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(rerun=False)
 

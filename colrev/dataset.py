@@ -419,12 +419,11 @@ class Dataset:
             record_header_dict = {r["ID"]: r for r in record_header_list}
             return record_header_dict
 
-        parser = bibtex.Parser()
-
         if file_path:
             with open(file_path, encoding="utf-8") as file:
                 load_str = file.read()
 
+        parser = bibtex.Parser()
         if load_str:
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
@@ -684,7 +683,10 @@ class Dataset:
             if "curated_metadata" in str(self.review_manager.path):
                 raise colrev_exceptions.RecordNotInIndexException()
 
-        except colrev_exceptions.RecordNotInIndexException:
+        except (
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+        ):
 
             if "" != record_dict.get("author", record_dict.get("editor", "")):
                 authors_string = record_dict.get(

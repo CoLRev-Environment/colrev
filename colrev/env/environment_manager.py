@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import json
-import os
 import typing
-from datetime import datetime
 from pathlib import Path
 
 import docker
@@ -15,7 +13,6 @@ import yaml
 from docker.errors import DockerException
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
-from opensearchpy.exceptions import NotFoundError
 from yaml import safe_load
 
 import colrev.exceptions as colrev_exceptions
@@ -200,30 +197,31 @@ class EnvironmentManager:
     ) -> dict:
         """Get the environment details"""
 
-        def get_last_modified() -> str:
+        # def get_last_modified() -> str:
 
-            list_of_files = local_index.opensearch_index.glob(
-                "**/*"
-            )  # * means all if need specific format then *.csv
-            latest_file = max(list_of_files, key=os.path.getmtime)
-            last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
-            return last_mod.strftime("%Y-%m-%d %H:%M")
+        #     list_of_files = local_index.opensearch_index.glob(
+        #         "**/*"
+        #     )  # * means all if need specific format then *.csv
+        #     latest_file = max(list_of_files, key=os.path.getmtime)
+        #     last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
+        #     return last_mod.strftime("%Y-%m-%d %H:%M")
 
         local_index = review_manager.get_local_index()
 
         environment_details = {}
         size = 0
         last_modified = "NOT_INITIATED"
-        status = ""
+        status = "TODO"
 
-        try:
-            size = local_index.open_search.cat.count(
-                index=local_index.RECORD_INDEX, params={"format": "json"}
-            )[0]["count"]
-            last_modified = get_last_modified()
-            status = "up"
-        except (NotFoundError, IndexError):
-            status = "down"
+        size = 0
+        # try:
+        #     size = local_index.open_search.cat.count(
+        #         index=local_index.RECORD_INDEX, params={"format": "json"}
+        #     )[0]["count"]
+        #     last_modified = get_last_modified()
+        #     status = "up"
+        # except (NotFoundError, IndexError):
+        #     status = "down"
 
         environment_details["index"] = {
             "size": size,
