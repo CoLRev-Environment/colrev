@@ -37,7 +37,7 @@ As a best practice recommendation, we suggest to keep notes on he review objecti
 This document may also serve as the review protocol and evolve into the final review manuscript.
 Review protocols often involve the following:
 
-- Sharing the repository with your team (see `instructions <3_collaboration.html>`_).
+- Sharing the repository with your team (see `instructions <collaboration.html>`_).
 - Refining the review objectives and the characteristics of the review.
 - Defining focal concepts of the review.
 - Developing a search strategy and testing it.
@@ -58,4 +58,4 @@ Review protocols often involve the following:
    :maxdepth: 3
    :caption: Operations
 
-   2_1_problem_formulation/init
+   problem_formulation/init

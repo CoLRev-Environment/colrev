@@ -33,5 +33,5 @@ To start the pdfs operation, run
    :maxdepth: 3
    :caption: Operations
 
-   2_4_pdf_retrieval/pdf_get
-   2_4_pdf_retrieval/pdf_prep
+   pdf_retrieval/pdf_get
+   pdf_retrieval/pdf_prep

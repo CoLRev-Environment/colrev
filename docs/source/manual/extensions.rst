@@ -38,8 +38,8 @@ When the review is passed, the details will be added to the [package_endpoints.j
    :maxdepth: 3
    :caption: Extension development resources
 
-   5_extensions/development
-   5_extensions/python
-   5_extensions/r
-   5_extensions/custom_extensions
-   5_extensions/example
+   extensions/development
+   extensions/python
+   extensions/r
+   extensions/custom_extensions
+   extensions/example

@@ -35,8 +35,8 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    colrev status
 
 
-**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/user_resources/manual.html).
-After each operation, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
+**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/manual/manual.html).
+After each operation, [validate the changes](docs/build/manual/manual/1_workflow.html#colrev-validate).
 
 .. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
    :width: 600
@@ -101,23 +101,22 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
 .. toctree::
    :hidden:
    :maxdepth: 2
-   :caption: User resources
+   :caption: Manual
 
-   Introduction <user_resources/manual>
-   user_resources/1_operations
-   user_resources/2_workflow
-   user_resources/2_1_problem_formulation
-   user_resources/2_2_metadata_retrieval
-   user_resources/2_3_metadata_prescreen
-   user_resources/2_4_pdf_retrieval
-   user_resources/2_5_pdf_screen
-   user_resources/2_6_data
-   user_resources/3_collaboration
-   user_resources/4_curation
-   user_resources/5_extensions
-   user_resources/6_sources
-   user_resources/credits
-   user_resources/help
+   Introduction <manual/manual>
+   manual/operations
+   manual/workflow
+   manual/problem_formulation
+   manual/metadata_retrieval
+   manual/metadata_prescreen
+   manual/pdf_retrieval
+   manual/pdf_screen
+   manual/data
+   manual/collaboration
+   manual/curation
+   manual/extensions
+   manual/credits
+   manual/help
 
 .. toctree::
    :hidden:

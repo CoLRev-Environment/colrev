@@ -44,4 +44,4 @@ This allows users to efficiently keep track of the records' status and it inform
    :maxdepth: 3
    :caption: Operations
 
-   2_6_data/data
+   data/data

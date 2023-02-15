@@ -14,7 +14,7 @@ Standalone literature reviews are typically based on a search strategy, which co
 
    - The **search scope** can restrict the journals, disciplines (based on reasons related to their topics or source reputation), time, or publication type (grey vs. academic literature).
    - The **search type and iterations** can be exploratory or systematic, and may evolve throughout the search iterations.
-   - The **combination of search techniques, sources, and parameters**. Search techniques can be database searches, citation searches (backward or forward snowballing), table-of-content searches, for example. Examples of sources are available `here </user_resources/6_sources.html>`_. For databases, the parameters (or search strings) can be developed based on a concept matrix (e.g., in line with the PICO framework), boolean operators, and search query translation tools.
+   - The **combination of search techniques, sources, and parameters**. Search techniques can be database searches, citation searches (backward or forward snowballing), table-of-content searches, for example. Examples of sources are available `here </manual/6_sources.html>`_. For databases, the parameters (or search strings) can be developed based on a concept matrix (e.g., in line with the PICO framework), boolean operators, and search query translation tools.
    - The **termination rule** specifies the criteria for stopping the search process.
 
 The methodological choices related to the search strategy should be documented for reporting purposes. This can be done in the ``data/paper.md`` or the ``readme.md``.
@@ -45,7 +45,7 @@ In particular, this pertains to an efficient flow of new records through the pro
    :maxdepth: 3
    :caption: Operations
 
-   2_2_metadata_retrieval/search
-   2_2_metadata_retrieval/load
-   2_2_metadata_retrieval/prep
-   2_2_metadata_retrieval/dedupe
+   metadata_retrieval/search
+   metadata_retrieval/load
+   metadata_retrieval/prep
+   metadata_retrieval/dedupe
