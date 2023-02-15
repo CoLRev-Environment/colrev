@@ -159,7 +159,8 @@ class EnvironmentManager:
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="docker",
-                detailed_trace=f"Docker service not available ({exc}). Please install/start Docker.",
+                detailed_trace=f"Docker service not available ({exc}). "
+                + "Please install/start Docker.",
             ) from exc
 
     def check_git_installed(self) -> None:
@@ -178,9 +179,8 @@ class EnvironmentManager:
         try:
             client = docker.from_env()
             _ = client.version()
-        except Exception as exc:  # pylint: disable=broad-except
-            print(exc)
-            # raise colrev_exceptions.MissingDependencyError("docker") from exc
+        except docker.errors.DockerException:
+            pass
 
     def _get_status(
         self, *, review_manager: colrev.review_manager.ReviewManager

@@ -61,6 +61,8 @@ class Commit:
         self.git_version = stream.read().replace("git ", "").replace("\n", "")
         stream = os.popen("docker --version")
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
+        if "" == self.docker_version:
+            self.docker_version = "Not installed"
 
         self.ext_script_name = ""
         self.ext_script_version = ""

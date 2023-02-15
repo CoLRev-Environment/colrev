@@ -10,6 +10,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
@@ -81,12 +82,15 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             "abstract" not in screen_record.data
             and Path(screen_record.data.get("file", "")).suffix == ".pdf"
         ):
-            abstract_from_tei = True
-            tei = screen_operation.review_manager.get_tei(
-                pdf_path=Path(screen_record.data["file"]),
-                tei_path=screen_record.get_tei_filename(),
-            )
-            screen_record.data["abstract"] = tei.get_abstract()
+            try:
+                abstract_from_tei = True
+                tei = screen_operation.review_manager.get_tei(
+                    pdf_path=Path(screen_record.data["file"]),
+                    tei_path=screen_record.get_tei_filename(),
+                )
+                screen_record.data["abstract"] = tei.get_abstract()
+            except colrev_exceptions.ServiceNotAvailableException:
+                pass
 
         self.__i += 1
         quit_pressed, skip_pressed = False, False
@@ -141,7 +145,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             screen_inclusion = all(decision == "in" for _, decision in decisions)
 
             if abstract_from_tei:
-                del screen_record.data["abstract"]
+                if "abstract" in screen_record.data:
+                    del screen_record.data["abstract"]
 
             screen_record.screen(
                 review_manager=screen_operation.review_manager,
@@ -171,7 +176,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 return "quit"
 
             if abstract_from_tei:
-                del screen_record.data["abstract"]
+                if "abstract" in screen_record.data:
+                    del screen_record.data["abstract"]
             if decision == "y":
                 screen_record.screen(
                     review_manager=screen_operation.review_manager,

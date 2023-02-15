@@ -59,11 +59,16 @@ class PDFPrep(colrev.operation.Operation):
         record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data["file"])
         if pdf_path.suffix == ".pdf":
-            record.data.update(
-                colrev_pdf_id=record.get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_path
+            try:
+                record.data.update(
+                    colrev_pdf_id=record.get_colrev_pdf_id(
+                        review_manager=self.review_manager, pdf_path=pdf_path
+                    )
                 )
-            )
+            except colrev_exceptions.ServiceNotAvailableException:
+                self.review_manager.logger.error(
+                    "Cannot create pdf-hash (Docker service not available)"
+                )
 
         # colrev_status == pdf_imported : means successful
         # create *_backup.pdf if record["file"] was changed
