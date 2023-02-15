@@ -20,7 +20,7 @@ The workflow, as illustrated in the following, consists of a three-step cycle th
    :alt: Workflow cycle
 
 Although the validation step is generally recommended, it is more important for some operations than for others.
-For example, users may skip the validation for operations like init, or operations that do not create new versions (such as push or show).
+For operations like init, or operations that do not create new versions (such as push or show), the validation can be skipped.
 
 The use of CoLRev operations ensures that the data is always formated consistently and that diffs are readable.
 It is also possible to create verisons through git commands, which automatically trigger CoLRev's pre-commit hooks.

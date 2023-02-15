@@ -882,6 +882,14 @@ class Dedupe(colrev.operation.Operation):
             if not self.review_manager.high_level_operation:
                 print()
 
+        dedupe_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
+        self.review_manager.logger.info("To validate the changes, use")
+
+        self.review_manager.logger.info(
+            f"{colors.ORANGE}colrev validate {dedupe_commit_id}{colors.END}"
+        )
+        print()
+
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed dedupe operation{colors.END}"
         )

@@ -315,6 +315,9 @@ class Search(colrev.operation.Operation):
         self.review_manager.logger.info(
             "Retrieve new records from an API or files (search sources)."
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
+        )
 
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
