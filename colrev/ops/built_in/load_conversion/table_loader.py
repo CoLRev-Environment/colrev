@@ -85,6 +85,9 @@ class TableLoadUtility:
                 record_dict["journal"] = record_dict["journal/book"]
                 del record_dict["journal/book"]
 
+            if "no Times-Cited" == record_dict.get("cited_by", ""):
+                del record_dict["cited_by"]
+
         if all("ID" in r for r in records):
             records_dict = {r["ID"]: r for r in records}
         else:
