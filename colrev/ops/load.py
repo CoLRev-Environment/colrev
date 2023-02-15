@@ -62,6 +62,9 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "Original records (search results) are stored in the directory data/search"
             )
+            self.review_manager.logger.info(
+                "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html"
+            )
 
     def __get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""

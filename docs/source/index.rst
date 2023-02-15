@@ -35,8 +35,8 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    colrev status
 
 
-**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/manual/manual.html).
-After each operation, [validate the changes](docs/build/manual/manual/1_workflow.html#colrev-validate).
+**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next `operation <manual/operations.html>`_.
+After each operation, `validate the changes <manual/workflow.html#colrev-validate>`_.
 
 .. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
    :width: 600

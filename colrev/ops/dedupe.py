@@ -856,6 +856,9 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.logger.info(
             "Identifies duplicate records and merges them (keeping traces to their origins)."
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/dedupe.html"
+        )
 
         if not self.review_manager.high_level_operation:
             print()

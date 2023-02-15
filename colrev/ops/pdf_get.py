@@ -565,6 +565,9 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"PDFs are stored in the directory {colors.ORANGE}data/pdfs{colors.END}"
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html"
+        )
 
         records = self.review_manager.dataset.load_records_dict()
         records = self.__set_status_if_file_linked(records=records)

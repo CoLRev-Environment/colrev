@@ -246,8 +246,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
 
     if status_operation.review_manager.verbose_mode:
         print(
-            "Documentation: https://github.com/geritwagner/"
-            + "colrev/tree/main/docs/source/user_resources"
+            "Documentation: https://colrev.readthedocs.io/en/latest/manual/manual.html"
         )
     else:
         print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")

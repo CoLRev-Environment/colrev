@@ -365,6 +365,9 @@ class PDFPrep(colrev.operation.Operation):
             "Prepare PDFs, validating them against their metadata, "
             "removing additional pages, ensuring machine readability."
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html"
+        )
 
         # temporary fix: remove all lines containing PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282

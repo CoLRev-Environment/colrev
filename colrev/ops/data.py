@@ -240,6 +240,9 @@ class Data(colrev.operation.Operation):
                 "The data operation covers different forms of data extraction, "
                 "analysis, and synthesis."
             )
+            self.review_manager.logger.info(
+                "See https://colrev.readthedocs.io/en/latest/manual/data/data.html"
+            )
 
         no_endpoints_registered = 0 == len(
             self.review_manager.settings.data.data_package_endpoints

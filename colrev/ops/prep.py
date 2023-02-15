@@ -857,6 +857,9 @@ class Prep(colrev.operation.Operation):
         self.review_manager.logger.info(
             "Prep completes and corrects record metadata based on APIs and preparation rules."
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html"
+        )
 
         # Note: for unit testing, we use a simple loop (instead of parallel)
         # to ensure that the IDs of feed records don't change

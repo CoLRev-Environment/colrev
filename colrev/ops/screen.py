@@ -308,6 +308,9 @@ class Screen(colrev.operation.Operation):
             "In the screen, records are included or excluded "
             "based on the PDFs and screening criteria."
         )
+        self.review_manager.logger.info(
+            "See https://colrev.readthedocs.io/en/latest/manual/pdf_screen/screen.html"
+        )
 
         # pylint: disable=duplicate-code
         split = []

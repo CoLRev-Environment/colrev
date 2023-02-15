@@ -253,7 +253,7 @@ def retrieve(
     - copy PDF files to the directory data/pdfs or
     - add an API-based search, as described in the documentation:
 
-    https://github.com/CoLRev-Ecosystem/colrev/blob/main/docs/source/user_resources/2_2_metadata_retrieval/search.rst
+    https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
     """
 
     try:
@@ -274,8 +274,7 @@ def retrieve(
                 f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
                 f" - copy PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
                 " - add an API-based search, as described in the documentation:\n"
-                "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
-                "docs/source/user_resources/2_2_metadata_retrieval/search.rst"
+                "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
             )
             return
 
@@ -875,6 +874,11 @@ def prescreen(
                 "Exclude irrelevant records based on metadata (i.e., titles and abstracts). "
                 "Remaining records are retained provisionally."
             )
+            review_manager.logger.info(
+                "See https://colrev.readthedocs.io/en/"
+                "latest/manual/metadata_prescreen/prescreen.html"
+            )
+
             prescreen_operation.main(split_str=split)
 
     except colrev_exceptions.CoLRevException as exc:
