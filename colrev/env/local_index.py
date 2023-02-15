@@ -900,7 +900,7 @@ class LocalIndex:
         res = self.__get_from_index_exact_match(
             index_name=self.TOC_INDEX, key="toc_key", value=toc_key
         )
-        toc_items = res.get("colrev_ids", [])  # type: ignore
+        toc_items = res.get("colrev_ids", "").split(";")  # type: ignore
 
         # TODO
 
