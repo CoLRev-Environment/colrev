@@ -47,9 +47,15 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
     ) -> bool:
 
         if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
-            prescreen_operation.review_manager.settings.prescreen.explanation = input(
+            print(
                 f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "
-                "(which papers should be included?):"
+                "(why should particular papers be included?):"
+            )
+            print(
+                'Example objective: "Include papers that focus on digital technology."'
+            )
+            prescreen_operation.review_manager.settings.prescreen.explanation = input(
+                ""
             )
             prescreen_operation.review_manager.save_settings()
         else:

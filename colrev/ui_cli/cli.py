@@ -877,8 +877,11 @@ def prescreen(
         else:
             review_manager.logger.info("Prescreen")
             review_manager.logger.info(
-                "Exclude irrelevant records based on metadata (i.e., titles and abstracts). "
-                "Remaining records are retained provisionally."
+                "Exclude irrelevant records based on metadata (i.e., titles and abstracts)."
+            )
+            review_manager.logger.info("Remaining records are retained provisionally")
+            review_manager.logger.info(
+                "In the screen, they can be included or excluded based on full-text documents."
             )
             review_manager.logger.info(
                 "See https://colrev.readthedocs.io/en/"

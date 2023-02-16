@@ -551,6 +551,10 @@ class Load(colrev.operation.Operation):
                     .rstrip(".")
                 )
 
+            if "year" in record_dict:
+                if str(record_dict["year"]).endswith(".0"):
+                    record_dict["year"] = str(record_dict["year"])[:-2]
+
             if "pages" in record_dict:
                 record_dict["pages"] = record_dict["pages"].replace("–", "--")
                 if record_dict["pages"].count("-") == 1:

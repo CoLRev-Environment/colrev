@@ -84,7 +84,11 @@ class PDFGet(colrev.operation.Operation):
         ):
             record.update_field(key="file", value=str(pdf_filepath), source="link_pdf")
             self.import_file(record=record)
-            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+            if (
+                colrev.record.RecordState.rev_prescreen_included
+                == record.data["colrev_status"]
+            ):
+                record.set_status(target_state=colrev.record.RecordState.pdf_imported)
 
         return record
 
@@ -173,11 +177,17 @@ class PDFGet(colrev.operation.Operation):
                     f"{endpoint.settings.endpoint}"  # type: ignore
                     f'({record_dict["ID"]}): retrieved .../{Path(record_dict["file"]).name}'
                 )
-                record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
-                self.review_manager.logger.info(
-                    f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                    + f"rev_prescreen_included → pdf_imported{colors.END}"
-                )
+                if (
+                    colrev.record.RecordState.rev_prescreen_included
+                    == record.data["colrev_status"]
+                ):
+                    record.data.update(
+                        colrev_status=colrev.record.RecordState.pdf_imported
+                    )
+                    self.review_manager.logger.info(
+                        f" {colors.GREEN}{record.data['ID']}".ljust(46)
+                        + f"rev_prescreen_included → pdf_imported{colors.END}"
+                    )
                 return record.get_data()
 
         self.review_manager.logger.info(
@@ -354,9 +364,13 @@ class PDFGet(colrev.operation.Operation):
                             source="linking-available-files",
                         )
                         self.import_file(record=record)
-                        record.set_status(
-                            target_state=colrev.record.RecordState.pdf_imported
-                        )
+                        if (
+                            colrev.record.RecordState.rev_prescreen_included
+                            == record.data["colrev_status"]
+                        ):
+                            record.set_status(
+                                target_state=colrev.record.RecordState.pdf_imported
+                            )
 
                         self.review_manager.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
@@ -440,7 +454,11 @@ class PDFGet(colrev.operation.Operation):
 
             record["file"] = str(new_filename)
             self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
-            record["colrev_status"] = colrev.record.RecordState.pdf_imported
+            if (
+                colrev.record.RecordState.rev_prescreen_included
+                == record.data["colrev_status"]
+            ):
+                record["colrev_status"] = colrev.record.RecordState.pdf_imported
 
         self.review_manager.dataset.save_records_dict(records=records)
 
@@ -526,7 +544,13 @@ class PDFGet(colrev.operation.Operation):
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
-                        record["colrev_status"] = colrev.record.RecordState.pdf_imported
+                        if (
+                            colrev.record.RecordState.rev_prescreen_included
+                            == record.data["colrev_status"]
+                        ):
+                            record[
+                                "colrev_status"
+                            ] = colrev.record.RecordState.pdf_imported
                     else:
                         print(
                             "Warning: record with file field but no existing PDF "
@@ -563,7 +587,8 @@ class PDFGet(colrev.operation.Operation):
             "Get PDFs of prescreen-included records from local and remote sources."
         )
         self.review_manager.logger.info(
-            f"PDFs are stored in the directory {colors.ORANGE}data/pdfs{colors.END}"
+            "PDFs are stored in the directory data/pdfs "
+            f"({colors.ORANGE}colrev pdfs --dir{colors.END})"
         )
         self.review_manager.logger.info(
             "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html"

@@ -134,9 +134,10 @@ class Unpaywall(JsonSchemaMixin):
             else:
                 if "fulltext" not in record.data:
                     record.data["fulltext"] = url
-                pdf_get_operation.review_manager.logger.info(
-                    "Unpaywall retrieval error " f"{res.status_code} - {url}"
-                )
+                if pdf_get_operation.review_manager.verbose_mode:
+                    pdf_get_operation.review_manager.logger.info(
+                        "Unpaywall retrieval error " f"{res.status_code} - {url}"
+                    )
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,

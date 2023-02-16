@@ -39,7 +39,8 @@ class RepoSetupError(CoLRevException):
 
         else:
             self.message = (
-                f"Not (yet) a CoLRev repository. To initialize, run:\n\n"
+                "Not yet a CoLRev repository. "
+                "To initialize a CoLRev repository (project), run:\n\n"
                 f"   {colors.ORANGE}colrev init --type {colors.END}literature_review\n\n"
                 f"Instead of {colors.ORANGE}literature_review{colors.END},"
                 " you can use any of the following review type:\n\n"

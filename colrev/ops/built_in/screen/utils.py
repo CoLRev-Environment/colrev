@@ -17,9 +17,9 @@ __FULL_SCREEN_EXPLANATION = (
     "Explanation: Screening criteria can be used "
     + """to include or exclude records based on specific reasons.
 Example:
-    - short name        : behavioral_treatment
-    - criterion type    : inclusion_criterion or exclusion_criterion
-    - explanation       : Include records reporting on behavioral treatment
+    - short name        (short string): behavioral_treatment
+    - criterion type    (select one)  : [i, e for inclusion_criterion OR exclusion_criterion]
+    - explanation       (text)        : Include records reporting on behavioral treatment
 
 Add a screening criterion [y,n]?"""
 )
