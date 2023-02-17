@@ -22,10 +22,7 @@ class RepoSetupError(CoLRevException):
     The project files are not properly set up as a CoLRev project.
     """
 
-    lr_docs = (
-        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
-        + "docs/source/user_resources/2_1_problem_formulation.rst"
-    )
+    lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
     def __init__(self, msg: str = None) -> None:
         Path(".report.log").unlink()

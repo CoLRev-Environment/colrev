@@ -100,7 +100,7 @@ class EnvironmentManager:
 
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
-                print(f"Warning: Path already registered: {path_to_register}")
+                # print(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
             print(f"Creating {self.registry}")

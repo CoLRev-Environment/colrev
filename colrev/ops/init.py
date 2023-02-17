@@ -340,7 +340,9 @@ class Initializer:
 
     def __setup_git(self) -> None:
 
-        self.logger.info("Create git repository")
+        self.logger.info("Create CoLRev repository")
+
+        self.logger.info("Set up git repository")
 
         git.Repo.init()
 

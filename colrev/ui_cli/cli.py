@@ -289,7 +289,6 @@ def retrieve(
         review_manager.logger.info(
             "Retrieve is a high-level operation consisting of search, load, prep, and dedupe:"
         )
-
         print()
 
         search_operation = review_manager.get_search_operation()
@@ -297,6 +296,7 @@ def retrieve(
 
         print()
 
+        review_manager.exact_call = "colrev prep"
         load_operation = review_manager.get_load_operation()
         new_sources = load_operation.get_new_sources(skip_query=True)
         load_operation = review_manager.get_load_operation(hide_load_explanation=True)
@@ -305,12 +305,13 @@ def retrieve(
         )
 
         print()
-
+        review_manager.exact_call = "colrev prep"
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
 
         print()
 
+        review_manager.exact_call = "colrev dedupe"
         dedupe_operation = review_manager.get_dedupe_operation()
         dedupe_operation.main()
 
@@ -1011,6 +1012,13 @@ def screen(
     help="Discard all missing PDFs as not_available",
 )
 @click.option(
+    "-d",
+    "--dir",
+    is_flag=True,
+    default=False,
+    help="Open the PDFs directory",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -1028,6 +1036,7 @@ def screen(
 def pdfs(
     ctx: click.core.Context,
     discard: bool,
+    dir: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1040,6 +1049,20 @@ def pdfs(
             high_level_operation=True,
             exact_call=EXACT_CALL,
         )
+
+        if dir:
+            import os
+            import platform
+            import subprocess
+
+            path = review_manager.path / Path("data/pdfs")
+            if platform.system() == "Windows":
+                os.startfile(path)
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", path])
+            else:
+                subprocess.Popen(["xdg-open", path])
+            return
 
         if discard:
             pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()

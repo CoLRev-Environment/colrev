@@ -405,10 +405,23 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 value="Americas Conference on Information Systems",
                 source="prep_ais_source",
             )
+
+        elif "https://aisel.aisnet.org/pacis" in record.data.get("url", ""):
+            record.update_field(
+                key="booktitle",
+                value="Pacific-Asia Conference on Information Systems",
+                source="prep_ais_source",
+            )
         elif "https://aisel.aisnet.org/ecis" in record.data.get("url", ""):
             record.update_field(
                 key="booktitle",
                 value="European Conference on Information Systems",
+                source="prep_ais_source",
+            )
+        elif "https://aisel.aisnet.org/icis" in record.data.get("url", ""):
+            record.update_field(
+                key="booktitle",
+                value="International Conference on Information Systems",
                 source="prep_ais_source",
             )
         elif "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):

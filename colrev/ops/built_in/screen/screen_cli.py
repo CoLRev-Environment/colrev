@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -89,7 +90,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                     tei_path=screen_record.get_tei_filename(),
                 )
                 screen_record.data["abstract"] = tei.get_abstract()
-            except colrev_exceptions.ServiceNotAvailableException:
+            except (colrev_exceptions.ServiceNotAvailableException, XMLSyntaxError):
                 pass
 
         self.__i += 1

@@ -796,9 +796,9 @@ class Manuscript(JsonSchemaMixin):
         advice = {
             "msg": f"{data_endpoint}"
             + "\n    1. Edit the manuscript (data/paper.md)"
-            + "\n    2. Run colrev data to build the manuscript"
-            + "\n    3. Run git add data/paper.md && "
-            + "git commit -m 'update manuscript' to create a version",
+            + "\n    2. To build the manuscript (output/paper.docx), run: colrev data"
+            + "\n    3. To create a version, run: git add data/paper.md && "
+            + "git commit -m 'update manuscript'",
             "detailed_msg": "... with a link to the docs etc.",
         }
         return advice
