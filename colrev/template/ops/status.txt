@@ -14,7 +14,7 @@ retrieve
 {% if status_stats.overall.md_prepared > 0 %}
 [{% if status_stats.perc_curated < 30 %}only {{ colors.RED }}
 {% elif status_stats.perc_curated < 60 %}{{ colors.ORANGE }}
-{% else %}[{{ colors.GREEN }}{% endif %}
+{% else %}{{ colors.GREEN }}{% endif %}
 {{ status_stats.nr_curated_records }}{{ colors.END }} quality-curated]
 {% endif %}
 <br>

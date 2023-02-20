@@ -1051,13 +1051,13 @@ def pdfs(
         )
 
         if dir:
-            import os
+            # pylint: disable=import-outside-toplevel
+            # pylint: disable=consider-using-with
             import platform
-            import subprocess
 
             path = review_manager.path / Path("data/pdfs")
             if platform.system() == "Windows":
-                os.startfile(path)
+                os.startfile(path)  # type: ignore
             elif platform.system() == "Darwin":
                 subprocess.Popen(["open", path])
             else:

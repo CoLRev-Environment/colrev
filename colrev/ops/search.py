@@ -76,7 +76,7 @@ class Search(colrev.operation.Operation):
 
         self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
         self.review_manager.create_commit(
-            msg=f"Add search source {add_source.filename}",
+            msg=f"Add search source {add_source.filename.relative_to(self.review_manager.path)}",
         )
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:

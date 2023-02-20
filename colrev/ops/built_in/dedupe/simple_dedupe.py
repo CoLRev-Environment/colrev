@@ -137,7 +137,7 @@ class SimpleDedupe(JsonSchemaMixin):
             # dedupe_operation.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             # )
-            details = similarity_dict["details"]
+            # details = similarity_dict["details"]
             # dedupe_operation.review_manager.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (

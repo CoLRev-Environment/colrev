@@ -55,7 +55,10 @@ class LocalIndexPDFGet(JsonSchemaMixin):
             )
             pdf_get_operation.import_file(record=record)
             if "fulltext" in retrieved_record:
-                record.get_tei_filename().write_text(retrieved_record["fulltext"])
+                try:
+                    record.get_tei_filename().write_text(retrieved_record["fulltext"])
+                except FileNotFoundError:
+                    pass
                 del retrieved_record["fulltext"]
             else:
                 tei_ext_path = Path(

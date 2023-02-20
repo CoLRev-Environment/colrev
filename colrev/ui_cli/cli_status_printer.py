@@ -204,8 +204,8 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     except colrev_exceptions.RepoSetupError as exc:
         print(f"Status failed ({exc})")
 
-    if status_operation.review_manager.verbose_mode:
-        print("Checks")
+    # if status_operation.review_manager.verbose_mode:
+    #     print("Checks")
 
     try:
         failure_items.extend(checker.check_repo_extended())
@@ -215,34 +215,34 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     if failure_items:
         ret_check = {"status": ExitCodes.FAIL, "msg": "  " + "\n  ".join(failure_items)}
 
-    if (
-        ExitCodes.SUCCESS == ret_check["status"]
-        and status_operation.review_manager.verbose_mode
-    ):
-        print(
-            "  ReviewManager.check_repo()  ...  "
-            f"{colors.GREEN}Everything ok.{colors.END}"
-        )
+    # if (
+    #     ExitCodes.SUCCESS == ret_check["status"]
+    #     and status_operation.review_manager.verbose_mode
+    # ):
+    #     print(
+    #         "  ReviewManager.check_repo()  ...  "
+    #         f"{colors.GREEN}Everything ok.{colors.END}"
+    #     )
     if ExitCodes.FAIL == ret_check["status"]:
-        print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
-        print(f'{ret_check["msg"]}\n')
+        # print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
+        # print(f'{ret_check["msg"]}\n')
         return
 
     # To format:
     status_operation.review_manager.dataset.save_records_dict(records=checker.records)
 
-    if (
-        not status_operation.review_manager.in_virtualenv()
-        and status_operation.review_manager.verbose_mode
-    ):
-        print(
-            f"\n  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
-        )
-        print(
-            "  For instructions to set up a virtual environment, run\n"
-            f"  {colors.ORANGE}colrev show venv{colors.END}"
-        )
-        print()
+    # if (
+    #     not status_operation.review_manager.in_virtualenv()
+    #     and status_operation.review_manager.verbose_mode
+    # ):
+    #     print(
+    #         f"\n  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
+    #     )
+    #     print(
+    #         "  For instructions to set up a virtual environment, run\n"
+    #         f"  {colors.ORANGE}colrev show venv{colors.END}"
+    #     )
+    #     print()
 
     if status_operation.review_manager.verbose_mode:
         print(

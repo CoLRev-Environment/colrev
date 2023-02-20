@@ -90,7 +90,7 @@ The more records are curated, the more you can focus on the synthesis.
    :align: center
    :alt: Reuse vision
 
-Further information is provided in the `documentation <docs/source/index.rst>`_, the developer `api reference <docs/build/technical_documentation/api.html>`_, and the `CoLRev framework <docs/build/technical_documentation/colrev.html>`_ summarizing the scientific foundations.
+Further information is provided in the `documentation <docs/source/index.rst>`_, the developer `api reference <docs/build/foundations/api.html>`_, and the `CoLRev framework <docs/build/foundations/colrev.html>`_ summarizing the scientific foundations.
 
 
 .. toctree::
@@ -123,12 +123,12 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
    :caption: Documentation and governance
    :maxdepth: 1
 
-   foundations_governance/colrev
-   technical_documentation/api
-   technical_documentation/cli
-   technical_documentation/extensions
-   foundations_governance/roadmap
-   foundations_governance/about
+   foundations/colrev
+   foundations/api
+   foundations/cli
+   foundations/extensions
+   foundations/roadmap
+   foundations/about
 
 
 .. toctree::

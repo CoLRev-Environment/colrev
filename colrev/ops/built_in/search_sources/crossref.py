@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 import requests
 import zope.interface
 from crossref.restful import Etiquette
+from crossref.restful import Journals
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
@@ -332,6 +333,33 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record_list
 
+    def __check_journal(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        timeout: int,
+        safe_feed: bool,
+    ) -> colrev.record.Record:
+        """When there is no doi, journal names can be checked against crossref"""
+
+        if "article" == record.data["ENTRYTYPE"]:
+            # If type article and doi not in record and journal name not found in journal-query: notify
+            journals = Journals(etiquette=self.etiquette)
+            # record.data["journal"] = "Information Systems Research"
+            found = False
+            ret = journals.query(record.data["journal"])
+            for rets in ret:
+                if rets["title"]:
+                    found = True
+                    break
+            if not found:
+                record.add_masterdata_provenance_note(
+                    key="journal", note="quality_defect:journal not in crossref"
+                )
+            # TODO : generally prefer container titles from crossref when merging?
+
+        return record
+
     def __get_masterdata_record(
         self,
         prep_operation: colrev.ops.prep.Prep,
@@ -490,6 +518,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
             timeout=timeout,
             safe_feed=safe_feed,
         )
+
+        if "doi" not in record.data:
+            record = self.__check_journal(
+                prep_operation=prep_operation,
+                record=record,
+                timeout=timeout,
+                safe_feed=safe_feed,
+            )
 
         return record
 
