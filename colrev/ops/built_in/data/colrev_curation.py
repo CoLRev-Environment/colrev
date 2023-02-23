@@ -370,6 +370,38 @@ class ColrevCuration(JsonSchemaMixin):
                 "detailed_msg": "records missing language field: "
                 + f"({','.join(records_missing_languages)})",
             }
+
+        identical_colrev_ids: typing.Dict[str, list] = {}
+        non_identifiable_records = []
+        for record_dict in records.values():
+            try:
+                if record_dict[
+                    "colrev_status"
+                ] in colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.md_prepared
+                ):
+                    cid = colrev.record.Record(data=record_dict).create_colrev_id(
+                        assume_complete=True
+                    )
+                    if cid in identical_colrev_ids:
+                        identical_colrev_ids[cid] = identical_colrev_ids[cid] + [
+                            record_dict["ID"]
+                        ]
+                    else:
+                        identical_colrev_ids[cid] = [record_dict["ID"]]
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
+                non_identifiable_records.append(record_dict["ID"])
+
+        identical_colrev_ids = {
+            k: v for k, v in identical_colrev_ids.items() if len(v) > 1
+        }
+        if identical_colrev_ids:
+            advice = {
+                "msg": "Curation: resolve records with identical colrev_ids:\n      - "
+                + "\n      - ".join(",".join(x) for x in identical_colrev_ids.values()),
+                "detailed_msg": "records missing language field: ",
+            }
+
         return advice
 
 
