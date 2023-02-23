@@ -397,7 +397,7 @@ class PDFPrep(colrev.operation.Operation):
         pdf_prep_data = self.__get_data(batch_size=batch_size)
 
         self.review_manager.logger.info(
-            "PDFs to prep".ljust(38) + f'{pdf_prep_data["nr_tasks"]} PDFs'
+            "PDFs to prep".ljust(39) + f'{pdf_prep_data["nr_tasks"]} PDFs'
         )
 
         if self.review_manager.verbose_mode:

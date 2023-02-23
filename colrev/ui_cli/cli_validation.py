@@ -173,7 +173,21 @@ def validate(
 
             print()
         elif "general" == key:
-            validate_operation.review_manager.logger.info("Starting general validation")
+            validate_operation.review_manager.logger.info("Start general validation")
+            validate_operation.review_manager.logger.info(
+                "Next, an interface will open and "
+                "display the changes introduced in the selected commit."
+            )
+            validate_operation.review_manager.logger.info(
+                "To undo minor changes, edit the corresponding files directly and run "
+                f"{colors.ORANGE}git add FILENAME && "
+                f"git commit -m 'DESCRIPTION OF CHANGES UNDONE'{colors.END}"
+            )
+            validate_operation.review_manager.logger.info(
+                "To undo all changes introduced in a commit, run "
+                f"{colors.ORANGE}git revert COMMIT_ID{colors.END}"
+            )
+            input("Enter to continue")
             if "commit_relative" in details:
                 subprocess.run(
                     ["gitk", f"--select-commit={details['commit_relative']}"],

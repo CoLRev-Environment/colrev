@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import collections
 import os
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -11,10 +12,10 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 if TYPE_CHECKING:
@@ -88,7 +89,7 @@ class ColrevCuration(JsonSchemaMixin):
         # pylint: disable=too-many-branches
 
         stats: dict = {}
-        for record_dict in tqdm(records.values()):
+        for record_dict in records.values():
             r_status = str(record_dict["colrev_status"])
             if r_status == "rev_prescreen_excluded":
                 continue
@@ -229,9 +230,11 @@ class ColrevCuration(JsonSchemaMixin):
         *,
         records: dict,
         review_manager: colrev.review_manager.ReviewManager,
+        silent_mode: bool,
     ) -> None:
 
-        review_manager.logger.info("Calculate statistics for readme")
+        if not silent_mode:
+            review_manager.logger.info("Calculate statistics for readme")
 
         # alternatively: get sources from search_sources.filename (name/stem?)
         sources = []
@@ -250,7 +253,7 @@ class ColrevCuration(JsonSchemaMixin):
         )
         review_manager.dataset.add_changes(path=review_manager.README_RELATIVE)
 
-    def __source_comparison(self) -> None:
+    def __source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
 
@@ -261,7 +264,8 @@ class ColrevCuration(JsonSchemaMixin):
         source_filenames = [
             str(x.filename) for x in self.data_operation.review_manager.settings.sources
         ]
-        print("sources: " + ",".join([str(x) for x in source_filenames]))
+        if not silent_mode:
+            print("sources: " + ",".join([str(x) for x in source_filenames]))
 
         records = self.data_operation.review_manager.dataset.load_records_dict()
         records = {
@@ -270,7 +274,8 @@ class ColrevCuration(JsonSchemaMixin):
             if not all(x in ";".join(v["colrev_origin"]) for x in str(source_filenames))
         }
         if len(records) == 0:
-            print("No records unmatched")
+            if not silent_mode:
+                print("No records unmatched")
             return
 
         for record in records.values():
@@ -286,14 +291,15 @@ class ColrevCuration(JsonSchemaMixin):
 
         records_df = pd.DataFrame.from_records(list(records.values()))
         records_df.to_excel(source_comparison_xlsx, index=False)
-        print(f"Exported {source_comparison_xlsx}")
+        if not silent_mode:
+            print(f"Exported {source_comparison_xlsx}")
 
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
-        silent_mode: bool,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the CoLRev curation"""
 
@@ -326,9 +332,11 @@ class ColrevCuration(JsonSchemaMixin):
 
         if self.settings.curated_masterdata:
             self.__update_stats_in_readme(
-                records=records, review_manager=data_operation.review_manager
+                records=records,
+                review_manager=data_operation.review_manager,
+                silent_mode=silent_mode,
             )
-            self.__source_comparison()
+            self.__source_comparison(silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,

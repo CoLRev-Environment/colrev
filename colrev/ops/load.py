@@ -858,8 +858,6 @@ class Load(colrev.operation.Operation):
     ) -> None:
         """Load records (main entrypoint)"""
 
-        # TODO : provide -s option
-
         def load_active_sources() -> list:
             checker = self.review_manager.get_checker()
             checker.check_sources()

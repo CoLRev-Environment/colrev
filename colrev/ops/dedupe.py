@@ -401,22 +401,31 @@ class Dedupe(colrev.operation.Operation):
         duplicate_id_mappings: dict,
         removed_duplicates: list,
         complete_dedupe: bool,
+        set_to_md_processed: list,
     ) -> None:
         for record_id, duplicate_ids in duplicate_id_mappings.items():
-            if complete_dedupe:
-                self.review_manager.logger.info(
-                    f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(46)
-                    + f"md_prepared →  md_processed{colors.END}"
-                )
-            else:
-                self.review_manager.logger.info(
-                    f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(46)
-                    + f"md_prepared →  md_prepared{colors.END}"
-                )
+            if (
+                colrev.record.RecordState.md_prepared
+                == records[record_id]["colrev_status"]
+            ):
+                if complete_dedupe:
+                    self.review_manager.logger.info(
+                        f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(
+                            46
+                        )
+                        + f"md_prepared →  md_processed{colors.END}"
+                    )
+                else:
+                    self.review_manager.logger.info(
+                        f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(
+                            46
+                        )
+                        + f"md_prepared →  md_prepared{colors.END}"
+                    )
         if complete_dedupe:
-            for record in records.values():
+            for rid in set_to_md_processed:
                 self.review_manager.logger.info(
-                    f" {colors.GREEN}{record['ID']}".ljust(46)
+                    f" {colors.GREEN}{rid}".ljust(46)
                     + f"md_prepared →  md_processed{colors.END}"
                 )
 
@@ -552,18 +561,21 @@ class Dedupe(colrev.operation.Operation):
             if removed_duplicate in records:
                 del records[removed_duplicate]
 
+        set_to_md_processed = []
         if complete_dedupe:
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record in records.values():
                 if record["colrev_status"] == colrev.record.RecordState.md_prepared:
                     record["colrev_status"] = colrev.record.RecordState.md_processed
+                    set_to_md_processed.append(record["ID"])
 
         self.__print_merge_stats(
             records=records,
             duplicate_id_mappings=duplicate_id_mappings,
             removed_duplicates=removed_duplicates,
             complete_dedupe=complete_dedupe,
+            set_to_md_processed=set_to_md_processed,
         )
 
         self.review_manager.dataset.save_records_dict(records=records)

@@ -290,6 +290,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         ais_mapping: dict = {}
         record.rename_fields_based_on_mapping(mapping=ais_mapping)
 

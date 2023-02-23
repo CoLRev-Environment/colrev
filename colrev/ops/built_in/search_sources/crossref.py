@@ -169,7 +169,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         """Get records of a selected journal from Crossref"""
 
         # pylint: disable=import-outside-toplevel
-        from crossref.restful import Journals
 
         assert re.match(self.__issn_regex, journal_issn)
 
@@ -343,7 +342,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
         """When there is no doi, journal names can be checked against crossref"""
 
         if "article" == record.data["ENTRYTYPE"]:
-            # If type article and doi not in record and journal name not found in journal-query: notify
+            # If type article and doi not in record and
+            # journal name not found in journal-query: notify
             journals = Journals(etiquette=self.etiquette)
             # record.data["journal"] = "Information Systems Research"
             found = False

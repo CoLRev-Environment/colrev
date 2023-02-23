@@ -1053,6 +1053,7 @@ def pdfs(
         if dir:
             # pylint: disable=import-outside-toplevel
             # pylint: disable=consider-using-with
+            # pylint: disable=no-member
             import platform
 
             path = review_manager.path / Path("data/pdfs")

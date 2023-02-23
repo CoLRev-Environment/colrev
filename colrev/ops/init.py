@@ -268,7 +268,6 @@ class Initializer:
                     for x in settings.data.data_package_endpoints
                     if x["endpoint"] not in ["colrev_built_in.manuscript"]
                 ]
-        # TODO : also remove other references to Docker containers
 
         self.review_manager.save_settings()
 
