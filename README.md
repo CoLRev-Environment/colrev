@@ -5,7 +5,7 @@
 # Collaborative Literature Reviews (CoLRev)
 
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
-[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)

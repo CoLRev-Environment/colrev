@@ -10,7 +10,8 @@ import colrev.review_manager
 
 
 @fixture
-def datadir(tmp_path: Path, request) -> Path:  # type: ignore
+def datadir(tmp_path: Path, request, mocker) -> Path:  # type: ignore
+    mocker.patch("colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git", return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"))
 
     colrev.review_manager.ReviewManager.get_init_operation(
         review_type="literature_review",
@@ -28,8 +29,9 @@ def datadir(tmp_path: Path, request) -> Path:  # type: ignore
     return tmp_path
 
 
-def test_prep(tmp_path: Path, datadir) -> None:  # type: ignore
+def test_prep(tmp_path: Path, datadir, mocker) -> None:  # type: ignore
     # use the directory tmp_path
+    mocker.patch("colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git", return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"))
 
     os.chdir(tmp_path)
 

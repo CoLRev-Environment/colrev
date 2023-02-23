@@ -1,1 +1,1 @@
-"""Unit test package for review_template."""
+"""Unit tests for colrev."""

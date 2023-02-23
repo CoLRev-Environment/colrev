@@ -2,16 +2,16 @@
 from pathlib import Path
 
 
-def test_full_run(tmp_path: Path) -> None:
+def test_full_run(tmp_path: Path, mocker) -> None:
     import colrev.review_manager
-    import os
     import colrev.env.utils
     from pathlib import Path
+    import os, shutil
 
     os.chdir(tmp_path)
 
-    import os, shutil
-
+    mocker.patch("colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git", return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"))
+    
     for filename in os.listdir(tmp_path):
         file_path = os.path.join(tmp_path, filename)
         try:
