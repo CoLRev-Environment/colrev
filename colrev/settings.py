@@ -507,6 +507,16 @@ class Settings(JsonSchemaMixin):
     screen: ScreenSettings
     data: DataSettings
 
+    def is_curated_repo(self) -> bool:
+        """Check whether data is curated in this repository"""
+
+        curation_endpoints = [
+            x
+            for x in self.data.data_package_endpoints
+            if x["endpoint"] == "colrev_built_in.colrev_curation"
+        ]
+        return bool(curation_endpoints)
+
     def is_curated_masterdata_repo(self) -> bool:
         """Check whether the masterdata is curated in this repository"""
 
@@ -515,7 +525,11 @@ class Settings(JsonSchemaMixin):
             for x in self.data.data_package_endpoints
             if x["endpoint"] == "colrev_built_in.colrev_curation"
         ]
-        return bool(curation_endpoints)
+        if curation_endpoints:
+            curation_endpoint = curation_endpoints[0]
+            if curation_endpoint["curated_masterdata"]:
+                return True
+        return False
 
     def __str__(self) -> str:
         return (

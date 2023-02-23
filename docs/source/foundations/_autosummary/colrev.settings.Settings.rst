@@ -23,6 +23,7 @@ colrev.settings.Settings
       ~Settings.from_object
       ~Settings.get_settings_schema
       ~Settings.is_curated_masterdata_repo
+      ~Settings.is_curated_repo
       ~Settings.json_schema
       ~Settings.register_field_encoders
       ~Settings.to_dict
