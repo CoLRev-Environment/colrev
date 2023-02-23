@@ -10,8 +10,11 @@ def test_full_run(tmp_path: Path, mocker) -> None:
 
     os.chdir(tmp_path)
 
-    mocker.patch("colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git", return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"))
-    
+    mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
+        return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
+    )
+
     for filename in os.listdir(tmp_path):
         file_path = os.path.join(tmp_path, filename)
         try:

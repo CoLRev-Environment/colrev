@@ -6,7 +6,10 @@ def test_merge(mocker) -> None:
     import colrev.record
     import colrev.env.local_index
 
-    mocker.patch("colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git", return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"))
+    mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
+        return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
+    )
 
     R1 = colrev.record.Record(
         data={
@@ -74,9 +77,10 @@ def test_merge(mocker) -> None:
 
     # DEDUPE test:
 
-
     LOCAL_INDEX = colrev.env.local_index.LocalIndex()
-    mocker.patch("colrev.env.local_index.LocalIndex.is_duplicate", return_value="unknown")
+    mocker.patch(
+        "colrev.env.local_index.LocalIndex.is_duplicate", return_value="unknown"
+    )
 
     # short cids / empty lists
     assert "unknown" == LOCAL_INDEX.is_duplicate(
