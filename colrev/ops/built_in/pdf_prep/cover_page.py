@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,8 +59,7 @@ class PDFCoverPage(JsonSchemaMixin):
 
         def __get_coverpages(*, pdf: str) -> typing.List[int]:
             # pylint: disable=too-many-branches
-            # for corrupted PDFs pdftotext seems to be more robust than
-            # pdf_reader.getPage(0).extractText()
+
             coverpages: typing.List[int] = []
 
             try:
@@ -98,22 +96,12 @@ class PDFCoverPage(JsonSchemaMixin):
             if str(first_page_average_hash_16) in first_page_hashes:
                 coverpages.append(0)
 
-            res = subprocess.run(
-                ["/usr/bin/pdftotext", pdf, "-f", "1", "-l", "1", "-enc", "UTF-8", "-"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
+            res = pdf_reader.getPage(0).extractText()
             page0 = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
             )
 
-            res = subprocess.run(
-                ["/usr/bin/pdftotext", pdf, "-f", "2", "-l", "2", "-enc", "UTF-8", "-"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
+            res = pdf_reader.getPage(1).extractText()
             page1 = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
             )

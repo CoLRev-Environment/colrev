@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -59,8 +58,6 @@ class PDFLastPage(JsonSchemaMixin):
         lp_path.mkdir(exist_ok=True)
 
         def __get_last_pages(*, pdf: str) -> typing.List[int]:
-            # for corrupted PDFs pdftotext seems to be more robust than
-            # pdf_reader.getPage(0).extractText()
 
             last_pages: typing.List[int] = []
             try:
@@ -68,13 +65,13 @@ class PDFLastPage(JsonSchemaMixin):
             except ValueError:
                 return last_pages
 
-            last_page_nr = len(pdf_reader.pages)
+            last_page_nr = len(pdf_reader.pages) - 1
 
             pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
 
             last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
                 pdf_path=Path(pdf),
-                page_nr=last_page_nr,
+                page_nr=last_page_nr + 1,
                 hash_size=16,
             )
 
@@ -95,24 +92,9 @@ class PDFLastPage(JsonSchemaMixin):
             ]
 
             if str(last_page_average_hash_16) in last_page_hashes:
-                last_pages.append(last_page_nr - 1)
+                last_pages.append(last_page_nr)
 
-            res = subprocess.run(
-                [
-                    "/usr/bin/pdftotext",
-                    pdf,
-                    "-f",
-                    str(last_page_nr),
-                    "-l",
-                    str(last_page_nr),
-                    "-enc",
-                    "UTF-8",
-                    "-",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
+            res = pdf_reader.getPage(last_page_nr).extractText()
             last_page_text = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
             )
@@ -124,7 +106,7 @@ class PDFLastPage(JsonSchemaMixin):
                 + "tesorpostedtoalistservwithoutthecopyrightholder"
                 in last_page_text
             ):
-                last_pages.append(last_page_nr - 1)
+                last_pages.append(last_page_nr)
 
             # CAIS last page / editorial board
             if all(
@@ -135,7 +117,7 @@ class PDFLastPage(JsonSchemaMixin):
                     "caissenioreditors",
                 ]
             ):
-                last_pages.append(last_page_nr - 1)
+                last_pages.append(last_page_nr)
 
             return list(set(last_pages))
 
