@@ -2,7 +2,7 @@
 from pathlib import Path
 
 
-def test_full_run(tmp_path: Path, mocker) -> None:
+def test_full_run(tmp_path: Path, mocker) -> None:  # type: ignore
     import colrev.review_manager
     import colrev.env.utils
     from pathlib import Path

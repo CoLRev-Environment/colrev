@@ -4,12 +4,14 @@
 
 # Collaborative Literature Reviews (CoLRev)
 
+![PyPI](https://img.shields.io/pypi/v/colrev)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
+[![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tox_workflow.yml)
+![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 
 CoLRev is an open-source environment for collaborative reviews.
 To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.

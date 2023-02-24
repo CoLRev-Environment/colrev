@@ -2,7 +2,7 @@
 import colrev.review_manager
 
 
-def test_merge(mocker) -> None:
+def test_merge(mocker) -> None:  # type: ignore
     import colrev.record
     import colrev.env.local_index
 
