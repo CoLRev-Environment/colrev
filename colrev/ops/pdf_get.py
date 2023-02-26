@@ -602,7 +602,7 @@ class PDFGet(colrev.operation.Operation):
 
         if pdf_get_data["nr_tasks"] > 0:
             self.review_manager.logger.info(
-                "PDFs to get".ljust(39) + f'{pdf_get_data["nr_tasks"]} PDFs'
+                "PDFs to get".ljust(38) + f'{pdf_get_data["nr_tasks"]} PDFs'
             )
 
             pool = Pool(4)

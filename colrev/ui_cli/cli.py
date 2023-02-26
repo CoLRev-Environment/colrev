@@ -1899,12 +1899,6 @@ def __print_environment_status(
 @click.option("--start", is_flag=True, default=False, help="Start environment services")
 @click.option("--stop", is_flag=True, default=False, help="Stop environment services")
 @click.option(
-    "--search",
-    is_flag=True,
-    default=False,
-    help="Start opensearch dashboard service to search the LocalIndex",
-)
-@click.option(
     "-r",
     "--register",
     is_flag=True,
@@ -1946,7 +1940,6 @@ def env(
     status: bool,
     start: bool,
     stop: bool,
-    search: bool,
     register: bool,
     unregister: bool,
     update_package_list: bool,
@@ -2024,10 +2017,8 @@ def env(
         package_manager.update_package_list()
 
     local_index = review_manager.get_local_index()
-    if search:
-        print("open ~/colrev/sqlite_index.db")
 
-    elif index:
+    if index:
         local_index.index()
 
     elif start:

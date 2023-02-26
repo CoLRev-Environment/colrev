@@ -2575,7 +2575,7 @@ class ScreenRecord(PrescreenRecord):
         """Save the screen decision"""
 
         self.data["screening_criteria"] = screening_criteria
-
+        PAD = 40
         if screen_inclusion:
             self.set_status(target_state=RecordState.rev_included)
 
