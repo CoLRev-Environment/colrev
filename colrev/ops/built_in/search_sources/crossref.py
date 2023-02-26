@@ -165,7 +165,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
         return retrieved_record
 
-    def __journal_query(self, *, journal_issn: str) -> typing.Iterator[dict]:
+    def __journal_query(
+        self, *, journal_issn: str, rerun: bool
+    ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
 
         # pylint: disable=import-outside-toplevel
@@ -173,9 +175,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
         assert re.match(self.__issn_regex, journal_issn)
 
         journals = Journals(etiquette=self.etiquette)
-        crossref_query_return = (
-            journals.works(journal_issn).query().sort("deposited").order("desc")
-        )
+        if rerun:
+            # Note : the "deposited" field is not always provided.
+            # only the general query will return all records.
+            crossref_query_return = journals.works(journal_issn).query()
+        else:
+            crossref_query_return = (
+                journals.works(journal_issn).query().sort("deposited").order("desc")
+            )
+
         for item in crossref_query_return:
             yield connector_utils.json_to_record(item=item)
 
@@ -585,13 +593,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
             f"SearchSource {source.filename} validated"
         )
 
-    def __get_crossref_query_return(self) -> typing.Iterator[dict]:
+    def __get_crossref_query_return(self, *, rerun: bool) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
 
         if "scope" in params:
             if "journal_issn" in params["scope"]:
                 for journal_issn in params["scope"]["journal_issn"].split("|"):
-                    yield from self.__journal_query(journal_issn=journal_issn)
+                    yield from self.__journal_query(
+                        journal_issn=journal_issn, rerun=rerun
+                    )
         else:
             if "query" in params:
                 crossref_query = {"bibliographic": params["query"]}
@@ -685,7 +695,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             #     self.__get_crossref_query_return(),
             #     total=len(crossref_feed.feed_records),
             # ):
-            for record_dict in self.__get_crossref_query_return():
+            for record_dict in self.__get_crossref_query_return(rerun=rerun):
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
                     "title", ""
