@@ -541,6 +541,13 @@ def load(
     help="Debug the preparation step for a selected record (in a file).",
 )
 @click.option(
+    "--skip",
+    is_flag=True,
+    default=False,
+    help="Skip the preparation.",
+    hidden=True,
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -564,6 +571,7 @@ def prep(
     debug: str,
     debug_file: Path,
     setup_custom_script: bool,
+    skip: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -601,6 +609,8 @@ def prep(
                 "Please check and adapt its position in the settings.json and commit."
             )
             return
+        if skip:
+            prep_operation.skip_prep()
 
         prep_operation.main(keep_ids=keep_ids)
 

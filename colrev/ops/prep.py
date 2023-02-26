@@ -840,6 +840,18 @@ class Prep(colrev.operation.Operation):
                 + f"{colors.RED}{nr_recs}{colors.END}".rjust(20, " ")
             )
 
+    def skip_prep(self) -> None:
+        """Skip the preparation"""
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        for record in records.values():
+            if colrev.record.RecordState.md_imported == record["colrev_status"]:
+                record["colrev_status"] = colrev.record.RecordState.md_prepared
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(msg="Skip prep")
+
     def main(
         self,
         *,
