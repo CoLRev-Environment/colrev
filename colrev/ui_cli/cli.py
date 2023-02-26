@@ -2687,6 +2687,41 @@ def merge(
 
 
 @main.command(help_priority=34)
+@click.argument("selection")
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.pass_context
+def undo(
+    ctx: click.core.Context,
+    selection: str,
+    verbose: bool,
+    force: bool,
+) -> None:
+    """Undo operations."""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        force_mode=force, verbose_mode=verbose
+    )
+
+    if "commit" == selection:
+        colrev.operation.CheckOperation(review_manager=review_manager)
+        git_repo = review_manager.dataset.get_repo()
+        git_repo.git.reset("--hard", "HEAD~1")
+
+
+@main.command(help_priority=35)
 @click.pass_context
 def version(
     ctx: click.core.Context,
