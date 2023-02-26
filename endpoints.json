@@ -89,9 +89,6 @@
             }
         ],
         "prep_man": [
-            {"package_endpoint_identifier": "colrev_built_in.colrev_cli_man_prep",
-             "endpoint": "colrev.ops.built_in.prep_man.prep_man_cli.CoLRevCLIManPrep"
-            },
             {"package_endpoint_identifier": "colrev_built_in.export_man_prep",
              "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep"
             },
