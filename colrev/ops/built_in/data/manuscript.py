@@ -198,6 +198,7 @@ class Manuscript(JsonSchemaMixin):
         try:
             commits_list = list(git_repo.iter_commits())
             commits_authors = []
+
             for commit in commits_list:
                 committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
                 if "GitHub" == committer:
@@ -207,7 +208,7 @@ class Manuscript(JsonSchemaMixin):
                 # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
             author = ", ".join(dict(Counter(commits_authors)))
         except ValueError:
-            author = review_manager.committer
+            author, _ = review_manager.get_committer()
         return author
 
     def __get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:

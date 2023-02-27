@@ -80,11 +80,13 @@ class PDFSearchSource(JsonSchemaMixin):
             if "volume" == self.subdir_pattern:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
+        _, email = source_operation.review_manager.get_committer()
+
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
             "https://github.com/CoLRev-Ecosystem/colrev",
-            source_operation.review_manager.email,
+            email,
         )
 
     def __update_if_pdf_renamed(

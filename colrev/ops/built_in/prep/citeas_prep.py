@@ -36,7 +36,7 @@ class CiteAsPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
@@ -44,6 +44,7 @@ class CiteAsPrep(JsonSchemaMixin):
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         self.session = prep_operation.review_manager.get_cached_session()
+        _, self.email = prep_operation.review_manager.get_committer()
 
     def __cite_as_json_to_record(
         self, *, json_str: str, url: str
@@ -95,7 +96,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
             url = (
                 f"https://api.citeas.org/product/{record.data['title']}?"
-                + f"email={prep_operation.review_manager.email}"
+                + f"email={self.email}"
             )
             ret = self.session.request(
                 "GET",

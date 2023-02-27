@@ -203,13 +203,12 @@ class Initializer:
 
         settings = self.review_manager.settings
 
+        committer, email = self.review_manager.get_committer()
         settings.project.authors = [
             colrev.settings.Author(
-                name=self.review_manager.committer,
-                initials="".join(
-                    part[0] for part in self.review_manager.committer.split(" ")
-                ),
-                email=self.review_manager.email,
+                name=committer,
+                initials="".join(part[0] for part in committer.split(" ")),
+                email=email,
             )
         ]
 

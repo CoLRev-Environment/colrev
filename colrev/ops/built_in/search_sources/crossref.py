@@ -90,11 +90,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             self.crossref_lock = Lock()
 
+        _, self.email = source_operation.review_manager.get_committer()
+
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
             "https://github.com/CoLRev-Ecosystem/colrev",
-            source_operation.review_manager.email,
+            self.email,
         )
         self.review_manager = source_operation.review_manager
 
@@ -282,7 +284,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             url = self.__create_query_url(
                 record=record, jour_vol_iss_list=jour_vol_iss_list
             )
-            headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+            headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
             record_list = []
             session = review_manager.get_cached_session()
 

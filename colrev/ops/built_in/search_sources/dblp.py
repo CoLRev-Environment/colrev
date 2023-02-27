@@ -106,6 +106,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
 
+        _, self.email = source_operation.review_manager.get_committer()
+
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
@@ -159,7 +161,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         # https://dblp.org/db/journals/jasis/index.html
         venue = venue_string
         url = self.__api_url_venues + venue_string.replace(" ", "+") + "&format=json"
-        headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+        headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         try:
             ret = session.request("GET", url, headers=headers, timeout=timeout)
             ret.raise_for_status()
@@ -290,7 +292,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
                 url = self.__api_url + query.replace(" ", "+") + "&format=json"
 
-            headers = {"user-agent": f"{__name__}  (mailto:{review_manager.email})"}
+            headers = {"user-agent": f"{__name__}  (mailto:{self.email})"}
             # review_manager.logger.debug(url)
             ret = session.request(
                 "GET", url, headers=headers, timeout=timeout  # type: ignore

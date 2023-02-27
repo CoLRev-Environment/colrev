@@ -396,13 +396,12 @@ class Upgrade(colrev.operation.Operation):
             settings["project"]["title"] = str(Path.cwd().name)
 
         if "authors" not in settings["project"]:
+            committer, email = self.review_manager.get_committer()
             settings["project"]["authors"] = [
                 {
-                    "name": self.review_manager.committer,
-                    "initials": "".join(
-                        part[0] for part in self.review_manager.committer.split(" ")
-                    ),
-                    "email": self.review_manager.email,
+                    "name": committer,
+                    "initials": "".join(part[0] for part in committer.split(" ")),
+                    "email": email,
                 }
             ]
 

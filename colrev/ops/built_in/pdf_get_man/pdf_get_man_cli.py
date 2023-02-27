@@ -67,7 +67,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         subject = f"Copy of a PDF ({record.data['ID']})"
 
         author_name = record.data.get("author", "").split(",")[0]
-        signed = pdf_get_man_operation.review_manager.committer
+        signed, _ = pdf_get_man_operation.review_manager.get_committer()
 
         template = colrev.env.utils.get_template(
             template_path="template/ops/pdf_get_man_mail.txt"

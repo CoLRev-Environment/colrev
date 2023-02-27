@@ -77,6 +77,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             self.pubmed_lock = Lock()
 
         self.review_manager = source_operation.review_manager
+        _, self.email = source_operation.review_manager.get_committer()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -253,7 +254,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     def __get_pubmed_ids(self, query: str, retstart: int) -> typing.List[str]:
 
-        headers = {"user-agent": f"{__name__} (mailto:{self.review_manager.email})"}
+        headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
 
         ret = session.request(
@@ -291,7 +292,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 + f"db={database}&id={pubmed_id}&rettype=xml&retmode=text"
             )
 
-            headers = {"user-agent": f"{__name__} (mailto:{self.review_manager.email})"}
+            headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
             session = self.review_manager.get_cached_session()
 
             # review_manager.logger.debug(url)

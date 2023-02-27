@@ -241,8 +241,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
                 + quote(record.data["title"])
             )
+            _, email = review_manager.get_committer()
 
-            headers = {"user-agent": f"{__name__} (mailto:{review_manager.email})"}
+            headers = {"user-agent": f"{__name__} (mailto:{email})"}
             record_list = []
             session = review_manager.get_cached_session()
 

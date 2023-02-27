@@ -204,14 +204,12 @@ class Commit:
                 path=self.review_manager.STATUS_RELATIVE
             )
 
+            committer, email = self.review_manager.get_committer()
+
             if self.manual_author:
-                git_author = git.Actor(
-                    self.review_manager.committer, self.review_manager.email
-                )
+                git_author = git.Actor(committer, email)
             else:
-                git_author = git.Actor(
-                    f"script:{self.script_name}", self.review_manager.email
-                )
+                git_author = git.Actor(f"script:{self.script_name}", email)
 
             # Note : this should run as the last command before creating the commit
             # to ensure that the git tree_hash is up-to-date.
@@ -225,9 +223,7 @@ class Commit:
             self.review_manager.dataset.create_commit(
                 msg=self.msg,
                 author=git_author,
-                committer=git.Actor(
-                    self.review_manager.committer, self.review_manager.email
-                ),
+                committer=git.Actor(committer, email),
                 hook_skipping=True,
             )
 

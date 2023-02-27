@@ -49,6 +49,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         self.session = prep_operation.review_manager.get_cached_session()
+        _, self.email = prep_operation.review_manager.get_committer()
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -64,10 +65,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         try:
 
             url = record.data.get("url", record.data.get("fulltext", "NA"))
-            headers = {
-                "user-agent": f"{__name__}  "
-                f"(mailto:{prep_operation.review_manager.email})"
-            }
+            headers = {"user-agent": f"{__name__}  " f"(mailto:{self.email})"}
             ret = self.session.request(
                 "GET", url, headers=headers, timeout=prep_operation.timeout
             )

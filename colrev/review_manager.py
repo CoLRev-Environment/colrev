@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import pprint
+import typing
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
@@ -114,10 +115,6 @@ class ReviewManager:
                 )
 
             self.environment_manager = self.get_environment_manager()
-            (
-                self.committer,
-                self.email,
-            ) = self.environment_manager.get_name_mail_from_git()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.settings = self.load_settings()
@@ -129,6 +126,10 @@ class ReviewManager:
                     self.logger.debug(exc)
             else:
                 raise exc
+
+    def get_committer(self) -> typing.Tuple[str, str]:
+        """Get the committer name and email"""
+        return self.environment_manager.get_name_mail_from_git()
 
     def __get_project_home_dir(self, *, path_str: str = None) -> Path:
         if path_str:

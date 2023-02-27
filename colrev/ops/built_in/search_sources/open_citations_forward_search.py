@@ -48,11 +48,13 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        _, email = source_operation.review_manager.get_committer()
+
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
             "https://github.com/CoLRev-Ecosystem/colrev",
-            source_operation.review_manager.email,
+            email,
         )
 
     @classmethod

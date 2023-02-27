@@ -43,9 +43,8 @@ class SemanticScholarPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-        self.headers = {
-            "user-agent": f"{__name__} (mailto:{prep_operation.review_manager.email})"
-        }
+        _, email = prep_operation.review_manager.get_committer()
+        self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
         self.session = prep_operation.review_manager.get_cached_session()
 
     def __get_record_from_item(
