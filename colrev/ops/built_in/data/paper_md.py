@@ -191,10 +191,8 @@ class PaperMarkdown(JsonSchemaMixin):
             f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.settings.paper_path}"
         )
 
-    def __authorship_heuristic(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> str:
-        git_repo = review_manager.dataset.get_repo()
+    def __authorship_heuristic(self) -> str:
+        git_repo = self.data_operation.review_manager.dataset.get_repo()
         try:
             commits_list = list(git_repo.iter_commits())
             commits_authors = []
@@ -208,7 +206,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
             author = ", ".join(dict(Counter(commits_authors)))
         except ValueError:
-            author, _ = review_manager.get_committer()
+            author, _ = self.data_operation.review_manager.get_committer()
         return author
 
     def __get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
@@ -224,7 +222,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __add_missing_records_to_paper(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         missing_records: list,
         silent_mode: bool,
     ) -> None:
@@ -257,25 +254,25 @@ class PaperMarkdown(JsonSchemaMixin):
                         paper_ids_added.append(missing_record)
 
                     for paper_id in paper_ids_added:
-                        review_manager.report_logger.info(
+                        self.data_operation.review_manager.report_logger.info(
                             # f" {missing_record}".ljust(self.__PAD, " ")
                             f" {paper_id}"
                             + f" added to {paper_path.name}"
                         )
                     nr_records_added = len(missing_records)
-                    review_manager.report_logger.info(
+                    self.data_operation.review_manager.report_logger.info(
                         f"{nr_records_added} records added to {self.settings.paper_path.name}"
                     )
 
                     for paper_id_added in paper_ids_added:
                         if not silent_mode:
-                            review_manager.logger.info(
+                            self.data_operation.review_manager.logger.info(
                                 f" {colors.GREEN}{paper_id_added}".ljust(45)
                                 + f"add to paper{colors.END}"
                             )
 
                     if not silent_mode:
-                        review_manager.logger.info(
+                        self.data_operation.review_manager.logger.info(
                             f"Added to {paper_path.name}".ljust(24)
                             + f"{nr_records_added}".rjust(15, " ")
                             + " records"
@@ -306,44 +303,44 @@ class PaperMarkdown(JsonSchemaMixin):
                     + f"{paper_path.name}. Add records at the end of "
                     + "the document."
                 )
-                review_manager.report_logger.warning(msg)
-                review_manager.logger.warning(msg)
+                self.data_operation.review_manager.report_logger.warning(msg)
+                self.data_operation.review_manager.logger.warning(msg)
                 if line != "\n":
                     writer.write("\n")
                 marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
                 writer.write(marker)
                 for missing_record in missing_records:
                     writer.write(missing_record)
-                    review_manager.report_logger.info(
+                    self.data_operation.review_manager.report_logger.info(
                         # f" {missing_record}".ljust(self.__PAD, " ") + " added"
                         f" {missing_record} added"
                     )
                     if not silent_mode:
-                        review_manager.logger.info(
+                        self.data_operation.review_manager.logger.info(
                             # f" {missing_record}".ljust(self.__PAD, " ") + " added"
                             f" {missing_record} added"
                         )
 
-    def __create_paper(
-        self, review_manager: colrev.review_manager.ReviewManager, silent_mode: bool
-    ) -> None:
+    def __create_paper(self, silent_mode: bool) -> None:
         if not silent_mode:
-            review_manager.report_logger.info("Create paper")
-            review_manager.logger.info("Create paper")
+            self.data_operation.review_manager.report_logger.info("Create paper")
+            self.data_operation.review_manager.logger.info("Create paper")
 
         title = "Paper template"
-        readme_file = review_manager.readme
+        readme_file = self.data_operation.review_manager.readme
         if readme_file.is_file():
             with open(readme_file, encoding="utf-8") as file:
                 title = file.readline()
                 title = title.replace("# ", "").replace("\n", "")
 
-        author = self.__authorship_heuristic(review_manager=review_manager)
+        author = self.__authorship_heuristic()
 
-        review_type = review_manager.settings.project.review_type
+        review_type = self.data_operation.review_manager.settings.project.review_type
 
-        package_manager = review_manager.get_package_manager()
-        check_operation = colrev.operation.CheckOperation(review_manager=review_manager)
+        package_manager = self.data_operation.review_manager.get_package_manager()
+        check_operation = colrev.operation.CheckOperation(
+            review_manager=self.data_operation.review_manager
+        )
 
         review_type_endpoint = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.review_type,
@@ -378,7 +375,7 @@ class PaperMarkdown(JsonSchemaMixin):
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,
             old_string="{{colrev_version}}",
-            new_string=str(review_manager.get_colrev_versions()[1]),
+            new_string=str(self.data_operation.review_manager.get_colrev_versions()[1]),
         )
         colrev.env.utils.inplace_change(
             filename=self.settings.paper_path,
@@ -389,7 +386,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __exclude_marked_records(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         synthesized_record_status_matrix: dict,
         records: typing.Dict,
     ) -> None:
@@ -425,15 +421,21 @@ class PaperMarkdown(JsonSchemaMixin):
                 ):
                     del synthesized_record_status_matrix[record_id]
                     colrev.record.ScreenRecord(data=records[record_id]).screen(
-                        review_manager=review_manager,
+                        review_manager=self.data_operation.review_manager,
                         screen_inclusion=False,
                         screening_criteria="NA",
                     )
 
-                    review_manager.logger.info(f"Excluded {record_id}")
-                    review_manager.report_logger.info(f"Excluded {record_id}")
+                    self.data_operation.review_manager.logger.info(
+                        f"Excluded {record_id}"
+                    )
+                    self.data_operation.review_manager.report_logger.info(
+                        f"Excluded {record_id}"
+                    )
                 else:
-                    review_manager.logger.error(f"Did not find ID {record_id}")
+                    self.data_operation.review_manager.logger.error(
+                        f"Did not find ID {record_id}"
+                    )
                     writer.write(line)
                     line = reader.readline()
                     continue
@@ -442,7 +444,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __add_missing_records(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
@@ -458,7 +459,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if 0 == len(missing_records):
             if not silent_mode:
-                review_manager.report_logger.info(
+                self.data_operation.review_manager.report_logger.info(
                     f"All records included in {self.settings.paper_path.name}"
                 )
             # review_manager.logger.debug(
@@ -466,31 +467,32 @@ class PaperMarkdown(JsonSchemaMixin):
             # )
         else:
             if not silent_mode:
-                review_manager.report_logger.info("Update paper")
-                review_manager.logger.info(
+                self.data_operation.review_manager.report_logger.info("Update paper")
+                self.data_operation.review_manager.logger.info(
                     f"Update paper ({self.settings.paper_path.name})"
                 )
             self.__add_missing_records_to_paper(
-                review_manager=review_manager,
                 missing_records=missing_records,
                 silent_mode=silent_mode,
             )
 
-    def __append_to_non_sample_references(
-        self, *, review_manager: colrev.review_manager.ReviewManager, filepath: Path
-    ) -> None:
+    def __append_to_non_sample_references(self, *, filepath: Path) -> None:
 
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
             non_sample_records = {}
             with open(self.NON_SAMPLE_REFERENCES_RELATIVE, encoding="utf8") as file:
-                non_sample_records = review_manager.dataset.load_records_dict(
-                    load_str=file.read()
+                non_sample_records = (
+                    self.data_operation.review_manager.dataset.load_records_dict(
+                        load_str=file.read()
+                    )
                 )
 
-            records_to_add = review_manager.dataset.load_records_dict(
-                load_str=filedata.decode("utf-8")
+            records_to_add = (
+                self.data_operation.review_manager.dataset.load_records_dict(
+                    load_str=filedata.decode("utf-8")
+                )
             )
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
@@ -506,7 +508,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 k: v for k, v in records_to_add.items() if k not in non_sample_records
             }
             if duplicated_keys:
-                review_manager.logger.error(
+                self.data_operation.review_manager.logger.error(
                     f"{colors.RED}Cannot add {duplicated_keys} to "
                     f"{self.NON_SAMPLE_REFERENCES_RELATIVE}, "
                     f"please change ID and add manually:{colors.END}"
@@ -515,28 +517,29 @@ class PaperMarkdown(JsonSchemaMixin):
                     print(colrev.record.Record(data=duplicated_record))
 
             non_sample_records = {**non_sample_records, **records_to_add}
-            review_manager.dataset.save_records_dict_to_file(
+            self.data_operation.review_manager.dataset.save_records_dict_to_file(
                 records=non_sample_records,
                 save_path=self.NON_SAMPLE_REFERENCES_RELATIVE,
             )
-            review_manager.dataset.add_changes(path=self.NON_SAMPLE_REFERENCES_RELATIVE)
+            self.data_operation.review_manager.dataset.add_changes(
+                path=self.NON_SAMPLE_REFERENCES_RELATIVE
+            )
 
-    def __add_prisma_if_available(
-        self, *, review_manager: colrev.review_manager.ReviewManager, silent_mode: bool
-    ) -> None:
+    def __add_prisma_if_available(self, *, silent_mode: bool) -> None:
 
         prisma_endpoint_l = [
             d
-            for d in review_manager.settings.data.data_package_endpoints
+            for d in self.data_operation.review_manager.settings.data.data_package_endpoints
             if d["endpoint"] == "colrev_built_in.prisma"
         ]
         if prisma_endpoint_l:
 
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
-                    review_manager.logger.info("Add PRISMA diagram to paper")
+                    self.data_operation.review_manager.logger.info(
+                        "Add PRISMA diagram to paper"
+                    )
                 self.__append_to_non_sample_references(
-                    review_manager=review_manager,
                     filepath=Path("template/prisma/prisma-refs.bib"),
                 )
 
@@ -571,31 +574,27 @@ class PaperMarkdown(JsonSchemaMixin):
     def update_paper(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> typing.Dict:
         """Update the paper (add new records after the NEW_RECORD_SOURCE_TAG)"""
+        review_manager = self.data_operation.review_manager
 
         if not self.settings.paper_path.is_file():
-            self.__create_paper(review_manager=review_manager, silent_mode=silent_mode)
+            self.__create_paper(silent_mode=silent_mode)
 
         self.__add_missing_records(
-            review_manager=review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
             silent_mode=silent_mode,
         )
 
         self.__exclude_marked_records(
-            review_manager=review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
             records=records,
         )
 
-        self.__add_prisma_if_available(
-            review_manager=review_manager, silent_mode=silent_mode
-        )
+        self.__add_prisma_if_available(silent_mode=silent_mode)
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
 
@@ -714,7 +713,6 @@ class PaperMarkdown(JsonSchemaMixin):
             relative_path=self.paper_relative_path, change_type="unstaged"
         ):
             records = self.update_paper(
-                review_manager=data_operation.review_manager,
                 records=records,
                 synthesized_record_status_matrix=synthesized_record_status_matrix,
                 silent_mode=silent_mode,

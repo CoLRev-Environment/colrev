@@ -82,7 +82,6 @@ class ColrevCuration(JsonSchemaMixin):
         self,
         *,
         records: dict,
-        review_manager: colrev.review_manager.ReviewManager,
         sources: list,
     ) -> dict:
 
@@ -117,7 +116,9 @@ class ColrevCuration(JsonSchemaMixin):
             elif "booktitle" in record_dict:
                 key = record_dict.get("year", "-")
             else:
-                review_manager.logger.error(f"TOC not supported: {record_dict}")
+                self.data_operation.review_manager.logger.error(
+                    f"TOC not supported: {record_dict}"
+                )
                 continue
             if not all(
                 source in [o.split("/")[0] for o in record_dict["colrev_origin"]]
@@ -244,9 +245,7 @@ class ColrevCuration(JsonSchemaMixin):
                 if source not in sources:
                     sources.append(source)
 
-        stats = self.__get_stats(
-            records=records, review_manager=review_manager, sources=sources
-        )
+        stats = self.__get_stats(records=records, sources=sources)
         markdown_output = self.__get_stats_markdown_table(stats=stats, sources=sources)
         self.__update_table_in_readme(
             review_manager=review_manager, markdown_output=markdown_output
