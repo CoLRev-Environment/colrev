@@ -332,7 +332,7 @@ def add_data(
 
         default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
 
-        if "colrev_built_in.manuscript" == add:
+        if "colrev_built_in.paper_md" == add:
             if "y" == input("Select a custom word template (y/n)?"):
 
                 template_name = input(

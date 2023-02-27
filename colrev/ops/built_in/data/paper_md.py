@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of a markdown manuscript as part of the data operations"""
+"""Creation of a markdown paper as part of the data operations"""
 from __future__ import annotations
 
 import os
@@ -30,16 +30,16 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
-class Manuscript(JsonSchemaMixin):
-    """Synthesize the literature in a manuscript
+class PaperMarkdown(JsonSchemaMixin):
+    """Synthesize the literature in a markdown paper
 
-    The manuscript (paper.md) is created automatically.
+    The paper (paper.md) is created automatically.
     Records are added for synthesis after the <!-- NEW_RECORD_SOURCE -->
-    Once records are moved to other parts of the manuscript (cited or in comments)
-    they are assumed to be synthesized in the manuscript.
+    Once records are moved to other parts of the paper (cited or in comments)
+    they are assumed to be synthesized in the paper.
     Once they are synthesized in all data endpoints,
     CoLRev sets their status to rev_synthesized.
-    The data operation also builds the manuscript (using pandoc, csl and a template).
+    The data operation also builds the paper (using pandoc, csl and a template).
     """
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
@@ -48,16 +48,16 @@ class Manuscript(JsonSchemaMixin):
     In the paper.md, the IDs of new records marked for synthesis
     will be appended after this tag.
 
-    If IDs are moved to other parts of the manuscript,
+    If IDs are moved to other parts of the paper,
     the corresponding record will be marked as rev_synthesized."""
 
     NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
 
     @dataclass
-    class ManuscriptSettings(
+    class PaperMarkdownSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
     ):
-        """Manuscript settings"""
+        """Paper settings"""
 
         endpoint: str
         version: str
@@ -74,7 +74,7 @@ class Manuscript(JsonSchemaMixin):
             },
         }
 
-    settings_class = ManuscriptSettings
+    settings_class = PaperMarkdownSettings
 
     __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
 
@@ -125,19 +125,19 @@ class Manuscript(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
 
-        manuscript_endpoint_details = {
-            "endpoint": "colrev_built_in.manuscript",
+        paper_md_endpoint_details = {
+            "endpoint": "colrev_built_in.paper_md",
             "version": "0.1",
             "word_template": self.__retrieve_default_word_template(),
         }
 
-        return manuscript_endpoint_details
+        return paper_md_endpoint_details
 
     def __retrieve_default_word_template(self) -> Path:
         template_name = self.data_operation.review_manager.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/manuscript/APA-7.docx")
+            file_path=Path("template/paper_md/APA-7.docx")
         )
 
         if filedata:
@@ -187,7 +187,7 @@ class Manuscript(JsonSchemaMixin):
             for line in file:
                 if self.NEW_RECORD_SOURCE_TAG in line:
                     return
-        raise ManuscriptRecordSourceTagError(
+        raise PaperMarkdownRecordSourceTagError(
             f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.settings.paper_path}"
         )
 
@@ -221,7 +221,7 @@ class Manuscript(JsonSchemaMixin):
 
         return list(set(record_id_list) - set(available))
 
-    def __add_missing_records_to_manuscript(
+    def __add_missing_records_to_paper(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
@@ -271,7 +271,7 @@ class Manuscript(JsonSchemaMixin):
                         if not silent_mode:
                             review_manager.logger.info(
                                 f" {colors.GREEN}{paper_id_added}".ljust(45)
-                                + f"add to manuscript{colors.END}"
+                                + f"add to paper{colors.END}"
                             )
 
                     if not silent_mode:
@@ -328,10 +328,10 @@ class Manuscript(JsonSchemaMixin):
         self, review_manager: colrev.review_manager.ReviewManager, silent_mode: bool
     ) -> None:
         if not silent_mode:
-            review_manager.report_logger.info("Create manuscript")
-            review_manager.logger.info("Create manuscript")
+            review_manager.report_logger.info("Create paper")
+            review_manager.logger.info("Create paper")
 
-        title = "Manuscript template"
+        title = "Paper template"
         readme_file = review_manager.readme
         if readme_file.is_file():
             with open(readme_file, encoding="utf-8") as file:
@@ -360,7 +360,7 @@ class Manuscript(JsonSchemaMixin):
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
         except FileNotFoundError:
-            paper_resource_path = Path("template/manuscript") / Path("paper.md")
+            paper_resource_path = Path("template/paper_md") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
@@ -466,11 +466,11 @@ class Manuscript(JsonSchemaMixin):
             # )
         else:
             if not silent_mode:
-                review_manager.report_logger.info("Update manuscript")
+                review_manager.report_logger.info("Update paper")
                 review_manager.logger.info(
-                    f"Update manuscript ({self.settings.paper_path.name})"
+                    f"Update paper ({self.settings.paper_path.name})"
                 )
-            self.__add_missing_records_to_manuscript(
+            self.__add_missing_records_to_paper(
                 review_manager=review_manager,
                 missing_records=missing_records,
                 silent_mode=silent_mode,
@@ -534,7 +534,7 @@ class Manuscript(JsonSchemaMixin):
 
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
-                    review_manager.logger.info("Add PRISMA diagram to manuscript")
+                    review_manager.logger.info("Add PRISMA diagram to paper")
                 self.__append_to_non_sample_references(
                     review_manager=review_manager,
                     filepath=Path("template/prisma/prisma-refs.bib"),
@@ -568,7 +568,7 @@ class Manuscript(JsonSchemaMixin):
                 if not silent_mode:
                     print()
 
-    def update_manuscript(
+    def update_paper(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
@@ -576,7 +576,7 @@ class Manuscript(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> typing.Dict:
-        """Update the manuscript (add new records after the NEW_RECORD_SOURCE_TAG)"""
+        """Update the paper (add new records after the NEW_RECORD_SOURCE_TAG)"""
 
         if not self.settings.paper_path.is_file():
             self.__create_paper(review_manager=review_manager, silent_mode=silent_mode)
@@ -604,7 +604,7 @@ class Manuscript(JsonSchemaMixin):
     def __create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
 
-            retrieval_path = Path("template/manuscript/non_sample_references.bib")
+            retrieval_path = Path("template/paper_md/non_sample_references.bib")
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
             )
@@ -646,8 +646,8 @@ class Manuscript(JsonSchemaMixin):
                 f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
-    def build_manuscript(self, *, data_operation: colrev.ops.data.Data) -> None:
-        """Build the manuscript (based on pandoc)"""
+    def build_paper(self, *, data_operation: colrev.ops.data.Data) -> None:
+        """Build the paper (based on pandoc)"""
 
         if not data_operation.review_manager.dataset.records_file.is_file():
             data_operation.review_manager.dataset.records_file.touch()
@@ -681,12 +681,12 @@ class Manuscript(JsonSchemaMixin):
             and self.settings.paper_output.is_file()
         ):
             data_operation.review_manager.logger.debug(
-                "Skipping manuscript build (no changes)"
+                "Skipping paper build (no changes)"
             )
             return
 
         if data_operation.review_manager.verbose_mode:
-            data_operation.review_manager.logger.info("Build manuscript")
+            data_operation.review_manager.logger.info("Build paper")
 
         script = (
             f"{self.paper_relative_path} --filter pandoc-crossref --citeproc "
@@ -708,12 +708,12 @@ class Manuscript(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data/manuscript"""
+        """Update the data/paper"""
 
         if not data_operation.review_manager.dataset.has_changes(
             relative_path=self.paper_relative_path, change_type="unstaged"
         ):
-            records = self.update_manuscript(
+            records = self.update_paper(
                 review_manager=data_operation.review_manager,
                 records=records,
                 synthesized_record_status_matrix=synthesized_record_status_matrix,
@@ -726,12 +726,12 @@ class Manuscript(JsonSchemaMixin):
                     f"{self.paper_relative_path} due to unstaged changes{colors.END}"
                 )
 
-        self.build_manuscript(data_operation=data_operation)
+        self.build_paper(data_operation=data_operation)
 
-    def __get_to_synthesize_in_manuscript(
+    def __get_to_synthesize_in_paper(
         self, *, paper: Path, records_for_synthesis: list
     ) -> list:
-        in_manuscript_to_synthesize = []
+        in_paper_to_synthesize = []
         if paper.is_file():
             with open(paper, encoding="utf-8") as file:
                 for line in file:
@@ -740,22 +740,22 @@ class Manuscript(JsonSchemaMixin):
                             line = file.readline()
                             if re.search(r"- @.*", line):
                                 record_id = re.findall(r"- @(.*)$", line)
-                                in_manuscript_to_synthesize.append(record_id[0])
+                                in_paper_to_synthesize.append(record_id[0])
                                 if line == "\n":
                                     break
 
-            in_manuscript_to_synthesize = [
-                x for x in in_manuscript_to_synthesize if x in records_for_synthesis
+            in_paper_to_synthesize = [
+                x for x in in_paper_to_synthesize if x in records_for_synthesis
             ]
         else:
-            in_manuscript_to_synthesize = records_for_synthesis
-        return in_manuscript_to_synthesize
+            in_paper_to_synthesize = records_for_synthesis
+        return in_paper_to_synthesize
 
     def __get_synthesized_ids_paper(
         self, *, paper: Path, synthesized_record_status_matrix: dict
     ) -> list:
 
-        in_manuscript_to_synthesize = self.__get_to_synthesize_in_manuscript(
+        in_paper_to_synthesize = self.__get_to_synthesize_in_paper(
             paper=paper,
             records_for_synthesis=list(synthesized_record_status_matrix.keys()),
         )
@@ -763,7 +763,7 @@ class Manuscript(JsonSchemaMixin):
         synthesized_ids = [
             x
             for x in list(synthesized_record_status_matrix.keys())
-            if x not in in_manuscript_to_synthesize
+            if x not in in_paper_to_synthesize
         ]
 
         return synthesized_ids
@@ -776,15 +776,15 @@ class Manuscript(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
         # Update status / synthesized_record_status_matrix
-        synthesized_in_manuscript = self.__get_synthesized_ids_paper(
+        synthesized_in_paper = self.__get_synthesized_ids_paper(
             paper=self.settings.paper_path,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
-        for syn_id in synthesized_in_manuscript:
+        for syn_id in synthesized_in_paper:
             if syn_id in synthesized_record_status_matrix:
                 synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
             else:
-                print(f"Error: {syn_id} not int {synthesized_in_manuscript}")
+                print(f"Error: {syn_id} not int {synthesized_in_paper}")
 
     def get_advice(
         self,
@@ -792,20 +792,20 @@ class Manuscript(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "Data operation [manuscript endpoint]: "
+        data_endpoint = "Data operation [paper_md endpoint]: "
 
         advice = {
             "msg": f"{data_endpoint}"
-            + "\n    1. Edit the manuscript (data/paper.md)"
-            + "\n    2. To build the manuscript (output/paper.docx), run: colrev data"
+            + "\n    1. Edit the paper (data/paper.md)"
+            + "\n    2. To build the paper (output/paper.docx), run: colrev data"
             + "\n    3. To create a version, run: git add data/paper.md && "
-            + "git commit -m 'update manuscript'",
+            + "git commit -m 'update paper'",
             "detailed_msg": "... with a link to the docs etc.",
         }
         return advice
 
 
-class ManuscriptRecordSourceTagError(Exception):
+class PaperMarkdownRecordSourceTagError(Exception):
     """NEW_RECORD_SOURCE_TAG not found in paper.md"""
 
     def __init__(self, msg: str) -> None:

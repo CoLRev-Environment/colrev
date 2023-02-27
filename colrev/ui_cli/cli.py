@@ -1633,7 +1633,7 @@ def data(
                 "No data format not specified. "
                 "To register a data endpoint, "
                 "use one (or several) of the following \n"
-                "    colrev data --add colrev_built_in.manuscript\n"
+                "    colrev data --add colrev_built_in.paper_md\n"
                 "    colrev data --add colrev_built_in.structured\n"
                 "    colrev data --add colrev_built_in.bibliography_export\n"
                 "    colrev data --add colrev_built_in.prisma\n"

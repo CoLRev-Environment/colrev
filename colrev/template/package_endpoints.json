@@ -227,7 +227,7 @@
             "short_description": "SearchSource for Pubmed",
             "link": "`PubMed <https://pubmed.ncbi.nlm.nih.gov/>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
+            "api_search": "Supported",
             "instructions": "`Instructions <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.py>`_"
         },
         {
@@ -664,16 +664,16 @@
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/github_pages.py>`_"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.manuscript",
-            "endpoint": "colrev.ops.built_in.data.manuscript.Manuscript",
-            "short_description": "Synthesize the literature in a manuscript",
-            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/manuscript.py>`_"
-        },
-        {
             "package_endpoint_identifier": "colrev_built_in.obsidian",
             "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian",
             "short_description": "Export the sample into an Obsidian database",
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/obsidian.py>`_"
+        },
+        {
+            "package_endpoint_identifier": "colrev_built_in.paper_md",
+            "endpoint": "colrev.ops.built_in.data.paper_md.PaperMarkdown",
+            "short_description": "Synthesize the literature in a markdown paper",
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/paper_md.py>`_"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.prisma",

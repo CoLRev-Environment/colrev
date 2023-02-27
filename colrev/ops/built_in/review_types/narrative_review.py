@@ -38,7 +38,7 @@ class NarrativeReview(JsonSchemaMixin):
 
         settings.data.data_package_endpoints = [
             {
-                "endpoint": "colrev_built_in.manuscript",
+                "endpoint": "colrev_built_in.paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
                 "csl_style": "apa.csl",

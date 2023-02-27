@@ -260,12 +260,12 @@ class Initializer:
             if [
                 x
                 for x in settings.data.data_package_endpoints
-                if x["endpoint"] in ["colrev_built_in.manuscript"]
+                if x["endpoint"] in ["colrev_built_in.paper_md"]
             ]:
                 settings.data.data_package_endpoints = [
                     x
                     for x in settings.data.data_package_endpoints
-                    if x["endpoint"] not in ["colrev_built_in.manuscript"]
+                    if x["endpoint"] not in ["colrev_built_in.paper_md"]
                 ]
 
         self.review_manager.save_settings()

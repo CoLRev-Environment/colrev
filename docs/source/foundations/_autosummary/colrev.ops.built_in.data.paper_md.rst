@@ -1,7 +1,7 @@
-colrev.ops.built\_in.data.manuscript
-====================================
+colrev.ops.built\_in.data.paper\_md
+===================================
 
-.. automodule:: colrev.ops.built_in.data.manuscript
+.. automodule:: colrev.ops.built_in.data.paper_md
 
 
 
@@ -20,7 +20,7 @@ colrev.ops.built\_in.data.manuscript
       :template: custom-class-template.rst
       :nosignatures:
 
-      Manuscript
+      PaperMarkdown
 
 
 
@@ -31,4 +31,4 @@ colrev.ops.built\_in.data.manuscript
    .. autosummary::
       :toctree:
 
-      ManuscriptRecordSourceTagError
+      PaperMarkdownRecordSourceTagError
