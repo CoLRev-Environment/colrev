@@ -120,7 +120,7 @@ class Manuscript(JsonSchemaMixin):
         self.paper_relative_path = self.settings.paper_path.relative_to(
             data_operation.review_manager.path
         )
-        self.__temp_path.mkdir(exist_ok=True)
+        self.__temp_path.mkdir(exist_ok=True, parents=True)
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""
