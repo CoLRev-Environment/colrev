@@ -96,9 +96,6 @@ class ReviewManager:
                 self.pdf_dir.mkdir(exist_ok=True)
                 self.output_dir.mkdir(exist_ok=True)
 
-            # Start LocalIndex to prevent waiting times
-            self.get_local_index()
-
             if self.debug_mode:
                 self.report_logger = colrev.logger.setup_report_logger(
                     review_manager=self, level=logging.DEBUG
