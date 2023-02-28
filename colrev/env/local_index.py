@@ -169,15 +169,12 @@ class LocalIndex:
             ):
                 pass
 
-    def __amend_record(self, *, item: dict, curated_fields: list) -> None:
+    def __amend_record(
+        self, *, cur: sqlite3.Cursor, item: dict, curated_fields: list
+    ) -> None:
         """Adds layered fields to amend existing records"""
 
         record_dict = self.__get_record_from_row(row=item)
-
-        self.__thread_lock.acquire(timeout=60)
-        thread_connection = sqlite3.connect(self.SQLITE_PATH)
-        thread_connection.row_factory = self.__dict_factory
-        cur = thread_connection.cursor()
 
         layered_fields = []
         cur.execute(
@@ -206,9 +203,6 @@ class LocalIndex:
             f"layered_fields='{json.dumps(layered_fields)}'"
             f" WHERE id='{item['id']}'"
         )
-
-        thread_connection.commit()
-        self.__thread_lock.release()
 
     def get_fields_to_remove(self, *, record_dict: dict) -> list:
         """Compares the record to available toc items and
@@ -286,6 +280,7 @@ class LocalIndex:
             for el in recs_to_index
         ]
 
+        cur = self.__sqlite_connection.cursor()
         for item in list_to_add:
             while True:
                 for records_index_required_key in self.RECORDS_INDEX_KEYS:
@@ -295,16 +290,13 @@ class LocalIndex:
                     print("NO ID IN RECORD")
                     break
                 try:
-                    cur = self.__sqlite_connection.cursor()
                     cur.execute(
                         f"INSERT INTO {self.RECORD_INDEX} "
                         f"VALUES(:{', :'.join(self.RECORDS_INDEX_KEYS)})",
                         item,
                     )
-                    self.__sqlite_connection.commit()
                     break
                 except sqlite3.IntegrityError:
-                    self.__sqlite_connection.commit()
                     stored_record = self.__get_item_from_index(
                         index_name=self.RECORD_INDEX,
                         key="colrev_id",
@@ -314,12 +306,15 @@ class LocalIndex:
                         data=stored_record
                     ).create_colrev_id()
                     if stored_colrev_id == item["colrev_id"]:
-                        self.__amend_record(item=item, curated_fields=curated_fields)
+                        self.__amend_record(
+                            cur=cur, item=item, curated_fields=curated_fields
+                        )
                         break
 
                     print("Collisions (TODO):")
                     print(stored_colrev_id)
                     print(item["colrev_id"])
+
                     # print(
                     #     [
                     #         {k: v for k, v in x.items() if k != "bibtex"}
@@ -335,6 +330,8 @@ class LocalIndex:
                     # paper_hash = self.__increment_hash(paper_hash=paper_hash)
                     # item["id"] = paper_hash
                     # continue in while-loop/try to insert...
+
+        self.__sqlite_connection.commit()
 
     def __get_record_from_row(self, *, row: dict) -> dict:
         parser = bibtex.Parser()
@@ -675,40 +672,44 @@ class LocalIndex:
                 for x in check_operation.review_manager.settings.data.data_package_endpoints
                 if x["endpoint"] == "colrev_built_in.colrev_curation"
             ]
+
             curated_fields = []
+            curation_url = ""
             if curation_endpoints:
                 curation_endpoint = curation_endpoints[0]
                 # Set masterdata_provenace to CURATED:{url}
                 curation_url = curation_endpoint["curation_url"]
-                if check_operation.review_manager.settings.is_curated_masterdata_repo():
-                    for record in records.values():
-                        record.update(
-                            colrev_masterdata_provenance=f"CURATED:{curation_url};;"
-                        )
-                else:
+                if (
+                    not check_operation.review_manager.settings.is_curated_masterdata_repo()
+                ):
                     # Curated fields/layered_fields only for non-masterdata-curated repos
                     # Add curation_url to curated fields (provenance)
                     curated_fields = curation_endpoint["curated_fields"]
-                    for curated_field in curated_fields:
-
-                        for record_dict in records.values():
-                            colrev.record.Record(data=record_dict).add_data_provenance(
-                                key=curated_field, source=f"CURATED:{curation_url}"
-                            )
-
-            # Set absolute file paths and set bibtex field (for simpler retrieval)
-            for record in records.values():
-                if "file" in record:
-                    record.update(file=repo_source_path / Path(record["file"]))
-                record["bibtex"] = review_manager.dataset.parse_bibtex_str(
-                    recs_dict_in={record["ID"]: record}
-                )
 
             recs_to_index = []
             toc_to_index: typing.Dict[str, str] = {}
             for record_dict in tqdm(records.values()):
                 try:
                     copy_for_toc_index = deepcopy(record_dict)
+
+                    if curated_fields:
+                        for curated_field in curated_fields:
+                            colrev.record.Record(data=record_dict).add_data_provenance(
+                                key=curated_field, source=f"CURATED:{curation_url}"
+                            )
+                    else:
+                        record_dict.update(
+                            colrev_masterdata_provenance=f"CURATED:{curation_url};;"
+                        )
+
+                    # Set absolute file paths and set bibtex field (for simpler retrieval)
+                    if "file" in record_dict:
+                        record_dict.update(
+                            file=repo_source_path / Path(record_dict["file"])
+                        )
+                    record_dict["bibtex"] = review_manager.dataset.parse_bibtex_str(
+                        recs_dict_in={record_dict["ID"]: record_dict}
+                    )
                     record_dict = self.__get_index_record(record_dict=record_dict)
                     recs_to_index.append(record_dict)
 
@@ -745,7 +746,6 @@ class LocalIndex:
 
     def index(self) -> None:
         """Index all registered CoLRev projects"""
-        # import shutil
 
         # Note : this task takes long and does not need to run often
         session = requests_cache.CachedSession(
