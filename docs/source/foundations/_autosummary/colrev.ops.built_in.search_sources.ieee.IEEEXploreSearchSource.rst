@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~IEEEXploreSearchSource.add_endpoint
       ~IEEEXploreSearchSource.all_json_schemas
       ~IEEEXploreSearchSource.field_mapping
       ~IEEEXploreSearchSource.from_dict

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
    .. autosummary::
       :nosignatures:
 
+      ~WileyOnlineLibrarySearchSource.add_endpoint
       ~WileyOnlineLibrarySearchSource.all_json_schemas
       ~WileyOnlineLibrarySearchSource.field_mapping
       ~WileyOnlineLibrarySearchSource.from_dict

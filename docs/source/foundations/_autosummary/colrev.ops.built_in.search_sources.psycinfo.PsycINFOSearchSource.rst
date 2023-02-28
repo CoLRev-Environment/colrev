@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~PsycINFOSearchSource.add_endpoint
       ~PsycINFOSearchSource.all_json_schemas
       ~PsycINFOSearchSource.field_mapping
       ~PsycINFOSearchSource.from_dict

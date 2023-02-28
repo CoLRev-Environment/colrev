@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~EuropePMCSearchSource.add_endpoint
       ~EuropePMCSearchSource.all_json_schemas
       ~EuropePMCSearchSource.europe_pcmc_query
       ~EuropePMCSearchSource.field_mapping

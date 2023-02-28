@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~SpringerLinkSearchSource.add_endpoint
       ~SpringerLinkSearchSource.all_json_schemas
       ~SpringerLinkSearchSource.field_mapping
       ~SpringerLinkSearchSource.from_dict

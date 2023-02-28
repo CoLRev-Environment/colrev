@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~LocalIndexSearchSource.add_endpoint
       ~LocalIndexSearchSource.all_json_schemas
       ~LocalIndexSearchSource.apply_correction
       ~LocalIndexSearchSource.field_mapping

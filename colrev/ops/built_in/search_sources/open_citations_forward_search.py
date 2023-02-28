@@ -244,6 +244,31 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return result
 
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if "forwardsearch" == query.replace("_", "").replace("-", ""):
+            filename = search_operation.get_unique_filename(
+                file_path_string="forward_search"
+            )
+            # pylint: disable=no-value-for-parameter
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.open_citations_forward_search",
+                filename=filename,
+                search_type=colrev.settings.SearchType.FORWARD_SEARCH,
+                search_parameters={
+                    "scope": {"colrev_status": "rev_included|rev_synthesized"},
+                },
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+            return add_source
+
+        return None
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

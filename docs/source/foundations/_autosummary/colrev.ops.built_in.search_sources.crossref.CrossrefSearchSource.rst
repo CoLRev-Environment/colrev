@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~CrossrefSearchSource.add_endpoint
       ~CrossrefSearchSource.all_json_schemas
       ~CrossrefSearchSource.check_availability
       ~CrossrefSearchSource.crossref_query

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~PDFSearchSource.add_endpoint
       ~PDFSearchSource.all_json_schemas
       ~PDFSearchSource.field_mapping
       ~PDFSearchSource.from_dict

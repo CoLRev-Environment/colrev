@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
    .. autosummary::
       :nosignatures:
 
+      ~TransportResearchInternationalDocumentation.add_endpoint
       ~TransportResearchInternationalDocumentation.all_json_schemas
       ~TransportResearchInternationalDocumentation.field_mapping
       ~TransportResearchInternationalDocumentation.from_dict

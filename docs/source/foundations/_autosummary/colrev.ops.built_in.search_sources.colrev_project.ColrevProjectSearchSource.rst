@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~ColrevProjectSearchSource.add_endpoint
       ~ColrevProjectSearchSource.all_json_schemas
       ~ColrevProjectSearchSource.field_mapping
       ~ColrevProjectSearchSource.from_dict

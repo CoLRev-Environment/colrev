@@ -315,9 +315,35 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
         if "curation_ID" in data:
-            result["confidence"] = 1
+            result["confidence"] = 1.0
 
         return result
+
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if query.startswith("local_index:"):
+            query = query.replace("local_index:", "")
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"local_index_{query}".replace("%", "").replace(
+                    "'", ""
+                )
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.local_index",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+            return add_source
+
+        return None
 
     def load_fixes(
         self,

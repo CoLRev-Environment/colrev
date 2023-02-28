@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
    .. autosummary::
       :nosignatures:
 
+      ~AISeLibrarySearchSource.add_endpoint
       ~AISeLibrarySearchSource.all_json_schemas
       ~AISeLibrarySearchSource.field_mapping
       ~AISeLibrarySearchSource.from_dict

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.systematic\_review\_datasets.SystematicRevi
    .. autosummary::
       :nosignatures:
 
+      ~SystematicReviewDatasetsSearchSource.add_endpoint
       ~SystematicReviewDatasetsSearchSource.all_json_schemas
       ~SystematicReviewDatasetsSearchSource.field_mapping
       ~SystematicReviewDatasetsSearchSource.from_dict

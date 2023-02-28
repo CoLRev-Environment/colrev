@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~GoogleScholarSearchSource.add_endpoint
       ~GoogleScholarSearchSource.all_json_schemas
       ~GoogleScholarSearchSource.field_mapping
       ~GoogleScholarSearchSource.from_dict

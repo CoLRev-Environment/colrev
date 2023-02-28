@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~ERICSearchSource.add_endpoint
       ~ERICSearchSource.all_json_schemas
       ~ERICSearchSource.field_mapping
       ~ERICSearchSource.from_dict

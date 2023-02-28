@@ -19,235 +19,45 @@ def add_search_source(
 ) -> None:
     """Add a search source package_endpoint"""
 
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-statements
     # pylint: disable=too-many-locals
 
-    if "pdfs" == query:
-
-        filename = search_operation.get_unique_filename(file_path_string="pdfs")
-        # pylint: disable=no-value-for-parameter
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.pdfs_dir",
-            filename=filename,
-            search_type=colrev.settings.SearchType.PDFS,
-            search_parameters={"scope": {"path": "data/pdfs"}},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-    elif "backwardsearch" == query.replace("_", "").replace("-", ""):
-        filename = search_operation.get_unique_filename(
-            file_path_string="pdf_backward_search"
-        )
-        # pylint: disable=no-value-for-parameter
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.pdf_backward_search",
-            filename=filename,
-            search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
-            search_parameters={
-                "scope": {"colrev_status": "rev_included|rev_synthesized"},
-            },
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-    elif "forwardsearch" == query.replace("_", "").replace("-", ""):
-        filename = search_operation.get_unique_filename(
-            file_path_string="forward_search"
-        )
-        # pylint: disable=no-value-for-parameter
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.open_citations_forward_search",
-            filename=filename,
-            search_type=colrev.settings.SearchType.FORWARD_SEARCH,
-            search_parameters={
-                "scope": {"colrev_status": "rev_included|rev_synthesized"},
-            },
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-
-    elif (
-        "https://dblp.org/search?q=" in query
-        or "https://dblp.org/search/publ?q=" in query
-    ):
-        query = query.replace(
-            "https://dblp.org/search?q=", "https://dblp.org/search/publ/api?q="
-        ).replace(
-            "https://dblp.org/search/publ?q=", "https://dblp.org/search/publ/api?q="
-        )
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"dblp_{query.replace('https://dblp.org/search/publ/api?q=', '')}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.dblp",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-    elif "https://search.crossref.org/?q=" in query:
-        query = (
-            query.replace("https://search.crossref.org/?q=", "")
-            .replace("&from_ui=yes", "")
-            .lstrip("+")
-        )
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"crossref_{query}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.crossref",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-
-    elif "colrev_built_in.crossref:jissn=" in query:
-        query = query.replace("colrev_built_in.crossref:jissn=", "")
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"crossref_jissn_{query}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.crossref",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"scope": {"journal_issn": query}},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-    elif "pubmed.ncbi.nlm.nih.gov" in query:
-        query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"pubmed_{query}"
-        )
-        query = (
-            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-            + query
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.pubmed",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-
-    elif "aisel.aisnet.org" in query:
-
-        peer_reviewed = "peer_reviewed=true" in query
-        start_date = ""
-        if "start_date=" in query:
-            start_date = query[query.find("start_date=") + 11 :]
-            start_date = start_date[: start_date.find("&")]
-            start_date = start_date.replace("%2F", "/")
-        end_date = ""
-        if "end_date=" in query:
-            end_date = query[query.find("end_date=") + 9 :]
-            end_date = end_date[: end_date.find("&")]
-            end_date = end_date.replace("%2F", "/")
-
-        query = query[query.find("?q=") + 3 : query.find("&start")]
-        query_parts = query.split("%20")
-
-        search_terms = []
-        query_parts_merged = []
-        parenthesis_expression = ""
-        for query_part in query_parts:
-            if query_part not in ["(", ")"] and "" == parenthesis_expression:
-                query_parts_merged.append(query_part)
-            elif "(" == query_part:
-                parenthesis_expression += "("
-            elif ")" == query_part:
-                parenthesis_expression = parenthesis_expression.rstrip().replace(
-                    "(", ""
-                )
-                query_parts_merged.append(parenthesis_expression)
-                parenthesis_expression = ""
-            else:
-                parenthesis_expression = parenthesis_expression + query_part + " "
-
-        term_no = 1
-        operator = ""
-
-        file_query = ""
-        for query_part in query_parts_merged:
-            if query_part in ["OR", "AND", "NOT"]:
-                operator = query_part
-                file_query += "_" + query_part + "_"
-                continue
-
-            field = "All fields"
-            if "%3A" in query_part:
-                field, query_part = query_part.split("%3A")
-            search_term = {"operator": operator, "term": query_part, "field": field}
-            file_query += "_" + query_part + "_"
-
-            search_terms.append(search_term)
-            term_no += 1
-
-        params = {"search_terms": search_terms, "peer_reviewed": peer_reviewed}
-        if start_date:
-            params["start_date"] = start_date
-        if end_date:
-            params["end_date"] = end_date
-
-        file_query = "aisel_" + file_query.lstrip("_").rstrip("_").replace("__", "_")
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"ais_{file_query}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.ais_library",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": params},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-
-    elif query.startswith("local_index:"):
-        query = query.replace("local_index:", "")
-
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"local_index_{query}".replace("%", "").replace("'", "")
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.local_index",
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-
-    elif Path(query).is_file():
+    if Path(query).is_file():
         # pylint: disable=import-outside-toplevel
         import shutil
 
-        dst = search_operation.review_manager.search_dir / Path(query).name
-        shutil.copyfile(query, dst)
         filename = search_operation.get_unique_filename(
             file_path_string=Path(query).name
         )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev_built_in.unknown_source",
-            filename=Path(
-                f"{filename}",
-            ),
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
+        dst = search_operation.review_manager.search_dir / Path(filename).name
+        shutil.copyfile(query, dst)
+        search_operation.review_manager.logger.info(
+            f"Copied {filename} to repo. Run colrev load"
         )
+        # Note : load runs the heuristics.
+        return
 
-    else:
+    package_manager = search_operation.review_manager.get_package_manager()
+
+    search_source_identifiers = package_manager.discover_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        installed_only=True,
+    )
+
+    search_sources = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        selected_packages=[{"endpoint": p} for p in search_source_identifiers],
+        operation=search_operation,
+        instantiate_objects=False,
+    )
+
+    results_list = []
+    for endpoint_class in search_sources.values():
+        res = endpoint_class.add_endpoint(search_operation, query)  # type: ignore
+        if res:
+            results_list.append(res)
+
+    if not results_list:
+
         query_dict = json.loads(query)
 
         assert "endpoint" in query_dict
@@ -306,6 +116,15 @@ def add_search_source(
             ],
             comment="",
         )
+
+    if len(results_list) > 2:
+        search_operation.review_manager.logger.info(
+            "TODO : select one (remove the others from the list)."
+        )
+        print(results_list)
+        return
+
+    add_source = results_list[0]
 
     search_operation.add_source(add_source=add_source)
 

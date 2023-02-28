@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~DBLPSearchSource.add_endpoint
       ~DBLPSearchSource.all_json_schemas
       ~DBLPSearchSource.check_availability
       ~DBLPSearchSource.field_mapping

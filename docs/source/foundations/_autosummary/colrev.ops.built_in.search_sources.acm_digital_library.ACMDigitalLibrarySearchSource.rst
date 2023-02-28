@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
    .. autosummary::
       :nosignatures:
 
+      ~ACMDigitalLibrarySearchSource.add_endpoint
       ~ACMDigitalLibrarySearchSource.all_json_schemas
       ~ACMDigitalLibrarySearchSource.field_mapping
       ~ACMDigitalLibrarySearchSource.from_dict

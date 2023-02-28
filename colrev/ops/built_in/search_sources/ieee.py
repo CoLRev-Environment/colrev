@@ -80,6 +80,13 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return result
 
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        return None
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
    .. autosummary::
       :nosignatures:
 
+      ~TaylorAndFrancisSearchSource.add_endpoint
       ~TaylorAndFrancisSearchSource.all_json_schemas
       ~TaylorAndFrancisSearchSource.field_mapping
       ~TaylorAndFrancisSearchSource.from_dict

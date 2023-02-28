@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~EbscoHostSearchSource.add_endpoint
       ~EbscoHostSearchSource.all_json_schemas
       ~EbscoHostSearchSource.field_mapping
       ~EbscoHostSearchSource.from_dict

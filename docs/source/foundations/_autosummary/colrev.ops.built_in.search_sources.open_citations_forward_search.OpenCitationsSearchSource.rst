@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
    .. autosummary::
       :nosignatures:
 
+      ~OpenCitationsSearchSource.add_endpoint
       ~OpenCitationsSearchSource.all_json_schemas
       ~OpenCitationsSearchSource.field_mapping
       ~OpenCitationsSearchSource.from_dict

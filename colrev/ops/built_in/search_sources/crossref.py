@@ -820,6 +820,49 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return result
 
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if "https://search.crossref.org/?q=" in query:
+            query = (
+                query.replace("https://search.crossref.org/?q=", "")
+                .replace("&from_ui=yes", "")
+                .lstrip("+")
+            )
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_{query}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+            return add_source
+        if "colrev_built_in.crossref:jissn=" in query:
+            query = query.replace("colrev_built_in.crossref:jissn=", "")
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_jissn_{query}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"scope": {"journal_issn": query}},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+            return add_source
+
+        return None
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

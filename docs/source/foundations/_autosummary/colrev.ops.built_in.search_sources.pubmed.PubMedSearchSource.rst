@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~PubMedSearchSource.add_endpoint
       ~PubMedSearchSource.all_json_schemas
       ~PubMedSearchSource.check_availability
       ~PubMedSearchSource.field_mapping

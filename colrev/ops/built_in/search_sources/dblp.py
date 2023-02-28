@@ -621,6 +621,37 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         return result
 
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if (
+            "https://dblp.org/search?q=" in query
+            or "https://dblp.org/search/publ?q=" in query
+        ):
+            query = query.replace(
+                "https://dblp.org/search?q=", "https://dblp.org/search/publ/api?q="
+            ).replace(
+                "https://dblp.org/search/publ?q=", "https://dblp.org/search/publ/api?q="
+            )
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"dblp_{query.replace('https://dblp.org/search/publ/api?q=', '')}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev_built_in.dblp",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                comment="",
+            )
+            return add_source
+
+        return None
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~WebOfScienceSearchSource.add_endpoint
       ~WebOfScienceSearchSource.all_json_schemas
       ~WebOfScienceSearchSource.field_mapping
       ~WebOfScienceSearchSource.from_dict

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~JSTORSearchSource.add_endpoint
       ~JSTORSearchSource.all_json_schemas
       ~JSTORSearchSource.field_mapping
       ~JSTORSearchSource.from_dict

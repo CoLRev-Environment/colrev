@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~UnknownSearchSource.add_endpoint
       ~UnknownSearchSource.all_json_schemas
       ~UnknownSearchSource.field_mapping
       ~UnknownSearchSource.from_dict

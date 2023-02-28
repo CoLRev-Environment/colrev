@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
    .. autosummary::
       :nosignatures:
 
+      ~ABIInformProQuestSearchSource.add_endpoint
       ~ABIInformProQuestSearchSource.all_json_schemas
       ~ABIInformProQuestSearchSource.field_mapping
       ~ABIInformProQuestSearchSource.from_dict

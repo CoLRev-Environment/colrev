@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.video\_dir.VideoDirSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~VideoDirSearchSource.add_endpoint
       ~VideoDirSearchSource.all_json_schemas
       ~VideoDirSearchSource.field_mapping
       ~VideoDirSearchSource.from_dict

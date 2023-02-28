@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~ScopusSearchSource.add_endpoint
       ~ScopusSearchSource.all_json_schemas
       ~ScopusSearchSource.field_mapping
       ~ScopusSearchSource.from_dict

@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
    .. autosummary::
       :nosignatures:
 
+      ~BackwardSearchSource.add_endpoint
       ~BackwardSearchSource.all_json_schemas
       ~BackwardSearchSource.field_mapping
       ~BackwardSearchSource.from_dict
