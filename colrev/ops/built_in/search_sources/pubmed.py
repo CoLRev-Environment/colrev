@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
+from urllib.parse import urlparse
 from xml.etree.ElementTree import Element
 
 import requests
@@ -105,7 +106,9 @@ class PubMedSearchSource(JsonSchemaMixin):
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if "pubmed.ncbi.nlm.nih.gov" in query:
+        host = urlparse(query).hostname
+
+        if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
             query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
 
             filename = search_operation.get_unique_filename(

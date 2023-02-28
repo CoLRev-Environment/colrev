@@ -6,6 +6,7 @@ import json
 import re
 from multiprocessing import Lock
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import requests
 
@@ -84,7 +85,8 @@ class WebsiteConnector:
         if "pages" in item:
             record.data["pages"] = item["pages"]
         if "url" in item:
-            if "https://doi.org/" in item["url"]:
+            host = urlparse(item["url"]).hostname
+            if host and host.endswith("doi.org"):
                 record.data["doi"] = item["url"].replace("https://doi.org/", "")
                 dummy_record = colrev.record.PrepRecord(
                     data={"doi": record.data["doi"]}

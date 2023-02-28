@@ -8,6 +8,7 @@ import webbrowser
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
+from urllib.parse import urlparse
 
 import git
 import zope.interface
@@ -865,7 +866,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     change_item=change_item,
                 )
 
-                if "github.com" in remote.url:
+                host = urlparse(remote.url).hostname
+                if host and host.endswith("github.com"):
                     link = (
                         str(remote.url).rstrip(".git")
                         + "/compare/"

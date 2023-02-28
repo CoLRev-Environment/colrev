@@ -8,6 +8,7 @@ import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 import zope.interface
@@ -73,8 +74,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
-        if "aisel.aisnet.org" in query:
+        # pylint: disable=too-many-statements
 
+        host = urlparse(query).hostname
+
+        if host and host.endswith("aisel.aisnet.org"):
             peer_reviewed = "peer_reviewed=true" in query
             start_date = ""
             if "start_date=" in query:
