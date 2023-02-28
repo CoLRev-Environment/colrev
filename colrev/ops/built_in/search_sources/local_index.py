@@ -141,14 +141,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def __retrieve_from_index(self) -> typing.List[dict]:
 
         params = self.search_source.search_parameters
-        # query = {
-        #     "query": {
-        #         "simple_query_string": {
-        #             "query": "...",
-        #             "fields": ["title", ...],
-        #         },
-        #     }
-        # }
         query = params["query"]
 
         returned_records = self.local_index.search(query=query)

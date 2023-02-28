@@ -106,7 +106,7 @@ class Sync:
                 # continue if found/extracted
 
             returned_records = local_index.search(
-                query={"query": {"match_phrase": {"ID": citation_key}}}
+                query=f"citation_key='{citation_key}'"
             )
 
             if 0 == len(returned_records):

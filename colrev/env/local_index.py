@@ -59,6 +59,7 @@ class LocalIndex:
     RECORDS_INDEX_KEYS = [
         "id",
         "colrev_id",
+        "citation_key",
         "title",
         "abstract",
         "file",
@@ -453,7 +454,7 @@ class LocalIndex:
 
         return record_dict
 
-    def search(self, *, query: dict) -> list[colrev.record.Record]:
+    def search(self, *, query: str) -> list[colrev.record.Record]:
         """Run a search for records"""
 
         try:
