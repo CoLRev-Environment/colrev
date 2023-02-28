@@ -239,7 +239,7 @@ def add_search_source(
         add_source = colrev.settings.SearchSource(
             endpoint="colrev_built_in.unknown_source",
             filename=Path(
-                f"data/search/{filename}",
+                f"{filename}",
             ),
             search_type=colrev.settings.SearchType.DB,
             search_parameters={},

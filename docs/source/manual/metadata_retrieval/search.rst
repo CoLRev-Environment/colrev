@@ -40,6 +40,7 @@ Examples:
     colrev search -a backward-search
     colrev search -a forward-search
     colrev search -a "local_index:title LIKE '%dark side%'"
+    colrev search -a "/path/to/local/file.bib"
 
 ..
     Examples:
