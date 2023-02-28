@@ -137,7 +137,7 @@ class SettingsEditor:
             os.kill(pid, signal.SIGTERM)
 
         self._open_browser()
-        app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+        app.run(host="0.0.0.0", port=5000, use_reloader=False)
 
 
 def main() -> None:
