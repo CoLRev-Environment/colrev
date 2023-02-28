@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
+from subprocess import check_output
 
 import docker
 import git
@@ -119,14 +120,14 @@ class EnvironmentManager:
 
     def get_name_mail_from_git(self) -> typing.Tuple[str, str]:
         """Get the committer name and email from git (globals)"""
-        ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = ("NA", "NA")
-        if ggit_conf_path.is_file():
-            glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
-            global_conf_details = (
-                glob_git_conf.get("user", "name"),
-                glob_git_conf.get("user", "email"),
-            )
+        username = check_output(["git", "config", "user.name"])
+        email = check_output(["git", "config", "user.email"])
+        global_conf_details = (
+            username.decode("utf-8").replace("\n", ""),
+            email.decode("utf-8").replace("\n", ""),
+        )
+
         if ("NA", "NA") == global_conf_details:
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."
