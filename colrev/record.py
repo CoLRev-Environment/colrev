@@ -1370,11 +1370,16 @@ class Record:
             if "UNKNOWN" == self.data[key]:
                 continue
             if "author" == key:
-                sanitized_author = re.sub("[^a-zA-Z, ;1]+", "", self.data[key])
-                if not re.findall(
-                    r"^[\w .'’-]*, [\w .'’-]*( and [\w .'’-]*, [\w .'’-]*)*$",
-                    sanitized_author,
-                    re.UNICODE,
+                sanitized_authors = re.sub("[^a-zA-Z, ;1]+", "", self.data[key]).split(
+                    " and "
+                )
+                if not all(
+                    re.findall(
+                        r"^[\w .'’-]*, [\w .'’-]*$",
+                        sanitized_author,
+                        re.UNICODE,
+                    )
+                    for sanitized_author in sanitized_authors
                 ):
                     defect_field_keys.append(key)
 

@@ -87,17 +87,34 @@ def test_defects() -> None:
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": "orig1",
         "year": "2020",
-        "title": "EDITORIAL",
-        "author": "RAI",
+        "title": "Editorial",
+        "author": "Rai, Arun",
         "journal": "MIS Quarterly",
         "volume": "45",
         "number": "1",
         "pages": "1--3",
         "url": "www.test.com",
     }
-    R1 = colrev.record.Record(data=v1)
-    assert set(R1.get_quality_defects()) == {"title", "author"}
-    assert R1.has_quality_defects()
+
+    author_defects = [
+        "RAI",  # all-caps
+        "Rai, Arun and B",  # incomplete part
+        "Rai, Phd, Arun",  # additional title
+        "Rai, Arun; Straub, Detmar",  # incorrect delimiter
+    ]
+    for author_defect in author_defects:
+        v1["author"] = author_defect
+        R1 = colrev.record.Record(data=v1)
+        assert set(R1.get_quality_defects()) == {"author"}
+        assert R1.has_quality_defects()
+    v1["author"] = "Rai, Arun"
+
+    title_defects = ["EDITORIAL"]  # all-caps
+    for title_defect in title_defects:
+        v1["title"] = title_defect
+        R1 = colrev.record.Record(data=v1)
+        assert set(R1.get_quality_defects()) == {"title"}
+        assert R1.has_quality_defects()
 
 
 def test_parse_bib() -> None:
