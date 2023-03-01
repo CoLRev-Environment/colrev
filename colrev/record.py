@@ -1370,24 +1370,19 @@ class Record:
             if "UNKNOWN" == self.data[key]:
                 continue
             if "author" == key:
+                sanitized_author = re.sub("[^a-zA-Z, ;1]+", "", self.data[key])
+                if not re.findall(
+                    r"^[\w .'’-]*, [\w .'’-]*( and [\w .'’-]*, [\w .'’-]*)*$",
+                    sanitized_author,
+                    re.UNICODE,
+                ):
+                    defect_field_keys.append(key)
+
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
-                if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
+                elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
                     defect_field_keys.append(key)
                 elif len(self.data[key]) < 5:
-                    defect_field_keys.append(key)
-
-                elif str(self.data[key]).count(" ") > (
-                    4 * str(self.data[key]).count(",")
-                ):
-                    defect_field_keys.append(key)
-
-                elif ", " not in self.data[key]:
-                    defect_field_keys.append(key)
-
-                elif str(self.data[key]).count(" and ") != (
-                    str(self.data[key]).count(",") - 1
-                ):
                     defect_field_keys.append(key)
                 elif "�" in str(self.data[key]):
                     defect_field_keys.append(key)

@@ -878,6 +878,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Crossref"""
 
+        source_item = [
+            x
+            for x in record.data["colrev_origin"]
+            if str(source.filename).replace("data/search/", "") in x
+        ]
+        if source_item:
+            record.set_masterdata_complete(source=source_item[0])
+
         return record
 
 

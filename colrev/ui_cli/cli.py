@@ -528,6 +528,11 @@ def load(
     help="Debug the preparation step for a selected record (can be 'all').",
 )
 @click.option(
+    "--cpu",
+    type=int,
+    help="Number of cpus (parallel processes)",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -570,6 +575,7 @@ def prep(
     set_ids: bool,
     debug: str,
     debug_file: Path,
+    cpu: int,
     setup_custom_script: bool,
     skip: bool,
     verbose: bool,
@@ -577,6 +583,7 @@ def prep(
 ) -> None:
     """Prepare records"""
 
+    # pylint: disable=too-many-branches
     try:
 
         review_manager = colrev.review_manager.ReviewManager(
@@ -612,7 +619,7 @@ def prep(
         if skip:
             prep_operation.skip_prep()
 
-        prep_operation.main(keep_ids=keep_ids)
+        prep_operation.main(keep_ids=keep_ids, cpu=cpu)
 
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
@@ -623,6 +630,14 @@ def prep(
         if verbose:
             raise exc
         print(exc)
+    except OSError as exc:
+        if 24 == exc.errno:
+            prep_operation.review_manager.logger.error(
+                "Too many files opened (OSError, Errno24). "
+                "To use a smaller number of parallel processes, run colrev prep --cpu 2"
+            )
+        else:
+            raise exc
 
 
 @main.command(help_priority=7)

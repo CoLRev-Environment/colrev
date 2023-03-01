@@ -858,6 +858,7 @@ class Prep(colrev.operation.Operation):
         keep_ids: bool = False,
         debug_ids: str = "NA",
         debug_file: Path = None,
+        cpu: int = 4,
     ) -> None:
         """Preparation of records (main entrypoint)"""
 
@@ -925,7 +926,7 @@ class Prep(colrev.operation.Operation):
                     pool = Pool(mp.cpu_count() // 2)
                 else:
                     # Note : if we use too many CPUS, a "too many open files" exception is thrown
-                    pool = Pool(self.cpus * 4)
+                    pool = Pool(cpu)
                 prepared_records = pool.map(self.prepare, preparation_data)
                 pool.close()
                 pool.join()
