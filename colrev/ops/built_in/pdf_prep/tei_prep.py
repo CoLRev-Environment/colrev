@@ -48,7 +48,7 @@ class TEIPDFPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data.get("file", "NA").endswith(".pdf"):
             return record.data
 
         if not record.get_tei_filename().is_file():
