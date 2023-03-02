@@ -94,10 +94,8 @@ class PDFLastPage(JsonSchemaMixin):
             if str(last_page_average_hash_16) in last_page_hashes:
                 last_pages.append(last_page_nr)
 
-            res = pdf_reader.getPage(last_page_nr).extractText()
-            last_page_text = (
-                res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
-            )
+            res = pdf_reader.getPage(last_page_nr).extract_text()
+            last_page_text = res.replace(" ", "").replace("\n", "").lower()
 
             # ME Sharpe last page
             if (
