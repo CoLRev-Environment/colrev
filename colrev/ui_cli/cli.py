@@ -1368,6 +1368,12 @@ def __print_pdf_hashes(
     help="Prepare all PDFs again (pdf_needs_manual_preparation).",
 )
 @click.option(
+    "--tei",
+    is_flag=True,
+    default=False,
+    help="Generate TEI documents.",
+)
+@click.option(
     "-c",
     "--cover",
     type=click.Path(exists=True),
@@ -1407,6 +1413,7 @@ def pdf_prep(
     reprocess: bool,
     pdf_hash: Path,
     setup_custom_script: bool,
+    tei: bool,
     cover: Path,
     verbose: bool,
     force: bool,
@@ -1432,7 +1439,8 @@ def pdf_prep(
         elif setup_custom_script:
             pdf_prep_operation.setup_custom_script()
             print("Activated custom_pdf_prep_script.py.")
-
+        elif tei:
+            pdf_prep_operation.generate_tei()
         else:
             pdf_prep_operation.main(batch_size=batch_size)
 

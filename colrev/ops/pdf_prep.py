@@ -14,6 +14,7 @@ import timeout_decorator
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+import colrev.ops.built_in.pdf_prep.tei_prep
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -364,6 +365,30 @@ class PDFPrep(colrev.operation.Operation):
         )
 
         self.review_manager.save_settings()
+
+    def generate_tei(self) -> None:
+        """Generate TEI documents for included records"""
+
+        self.review_manager.logger.info("Generate TEI documents")
+        endpoint = colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep(
+            pdf_prep_operation=self, settings={"endpoint": "colrev_built_in.create_tei"}
+        )
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            if record_dict["colrev_status"] not in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]:
+                continue
+            self.review_manager.logger.info(record_dict["ID"])
+            try:
+                endpoint.prep_pdf(
+                    pdf_prep_operation=self,
+                    record=colrev.record.Record(data=record_dict),
+                    pad=0,
+                )
+            except colrev_exceptions.TEIException:
+                self.review_manager.logger.error("Eror generating TEI")
 
     def main(
         self,

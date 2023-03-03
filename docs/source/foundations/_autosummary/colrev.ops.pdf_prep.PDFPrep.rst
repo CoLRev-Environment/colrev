@@ -17,6 +17,7 @@ colrev.ops.pdf\_prep.PDFPrep
       :nosignatures:
 
       ~PDFPrep.check_precondition
+      ~PDFPrep.generate_tei
       ~PDFPrep.main
       ~PDFPrep.prepare_pdf
       ~PDFPrep.setup_custom_script

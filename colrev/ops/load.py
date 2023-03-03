@@ -294,7 +294,7 @@ class Load(colrev.operation.Operation):
                 heuristic_source = heuristic_result_list[0]
             else:
                 if not skip_query:
-                    print("Select search source:")
+                    print(f"{colors.ORANGE}Select search source{colors.END}:")
                     for i, heuristic_source in enumerate(heuristic_result_list):
                         highlight_color = ""
                         if heuristic_source["confidence"] >= 0.7:
