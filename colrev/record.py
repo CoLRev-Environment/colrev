@@ -1382,7 +1382,16 @@ class Record:
                     for sanitized_author in sanitized_authors
                 ):
                     defect_field_keys.append(key)
-
+                # At least two capital letters per name
+                elif not all(
+                    re.findall(
+                        r"[A-Z].*[A-Z]",
+                        sanitized_author,
+                        re.UNICODE,
+                    )
+                    for sanitized_author in sanitized_authors
+                ):
+                    defect_field_keys.append(key)
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):

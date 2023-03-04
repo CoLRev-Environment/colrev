@@ -101,6 +101,7 @@ def test_defects() -> None:
         "Rai, Arun and B",  # incomplete part
         "Rai, Phd, Arun",  # additional title
         "Rai, Arun; Straub, Detmar",  # incorrect delimiter
+        "Mathiassen, Lars and jonsson, katrin and Holmstrom, Jonny",  # author without capital letters
     ]
     for author_defect in author_defects:
         v1["author"] = author_defect
