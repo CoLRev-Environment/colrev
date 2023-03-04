@@ -20,6 +20,7 @@ def add_search_source(
     """Add a search source package_endpoint"""
 
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
 
     if Path(query).is_file():
         # pylint: disable=import-outside-toplevel
@@ -52,7 +53,11 @@ def add_search_source(
 
     results_list = []
     for endpoint_class in search_sources.values():
+        if search_operation.review_manager.verbose_mode:
+            search_operation.review_manager.logger.info(f"Test {endpoint_class}")
         res = endpoint_class.add_endpoint(search_operation, query)  # type: ignore
+        if search_operation.review_manager.verbose_mode:
+            search_operation.review_manager.logger.info(f"res={res}")
         if res:
             results_list.append(res)
 

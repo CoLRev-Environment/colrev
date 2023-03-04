@@ -255,21 +255,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if "backwardsearch" == query.replace("_", "").replace("-", ""):
-            filename = search_operation.get_unique_filename(
-                file_path_string="pdf_backward_search"
-            )
-            # pylint: disable=no-value-for-parameter
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.pdf_backward_search",
-                filename=filename,
-                search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
-                search_parameters={
-                    "scope": {"colrev_status": "rev_included|rev_synthesized"},
-                },
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-                comment="",
-            )
-            return add_source
+            return cls.get_default_source()
 
         return None
 
