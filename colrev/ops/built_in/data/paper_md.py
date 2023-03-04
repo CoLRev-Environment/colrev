@@ -112,7 +112,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self.__create_non_sample_references_bib()
 
-        self.pandoc_image = "pandoc/ubuntu-latex:2.14"
+        self.pandoc_image = "pandoc/latex:3.0"
         data_operation.review_manager.environment_manager.build_docker_image(
             imagename=self.pandoc_image
         )
