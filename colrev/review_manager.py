@@ -365,14 +365,14 @@ class ReviewManager:
         return colrev.env.local_index.LocalIndex(verbose_mode=verbose_mode)
 
     @classmethod
-    def get_package_manager(  # type: ignore
-        cls, **kwargs
+    def get_package_manager(
+        cls, *, verbose_mode: bool = True
     ) -> colrev.env.package_manager.PackageManager:
         """Get a package manager object"""
 
         import colrev.env.package_manager
 
-        return colrev.env.package_manager.PackageManager(**kwargs)
+        return colrev.env.package_manager.PackageManager(verbose=verbose_mode)
 
     @classmethod
     def get_grobid_service(cls) -> colrev.env.grobid_service.GrobidService:

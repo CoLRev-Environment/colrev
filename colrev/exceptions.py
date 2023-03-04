@@ -457,6 +457,14 @@ class MissingDependencyError(CoLRevException):
         super().__init__(self.message)
 
 
+class DependencyConfigurationError(CoLRevException):
+    """The required dependency is not configured correctly."""
+
+    def __init__(self, dep: str) -> None:
+        self.message = f"{dep}"
+        super().__init__(self.message)
+
+
 class ServiceNotAvailableException(CoLRevException):
     """An environment service is not available."""
 

@@ -19,6 +19,7 @@ from yaml import safe_load
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 
 class EnvironmentManager:
@@ -180,8 +181,14 @@ class EnvironmentManager:
         try:
             client = docker.from_env()
             _ = client.version()
-        except docker.errors.DockerException:
-            pass
+        except docker.errors.DockerException as exc:
+            if "PermissionError" in exc.args[0]:
+                raise colrev_exceptions.DependencyConfigurationError(
+                    "Docker: Permission error. Run "
+                    f"{colors.ORANGE}sudo gpasswd -a $USER docker && "
+                    f"newgrp docker{colors.END}"
+                )
+            raise colrev_exceptions.MissingDependencyError("Docker")
 
     def _get_status(
         self, *, review_manager: colrev.review_manager.ReviewManager

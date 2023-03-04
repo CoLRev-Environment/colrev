@@ -23,7 +23,7 @@ Compared to other environments, the following features stand out:
 Getting started
 ---------------------------------------
 
-After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_:
+After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_ (Docker is optional but recommended):
 
 
 .. code-block::

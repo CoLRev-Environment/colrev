@@ -30,6 +30,7 @@ colrev.exceptions
       CuratedOutletNotUnique
       DataException
       DedupeError
+      DependencyConfigurationError
       DirtyRepoAfterProcessingError
       DuplicateIDsError
       FieldValueError

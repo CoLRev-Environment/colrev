@@ -126,6 +126,15 @@ class Initializer:
                 "Global git variables (user name and email) not available."
             )
 
+        try:
+            environment_manager.check_docker_installed()
+        except colrev_exceptions.MissingDependencyError as exc:
+            if not self.light:
+                raise colrev_exceptions.CoLRevException(
+                    f"Docker not installed. To init a repository without Docker, run "
+                    f"{colors.ORANGE}colrev init --light{colors.END}"
+                ) from exc
+
     def __setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev-init_logger")
@@ -257,16 +266,28 @@ class Initializer:
             )
 
         if self.light:
-            if [
+            settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
-                if x["endpoint"] in ["colrev_built_in.paper_md"]
-            ]:
-                settings.data.data_package_endpoints = [
-                    x
-                    for x in settings.data.data_package_endpoints
-                    if x["endpoint"] not in ["colrev_built_in.paper_md"]
+                if x["endpoint"] not in ["colrev_built_in.paper_md"]
+            ]
+            settings.sources = [
+                x
+                for x in settings.sources
+                if x.endpoint not in ["colrev_built_in.pdfs_dir"]
+            ]
+
+            settings.pdf_prep.pdf_prep_package_endpoints = [
+                x
+                for x in settings.pdf_prep.pdf_prep_package_endpoints
+                if x["endpoint"]
+                not in [
+                    "colrev_built_in.pdf_check_ocr",
+                    "colrev_built_in.remove_coverpage",
+                    "colrev_built_in.remove_last_page",
+                    "colrev_built_in.create_tei",
                 ]
+            ]
 
         self.review_manager.save_settings()
 

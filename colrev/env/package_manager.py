@@ -448,7 +448,8 @@ class PackageManager:
 
     package: typing.Dict[str, typing.Dict[str, typing.Dict]]
 
-    def __init__(self) -> None:
+    def __init__(self, *, verbose: bool = False) -> None:
+        self.verbose = verbose
         self.packages = self.__load_package_endpoints_index()
         self.__flag_installed_packages()
 
@@ -485,7 +486,13 @@ class PackageManager:
                         package_type=package_type, package_identifier=package_identifier
                     )
                     package["installed"] = True
-                except (AttributeError, ModuleNotFoundError):
+                except (AttributeError, ModuleNotFoundError) as exc:
+                    if hasattr(exc, "name"):
+                        if package_identifier.split(".")[0] != exc.name:  # type: ignore
+                            if self.verbose:
+                                raise exc
+                            print(f"Error loading package {package_identifier}: {exc}")
+
                     package["installed"] = False
 
     def __replace_path_by_str(self, *, orig_dict):  # type: ignore
