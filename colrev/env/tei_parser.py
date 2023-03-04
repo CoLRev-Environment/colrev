@@ -675,8 +675,19 @@ class TEIParser:
                         entrytype = "book"
         return entrytype
 
-    def get_bibliography(self) -> list:
+    def __get_tei_id_count(self, *, tei_id: str) -> int:
+        count = 0
+
+        for reference in self.root.iter(self.ns["tei"] + "ref"):
+            if "target" in reference.keys():
+                if reference.get("target") == f"#{tei_id}":
+                    count += 1
+
+        return count
+
+    def get_bibliography(self, *, min_intext_citations: int = 0) -> list:
         """Get the bibliography (references section) as a list of record dicts"""
+        # Note : could also allow top-10 % of most frequent in-text citations
 
         bibliographies = self.root.iter(self.ns["tei"] + "listBibl")
         tei_bib_db = []
@@ -687,6 +698,14 @@ class TEIParser:
                     tei_id = self.__get_reference_bibliography_tei_id(
                         reference=reference
                     )
+
+                    if min_intext_citations > 0:
+                        if (
+                            self.__get_tei_id_count(tei_id=tei_id)
+                            < min_intext_citations
+                        ):
+                            continue
+
                     if "article" == entrytype:
                         ref_rec = {
                             "ID": tei_id,
