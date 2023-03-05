@@ -25,12 +25,14 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 
    # Install
    pip install colrev
-   # Optional: install autocompletion (Bash, Zsh, Fish):
-   colrev install-click
+
+Docker is optional but recommended. It efficiently runs containers that would otherwise require complex setup and configuration (such as GROBID, Zotero translators, Pandoc, OCRMyPDF, bibutils). To run CoLRev without this functionality, CoLRev automatically detects whether Docker is available and suggests to setup repositories with the `light` option (`colrev init --light`).
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks
 On Windows, Docker must be started before using CoLRev. This can be done manually or automatically based on the Settings (General/Start Docker Desktop when you log in).
-Extensions are available in the `extensions section <manual/A_appendix.html#extension>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+
+..
+    Extensions are available in the `extensions section <manual/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 **Python venv**
 

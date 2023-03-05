@@ -17,7 +17,7 @@ Compared to other environments, the following features stand out:
 - offers a **self-explanatory, fault-tolerant, and configurable** user workflow
 - implements a granular **data provenance** model and **robust identification** schemes
 - provides **end-to-end process support** and allows you to **plug in state-of-the-art tools**
-- enables **typological and methodological pluralism** throughout the process
+- enables **typological and methodological pluralism** throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
 - operates a **built-in model for content curation** and reuse
 
 Getting started

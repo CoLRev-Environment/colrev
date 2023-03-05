@@ -25,8 +25,8 @@ The endpoints for extensions are documented in the `extension endpoints <../tech
 
 Registered extensions are public Python packages that can be installed via PyPI.
 They contain an ``endpoints.json`` file in the top-level directory (`colrev_built_in <https://github.com/CoLRev-Ecosystem/colrev/blob/main/endpoints.json>`_ provides an example).
-To register a new extension, create a pull request briefly describing the extension and adding it to the [packages.json](https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/packages.json).
-When the review is passed, the details will be added to the [package_endpoints.json](https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_endpoints.json), which also makes them available in the documentation.
+To register a new extension, create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/packages.json>`_.
+When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
 
 
 ..

@@ -131,7 +131,10 @@ class Initializer:
         except colrev_exceptions.MissingDependencyError as exc:
             if not self.light:
                 raise colrev_exceptions.CoLRevException(
-                    f"Docker not installed. To init a repository without Docker, run "
+                    "Docker not installed. Docker is optional but recommended.\n"
+                    "For more information, see "
+                    "https://colrev.readthedocs.io/en/latest/manual/manual.html"
+                    "To init a repository without Docker, run "
                     f"{colors.ORANGE}colrev init --light{colors.END}"
                 ) from exc
 
