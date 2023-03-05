@@ -387,6 +387,19 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             return record
 
         retrieved_record_dict = {}
+        added_colrev_pdf_id = False
+        # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
+        if "file" in record.data and "colrev_pdf_id" not in record.data:
+            pdf_path = Path(
+                prep_operation.review_manager.path / Path(record.data["file"])
+            )
+            record.data.update(
+                colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
+                    review_manager=prep_operation.review_manager, pdf_path=pdf_path
+                )
+            )
+            added_colrev_pdf_id = True
+
         try:
             retrieved_record_dict = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
@@ -432,6 +445,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     return record
             except colrev_exceptions.NotTOCIdentifiableException:
                 return record
+        finally:
+            if added_colrev_pdf_id:
+                del record.data["colrev_pdf_id"]
 
         retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
         if "colrev_status" in retrieved_record.data:

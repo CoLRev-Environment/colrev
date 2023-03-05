@@ -5,6 +5,7 @@ from __future__ import annotations
 import collections
 import re
 from dataclasses import dataclass
+from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
 
 import requests
@@ -48,7 +49,12 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         self.same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
-        self.session = prep_operation.review_manager.get_cached_session()
+        try:
+            self.session = prep_operation.review_manager.get_cached_session()
+        except OperationalError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="sqlite-requests-cache"
+            ) from exc
         _, self.email = prep_operation.review_manager.get_committer()
 
     @timeout_decorator.timeout(60, use_signals=False)

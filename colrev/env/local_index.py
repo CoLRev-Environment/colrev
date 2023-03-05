@@ -68,7 +68,7 @@ class LocalIndex:
         "url",
         "doi",
         "dblp_key",
-        "corlev_pdf_id",
+        "colrev_pdf_id",
         "bibtex",
         "layered_fields"
         # "curation_ID"
@@ -1067,13 +1067,17 @@ class LocalIndex:
         if not retrieved_record_dict:
             remove_colrev_id = False
             if "colrev_id" not in record_dict:
-                record_dict["colrev_id"] = colrev.record.Record(
-                    data=record_dict
-                ).create_colrev_id()
-                remove_colrev_id = True
+                try:
+                    record_dict["colrev_id"] = colrev.record.Record(
+                        data=record_dict
+                    ).create_colrev_id()
+                    remove_colrev_id = True
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
+                    pass
             for key, value in record_dict.items():
                 if key not in self.global_keys or "ID" == key:
                     continue
+
                 retrieved_record_dict = self.__get_item_from_index(
                     index_name=self.RECORD_INDEX, key=key, value=value
                 )

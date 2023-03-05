@@ -456,7 +456,7 @@ class PDFGet(colrev.operation.Operation):
             self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
             if (
                 colrev.record.RecordState.rev_prescreen_included
-                == record.data["colrev_status"]
+                == record["colrev_status"]
             ):
                 record["colrev_status"] = colrev.record.RecordState.pdf_imported
 
@@ -546,7 +546,7 @@ class PDFGet(colrev.operation.Operation):
                     ):
                         if (
                             colrev.record.RecordState.rev_prescreen_included
-                            == record.data["colrev_status"]
+                            == record["colrev_status"]
                         ):
                             record[
                                 "colrev_status"

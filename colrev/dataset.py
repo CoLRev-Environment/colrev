@@ -813,9 +813,6 @@ class Dataset:
 
         for record_id in tqdm(list(records.keys())):
             record_dict = records[record_id]
-            record = colrev.record.Record(data=record_dict)
-            if record.masterdata_is_curated():
-                continue
             if selected_ids is not None:
                 if record_id not in selected_ids:
                     continue
