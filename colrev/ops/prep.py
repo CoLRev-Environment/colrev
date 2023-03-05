@@ -15,6 +15,7 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import timeout_decorator
+from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
 
 import colrev.env.utils
@@ -24,6 +25,7 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=too-many-lines
 
 # logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
@@ -894,66 +896,86 @@ class Prep(colrev.operation.Operation):
 
         prep_commit_id = "HEAD"
 
-        for i, prep_round in enumerate(self.review_manager.settings.prep.prep_rounds):
+        try:
+            for i, prep_round in enumerate(
+                self.review_manager.settings.prep.prep_rounds
+            ):
 
-            self.__setup_prep_round(i=i, prep_round=prep_round)
+                self.__setup_prep_round(i=i, prep_round=prep_round)
 
-            preparation_data = self.__get_preparation_data(
-                prep_round=prep_round, debug_file=debug_file, debug_ids=debug_ids
-            )
-            previous_preparation_data = deepcopy(preparation_data)
-
-            if len(preparation_data) == 0:
-                self.review_manager.logger.info("No records to prepare.")
-                print()
-                return
-
-            if self.debug_mode or __unit_testing:
-                # Note: preparation_data is not turned into a list of records.
-                prepared_records = []
-                for item in preparation_data:
-                    record = self.prepare(item)
-                    prepared_records.append(record)
-            else:
-
-                prep_pe_names = [
-                    r["endpoint"] for r in prep_round.prep_package_endpoints
-                ]
-                if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
-                    self.review_manager.logger.info(
-                        "Info: The language detector requires RAM and may take longer"
-                    )
-                    pool = Pool(mp.cpu_count() // 2)
-                else:
-                    # Note : if we use too many CPUS, a "too many open files" exception is thrown
-                    pool = Pool(cpu)
-                prepared_records = pool.map(self.prepare, preparation_data)
-                pool.close()
-                pool.join()
-
-            self.__log_record_change_scores(
-                preparation_data=previous_preparation_data,
-                prepared_records=prepared_records,
-            )
-
-            if not self.debug_mode:
-                self.review_manager.dataset.save_records_dict(
-                    records={r["ID"]: r for r in prepared_records}, partial=True
+                preparation_data = self.__get_preparation_data(
+                    prep_round=prep_round, debug_file=debug_file, debug_ids=debug_ids
                 )
+                previous_preparation_data = deepcopy(preparation_data)
 
-                self.__log_details(prepared_records=prepared_records)
-
-                self.review_manager.create_commit(
-                    msg=f"Prepare records ({prep_round.name})",
-                )
-                prep_commit_id = (
-                    self.review_manager.dataset.get_repo().head.commit.hexsha
-                )
-                if not self.review_manager.high_level_operation:
+                if len(preparation_data) == 0:
+                    self.review_manager.logger.info("No records to prepare.")
                     print()
-            self.review_manager.reset_report_logger()
+                    return
 
-            self.__print_stats()
+                if self.debug_mode or __unit_testing:
+                    # Note: preparation_data is not turned into a list of records.
+                    prepared_records = []
+                    for item in preparation_data:
+                        record = self.prepare(item)
+                        prepared_records.append(record)
+                else:
+
+                    prep_pe_names = [
+                        r["endpoint"] for r in prep_round.prep_package_endpoints
+                    ]
+                    if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
+                        self.review_manager.logger.info(
+                            "Info: The language detector requires RAM and may take longer"
+                        )
+                        pool = Pool(mp.cpu_count() // 2)
+                    else:
+                        # Note : if we use too many CPUS,
+                        # a "too many open files" exception is thrown
+                        pool = Pool(cpu)
+                    prepared_records = pool.map(self.prepare, preparation_data)
+                    pool.close()
+                    pool.join()
+
+                self.__log_record_change_scores(
+                    preparation_data=previous_preparation_data,
+                    prepared_records=prepared_records,
+                )
+
+                if not self.debug_mode:
+                    self.review_manager.dataset.save_records_dict(
+                        records={r["ID"]: r for r in prepared_records}, partial=True
+                    )
+
+                    self.__log_details(prepared_records=prepared_records)
+
+                    self.review_manager.create_commit(
+                        msg=f"Prepare records ({prep_round.name})",
+                    )
+                    prep_commit_id = (
+                        self.review_manager.dataset.get_repo().head.commit.hexsha
+                    )
+                    if not self.review_manager.high_level_operation:
+                        print()
+                self.review_manager.reset_report_logger()
+
+                self.__print_stats()
+
+        except requests_ConnectionError as exc:
+            if "OSError(24, 'Too many open files" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Too many files opened (OSError, Errno24). "
+                    "To use a smaller number of parallel processes, run colrev prep --cpu 1"
+                ) from exc
+            raise exc
+
+        except OSError as exc:
+            if 24 == exc.errno:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Too many files opened (OSError, Errno24). "
+                    "To use a smaller number of parallel processes, run colrev prep --cpu 1"
+                ) from exc
+            raise exc
 
         if not keep_ids and not self.debug_mode:
             self.review_manager.logger.info("Set record IDs")

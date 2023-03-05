@@ -630,14 +630,6 @@ def prep(
         if verbose:
             raise exc
         print(exc)
-    except OSError as exc:
-        if 24 == exc.errno:
-            prep_operation.review_manager.logger.error(
-                "Too many files opened (OSError, Errno24). "
-                "To use a smaller number of parallel processes, run colrev prep --cpu 2"
-            )
-        else:
-            raise exc
 
 
 @main.command(help_priority=7)
