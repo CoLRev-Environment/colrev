@@ -86,6 +86,7 @@ class LocalIndex:
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         self.__index_tei = True
         self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
+        self.__sqlite_connection.row_factory = self.__dict_factory
         self.__thread_lock = Lock()
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
@@ -765,6 +766,7 @@ class LocalIndex:
 
         Path(self.SQLITE_PATH).unlink()
         self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
+        self.__sqlite_connection.row_factory = self.__dict_factory
         cur = self.__sqlite_connection.cursor()
         cur.execute(f"drop table if exists {self.RECORD_INDEX}")
         cur.execute(
