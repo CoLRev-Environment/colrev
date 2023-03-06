@@ -1,0 +1,6 @@
+[run]
+omit =
+    # omit reference implementation
+    colrev/ops/built_in/*
+    # omit everything in /usr
+    /usr/*
