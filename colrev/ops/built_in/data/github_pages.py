@@ -110,9 +110,12 @@ class GithubPages(JsonSchemaMixin):
         )
         data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
 
-    def __update_data(self, *, data_operation: colrev.ops.data.Data) -> None:
+    def __update_data(
+        self, *, data_operation: colrev.ops.data.Data, silent_mode: bool
+    ) -> None:
 
-        data_operation.review_manager.logger.info("Update data on github pages")
+        if not silent_mode:
+            data_operation.review_manager.logger.info("Update data on github pages")
         records = data_operation.review_manager.dataset.load_records_dict()
 
         # pylint: disable=duplicate-code
@@ -134,9 +137,14 @@ class GithubPages(JsonSchemaMixin):
         data_operation.review_manager.create_commit(msg="Update sample")
 
     def __push_branch(
-        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
+        self,
+        *,
+        data_operation: colrev.ops.data.Data,
+        git_repo: git.Repo,
+        silent_mode: bool,
     ) -> None:
-        data_operation.review_manager.logger.info("Push to github pages")
+        if not silent_mode:
+            data_operation.review_manager.logger.info("Push to github pages")
         if "origin" in git_repo.remotes:
             if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
                 git_repo.git.push("origin", self.GH_PAGES_BRANCH_NAME, "--no-verify")
@@ -153,18 +161,20 @@ class GithubPages(JsonSchemaMixin):
                 .replace(".git", "")
                 .split("/")
             )
-            data_operation.review_manager.logger.info(
-                f"Data available at: https://{username}.github.io/{project}/"
-            )
+            if not silent_mode:
+                data_operation.review_manager.logger.info(
+                    f"Data available at: https://{username}.github.io/{project}/"
+                )
         else:
-            data_operation.review_manager.logger.info("No remotes specified")
+            if not silent_mode:
+                data_operation.review_manager.logger.info("No remotes specified")
 
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
-        silent_mode: bool,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the data/github pages"""
 
@@ -184,10 +194,14 @@ class GithubPages(JsonSchemaMixin):
 
         git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
 
-        self.__update_data(data_operation=data_operation)
+        self.__update_data(data_operation=data_operation, silent_mode=silent_mode)
 
         if self.settings.auto_push:
-            self.__push_branch(data_operation=data_operation, git_repo=git_repo)
+            self.__push_branch(
+                data_operation=data_operation,
+                git_repo=git_repo,
+                silent_mode=silent_mode,
+            )
 
         git_repo.git.checkout(active_branch)
 

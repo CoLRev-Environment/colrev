@@ -410,6 +410,7 @@ class LocalIndex:
             "grobid-version",
             "excl_criteria",
             "exclusion_criteria",
+            "screening_criteria",
             "local_curated_metadata",
             "metadata_source_repository_paths",
         )
