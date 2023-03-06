@@ -658,7 +658,7 @@ class Load(colrev.operation.Operation):
                 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
                 doi_match = re.match(r"^10.\d{4,9}\/", record["doi"])
                 if not doi_match:
-                    self.review_manager.logger.info("remove doi (not matching regex)")
+                    self.review_manager.logger.info(f"remove doi (not matching regex): {record['doi']}")
                     del record["doi"]
 
             self.review_manager.logger.debug(

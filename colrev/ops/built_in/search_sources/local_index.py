@@ -393,12 +393,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             pdf_path = Path(
                 prep_operation.review_manager.path / Path(record.data["file"])
             )
-            record.data.update(
-                colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=prep_operation.review_manager, pdf_path=pdf_path
+            if pdf_path.is_file():
+                record.data.update(
+                    colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
+                        review_manager=prep_operation.review_manager, pdf_path=pdf_path
+                    )
                 )
-            )
-            added_colrev_pdf_id = True
+                added_colrev_pdf_id = True
 
         try:
             retrieved_record_dict = self.local_index.retrieve(

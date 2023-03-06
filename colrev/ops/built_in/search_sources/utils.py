@@ -145,6 +145,8 @@ def json_to_record(*, item: dict) -> dict:
             # other languages/more systematically
             if "en" == record_dict["language"]:
                 record_dict["language"] = record_dict["language"].replace("en", "eng")
+            if "fr" == record_dict["language"]:
+                record_dict["language"] = record_dict["language"].replace('fr', 'fra')
 
     if (
         not any(x in item for x in ["published-print", "published"])
@@ -162,6 +164,8 @@ def json_to_record(*, item: dict) -> dict:
         for update_item in item["update-to"]:
             if update_item["type"] == "retraction":
                 record_dict["warning"] = "retracted"
+    if "(retracted)" in record_dict.get('title', '').lower():
+        record_dict["warning"] = "retracted"
 
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")

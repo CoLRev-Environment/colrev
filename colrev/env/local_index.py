@@ -865,7 +865,7 @@ class LocalIndex:
         # pylint: disable=too-many-locals
 
         # 1. get TOC
-        toc_items = []
+        toc_items, toc_key = [], "NA"
         try:
             toc_key = colrev.record.Record(data=record_dict).get_toc_key()
         except colrev_exceptions.NotTOCIdentifiableException as exc:

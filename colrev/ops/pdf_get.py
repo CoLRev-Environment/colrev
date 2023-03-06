@@ -552,10 +552,11 @@ class PDFGet(colrev.operation.Operation):
                                 "colrev_status"
                             ] = colrev.record.RecordState.pdf_imported
                     else:
-                        print(
-                            "Warning: record with file field but no existing PDF "
+                        self.review_manager.logger.warning(
+                            "Remove non-existent file link "
                             f'({record["ID"]}: {record["file"]}'
                         )
+                        colrev.record.Record(data=record).remove_field(key="file")
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 

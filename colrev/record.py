@@ -1398,9 +1398,7 @@ class Record:
                     defect_field_keys.append(key)
                 elif len(self.data[key]) < 5:
                     defect_field_keys.append(key)
-                elif "�" in str(self.data[key]):
-                    defect_field_keys.append(key)
-                elif "http" in str(self.data[key]):
+                elif any(x in str(self.data[key]) for x in ["�", "http", "University"]):
                     defect_field_keys.append(key)
 
             if "title" == key:
