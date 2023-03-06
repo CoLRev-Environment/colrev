@@ -180,7 +180,7 @@ class PDFPrep(colrev.operation.Operation):
             ) as err:
                 self.review_manager.logger.error(
                     f'Error for {record.data["ID"]} '  # type: ignore
-                    f"(in {endpoint.settings.endpoint} : {err})"
+                    f"(in {endpoint.settings.endpoint} : {err})"  # type: ignore
                 )
                 record.data[
                     "colrev_status"
