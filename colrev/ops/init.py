@@ -202,6 +202,10 @@ class Initializer:
                 Path(".pre-commit-config.yaml"),
             ],
             [Path("template/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
+            [
+                Path("template/init/pre-commit.yml"),
+                Path(".github/workflows/pre-commit.yml"),
+            ],
             [Path("template/init/gitattributes"), Path(".gitattributes")],
             [Path("template/init/gitignore"), Path(".gitignore")],
             [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
@@ -325,6 +329,7 @@ class Initializer:
             ".markdownlint.yaml",
             "LICENSE.txt",
             "data/records.bib",
+            ".github/workflows/pre-commit.yml",
         ]
         for file_to_add in files_to_add:
             self.review_manager.dataset.add_changes(path=Path(file_to_add))

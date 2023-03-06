@@ -1,5 +1,10 @@
 default_language_version:
     python: python3
+
+# colrev hooks are not (yet) available in pre-commit-ci
+ci:
+    skip: [colrev-hooks-format, colrev-hooks-check]
+
 repos:
 -   repo: local
     hooks:

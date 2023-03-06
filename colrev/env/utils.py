@@ -17,6 +17,7 @@ def retrieve_package_file(*, template_file: Path, target: Path) -> None:
     """Retrieve a file from the CoLRev package"""
     filedata = pkgutil.get_data("colrev", str(template_file))
     if filedata:
+        target.parent.mkdir(exist_ok=True, parents=True)
         with open(target, "w", encoding="utf8") as file:
             file.write(filedata.decode("utf-8"))
         return

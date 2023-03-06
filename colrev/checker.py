@@ -153,7 +153,7 @@ class Checker:
                 f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
 
-        if os.getenv("GITHUB_ACTIONS") != "true":
+        if not self.review_manager.in_ci_environment():
             pch_file = Path(".git/hooks/pre-commit")
             if pch_file.is_file():
                 with open(pch_file, encoding="utf8") as file:
