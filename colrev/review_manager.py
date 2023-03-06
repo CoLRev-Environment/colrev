@@ -702,6 +702,18 @@ class ReviewManager:
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
 
+    def in_ci_environment(self, *, identifier: str = None) -> bool:
+        """Check whether CoLRev runs in a continuous-integration environment"""
+
+        if identifier:
+            if "GITHUB_ACTIONS" == identifier:
+                return "true" == os.getenv("GITHUB_ACTIONS")
+
+        return any(
+            "true" == os.getenv(x)
+            for x in ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
+        )
+
 
 if __name__ == "__main__":
     pass

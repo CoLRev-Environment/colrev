@@ -65,6 +65,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_upgrade
       ~ReviewManager.get_validate_operation
       ~ReviewManager.get_zotero_translation_service
+      ~ReviewManager.in_ci_environment
       ~ReviewManager.in_virtualenv
       ~ReviewManager.load_settings
       ~ReviewManager.notify

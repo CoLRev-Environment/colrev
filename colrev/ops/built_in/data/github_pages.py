@@ -178,6 +178,12 @@ class GithubPages(JsonSchemaMixin):
     ) -> None:
         """Update the data/github pages"""
 
+        if data_operation.review_manager.in_ci_environment():
+            data_operation.review_manager.logger.error(
+                "Running in CI environment. Skipping github-pages generation."
+            )
+            return
+
         if data_operation.review_manager.dataset.has_changes():
             data_operation.review_manager.logger.error(
                 "Cannot update github pages because there are uncommited changes."
