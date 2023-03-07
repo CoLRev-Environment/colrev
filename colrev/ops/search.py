@@ -7,6 +7,7 @@ import time
 from copy import deepcopy
 from pathlib import Path
 from random import randint
+from typing import Optional
 
 import requests
 from pybtex.database.input import bibtex
@@ -104,7 +105,7 @@ class Search(colrev.operation.Operation):
             )
 
     def __get_search_sources(
-        self, *, selection_str: str = None
+        self, *, selection_str: Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
         sources_selected = self.sources
         if selection_str:
@@ -303,7 +304,11 @@ class Search(colrev.operation.Operation):
         return changed
 
     def main(
-        self, *, selection_str: str = None, rerun: bool, skip_commit: bool = False
+        self,
+        *,
+        selection_str: Optional[str] = None,
+        rerun: bool,
+        skip_commit: bool = False,
     ) -> None:
         """Search for records (main entrypoint)"""
 

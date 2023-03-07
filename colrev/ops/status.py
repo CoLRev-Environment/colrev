@@ -7,6 +7,7 @@ import io
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -73,7 +74,7 @@ class Status(colrev.operation.Operation):
         return analytics_dict
 
     def get_review_status_report(
-        self, *, records: dict = None, colors: bool = True
+        self, *, records: Optional[dict] = None, colors: bool = True
     ) -> str:
         """Get the review status report"""
 
@@ -107,7 +108,7 @@ class StatusStats:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        records: dict = None,
+        records: Optional[dict] = None,
     ) -> None:
         self.review_manager = review_manager
         colrev.operation.CheckOperation(review_manager=review_manager)

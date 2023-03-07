@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -16,8 +15,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods

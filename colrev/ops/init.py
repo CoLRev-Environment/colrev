@@ -12,6 +12,7 @@ from subprocess import CalledProcessError
 from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
+from typing import Optional
 
 import git
 
@@ -39,7 +40,7 @@ class Initializer:
         example: bool = False,
         light: bool = False,
         local_pdf_collection: bool = False,
-        target_path: Path = None,
+        target_path: Optional[Path] = None,
         exact_call: str = "",
     ) -> None:
         if review_type is None:

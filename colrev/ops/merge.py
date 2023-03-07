@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 from git.exc import GitCommandError
@@ -12,8 +11,11 @@ import colrev.env.utils
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

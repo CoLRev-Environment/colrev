@@ -13,6 +13,7 @@ from datetime import timedelta
 from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
+from typing import Optional
 
 import timeout_decorator
 from requests.exceptions import ConnectionError as requests_ConnectionError
@@ -293,10 +294,12 @@ class Prep(colrev.operation.Operation):
         if not self.review_manager.verbose_mode:
             # pylint: disable=redefined-outer-name,invalid-name
             with PREP_COUNTER.get_lock():
-                PREP_COUNTER.value += 1
+                PREP_COUNTER.value += 1  # type: ignore
             progress = ""
             if item["nr_items"] > 100:
-                progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(12, " ")
+                progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(  # type: ignore
+                    12, " "
+                )
 
             if record.preparation_break_condition():
                 if (
@@ -590,7 +593,7 @@ class Prep(colrev.operation.Operation):
         self,
         *,
         prep_round: colrev.settings.PrepRound,
-        debug_file: Path = None,
+        debug_file: Optional[Path] = None,
         debug_ids: str,
     ) -> list:
         if self.debug_mode:
@@ -660,7 +663,7 @@ class Prep(colrev.operation.Operation):
         return prior_records
 
     def __load_prep_data_for_debug(
-        self, *, debug_ids: str, debug_file: Path = None
+        self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
             with open(debug_file, encoding="utf8") as target_db:
@@ -709,7 +712,7 @@ class Prep(colrev.operation.Operation):
         # pylint: disable=redefined-outer-name,invalid-name
         PREP_COUNTER = Value("i", 0)
         with PREP_COUNTER.get_lock():
-            PREP_COUNTER.value = 0
+            PREP_COUNTER.value = 0  # type: ignore
 
         self.first_round = bool(i == 0)
 
@@ -850,7 +853,7 @@ class Prep(colrev.operation.Operation):
         *,
         keep_ids: bool = False,
         debug_ids: str = "NA",
-        debug_file: Path = None,
+        debug_file: Optional[Path] = None,
         cpu: int = 4,
     ) -> None:
         """Preparation of records (main entrypoint)"""

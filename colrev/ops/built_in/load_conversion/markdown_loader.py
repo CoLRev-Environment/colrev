@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -12,8 +11,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
-if TYPE_CHECKING:
-    import colrev.ops.load
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument

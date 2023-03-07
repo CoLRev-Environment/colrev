@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing
+from typing import Optional
 
 import colrev.operation
 
@@ -16,7 +17,7 @@ class ReviewTypes:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        review_type: str = None,
+        review_type: Optional[str] = None,
     ) -> None:
         package_manager = review_manager.get_package_manager()
         check_operation = colrev.operation.CheckOperation(review_manager=review_manager)

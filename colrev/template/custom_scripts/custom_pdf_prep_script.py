@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
@@ -11,8 +10,11 @@ from dacite import from_dict
 import colrev.operation
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 

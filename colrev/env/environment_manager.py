@@ -6,6 +6,7 @@ import json
 import typing
 from pathlib import Path
 from subprocess import check_output
+from typing import Optional
 
 import docker
 import git
@@ -135,7 +136,9 @@ class EnvironmentManager:
             )
         return global_conf_details
 
-    def build_docker_image(self, *, imagename: str, image_path: Path = None) -> None:
+    def build_docker_image(
+        self, *, imagename: str, image_path: Optional[Path] = None
+    ) -> None:
         """Build a docker image"""
 
         try:

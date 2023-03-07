@@ -7,7 +7,6 @@ import typing
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -20,8 +19,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 # an option: https://pypi.org/project/csv-schema/

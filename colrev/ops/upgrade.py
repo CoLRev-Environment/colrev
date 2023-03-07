@@ -6,7 +6,6 @@ import json
 import typing
 from pathlib import Path
 from shutil import copytree
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import yaml
@@ -16,8 +15,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

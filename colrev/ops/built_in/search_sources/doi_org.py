@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from sqlite3 import OperationalError
-from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 import requests
@@ -15,8 +14,11 @@ import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)

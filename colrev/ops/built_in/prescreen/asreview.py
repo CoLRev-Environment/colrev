@@ -16,8 +16,9 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
+if False:  # pylint: disable=using-constant-test
+    if typing.TYPE_CHECKING:
+        import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

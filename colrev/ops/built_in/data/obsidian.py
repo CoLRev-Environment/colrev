@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -15,8 +14,11 @@ import colrev.env.utils
 import colrev.record
 
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

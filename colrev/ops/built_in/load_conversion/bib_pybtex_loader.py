@@ -7,15 +7,17 @@ import re
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
-if TYPE_CHECKING:
-    import colrev.ops.load
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument

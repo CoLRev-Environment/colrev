@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
@@ -11,8 +10,11 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
-if TYPE_CHECKING:
-    import colrev.ops.search.Search
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.search.Search
 
 
 @zope.interface.implementer(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from multiprocessing import Lock
-from typing import TYPE_CHECKING
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -13,8 +13,11 @@ import requests
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING  # pylint: disable=ungrouped-imports
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # Note: not implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -35,7 +38,10 @@ class WebsiteConnector:
     # pylint: disable=unused-argument
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict = None
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: Optional[dict] = None,
     ) -> None:
         self.zotero_lock = Lock()
 

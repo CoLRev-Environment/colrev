@@ -5,13 +5,15 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class PDFHashService:

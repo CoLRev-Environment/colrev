@@ -6,7 +6,7 @@ import typing
 from collections import Counter
 from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import git
 from git.exc import InvalidGitRepositoryError
@@ -14,8 +14,11 @@ from git.exc import NoSuchPathError
 
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager.ReviewManager
 
 
 class Advisor:
@@ -197,7 +200,7 @@ class Advisor:
                 }
 
     def __get_collaboration_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
         """Get instructions related to collaboration"""
 
@@ -515,7 +518,7 @@ class Advisor:
                 review_instructions.append(instruction)
 
     def get_review_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> list:
         """Get instructions related to the review (operations)"""
 
@@ -703,7 +706,7 @@ class Advisor:
         return environment_instructions
 
     def get_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
         """Get all instructions on the project"""
 

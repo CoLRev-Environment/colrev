@@ -7,7 +7,7 @@ import string
 import typing
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import pandas as pd
 
@@ -17,8 +17,11 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class Dedupe(colrev.operation.Operation):
@@ -433,7 +436,7 @@ class Dedupe(colrev.operation.Operation):
         *,
         results: list,
         complete_dedupe: bool = False,
-        preferred_masterdata_sources: list = None,
+        preferred_masterdata_sources: Optional[list] = None,
     ) -> None:
         """Apply automated deduplication decisions
 
@@ -707,7 +710,10 @@ class Dedupe(colrev.operation.Operation):
         return records
 
     def unmerge_records(
-        self, *, current_record_ids: list = None, previous_id_lists: list = None
+        self,
+        *,
+        current_record_ids: Optional[list] = None,
+        previous_id_lists: Optional[list] = None,
     ) -> None:
         """Unmerge duplicate decision of the records, as identified by their ids.
 

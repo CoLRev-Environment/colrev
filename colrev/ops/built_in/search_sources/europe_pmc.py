@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
-from typing import TYPE_CHECKING
+from typing import Optional
 from urllib.parse import quote
 from xml.etree.ElementTree import Element
 
@@ -25,8 +25,13 @@ import colrev.ops.search
 import colrev.record
 import colrev.settings
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+# pylint: disable=duplicate-code
+
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING  # pylint: disable=ungrouped-imports
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 
 # pylint: disable=unused-argument
@@ -74,7 +79,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict = None,
+        settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # EuropePMC as a search_source

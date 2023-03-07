@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Optional
 from xml.etree.ElementTree import Element
 
 import requests
@@ -38,8 +39,8 @@ class TEIParser:
         self,
         *,
         environment_manager: colrev.env.environment_manager.EnvironmentManager,
-        pdf_path: Path = None,
-        tei_path: Path = None,
+        pdf_path: Optional[Path] = None,
+        tei_path: Optional[Path] = None,
     ):
         """Creates a TEI file
         modes of operation:

@@ -7,7 +7,6 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -18,8 +17,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @dataclass

@@ -6,7 +6,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -17,8 +16,11 @@ from pdfminer.pdftypes import PDFException
 import colrev.env.package_manager
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_get
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_get
 
 # pylint: disable=too-few-public-methods
 

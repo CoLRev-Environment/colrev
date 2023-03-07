@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
+from typing import Optional
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element
 
@@ -46,7 +47,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict = None,
+        settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # Pubmed as a search_source

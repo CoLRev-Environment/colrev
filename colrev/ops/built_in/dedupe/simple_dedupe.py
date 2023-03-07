@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -15,8 +14,11 @@ import colrev.ops.built_in.dedupe.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -220,8 +221,8 @@ class Data(colrev.operation.Operation):
     def main(
         self,
         *,
-        selection_list: list = None,
-        records: dict = None,
+        selection_list: Optional[list] = None,
+        records: Optional[dict] = None,
         silent_mode: bool = False,
     ) -> dict:
         """Data operation (main entrypoint)

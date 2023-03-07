@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import requests
 import zope.interface
@@ -16,8 +16,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -43,7 +46,10 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     __open_library_md_filename = Path("data/search/md_open_library.bib")
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict = None
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # OpenLibrary as a search_source

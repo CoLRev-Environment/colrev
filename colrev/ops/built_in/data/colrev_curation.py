@@ -7,7 +7,6 @@ import os
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -18,8 +17,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

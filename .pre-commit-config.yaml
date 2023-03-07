@@ -33,8 +33,8 @@ repos:
     rev: 6.0.0
     hooks:
     -   id: flake8
-        additional_dependencies: [flake8-typing-imports==1.9.0]
-        args: ['--max-line-length=110', '--extend-ignore=E203', '--min-python-version=3.8.0']
+        additional_dependencies: [flake8-typing-imports==1.12.0]
+        args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v3.9.0
     hooks:
@@ -46,7 +46,7 @@ repos:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.0.1'  # Use the sha / tag you want to point at
+    rev: 'v1.0.1'
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]

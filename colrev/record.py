@@ -12,7 +12,7 @@ import typing
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import dictdiffer
 import pandas as pd
@@ -36,8 +36,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods
@@ -297,7 +300,7 @@ class Record:
             for x in self.data.get("colrev_origin", [])
         )
 
-    def get_value(self, *, key: str, default: str = None) -> str:
+    def get_value(self, *, key: str, default: Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
         if default is not None:
             try:
@@ -680,7 +683,7 @@ class Record:
         *,
         merging_record: Record,
         default_source: str,
-        preferred_masterdata_source_prefixes: list = None,
+        preferred_masterdata_source_prefixes: Optional[list] = None,
     ) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
@@ -1325,7 +1328,7 @@ class Record:
                 continue
 
             if key in self.identifying_field_keys:
-                if not self.masterdata_is_curated:
+                if not self.masterdata_is_curated():
                     self.add_masterdata_provenance(key=key, source=source_info, note="")
             else:
                 self.add_data_provenance(key=key, source=source_info, note="")
@@ -1443,7 +1446,10 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, *, also_known_as_record: dict = None, assume_complete: bool = False
+        self,
+        *,
+        also_known_as_record: Optional[dict] = None,
+        assume_complete: bool = False,
     ) -> str:
         """Returns the colrev_id of the Record.
         If a also_known_as_record is provided, it returns the colrev_id of the
@@ -1651,7 +1657,9 @@ class Record:
         for key in to_drop:
             self.remove_field(key=key)
 
-    def extract_text_by_page(self, *, pages: list = None, project_path: Path) -> str:
+    def extract_text_by_page(
+        self, *, pages: Optional[list] = None, project_path: Path
+    ) -> str:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
@@ -1711,7 +1719,7 @@ class Record:
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Path = None
+        self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
     ) -> None:
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data["file"])
@@ -1841,7 +1849,7 @@ class Record:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        filepath: Path = None,
+        filepath: Optional[Path] = None,
         PAD: int = 40,
     ) -> None:
         """Record pdf-get-man decision"""
@@ -2064,7 +2072,7 @@ class Record:
                     )
 
     def update_masterdata_provenance(
-        self, *, masterdata_restrictions: dict = None
+        self, *, masterdata_restrictions: Optional[dict] = None
     ) -> None:
         """Update the masterdata provenance"""
         # pylint: disable=too-many-branches
@@ -2821,9 +2829,9 @@ class RecordStateModel:
     def __init__(
         self,
         *,
-        state: RecordState = None,
-        operation: colrev.operation.OperationsType = None,
-        review_manager: colrev.review_manager.ReviewManager = None,
+        state: Optional[RecordState] = None,
+        operation: Optional[colrev.operation.OperationsType] = None,
+        review_manager: Optional[colrev.review_manager.ReviewManager] = None,
     ) -> None:
         if operation:
             start_states: list[str] = [

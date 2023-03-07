@@ -12,7 +12,7 @@ from importlib.metadata import version
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import requests
 import zope.interface
@@ -29,9 +29,12 @@ import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.search
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.search
+        import colrev.ops.prep
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -59,7 +62,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict = None
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # Crossref as a search_source
@@ -363,7 +369,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 record.add_masterdata_provenance_note(
                     key="journal", note="quality_defect:journal not in crossref"
                 )
-            # TODO : generally prefer container titles from crossref when merging?
 
         return record
 
