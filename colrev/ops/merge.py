@@ -119,7 +119,7 @@ class Merge(colrev.operation.Operation):
         if path in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
-            for (stage, blob) in unmerged_blobs[path]:
+            for stage, blob in unmerged_blobs[path]:
                 # stage == 1: common ancestor (often md_processed for prescreen)
                 # stage == 2: own branch
                 # stage == 3: other branch

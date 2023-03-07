@@ -42,7 +42,6 @@ class Dataset:
     __git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         self.review_manager = review_manager
         self.records_file = review_manager.path / self.RECORDS_FILE_RELATIVE
 
@@ -108,7 +107,6 @@ class Dataset:
         found_but_not_changed = False
         skipped_prior_commits = False  # if no commit_sha provided
         for commit in self.__git_repo.iter_commits():
-
             if commit_sha:
                 if not skipped_prior_commits:
                     if not found_but_not_changed:
@@ -671,11 +669,9 @@ class Dataset:
     def __generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
-
         # pylint: disable=too-many-branches
 
         try:
-
             retrieved_record = local_index.retrieve(record_dict=record_dict)
             temp_id = retrieved_record["ID"]
 
@@ -687,7 +683,6 @@ class Dataset:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-
             if "" != record_dict.get("author", record_dict.get("editor", "")):
                 authors_string = record_dict.get(
                     "author", record_dict.get("editor", "Anonymous")

@@ -42,7 +42,6 @@ class Initializer:
         target_path: Path = None,
         exact_call: str = "",
     ) -> None:
-
         if review_type is None:
             review_type = "literature_review"
 
@@ -162,14 +161,12 @@ class Initializer:
         return init_logger
 
     def __register_repo(self) -> None:
-
         self.review_manager.logger.info("Register CoLRev repository")
 
         environment_manager = self.review_manager.get_environment_manager()
         environment_manager.register_repo(path_to_register=Path.cwd())
 
     def __create_commit(self, *, saved_args: dict) -> None:
-
         del saved_args["local_pdf_collection"]
         self.review_manager.create_commit(
             msg="Initial commit",
@@ -335,7 +332,6 @@ class Initializer:
             self.review_manager.dataset.add_changes(path=Path(file_to_add))
 
     def __post_commit_edits(self) -> None:
-
         if "curated_masterdata" == self.review_type:
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
@@ -366,7 +362,6 @@ class Initializer:
             self.review_manager.logger.info("Completed setup.")
 
     def __setup_git(self) -> None:
-
         self.logger.info("Create CoLRev repository")
 
         self.logger.info("Set up git repository")
@@ -441,7 +436,6 @@ class Initializer:
         git_repo.index.add(["settings.json"])
 
     def __create_local_pdf_collection(self) -> None:
-
         self.review_manager.report_logger.handlers = []
 
         local_index = self.review_manager.get_local_index()

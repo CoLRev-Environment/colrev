@@ -50,7 +50,6 @@ class PDFHashService:
                 [command], stderr=subprocess.STDOUT, shell=True
             )
         except subprocess.CalledProcessError as exc:
-
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
         pdf_hash = ret.decode("utf-8").replace("\n", "")

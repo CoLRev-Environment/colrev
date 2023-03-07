@@ -32,7 +32,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     always_apply_changes = True
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
-
         self.settings = self.settings_class.load_settings(data=settings)
 
         # Note : Lingua is tested/evaluated relative to other libraries:
@@ -111,7 +110,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             len(record.data.get("title", "")) > 40
             and record.data.get("title", "").count("[") == 1
         ):
-
             confidence_values_part1 = (
                 self.language_detector.compute_language_confidence_values(
                     text=record.data["title"].split("[")[0]
@@ -201,7 +199,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # If language not in record, add language (always - needed in dedupe.)
         set_most_likely_language = False
         for lang, conf in confidence_values:
-
             predicted_language = "not-found"
             # Map to ISO 639-3 language code
             if lang.name.lower() in self.lang_code_mapping:

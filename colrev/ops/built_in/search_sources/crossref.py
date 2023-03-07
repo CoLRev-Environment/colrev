@@ -61,7 +61,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict = None
     ) -> None:
-
         if settings:
             # Crossref as a search_source
             self.search_source = from_dict(
@@ -192,7 +191,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __create_query_url(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool
     ) -> str:
-
         if jour_vol_iss_list:
             params = {"rows": "50"}
             container_title = re.sub(r"[\W]+", " ", record.data["journal"])
@@ -278,7 +276,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # Note : only returning a multiple-item list for jour_vol_iss_list
 
         try:
-
             record = record_input.copy_prep_rec()
 
             url = self.__create_query_url(
@@ -377,9 +374,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         timeout: int,
         safe_feed: bool,
     ) -> colrev.record.Record:
-
         try:
-
             retrieved_records = self.crossref_query(
                 review_manager=self.review_manager,
                 record_input=record,
@@ -475,7 +470,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __check_doi_masterdata(
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
-
         try:
             retrieved_record = self.__query_doi(doi=record.data["doi"])
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
@@ -551,7 +545,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         )
 
         if source.filename.name != self.__crossref_md_filename.name:
-
             if not any(x in source.search_parameters for x in ["query", "scope"]):
                 raise colrev_exceptions.InvalidQueryException(
                     "Crossref search_parameters requires a query or journal_issn field"
@@ -620,7 +613,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation: colrev.ops.search.Search,
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
-
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_changed = 0
@@ -680,7 +672,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-
         # pylint: disable=too-many-branches
 
         if rerun:
@@ -692,7 +683,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         nr_retrieved, nr_changed = 0, 0
 
         try:
-
             # for record_dict in tqdm(
             #     self.__get_crossref_query_return(),
             #     total=len(crossref_feed.feed_records),
@@ -704,7 +694,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 ):
                     continue
                 try:
-
                     crossref_feed.set_id(record_dict=record_dict)
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
@@ -777,7 +766,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
-        except (requests.exceptions.JSONDecodeError) as exc:
+        except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):

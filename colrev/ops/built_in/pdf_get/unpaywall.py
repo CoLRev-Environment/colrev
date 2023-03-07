@@ -48,7 +48,6 @@ class Unpaywall(JsonSchemaMixin):
         retry: int = 0,
         pdfonly: bool = True,
     ) -> str:
-
         url = f"https://api.unpaywall.org/v2/{doi}"
 
         try:

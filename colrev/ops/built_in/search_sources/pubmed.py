@@ -48,7 +48,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: dict = None,
     ) -> None:
-
         if settings:
             # Pubmed as a search_source
             self.search_source = from_dict(
@@ -142,7 +141,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         )
 
         if source.filename.name != self.__pubmed_md_filename.name:
-
             if "query" not in source.search_parameters:
                 raise colrev_exceptions.InvalidQueryException(
                     f"Source missing query search_parameter ({source.filename})"
@@ -188,7 +186,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     @classmethod
     def __pubmed_xml_to_record(cls, *, root: Element) -> dict:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
@@ -284,7 +281,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         return retrieved_record_dict
 
     def __get_pubmed_ids(self, query: str, retstart: int) -> typing.List[str]:
-
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
 
@@ -316,7 +312,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         """Retrieve records from Pubmed based on a query"""
 
         try:
-
             database = "pubmed"
             url = (
                 "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
@@ -357,9 +352,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         timeout: int,
         safe_feed: bool,
     ) -> colrev.record.Record:
-
         try:
-
             retrieved_record_dict = self.__pubmed_query_id(
                 pubmed_id=record.data["pubmedid"],
                 timeout=timeout,
@@ -475,7 +468,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         retstart = 0
         while True:
-
             pubmed_ids = self.__get_pubmed_ids(query=params["query"], retstart=retstart)
             if not pubmed_ids:
                 break
@@ -492,7 +484,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         pubmed_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-
         # pylint: disable=too-many-branches
 
         if rerun:
@@ -504,7 +495,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         nr_retrieved, nr_changed = 0, 0
 
         try:
-
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
@@ -512,7 +502,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 ):
                     continue
                 try:
-
                     pubmed_feed.set_id(record_dict=record_dict)
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
@@ -575,7 +564,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
-        except (requests.exceptions.JSONDecodeError) as exc:
+        except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
@@ -592,7 +581,6 @@ class PubMedSearchSource(JsonSchemaMixin):
         search_operation: colrev.ops.search.Search,
         pubmed_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
-
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_changed = 0

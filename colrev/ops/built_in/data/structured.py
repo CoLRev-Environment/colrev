@@ -74,7 +74,6 @@ Example 2:
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-
         if "version" not in settings:
             settings["version"] = "0.1"
 
@@ -184,9 +183,7 @@ Example 2:
             review_manager: colrev.review_manager.ReviewManager,
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
-
             if not self.data_path.is_file():
-
                 self.__set_fields()
 
                 field_names = [f["name"] for f in self.settings.fields]
@@ -277,7 +274,6 @@ Example 2:
         def get_structured_data_extracted(
             *, synthesized_record_status_matrix: typing.Dict, data_path: Path
         ) -> list:
-
             if not data_path.is_file():
                 return []
 

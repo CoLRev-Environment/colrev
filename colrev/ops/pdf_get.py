@@ -27,7 +27,6 @@ class PDFGet(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.pdf_get,
@@ -162,7 +161,6 @@ class PDFGet(colrev.operation.Operation):
         for (
             pdf_get_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
-
             endpoint_dict = self.package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
                 selected_packages=[pdf_get_package_endpoint],
@@ -332,7 +330,6 @@ class PDFGet(colrev.operation.Operation):
             msg = f"Check unlinked PDF: {file.relative_to(self.review_manager.path)}"
             self.review_manager.logger.info(msg)
             if file.stem not in records.keys():
-
                 tei = self.review_manager.get_tei(pdf_path=file)
                 pdf_record = tei.get_metadata()
 
@@ -499,7 +496,6 @@ class PDFGet(colrev.operation.Operation):
         return pdf_get_data
 
     def _print_stats(self, *, retrieved_record_list: list) -> None:
-
         self.retrieved = len([r for r in retrieved_record_list if "file" in r])
 
         self.not_retrieved = self.to_retrieve - self.retrieved
@@ -534,7 +530,6 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(not_retrieved_string)
 
     def __set_status_if_file_linked(self, *, records: dict) -> dict:
-
         for record in records.values():
             if record["colrev_status"] in [
                 colrev.record.RecordState.rev_prescreen_included,

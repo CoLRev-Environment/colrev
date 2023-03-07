@@ -53,11 +53,9 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-
         self.settings = self.settings_class.load_settings(data=settings)
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
-
         author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
         title_similarity = (
@@ -87,7 +85,6 @@ class CurationDedupe(JsonSchemaMixin):
         references: pd.DataFrame,
         min_similarity: float,
     ) -> tuple:
-
         # Fill out the similarity matrix first
         for base_entry_i in range(1, references.shape[0]):
             for comparison_entry_i in range(1, references.shape[0]):
@@ -103,7 +100,6 @@ class CurationDedupe(JsonSchemaMixin):
         tuples_to_process = []
         maximum_similarity = 1
         while True:
-
             maximum_similarity = np.amax(similarity_array)
             if maximum_similarity < min_similarity:
                 break
@@ -208,7 +204,6 @@ class CurationDedupe(JsonSchemaMixin):
         toc_items = self.__get_toc_items(records_list=source_records)
 
         for toc_item in toc_items:
-
             # Note : these would be potential errors (duplicates)
             # because they have the same selected_source
             processed_same_toc_same_source_records = [
@@ -330,7 +325,6 @@ class CurationDedupe(JsonSchemaMixin):
 
         # match based on overlapping  colrev_ids
         for toc_item in tqdm(toc_items):
-
             processed_same_toc_records = [
                 r
                 for r in records.values()
@@ -377,7 +371,6 @@ class CurationDedupe(JsonSchemaMixin):
     def __dedupe_pdf_source(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
     ) -> list[dict]:
-
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-nested-blocks
@@ -408,7 +401,6 @@ class CurationDedupe(JsonSchemaMixin):
         )
 
         for toc_item in tqdm(toc_items):
-
             processed_same_toc_records = [
                 r
                 for r in records.values()
@@ -491,7 +483,6 @@ class CurationDedupe(JsonSchemaMixin):
                     data=rec1
                 ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
                 if validation_info["validates"] or overlapping_colrev_ids:
-
                     # Note : make sure that we merge into the CURATED record
                     if "file" in rec1:
                         if tuple_to_process[0] not in [x["ID1"] for x in decision_list]:

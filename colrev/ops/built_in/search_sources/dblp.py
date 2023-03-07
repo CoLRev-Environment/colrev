@@ -77,7 +77,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: dict = None,
     ) -> None:
-
         if settings:
             # DBLP as a search_source
             self.search_source = from_dict(
@@ -384,7 +383,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         search_operation: colrev.ops.search.Search,
         dblp_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
-
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_changed = 0
@@ -443,7 +441,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         dblp_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-nested-blocks
@@ -461,7 +458,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 start = datetime.now().year - 2
 
             for year in range(start, datetime.now().year + 1):
-
                 search_operation.review_manager.logger.debug(f"Retrieve year {year}")
 
                 if "scope" in self.search_source.search_parameters:
@@ -534,7 +530,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                             nr_retrieved += 1
 
                         else:
-
                             changed = search_operation.update_existing_record(
                                 records=records,
                                 record_dict=retrieved_record.data,

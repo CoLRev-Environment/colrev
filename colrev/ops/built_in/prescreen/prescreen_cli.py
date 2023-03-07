@@ -45,7 +45,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         stat_len: int,
         padding: int,
     ) -> bool:
-
         if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
             print(
                 f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "

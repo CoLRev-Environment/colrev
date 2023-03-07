@@ -45,7 +45,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict = None
     ) -> None:
-
         if settings:
             # OpenLibrary as a search_source
             self.search_source = from_dict(
@@ -148,7 +147,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     def __get_record_from_open_library(
         self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
     ) -> colrev.record.Record:
-
         session = prep_operation.review_manager.get_cached_session()
 
         url = "NA"
@@ -230,7 +228,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             return record
 
         try:
-
             retrieved_record = self.__get_record_from_open_library(
                 prep_operation=prep_operation, record=record
             )

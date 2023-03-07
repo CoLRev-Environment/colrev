@@ -18,7 +18,6 @@ class Trace(colrev.operation.Operation):
     """Trace a record through history"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.check,
@@ -36,7 +35,6 @@ class Trace(colrev.operation.Operation):
         record_id: str,
         prev_record: dict,
     ) -> dict:
-
         record = records_dict[record_id]
 
         diffs = list(dictdiffer.diff(prev_record, record))

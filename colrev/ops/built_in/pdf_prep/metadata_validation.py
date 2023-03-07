@@ -95,7 +95,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
 
         # Editorials often have no author in the PDF (or on the last page)
         if "editorial" not in title_words:
-
             match_count = 0
             for author_name in record.data.get("author", "").split(" and "):
                 author_name = author_name.split(",")[0].lower().replace(" ", "")
@@ -108,7 +107,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
                     match_count += 1
 
             if match_count / len(record.data.get("author", "").split(" and ")) < 0.8:
-
                 validation_info["msgs"].append(  # type: ignore
                     f"{record.data['file']}: author not found in first pages"
                 )

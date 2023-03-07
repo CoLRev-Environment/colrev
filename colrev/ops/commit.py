@@ -37,7 +37,6 @@ class Commit:
         script_name: str,
         saved_args: dict = None,
     ) -> None:
-
         self.review_manager = review_manager
         self.manual_author = manual_author
 
@@ -108,7 +107,6 @@ class Commit:
         return flag
 
     def __get_commit_report_header(self) -> str:
-
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_header.txt"
         )
@@ -117,7 +115,6 @@ class Commit:
         return content
 
     def __get_commit_report_details(self) -> str:
-
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_details.txt"
         )
@@ -126,10 +123,8 @@ class Commit:
         return content
 
     def __get_detailed_processing_report(self) -> str:
-
         processing_report = ""
         if self.review_manager.report_path.is_file():
-
             # Reformat
             prefixes = [
                 "[('change', 'author',",
@@ -185,7 +180,6 @@ class Commit:
         return processing_report
 
     def __get_commit_report(self) -> str:
-
         status_operation = self.review_manager.get_status_operation()
 
         report = self.__get_commit_report_header()

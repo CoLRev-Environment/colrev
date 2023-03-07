@@ -40,7 +40,6 @@ class TableScreen(JsonSchemaMixin):
     def __create_screening_table(
         self, *, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
     ) -> list:
-
         # pylint: disable=too-many-branches
         screen_operation.review_manager.logger.info("Loading records for export")
 
@@ -50,7 +49,6 @@ class TableScreen(JsonSchemaMixin):
 
         tbl = []
         for record in records.values():
-
             if record["colrev_status"] not in [
                 colrev.record.RecordState.pdf_prepared,
             ]:

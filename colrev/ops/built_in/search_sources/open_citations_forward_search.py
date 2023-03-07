@@ -45,7 +45,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
         _, email = source_operation.review_manager.get_committer()
@@ -117,7 +116,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         return True
 
     def __get_forward_search_records(self, *, record_dict: dict) -> list:
-
         forward_citations = []
 
         url = f"https://opencitations.net/index/coci/api/v1/citations/{record_dict['doi']}"

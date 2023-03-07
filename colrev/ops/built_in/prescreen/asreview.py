@@ -62,7 +62,6 @@ class ASReviewPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> None:
-
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 
         prescreen.review_manager.logger.info("Export: asreview")
@@ -98,7 +97,6 @@ class ASReviewPrescreen(JsonSchemaMixin):
         self, prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict
     ) -> None:
         def get_last_modified(input_paths: list[str]) -> Path:
-
             latest_file = max(input_paths, key=os.path.getmtime)
             return Path(latest_file)
 
@@ -125,7 +123,6 @@ class ASReviewPrescreen(JsonSchemaMixin):
         # We would probably want to do that in a separate commit
 
         if asreview_project_file.suffix == ".asreview":  # "Export project" in asreview
-
             print(
                 "the project export seems to have changed. we now need to parse"
                 "the results.sql file..."
@@ -225,7 +222,6 @@ class ASReviewPrescreen(JsonSchemaMixin):
             start_screen_selected = "y" == input("Start prescreen [y,n]?")
 
         if start_screen_selected:
-
             # Note : the Docker image throws errors for Linux machines
             # The pip package is recommended anyway.
 

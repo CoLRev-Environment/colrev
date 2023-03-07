@@ -43,7 +43,6 @@ class DOIConnector:
             return record
 
         try:
-
             session = review_manager.get_cached_session()
 
             # for testing:

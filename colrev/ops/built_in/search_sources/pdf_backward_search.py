@@ -39,7 +39,6 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-
         if "min_intext_citations" not in settings["search_parameters"]:
             settings["search_parameters"]["min_intext_citations"] = 3
 
@@ -150,7 +149,6 @@ class BackwardSearchSource(JsonSchemaMixin):
         nr_added, nr_changed = 0, 0
         for record in records.values():
             try:
-
                 if not self.__bw_search_condition(record=record):
                     continue
 

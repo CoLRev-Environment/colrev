@@ -63,7 +63,6 @@ class ReviewManager:
         navigate_to_home_dir: bool = True,
         exact_call: str = "",
     ) -> None:
-
         self.force_mode = force_mode
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode

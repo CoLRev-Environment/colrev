@@ -46,7 +46,6 @@ class PRISMA(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -171,7 +170,6 @@ class PRISMA(JsonSchemaMixin):
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
-
         # pylint: disable=duplicate-code
         try:
             uid = os.stat(data_operation.review_manager.settings_path).st_uid

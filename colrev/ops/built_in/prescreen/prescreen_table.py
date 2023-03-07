@@ -59,7 +59,6 @@ class TablePrescreen(JsonSchemaMixin):
 
         tbl = []
         for record in records.values():
-
             if record["colrev_status"] not in [
                 colrev.record.RecordState.md_processed,
                 colrev.record.RecordState.rev_prescreen_excluded,

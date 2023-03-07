@@ -114,7 +114,6 @@ class Screen(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         if criterion_name not in self.review_manager.settings.screen.criteria:
-
             add_criterion = colrev.settings.ScreenCriterion(
                 explanation=criterion_explanation,
                 criterion_type=criterion_type,
@@ -129,7 +128,6 @@ class Screen(colrev.operation.Operation):
             return
 
         for record in records.values():
-
             if record["colrev_status"] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -162,7 +160,6 @@ class Screen(colrev.operation.Operation):
             return
 
         for record in records.values():
-
             if record["colrev_status"] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -253,7 +250,6 @@ class Screen(colrev.operation.Operation):
         )
 
     def __print_stats(self, *, selected_record_ids: list) -> None:
-
         records = self.review_manager.dataset.load_records_dict(header_only=True)
         screen_excluded = [
             r["ID"]
@@ -330,7 +326,6 @@ class Screen(colrev.operation.Operation):
         for (
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
-
             endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.screen,
                 selected_packages=self.review_manager.settings.screen.screen_package_endpoints,

@@ -51,7 +51,6 @@ class ExportManPrep(JsonSchemaMixin):
         prep_man_operation: colrev.ops.prep_man.PrepMan,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-
         if "pdf_handling_mode" not in settings:
             settings["pdf_handling_mode"] = "symlink"
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
@@ -63,7 +62,6 @@ class ExportManPrep(JsonSchemaMixin):
         self.export_path = self.prep_man_path / Path("records_prep_man.bib")
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
-
         prep_man_path_pdfs = self.prep_man_path / Path("data/pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
@@ -80,7 +78,6 @@ class ExportManPrep(JsonSchemaMixin):
                 if "copy_first_page" == self.settings.pdf_handling_mode:
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if len(pdf_reader.pages) >= 1:
-
                         writer = PdfFileWriter()
                         writer.addPage(pdf_reader.getPage(0))
                         with open(target_path, "wb") as outfile:
@@ -113,7 +110,6 @@ class ExportManPrep(JsonSchemaMixin):
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
     ) -> None:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
 

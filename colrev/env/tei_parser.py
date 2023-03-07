@@ -315,7 +315,6 @@ class TEIParser:
         return author_dict
 
     def __get_author_name_from_node(self, *, author_node: Element) -> str:
-
         authorname = ""
 
         author_pers_node = author_node.find(self.ns["tei"] + "persName")
@@ -360,7 +359,6 @@ class TEIParser:
                     for author_node in analytic_node.iterfind(
                         self.ns["tei"] + "author"
                     ):
-
                         authorname = self.__get_author_name_from_node(
                             author_node=author_node
                         )
@@ -498,7 +496,6 @@ class TEIParser:
 
         if authors_node is not None:
             for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
-
                 authorname = self.__get_author_name_from_node(author_node=author_node)
 
                 if authorname not in [", ", ""]:

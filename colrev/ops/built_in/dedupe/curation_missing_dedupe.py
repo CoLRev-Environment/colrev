@@ -53,7 +53,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
         for source_origin in source_origins:
-
             selected_records = [
                 r
                 for r in records.values()
@@ -320,7 +319,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
             dedupe_operation.review_manager.dataset.save_records_dict(records=records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-
             dedupe_operation.review_manager.dataset.add_record_changes()
 
             dedupe_operation.review_manager.create_commit(

@@ -23,7 +23,6 @@ class Data(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.data,
@@ -116,7 +115,6 @@ class Data(colrev.operation.Operation):
         def prep_observations(
             *, prepared_records_df: pd.DataFrame, records: dict
         ) -> pd.DataFrame:
-
             included_papers = [
                 ID
                 for ID, record in records.items()

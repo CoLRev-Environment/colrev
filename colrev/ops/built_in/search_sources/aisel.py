@@ -257,7 +257,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         ais_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-
         # pylint: disable=too-many-branches
 
         if rerun:
@@ -269,7 +268,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         nr_retrieved, nr_changed = 0, 0
 
         try:
-
             for record_dict in self.__get_ais_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
@@ -334,7 +332,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
-        except (requests.exceptions.JSONDecodeError) as exc:
+        except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
@@ -401,7 +399,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 "All Sprouts Content",
             ]
         ):
-
             if (
                 "journal" not in record.data
                 and "title" in record.data
@@ -414,7 +411,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             record.change_entrytype(new_entrytype="article")
 
         else:
-
             record.remove_field(key="publisher")
 
             if (
@@ -422,7 +418,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 and "title" in record.data
                 and "chapter" in record.data
             ):
-
                 record.rename_field(key="title", new_key="booktitle")
                 record.rename_field(key="chapter", new_key="title")
 

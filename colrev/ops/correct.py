@@ -57,7 +57,6 @@ class Corrections:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
-
         self.review_manager = review_manager
         self.local_index = self.review_manager.get_local_index()
         self.resources = self.review_manager.get_resources()
@@ -71,7 +70,6 @@ class Corrections:
     def __prep_for_change_item_creation(
         self, *, original_record: dict, corrected_record: dict
     ) -> None:
-
         # Cast to string for persistence
         original_record = {k: str(v) for k, v in original_record.items()}
         corrected_record = {k: str(v) for k, v in corrected_record.items()}
@@ -93,7 +91,6 @@ class Corrections:
         original_record: dict,
         corrected_record: dict,
     ) -> None:
-
         # pylint: disable=too-many-branches
 
         self.__prep_for_change_item_creation(
@@ -195,7 +192,6 @@ class Corrections:
         # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
         # The following code should be much simpler...
         for record_dict in records.values():
-
             # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
             # use origin-indexed dict (discarding changes during merges)
 
@@ -211,9 +207,7 @@ class Corrections:
                 continue
 
             for prior_r in record_prior:
-
                 if self.__record_corrected(prior_r=prior_r, record_dict=record_dict):
-
                     corrected_record = record_dict.copy()
 
                     # original_record = (

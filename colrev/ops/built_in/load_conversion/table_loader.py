@@ -33,7 +33,6 @@ class TableLoadUtility:
 
         next_id = 1
         for record_dict in records:
-
             if "type" in record_dict:
                 record_dict["ENTRYTYPE"] = record_dict["type"]
                 del record_dict["type"]

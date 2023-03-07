@@ -109,7 +109,6 @@ class Upgrade(colrev.operation.Operation):
             )
 
     def __print_release_notes(self, *, selected_version: str) -> None:
-
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("../CHANGELOG.md")
         )
@@ -551,7 +550,6 @@ class Upgrade(colrev.operation.Operation):
             del settings["prescreen"]["scope"]
 
             if len(scope_items) > 0:
-
                 if "scope_prescreen" not in [
                     s["endpoint"] for s in settings["prescreen"]["scripts"]
                 ]:

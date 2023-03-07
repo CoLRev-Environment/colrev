@@ -177,7 +177,6 @@ class PDFCompletenessValidation(JsonSchemaMixin):
             ):
                 pass
             else:
-
                 msg = (
                     f'{record.data["ID"]}'.ljust(pad, " ")
                     + f'Nr of pages in file ({record.data["pages_in_file"]}) '

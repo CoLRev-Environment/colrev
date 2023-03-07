@@ -321,7 +321,8 @@ class DataPackageEndpointInterface(
         endpoint_identifier: str,
     ) -> None:
         """Update the record status matrix,
-        i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier"""
+        i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier
+        """
 
     def get_advice(  # type: ignore
         review_manager: colrev.review_manager.ReviewManager,
@@ -454,7 +455,6 @@ class PackageManager:
         self.__flag_installed_packages()
 
     def __load_package_endpoints_index(self) -> dict:
-
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_endpoints.json")
         )
@@ -540,7 +540,6 @@ class PackageManager:
         for parameter in [
             i for i in settings_class.__annotations__.keys() if i[:1] != "_"
         ]:
-
             # # default value: determined from class.__dict__
             # # merging_non_dup_threshold: float= 0.7
             # if parameter in settings_class.__dict__:
@@ -676,12 +675,10 @@ class PackageManager:
         package_type: PackageEndpointType,
         ignore_not_available: bool,
     ) -> typing.Dict:
-
         # avoid changes in the config
         selected_packages = deepcopy(selected_packages)
         packages_dict: typing.Dict = {}
         for selected_package in selected_packages:
-
             package_identifier = selected_package["endpoint"].lower()
             packages_dict[package_identifier] = {}
 
@@ -825,7 +822,6 @@ class PackageManager:
             )
             print(f" load {endpoint_type}: \n -  {package_list}")
             for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
-
                 self.packages[PackageEndpointType[endpoint_type]][
                     endpoint_item["package_endpoint_identifier"]
                 ] = {"endpoint": endpoint_item["endpoint"], "installed": True}

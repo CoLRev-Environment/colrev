@@ -42,7 +42,6 @@ class BibPybtexLoader(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
     def __general_load_fixes(self, records: dict) -> dict:
-
         return records
 
     def __apply_file_fixes(
@@ -123,7 +122,6 @@ class BibPybtexLoader(JsonSchemaMixin):
         """Load records from the source"""
         records = {}
         if source.filename.is_file():
-
             self.__apply_file_fixes(
                 load_operation=load_operation, filename=source.filename
             )

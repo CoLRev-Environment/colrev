@@ -31,7 +31,6 @@ class TEIPDFPrep(JsonSchemaMixin):
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
-
         self.settings = self.settings_class.load_settings(data=settings)
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()

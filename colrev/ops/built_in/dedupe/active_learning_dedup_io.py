@@ -53,7 +53,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-
         logging.basicConfig()
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
@@ -242,12 +241,10 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         results: list,
     ) -> None:
-
         if (
             self.__get_nr_duplicates(result_list=results) > 10
             and self.__get_nr_non_duplicates(result_list=results) > 10
         ):
-
             dedupe_operation.apply_merges(results=results, complete_dedupe=False)
 
             dedupe_operation.review_manager.logger.info("Training deduper.")
@@ -349,7 +346,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         manual_dedupe_decision_list = []
 
         while not finished:
-
             if use_previous:
                 record_pair, _ = examples_buffer.pop(0)
                 use_previous = False
@@ -572,7 +568,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             )
 
         for dedupe_decision in dedupe_decision_list:
-
             if len(dedupe_decision["records"]) == 0:
                 continue
 
@@ -590,7 +585,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 continue
 
             for dupe_rec in dedupe_decision["records"]:
-
                 orig_propagated = dedupe_operation.review_manager.dataset.propagated_id(
                     record_id=orig_rec
                 )
@@ -599,7 +593,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 )
 
                 if not orig_propagated and not dupe_propagated:
-
                     # Use the record['ID'] without appended letters if possible
                     # Set orig_propagated=True if record_a_ID should be kept
                     if orig_rec[-1:].isnumeric() and not dupe_rec[-1:].isnumeric():
@@ -780,7 +773,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     def __get_collected_dupes_non_dupes_from_clusters(
         self, *, clustered_dupes: list, data_d: dict
     ) -> dict:
-
         # pylint: disable=too-many-locals
 
         cluster_membership = {}
@@ -789,7 +781,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         #  'BhaskaraBawa2021': {'Cluster ID': 353, 'confidence_score': 1.0}}
         for cluster_id, (records, scores) in enumerate(clustered_dupes):
             for record_id, score in zip(records, scores):
-
                 cluster_membership[record_id] = {
                     "cluster_id": cluster_id,
                     "confidence_score": score,
@@ -847,7 +838,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         clustered_dupes: list,
         data_d: dict,
     ) -> None:
-
         results = self.__get_collected_dupes_non_dupes_from_clusters(
             clustered_dupes=clustered_dupes, data_d=data_d
         )
@@ -865,7 +855,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     def __cluster_duplicates(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, data_d: dict
     ) -> list:
-
         # pylint: disable=too-many-locals
 
         dedupe_operation.review_manager.logger.info("Clustering duplicates...")
@@ -917,7 +906,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             #     pass
 
         else:
-
             for field in deduper.fingerprinter.index_fields:
                 field_data = (r[field] for r in data_d.values() if field in r)
                 deduper.fingerprinter.index(field_data, field)
@@ -947,7 +935,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             records_data = {r["ID"]: r for r in data_d.values()}
 
             def record_pairs(result_set: list[tuple]) -> typing.Iterator[tuple]:
-
                 for row in result_set:
                     id_a, id_b = row
                     record_a = (id_a, records_data[id_a])

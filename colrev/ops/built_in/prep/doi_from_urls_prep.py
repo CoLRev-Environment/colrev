@@ -69,7 +69,6 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             return record
 
         try:
-
             url = record.data.get("url", record.data.get("fulltext", "NA"))
             headers = {"user-agent": f"{__name__}  " f"(mailto:{self.email})"}
             ret = self.session.request(

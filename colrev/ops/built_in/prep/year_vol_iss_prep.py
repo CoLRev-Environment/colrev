@@ -165,7 +165,6 @@ class YearVolIssPrep(JsonSchemaMixin):
             source_operation=prep_operation
         )
         try:
-
             retrieved_records = crossref_source.crossref_query(
                 review_manager=prep_operation.review_manager,
                 record_input=record,

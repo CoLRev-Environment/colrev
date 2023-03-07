@@ -72,7 +72,6 @@ class BrokenFilesError(CoLRevException):
     """
 
     def __init__(self, msg: str) -> None:
-
         self.message = (
             f"Detected broken files ({msg}). To fix use\n     "
             f"{colors.ORANGE}colrev repair{colors.END}"

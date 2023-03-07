@@ -68,7 +68,6 @@ class PDFCheckOCR(JsonSchemaMixin):
         record_dict: dict,
         pad: int,  # pylint: disable=unused-argument
     ) -> None:
-
         pdf_path = review_manager.path / Path(record_dict["file"])
         ocred_filename = Path(str(pdf_path).replace(".pdf", "_ocr.pdf"))
 

@@ -14,7 +14,6 @@ class SearchSources:
     """SearchSources (including academic databases, citation searches, PDF files)"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         package_manager = review_manager.get_package_manager()
         check_operation = colrev.operation.CheckOperation(review_manager=review_manager)
 

@@ -81,7 +81,6 @@ class LocalIndex:
         *,
         verbose_mode: bool = False,
     ) -> None:
-
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         self.__index_tei = True
@@ -138,7 +137,6 @@ class LocalIndex:
     #     self.open_search.index(index=self.AUTHOR_INDEX, body=author_dict)
 
     def __index_tei_document(self, *, recs_to_index: list) -> None:
-
         if not self.__index_tei:
             return
         for record_dict in recs_to_index:
@@ -217,7 +215,6 @@ class LocalIndex:
         internal_record_dict = deepcopy(record_dict)
 
         if all(x in internal_record_dict.keys() for x in ["volume", "number"]):
-
             try:
                 toc_key_full = colrev.record.Record(
                     data=internal_record_dict
@@ -275,7 +272,6 @@ class LocalIndex:
             self.__sqlite_connection.commit()
 
     def __add_index_records(self, *, recs_to_index: list, curated_fields: list) -> None:
-
         list_to_add = [
             {k: v for k, v in el.items() if k in self.RECORDS_INDEX_KEYS}
             for el in recs_to_index
@@ -481,11 +477,9 @@ class LocalIndex:
         return records_to_return
 
     def __outlets_duplicated(self) -> bool:
-
         print("Validate curated metadata")
 
         try:
-
             curated_outlets = self.environment_manager.get_curated_outlets()
 
             if len(curated_outlets) != len(set(curated_outlets)):
@@ -505,7 +499,6 @@ class LocalIndex:
         return False
 
     def _prepare_record_for_indexing(self, *, record_dict: dict) -> dict:
-
         # pylint: disable=too-many-branches
         if "colrev_status" not in record_dict:
             raise colrev_exceptions.RecordNotIndexableException()
@@ -618,7 +611,6 @@ class LocalIndex:
         return record.get_data()
 
     def __get_index_record(self, *, record_dict: dict) -> dict:
-
         try:
             record_dict = self._prepare_record_for_indexing(record_dict=record_dict)
             cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
@@ -646,7 +638,6 @@ class LocalIndex:
         import colrev.review_manager
 
         try:
-
             if not Path(repo_source_path).is_dir():
                 print(f"Warning {repo_source_path} not a directory")
                 return
@@ -743,7 +734,7 @@ class LocalIndex:
             if curation_endpoints:
                 self.__add_index_toc(toc_to_index=toc_to_index)
 
-        except (colrev_exceptions.CoLRevException) as exc:
+        except colrev_exceptions.CoLRevException as exc:
             print(exc)
 
     def index(self) -> None:
@@ -831,7 +822,6 @@ class LocalIndex:
             raise colrev_exceptions.TOCNotAvailableException() from exc
 
     def __toc_exists(self, *, toc_item: str) -> bool:
-
         try:
             self.__thread_lock.acquire(timeout=60)
             thread_connection = sqlite3.connect(self.SQLITE_PATH)
@@ -956,7 +946,6 @@ class LocalIndex:
         raise colrev_exceptions.RecordNotInIndexException()
 
     def __get_items_from_index(self, *, index_name: str, query: str) -> list:
-
         try:
             self.__thread_lock.acquire(timeout=60)
             thread_connection = sqlite3.connect(self.SQLITE_PATH)
@@ -972,7 +961,6 @@ class LocalIndex:
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
     def __get_item_from_index(self, *, index_name: str, key: str, value: str) -> dict:
-
         try:
             self.__thread_lock.acquire(timeout=60)
             thread_connection = sqlite3.connect(self.SQLITE_PATH)
@@ -1106,7 +1094,6 @@ class LocalIndex:
         """Convenience function to check whether two records are a duplicate"""
 
         try:
-
             # Ensure that we receive actual lists
             # otherwise, __retrieve_based_on_colrev_id iterates over a string and
             # open_search_thread_instance.search returns random results

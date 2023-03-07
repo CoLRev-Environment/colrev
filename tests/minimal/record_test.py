@@ -38,7 +38,6 @@ def test_add_colrev_ids() -> None:
 
 
 def test_provenance() -> None:
-
     import colrev.record
 
     v1 = {
@@ -76,7 +75,6 @@ def test_provenance() -> None:
 
 
 def test_defects() -> None:
-
     import colrev.record
 
     v1 = {

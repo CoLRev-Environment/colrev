@@ -124,7 +124,6 @@ class Sync:
                 self.non_unique_for_import.append(listed_item)
 
     def __get_ids_in_paper(self) -> typing.List:
-
         pybtex.errors.set_strict_mode(False)
 
         if Path("references.bib").is_file():
@@ -145,7 +144,6 @@ class Sync:
             self.records_to_import.append(record)
 
     def __save_to_bib(self, *, records: dict, save_path: Path) -> None:
-
         # pylint: disable=duplicate-code
 
         def parse_bibtex_str(*, recs_dict_in: dict) -> str:
@@ -215,7 +213,6 @@ class Sync:
         if not references_file.is_file():
             records = []
         else:
-
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
             records = list(

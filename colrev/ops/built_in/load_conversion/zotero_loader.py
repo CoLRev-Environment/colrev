@@ -36,7 +36,6 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
     def __init__(self, *, load_operation: colrev.ops.load.Load, settings: dict):
-
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.zotero_translation_service = (

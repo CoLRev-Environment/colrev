@@ -55,7 +55,6 @@ class Operation:
         operations_type: OperationsType,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         self.review_manager = review_manager
         self.force_mode = self.review_manager.force_mode
 
@@ -84,7 +83,6 @@ class Operation:
     def __require_clean_repo_general(
         self, *, git_repo: git.Repo = None, ignore_pattern: list = None
     ) -> bool:
-
         if git_repo is None:
             git_repo = git.Repo(self.review_manager.path)
 
@@ -144,7 +142,6 @@ class Operation:
             self.__check_record_state_model_precondition()
 
         elif OperationsType.prep == self.type:
-
             if self.notify_state_transition_operation:
                 self.__require_clean_repo_general()
                 self.__check_record_state_model_precondition()

@@ -20,7 +20,6 @@ class ScreenshotService:
     """Environment service for website screenshots"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         self.chrome_browserless_image = "browserless/chrome:latest"
         self.review_manager = review_manager
         self.review_manager.environment_manager.build_docker_image(

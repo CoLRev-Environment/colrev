@@ -18,7 +18,6 @@ class ReviewTypes:
         review_manager: colrev.review_manager.ReviewManager,
         review_type: str = None,
     ) -> None:
-
         package_manager = review_manager.get_package_manager()
         check_operation = colrev.operation.CheckOperation(review_manager=review_manager)
 

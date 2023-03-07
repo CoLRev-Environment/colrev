@@ -113,7 +113,6 @@ class GithubPages(JsonSchemaMixin):
     def __update_data(
         self, *, data_operation: colrev.ops.data.Data, silent_mode: bool
     ) -> None:
-
         if not silent_mode:
             data_operation.review_manager.logger.info("Update data on github pages")
         records = data_operation.review_manager.dataset.load_records_dict()

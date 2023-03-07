@@ -48,7 +48,6 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
 
     def __validate_against_doi_metadata(self, *, record: colrev.record.Record) -> None:
-
         # pylint: disable=too-many-branches
 
         if "doi" not in record.data:

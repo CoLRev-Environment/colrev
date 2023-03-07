@@ -37,7 +37,6 @@ def print_review_instructions(review_instructions: dict) -> None:
         print()
 
     for review_instruction in review_instructions:
-
         # prioritize based on the order of instructions (most important first)
         # if priority_item_set and "priority" not in review_instruction.keys():
         #     continue

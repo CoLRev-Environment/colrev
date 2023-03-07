@@ -62,7 +62,6 @@ def add_search_source(
             results_list.append(res)
 
     if not results_list:
-
         query_dict = json.loads(query)
 
         assert "endpoint" in query_dict
@@ -158,7 +157,6 @@ def add_data(
 
         if "colrev_built_in.paper_md" == add:
             if "y" == input("Select a custom word template (y/n)?"):
-
                 template_name = input(
                     'Please copy the word template to " \
                 "the project directory and enter the filename.'

@@ -45,7 +45,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     def __update_metadata(
         self, *, record: colrev.record.Record
     ) -> colrev.record.Record:
-
         valid_selections = ["a", "c", "t", "v", "n", "p", "s"]
         user_selection = ""
         print(
@@ -111,7 +110,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             item: dict,
             stat: str,
         ) -> dict:
-
             # pylint: disable=no-member
             # pylint: disable=too-many-branches
             # pylint: disable=too-many-locals
@@ -171,7 +169,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 user_selection = ""
                 valid_selections = ["y", "n", "s", "q"]
                 while user_selection not in valid_selections:
-
                     user_selection = input("Selection: ")
                     if user_selection.startswith("s"):
                         if user_selection[1:].isdigit():
@@ -254,7 +251,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
             if "y" == input("Create commit (y/n)?"):
-
                 pdf_prep_man_operation.review_manager.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,

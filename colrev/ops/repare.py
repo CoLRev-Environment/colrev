@@ -32,7 +32,6 @@ class Repare(colrev.operation.Operation):
         )
 
     def __fix_files(self, *, records: dict) -> None:
-
         # pylint: disable=too-many-branches
 
         # fix file no longer available
@@ -82,7 +81,6 @@ class Repare(colrev.operation.Operation):
                     full_path.unlink()
 
                 try:
-
                     record = colrev.record.Record(data=record_dict)
                     retrieved_record = local_index.retrieve(
                         record_dict=record.data, include_file=True
@@ -121,7 +119,6 @@ class Repare(colrev.operation.Operation):
             ] = colrev.record.RecordState.rev_prescreen_included
 
     def __fix_provenance(self, *, records: dict) -> None:
-
         # pylint: disable=too-many-nested-blocks
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
@@ -199,7 +196,6 @@ class Repare(colrev.operation.Operation):
                             ):
                                 del record.data["colrev_masterdata_provenance"][key]
                         if key not in record.data["colrev_masterdata_provenance"]:
-
                             options = {}
                             for origin in record.data["colrev_origin"]:
                                 origin_source, origin_id = origin.split("/")
@@ -252,7 +248,6 @@ class Repare(colrev.operation.Operation):
                             prov_details["source"] = record.data["colrev_origin"][0]
 
                 else:
-
                     if key in record.data["colrev_data_provenance"]:
                         if not any(
                             record.data["colrev_data_provenance"][key][
@@ -295,7 +290,6 @@ class Repare(colrev.operation.Operation):
                         prov_details["source"] = record.data["colrev_origin"][0]
 
     def __fix_curated_sources(self, *, records: dict) -> None:
-
         local_index = self.review_manager.get_local_index()
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev_built_in.local_index":

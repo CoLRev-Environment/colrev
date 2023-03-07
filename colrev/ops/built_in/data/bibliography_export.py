@@ -68,7 +68,6 @@ class BibliographyExport(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-
         if "bib_format" not in settings:
             settings["bib_format"] = "endnote"
         settings["bib_format"] = BibFormats[settings["bib_format"]]
@@ -117,7 +116,6 @@ class BibliographyExport(JsonSchemaMixin):
     def __zotero_conversion(
         self, *, data_operation: colrev.ops.data.Data, selected_records: dict
     ) -> None:
-
         data_operation.review_manager.logger.info(
             f"Export {self.settings.bib_format.name}"
         )

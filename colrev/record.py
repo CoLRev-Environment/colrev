@@ -129,7 +129,6 @@ class Record:
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
-
         identifying_keys_order = ["ID", "ENTRYTYPE"] + [
             k for k in self.identifying_field_keys if k in self.data
         ]
@@ -450,7 +449,6 @@ class Record:
             for k, v in self.data.items()
             if k in self.identifying_field_keys
         ):
-
             for k in self.identifying_field_keys:
                 if k in self.data.get("colrev_masterdata_provenance", {}):
                     if (
@@ -717,7 +715,6 @@ class Record:
                     del self.data[k]
 
         for key in list(merging_record.data.keys()):
-
             val = self.__get_merging_val(merging_record=merging_record, key=key)
             if "" == val:
                 continue
@@ -743,7 +740,6 @@ class Record:
 
             # Part 1: identifying fields
             if key in Record.identifying_field_keys:
-
                 if preferred_masterdata_source_prefixes:
                     if merging_record_preferred:
                         self.update_field(
@@ -856,7 +852,6 @@ class Record:
 
     @classmethod
     def __select_best_container_title(cls, *, default: str, candidate: str) -> str:
-
         best_journal = default
 
         default_upper = colrev.env.utils.percent_upper_chars(default)
@@ -1078,7 +1073,6 @@ class Record:
     def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
         """Determine the detailed similarities between records"""
         try:
-
             author_similarity = fuzz.ratio(record_a["author"], record_b["author"]) / 100
 
             title_similarity = (
@@ -1160,7 +1154,6 @@ class Record:
                 ]
 
             else:
-
                 weights = [0.15, 0.75, 0.05, 0.05]
                 sim_names = [
                     "author",
@@ -1321,7 +1314,6 @@ class Record:
         """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
-
             if key in [
                 "colrev_id",
                 "colrev_status",
@@ -1469,7 +1461,6 @@ class Record:
             names = input_string.replace("; ", " and ").split(" and ")
             author_list = []
             for name in names:
-
                 if "," == name.rstrip()[-1:]:
                     # if last-names only (eg, "Webster, and Watson, ")
                     if len(name[:-2]) > 1:
@@ -1575,7 +1566,6 @@ class Record:
             record_dict = also_known_as_record
 
         try:
-
             # Including the version of the identifier prevents cases
             # in which almost all identifiers are identical
             # (and very few identifiers change)
@@ -1800,7 +1790,6 @@ class Record:
     def __set_initial_non_curated_import_provenance(
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
-
         masterdata_restrictions = review_manager.dataset.get_applicable_restrictions(
             record_dict=self.get_data()
         )
@@ -2508,7 +2497,6 @@ class PrescreenRecord(Record):
     """The PrescreenRecord class provides convenience functions for record prescreen"""
 
     def __str__(self) -> str:
-
         ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
         ret_str += (
             f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
@@ -2837,7 +2825,6 @@ class RecordStateModel:
         operation: colrev.operation.OperationsType = None,
         review_manager: colrev.review_manager.ReviewManager = None,
     ) -> None:
-
         if operation:
             start_states: list[str] = [
                 str(x["source"])

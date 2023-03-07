@@ -37,7 +37,6 @@ class WebsiteConnector:
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict = None
     ) -> None:
-
         self.zotero_lock = Lock()
 
     @classmethod

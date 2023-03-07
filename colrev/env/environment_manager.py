@@ -143,7 +143,6 @@ class EnvironmentManager:
             repo_tags = [t for image in client.images.list() for t in image.tags]
 
             if imagename not in repo_tags:
-
                 if image_path:
                     assert colrev.review_manager.__file__
                     colrev_path = Path("")

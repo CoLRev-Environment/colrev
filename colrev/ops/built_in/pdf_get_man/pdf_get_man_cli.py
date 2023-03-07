@@ -61,7 +61,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> colrev.record.Record:
-
         # get the recipient email(s) from the local author index
         recipient = "TODO"
         subject = f"Copy of a PDF ({record.data['ID']})"
@@ -92,7 +91,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> Path:
-
         filepath = (
             pdf_get_man_operation.review_manager.pdf_dir
             / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
@@ -199,7 +197,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> None:
-
         # pdf_get_man_operation.review_manager.logger.debug(
         #     f"called pdf_get_man_cli for {record}"
         # )

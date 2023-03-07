@@ -45,7 +45,6 @@ class Load(colrev.operation.Operation):
         notify_state_transition_operation: bool = True,
         hide_load_explanation: bool = False,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.load,
@@ -111,7 +110,6 @@ class Load(colrev.operation.Operation):
         """Apply heuristics to identify source"""
 
         def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
-
             filetype = filepath.suffix.replace(".", "")
 
             for (
@@ -266,7 +264,6 @@ class Load(colrev.operation.Operation):
 
         new_sources = []
         for sfp in new_search_files:
-
             sfp_name = sfp
             if sfp_name in [
                 str(source.filename) for source in self.review_manager.settings.sources
@@ -323,7 +320,6 @@ class Load(colrev.operation.Operation):
                 "colrev_built_in.unknown_source"
                 == heuristic_source["source_candidate"].endpoint
             ):
-
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
                 if not skip_query:
@@ -380,7 +376,6 @@ class Load(colrev.operation.Operation):
 
     def __resolve_non_unique_ids(self, *, source: colrev.settings.SearchSource) -> None:
         def get_unique_id(*, non_unique_id: str, id_list: list[str]) -> str:
-
             order = 0
             letters = list(string.ascii_lowercase)
             temp_id = non_unique_id
@@ -499,7 +494,6 @@ class Load(colrev.operation.Operation):
         )
 
         if colrev.record.RecordState.md_retrieved == record_dict["colrev_status"]:
-
             # Consistently set keys to lower case
             lower_keys = [k.lower() for k in list(record_dict.keys())]
             for key, n_key in zip(list(record_dict.keys()), lower_keys):
@@ -707,7 +701,6 @@ class Load(colrev.operation.Operation):
     def __load_source_records(
         self, *, source: colrev.settings.SearchSource, keep_ids: bool
     ) -> None:
-
         search_records = self.__get_search_records(source=source)
         if len(search_records) == 0:
             return
@@ -772,7 +765,6 @@ class Load(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
     def __validate_load(self, *, source: colrev.settings.SearchSource) -> None:
-
         imported_origins = self.__get_currently_imported_origin_list()
         imported = len(imported_origins) - source.len_before
 
@@ -826,7 +818,6 @@ class Load(colrev.operation.Operation):
             return records
 
         def drop_empty_fields(*, records: dict) -> dict:
-
             records_list = list(records.values())
             records_list = [
                 {k: v for k, v in record.items() if v is not None}
@@ -877,7 +868,6 @@ class Load(colrev.operation.Operation):
         git_repo = self.review_manager.dataset.get_repo()
         part_exact_call = self.review_manager.exact_call
         for source in load_active_sources():
-
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
 
@@ -938,7 +928,7 @@ class Load(colrev.operation.Operation):
                 git_repo.git.stash("pop")
                 if not self.review_manager.high_level_operation:
                     print()
-            except (colrev_exceptions.ImportException) as exc:
+            except colrev_exceptions.ImportException as exc:
                 print(exc)
 
         if combine_commits and self.review_manager.dataset.has_changes():

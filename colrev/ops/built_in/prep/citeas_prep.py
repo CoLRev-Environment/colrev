@@ -49,7 +49,6 @@ class CiteAsPrep(JsonSchemaMixin):
     def __cite_as_json_to_record(
         self, *, json_str: str, url: str
     ) -> colrev.record.PrepRecord:
-
         retrieved_record: dict = {}
         data = json.loads(json_str)
 
@@ -93,7 +92,6 @@ class CiteAsPrep(JsonSchemaMixin):
             return record
 
         try:
-
             url = (
                 f"https://api.citeas.org/product/{record.data['title']}?"
                 + f"email={self.email}"
