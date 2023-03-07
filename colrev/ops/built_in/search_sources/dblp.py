@@ -10,6 +10,7 @@ from datetime import datetime
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
+from typing import Optional
 
 import requests
 import zope.interface
@@ -25,7 +26,6 @@ import colrev.ui_cli.cli_colors as colors
 
 if False:  # pylint: disable=using-constant-test
     import typing
-    from typing import Optional
 
     # from typing import TYPE_CHECKING
 
@@ -61,7 +61,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         search_type: colrev.settings.SearchType
         search_parameters: dict
         load_conversion_package_endpoint: dict
-        comment: typing.Optional[str]
+        comment: Optional[str]
 
         _details = {
             "search_parameters": {
