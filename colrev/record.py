@@ -12,7 +12,7 @@ import typing
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import dictdiffer
 import pandas as pd
@@ -36,8 +36,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods
@@ -129,7 +132,6 @@ class Record:
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
-
         identifying_keys_order = ["ID", "ENTRYTYPE"] + [
             k for k in self.identifying_field_keys if k in self.data
         ]
@@ -298,7 +300,7 @@ class Record:
             for x in self.data.get("colrev_origin", [])
         )
 
-    def get_value(self, *, key: str, default: str = None) -> str:
+    def get_value(self, *, key: str, default: Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
         if default is not None:
             try:
@@ -450,7 +452,6 @@ class Record:
             for k, v in self.data.items()
             if k in self.identifying_field_keys
         ):
-
             for k in self.identifying_field_keys:
                 if k in self.data.get("colrev_masterdata_provenance", {}):
                     if (
@@ -682,7 +683,7 @@ class Record:
         *,
         merging_record: Record,
         default_source: str,
-        preferred_masterdata_source_prefixes: list = None,
+        preferred_masterdata_source_prefixes: Optional[list] = None,
     ) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
@@ -717,7 +718,6 @@ class Record:
                     del self.data[k]
 
         for key in list(merging_record.data.keys()):
-
             val = self.__get_merging_val(merging_record=merging_record, key=key)
             if "" == val:
                 continue
@@ -743,7 +743,6 @@ class Record:
 
             # Part 1: identifying fields
             if key in Record.identifying_field_keys:
-
                 if preferred_masterdata_source_prefixes:
                     if merging_record_preferred:
                         self.update_field(
@@ -856,7 +855,6 @@ class Record:
 
     @classmethod
     def __select_best_container_title(cls, *, default: str, candidate: str) -> str:
-
         best_journal = default
 
         default_upper = colrev.env.utils.percent_upper_chars(default)
@@ -1078,7 +1076,6 @@ class Record:
     def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
         """Determine the detailed similarities between records"""
         try:
-
             author_similarity = fuzz.ratio(record_a["author"], record_b["author"]) / 100
 
             title_similarity = (
@@ -1160,7 +1157,6 @@ class Record:
                 ]
 
             else:
-
                 weights = [0.15, 0.75, 0.05, 0.05]
                 sim_names = [
                     "author",
@@ -1321,7 +1317,6 @@ class Record:
         """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
-
             if key in [
                 "colrev_id",
                 "colrev_status",
@@ -1333,7 +1328,7 @@ class Record:
                 continue
 
             if key in self.identifying_field_keys:
-                if not self.masterdata_is_curated:
+                if not self.masterdata_is_curated():
                     self.add_masterdata_provenance(key=key, source=source_info, note="")
             else:
                 self.add_data_provenance(key=key, source=source_info, note="")
@@ -1451,7 +1446,10 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, *, also_known_as_record: dict = None, assume_complete: bool = False
+        self,
+        *,
+        also_known_as_record: Optional[dict] = None,
+        assume_complete: bool = False,
     ) -> str:
         """Returns the colrev_id of the Record.
         If a also_known_as_record is provided, it returns the colrev_id of the
@@ -1469,7 +1467,6 @@ class Record:
             names = input_string.replace("; ", " and ").split(" and ")
             author_list = []
             for name in names:
-
                 if "," == name.rstrip()[-1:]:
                     # if last-names only (eg, "Webster, and Watson, ")
                     if len(name[:-2]) > 1:
@@ -1575,7 +1572,6 @@ class Record:
             record_dict = also_known_as_record
 
         try:
-
             # Including the version of the identifier prevents cases
             # in which almost all identifiers are identical
             # (and very few identifiers change)
@@ -1661,7 +1657,9 @@ class Record:
         for key in to_drop:
             self.remove_field(key=key)
 
-    def extract_text_by_page(self, *, pages: list = None, project_path: Path) -> str:
+    def extract_text_by_page(
+        self, *, pages: Optional[list] = None, project_path: Path
+    ) -> str:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
@@ -1721,7 +1719,7 @@ class Record:
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Path = None
+        self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
     ) -> None:
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data["file"])
@@ -1800,7 +1798,6 @@ class Record:
     def __set_initial_non_curated_import_provenance(
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
-
         masterdata_restrictions = review_manager.dataset.get_applicable_restrictions(
             record_dict=self.get_data()
         )
@@ -1852,7 +1849,7 @@ class Record:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        filepath: Path = None,
+        filepath: Optional[Path] = None,
         PAD: int = 40,
     ) -> None:
         """Record pdf-get-man decision"""
@@ -2075,7 +2072,7 @@ class Record:
                     )
 
     def update_masterdata_provenance(
-        self, *, masterdata_restrictions: dict = None
+        self, *, masterdata_restrictions: Optional[dict] = None
     ) -> None:
         """Update the masterdata provenance"""
         # pylint: disable=too-many-branches
@@ -2508,7 +2505,6 @@ class PrescreenRecord(Record):
     """The PrescreenRecord class provides convenience functions for record prescreen"""
 
     def __str__(self) -> str:
-
         ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
         ret_str += (
             f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
@@ -2833,11 +2829,10 @@ class RecordStateModel:
     def __init__(
         self,
         *,
-        state: RecordState = None,
-        operation: colrev.operation.OperationsType = None,
-        review_manager: colrev.review_manager.ReviewManager = None,
+        state: Optional[RecordState] = None,
+        operation: Optional[colrev.operation.OperationsType] = None,
+        review_manager: Optional[colrev.review_manager.ReviewManager] = None,
     ) -> None:
-
         if operation:
             start_states: list[str] = [
                 str(x["source"])

@@ -45,7 +45,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
     def validate_source(

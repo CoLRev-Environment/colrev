@@ -7,7 +7,6 @@ import os
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -18,8 +17,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -48,7 +50,6 @@ class ColrevCuration(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -84,7 +85,6 @@ class ColrevCuration(JsonSchemaMixin):
         records: dict,
         sources: list,
     ) -> dict:
-
         # pylint: disable=too-many-branches
 
         stats: dict = {}
@@ -147,7 +147,6 @@ class ColrevCuration(JsonSchemaMixin):
         return stats
 
     def __get_stats_markdown_table(self, *, stats: dict, sources: list) -> str:
-
         cell_width = 16
         sources += ["all_merged"]
         output = "|TOC".ljust(cell_width - 1, " ") + "|"
@@ -160,7 +159,6 @@ class ColrevCuration(JsonSchemaMixin):
         ordered_stats = collections.OrderedDict(sorted(stats.items(), reverse=True))
 
         for key, row in ordered_stats.items():
-
             output += f"\n|{key}".ljust(cell_width, " ") + "|"
             for source in sources:
                 if source != "all_merged":
@@ -233,7 +231,6 @@ class ColrevCuration(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         silent_mode: bool,
     ) -> None:
-
         if not silent_mode:
             review_manager.logger.info("Calculate statistics for readme")
 

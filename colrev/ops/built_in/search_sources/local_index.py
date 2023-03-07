@@ -8,6 +8,7 @@ import webbrowser
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -63,9 +64,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict = None,
+        settings: Optional[dict] = None,
     ) -> None:
-
         if settings:
             # LocalIndex as a search_source
             self.search_source = from_dict(
@@ -140,7 +140,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         )
 
     def __retrieve_from_index(self) -> typing.List[dict]:
-
         params = self.search_source.search_parameters
         query = params["query"]
 
@@ -168,7 +167,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
-
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_changed = 0
@@ -231,13 +229,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-
         records = search_operation.review_manager.dataset.load_records_dict()
 
         nr_retrieved, nr_changed = 0, 0
 
         for retrieved_record_dict in self.__retrieve_from_index():
-
             try:
                 local_index_feed.set_id(record_dict=retrieved_record_dict)
             except colrev_exceptions.NotFeedIdentifiableException:
@@ -297,7 +293,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-
             self.__run_md_search_update(
                 search_operation=search_operation,
                 local_index_feed=local_index_feed,
@@ -659,7 +654,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def __retrieve_by_colrev_id(
         self, *, indexed_record_dict: dict, records: list[dict]
     ) -> dict:
-
         indexed_record = colrev.record.Record(data=indexed_record_dict)
 
         if "colrev_id" in indexed_record.data:
@@ -685,7 +679,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records: dict,
         change_item: dict,
     ) -> dict:
-
         original_record = change_item["original_record"]
 
         local_index_feed = self.search_source.get_feed(
@@ -712,7 +705,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             )
             return record_dict
         except colrev_exceptions.RecordNotInRepoException:
-
             matching_doi_rec_l = [
                 r
                 for r in records.values()
@@ -758,8 +750,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         record_dict: dict,
         change_item: dict,
     ) -> None:
-
-        for (edit_type, key, change) in list(change_item["changes"]):
+        for edit_type, key, change in list(change_item["changes"]):
             # Note : by retricting changes to self.essential_md_keys,
             # we also prevent changes in
             # "colrev_status", "colrev_origin", "file"
@@ -793,7 +784,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         prev_branch_name: str,
         source_url: str,
     ) -> None:
-
         git_repo.remotes.origin.push(
             refspec=f"{record_branch_name}:{record_branch_name}"
         )
@@ -832,7 +822,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         source_url: str,
         change_list: list,
     ) -> bool:
-
         # pylint: disable=too-many-locals
 
         git_repo = check_operation.review_manager.dataset.get_repo()
@@ -842,7 +831,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         pull_request_msgs = []
         pull_request_links = []
         for change_item in change_list:
-
             try:
                 record_dict = self.__retrieve_record_for_correction(
                     records=records,

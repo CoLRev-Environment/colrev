@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -15,8 +14,11 @@ import colrev.env.utils
 import colrev.record
 
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -110,7 +112,6 @@ class Obsidian(JsonSchemaMixin):
     def __append_missing_records(
         self, *, data_operation: colrev.ops.data.Data, records: dict, silent_mode: bool
     ) -> None:
-
         included = data_operation.get_record_ids_for_synthesis(records)
         missing_records = self.__get_obsidian_missing(included=included)
         if len(missing_records) == 0:
@@ -196,7 +197,6 @@ class Obsidian(JsonSchemaMixin):
         # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def __ignore_paths(self, *, data_operation: colrev.ops.data.Data) -> None:
-
         gitignore_path = Path(data_operation.review_manager.path / ".gitignore")
         git_ignore_content = gitignore_path.read_text(encoding="utf-8")
 

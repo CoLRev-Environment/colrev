@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import requests
 import timeout_decorator
@@ -16,9 +15,12 @@ import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
 import colrev.record
 
+# pylint: disable=duplicate-code
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 
@@ -165,7 +167,6 @@ class YearVolIssPrep(JsonSchemaMixin):
             source_operation=prep_operation
         )
         try:
-
             retrieved_records = crossref_source.crossref_query(
                 review_manager=prep_operation.review_manager,
                 record_input=record,

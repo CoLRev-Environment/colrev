@@ -11,7 +11,7 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import git
 import pybtex.errors
@@ -27,8 +27,11 @@ import colrev.operation
 import colrev.record
 import colrev.settings
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-lines
@@ -42,7 +45,6 @@ class Dataset:
     __git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         self.review_manager = review_manager
         self.records_file = review_manager.path / self.RECORDS_FILE_RELATIVE
 
@@ -58,7 +60,9 @@ class Dataset:
 
         self.masterdata_restrictions = self.__get_masterdata_restrictions()
 
-    def get_origin_state_dict(self, *, file_object: io.StringIO = None) -> dict:
+    def get_origin_state_dict(
+        self, *, file_object: Optional[io.StringIO] = None
+    ) -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
 
         {'30_example_records.bib/Staehr2010': <RecordState.pdf_not_available: 10>,}
@@ -108,7 +112,6 @@ class Dataset:
         found_but_not_changed = False
         skipped_prior_commits = False  # if no commit_sha provided
         for commit in self.__git_repo.iter_commits():
-
             if commit_sha:
                 if not skipped_prior_commits:
                     if not found_but_not_changed:
@@ -233,7 +236,7 @@ class Dataset:
                         print(f"problem with data_provenance_item {item}")
 
         else:
-            print(f"error loading dict_field: {key}")
+            print(f"error loading dict_field: {field}")
 
         return return_dict
 
@@ -296,7 +299,9 @@ class Dataset:
 
         return records_dict
 
-    def __read_record_header_items(self, *, file_object: typing.TextIO = None) -> list:
+    def __read_record_header_items(
+        self, *, file_object: Optional[typing.TextIO] = None
+    ) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
 
         # pylint: disable=too-many-statements
@@ -388,7 +393,11 @@ class Dataset:
         ]
 
     def load_records_dict(
-        self, *, file_path: Path = None, load_str: str = None, header_only: bool = False
+        self,
+        *,
+        file_path: Optional[Path] = None,
+        load_str: Optional[str] = None,
+        header_only: bool = False,
     ) -> dict:
         """Load the records
 
@@ -597,7 +606,9 @@ class Dataset:
             return
         self.save_records_dict_to_file(records=records, save_path=self.records_file)
 
-    def read_next_record(self, *, conditions: list = None) -> typing.Iterator[dict]:
+    def read_next_record(
+        self, *, conditions: Optional[list] = None
+    ) -> typing.Iterator[dict]:
         """Read records (Iterator) based on condition"""
 
         # Note : matches conditions connected with 'OR'
@@ -671,11 +682,9 @@ class Dataset:
     def __generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
-
         # pylint: disable=too-many-branches
 
         try:
-
             retrieved_record = local_index.retrieve(record_dict=record_dict)
             temp_id = retrieved_record["ID"]
 
@@ -687,7 +696,6 @@ class Dataset:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-
             if "" != record_dict.get("author", record_dict.get("editor", "")):
                 authors_string = record_dict.get(
                     "author", record_dict.get("editor", "Anonymous")
@@ -770,7 +778,7 @@ class Dataset:
         *,
         local_index: colrev.env.local_index.LocalIndex,
         record_dict: dict,
-        existing_ids: list = None,
+        existing_ids: Optional[list] = None,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
@@ -796,7 +804,9 @@ class Dataset:
 
         return temp_id
 
-    def set_ids(self, *, records: dict = None, selected_ids: list = None) -> dict:
+    def set_ids(
+        self, *, records: Optional[dict] = None, selected_ids: Optional[list] = None
+    ) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         # pylint: disable=redefined-outer-name
@@ -917,7 +927,7 @@ class Dataset:
         return self.__git_repo
 
     def has_changes(
-        self, *, relative_path: Path = None, change_type: str = "all"
+        self, *, relative_path: Optional[Path] = None, change_type: str = "all"
     ) -> bool:
         """Check whether the relative path (or the git repository) has changes"""
 

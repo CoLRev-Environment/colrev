@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import zope.interface
@@ -15,8 +14,11 @@ from docker.errors import DockerException
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 
-if TYPE_CHECKING:
-    import colrev.ops.load
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -55,7 +57,6 @@ class BibutilsLoader(JsonSchemaMixin):
         """Load records from the source"""
 
         def bibutils_convert(script: str, data: str) -> str:
-
             if "xml2bib" == script:
                 script = script + " -b -w -sk "
             else:

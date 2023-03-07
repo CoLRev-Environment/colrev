@@ -9,6 +9,7 @@ import typing
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
+from typing import Optional
 
 import requests_cache
 import yaml
@@ -55,7 +56,7 @@ class ReviewManager:
     def __init__(
         self,
         *,
-        path_str: str = None,
+        path_str: Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
         debug_mode: bool = False,
@@ -63,7 +64,6 @@ class ReviewManager:
         navigate_to_home_dir: bool = True,
         exact_call: str = "",
     ) -> None:
-
         self.force_mode = force_mode
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode
@@ -131,7 +131,7 @@ class ReviewManager:
         """Get the committer name and email"""
         return self.environment_manager.get_name_mail_from_git()
 
-    def __get_project_home_dir(self, *, path_str: str = None) -> Path:
+    def __get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
         if path_str:
             return Path(path_str)
 
@@ -265,7 +265,7 @@ class ReviewManager:
                 raise exc
 
     def update_status_yaml(
-        self, *, add_to_git: bool = True, records: dict = None
+        self, *, add_to_git: bool = True, records: Optional[dict] = None
     ) -> None:
         """Update the status.yaml"""
 
@@ -282,7 +282,7 @@ class ReviewManager:
         msg: str,
         manual_author: bool = False,
         script_call: str = "",
-        saved_args: dict = None,
+        saved_args: Optional[dict] = None,
     ) -> bool:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
@@ -341,7 +341,7 @@ class ReviewManager:
         return colrev.checker.Checker(review_manager=self)
 
     def get_status_stats(
-        self, *, records: dict = None
+        self, *, records: Optional[dict] = None
     ) -> colrev.ops.status.StatusStats:
         """Get a status stats object"""
 
@@ -385,7 +385,7 @@ class ReviewManager:
         )
 
     def get_tei(
-        self, *, pdf_path: Path = None, tei_path: Path = None
+        self, *, pdf_path: Optional[Path] = None, tei_path: Optional[Path] = None
     ) -> colrev.env.tei_parser.TEIParser:  # type: ignore
         """Get a tei object"""
 
@@ -456,7 +456,7 @@ class ReviewManager:
         example: bool = False,
         light: bool = False,
         local_pdf_collection: bool = False,
-        target_path: Path = None,
+        target_path: Optional[Path] = None,
         exact_call: str = "",
     ) -> colrev.ops.init.Initializer:
         """Get an init operation object"""
@@ -681,7 +681,7 @@ class ReviewManager:
         return colrev.ops.search_sources.SearchSources(review_manager=self)
 
     def get_review_types(
-        self, *, review_type: str = None
+        self, *, review_type: Optional[str] = None
     ) -> colrev.ops.review_types.ReviewTypes:
         """Get a ReviewTypes object"""
         import colrev.ops.review_types
@@ -693,7 +693,7 @@ class ReviewManager:
     def get_review_manager(
         self,
         *,
-        path_str: str = None,
+        path_str: Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
     ) -> ReviewManager:
@@ -702,7 +702,7 @@ class ReviewManager:
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
 
-    def in_ci_environment(self, *, identifier: str = None) -> bool:
+    def in_ci_environment(self, *, identifier: Optional[str] = None) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
 
         if identifier:

@@ -47,7 +47,6 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-
         converters = {Path: Path, Enum: Enum}
         self.search_source = from_dict(
             data_class=self.settings_class,
@@ -132,7 +131,6 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.rename_field(key="title", new_key="chapter")
 
         if "UNKNOWN" != record.data.get("author", "UNKNOWN"):
-
             # fix name format
             if (1 == len(record.data["author"].split(" ")[0])) or (
                 ", " not in record.data["author"]

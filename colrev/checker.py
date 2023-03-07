@@ -8,7 +8,6 @@ import sys
 import typing
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import yaml
 from git.exc import InvalidGitRepositoryError
@@ -18,8 +17,11 @@ import colrev.operation
 from colrev.exit_codes import ExitCodes
 
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class Checker:
@@ -30,7 +32,6 @@ class Checker:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
-
         self.review_manager = review_manager
 
         self.review_manager.notified_next_operation = (
@@ -109,7 +110,7 @@ class Checker:
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
-            for (stage, _) in list_of_blobs:
+            for stage, _ in list_of_blobs:
                 if stage != 0:
                     raise colrev_exceptions.GitConflictError(Path(path))
 
@@ -300,7 +301,6 @@ class Checker:
             for [record_id, status, screen_crit] in status_data[
                 "screening_criteria_list"
             ]:
-
                 if status not in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.rev_included
                 ):
@@ -452,7 +452,6 @@ class Checker:
     def check_sources(self) -> None:
         """Check the sources"""
         for source in self.review_manager.settings.sources:
-
             if not source.filename.is_file():
                 self.review_manager.logger.debug(
                     f"Search details without file: {source.filename}"
@@ -481,7 +480,6 @@ class Checker:
         status: colrev.record.RecordState,
         status_data: dict,
     ) -> dict:
-
         prior_status = []
         if "colrev_status" in prior:
             prior_status = [
@@ -519,7 +517,6 @@ class Checker:
         return status_transition
 
     def __retrieve_status_data(self, *, prior: dict, records: dict) -> dict:
-
         status_data: dict = {
             "pdf_not_exists": [],
             "status_fields": [],

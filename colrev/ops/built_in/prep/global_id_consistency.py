@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
@@ -16,8 +15,11 @@ import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.ops.search_sources
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 
@@ -48,7 +50,6 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
 
     def __validate_against_doi_metadata(self, *, record: colrev.record.Record) -> None:
-
         # pylint: disable=too-many-branches
 
         if "doi" not in record.data:

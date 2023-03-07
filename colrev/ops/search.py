@@ -7,6 +7,7 @@ import time
 from copy import deepcopy
 from pathlib import Path
 from random import randint
+from typing import Optional
 
 import requests
 from pybtex.database.input import bibtex
@@ -26,7 +27,6 @@ class Search(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.search,
@@ -82,7 +82,6 @@ class Search(colrev.operation.Operation):
         )
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
-
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
@@ -106,9 +105,8 @@ class Search(colrev.operation.Operation):
             )
 
     def __get_search_sources(
-        self, *, selection_str: str = None
+        self, *, selection_str: Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
-
         sources_selected = self.sources
         if selection_str:
             if "all" != selection_str:
@@ -130,7 +128,6 @@ class Search(colrev.operation.Operation):
         return sources_selected
 
     def __have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
-
         # To ignore changes introduced by saving/loading the feed-records,
         # we parse and load them in the following.
         record_a = deepcopy(record_a_orig)
@@ -187,7 +184,6 @@ class Search(colrev.operation.Operation):
 
         origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
         for main_record_dict in records.values():
-
             if origin not in main_record_dict["colrev_origin"]:
                 continue
 
@@ -230,7 +226,6 @@ class Search(colrev.operation.Operation):
             )
 
             for key, value in record_dict.items():
-
                 if (
                     not update_time_variant_fields
                     and key in colrev.record.Record.time_variant_fields
@@ -309,7 +304,11 @@ class Search(colrev.operation.Operation):
         return changed
 
     def main(
-        self, *, selection_str: str = None, rerun: bool, skip_commit: bool = False
+        self,
+        *,
+        selection_str: Optional[str] = None,
+        rerun: bool,
+        skip_commit: bool = False,
     ) -> None:
         """Search for records (main entrypoint)"""
 
@@ -327,7 +326,6 @@ class Search(colrev.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
 
         for source in self.__get_search_sources(selection_str=selection_str):
-
             endpoint_dict = package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
@@ -411,7 +409,6 @@ class GeneralOriginFeed:
         source_identifier: str,
         update_only: bool,
     ):
-
         self.source = search_source
         self.feed_file = search_source.get_corresponding_bib_file()
 
@@ -463,7 +460,6 @@ class GeneralOriginFeed:
 
         search_operation = self.review_manager.get_search_operation()
         if len(self.feed_records) > 0:
-
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             self.review_manager.dataset.save_records_dict_to_file(
                 records=self.feed_records, save_path=self.feed_file

@@ -6,7 +6,6 @@ import shutil
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
@@ -17,8 +16,13 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
+# pylint: disable=duplicate-code
+
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 
@@ -58,7 +62,6 @@ class PDFLastPage(JsonSchemaMixin):
         lp_path.mkdir(exist_ok=True)
 
         def __get_last_pages(*, pdf: str) -> typing.List[int]:
-
             last_pages: typing.List[int] = []
             try:
                 pdf_reader = PdfFileReader(str(pdf), strict=False)

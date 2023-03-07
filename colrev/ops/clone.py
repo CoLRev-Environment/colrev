@@ -34,7 +34,6 @@ class Clone:
             )
             review_manager.check_repository_setup()
         except colrev_exceptions.RepoSetupError:
-
             print("Not a CoLRev repository.")
             return
         environment_manager = review_manager.get_environment_manager()

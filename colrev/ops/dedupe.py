@@ -7,7 +7,7 @@ import string
 import typing
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import pandas as pd
 
@@ -17,8 +17,11 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class Dedupe(colrev.operation.Operation):
@@ -36,7 +39,6 @@ class Dedupe(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.dedupe,
@@ -238,7 +240,6 @@ class Dedupe(colrev.operation.Operation):
         return records
 
     def __select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
-
         # pylint: disable=too-many-branches
 
         # Heuristic
@@ -303,7 +304,6 @@ class Dedupe(colrev.operation.Operation):
     def __same_source_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
-
         main_rec_sources = [x.split("/")[0] for x in main_record.data["colrev_origin"]]
         dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data["colrev_origin"]]
         same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
@@ -344,7 +344,6 @@ class Dedupe(colrev.operation.Operation):
             colrev.settings.SameSourceMergePolicy.warn
             == self.review_manager.settings.dedupe.same_source_merges
         ):
-
             self.review_manager.logger.warning(
                 f"\n{colors.ORANGE}"
                 "Applying same source merge "
@@ -361,7 +360,6 @@ class Dedupe(colrev.operation.Operation):
             colrev.settings.SameSourceMergePolicy.prevent
             == self.review_manager.settings.dedupe.same_source_merges
         ):
-
             self.review_manager.logger.warning(
                 f"Prevented same-source merge: ({merge_info})"
             )
@@ -438,7 +436,7 @@ class Dedupe(colrev.operation.Operation):
         *,
         results: list,
         complete_dedupe: bool = False,
-        preferred_masterdata_sources: list = None,
+        preferred_masterdata_sources: Optional[list] = None,
     ) -> None:
         """Apply automated deduplication decisions
 
@@ -479,10 +477,8 @@ class Dedupe(colrev.operation.Operation):
         removed_duplicates = []
         duplicate_id_mappings = {}
         record_to_merge = self.__get_records_to_merge(records=records, results=results)
-        for (main_record, dupe_record, dupe) in record_to_merge:
-
+        for main_record, dupe_record, dupe in record_to_merge:
             try:
-
                 if self.__is_cross_level_merge(
                     main_record=main_record, dupe_record=dupe_record
                 ):
@@ -589,7 +585,6 @@ class Dedupe(colrev.operation.Operation):
 
         duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
         for dupe in duplicates_to_process:
-
             try:
                 rec_1 = records[dupe.pop("ID1")]
                 rec_2 = records[dupe.pop("ID2")]
@@ -715,7 +710,10 @@ class Dedupe(colrev.operation.Operation):
         return records
 
     def unmerge_records(
-        self, *, current_record_ids: list = None, previous_id_lists: list = None
+        self,
+        *,
+        current_record_ids: Optional[list] = None,
+        previous_id_lists: Optional[list] = None,
     ) -> None:
         """Unmerge duplicate decision of the records, as identified by their ids.
 
@@ -765,7 +763,6 @@ class Dedupe(colrev.operation.Operation):
                 self.unmerge_records(previous_id_lists=previous_ids_to_unmerge)
 
         if self.non_dupe_file_xlsx.is_file() or self.non_dupe_file_txt.is_file():
-
             ids_to_merge = []
             if self.non_dupe_file_xlsx.is_file():
                 non_dupes = pd.read_excel(self.non_dupe_file_xlsx)
@@ -832,7 +829,6 @@ class Dedupe(colrev.operation.Operation):
         same_source_merges = []
 
         for record in records.values():
-
             rec_sources = [x.split("/")[0] for x in record["colrev_origin"]]
 
             duplicated_sources = [
@@ -879,7 +875,6 @@ class Dedupe(colrev.operation.Operation):
         for (
             dedupe_package_endpoint
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
-
             # Note : load package/script at this point because the same script
             # may run with different parameters
             endpoint_dict = package_manager.load_packages(

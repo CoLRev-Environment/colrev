@@ -15,8 +15,9 @@ import colrev.env.package_manager
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
+if False:  # pylint: disable=using-constant-test
+    if typing.TYPE_CHECKING:
+        import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -59,7 +60,6 @@ class TablePrescreen(JsonSchemaMixin):
 
         tbl = []
         for record in records.values():
-
             if record["colrev_status"] not in [
                 colrev.record.RecordState.md_processed,
                 colrev.record.RecordState.rev_prescreen_excluded,

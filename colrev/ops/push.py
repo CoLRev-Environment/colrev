@@ -57,7 +57,6 @@ class Push(colrev.operation.Operation):
 
             record = output["original_record"]
             for source_origin in record["colrev_origin"]:
-
                 # note : simple heuristic / should be based on the SearchSources
                 # (objects - whether they offer correction functionality)
                 source_prefix = source_origin[: source_origin.find("/")]
@@ -83,7 +82,6 @@ class Push(colrev.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
 
         for source_prefix, change_itemsets in change_sets.items():
-
             source_l = [
                 s
                 for s in self.review_manager.settings.sources
@@ -123,7 +121,6 @@ class Push(colrev.operation.Operation):
     def __share_correction(
         self, *, source: colrev.settings.SearchSource, change_list: list
     ) -> None:
-
         prepared_change_list = []
         for change in change_list:
             prepared_change_list.append(

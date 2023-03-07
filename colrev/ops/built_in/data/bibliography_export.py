@@ -7,7 +7,6 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -18,8 +17,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @dataclass
@@ -68,7 +70,6 @@ class BibliographyExport(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-
         if "bib_format" not in settings:
             settings["bib_format"] = "endnote"
         settings["bib_format"] = BibFormats[settings["bib_format"]]
@@ -117,7 +118,6 @@ class BibliographyExport(JsonSchemaMixin):
     def __zotero_conversion(
         self, *, data_operation: colrev.ops.data.Data, selected_records: dict
     ) -> None:
-
         data_operation.review_manager.logger.info(
             f"Export {self.settings.bib_format.name}"
         )

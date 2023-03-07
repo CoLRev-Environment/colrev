@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
@@ -14,8 +13,11 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 
@@ -31,7 +33,6 @@ class TEIPDFPrep(JsonSchemaMixin):
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
-
         self.settings = self.settings_class.load_settings(data=settings)
 
         grobid_service = pdf_prep_operation.review_manager.get_grobid_service()

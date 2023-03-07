@@ -6,7 +6,6 @@ import json
 import typing
 from pathlib import Path
 from shutil import copytree
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import yaml
@@ -16,8 +15,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -109,7 +111,6 @@ class Upgrade(colrev.operation.Operation):
             )
 
     def __print_release_notes(self, *, selected_version: str) -> None:
-
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("../CHANGELOG.md")
         )
@@ -551,7 +552,6 @@ class Upgrade(colrev.operation.Operation):
             del settings["prescreen"]["scope"]
 
             if len(scope_items) > 0:
-
                 if "scope_prescreen" not in [
                     s["endpoint"] for s in settings["prescreen"]["scripts"]
                 ]:

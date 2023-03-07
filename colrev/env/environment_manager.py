@@ -6,6 +6,7 @@ import json
 import typing
 from pathlib import Path
 from subprocess import check_output
+from typing import Optional
 
 import docker
 import git
@@ -135,7 +136,9 @@ class EnvironmentManager:
             )
         return global_conf_details
 
-    def build_docker_image(self, *, imagename: str, image_path: Path = None) -> None:
+    def build_docker_image(
+        self, *, imagename: str, image_path: Optional[Path] = None
+    ) -> None:
         """Build a docker image"""
 
         try:
@@ -143,7 +146,6 @@ class EnvironmentManager:
             repo_tags = [t for image in client.images.list() for t in image.tags]
 
             if imagename not in repo_tags:
-
                 if image_path:
                     assert colrev.review_manager.__file__
                     colrev_path = Path("")

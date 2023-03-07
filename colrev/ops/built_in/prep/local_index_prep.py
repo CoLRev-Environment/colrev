@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
@@ -14,8 +13,14 @@ import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+
+# pylint: disable=duplicate-code
+
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 
@@ -34,7 +39,6 @@ class LocalIndexPrep(JsonSchemaMixin):
     always_apply_changes = True
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
-
         self.settings = self.settings_class.load_settings(data=settings)
         self.local_index_source = local_index_connector.LocalIndexSearchSource(
             source_operation=prep_operation

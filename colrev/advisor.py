@@ -6,7 +6,7 @@ import typing
 from collections import Counter
 from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import git
 from git.exc import InvalidGitRepositoryError
@@ -14,8 +14,11 @@ from git.exc import NoSuchPathError
 
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.review_manager.ReviewManager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager.ReviewManager
 
 
 class Advisor:
@@ -42,7 +45,6 @@ class Advisor:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
-
         self.review_manager = review_manager
 
     def __append_merge_conflict_warning(
@@ -51,7 +53,7 @@ class Advisor:
         found_a_conflict = False
         unmerged_blobs = git_repo.index.unmerged_blobs()
         for _, list_of_blobs in unmerged_blobs.items():
-            for (stage, _) in list_of_blobs:
+            for stage, _ in list_of_blobs:
                 if stage != 0:
                     found_a_conflict = True
         if found_a_conflict:
@@ -68,7 +70,6 @@ class Advisor:
     def __notify_non_staged_files(
         self, *, collaboration_instructions: dict, git_repo: git.Repo
     ) -> None:
-
         # Notify when changes in bib files are not staged
         # (this may raise unexpected errors)
 
@@ -199,7 +200,7 @@ class Advisor:
                 }
 
     def __get_collaboration_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
         """Get instructions related to collaboration"""
 
@@ -406,12 +407,10 @@ class Advisor:
             or self.review_manager.verbose_mode
             or self.review_manager.settings.is_curated_masterdata_repo()
         ):
-
             if (
                 "colrev data" in [ri["cmd"] for ri in review_instructions]
                 or self.review_manager.settings.is_curated_masterdata_repo()
             ):
-
                 for item in review_instructions.copy():
                     if item.get("cmd") == "colrev data":
                         review_instructions.remove(item)
@@ -426,7 +425,6 @@ class Advisor:
                 for (
                     data_package_endpoint
                 ) in self.review_manager.settings.data.data_package_endpoints:
-
                     endpoint_dict = package_manager.load_packages(
                         package_type=colrev.env.package_manager.PackageEndpointType.data,
                         selected_packages=[data_package_endpoint],
@@ -441,7 +439,6 @@ class Advisor:
     def __get_missing_files(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
-
         # excluding pdf_not_available
         file_required_status = [
             colrev.record.RecordState.pdf_imported,
@@ -464,7 +461,6 @@ class Advisor:
     def __append_pdf_issue_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats, review_instructions: list
     ) -> None:
-
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
             missing_files = self.__get_missing_files(status_stats=status_stats)
@@ -522,7 +518,7 @@ class Advisor:
                 review_instructions.append(instruction)
 
     def get_review_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> list:
         """Get instructions related to the review (operations)"""
 
@@ -558,7 +554,6 @@ class Advisor:
 
     # Note : no named arguments for multiprocessing
     def __append_registered_repo_instructions(self, registered_path: Path) -> dict:
-
         instruction = {}
 
         try:
@@ -632,7 +627,6 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-
                 if "journal" == line.lstrip()[:7]:
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
@@ -712,7 +706,7 @@ class Advisor:
         return environment_instructions
 
     def get_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats = None
+        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
         """Get all instructions on the project"""
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 import typing
 from time import sleep
-from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
@@ -14,8 +13,11 @@ import colrev.ui_cli.cli_colors as colors
 from colrev.exit_codes import ExitCodes
 
 
-if TYPE_CHECKING:
-    import colrev.ops.status
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.status
 
 
 def print_review_instructions(review_instructions: dict) -> None:
@@ -37,7 +39,6 @@ def print_review_instructions(review_instructions: dict) -> None:
         print()
 
     for review_instruction in review_instructions:
-
         # prioritize based on the order of instructions (most important first)
         # if priority_item_set and "priority" not in review_instruction.keys():
         #     continue

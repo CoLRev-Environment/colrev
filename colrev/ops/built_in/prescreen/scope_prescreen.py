@@ -12,8 +12,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.record
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
+if False:  # pylint: disable=using-constant-test
+    if typing.TYPE_CHECKING:
+        import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -79,7 +80,6 @@ class ScopePrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-
         if "TimeScopeFrom" in settings:
             assert settings["TimeScopeFrom"] > 1900
         if "TimeScopeFrom" in settings:
@@ -100,7 +100,6 @@ class ScopePrescreen(JsonSchemaMixin):
         )
 
     def __load_predatory_journals_beal(self) -> dict:
-
         predatory_journals = {}
 
         filedata = colrev.env.utils.get_package_file_content(

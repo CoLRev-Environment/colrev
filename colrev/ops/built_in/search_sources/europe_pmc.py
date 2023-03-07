@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
-from typing import TYPE_CHECKING
+from typing import Optional
 from urllib.parse import quote
 from xml.etree.ElementTree import Element
 
@@ -25,8 +25,13 @@ import colrev.ops.search
 import colrev.record
 import colrev.settings
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+# pylint: disable=duplicate-code
+
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING  # pylint: disable=ungrouped-imports
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 
 # pylint: disable=unused-argument
@@ -74,9 +79,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.operation.Operation,
-        settings: dict = None,
+        settings: Optional[dict] = None,
     ) -> None:
-
         if settings:
             # EuropePMC as a search_source
             self.search_source = from_dict(
@@ -111,7 +115,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def __europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
@@ -234,7 +237,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-locals
 
         try:
-
             record = record_input.copy_prep_rec()
 
             url = (
@@ -262,7 +264,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 result_list = root.findall("resultList")[0]
 
                 for result_item in result_list.findall("result"):
-
                     retrieved_record = cls.__europe_pmc_xml_to_record(item=result_item)
 
                     if "title" not in retrieved_record.data:
@@ -321,9 +322,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
 
         try:
-
             if len(record.data.get("title", "")) > 35:
-
                 retries = 0
                 while retries < prep_operation.max_retries_on_error:
                     retries += 1
@@ -428,7 +427,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         )
 
         try:
-
             for retrieved_record in self.europe_pcmc_query(
                 review_manager=search_operation.review_manager,
                 record_input=colrev.record.Record(
@@ -436,7 +434,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 ),
                 most_similar_only=False,
             ):
-
                 if "colrev_data_provenance" in retrieved_record.data:
                     del retrieved_record.data["colrev_data_provenance"]
                 if "colrev_masterdata_provenance" in retrieved_record.data:

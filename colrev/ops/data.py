@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -23,7 +24,6 @@ class Data(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.data,
@@ -116,7 +116,6 @@ class Data(colrev.operation.Operation):
         def prep_observations(
             *, prepared_records_df: pd.DataFrame, records: dict
         ) -> pd.DataFrame:
-
             included_papers = [
                 ID
                 for ID, record in records.items()
@@ -222,8 +221,8 @@ class Data(colrev.operation.Operation):
     def main(
         self,
         *,
-        selection_list: list = None,
-        records: dict = None,
+        selection_list: Optional[list] = None,
+        records: Optional[dict] = None,
         silent_mode: bool = False,
     ) -> dict:
         """Data operation (main entrypoint)

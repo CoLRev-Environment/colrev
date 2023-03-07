@@ -33,7 +33,6 @@ class PDFPrep(colrev.operation.Operation):
         reprocess: bool = False,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.pdf_prep,
@@ -56,7 +55,6 @@ class PDFPrep(colrev.operation.Operation):
     def __complete_successful_pdf_prep(
         self, *, record: colrev.record.Record, original_filename: str
     ) -> None:
-
         record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data["file"])
         if pdf_path.suffix == ".pdf":
@@ -74,7 +72,6 @@ class PDFPrep(colrev.operation.Operation):
         # colrev_status == pdf_imported : means successful
         # create *_backup.pdf if record["file"] was changed
         if original_filename != record.data["file"]:
-
             current_file = self.review_manager.path / Path(record.data["file"])
             original_file = self.review_manager.path / Path(original_filename)
             if current_file.is_file() and original_file.is_file():
@@ -146,7 +143,6 @@ class PDFPrep(colrev.operation.Operation):
         for (
             pdf_prep_package_endpoint
         ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
-
             try:
                 if (
                     pdf_prep_package_endpoint["endpoint"]
@@ -232,7 +228,6 @@ class PDFPrep(colrev.operation.Operation):
         return record.get_data()
 
     def __get_data(self, *, batch_size: int) -> dict:
-
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -265,7 +260,6 @@ class PDFPrep(colrev.operation.Operation):
         return prep_data
 
     def __set_to_reprocess(self) -> None:
-
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if (
@@ -305,7 +299,6 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
-
         self.pdf_prepared = len(
             [
                 r
@@ -434,7 +427,6 @@ class PDFPrep(colrev.operation.Operation):
                 )
 
         else:
-
             endpoint_names = [
                 s["endpoint"]
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints

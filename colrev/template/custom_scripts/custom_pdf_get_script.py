@@ -2,15 +2,16 @@
 """Template for a custom PDFGet PackageEndpoint"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import zope.interface
 from dacite import from_dict
 
 import colrev.operation
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_get
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_get
 
 
 # pylint: disable=too-few-public-methods

@@ -6,6 +6,7 @@ import datetime
 import re
 import typing
 from pathlib import Path
+from typing import Optional
 
 from tqdm import tqdm
 
@@ -18,7 +19,6 @@ class Validate(colrev.operation.Operation):
     """Validate changes"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.check,
@@ -27,7 +27,6 @@ class Validate(colrev.operation.Operation):
         self.cpus = 4
 
     def __load_prior_records_dict(self, *, target_commit: str) -> dict:
-
         git_repo = self.review_manager.dataset.get_repo()
 
         revlist = (
@@ -115,7 +114,6 @@ class Validate(colrev.operation.Operation):
         change_diff = []
         merged_records = False
         for record in records:
-
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
@@ -196,7 +194,9 @@ class Validate(colrev.operation.Operation):
 
         return change_diff
 
-    def load_changed_records(self, *, target_commit: str = None) -> list[dict]:
+    def load_changed_records(
+        self, *, target_commit: Optional[str] = None
+    ) -> list[dict]:
         """Load the records that were changed in the target commit"""
         if target_commit is None:
             self.review_manager.logger.info("Loading data...")
@@ -255,7 +255,6 @@ class Validate(colrev.operation.Operation):
         return validation_details
 
     def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
-
         # pylint: disable=too-many-branches
 
         if not target_commit:
@@ -395,7 +394,6 @@ class Validate(colrev.operation.Operation):
                 .decode("utf-8")
             )
             if "screen" in commit.message or "prescreen" in commit.message:
-
                 prescreen_validation = self.validate_merge_prescreen_screen(
                     commit_sha=commit.hexsha,
                     current_branch_records=records_branch_1,
@@ -428,7 +426,6 @@ class Validate(colrev.operation.Operation):
                 commit_object = git_repo.commit(scope)
                 commit = commit_object.hexsha
             except ValueError:
-
                 for commit_candidate in git_repo.iter_commits():
                     if str(commit_candidate.tree) == scope:
                         commit = commit_candidate.hexsha
@@ -452,7 +449,6 @@ class Validate(colrev.operation.Operation):
     def __deduplicated_records(
         self, *, records: list[dict], prior_records_dict: dict
     ) -> bool:
-
         return {",".join(sorted(x)) for x in [r["colrev_origin"] for r in records]} != {
             ",".join(sorted(x))
             for x in [r["colrev_origin"] for r in prior_records_dict.values()]

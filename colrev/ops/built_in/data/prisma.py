@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import List
-from typing import TYPE_CHECKING
 
 import docker
 import pandas as pd
@@ -20,9 +19,12 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
+# pylint: disable=duplicate-code
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -46,7 +48,6 @@ class PRISMA(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -171,7 +172,6 @@ class PRISMA(JsonSchemaMixin):
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
-
         # pylint: disable=duplicate-code
         try:
             uid = os.stat(data_operation.review_manager.settings_path).st_uid

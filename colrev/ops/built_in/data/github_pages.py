@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,9 +13,12 @@ import colrev.env.utils
 import colrev.record
 
 
-if TYPE_CHECKING:
-    import colrev.ops.data
-    import git
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
+        import git
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -113,7 +115,6 @@ class GithubPages(JsonSchemaMixin):
     def __update_data(
         self, *, data_operation: colrev.ops.data.Data, silent_mode: bool
     ) -> None:
-
         if not silent_mode:
             data_operation.review_manager.logger.info("Update data on github pages")
         records = data_operation.review_manager.dataset.load_records_dict()

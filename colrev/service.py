@@ -72,7 +72,6 @@ class Service:
     review_manager: colrev.review_manager.ReviewManager
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         print("Starting CoLRev service...")
 
         self.review_manager = review_manager
@@ -161,7 +160,6 @@ class Service:
         return service_logger
 
     def __run_queue_item(self) -> None:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 
@@ -178,7 +176,6 @@ class Service:
 
         print()
         if "colrev retrieve" == item["cmd"]:
-
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(rerun=False)
 
@@ -196,14 +193,11 @@ class Service:
             dedupe_operation.main()
 
         elif "colrev search" == item["cmd"]:
-
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(selection_str=None, rerun=False)
 
         elif "colrev load" == item["cmd"]:
-
             if len(list(self.review_manager.search_dir.glob("*"))) > 0:
-
                 self.logger.info("Running %s", item["name"])
 
                 load_operation = self.review_manager.get_load_operation()
@@ -218,12 +212,10 @@ class Service:
                 return
 
         elif "colrev prep" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
             preparation_operation = self.review_manager.get_prep_operation()
             preparation_operation.main()
         elif "colrev dedupe" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
 
             # Note : settings should be
@@ -234,19 +226,16 @@ class Service:
             dedupe_operation.main()
 
         elif "colrev prescreen" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
             prescreen_operation = self.review_manager.get_prescreen_operation()
             prescreen_operation.include_all_in_prescreen(persist=False)
 
         elif "colrev pdf-get" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
             pdf_get_operation = self.review_manager.get_pdf_get_operation()
             pdf_get_operation.main()
 
         elif "colrev pdf-prep" == item["cmd"]:
-
             # this may be solved more elegantly,
             # but we need colrev to link existing pdfs (file field)
 
@@ -258,13 +247,11 @@ class Service:
             pdf_preparation_operation.main(batch_size=0)
 
         elif "colrev screen" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
             screen_operation = self.review_manager.get_screen_operation()
             screen_operation.include_all_in_screen(persist=False)
 
         elif "colrev data" == item["cmd"]:
-
             self.logger.info("Running %s", item["name"])
             data_operation = self.review_manager.get_data_operation()
             data_operation.main()
@@ -293,7 +280,6 @@ class Service:
     def __worker(self) -> None:
         try:
             while True:
-
                 # Ensure that tasks are unique and priority items
                 self.service_queue.queue = deque(
                     list(

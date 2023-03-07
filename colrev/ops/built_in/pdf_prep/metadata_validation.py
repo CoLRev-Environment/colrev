@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import timeout_decorator
 import zope.interface
@@ -16,8 +15,11 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -95,7 +97,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
 
         # Editorials often have no author in the PDF (or on the last page)
         if "editorial" not in title_words:
-
             match_count = 0
             for author_name in record.data.get("author", "").split(" and "):
                 author_name = author_name.split(",")[0].lower().replace(" ", "")
@@ -108,7 +109,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
                     match_count += 1
 
             if match_count / len(record.data.get("author", "").split(" and ")) < 0.8:
-
                 validation_info["msgs"].append(  # type: ignore
                     f"{record.data['file']}: author not found in first pages"
                 )

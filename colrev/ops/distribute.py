@@ -5,13 +5,15 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.operation
 import colrev.settings
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class Distribute(colrev.operation.Operation):
@@ -49,9 +51,7 @@ class Distribute(colrev.operation.Operation):
         path = Path.cwd() / Path(path)
 
         if path.is_file():
-
             if path.suffix == ".bib":
-
                 # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/69
                 # append records (check duplicates/duplicate IDs)
                 # if path already exists
@@ -62,7 +62,6 @@ class Distribute(colrev.operation.Operation):
                 input(path)
 
             if path.suffix == ".pdf":
-
                 grobid_service = self.review_manager.get_grobid_service()
 
                 grobid_service.start()

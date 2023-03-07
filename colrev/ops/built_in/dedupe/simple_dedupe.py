@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -15,8 +14,11 @@ import colrev.ops.built_in.dedupe.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -56,7 +58,6 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         settings: dict,
     ):
-
         self.settings = self.settings_class.load_settings(data=settings)
 
         assert self.settings.merging_non_dup_threshold >= 0.0
@@ -70,14 +71,12 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         records_batch: list,
     ) -> dict:
-
         max_similarity_record = {
             "reference_record": records_batch[len(records_batch) - 1]["ID"],
             "record_id": "NA",
             "similarity": 0,
         }
         for i in range(0, len(records_batch) - 1):
-
             sim_details = colrev.record.Record.get_similarity_detailed(
                 record_a=records_batch[i],
                 record_b=records_batch[len(records_batch) - 1],
@@ -93,7 +92,6 @@ class SimpleDedupe(JsonSchemaMixin):
     def __append_merges(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
     ) -> dict:
-
         records_batch = batch_item["queue"]
 
         # if the record is the first one added to the records
@@ -132,7 +130,6 @@ class SimpleDedupe(JsonSchemaMixin):
             < max_similarity
             < self.settings.merging_dup_threshold
         ):
-
             other_id = similarity_dict["record_id"]
             # dedupe_operation.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
@@ -181,7 +178,6 @@ class SimpleDedupe(JsonSchemaMixin):
         return ret
 
     def __get_dedupe_data(self, *, dedupe_operation: colrev.ops.dedupe.Dedupe) -> dict:
-
         records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
             header_only=True
         )

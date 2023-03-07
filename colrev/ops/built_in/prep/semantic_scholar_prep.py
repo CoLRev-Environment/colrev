@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import requests
 import timeout_decorator
@@ -16,8 +15,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

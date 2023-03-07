@@ -13,6 +13,7 @@ from datetime import timedelta
 from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
+from typing import Optional
 
 import timeout_decorator
 from requests.exceptions import ConnectionError as requests_ConnectionError
@@ -178,7 +179,6 @@ class Prep(colrev.operation.Operation):
         preparation_record: colrev.record.PrepRecord,
         prep_package_endpoint: colrev.env.package_manager.PrepPackageEndpointInterface,
     ) -> None:
-
         if not self.debug_mode:
             return
 
@@ -235,7 +235,6 @@ class Prep(colrev.operation.Operation):
         for prep_round_package_endpoint in deepcopy(
             item["prep_round_package_endpoints"]
         ):
-
             try:
                 endpoint = self.prep_package_endpoints[
                     prep_round_package_endpoint["endpoint"].lower()
@@ -293,13 +292,14 @@ class Prep(colrev.operation.Operation):
                     raise exc
 
         if not self.review_manager.verbose_mode:
-
             # pylint: disable=redefined-outer-name,invalid-name
             with PREP_COUNTER.get_lock():
-                PREP_COUNTER.value += 1
+                PREP_COUNTER.value += 1  # type: ignore
             progress = ""
             if item["nr_items"] > 100:
-                progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(12, " ")
+                progress = f"({PREP_COUNTER.value}/{item['nr_items']}) ".rjust(  # type: ignore
+                    12, " "
+                )
 
             if record.preparation_break_condition():
                 if (
@@ -396,7 +396,6 @@ class Prep(colrev.operation.Operation):
         return revlist
 
     def __reset(self, *, record_list: list[dict]) -> None:
-
         record_list = self.__select_record_list_for_reset(record_list=record_list)
         revlist = self.__get_revlist_for_reset()
 
@@ -418,7 +417,6 @@ class Prep(colrev.operation.Operation):
                 ):
                     continue
                 for record_to_unmerge, record in record_reset_list:
-
                     if any(
                         o in prior_record["colrev_origin"]
                         for o in record["colrev_origin"]
@@ -562,7 +560,6 @@ class Prep(colrev.operation.Operation):
         self.review_manager.save_settings()
 
     def __load_prep_data(self) -> dict:
-
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -596,7 +593,7 @@ class Prep(colrev.operation.Operation):
         self,
         *,
         prep_round: colrev.settings.PrepRound,
-        debug_file: Path = None,
+        debug_file: Optional[Path] = None,
         debug_ids: str,
     ) -> list:
         if self.debug_mode:
@@ -642,7 +639,6 @@ class Prep(colrev.operation.Operation):
         original_records: list[dict],
         condition_state: colrev.record.RecordState,
     ) -> list:
-
         retrieved, prior_records = [], []
         for (
             prior_records_dict
@@ -667,9 +663,8 @@ class Prep(colrev.operation.Operation):
         return prior_records
 
     def __load_prep_data_for_debug(
-        self, *, debug_ids: str, debug_file: Path = None
+        self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
-
         if debug_file:
             with open(debug_file, encoding="utf8") as target_db:
                 records_dict = self.review_manager.dataset.load_records_dict(
@@ -714,11 +709,10 @@ class Prep(colrev.operation.Operation):
     def __setup_prep_round(
         self, *, i: int, prep_round: colrev.settings.PrepRound
     ) -> None:
-
         # pylint: disable=redefined-outer-name,invalid-name
         PREP_COUNTER = Value("i", 0)
         with PREP_COUNTER.get_lock():
-            PREP_COUNTER.value = 0
+            PREP_COUNTER.value = 0  # type: ignore
 
         self.first_round = bool(i == 0)
 
@@ -859,7 +853,7 @@ class Prep(colrev.operation.Operation):
         *,
         keep_ids: bool = False,
         debug_ids: str = "NA",
-        debug_file: Path = None,
+        debug_file: Optional[Path] = None,
         cpu: int = 4,
     ) -> None:
         """Preparation of records (main entrypoint)"""
@@ -900,7 +894,6 @@ class Prep(colrev.operation.Operation):
             for i, prep_round in enumerate(
                 self.review_manager.settings.prep.prep_rounds
             ):
-
                 self.__setup_prep_round(i=i, prep_round=prep_round)
 
                 preparation_data = self.__get_preparation_data(
@@ -920,7 +913,6 @@ class Prep(colrev.operation.Operation):
                         record = self.prepare(item)
                         prepared_records.append(record)
                 else:
-
                     prep_pe_names = [
                         r["endpoint"] for r in prep_round.prep_package_endpoints
                     ]

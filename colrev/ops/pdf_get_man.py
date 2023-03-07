@@ -21,7 +21,6 @@ class PDFGetMan(colrev.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.pdf_get_man,
@@ -138,7 +137,6 @@ class PDFGetMan(colrev.operation.Operation):
         for (
             pdf_get_man_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints:
-
             endpoint = self.pdf_get_man_package_endpoints[
                 pdf_get_man_package_endpoint["endpoint"]
             ]

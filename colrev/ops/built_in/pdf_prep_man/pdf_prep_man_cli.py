@@ -8,7 +8,6 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -18,8 +17,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep_man
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_prep_man
 
 
 # pylint: disable=too-few-public-methods
@@ -45,7 +47,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     def __update_metadata(
         self, *, record: colrev.record.Record
     ) -> colrev.record.Record:
-
         valid_selections = ["a", "c", "t", "v", "n", "p", "s"]
         user_selection = ""
         print(
@@ -111,7 +112,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             item: dict,
             stat: str,
         ) -> dict:
-
             # pylint: disable=no-member
             # pylint: disable=too-many-branches
             # pylint: disable=too-many-locals
@@ -171,7 +171,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 user_selection = ""
                 valid_selections = ["y", "n", "s", "q"]
                 while user_selection not in valid_selections:
-
                     user_selection = input("Selection: ")
                     if user_selection.startswith("s"):
                         if user_selection[1:].isdigit():
@@ -254,7 +253,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
             if "y" == input("Create commit (y/n)?"):
-
                 pdf_prep_man_operation.review_manager.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,

@@ -4,15 +4,18 @@ from __future__ import annotations
 
 from enum import auto
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import git
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class OperationsType(Enum):
@@ -55,7 +58,6 @@ class Operation:
         operations_type: OperationsType,
         notify_state_transition_operation: bool = True,
     ) -> None:
-
         self.review_manager = review_manager
         self.force_mode = self.review_manager.force_mode
 
@@ -82,9 +84,11 @@ class Operation:
         record_state_model.check_operation_precondition(operation=self)
 
     def __require_clean_repo_general(
-        self, *, git_repo: git.Repo = None, ignore_pattern: list = None
+        self,
+        *,
+        git_repo: Optional[git.Repo] = None,
+        ignore_pattern: Optional[list] = None,
     ) -> bool:
-
         if git_repo is None:
             git_repo = git.Repo(self.review_manager.path)
 
@@ -144,7 +148,6 @@ class Operation:
             self.__check_record_state_model_precondition()
 
         elif OperationsType.prep == self.type:
-
             if self.notify_state_transition_operation:
                 self.__require_clean_repo_general()
                 self.__check_record_state_model_precondition()

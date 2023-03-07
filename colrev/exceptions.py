@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.record
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.record
 
 
 class CoLRevException(Exception):
@@ -24,7 +27,7 @@ class RepoSetupError(CoLRevException):
 
     lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         Path(".report.log").unlink()
         if msg:
             self.message = f" {msg}"
@@ -72,7 +75,6 @@ class BrokenFilesError(CoLRevException):
     """
 
     def __init__(self, msg: str) -> None:
-
         self.message = (
             f"Detected broken files ({msg}). To fix use\n     "
             f"{colors.ORANGE}colrev repair{colors.END}"
@@ -251,7 +253,9 @@ class DuplicateIDsError(CoLRevException):
 class NotEnoughDataToIdentifyException(CoLRevException):
     """The meta-data is not sufficiently complete to identify the record."""
 
-    def __init__(self, *, msg: str = None, missing_fields: list = None) -> None:
+    def __init__(
+        self, *, msg: Optional[str] = None, missing_fields: Optional[list] = None
+    ) -> None:
         self.message = msg
         self.missing_fields = missing_fields
         super().__init__(self.message)
@@ -262,7 +266,7 @@ class NotTOCIdentifiableException(CoLRevException):
     Either the table-of-contents key is not implemented or
     the ENTRYTPE is not organized in tables-of-contents (e.g., online)."""
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -331,7 +335,7 @@ class NoSearchFeedRegistered(CoLRevException):
 class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -411,7 +415,7 @@ class NoPaperEndpointRegistered(CoLRevException):
 class RecordNotInRepoException(CoLRevException):
     """The record was not found in the main records."""
 
-    def __init__(self, record_id: str = None) -> None:
+    def __init__(self, record_id: Optional[str] = None) -> None:
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:
@@ -493,7 +497,7 @@ class TEIException(CoLRevException):
 class RecordNotInIndexException(CoLRevException):
     """The requested record was not found in the LocalIndex."""
 
-    def __init__(self, record_id: str = None) -> None:
+    def __init__(self, record_id: Optional[str] = None) -> None:
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:
@@ -504,7 +508,9 @@ class RecordNotInIndexException(CoLRevException):
 class RecordNotIndexableException(CoLRevException):
     """The requested record could not be added to the LocalIndex."""
 
-    def __init__(self, record_id: str = None, missing_key: str = None) -> None:
+    def __init__(
+        self, record_id: Optional[str] = None, missing_key: Optional[str] = None
+    ) -> None:
         self.missing_key = missing_key
         if missing_key is None:
             missing_key = "-"
@@ -518,7 +524,7 @@ class RecordNotIndexableException(CoLRevException):
 class TOCNotAvailableException(CoLRevException):
     """Tables of contents (toc) are not available for the requested item."""
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -526,6 +532,6 @@ class TOCNotAvailableException(CoLRevException):
 class CuratedOutletNotUnique(CoLRevException):
     """The outlets (journals or conferences) with curated metadata are not unique."""
 
-    def __init__(self, msg: str = None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)

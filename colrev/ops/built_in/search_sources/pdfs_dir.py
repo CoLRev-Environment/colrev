@@ -50,7 +50,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
-
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
         self.pdf_preparation_operation = (
@@ -138,7 +137,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __remove_records_if_pdf_no_longer_exists(
         self, *, search_operation: colrev.ops.search.Search
     ) -> None:
-
         # search_operation.review_manager.logger.debug(
         #     "Checking for PDFs that no longer exist"
         # )
@@ -147,7 +145,6 @@ class PDFSearchSource(JsonSchemaMixin):
             return
 
         with open(self.search_source.filename, encoding="utf8") as target_db:
-
             search_rd = search_operation.review_manager.dataset.load_records_dict(
                 load_str=target_db.read()
             )
@@ -216,7 +213,6 @@ class PDFSearchSource(JsonSchemaMixin):
             record_dict["ENTRYTYPE"] = "inproceedings"
 
         if self.subdir_pattern:
-
             # Note : no file access here (just parsing the patterns)
             # no absolute paths needed
             partial_path = Path(record_dict["file"]).parents[0]
@@ -258,7 +254,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __get_record_from_pdf_grobid(
         self, *, search_operation: colrev.ops.search.Search, record_dict: dict
     ) -> dict:
-
         if colrev.record.RecordState.md_prepared == record_dict.get(
             "colrev_status", "NA"
         ):
@@ -313,7 +308,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __get_grobid_metadata(
         self, *, search_operation: colrev.ops.search.Search, pdf_path: Path
     ) -> dict:
-
         record_dict: typing.Dict[str, typing.Any] = {
             "file": str(pdf_path),
             "ENTRYTYPE": "misc",
@@ -373,7 +367,6 @@ class PDFSearchSource(JsonSchemaMixin):
         self,
         pdf_path: Path,
     ) -> bool:
-
         if ";" in str(pdf_path):
             self.review_manager.logger.error(
                 f'skipping PDF with ";" in filepath: \n{pdf_path}'
@@ -386,7 +379,6 @@ class PDFSearchSource(JsonSchemaMixin):
             or "_wo_lp.pdf" == str(pdf_path)[-10:]
             or "_backup.pdf" == str(pdf_path)[-11:]
         ):
-
             self.review_manager.logger.info(
                 f"Skipping PDF with _ocr.pdf/_wo_cp.pdf: {pdf_path}"
             )
@@ -434,7 +426,6 @@ class PDFSearchSource(JsonSchemaMixin):
         )
 
     def __add_md_string(self, *, record_dict: dict) -> dict:
-
         md_copy = record_dict.copy()
         try:
             fsize = str(
@@ -495,12 +486,10 @@ class PDFSearchSource(JsonSchemaMixin):
         ]
         nr_added, nr_changed = 0, 0
         for pdf_batch in pdf_batches:
-
             for record in pdfs_dir_feed.feed_records.values():
                 record = self.__add_md_string(record_dict=record)
 
             for pdf_path in pdf_batch:
-
                 if self.__is_broken_filepath(pdf_path=pdf_path):
                     continue
 

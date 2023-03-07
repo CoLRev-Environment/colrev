@@ -18,7 +18,6 @@ class ZoteroTranslationService:
     def __init__(
         self, *, environment_manager: colrev.env.environment_manager.EnvironmentManager
     ) -> None:
-
         self.image_name = "zotero/translation-server:2.0.4"
         environment_manager.build_docker_image(imagename=self.image_name)
 

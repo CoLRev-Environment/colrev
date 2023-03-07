@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import html
 import re
-from typing import TYPE_CHECKING
 
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 
 def json_to_record(*, item: dict) -> dict:

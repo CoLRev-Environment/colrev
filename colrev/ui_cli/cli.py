@@ -162,7 +162,6 @@ def init(
     import colrev.ui_web.settings_editor
 
     try:
-
         colrev.review_manager.ReviewManager.get_init_operation(
             review_type=type,
             example=example,
@@ -585,7 +584,6 @@ def prep(
 
     # pylint: disable=too-many-branches
     try:
-
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
@@ -676,7 +674,6 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
 
 
 def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
-
     info = dedupe_operation.get_info()
 
     if len(info["same_source_merges"]) > 0:
@@ -734,7 +731,6 @@ def dedupe(
     """Deduplicate records"""
 
     try:
-
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
@@ -1447,7 +1443,6 @@ def pdf_prep(
 def __delete_first_pages_cli(
     pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
 ) -> None:
-
     records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
     while True:
         if record_id in records:
@@ -1847,7 +1842,6 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 def __print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-
     environment_manager = review_manager.get_environment_manager()
     environment_details = environment_manager.get_environment_details(
         review_manager=review_manager
@@ -1870,7 +1864,6 @@ def __print_environment_status(
         if "curated_metadata" not in x["repo_source_path"]
     ]
     for colrev_repo in sorted(project_repos, key=lambda d: d["repo_name"]):
-
         repo_stats = f' {colrev_repo["repo_name"]}'
         if colrev_repo["remote"]:
             if colrev_repo["behind_remote"]:
@@ -2106,7 +2099,6 @@ def settings(
         force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
     if update_hooks:
-
         print("Update pre-commit hooks")
 
         if review_manager.dataset.has_changes():
@@ -2130,7 +2122,6 @@ def settings(
         return
 
     if modify:
-
         # TBD: maybe use glom.delete?
         # There is no simply append...
         # (we could replace the (last) position element with
@@ -2376,7 +2367,6 @@ def service(
     """Service for real-time reviews"""
 
     try:
-
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )

@@ -5,13 +5,15 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class PDFHashService:
@@ -50,7 +52,6 @@ class PDFHashService:
                 [command], stderr=subprocess.STDOUT, shell=True
             )
         except subprocess.CalledProcessError as exc:
-
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
         pdf_hash = ret.decode("utf-8").replace("\n", "")

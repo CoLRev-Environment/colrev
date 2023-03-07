@@ -12,8 +12,9 @@ import colrev.env.package_manager
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
+if False:  # pylint: disable=using-constant-test
+    if typing.TYPE_CHECKING:
+        import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 
@@ -45,7 +46,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         stat_len: int,
         padding: int,
     ) -> bool:
-
         if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
             print(
                 f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "

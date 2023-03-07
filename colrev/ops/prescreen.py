@@ -82,7 +82,6 @@ class Prescreen(colrev.operation.Operation):
         self.__prescreen_records(ids=ids, include=False)
 
     def __prescreen_records(self, *, ids: str, include: bool) -> None:
-
         records = self.review_manager.dataset.load_records_dict()
         for record_id in ids.split(","):
             if record_id not in records:
@@ -196,7 +195,6 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def __print_stats(self, *, selected_record_ids: list) -> None:
-
         records = self.review_manager.dataset.load_records_dict(header_only=True)
         prescreen_excluded = [
             r["ID"]
@@ -265,7 +263,6 @@ class Prescreen(colrev.operation.Operation):
             return
 
         for prescreen_package_endpoint in prescreen_package_endpoints:
-
             self.review_manager.logger.debug(
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )

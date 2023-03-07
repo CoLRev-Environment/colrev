@@ -9,15 +9,18 @@ import sys
 import tempfile
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Optional
 
 import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
-if TYPE_CHECKING:
-    import colrev.review_manager
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.review_manager
 
 
 class Commit:
@@ -35,9 +38,8 @@ class Commit:
         msg: str,
         manual_author: bool,
         script_name: str,
-        saved_args: dict = None,
+        saved_args: Optional[dict] = None,
     ) -> None:
-
         self.review_manager = review_manager
         self.manual_author = manual_author
 
@@ -78,7 +80,7 @@ class Commit:
                     pass
         self.__temp_path.mkdir(exist_ok=True)
 
-    def __parse_saved_args(self, *, saved_args: dict = None) -> str:
+    def __parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():
@@ -108,7 +110,6 @@ class Commit:
         return flag
 
     def __get_commit_report_header(self) -> str:
-
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_header.txt"
         )
@@ -117,7 +118,6 @@ class Commit:
         return content
 
     def __get_commit_report_details(self) -> str:
-
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_details.txt"
         )
@@ -126,10 +126,8 @@ class Commit:
         return content
 
     def __get_detailed_processing_report(self) -> str:
-
         processing_report = ""
         if self.review_manager.report_path.is_file():
-
             # Reformat
             prefixes = [
                 "[('change', 'author',",
@@ -185,7 +183,6 @@ class Commit:
         return processing_report
 
     def __get_commit_report(self) -> str:
-
         status_operation = self.review_manager.get_status_operation()
 
         report = self.__get_commit_report_header()

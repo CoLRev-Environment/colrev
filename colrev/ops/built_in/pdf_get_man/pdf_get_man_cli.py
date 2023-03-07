@@ -5,7 +5,6 @@ from __future__ import annotations
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,8 +13,11 @@ import colrev.env.package_manager
 import colrev.ops.pdf_get
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_get_man
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.pdf_get_man
 
 
 # pylint: disable=too-few-public-methods
@@ -61,7 +63,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> colrev.record.Record:
-
         # get the recipient email(s) from the local author index
         recipient = "TODO"
         subject = f"Copy of a PDF ({record.data['ID']})"
@@ -92,7 +93,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> Path:
-
         filepath = (
             pdf_get_man_operation.review_manager.pdf_dir
             / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
@@ -199,7 +199,6 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> None:
-
         # pdf_get_man_operation.review_manager.logger.debug(
         #     f"called pdf_get_man_cli for {record}"
         # )

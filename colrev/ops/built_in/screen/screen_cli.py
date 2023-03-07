@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -17,8 +16,11 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.screen
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.screen
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -72,7 +74,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         screen_operation: colrev.ops.screen.Screen,
         record_dict: dict,
     ) -> str:
-
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
@@ -104,7 +105,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             decisions = []
 
             for criterion_name, criterion_settings in self.screening_criteria.items():
-
                 decision, ret = "NA", "NA"
                 while ret not in ["y", "n", "q", "s"]:
                     color = colors.GREEN
@@ -157,7 +157,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             )
 
         else:
-
             decision, ret = "NA", "NA"
             while ret not in ["y", "n", "q", "s"]:
                 ret = input(
@@ -198,7 +197,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def __screen_cli(
         self, screen_operation: colrev.ops.screen.Screen, split: list
     ) -> dict:
-
         screen_data = screen_operation.get_data()
         self.__pad = screen_data["PAD"]
         self.__stat_len = screen_data["nr_tasks"]

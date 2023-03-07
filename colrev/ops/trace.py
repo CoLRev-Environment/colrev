@@ -3,22 +3,23 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
 
 import dictdiffer
 
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import git.objects.commit
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import git.objects.commit
 
 
 class Trace(colrev.operation.Operation):
     """Trace a record through history"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         super().__init__(
             review_manager=review_manager,
             operations_type=colrev.operation.OperationsType.check,
@@ -36,7 +37,6 @@ class Trace(colrev.operation.Operation):
         record_id: str,
         prev_record: dict,
     ) -> dict:
-
         record = records_dict[record_id]
 
         diffs = list(dictdiffer.diff(prev_record, record))

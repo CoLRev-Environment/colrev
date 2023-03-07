@@ -10,7 +10,6 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -24,8 +23,12 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.data
+# pylint: disable=duplicate-code
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -84,7 +87,6 @@ class PaperMarkdown(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
-
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -182,7 +184,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __check_new_record_source_tag(
         self,
     ) -> None:
-
         with open(self.settings.paper_path, encoding="utf-8") as file:
             for line in file:
                 if self.NEW_RECORD_SOURCE_TAG in line:
@@ -389,7 +390,6 @@ class PaperMarkdown(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         records: typing.Dict,
     ) -> None:
-
         # pylint: disable=consider-using-with
 
         temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
@@ -399,7 +399,6 @@ class PaperMarkdown(JsonSchemaMixin):
         with open(temp.name, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
         ) as writer:
-
             line = reader.readline()
             while line:
                 if not line.startswith("EXCLUDE "):
@@ -447,7 +446,6 @@ class PaperMarkdown(JsonSchemaMixin):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-
         missing_records = self.__get_data_page_missing(
             paper=self.settings.paper_path,
             record_id_list=list(synthesized_record_status_matrix.keys()),
@@ -477,7 +475,6 @@ class PaperMarkdown(JsonSchemaMixin):
             )
 
     def __append_to_non_sample_references(self, *, filepath: Path) -> None:
-
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
@@ -526,14 +523,12 @@ class PaperMarkdown(JsonSchemaMixin):
             )
 
     def __add_prisma_if_available(self, *, silent_mode: bool) -> None:
-
         prisma_endpoint_l = [
             d
             for d in self.data_operation.review_manager.settings.data.data_package_endpoints
             if d["endpoint"] == "colrev_built_in.prisma"
         ]
         if prisma_endpoint_l:
-
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
                     self.data_operation.review_manager.logger.info(
@@ -551,7 +546,6 @@ class PaperMarkdown(JsonSchemaMixin):
                 with open(temp.name, encoding="utf-8") as reader, open(
                     paper_path, "w", encoding="utf-8"
                 ) as writer:
-
                     line = reader.readline()
                     while line:
                         if "# Method" not in line:
@@ -602,7 +596,6 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def __create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
-
             retrieval_path = Path("template/paper_md/non_sample_references.bib")
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
@@ -614,7 +607,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
-
         # pylint: disable=duplicate-code
         try:
             uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
@@ -752,7 +744,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __get_synthesized_ids_paper(
         self, *, paper: Path, synthesized_record_status_matrix: dict
     ) -> list:
-
         in_paper_to_synthesize = self.__get_to_synthesize_in_paper(
             paper=paper,
             records_for_synthesis=list(synthesized_record_status_matrix.keys()),

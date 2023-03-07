@@ -32,7 +32,6 @@ class SettingsEditor:
     review_manager: colrev.review_manager.ReviewManager
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-
         self.review_manager = review_manager
         self.package_manager = self.review_manager.get_package_manager()
         self.settings_path = self.review_manager.settings_path
@@ -40,7 +39,6 @@ class SettingsEditor:
         # Note : no need for default values (they are already inserted before by the template setup)
 
     def _open_browser(self) -> None:
-
         url = "http://127.0.0.1:5000"
 
         Timer(1, lambda: webbrowser.open_new(url)).start()
@@ -65,7 +63,6 @@ class SettingsEditor:
 
         @app.route("/api/getSettings")
         def getSettings() -> Response:
-
             with open(self.settings_path, encoding="utf-8") as file:
                 json__content = file.read()
 
@@ -90,7 +87,6 @@ class SettingsEditor:
 
         @app.route("/api/getOptions")
         def getOptions() -> Response:
-
             # Decision: get the whole list of setting_options (not individually)
             # "similarity": {'type': 'float', 'min': 0, 'max': 1}
             options = self.review_manager.settings.get_settings_schema()

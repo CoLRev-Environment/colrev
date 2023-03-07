@@ -7,15 +7,17 @@ import re
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
-if TYPE_CHECKING:
-    import colrev.ops.load
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -42,7 +44,6 @@ class BibPybtexLoader(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
     def __general_load_fixes(self, records: dict) -> dict:
-
         return records
 
     def __apply_file_fixes(
@@ -123,7 +124,6 @@ class BibPybtexLoader(JsonSchemaMixin):
         """Load records from the source"""
         records = {}
         if source.filename.is_file():
-
             self.__apply_file_fixes(
                 load_operation=load_operation, filename=source.filename
             )

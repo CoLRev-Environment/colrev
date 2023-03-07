@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import TYPE_CHECKING
 
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.status
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.status
 
 # pylint: disable=duplicate-code
 keys = [
@@ -31,7 +33,6 @@ def __validate_dedupe(
     validation_details: dict,
     threshold: float,  # pylint: disable=unused-argument
 ) -> None:
-
     dedupe_operation = validate_operation.review_manager.get_dedupe_operation()
 
     for validation_item in validation_details:
@@ -63,7 +64,6 @@ def __validate_prep(
     validation_details: dict,
     threshold: float,
 ) -> None:
-
     displayed = False
     for validation_element in validation_details:
         if validation_element["change_score"] < threshold:

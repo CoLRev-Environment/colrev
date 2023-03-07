@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -16,8 +15,11 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -53,7 +55,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
         records = dedupe_operation.review_manager.dataset.load_records_dict()
         for source_origin in source_origins:
-
             selected_records = [
                 r
                 for r in records.values()
@@ -320,7 +321,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
             dedupe_operation.review_manager.dataset.save_records_dict(records=records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-
             dedupe_operation.review_manager.dataset.add_record_changes()
 
             dedupe_operation.review_manager.create_commit(
