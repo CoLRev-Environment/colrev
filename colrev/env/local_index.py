@@ -294,39 +294,44 @@ class LocalIndex:
                     )
                     break
                 except sqlite3.IntegrityError:
-                    stored_record = self.__get_item_from_index(
-                        index_name=self.RECORD_INDEX,
-                        key="colrev_id",
-                        value=item["colrev_id"],
-                    )
-                    stored_colrev_id = colrev.record.Record(
-                        data=stored_record
-                    ).create_colrev_id()
-                    if stored_colrev_id == item["colrev_id"]:
-                        self.__amend_record(
-                            cur=cur, item=item, curated_fields=curated_fields
-                        )
+                    if not item["layered_fields"]:
                         break
+                    try:
+                        stored_record = self.__get_item_from_index(
+                            index_name=self.RECORD_INDEX,
+                            key="colrev_id",
+                            value=item["colrev_id"],
+                        )
+                        stored_colrev_id = colrev.record.Record(
+                            data=stored_record
+                        ).create_colrev_id()
+                        if stored_colrev_id == item["colrev_id"]:
+                            self.__amend_record(
+                                cur=cur, item=item, curated_fields=curated_fields
+                            )
+                            break
 
-                    print("Collisions (TODO):")
-                    print(stored_colrev_id)
-                    print(item["colrev_id"])
+                        print("Collisions (TODO):")
+                        print(stored_colrev_id)
+                        print(item["colrev_id"])
 
-                    # print(
-                    #     [
-                    #         {k: v for k, v in x.items() if k != "bibtex"}
-                    #         for x in stored_record
-                    #     ]
-                    # )
-                    # print(item)
-                    # to handle the collision:
-                    # print(f"Collision: {paper_hash}")
-                    # print(cid_to_index)
-                    # print(saved_record_cid)
-                    # print(saved_record)
-                    # paper_hash = self.__increment_hash(paper_hash=paper_hash)
-                    # item["id"] = paper_hash
-                    # continue in while-loop/try to insert...
+                        # print(
+                        #     [
+                        #         {k: v for k, v in x.items() if k != "bibtex"}
+                        #         for x in stored_record
+                        #     ]
+                        # )
+                        # print(item)
+                        # to handle the collision:
+                        # print(f"Collision: {paper_hash}")
+                        # print(cid_to_index)
+                        # print(saved_record_cid)
+                        # print(saved_record)
+                        # paper_hash = self.__increment_hash(paper_hash=paper_hash)
+                        # item["id"] = paper_hash
+                        # continue in while-loop/try to insert...
+                    except colrev_exceptions.RecordNotInIndexException:
+                        break
 
         self.__sqlite_connection.commit()
 
@@ -500,6 +505,7 @@ class LocalIndex:
 
     def _prepare_record_for_indexing(self, *, record_dict: dict) -> dict:
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
         if "colrev_status" not in record_dict:
             raise colrev_exceptions.RecordNotIndexableException()
 
@@ -560,6 +566,11 @@ class LocalIndex:
             record_dict["year"] = int(record_dict["year"])
         elif "year" in record_dict:
             del record_dict["year"]
+
+        if "language" in record_dict:
+            if len(record_dict["language"]) != 3:
+                print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
+                del record_dict["language"]
 
         # Provenance should point to the original repository path.
         # If the provenance/source was example.bib (and the record is amended during indexing)

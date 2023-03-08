@@ -438,7 +438,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     default_source=retrieved_record.data["colrev_origin"][0],
                 )
 
-                if "retracted" in record.data.get("warning", ""):
+                if "retracted" in retrieved_record.data.get(
+                    "warning", ""
+                ) or "retracted" in retrieved_record.data.get(
+                    "prescreen_exclusion", ""
+                ):
                     record.prescreen_exclude(reason="retracted")
                     record.remove_field(key="warning")
                 else:

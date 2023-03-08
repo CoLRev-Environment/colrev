@@ -389,12 +389,16 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 prep_operation.review_manager.path / Path(record.data["file"])
             )
             if pdf_path.is_file():
-                record.data.update(
-                    colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
-                        review_manager=prep_operation.review_manager, pdf_path=pdf_path
+                try:
+                    record.data.update(
+                        colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
+                            review_manager=prep_operation.review_manager,
+                            pdf_path=pdf_path,
+                        )
                     )
-                )
-                added_colrev_pdf_id = True
+                    added_colrev_pdf_id = True
+                except colrev_exceptions.PDFHashError:
+                    pass
 
         try:
             retrieved_record_dict = self.local_index.retrieve(
@@ -482,6 +486,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 merging_record=retrieved_record,
                 default_source=default_source,
             )
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            if "retracted" == retrieved_record.data.get("prescreen_exclusion", "NA"):
+                record.prescreen_exclude(reason="retracted")
 
             git_repo = prep_operation.review_manager.dataset.get_repo()
             cur_project_source_paths = [str(prep_operation.review_manager.path)]
@@ -509,8 +516,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             colrev_exceptions.NotFeedIdentifiableException,
         ):
             self.local_index_lock.release()
-
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
         return record
 
