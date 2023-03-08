@@ -10,9 +10,9 @@
 [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tox_workflow.yml)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
-![Coverage](coverage.svg)
+![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/coverage.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 
 CoLRev is an open-source environment for collaborative reviews.
