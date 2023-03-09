@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
       ~TaylorAndFrancisSearchSource.from_dict
       ~TaylorAndFrancisSearchSource.from_json
       ~TaylorAndFrancisSearchSource.from_object
+      ~TaylorAndFrancisSearchSource.get_masterdata
       ~TaylorAndFrancisSearchSource.heuristic
       ~TaylorAndFrancisSearchSource.json_schema
       ~TaylorAndFrancisSearchSource.load_fixes
       ~TaylorAndFrancisSearchSource.prepare
       ~TaylorAndFrancisSearchSource.register_field_encoders
+      ~TaylorAndFrancisSearchSource.run_search
       ~TaylorAndFrancisSearchSource.to_dict
       ~TaylorAndFrancisSearchSource.to_json
       ~TaylorAndFrancisSearchSource.validate_source

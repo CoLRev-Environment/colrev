@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.from_dict
       ~ERICSearchSource.from_json
       ~ERICSearchSource.from_object
+      ~ERICSearchSource.get_masterdata
       ~ERICSearchSource.heuristic
       ~ERICSearchSource.json_schema
       ~ERICSearchSource.load_fixes
       ~ERICSearchSource.prepare
       ~ERICSearchSource.register_field_encoders
+      ~ERICSearchSource.run_search
       ~ERICSearchSource.to_dict
       ~ERICSearchSource.to_json
       ~ERICSearchSource.validate_source

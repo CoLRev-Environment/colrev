@@ -368,13 +368,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     def get_masterdata(
         self,
-        *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
 
         if any(self.origin_prefix in o for o in record.data["colrev_origin"]):

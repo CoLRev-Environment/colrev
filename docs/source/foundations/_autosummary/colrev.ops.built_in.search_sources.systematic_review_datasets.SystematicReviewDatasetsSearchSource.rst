@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.systematic\_review\_datasets.SystematicRevi
       ~SystematicReviewDatasetsSearchSource.from_dict
       ~SystematicReviewDatasetsSearchSource.from_json
       ~SystematicReviewDatasetsSearchSource.from_object
+      ~SystematicReviewDatasetsSearchSource.get_masterdata
       ~SystematicReviewDatasetsSearchSource.heuristic
       ~SystematicReviewDatasetsSearchSource.json_schema
       ~SystematicReviewDatasetsSearchSource.load_fixes
       ~SystematicReviewDatasetsSearchSource.prepare
       ~SystematicReviewDatasetsSearchSource.register_field_encoders
+      ~SystematicReviewDatasetsSearchSource.run_search
       ~SystematicReviewDatasetsSearchSource.to_dict
       ~SystematicReviewDatasetsSearchSource.to_json
       ~SystematicReviewDatasetsSearchSource.validate_source

@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
       ~PsycINFOSearchSource.from_dict
       ~PsycINFOSearchSource.from_json
       ~PsycINFOSearchSource.from_object
+      ~PsycINFOSearchSource.get_masterdata
       ~PsycINFOSearchSource.heuristic
       ~PsycINFOSearchSource.json_schema
       ~PsycINFOSearchSource.load_fixes
       ~PsycINFOSearchSource.prepare
       ~PsycINFOSearchSource.register_field_encoders
+      ~PsycINFOSearchSource.run_search
       ~PsycINFOSearchSource.to_dict
       ~PsycINFOSearchSource.to_json
       ~PsycINFOSearchSource.validate_source

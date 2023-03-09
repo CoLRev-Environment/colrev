@@ -181,6 +181,16 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             f"{colors.GREEN}Retrieved {nr_added} new records {colors.END}"
         )
 
+    def get_masterdata(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        """Not implemented"""
+        return record
+
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for CoLRev projects"""

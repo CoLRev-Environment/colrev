@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.from_dict
       ~ScopusSearchSource.from_json
       ~ScopusSearchSource.from_object
+      ~ScopusSearchSource.get_masterdata
       ~ScopusSearchSource.heuristic
       ~ScopusSearchSource.json_schema
       ~ScopusSearchSource.load_fixes
       ~ScopusSearchSource.prepare
       ~ScopusSearchSource.register_field_encoders
+      ~ScopusSearchSource.run_search
       ~ScopusSearchSource.to_dict
       ~ScopusSearchSource.to_json
       ~ScopusSearchSource.validate_source

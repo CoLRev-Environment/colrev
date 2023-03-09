@@ -350,8 +350,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
+        save_feed: bool,
         timeout: int,
-        safe_feed: bool,
     ) -> colrev.record.Record:
         try:
             retrieved_record_dict = self.__pubmed_query_id(
@@ -411,7 +411,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     source=retrieved_record.data["colrev_origin"][0]
                 )
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
-                if safe_feed:
+                if save_feed:
                     pubmed_feed.save_feed_file()
                 self.pubmed_lock.release()
                 return record
@@ -433,10 +433,9 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     def get_masterdata(
         self,
-        *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
-        safe_feed: bool = True,
+        save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Pubmed based on similarity with the record provided"""
@@ -459,7 +458,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             prep_operation=prep_operation,
             record=record,
             timeout=timeout,
-            safe_feed=safe_feed,
+            save_feed=save_feed,
         )
 
         return record

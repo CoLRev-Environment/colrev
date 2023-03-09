@@ -46,7 +46,6 @@ class TheoreticalReview(JsonSchemaMixin):
                 "endpoint": "colrev_built_in.paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
-                "csl_style": "apa.csl",
             },
         ]
         return settings

@@ -22,6 +22,7 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
       ~PDFSearchSource.from_dict
       ~PDFSearchSource.from_json
       ~PDFSearchSource.from_object
+      ~PDFSearchSource.get_masterdata
       ~PDFSearchSource.heuristic
       ~PDFSearchSource.json_schema
       ~PDFSearchSource.load_fixes

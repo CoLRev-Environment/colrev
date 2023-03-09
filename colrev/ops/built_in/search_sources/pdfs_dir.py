@@ -440,6 +440,16 @@ class PDFSearchSource(JsonSchemaMixin):
         record_dict["md_string"] = str(fsize) + md_string
         return record_dict
 
+    def get_masterdata(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        """Not implemented"""
+        return record
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:

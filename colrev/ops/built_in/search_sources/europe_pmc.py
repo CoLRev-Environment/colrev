@@ -310,9 +310,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     def get_masterdata(
         self,
-        *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
+        save_feed: bool = True,
         timeout: int = 10,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
@@ -468,6 +468,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
         return None
 
     def load_fixes(

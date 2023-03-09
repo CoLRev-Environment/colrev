@@ -65,7 +65,6 @@ class PaperMarkdown(JsonSchemaMixin):
         endpoint: str
         version: str
         word_template: Path
-        csl_style: str
         paper_path: Path = Path("paper.md")
         paper_output: Path = Path("paper.docx")
 
@@ -87,6 +86,8 @@ class PaperMarkdown(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        self.data_operation = data_operation
+
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"

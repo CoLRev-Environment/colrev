@@ -22,11 +22,13 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.from_dict
       ~WileyOnlineLibrarySearchSource.from_json
       ~WileyOnlineLibrarySearchSource.from_object
+      ~WileyOnlineLibrarySearchSource.get_masterdata
       ~WileyOnlineLibrarySearchSource.heuristic
       ~WileyOnlineLibrarySearchSource.json_schema
       ~WileyOnlineLibrarySearchSource.load_fixes
       ~WileyOnlineLibrarySearchSource.prepare
       ~WileyOnlineLibrarySearchSource.register_field_encoders
+      ~WileyOnlineLibrarySearchSource.run_search
       ~WileyOnlineLibrarySearchSource.to_dict
       ~WileyOnlineLibrarySearchSource.to_json
       ~WileyOnlineLibrarySearchSource.validate_source

@@ -41,7 +41,6 @@ class ScientometricReview(JsonSchemaMixin):
                 "endpoint": "colrev_built_in.paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
-                "csl_style": "apa.csl",
             }
         ]
         settings.pdf_get.pdf_required_for_screen_and_synthesis = False

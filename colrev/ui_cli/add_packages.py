@@ -174,12 +174,11 @@ def add_data(
                 ret = requests.get(csl_link, allow_redirects=True, timeout=30)
                 with open(Path(csl_link).name, "wb") as file:
                     file.write(ret.content)
-                default_endpoint_conf["csl_style"] = Path(csl_link).name
             else:
                 print("Adding APA as a default")
 
             data_operation.review_manager.dataset.add_changes(
-                path=default_endpoint_conf["csl_style"]
+                path=Path(Path(csl_link).name)
             )
             data_operation.review_manager.dataset.add_changes(
                 path=default_endpoint_conf["word_template"]

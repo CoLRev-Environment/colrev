@@ -675,7 +675,11 @@ class DBLPSearchSource(JsonSchemaMixin):
         return record
 
     def get_masterdata(
-        self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from DBLP based on similarity with the record provided"""
 

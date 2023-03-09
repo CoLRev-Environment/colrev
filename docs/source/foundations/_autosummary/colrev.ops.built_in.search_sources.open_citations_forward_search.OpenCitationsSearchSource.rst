@@ -23,6 +23,7 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
       ~OpenCitationsSearchSource.from_json
       ~OpenCitationsSearchSource.from_object
       ~OpenCitationsSearchSource.get_default_source
+      ~OpenCitationsSearchSource.get_masterdata
       ~OpenCitationsSearchSource.heuristic
       ~OpenCitationsSearchSource.json_schema
       ~OpenCitationsSearchSource.load_fixes

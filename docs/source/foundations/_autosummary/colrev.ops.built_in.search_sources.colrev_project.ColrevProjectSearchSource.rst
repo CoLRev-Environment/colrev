@@ -22,6 +22,7 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.from_dict
       ~ColrevProjectSearchSource.from_json
       ~ColrevProjectSearchSource.from_object
+      ~ColrevProjectSearchSource.get_masterdata
       ~ColrevProjectSearchSource.heuristic
       ~ColrevProjectSearchSource.json_schema
       ~ColrevProjectSearchSource.load_fixes

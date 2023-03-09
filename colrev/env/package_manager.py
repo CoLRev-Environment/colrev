@@ -131,6 +131,20 @@ class SearchSourcePackageEndpointInterface(
     def add_endpoint(search_operation: colrev.ops.search.Search, query: str):  # type: ignore
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
+    # pylint: disable=no-self-argument
+    def run_search(search_operation: colrev.ops.search.Search, rerun: bool) -> None:  # type: ignore
+        """Run a search of the SearchSource"""
+
+    # pylint: disable=no-self-argument
+    def get_masterdata(  # type: ignore
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ):
+        """Retrieve masterdata from the SearchSource"""
+
+    # pylint: disable=no-self-argument
     def load_fixes(  # type: ignore
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,

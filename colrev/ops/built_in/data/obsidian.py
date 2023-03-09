@@ -54,7 +54,7 @@ class Obsidian(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)

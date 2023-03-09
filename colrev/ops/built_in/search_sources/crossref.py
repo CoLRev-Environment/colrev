@@ -350,7 +350,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         timeout: int,
-        safe_feed: bool,
+        save_feed: bool,
     ) -> colrev.record.Record:
         """When there is no doi, journal names can be checked against crossref"""
 
@@ -377,7 +377,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         timeout: int,
-        safe_feed: bool,
+        save_feed: bool,
     ) -> colrev.record.Record:
         try:
             retrieved_records = self.crossref_query(
@@ -456,7 +456,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
                     )
-                if safe_feed:
+                if save_feed:
                     crossref_feed.save_feed_file()
                 self.crossref_lock.release()
                 return record
@@ -507,10 +507,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     def get_masterdata(
         self,
-        *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
-        safe_feed: bool = True,
+        save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Crossref based on similarity with the record provided"""
@@ -529,7 +528,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             prep_operation=prep_operation,
             record=record,
             timeout=timeout,
-            safe_feed=safe_feed,
+            save_feed=save_feed,
         )
 
         if "doi" not in record.data:
@@ -537,7 +536,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 prep_operation=prep_operation,
                 record=record,
                 timeout=timeout,
-                safe_feed=safe_feed,
+                save_feed=save_feed,
             )
 
         return record
@@ -843,8 +842,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-        if "colrev_built_in.crossref:jissn=" in query:
-            query = query.replace("colrev_built_in.crossref:jissn=", "")
+        if "crossref:jissn=" in query.replace("colrev_built_in.", ""):
+            query = query.replace("crossref:jissn=", "").replace("colrev_built_in.", "")
 
             filename = search_operation.get_unique_filename(
                 file_path_string=f"crossref_jissn_{query}"
