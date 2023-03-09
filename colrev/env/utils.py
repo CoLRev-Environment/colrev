@@ -104,7 +104,9 @@ def custom_asdict_factory(data) -> dict:  # type: ignore
             # e.g., with the web ui
             if str(obj) == "1.0":
                 return 1
-            return obj
+        if isinstance(obj, list):
+            if all(isinstance(el, Path) for el in obj):
+                return [str(el) for el in obj]
         return obj
 
     return {k: convert_value(v) for k, v in data}
