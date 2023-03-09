@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import colrev.review_manager
 
 
 def test_merge(mocker) -> None:  # type: ignore

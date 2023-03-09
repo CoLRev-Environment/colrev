@@ -35,6 +35,14 @@ def test_add_colrev_ids() -> None:
         "pages": "1--3",
     }
 
+    R1 = colrev.record.Record(data=v1)
+    assert (
+        "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial" == R1.create_colrev_id()
+    )
+
+    R2 = colrev.record.Record(data=v2)
+    assert "colrev_id1:|a|misq|45|1|2020|rai|editorial" == R2.create_colrev_id()
+
 
 def test_provenance() -> None:
     import colrev.record
