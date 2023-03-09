@@ -23,6 +23,7 @@ colrev.service.Event
       ~Event.on_deleted
       ~Event.on_modified
       ~Event.on_moved
+      ~Event.on_opened
 
 
 
