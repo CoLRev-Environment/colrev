@@ -1039,7 +1039,9 @@ class Upgrade(colrev.operation.Operation):
             self.review_manager.dataset.add_changes(path=bib_file)
 
     def __migrate_0_7_0(self) -> None:
-        pre_commit_contents = Path(".pre-commit-config.yaml").read_text()
+        pre_commit_contents = Path(".pre-commit-config.yaml").read_text(
+            encoding="utf-8"
+        )
         if "ci:" not in pre_commit_contents:
             pre_commit_contents = pre_commit_contents.replace(
                 "repos:",

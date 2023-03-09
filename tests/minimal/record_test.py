@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import colrev.review_manager
 
 
 def test_add_colrev_ids() -> None:
