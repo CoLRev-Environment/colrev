@@ -109,18 +109,6 @@ Before you submit a pull request, check that it meets these guidelines:
 - Named parameters are preferred over positional parameters to avoid ambiguity and facilitate code refactoring.
 - Variable names should help to avoid ambiguities and indicate their type if necessary (e.g., record for colrev.record.Record and record_dict for dicts).
 
-## Deploying
+## Release
 
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run
-
-```
-git tag 0.0.1 # major / minor / patch
-python3 setup.py sdist
-twine upload dist/* # check/test
-git push
-git push --tags
-```
-
-Travis will then deploy to PyPI if tests pass.
+See [release checklist](release-checklist.md).

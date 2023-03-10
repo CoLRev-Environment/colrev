@@ -6,7 +6,7 @@
 
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
-![PyPI](https://img.shields.io/pypi/v/colrev)
+<!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
