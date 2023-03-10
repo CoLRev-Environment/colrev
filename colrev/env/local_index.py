@@ -14,6 +14,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from threading import Timer
 
+import requests
 import requests_cache
 from pybtex.database.input import bibtex
 from thefuzz import fuzz
@@ -43,6 +44,8 @@ class LocalIndex:
 
     teiind_path = local_environment_path / Path(".tei_index/")
     annotators_path = local_environment_path / Path("annotators")
+
+    __sqlite_available = True
 
     # Note : records are indexed by id = hash(colrev_id)
     # to ensure that the indexing-ids do not exceed limits
@@ -84,9 +87,13 @@ class LocalIndex:
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         self.__index_tei = True
-        self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
-        self.__sqlite_connection.row_factory = self.__dict_factory
-        self.__thread_lock = Lock()
+
+        if Path(self.SQLITE_PATH).is_file():
+            self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
+            self.__sqlite_connection.row_factory = self.__dict_factory
+            self.__thread_lock = Lock()
+        else:
+            self.__sqlite_available = False
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
@@ -371,10 +378,35 @@ class LocalIndex:
 
         raise colrev_exceptions.RecordNotInIndexException()
 
+    def _retrieve_from_github_curation(self, *, record_dict: dict) -> dict:
+        gh_url, record_id = record_dict["curation_ID"].split("#")
+        records_url = (
+            gh_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
+            + "/master/data/records.bib"
+        )
+
+        curation_records = requests.get(records_url)
+
+        parser = bibtex.Parser()
+        bib_data = parser.parse_string(curation_records.text)
+        ret = colrev.dataset.Dataset.parse_records_dict(records_dict=bib_data.entries)
+
+        if record_id not in ret:
+            raise colrev_exceptions.RecordNotInIndexException
+
+        ret[record_id]["curation_ID"] = record_dict["curation_ID"]
+        return ret[record_id]
+
     def __retrieve_from_record_index(self, *, record_dict: dict) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
         record = colrev.record.Record(data=record_dict)
+
+        if not self.__sqlite_available:
+            if record_dict.get("curation_ID", "NA").startswith("https://github.com/"):
+                return self._retrieve_from_github_curation(record_dict=record_dict)
+            raise colrev_exceptions.RecordNotInIndexException
+
         if "colrev_id" in record.data:
             cid_to_retrieve = record.get_colrev_id()
         else:
@@ -1066,7 +1098,7 @@ class LocalIndex:
                 print(f"{record_dict['ID']} - no exact match")
 
         # 2. Try using global-ids
-        if not retrieved_record_dict:
+        if not retrieved_record_dict and self.__sqlite_available:
             remove_colrev_id = False
             if "colrev_id" not in record_dict:
                 try:

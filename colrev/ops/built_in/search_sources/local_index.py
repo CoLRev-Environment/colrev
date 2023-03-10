@@ -203,6 +203,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 source=self.search_source,
                 update_time_variant_fields=True,
             )
+            # Note : changed refers to the data/records.bib.
+            # Records that are not yet imported do not count.
             if changed:
                 nr_changed += 1
 
