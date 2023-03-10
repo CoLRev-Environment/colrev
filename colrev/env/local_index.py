@@ -14,7 +14,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from threading import Timer
 
-import requests
+import git
 import requests_cache
 from pybtex.database.input import bibtex
 from thefuzz import fuzz
@@ -379,17 +379,31 @@ class LocalIndex:
         raise colrev_exceptions.RecordNotInIndexException()
 
     def _retrieve_from_github_curation(self, *, record_dict: dict) -> dict:
-        gh_url, record_id = record_dict["curation_ID"].split("#")
-        records_url = (
-            gh_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
-            + "/master/data/records.bib"
-        )
+        ret = {}
+        try:
+            gh_url, record_id = record_dict["curation_ID"].split("#")
 
-        curation_records = requests.get(records_url)
+            temp_path = Path.home().joinpath("colrev").joinpath("test")
+            temp_path.mkdir(exist_ok=True, parents=True)
+            target_path = Path(temp_path) / Path(gh_url.split("/")[-1])
+            if not target_path.is_dir():
+                git.Repo.clone_from(
+                    gh_url,  # .replace("https://github.com/", "git@github.com:") + ".git",
+                    str(target_path),
+                    depth=1,
+                )
 
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(curation_records.text)
-        ret = colrev.dataset.Dataset.parse_records_dict(records_dict=bib_data.entries)
+            content = ""
+            with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:
+                content = file.read()
+
+            parser = bibtex.Parser()
+            bib_data = parser.parse_string(content)
+            ret = colrev.dataset.Dataset.parse_records_dict(
+                records_dict=bib_data.entries
+            )
+        except git.exc.GitCommandError:
+            pass
 
         if record_id not in ret:
             raise colrev_exceptions.RecordNotInIndexException
