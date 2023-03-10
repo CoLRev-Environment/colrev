@@ -78,7 +78,7 @@ class Commit:
                     self.ext_script_version = f"version {script_version}"
                 except importlib.metadata.PackageNotFoundError:
                     pass
-        self.__temp_path.mkdir(exist_ok=True)
+        self.__temp_path.mkdir(exist_ok=True, parents=True)
 
     def __parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
         saved_args_str = ""
