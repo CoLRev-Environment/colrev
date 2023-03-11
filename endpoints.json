@@ -86,6 +86,9 @@
             },
             {"package_endpoint_identifier": "colrev_built_in.update_metadata_status",
              "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep"
+            },
+            {"package_endpoint_identifier": "colrev_built_in.general_polish",
+             "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep"
             }
         ],
         "prep_man": [

@@ -42,6 +42,7 @@ colrev.ops.prep.Prep
       ~Prep.last_round
       ~Prep.debug_mode
       ~Prep.pad
+      ~Prep.polish
       ~Prep.prep_package_endpoints
       ~Prep.force_mode
       ~Prep.type

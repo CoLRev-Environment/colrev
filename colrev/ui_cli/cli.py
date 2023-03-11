@@ -500,6 +500,12 @@ def load(
     help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.option(
+    "--polish",
+    is_flag=True,
+    default=False,
+    help="Polish record metadata (includes records in md_processed or beyond).",
+)
+@click.option(
     "--reset_records",
     default="NA",
     type=str,
@@ -569,6 +575,7 @@ def load(
 def prep(
     ctx: click.core.Context,
     keep_ids: bool,
+    polish: bool,
     reset_records: str,
     reset_ids: bool,
     set_ids: bool,
@@ -583,6 +590,7 @@ def prep(
     """Prepare records"""
 
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     try:
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
@@ -617,7 +625,7 @@ def prep(
         if skip:
             prep_operation.skip_prep()
 
-        prep_operation.main(keep_ids=keep_ids, cpu=cpu)
+        prep_operation.main(keep_ids=keep_ids, cpu=cpu, polish=polish)
 
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)

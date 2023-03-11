@@ -22,6 +22,7 @@ if False:  # pylint: disable=using-constant-test
         import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=duplicate-code
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)

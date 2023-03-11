@@ -376,6 +376,12 @@
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.py>`_"
         },
         {
+            "package_endpoint_identifier": "colrev_built_in.general_polish",
+            "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep",
+            "short_description": "Prepares records by applying polishing rules",
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/general_polish.py>`_"
+        },
+        {
             "package_endpoint_identifier": "colrev_built_in.get_doi_from_sem_scholar",
             "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep",
             "short_description": "Prepares records based on SemanticScholar metadata",

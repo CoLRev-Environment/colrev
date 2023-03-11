@@ -16,6 +16,7 @@ from threading import Timer
 
 import git
 import requests_cache
+from git.exc import GitCommandError
 from pybtex.database.input import bibtex
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -402,7 +403,7 @@ class LocalIndex:
             ret = colrev.dataset.Dataset.parse_records_dict(
                 records_dict=bib_data.entries
             )
-        except git.exc.GitCommandError:
+        except GitCommandError:
             pass
 
         if record_id not in ret:
@@ -895,6 +896,8 @@ class LocalIndex:
             return True
         except sqlite3.OperationalError:
             self.__thread_lock.release()
+        except AttributeError:  # ie. no sqlite database available
+            return False
 
         return False
 
@@ -1015,6 +1018,8 @@ class LocalIndex:
 
         except sqlite3.OperationalError as exc:
             self.__thread_lock.release()
+            raise colrev_exceptions.RecordNotInIndexException() from exc
+        except AttributeError as exc:
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
     def __get_item_from_index(self, *, index_name: str, key: str, value: str) -> dict:
