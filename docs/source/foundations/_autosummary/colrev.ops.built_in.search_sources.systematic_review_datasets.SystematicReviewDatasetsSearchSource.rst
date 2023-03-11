@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.systematic\_review\_datasets.SystematicRevi
 
    .. autosummary::
 
+      ~SystematicReviewDatasetsSearchSource.api_search_supported
       ~SystematicReviewDatasetsSearchSource.heuristic_status
       ~SystematicReviewDatasetsSearchSource.link
       ~SystematicReviewDatasetsSearchSource.search_type

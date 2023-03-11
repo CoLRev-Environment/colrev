@@ -30,6 +30,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "url"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "IEEE Xplore"
     link = "https://ieeexplore.ieee.org/"

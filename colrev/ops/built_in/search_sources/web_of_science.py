@@ -31,6 +31,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Web of Science"
     link = "https://www.webofknowledge.com"

@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
 
    .. autosummary::
 
+      ~PDFSearchSource.api_search_supported
       ~PDFSearchSource.heuristic_status
       ~PDFSearchSource.link
       ~PDFSearchSource.search_type

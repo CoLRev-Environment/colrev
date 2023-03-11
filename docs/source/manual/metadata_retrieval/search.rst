@@ -70,14 +70,12 @@ The following SearchSources are covered (additional ones are on the `SearchSourc
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource", "link"), ("Identifier", "package_endpoint_identifier"), ("Heuristics", "heuristic"), ("API search", "api_search"), ("Search instructions", "instructions")],
+        [("SearchSource", "link"), ("Identifier", "package_endpoint_identifier"), ("API search", "api_search"), ("Search instructions", "instructions")],
         data['search_source'],
         title='',
         ) }}
 
 Notes:
     - Other SearchSources are handled by "Unknown Source"
-    - Heuristics enable automated detection of the SearchSources upon load
-    - ONI: Output not identifiable (e.g., BibTeX/RIS files lack unique features to identify the original SearchSource)
     - NA: Not applicable
     - For updates, fixes, and additions of SearchSources, check the `Github issues <https://github.com/CoLRev-Ecosystem/colrev/labels/search_source>`_.

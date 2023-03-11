@@ -32,6 +32,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     # Note : ID is the accession number.
     source_identifier = "{{ID}}"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "EBSCOHost"
     link = "https://search.ebscohost.com/"

@@ -35,6 +35,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev_built_in.unknown_source"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
     link = (

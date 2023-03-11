@@ -56,6 +56,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     source_identifier = "doi"
     # "https://api.crossref.org/works/{{doi}}"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     link = "https://www.crossref.org/"
     short_name = "Crossref"

@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
 
    .. autosummary::
 
+      ~IEEEXploreSearchSource.api_search_supported
       ~IEEEXploreSearchSource.heuristic_status
       ~IEEEXploreSearchSource.link
       ~IEEEXploreSearchSource.search_type

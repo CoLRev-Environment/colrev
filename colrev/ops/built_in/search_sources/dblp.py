@@ -45,6 +45,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     source_identifier = "dblp_key"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "DBLP"
     link = "https://dblp.org/"

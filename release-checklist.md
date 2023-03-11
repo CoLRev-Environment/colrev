@@ -2,6 +2,7 @@
 
 - Run `make linkcheck` in the docs and fix broken links.
 - Run `poetry update`.
+- Run `colrev env --update_package_list`.
 - Update Docker image versions and test.
 - Collect release notes and update the `CHANGELOG.md`.
 - Update version in `CITATION.cff`.

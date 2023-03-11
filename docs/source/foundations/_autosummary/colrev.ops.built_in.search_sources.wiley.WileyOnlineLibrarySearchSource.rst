@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
 
    .. autosummary::
 
+      ~WileyOnlineLibrarySearchSource.api_search_supported
       ~WileyOnlineLibrarySearchSource.heuristic_status
       ~WileyOnlineLibrarySearchSource.link
       ~WileyOnlineLibrarySearchSource.search_type

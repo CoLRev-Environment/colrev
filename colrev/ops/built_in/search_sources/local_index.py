@@ -37,6 +37,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "curation_ID"
     search_type = colrev.settings.SearchType.OTHER
+    api_search_supported = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
     link = (

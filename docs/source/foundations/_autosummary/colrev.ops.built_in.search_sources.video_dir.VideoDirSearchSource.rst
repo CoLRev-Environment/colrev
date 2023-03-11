@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.video\_dir.VideoDirSearchSource
 
    .. autosummary::
 
+      ~VideoDirSearchSource.api_search_supported
       ~VideoDirSearchSource.heuristic_status
       ~VideoDirSearchSource.link
       ~VideoDirSearchSource.search_type

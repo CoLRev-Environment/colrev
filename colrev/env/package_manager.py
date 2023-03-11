@@ -102,21 +102,17 @@ class SearchSourcePackageEndpointInterface(
         """Main SearchType associated with the SearchSource"""
     )
 
+    api_search_supported = zope.interface.Attribute(
+        """Flag indicating whether API searches are supported (by the run_search method)"""
+    )
+
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )
     short_name = zope.interface.Attribute("""Short name of the SearchSource""")
     link = zope.interface.Attribute("""Link to the SearchSource website""")
 
-    # Note : optional method
     # pylint: disable=no-self-argument
-    # def run_search(
-    #     search_operation: colrev.ops.search.Search, rerun: bool
-    # ) -> None:  # type: ignore
-    #     """Run the search operation
-    #       rerun: retrieve and update all records again (default: only receive recent ones)
-    #       """
-
     def validate_source(
         search_operation: colrev.ops.search.Search, source: colrev.settings.SearchSource
     ) -> None:  # type: ignore
@@ -875,7 +871,7 @@ class PackageManager:
                         .replace("na", "NA")
                     )
 
-                    if hasattr(endpoint, "run_search"):
+                    if endpoint.api_search_supported:
                         endpoint_item["api_search"] = "Supported"
                     else:
                         endpoint_item["api_search"] = "NA"

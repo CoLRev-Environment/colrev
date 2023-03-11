@@ -41,6 +41,7 @@ class PDFSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "file"
     search_type = colrev.settings.SearchType.PDFS
+    api_search_supported = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"
     link = "https://github.com/kermitt2/grobid"

@@ -29,6 +29,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "{{ID}}"
     search_type = colrev.settings.SearchType.DB
+    api_search_supported = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
     link = "https://about.proquest.com/en/products-services/abi_inform_complete/"

@@ -42,6 +42,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
 
    .. autosummary::
 
+      ~LocalIndexSearchSource.api_search_supported
       ~LocalIndexSearchSource.essential_md_keys
       ~LocalIndexSearchSource.heuristic_status
       ~LocalIndexSearchSource.link
