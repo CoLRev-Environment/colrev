@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.general\_polish.GeneralPolishPrep
    .. autosummary::
 
       ~GeneralPolishPrep.always_apply_changes
+      ~GeneralPolishPrep.frequent_acronyms
       ~GeneralPolishPrep.source_correction_hint

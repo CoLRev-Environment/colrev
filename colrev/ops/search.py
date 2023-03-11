@@ -312,6 +312,16 @@ class Search(colrev.operation.Operation):
     ) -> None:
         """Search for records (main entrypoint)"""
 
+        if selection_str:
+            if not Path(selection_str).is_file():
+                raise colrev_exceptions.ParameterError(
+                    parameter="select",
+                    value=selection_str,
+                    options=[
+                        str(s.filename) for s in self.review_manager.settings.sources
+                    ],
+                )
+
         self.review_manager.logger.info("Search")
         self.review_manager.logger.info(
             "Retrieve new records from an API or files (search sources)."
