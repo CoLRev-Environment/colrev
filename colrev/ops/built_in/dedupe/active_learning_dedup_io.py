@@ -46,6 +46,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
     deduper: dedupe_io.Deduper
 
+    ci_supported: bool = False
+
     # Code based on
     # https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
 
@@ -510,6 +512,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 @dataclass
 class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     """Applies trained (active learning) model"""
+
+    ci_supported: bool = False
 
     @dataclass
     class ActiveLearningSettings(

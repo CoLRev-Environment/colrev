@@ -35,5 +35,6 @@ colrev.ops.built\_in.prescreen.asreview.ASReviewPrescreen
 
    .. autosummary::
 
+      ~ASReviewPrescreen.ci_supported
       ~ASReviewPrescreen.endpoint_path
       ~ASReviewPrescreen.export_filepath

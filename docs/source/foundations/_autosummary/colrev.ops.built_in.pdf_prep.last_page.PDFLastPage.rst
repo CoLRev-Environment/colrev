@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_prep.last\_page.PDFLastPage
       ~PDFLastPage.register_field_encoders
       ~PDFLastPage.to_dict
       ~PDFLastPage.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDFLastPage.ci_supported

@@ -35,4 +35,5 @@ colrev.ops.built\_in.load\_conversion.markdown\_loader.MarkdownLoader
 
    .. autosummary::
 
+      ~MarkdownLoader.ci_supported
       ~MarkdownLoader.supported_extensions

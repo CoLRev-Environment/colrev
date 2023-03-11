@@ -26,3 +26,13 @@ colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
       ~ScopePrescreen.run_prescreen
       ~ScopePrescreen.to_dict
       ~ScopePrescreen.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ScopePrescreen.ci_supported

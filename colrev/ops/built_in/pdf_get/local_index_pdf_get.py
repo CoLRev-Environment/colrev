@@ -29,6 +29,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
     """Get PDFs from LocalIndex"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

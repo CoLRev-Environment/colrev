@@ -32,6 +32,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
     """Deduplication of remaining records in a curated metadata repository"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

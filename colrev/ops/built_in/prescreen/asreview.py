@@ -33,6 +33,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
     """ASReview-based prescreen"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
@@ -45,17 +46,18 @@ class ASReviewPrescreen(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        try:
-            # pylint: disable=import-outside-toplevel
+        if not prescreen_operation.review_manager.in_ci_environment():
+            try:
+                # pylint: disable=import-outside-toplevel
 
-            import asreview  # noqa: F401
+                import asreview  # noqa: F401
 
-            _ = asreview
-        except (ImportError, ModuleNotFoundError) as exc:
-            raise colrev_exceptions.MissingDependencyError(
-                "Dependency asreview not found. "
-                "Please install it\n  pip install asreview"
-            ) from exc
+                _ = asreview
+            except (ImportError, ModuleNotFoundError) as exc:
+                raise colrev_exceptions.MissingDependencyError(
+                    "Dependency asreview not found. "
+                    "Please install it\n  pip install asreview"
+                ) from exc
 
     def __export_for_asreview(
         self,

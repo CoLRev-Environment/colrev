@@ -32,6 +32,8 @@ if False:  # pylint: disable=using-constant-test
 class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""
 
+    ci_supported: bool = False
+
     @dataclass
     class PRISMASettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
         """PRISMA settings"""
@@ -67,10 +69,11 @@ class PRISMA(JsonSchemaMixin):
             for path in self.settings.diagram_path
         ]
 
-        self.prisma_image = "colrev/prisma:latest"
-        data_operation.review_manager.environment_manager.build_docker_image(
-            imagename=self.prisma_image
-        )
+        if not data_operation.review_manager.in_ci_environment():
+            self.prisma_image = "colrev/prisma:latest"
+            data_operation.review_manager.environment_manager.build_docker_image(
+                imagename=self.prisma_image
+            )
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""

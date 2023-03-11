@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.narrative\_review.NarrativeReview
       ~NarrativeReview.register_field_encoders
       ~NarrativeReview.to_dict
       ~NarrativeReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~NarrativeReview.ci_supported

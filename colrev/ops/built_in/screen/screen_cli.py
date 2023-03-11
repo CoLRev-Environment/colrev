@@ -29,6 +29,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     """Screen documents using a CLI"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

@@ -36,6 +36,8 @@ class BibutilsLoader(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
+    ci_supported: bool = False
+
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
     def __init__(
@@ -46,10 +48,11 @@ class BibutilsLoader(JsonSchemaMixin):
     ):
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.bibutils_image = "colrev/bibutils:latest"
-        load_operation.review_manager.environment_manager.build_docker_image(
-            imagename=self.bibutils_image
-        )
+        if not load_operation.review_manager.in_ci_environment():
+            self.bibutils_image = "colrev/bibutils:latest"
+            load_operation.review_manager.environment_manager.build_docker_image(
+                imagename=self.bibutils_image
+            )
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource

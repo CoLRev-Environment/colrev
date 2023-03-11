@@ -42,3 +42,4 @@ colrev.ops.built\_in.data.paper\_md.PaperMarkdown
 
       ~PaperMarkdown.NEW_RECORD_SOURCE_TAG
       ~PaperMarkdown.NON_SAMPLE_REFERENCES_RELATIVE
+      ~PaperMarkdown.ci_supported

@@ -35,4 +35,5 @@ colrev.ops.built\_in.load\_conversion.zotero\_loader.ZoteroTranslationLoader
 
    .. autosummary::
 
+      ~ZoteroTranslationLoader.ci_supported
       ~ZoteroTranslationLoader.supported_extensions

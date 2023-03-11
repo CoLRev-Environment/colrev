@@ -31,6 +31,7 @@ class LocalIndexPrep(JsonSchemaMixin):
     """Prepares records based on LocalIndex metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     source_correction_hint = (
         "correct the metadata in the source "
@@ -40,9 +41,11 @@ class LocalIndexPrep(JsonSchemaMixin):
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-        self.local_index_source = local_index_connector.LocalIndexSearchSource(
-            source_operation=prep_operation
-        )
+
+        if not prep_operation.review_manager.in_ci_environment():
+            self.local_index_source = local_index_connector.LocalIndexSearchSource(
+                source_operation=prep_operation
+            )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(

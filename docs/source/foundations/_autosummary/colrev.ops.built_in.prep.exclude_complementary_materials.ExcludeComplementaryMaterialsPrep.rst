@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.exclude\_complementary\_materials.ExcludeComplementary
 
       ~ExcludeComplementaryMaterialsPrep.alphabet_detector
       ~ExcludeComplementaryMaterialsPrep.always_apply_changes
+      ~ExcludeComplementaryMaterialsPrep.ci_supported
       ~ExcludeComplementaryMaterialsPrep.source_correction_hint

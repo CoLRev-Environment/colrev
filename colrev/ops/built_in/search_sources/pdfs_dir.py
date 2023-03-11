@@ -42,6 +42,7 @@ class PDFSearchSource(JsonSchemaMixin):
     source_identifier = "file"
     search_type = colrev.settings.SearchType.PDFS
     api_search_supported = True
+    ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"
     link = "https://github.com/kermitt2/grobid"
@@ -53,11 +54,13 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
-        self.pdf_preparation_operation = (
-            source_operation.review_manager.get_pdf_prep_operation(
-                notify_state_transition_operation=False
+
+        if not source_operation.review_manager.in_ci_environment():
+            self.pdf_preparation_operation = (
+                source_operation.review_manager.get_pdf_prep_operation(
+                    notify_state_transition_operation=False
+                )
             )
-        )
 
         self.pdfs_path = source_operation.review_manager.path / Path(
             self.search_source.search_parameters["scope"]["path"]
@@ -459,6 +462,10 @@ class PDFSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
+
+        # Do not run in continuous-integration environment
+        if search_operation.review_manager.in_ci_environment():
+            return
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)

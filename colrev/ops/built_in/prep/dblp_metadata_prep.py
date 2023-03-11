@@ -29,6 +29,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
     """Prepares records based on dblp.org metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = (
         "send and email to dblp@dagstuhl.de"

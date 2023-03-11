@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.semantic\_scholar\_prep.SemanticScholarPrep
    .. autosummary::
 
       ~SemanticScholarPrep.always_apply_changes
+      ~SemanticScholarPrep.ci_supported
       ~SemanticScholarPrep.source_correction_hint

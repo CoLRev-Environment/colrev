@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_prep.cover\_page.PDFCoverPage
       ~PDFCoverPage.register_field_encoders
       ~PDFCoverPage.to_dict
       ~PDFCoverPage.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDFCoverPage.ci_supported

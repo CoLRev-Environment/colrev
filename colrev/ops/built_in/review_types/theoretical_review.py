@@ -22,6 +22,7 @@ class TheoreticalReview(JsonSchemaMixin):
     """Theoretical review"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     def __init__(
         self, *, operation: colrev.operation.CheckOperation, settings: dict

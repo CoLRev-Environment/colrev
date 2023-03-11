@@ -26,3 +26,13 @@ colrev.ops.built\_in.prep\_man.curation\_jupyter\_prep\_man.CurationJupyterNoteb
       ~CurationJupyterNotebookManPrep.register_field_encoders
       ~CurationJupyterNotebookManPrep.to_dict
       ~CurationJupyterNotebookManPrep.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CurationJupyterNotebookManPrep.ci_supported

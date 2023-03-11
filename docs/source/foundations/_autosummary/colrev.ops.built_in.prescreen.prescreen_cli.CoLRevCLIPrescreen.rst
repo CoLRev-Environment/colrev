@@ -26,3 +26,13 @@ colrev.ops.built\_in.prescreen.prescreen\_cli.CoLRevCLIPrescreen
       ~CoLRevCLIPrescreen.run_prescreen
       ~CoLRevCLIPrescreen.to_dict
       ~CoLRevCLIPrescreen.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CoLRevCLIPrescreen.ci_supported

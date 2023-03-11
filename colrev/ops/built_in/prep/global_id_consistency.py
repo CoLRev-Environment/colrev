@@ -31,6 +31,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
     """Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

@@ -26,4 +26,5 @@ colrev.ops.built\_in.load\_conversion.table\_loader.ExcelLoader
 
    .. autosummary::
 
+      ~ExcelLoader.ci_supported
       ~ExcelLoader.supported_extensions

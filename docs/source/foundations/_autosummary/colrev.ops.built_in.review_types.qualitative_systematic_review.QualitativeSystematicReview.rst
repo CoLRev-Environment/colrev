@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.qualitative\_systematic\_review.QualitativeSy
       ~QualitativeSystematicReview.register_field_encoders
       ~QualitativeSystematicReview.to_dict
       ~QualitativeSystematicReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~QualitativeSystematicReview.ci_supported

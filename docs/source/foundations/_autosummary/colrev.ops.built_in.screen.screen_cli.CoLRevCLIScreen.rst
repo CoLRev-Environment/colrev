@@ -26,3 +26,13 @@ colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
       ~CoLRevCLIScreen.run_screen
       ~CoLRevCLIScreen.to_dict
       ~CoLRevCLIScreen.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CoLRevCLIScreen.ci_supported

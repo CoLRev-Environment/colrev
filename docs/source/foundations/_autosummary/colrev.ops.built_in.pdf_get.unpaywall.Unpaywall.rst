@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_get.unpaywall.Unpaywall
       ~Unpaywall.register_field_encoders
       ~Unpaywall.to_dict
       ~Unpaywall.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Unpaywall.ci_supported

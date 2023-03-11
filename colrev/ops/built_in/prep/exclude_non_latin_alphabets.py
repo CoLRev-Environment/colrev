@@ -30,6 +30,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     (in the title, author, journal, or booktitle field)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

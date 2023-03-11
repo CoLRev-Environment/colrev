@@ -29,3 +29,13 @@ colrev.ops.built\_in.data.prisma.PRISMA
       ~PRISMA.to_json
       ~PRISMA.update_data
       ~PRISMA.update_record_status_matrix
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PRISMA.ci_supported

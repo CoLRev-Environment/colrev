@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
    .. autosummary::
 
       ~CrossrefMetadataPrep.always_apply_changes
+      ~CrossrefMetadataPrep.ci_supported
       ~CrossrefMetadataPrep.source_correction_hint

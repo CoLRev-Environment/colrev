@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.remove\_broken\_ids.RemoveBrokenIDPrep
    .. autosummary::
 
       ~RemoveBrokenIDPrep.always_apply_changes
+      ~RemoveBrokenIDPrep.ci_supported
       ~RemoveBrokenIDPrep.source_correction_hint

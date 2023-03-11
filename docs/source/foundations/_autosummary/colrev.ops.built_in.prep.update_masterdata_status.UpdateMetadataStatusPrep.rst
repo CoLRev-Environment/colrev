@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
    .. autosummary::
 
       ~UpdateMetadataStatusPrep.always_apply_changes
+      ~UpdateMetadataStatusPrep.ci_supported
       ~UpdateMetadataStatusPrep.source_correction_hint

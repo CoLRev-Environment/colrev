@@ -29,6 +29,7 @@ class TableScreen(JsonSchemaMixin):
     """Screen documents using tables (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     screen_table_path = Path("screen/screen.csv")
 

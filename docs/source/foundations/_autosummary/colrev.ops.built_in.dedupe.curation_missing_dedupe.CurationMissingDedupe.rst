@@ -26,3 +26,13 @@ colrev.ops.built\_in.dedupe.curation\_missing\_dedupe.CurationMissingDedupe
       ~CurationMissingDedupe.run_dedupe
       ~CurationMissingDedupe.to_dict
       ~CurationMissingDedupe.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CurationMissingDedupe.ci_supported

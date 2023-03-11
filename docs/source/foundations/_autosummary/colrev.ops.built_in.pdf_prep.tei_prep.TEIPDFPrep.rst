@@ -36,3 +36,4 @@ colrev.ops.built\_in.pdf\_prep.tei\_prep.TEIPDFPrep
    .. autosummary::
 
       ~TEIPDFPrep.TEI_PATH_RELATIVE
+      ~TEIPDFPrep.ci_supported

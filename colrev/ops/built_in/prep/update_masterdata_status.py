@@ -26,6 +26,7 @@ class UpdateMetadataStatusPrep(JsonSchemaMixin):
     """Prepares records by updating the metadata status"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

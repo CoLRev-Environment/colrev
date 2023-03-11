@@ -29,6 +29,8 @@ if False:  # pylint: disable=using-constant-test
 class ColrevCuration(JsonSchemaMixin):
     """CoLRev Curation"""
 
+    ci_supported: bool = True
+
     @dataclass
     class ColrevCurationSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

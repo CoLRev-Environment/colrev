@@ -27,6 +27,7 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
     """Prepares records by excluding collection entries (e.g., proceedings)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

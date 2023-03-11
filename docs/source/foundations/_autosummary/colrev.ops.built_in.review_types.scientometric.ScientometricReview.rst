@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.scientometric.ScientometricReview
       ~ScientometricReview.register_field_encoders
       ~ScientometricReview.to_dict
       ~ScientometricReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ScientometricReview.ci_supported

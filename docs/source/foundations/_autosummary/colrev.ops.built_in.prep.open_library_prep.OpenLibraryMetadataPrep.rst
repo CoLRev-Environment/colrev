@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
    .. autosummary::
 
       ~OpenLibraryMetadataPrep.always_apply_changes
+      ~OpenLibraryMetadataPrep.ci_supported
       ~OpenLibraryMetadataPrep.source_correction_hint

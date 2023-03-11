@@ -28,6 +28,8 @@ if False:  # pylint: disable=using-constant-test
 class Obsidian(JsonSchemaMixin):
     """Export the sample into an Obsidian database"""
 
+    ci_supported: bool = False
+
     @dataclass
     class ObsidianSettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
         """Settings for Obsidian"""

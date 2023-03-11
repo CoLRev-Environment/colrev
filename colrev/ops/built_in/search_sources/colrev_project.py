@@ -36,6 +36,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     source_identifier = "colrev_project"
     search_type = colrev.settings.SearchType.OTHER
     api_search_supported = True
+    ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
     link = (

@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
    .. autosummary::
 
       ~DBLPMetadataPrep.always_apply_changes
+      ~DBLPMetadataPrep.ci_supported
       ~DBLPMetadataPrep.source_correction_hint

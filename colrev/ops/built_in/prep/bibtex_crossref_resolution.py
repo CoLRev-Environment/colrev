@@ -31,6 +31,7 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
+    ci_supported: bool = True
 
     def __init__(
         self,

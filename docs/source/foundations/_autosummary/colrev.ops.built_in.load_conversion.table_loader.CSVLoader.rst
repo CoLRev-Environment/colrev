@@ -35,4 +35,5 @@ colrev.ops.built\_in.load\_conversion.table\_loader.CSVLoader
 
    .. autosummary::
 
+      ~CSVLoader.ci_supported
       ~CSVLoader.supported_extensions

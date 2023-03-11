@@ -29,6 +29,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that are not in the languages_to_include"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -45,27 +46,30 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # Note : the following objects have heavy memory footprints and should be
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
-        self.language_detector = (
-            LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
-        )
-        # Language formats: ISO 639-1 standard language codes
-        # https://github.com/flyingcircusio/pycountry
-
-        prescreen_package_endpoints = (
-            prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
-        )
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-        # set as settings parameter?
         languages_to_include = ["eng"]
-        if "scope_prescreen" in [s["endpoint"] for s in prescreen_package_endpoints]:
-            for scope_prescreen in [
-                s
-                for s in prescreen_package_endpoints
-                if "scope_prescreen" == s["endpoint"]
+        if not prep_operation.review_manager.in_ci_environment():
+            self.language_detector = (
+                LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
+            )
+            # Language formats: ISO 639-1 standard language codes
+            # https://github.com/flyingcircusio/pycountry
+
+            prescreen_package_endpoints = (
+                prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
+            )
+            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
+            # set as settings parameter?
+            if "scope_prescreen" in [
+                s["endpoint"] for s in prescreen_package_endpoints
             ]:
-                languages_to_include.extend(
-                    scope_prescreen.get("LanguageScope", ["eng"])
-                )
+                for scope_prescreen in [
+                    s
+                    for s in prescreen_package_endpoints
+                    if "scope_prescreen" == s["endpoint"]
+                ]:
+                    languages_to_include.extend(
+                        scope_prescreen.get("LanguageScope", ["eng"])
+                    )
         self.languages_to_include = list(set(languages_to_include))
 
         self.lang_code_mapping = {}

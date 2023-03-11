@@ -755,6 +755,7 @@ class PackageManager:
         operation: colrev.operation.Operation,
         ignore_not_available: bool = False,
         instantiate_objects: bool = True,
+        only_ci_supported: bool = False,
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Load the packages for a particular package_type"""
 
@@ -801,6 +802,10 @@ class PackageManager:
                     packages_dict[package_identifier] = package_class["endpoint"](
                         **params
                     )
+                    if only_ci_supported:
+                        if not packages_dict[package_identifier].ci_supported:
+                            to_remove.append(package_identifier)
+                            continue
                     verifyObject(endpoint_class, packages_dict[package_identifier])
                 except colrev_exceptions.ServiceNotAvailableException as sna_exc:
                     if "docker" == sna_exc.dep:
@@ -846,6 +851,8 @@ class PackageManager:
                 if "\n" in endpoint.__doc__:
                     short_description = endpoint.__doc__.split("\n")[0]
                 endpoint_item["short_description"] = short_description
+
+                endpoint_item["ci_supported"] = endpoint.ci_supported
 
                 code_link = (
                     "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"

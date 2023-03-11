@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_get.local\_index\_pdf\_get.LocalIndexPDFGet
       ~LocalIndexPDFGet.register_field_encoders
       ~LocalIndexPDFGet.to_dict
       ~LocalIndexPDFGet.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~LocalIndexPDFGet.ci_supported

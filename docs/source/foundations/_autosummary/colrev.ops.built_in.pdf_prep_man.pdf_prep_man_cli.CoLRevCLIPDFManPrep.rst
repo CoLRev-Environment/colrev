@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli.CoLRevCLIPDFManPrep
       ~CoLRevCLIPDFManPrep.register_field_encoders
       ~CoLRevCLIPDFManPrep.to_dict
       ~CoLRevCLIPDFManPrep.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CoLRevCLIPDFManPrep.ci_supported

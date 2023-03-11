@@ -34,6 +34,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
+    ci_supported: bool = True
 
     def __init__(
         self,

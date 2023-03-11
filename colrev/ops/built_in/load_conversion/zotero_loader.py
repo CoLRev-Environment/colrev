@@ -34,18 +34,20 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
     Supports ris, rdf, json, mods, xml, marc, txt"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
     def __init__(self, *, load_operation: colrev.ops.load.Load, settings: dict):
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.zotero_translation_service = (
-            load_operation.review_manager.get_zotero_translation_service()
-        )
-        self.zotero_translation_service.start_zotero_translators(
-            startup_without_waiting=True
-        )
+        if not load_operation.review_manager.in_ci_environment():
+            self.zotero_translation_service = (
+                load_operation.review_manager.get_zotero_translation_service()
+            )
+            self.zotero_translation_service.start_zotero_translators(
+                startup_without_waiting=True
+            )
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource

@@ -136,6 +136,7 @@ class CSVLoader(JsonSchemaMixin):
     """Loads csv files (based on pandas)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     supported_extensions = ["csv"]
 
@@ -194,6 +195,7 @@ class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     supported_extensions = ["xls", "xlsx"]
 

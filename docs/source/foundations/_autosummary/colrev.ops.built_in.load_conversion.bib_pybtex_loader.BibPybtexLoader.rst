@@ -35,4 +35,5 @@ colrev.ops.built\_in.load\_conversion.bib\_pybtex\_loader.BibPybtexLoader
 
    .. autosummary::
 
+      ~BibPybtexLoader.ci_supported
       ~BibPybtexLoader.supported_extensions

@@ -39,6 +39,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     source_identifier = "pubmedid"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = True
+    ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PubMed"
     link = "https://pubmed.ncbi.nlm.nih.gov/"

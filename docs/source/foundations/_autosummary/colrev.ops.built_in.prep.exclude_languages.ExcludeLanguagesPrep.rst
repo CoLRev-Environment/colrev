@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.exclude\_languages.ExcludeLanguagesPrep
    .. autosummary::
 
       ~ExcludeLanguagesPrep.always_apply_changes
+      ~ExcludeLanguagesPrep.ci_supported
       ~ExcludeLanguagesPrep.source_correction_hint

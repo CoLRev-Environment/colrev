@@ -29,16 +29,20 @@ class TEIPDFPrep(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     TEI_PATH_RELATIVE = Path("data/.tei")
+    ci_supported: bool = False
 
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
-        grobid_service.start()
-        self.tei_path = pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
-        self.tei_path.mkdir(exist_ok=True)
+        if not pdf_prep_operation.review_manager.in_ci_environment():
+            grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
+            grobid_service.start()
+            self.tei_path = (
+                pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
+            )
+            self.tei_path.mkdir(exist_ok=True)
 
     @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(

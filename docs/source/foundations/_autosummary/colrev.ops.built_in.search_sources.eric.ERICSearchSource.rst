@@ -42,6 +42,7 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
    .. autosummary::
 
       ~ERICSearchSource.api_search_supported
+      ~ERICSearchSource.ci_supported
       ~ERICSearchSource.heuristic_status
       ~ERICSearchSource.link
       ~ERICSearchSource.search_type

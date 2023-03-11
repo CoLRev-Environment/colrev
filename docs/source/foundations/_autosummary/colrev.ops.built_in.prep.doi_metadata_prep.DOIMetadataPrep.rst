@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.doi\_metadata\_prep.DOIMetadataPrep
    .. autosummary::
 
       ~DOIMetadataPrep.always_apply_changes
+      ~DOIMetadataPrep.ci_supported
       ~DOIMetadataPrep.source_correction_hint

@@ -28,6 +28,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
     """CLI-based prescreen"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

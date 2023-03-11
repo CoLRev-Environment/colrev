@@ -239,6 +239,11 @@ class Prep(colrev.operation.Operation):
             item["prep_round_package_endpoints"]
         ):
             try:
+                if (
+                    prep_round_package_endpoint["endpoint"].lower()
+                    not in self.prep_package_endpoints
+                ):
+                    continue
                 endpoint = self.prep_package_endpoints[
                     prep_round_package_endpoint["endpoint"].lower()
                 ]
@@ -773,13 +778,14 @@ class Prep(colrev.operation.Operation):
             package_type=colrev.env.package_manager.PackageEndpointType.prep,
             selected_packages=required_prep_package_endpoints,
             operation=self,
+            only_ci_supported=self.review_manager.in_ci_environment(),
         )
 
-        for endpoin_name, endpoint in self.prep_package_endpoints.items():
+        for endpoint_name, endpoint in self.prep_package_endpoints.items():
             check_function = getattr(endpoint, "check_availability", None)
             if callable(check_function):
                 self.review_manager.logger.debug(
-                    f"Check availability of {endpoin_name}"
+                    f"Check availability of {endpoint_name}"
                 )
                 endpoint.check_availability(source_operation=self)  # type: ignore
 

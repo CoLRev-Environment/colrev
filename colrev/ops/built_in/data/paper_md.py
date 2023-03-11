@@ -56,6 +56,8 @@ class PaperMarkdown(JsonSchemaMixin):
 
     NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
 
+    ci_supported: bool = False
+
     @dataclass
     class PaperMarkdownSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
@@ -115,10 +117,11 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self.__create_non_sample_references_bib()
 
-        self.pandoc_image = "pandoc/latex:2.19.2"
-        data_operation.review_manager.environment_manager.build_docker_image(
-            imagename=self.pandoc_image
-        )
+        if not data_operation.review_manager.in_ci_environment():
+            self.pandoc_image = "pandoc/latex:2.19.2"
+            data_operation.review_manager.environment_manager.build_docker_image(
+                imagename=self.pandoc_image
+            )
 
         self.paper_relative_path = self.settings.paper_path.relative_to(
             data_operation.review_manager.path

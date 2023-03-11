@@ -30,6 +30,8 @@ if False:  # pylint: disable=using-constant-test
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
+    ci_supported: bool = False
+
     @dataclass
     class ExportManPrepSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

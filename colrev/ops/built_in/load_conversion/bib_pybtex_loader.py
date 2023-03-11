@@ -35,6 +35,8 @@ class BibPybtexLoader(JsonSchemaMixin):
 
     supported_extensions = ["bib"]
 
+    ci_supported: bool = True
+
     def __init__(
         self,
         *,

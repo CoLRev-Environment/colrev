@@ -29,3 +29,13 @@ colrev.ops.built\_in.data.colrev\_curation.ColrevCuration
       ~ColrevCuration.to_json
       ~ColrevCuration.update_data
       ~ColrevCuration.update_record_status_matrix
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ColrevCuration.ci_supported

@@ -29,6 +29,8 @@ if False:  # pylint: disable=using-constant-test
 class SimpleDedupe(JsonSchemaMixin):
     """Simple duplicate identification (for small sample sizes)"""
 
+    ci_supported: bool = True
+
     @dataclass
     class SimpleDedupeSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

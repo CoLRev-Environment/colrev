@@ -30,6 +30,7 @@ class ScopusSearchSource(JsonSchemaMixin):
     source_identifier = "url"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = False
+    ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Scopus"
     link = "http://www.scopus.com"

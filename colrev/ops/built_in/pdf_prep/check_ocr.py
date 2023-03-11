@@ -31,6 +31,7 @@ class PDFCheckOCR(JsonSchemaMixin):
     """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,
@@ -40,10 +41,11 @@ class PDFCheckOCR(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
-        pdf_prep_operation.review_manager.environment_manager.build_docker_image(
-            imagename=self.ocrmypdf_image
-        )
+        if not pdf_prep_operation.review_manager.in_ci_environment():
+            self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
+            pdf_prep_operation.review_manager.environment_manager.build_docker_image(
+                imagename=self.ocrmypdf_image
+            )
 
     language_detector = (
         LanguageDetectorBuilder.from_all_languages_with_latin_script().build()

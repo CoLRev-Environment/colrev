@@ -33,6 +33,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     """Get PDFs manually based on a CLI"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

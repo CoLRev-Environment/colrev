@@ -28,6 +28,8 @@ class SourceSpecificPrep(JsonSchemaMixin):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
     source_correction_hint = "check with the developer"
+    ci_supported: bool = True
+
     always_apply_changes = True
     settings_class = colrev.env.package_manager.DefaultSettings
 

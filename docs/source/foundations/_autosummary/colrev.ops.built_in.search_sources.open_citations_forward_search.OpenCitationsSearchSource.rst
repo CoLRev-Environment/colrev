@@ -42,6 +42,8 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
 
    .. autosummary::
 
+      ~OpenCitationsSearchSource.api_search_supported
+      ~OpenCitationsSearchSource.ci_supported
       ~OpenCitationsSearchSource.heuristic_status
       ~OpenCitationsSearchSource.link
       ~OpenCitationsSearchSource.search_type

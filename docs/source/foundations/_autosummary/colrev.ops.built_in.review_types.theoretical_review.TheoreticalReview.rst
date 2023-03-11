@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
       ~TheoreticalReview.register_field_encoders
       ~TheoreticalReview.to_dict
       ~TheoreticalReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~TheoreticalReview.ci_supported

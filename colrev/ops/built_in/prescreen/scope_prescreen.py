@@ -28,6 +28,8 @@ class ScopePrescreen(JsonSchemaMixin):
 
     """Rule-based prescreen (scope)"""
 
+    ci_supported: bool = True
+
     @dataclass
     class ScopePrescreenSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

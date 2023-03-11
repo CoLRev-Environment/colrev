@@ -35,5 +35,6 @@ colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidatio
 
    .. autosummary::
 
+      ~PDFCompletenessValidation.ci_supported
       ~PDFCompletenessValidation.roman_page_pattern
       ~PDFCompletenessValidation.roman_pages_pattern

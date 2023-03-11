@@ -31,6 +31,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
     """Prepares records based on Pubmed metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False

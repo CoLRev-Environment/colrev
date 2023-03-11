@@ -26,3 +26,13 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeAuto
       ~ActiveLearningDedupeAutomated.run_dedupe
       ~ActiveLearningDedupeAutomated.to_dict
       ~ActiveLearningDedupeAutomated.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ActiveLearningDedupeAutomated.ci_supported

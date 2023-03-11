@@ -41,6 +41,8 @@ class Field(JsonSchemaMixin):
 class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a table)"""
 
+    ci_supported: bool = False
+
     @dataclass
     class StructuredDataSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

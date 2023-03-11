@@ -31,6 +31,7 @@ class PDFCoverPage(JsonSchemaMixin):
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,
@@ -40,8 +41,9 @@ class PDFCoverPage(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        # Note : to pull image if not available
-        pdf_prep_operation.review_manager.get_pdf_hash_service()
+        if not pdf_prep_operation.review_manager.in_ci_environment():
+            # Note : to pull image if not available
+            pdf_prep_operation.review_manager.get_pdf_hash_service()
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(

@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.literature\_review.LiteratureReview
       ~LiteratureReview.register_field_encoders
       ~LiteratureReview.to_dict
       ~LiteratureReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~LiteratureReview.ci_supported

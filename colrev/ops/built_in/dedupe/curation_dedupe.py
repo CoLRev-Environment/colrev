@@ -34,6 +34,8 @@ class CurationDedupe(JsonSchemaMixin):
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
+    ci_supported: bool = False
+
     @dataclass
     class CurationDedupeSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

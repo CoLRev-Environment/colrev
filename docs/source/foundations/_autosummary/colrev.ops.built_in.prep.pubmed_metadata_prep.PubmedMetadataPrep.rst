@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.pubmed\_metadata\_prep.PubmedMetadataPrep
    .. autosummary::
 
       ~PubmedMetadataPrep.always_apply_changes
+      ~PubmedMetadataPrep.ci_supported
       ~PubmedMetadataPrep.source_correction_hint

@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.curated\_masterdata.CuratedMasterdata
       ~CuratedMasterdata.register_field_encoders
       ~CuratedMasterdata.to_dict
       ~CuratedMasterdata.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CuratedMasterdata.ci_supported

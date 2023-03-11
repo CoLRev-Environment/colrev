@@ -39,3 +39,4 @@ colrev.ops.built\_in.data.github\_pages.GithubPages
    .. autosummary::
 
       ~GithubPages.GH_PAGES_BRANCH_NAME
+      ~GithubPages.ci_supported

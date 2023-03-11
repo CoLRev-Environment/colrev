@@ -30,6 +30,7 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
     (tables of contents, editorial boards, about our authors)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True

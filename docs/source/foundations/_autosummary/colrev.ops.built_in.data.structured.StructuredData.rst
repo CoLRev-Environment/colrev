@@ -30,3 +30,13 @@ colrev.ops.built\_in.data.structured.StructuredData
       ~StructuredData.update_data
       ~StructuredData.update_record_status_matrix
       ~StructuredData.validate_structured_data
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~StructuredData.ci_supported

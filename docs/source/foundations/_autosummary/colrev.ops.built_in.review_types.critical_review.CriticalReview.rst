@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.critical\_review.CriticalReview
       ~CriticalReview.register_field_encoders
       ~CriticalReview.to_dict
       ~CriticalReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CriticalReview.ci_supported

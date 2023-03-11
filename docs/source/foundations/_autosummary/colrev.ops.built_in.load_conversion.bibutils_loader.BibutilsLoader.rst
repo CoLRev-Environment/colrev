@@ -35,4 +35,5 @@ colrev.ops.built\_in.load\_conversion.bibutils\_loader.BibutilsLoader
 
    .. autosummary::
 
+      ~BibutilsLoader.ci_supported
       ~BibutilsLoader.supported_extensions

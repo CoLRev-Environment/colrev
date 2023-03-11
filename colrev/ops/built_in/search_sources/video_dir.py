@@ -35,6 +35,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
     source_identifier = "file"
     search_type = colrev.settings.SearchType.OTHER
     api_search_supported = True
+    ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Video directory"
     link = (

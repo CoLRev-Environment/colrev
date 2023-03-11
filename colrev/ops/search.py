@@ -340,8 +340,10 @@ class Search(colrev.operation.Operation):
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
             )
-
+            if source.endpoint.lower() not in endpoint_dict:
+                continue
             endpoint = endpoint_dict[source.endpoint.lower()]
             endpoint.validate_source(search_operation=self, source=source)  # type: ignore
 

@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.conceptual\_review.ConceptualReview
       ~ConceptualReview.register_field_encoders
       ~ConceptualReview.to_dict
       ~ConceptualReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ConceptualReview.ci_supported

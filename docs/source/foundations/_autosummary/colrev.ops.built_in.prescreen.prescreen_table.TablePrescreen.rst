@@ -28,3 +28,13 @@ colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
       ~TablePrescreen.run_prescreen
       ~TablePrescreen.to_dict
       ~TablePrescreen.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~TablePrescreen.ci_supported

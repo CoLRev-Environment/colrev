@@ -32,6 +32,8 @@ class MarkdownLoader(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
 
+    ci_supported: bool = False
+
     supported_extensions = ["md"]
 
     def __init__(

@@ -26,3 +26,13 @@ colrev.ops.built\_in.dedupe.curation\_dedupe.CurationDedupe
       ~CurationDedupe.run_dedupe
       ~CurationDedupe.to_dict
       ~CurationDedupe.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CurationDedupe.ci_supported

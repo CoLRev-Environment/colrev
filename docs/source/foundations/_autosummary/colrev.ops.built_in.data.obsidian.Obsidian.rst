@@ -42,3 +42,4 @@ colrev.ops.built\_in.data.obsidian.Obsidian
       ~Obsidian.OBSIDIAN_INBOX_PATH_RELATIVE
       ~Obsidian.OBSIDIAN_PAPER_PATH_RELATIVE
       ~Obsidian.OBSIDIAN_PATH_RELATIVE
+      ~Obsidian.ci_supported

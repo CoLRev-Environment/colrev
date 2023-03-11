@@ -26,3 +26,13 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
       ~WebsiteScreenshot.register_field_encoders
       ~WebsiteScreenshot.to_dict
       ~WebsiteScreenshot.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~WebsiteScreenshot.ci_supported

@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.year\_vol\_iss\_prep.YearVolIssPrep
    .. autosummary::
 
       ~YearVolIssPrep.always_apply_changes
+      ~YearVolIssPrep.ci_supported
       ~YearVolIssPrep.source_correction_hint

@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.europe\_pmc\_prep.EuropePMCMetadataPrep
    .. autosummary::
 
       ~EuropePMCMetadataPrep.always_apply_changes
+      ~EuropePMCMetadataPrep.ci_supported
       ~EuropePMCMetadataPrep.source_correction_hint

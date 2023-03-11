@@ -49,6 +49,8 @@ class BibliographyExport(JsonSchemaMixin):
     ]
     PYBTEX_FORMATS = [BibFormats.citavi, BibFormats.jabref, BibFormats.zotero]
 
+    ci_supported: bool = False
+
     @dataclass
     class BibliographyExportSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
@@ -77,10 +79,10 @@ class BibliographyExport(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
-
-        data_operation.review_manager.get_zotero_translation_service()
-
         self.endpoint_path = data_operation.review_manager.output_dir
+
+        if not data_operation.review_manager.in_ci_environment():
+            data_operation.review_manager.get_zotero_translation_service()
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""

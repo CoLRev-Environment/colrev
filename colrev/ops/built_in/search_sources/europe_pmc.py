@@ -49,6 +49,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     source_identifier = "europe_pmc_id"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = True
+    ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
     link = "https://europepmc.org/"

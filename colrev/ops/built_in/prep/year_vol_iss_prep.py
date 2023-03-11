@@ -31,6 +31,7 @@ class YearVolIssPrep(JsonSchemaMixin):
     """Prepares records based on year-volume-issue dependency"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"

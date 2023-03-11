@@ -42,6 +42,7 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
    .. autosummary::
 
       ~WebOfScienceSearchSource.api_search_supported
+      ~WebOfScienceSearchSource.ci_supported
       ~WebOfScienceSearchSource.heuristic_status
       ~WebOfScienceSearchSource.link
       ~WebOfScienceSearchSource.search_type

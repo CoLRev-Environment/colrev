@@ -23,6 +23,7 @@ class CuratedMasterdata(JsonSchemaMixin):
     """Curated masterdata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     def __init__(
         self, *, operation: colrev.operation.CheckOperation, settings: dict

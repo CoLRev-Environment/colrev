@@ -27,3 +27,13 @@ colrev.ops.built\_in.pdf\_prep.metadata\_validation.PDFMetadataValidation
       ~PDFMetadataValidation.to_dict
       ~PDFMetadataValidation.to_json
       ~PDFMetadataValidation.validates_based_on_metadata
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDFMetadataValidation.ci_supported

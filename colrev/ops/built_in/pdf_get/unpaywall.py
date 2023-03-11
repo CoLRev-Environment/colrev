@@ -31,6 +31,7 @@ class Unpaywall(JsonSchemaMixin):
     """Get PDFs from unpaywall.org"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self,

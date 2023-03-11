@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.scoping\_review.ScopingReview
       ~ScopingReview.register_field_encoders
       ~ScopingReview.to_dict
       ~ScopingReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ScopingReview.ci_supported

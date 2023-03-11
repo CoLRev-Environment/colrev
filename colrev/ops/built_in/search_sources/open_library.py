@@ -41,6 +41,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     source_identifier = "isbn"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = False
+    ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
     link = "https://openlibrary.org/"

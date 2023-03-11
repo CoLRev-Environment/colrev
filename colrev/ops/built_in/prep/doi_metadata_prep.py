@@ -29,6 +29,7 @@ class DOIMetadataPrep(JsonSchemaMixin):
     """Prepares records based on doi.org metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"

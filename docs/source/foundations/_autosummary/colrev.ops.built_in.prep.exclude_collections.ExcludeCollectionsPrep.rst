@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.exclude\_collections.ExcludeCollectionsPrep
    .. autosummary::
 
       ~ExcludeCollectionsPrep.always_apply_changes
+      ~ExcludeCollectionsPrep.ci_supported
       ~ExcludeCollectionsPrep.source_correction_hint

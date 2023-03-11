@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.bibtex\_crossref\_resolution.BibTexCrossrefResolutionP
    .. autosummary::
 
       ~BibTexCrossrefResolutionPrep.always_apply_changes
+      ~BibTexCrossrefResolutionPrep.ci_supported
       ~BibTexCrossrefResolutionPrep.source_correction_hint

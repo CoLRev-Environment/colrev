@@ -26,3 +26,13 @@ colrev.ops.built\_in.dedupe.simple\_dedupe.SimpleDedupe
       ~SimpleDedupe.run_dedupe
       ~SimpleDedupe.to_dict
       ~SimpleDedupe.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~SimpleDedupe.ci_supported

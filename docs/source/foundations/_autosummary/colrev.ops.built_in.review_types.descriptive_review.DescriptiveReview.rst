@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.descriptive\_review.DescriptiveReview
       ~DescriptiveReview.register_field_encoders
       ~DescriptiveReview.to_dict
       ~DescriptiveReview.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DescriptiveReview.ci_supported

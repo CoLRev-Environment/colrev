@@ -33,6 +33,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     source_identifier = "bwsearch_ref"
     search_type = colrev.settings.SearchType.BACKWARD_SEARCH
     api_search_supported = True
+    ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
     link = "https://github.com/kermitt2/grobid"
@@ -44,8 +45,11 @@ class BackwardSearchSource(JsonSchemaMixin):
             settings["search_parameters"]["min_intext_citations"] = 3
 
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.grobid_service = source_operation.review_manager.get_grobid_service()
-        self.grobid_service.start()
+        # Do not run in continuous-integration environment
+        if not source_operation.review_manager.in_ci_environment():
+            self.grobid_service = source_operation.review_manager.get_grobid_service()
+            self.grobid_service.start()
+
         self.review_manager = source_operation.review_manager
 
     @classmethod
@@ -127,6 +131,10 @@ class BackwardSearchSource(JsonSchemaMixin):
         """Run a search of PDFs (backward search based on GROBID)"""
 
         # pylint: disable=too-many-branches
+
+        # Do not run in continuous-integration environment
+        if search_operation.review_manager.in_ci_environment():
+            return
 
         records = search_operation.review_manager.dataset.load_records_dict()
 

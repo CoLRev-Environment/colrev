@@ -37,4 +37,5 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
 
       ~ActiveLearningDedupeTraining.SETTINGS_FILE_RELATIVE
       ~ActiveLearningDedupeTraining.TRAINING_FILE_RELATIVE
+      ~ActiveLearningDedupeTraining.ci_supported
       ~ActiveLearningDedupeTraining.deduper

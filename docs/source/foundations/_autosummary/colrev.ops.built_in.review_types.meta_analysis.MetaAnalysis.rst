@@ -26,3 +26,13 @@ colrev.ops.built\_in.review\_types.meta\_analysis.MetaAnalysis
       ~MetaAnalysis.register_field_encoders
       ~MetaAnalysis.to_dict
       ~MetaAnalysis.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~MetaAnalysis.ci_supported

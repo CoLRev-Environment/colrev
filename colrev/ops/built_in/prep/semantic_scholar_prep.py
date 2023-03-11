@@ -31,6 +31,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
     """Prepares records based on SemanticScholar metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = (
         "fill out the online form: "

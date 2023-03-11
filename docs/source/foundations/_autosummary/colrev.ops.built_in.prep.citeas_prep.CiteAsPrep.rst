@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.citeas\_prep.CiteAsPrep
    .. autosummary::
 
       ~CiteAsPrep.always_apply_changes
+      ~CiteAsPrep.ci_supported
       ~CiteAsPrep.source_correction_hint

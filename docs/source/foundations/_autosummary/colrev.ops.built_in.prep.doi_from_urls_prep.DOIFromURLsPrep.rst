@@ -36,5 +36,6 @@ colrev.ops.built\_in.prep.doi\_from\_urls\_prep.DOIFromURLsPrep
    .. autosummary::
 
       ~DOIFromURLsPrep.always_apply_changes
+      ~DOIFromURLsPrep.ci_supported
       ~DOIFromURLsPrep.doi_regex
       ~DOIFromURLsPrep.source_correction_hint

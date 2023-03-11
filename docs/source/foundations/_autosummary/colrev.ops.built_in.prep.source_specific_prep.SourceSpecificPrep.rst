@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.source\_specific\_prep.SourceSpecificPrep
    .. autosummary::
 
       ~SourceSpecificPrep.always_apply_changes
+      ~SourceSpecificPrep.ci_supported
       ~SourceSpecificPrep.source_correction_hint

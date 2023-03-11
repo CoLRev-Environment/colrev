@@ -36,6 +36,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     source_identifier = "url"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = True
+    ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"
     link = "https://aisel.aisnet.org/"

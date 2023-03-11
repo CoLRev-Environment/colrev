@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets.ExcludeNonLatinAlphabet
 
       ~ExcludeNonLatinAlphabetsPrep.alphabet_detector
       ~ExcludeNonLatinAlphabetsPrep.always_apply_changes
+      ~ExcludeNonLatinAlphabetsPrep.ci_supported
       ~ExcludeNonLatinAlphabetsPrep.source_correction_hint

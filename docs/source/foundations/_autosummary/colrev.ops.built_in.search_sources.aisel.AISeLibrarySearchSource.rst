@@ -42,6 +42,7 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
    .. autosummary::
 
       ~AISeLibrarySearchSource.api_search_supported
+      ~AISeLibrarySearchSource.ci_supported
       ~AISeLibrarySearchSource.heuristic_status
       ~AISeLibrarySearchSource.link
       ~AISeLibrarySearchSource.search_type

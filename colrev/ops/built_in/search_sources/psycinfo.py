@@ -30,6 +30,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     source_identifier = "url"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = False
+    ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     short_name = "PsycInfo (APA)"
     link = "https://www.apa.org/pubs/databases/psycinfo"

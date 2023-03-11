@@ -29,6 +29,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     """Prepares records based on crossref.org metadata"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"

@@ -28,6 +28,7 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
     """Manual preparation based on a Jupyter Notebook"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = False
 
     def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict

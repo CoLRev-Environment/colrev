@@ -26,3 +26,13 @@ colrev.ops.built\_in.prep\_man.prep\_man\_export.ExportManPrep
       ~ExportManPrep.register_field_encoders
       ~ExportManPrep.to_dict
       ~ExportManPrep.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ExportManPrep.ci_supported

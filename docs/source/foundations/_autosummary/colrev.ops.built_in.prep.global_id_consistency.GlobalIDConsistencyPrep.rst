@@ -36,4 +36,5 @@ colrev.ops.built\_in.prep.global\_id\_consistency.GlobalIDConsistencyPrep
    .. autosummary::
 
       ~GlobalIDConsistencyPrep.always_apply_changes
+      ~GlobalIDConsistencyPrep.ci_supported
       ~GlobalIDConsistencyPrep.source_correction_hint
