@@ -330,6 +330,7 @@ class Screen(colrev.operation.Operation):
                 package_type=colrev.env.package_manager.PackageEndpointType.screen,
                 selected_packages=self.review_manager.settings.screen.screen_package_endpoints,
                 operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
             )
 
             selected_record_ids = [

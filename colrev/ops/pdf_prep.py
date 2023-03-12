@@ -50,6 +50,7 @@ class PDFPrep(colrev.operation.Operation):
             package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
             selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
             operation=self,
+            only_ci_supported=self.review_manager.in_ci_environment(),
         )
 
     def __complete_successful_pdf_prep(

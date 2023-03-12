@@ -761,6 +761,8 @@ class PackageManager:
 
         # pylint: disable=import-outside-toplevel
         # pylint: disable=unnecessary-dict-index-lookup
+        # pylint: disable=too-many-locals
+
         # Note : when iterating over packages_dict.items(),
         # changes to the values (or del k) would not persist
 

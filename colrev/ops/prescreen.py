@@ -270,6 +270,7 @@ class Prescreen(colrev.operation.Operation):
                 package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
                 selected_packages=prescreen_package_endpoints,
                 operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
             )
             endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
 
