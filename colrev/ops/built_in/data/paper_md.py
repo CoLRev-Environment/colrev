@@ -720,7 +720,8 @@ class PaperMarkdown(JsonSchemaMixin):
                     f"{self.paper_relative_path} due to unstaged changes{colors.END}"
                 )
 
-        self.build_paper(data_operation=data_operation)
+        if not data_operation.review_manager.in_ci_environment():
+            self.build_paper(data_operation=data_operation)
 
     def __get_to_synthesize_in_paper(
         self, *, paper: Path, records_for_synthesis: list
