@@ -1641,24 +1641,25 @@ def data(
             return
 
         ret = data_operation.main()
-        if ret["ask_to_commit"]:
-            if "y" == input("Create commit (y/n)?"):
-                review_manager.create_commit(
-                    msg="Data and synthesis", manual_author=True
+        if not data_operation.review_manager.in_ci_environment():
+            if ret["ask_to_commit"]:
+                if "y" == input("Create commit (y/n)?"):
+                    review_manager.create_commit(
+                        msg="Data and synthesis", manual_author=True
+                    )
+            if ret["no_endpoints_registered"]:
+                print(
+                    "No data format not specified. "
+                    "To register a data endpoint, "
+                    "use one (or several) of the following \n"
+                    "    colrev data --add colrev_built_in.paper_md\n"
+                    "    colrev data --add colrev_built_in.structured\n"
+                    "    colrev data --add colrev_built_in.bibliography_export\n"
+                    "    colrev data --add colrev_built_in.prisma\n"
+                    "    colrev data --add colrev_built_in.github_pages\n"
+                    "    colrev data --add colrev_built_in.zettlr\n"
+                    "    colrev data --add colrev_built_in.colrev_curation"
                 )
-        if ret["no_endpoints_registered"]:
-            print(
-                "No data format not specified. "
-                "To register a data endpoint, "
-                "use one (or several) of the following \n"
-                "    colrev data --add colrev_built_in.paper_md\n"
-                "    colrev data --add colrev_built_in.structured\n"
-                "    colrev data --add colrev_built_in.bibliography_export\n"
-                "    colrev data --add colrev_built_in.prisma\n"
-                "    colrev data --add colrev_built_in.github_pages\n"
-                "    colrev data --add colrev_built_in.zettlr\n"
-                "    colrev data --add colrev_built_in.colrev_curation"
-            )
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
