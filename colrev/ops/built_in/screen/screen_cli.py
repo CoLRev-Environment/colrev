@@ -146,6 +146,17 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
             screen_inclusion = all(decision == "in" for _, decision in decisions)
 
+            if screen_inclusion:
+                print(
+                    f"Overall screening decision for {record_dict['ID']}: "
+                    f"{colors.GREEN}include{colors.END}"
+                )
+            else:
+                print(
+                    f"Overall screening decision for {record_dict['ID']}: "
+                    f"{colors.RED}exclude{colors.END}"
+                )
+
             if abstract_from_tei:
                 if "abstract" in screen_record.data:
                     del screen_record.data["abstract"]
