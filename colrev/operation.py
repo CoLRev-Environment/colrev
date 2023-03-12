@@ -163,9 +163,7 @@ class Operation:
             self.__check_record_state_model_precondition()
 
         elif OperationsType.prescreen == self.type:
-            self.__require_clean_repo_general(
-                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
-            )
+            self.__require_clean_repo_general()
             self.__check_record_state_model_precondition()
 
         elif OperationsType.pdf_get == self.type:

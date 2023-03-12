@@ -129,7 +129,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         stat_len = len(split) if len(split) > 0 else prescreen_data["nr_tasks"]
         padding = prescreen_data["PAD"]
 
-        completed = self.__fun_cli_prescreen(
+        self.__fun_cli_prescreen(
             prescreen_operation=prescreen_operation,
             prescreen_data=prescreen_data,
             split=split,
@@ -141,9 +141,14 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         # prescreen_operation.review_manager.dataset.save_records_dict(records=records)
         prescreen_operation.review_manager.dataset.add_record_changes()
 
-        if not completed:
-            if "y" != input("Create commit (y/n)?"):
-                return records
+        # Note : currently, it is easier to create a commit in all cases.
+        # Upon continuing the prescreen, the scope-based prescreen commits the changes,
+        # which is misleading.
+        # Users can still squash commits.
+        # Note: originall: completed = self.__fun_cli_prescreen(...
+        # if not completed:
+        #     if "y" != input("Create commit (y/n)?"):
+        #         return records
 
         prescreen_operation.review_manager.create_commit(
             msg="Pre-screening (manual)", manual_author=True
