@@ -1641,7 +1641,12 @@ def data(
             return
 
         ret = data_operation.main()
-        if not data_operation.review_manager.in_ci_environment():
+        if data_operation.review_manager.in_ci_environment():
+            if ret["ask_to_commit"]:
+                review_manager.create_commit(
+                    msg="Data and synthesis", manual_author=True
+                )
+        else:
             if ret["ask_to_commit"]:
                 if "y" == input("Create commit (y/n)?"):
                     review_manager.create_commit(
