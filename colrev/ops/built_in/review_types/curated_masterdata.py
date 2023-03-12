@@ -61,7 +61,7 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.search.retrieve_forthcoming = False
 
         settings.prep.prep_rounds[0].prep_package_endpoints.insert(
-            0, {"endpoint": "colrev_built_in.prep_exclude_complementary_materials"}
+            0, {"endpoint": "colrev_built_in.exclude_complementary_materials"}
         )
 
         for prep_round in settings.prep.prep_rounds:
@@ -118,10 +118,12 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "curation_url": "TODO",
                 "curated_masterdata": True,
                 "masterdata_restrictions": {
-                    "from_year": 1900,
-                    "to_year": 5000,
-                    "volume": True,
-                    "number": True,
+                    "1900": {
+                        "ENTRYTYPE": "article",
+                        "volume": True,
+                        "number": True,
+                        "journal": "Journal Name",
+                    }
                 },
                 "curated_fields": ["doi", "url"],
             }
