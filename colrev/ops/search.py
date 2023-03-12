@@ -313,7 +313,9 @@ class Search(colrev.operation.Operation):
         """Search for records (main entrypoint)"""
 
         if selection_str:
-            if not Path(selection_str).is_file():
+            if Path(selection_str) not in [
+                s.filename for s in self.review_manager.settings.sources
+            ]:
                 raise colrev_exceptions.ParameterError(
                     parameter="select",
                     value=selection_str,

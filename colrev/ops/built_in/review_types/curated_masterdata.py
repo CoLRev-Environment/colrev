@@ -44,21 +44,20 @@ class CuratedMasterdata(JsonSchemaMixin):
             template_file=Path("template/review_type/curated_masterdata/readme.md"),
             target=Path("readme.md"),
         )
-        if self.review_manager.settings.project.curation_url:
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path(
+                "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+            ),
+            target=Path(".github/workflows/colrev_update.yml"),
+        )
+
+        if hasattr(self.review_manager.settings.project, "curation_url"):
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{url}}",
                 new_string=self.review_manager.settings.project.curation_url,
             )
-        crossref_source = colrev.settings.SearchSource(
-            endpoint="crossref",
-            filename=Path("data/search/CROSSREF.bib"),
-            search_type=colrev.settings.SearchType["DB"],
-            search_parameters={},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
-            comment="",
-        )
-        settings.sources.insert(0, crossref_source)
+
         settings.search.retrieve_forthcoming = False
 
         settings.prep.prep_rounds[0].prep_package_endpoints.insert(
@@ -118,9 +117,12 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "version": "0.1",
                 "curation_url": "TODO",
                 "curated_masterdata": True,
-                "volume_number_requirements": [
-                    {"from_year": 1900, "to_year": 5000, "volume": True, "number": True}
-                ],
+                "masterdata_restrictions": {
+                    "from_year": 1900,
+                    "to_year": 5000,
+                    "volume": True,
+                    "number": True,
+                },
                 "curated_fields": ["doi", "url"],
             }
         ]

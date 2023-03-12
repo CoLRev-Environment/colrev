@@ -207,6 +207,12 @@ class Initializer:
             [Path("template/init/gitattributes"), Path(".gitattributes")],
             [Path("template/init/gitignore"), Path(".gitignore")],
             [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
+            [
+                Path(
+                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                ),
+                Path(".github/workflows/colrev_update.yml"),
+            ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
             colrev.env.utils.retrieve_package_file(
@@ -318,19 +324,8 @@ class Initializer:
         with open("data/records.bib", mode="w", encoding="utf-8") as file:
             file.write("\n")
 
-        files_to_add = [
-            "readme.md",
-            ".pre-commit-config.yaml",
-            ".gitattributes",
-            ".gitignore",
-            "settings.json",
-            ".markdownlint.yaml",
-            "LICENSE.txt",
-            "data/records.bib",
-            ".github/workflows/pre-commit.yml",
-        ]
-        for file_to_add in files_to_add:
-            self.review_manager.dataset.add_changes(path=Path(file_to_add))
+        git_repo = self.review_manager.dataset.get_repo()
+        git_repo.git.add(all=True)
 
     def __post_commit_edits(self) -> None:
         if "curated_masterdata" == self.review_type:
