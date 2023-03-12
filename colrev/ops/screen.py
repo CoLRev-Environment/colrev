@@ -332,13 +332,19 @@ class Screen(colrev.operation.Operation):
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),
             )
+            if screen_package_endpoint["endpoint"] not in endpoint_dict:
+                self.review_manager.logger.info(
+                    f'Skip {screen_package_endpoint["endpoint"]} (not available)'
+                )
+                continue
+
+            endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
 
             selected_record_ids = [
                 r["ID"]
                 for r in records.values()
                 if colrev.record.RecordState.pdf_prepared == r["colrev_status"]
             ]
-            endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
             endpoint.run_screen(self, records, split)  # type: ignore
 
             self.__print_stats(selected_record_ids=selected_record_ids)

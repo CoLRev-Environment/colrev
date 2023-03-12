@@ -272,6 +272,12 @@ class Prescreen(colrev.operation.Operation):
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),
             )
+            if prescreen_package_endpoint["endpoint"] not in endpoint_dict:
+                self.review_manager.logger.info(
+                    f'Skip {prescreen_package_endpoint["endpoint"]} (not available)'
+                )
+                continue
+
             endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
 
             selected_record_ids = [

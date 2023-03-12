@@ -292,7 +292,15 @@ class Data(colrev.operation.Operation):
                 package_type=colrev.env.package_manager.PackageEndpointType.data,
                 selected_packages=[data_package_endpoint],
                 operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
             )
+
+            if data_package_endpoint["endpoint"] not in endpoint_dict:
+                self.review_manager.logger.info(
+                    f'Skip {data_package_endpoint["endpoint"]} (not available)'
+                )
+                continue
+
             endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
             endpoint.update_data(  # type: ignore

@@ -883,6 +883,11 @@ class Dedupe(colrev.operation.Operation):
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),
             )
+            if dedupe_package_endpoint["endpoint"] not in endpoint_dict:
+                self.review_manager.logger.info(
+                    f'Skip {dedupe_package_endpoint["endpoint"]} (not available)'
+                )
+                continue
 
             endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 

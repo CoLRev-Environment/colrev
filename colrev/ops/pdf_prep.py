@@ -150,7 +150,7 @@ class PDFPrep(colrev.operation.Operation):
                     not in self.pdf_prep_package_endpoints
                 ):
                     self.review_manager.logger.error(
-                        f'Skip (not available): {pdf_prep_package_endpoint["endpoint"]}'
+                        f'Skip {pdf_prep_package_endpoint["endpoint"]} (not available)'
                     )
                     continue
                 endpoint = self.pdf_prep_package_endpoints[
