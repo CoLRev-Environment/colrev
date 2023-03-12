@@ -814,7 +814,7 @@ class LocalIndex:
         print(f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}")
         # Note : the tei-directory should be removed manually.
 
-        Path(self.SQLITE_PATH).unlink()
+        Path(self.SQLITE_PATH).unlink(missing_ok=True)
         self.__sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
         self.__sqlite_connection.row_factory = self.__dict_factory
         cur = self.__sqlite_connection.cursor()
