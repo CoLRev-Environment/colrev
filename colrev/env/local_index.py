@@ -23,6 +23,7 @@ from tqdm import tqdm
 
 import colrev.dataset
 import colrev.env.environment_manager
+import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -795,6 +796,22 @@ class LocalIndex:
         except colrev_exceptions.CoLRevException as exc:
             print(exc)
 
+    def __load_masterdata_curations(self) -> dict:
+        # Note : the following should be replaced by heuristics
+        # based on the data (between colrev load and prep)
+        masterdata_curations = {}
+        filedata = colrev.env.utils.get_package_file_content(
+            file_path=Path("template/ops/masterdata_curations.csv")
+        )
+
+        if filedata:
+            for masterdata_curation in filedata.decode("utf-8").splitlines():
+                masterdata_curations[
+                    masterdata_curation.lower()
+                ] = masterdata_curation.lower()
+
+        return masterdata_curations
+
     def index(self) -> None:
         """Index all registered CoLRev projects"""
 
@@ -835,6 +852,20 @@ class LocalIndex:
             x["repo_source_path"]
             for x in self.environment_manager.load_environment_registry()
         ]
+        if not repo_source_paths:
+            env_resources = colrev.env.resources.Resources()
+            curated_resources = list(self.__load_masterdata_curations().values())
+            for curated_resource in curated_resources:
+                print(f"Install {curated_resource}")
+                env_resources.install_curated_resource(
+                    curated_resource=curated_resource
+                )
+
+            repo_source_paths = [
+                x["repo_source_path"]
+                for x in self.environment_manager.load_environment_registry()
+            ]
+
         for repo_source_path in repo_source_paths:
             self.index_colrev_project(repo_source_path=repo_source_path)
 
