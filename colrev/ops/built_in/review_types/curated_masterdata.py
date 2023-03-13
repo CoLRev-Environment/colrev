@@ -60,16 +60,19 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         settings.search.retrieve_forthcoming = False
 
-        settings.prep.prep_rounds[0].prep_package_endpoints.insert(
-            0, {"endpoint": "colrev_built_in.exclude_complementary_materials"}
-        )
-
-        for prep_round in settings.prep.prep_rounds:
-            prep_round.prep_package_endpoints = [
-                x
-                for x in prep_round.prep_package_endpoints
-                if x["endpoint"] != "colrev_built_in.get_masterdata_from_citeas"
-            ]
+        settings.prep.prep_rounds[0].prep_package_endpoints = [
+            {"endpoint": "colrev_built_in.resolve_crossrefs"},
+            {"endpoint": "colrev_built_in.source_specific_prep"},
+            {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
+            {"endpoint": "colrev_built_in.exclude_collections"},
+            {"endpoint": "colrev_built_in.exclude_complementary_materials"},
+            {"endpoint": "colrev_built_in.exclude_languages"},
+            {"endpoint": "colrev_built_in.remove_urls_with_500_errors"},
+            {"endpoint": "colrev_built_in.remove_broken_ids"},
+            {"endpoint": "colrev_built_in.global_ids_consistency_check"},
+            {"endpoint": "colrev_built_in.get_doi_from_urls"},
+            {"endpoint": "colrev_built_in.get_year_from_vol_iss_jour"},
+        ]
 
         settings.prep.prep_man_package_endpoints = [
             {"endpoint": "colrev_built_in.prep_man_curation_jupyter"},
