@@ -29,6 +29,7 @@ colrev.ops.built\_in.prep
    colrev.ops.built_in.prep.bibtex_crossref_resolution
    colrev.ops.built_in.prep.citeas_prep
    colrev.ops.built_in.prep.crossref_metadata_prep
+   colrev.ops.built_in.prep.curation_prep
    colrev.ops.built_in.prep.dblp_metadata_prep
    colrev.ops.built_in.prep.doi_from_urls_prep
    colrev.ops.built_in.prep.doi_metadata_prep

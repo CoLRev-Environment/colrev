@@ -301,45 +301,6 @@ class ColrevCuration(JsonSchemaMixin):
     ) -> None:
         """Update the CoLRev curation"""
 
-        for record_dict in records.values():
-            if (
-                record_dict["colrev_status"]
-                == colrev.record.RecordState.rev_prescreen_excluded
-            ):
-                continue
-            if record_dict.get("year", "UNKNOWN") == "UNKNOWN":
-                record_dict[
-                    "colrev_status"
-                ] = colrev.record.RecordState.md_needs_manual_preparation
-                colrev.record.Record(data=record_dict).add_masterdata_provenance(
-                    key="year",
-                    source="colrev_curation.masterdata_restrictions",
-                    note="missing",
-                )
-                continue
-
-            applicable_restrictions = (
-                data_operation.review_manager.dataset.get_applicable_restrictions(
-                    record_dict=record_dict,
-                )
-            )
-
-            colrev.record.Record(data=record_dict).apply_restrictions(
-                restrictions=applicable_restrictions
-            )
-            if any(
-                "missing" in note
-                for note in [
-                    x["note"]
-                    for x in record_dict.get(
-                        "colrev_masterdata_provenance", {}
-                    ).values()
-                ]
-            ):
-                colrev.record.Record(data=record_dict).set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-
         if self.settings.curated_masterdata:
             self.__update_stats_in_readme(
                 records=records,

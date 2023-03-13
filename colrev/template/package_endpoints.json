@@ -396,6 +396,13 @@
     ],
     "prep": [
         {
+            "package_endpoint_identifier": "colrev_built_in.curation_prep",
+            "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
+            "short_description": "Preparation of curations",
+            "ci_supported": true,
+            "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/curation_prep.py>`_"
+        },
+        {
             "package_endpoint_identifier": "colrev_built_in.exclude_collections",
             "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep",
             "short_description": "Prepares records by excluding collection entries (e.g., proceedings)",
@@ -585,7 +592,7 @@
             "package_endpoint_identifier": "colrev_built_in.curation_full_outlet_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
             "short_description": "Deduplication endpoint for curations with full journals/proceedings",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.py>`_"
         },
         {

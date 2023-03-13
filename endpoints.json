@@ -89,7 +89,11 @@
             },
             {"package_endpoint_identifier": "colrev_built_in.general_polish",
              "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep"
-            }
+            },
+            {"package_endpoint_identifier": "colrev_built_in.curation_prep",
+            "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep"
+           }
+
         ],
         "prep_man": [
             {"package_endpoint_identifier": "colrev_built_in.export_man_prep",
