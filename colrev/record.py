@@ -1267,6 +1267,10 @@ class Record:
         if key in md_p_dict:
             if "" == md_p_dict[key]["note"] or "" == note:
                 md_p_dict[key]["note"] = note
+            elif "missing" == note and "not_missing" in md_p_dict[key]["note"].split(
+                ","
+            ):
+                md_p_dict[key]["note"] = "missing"
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
             md_p_dict[key]["source"] = source
