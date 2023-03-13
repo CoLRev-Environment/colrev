@@ -34,7 +34,7 @@ class CurationDedupe(JsonSchemaMixin):
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
-    ci_supported: bool = False
+    ci_supported: bool = True
 
     @dataclass
     class CurationDedupeSettings(
@@ -153,6 +153,7 @@ class CurationDedupe(JsonSchemaMixin):
             available_sources = [
                 str(s.filename)
                 for s in dedupe_operation.review_manager.settings.sources
+                if "md_" not in str(s.filename)
             ]
             dedupe_sources = [
                 s["selected_source"]
@@ -242,11 +243,13 @@ class CurationDedupe(JsonSchemaMixin):
                             f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
                             f"{source_record_dict.get('title', 'NO_TITLE')}"
                         )
-
-                if "y" == input(
-                    "No existing records (md_processed*) found. "
-                    "All records unique? Set to md_processed [y]? "
-                ):
+                recs_unique = dedupe_operation.review_manager.force_mode
+                if not recs_unique:
+                    recs_unique = "y" == input(
+                        "No existing records (md_processed*) found. "
+                        "All records unique? Set to md_processed [y]? "
+                    )
+                if recs_unique:
                     for source_record_dict in source_records:
                         if all(
                             source_record_dict.get(k, "NA") == v
