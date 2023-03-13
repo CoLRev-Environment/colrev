@@ -407,6 +407,7 @@ class TEIParser:
             )
             html_str = etree.tostring(abstract_node).decode("utf-8")
             abstract_text = cleanhtml(html_str)
+        abstract_text = abstract_text.lstrip().rstrip()
         return abstract_text
 
     def get_metadata(self) -> dict:
