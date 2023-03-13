@@ -194,14 +194,22 @@ class PDFGet(colrev.operation.Operation):
                     )
                 return record.get_data()
 
-        self.review_manager.logger.info(
-            f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-            + f"rev_prescreen_included → pdf_needs_manual_retrieval{colors.END}"
-        )
+        if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
+            self.review_manager.logger.info(
+                f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"rev_prescreen_included → pdf_needs_manual_retrieval{colors.END}"
+            )
 
-        record.data.update(
-            colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
-        )
+            record.data.update(
+                colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
+            )
+        else:
+            self.review_manager.logger.info(
+                f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"rev_prescreen_included → pdf_prepared{colors.END}"
+            )
+
+            record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
 
         return record.get_data()
 
