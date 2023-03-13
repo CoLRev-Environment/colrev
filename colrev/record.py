@@ -2036,6 +2036,34 @@ class Record:
             if restrictions["ENTRYTYPE"] != self.data["ENTRYTYPE"]:
                 self.data["ENTRYTYPE"] = restrictions["ENTRYTYPE"]
 
+        if "author" not in self.data:
+            self.data[
+                "colrev_status"
+            ] = colrev.record.RecordState.md_needs_manual_preparation
+            colrev.record.Record(data=self.data).add_masterdata_provenance(
+                key="author",
+                source="colrev_curation.masterdata_restrictions",
+                note="missing",
+            )
+        if "title" not in self.data:
+            self.data[
+                "colrev_status"
+            ] = colrev.record.RecordState.md_needs_manual_preparation
+            colrev.record.Record(data=self.data).add_masterdata_provenance(
+                key="title",
+                source="colrev_curation.masterdata_restrictions",
+                note="missing",
+            )
+        if "year" not in self.data:
+            self.data[
+                "colrev_status"
+            ] = colrev.record.RecordState.md_needs_manual_preparation
+            colrev.record.Record(data=self.data).add_masterdata_provenance(
+                key="year",
+                source="colrev_curation.masterdata_restrictions",
+                note="missing",
+            )
+
         if "journal" in restrictions:
             if restrictions["journal"] != self.data.get("journal", ""):
                 self.data["journal"] = restrictions["journal"]
