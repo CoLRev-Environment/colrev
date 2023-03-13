@@ -327,6 +327,18 @@ class ColrevCuration(JsonSchemaMixin):
             colrev.record.Record(data=record_dict).apply_restrictions(
                 restrictions=applicable_restrictions
             )
+            if any(
+                "missing" in note
+                for note in [
+                    x["note"]
+                    for x in record_dict.get(
+                        "colrev_masterdata_provenance", {}
+                    ).values()
+                ]
+            ):
+                colrev.record.Record(data=record_dict).set_status(
+                    target_state=colrev.record.RecordState.md_needs_manual_preparation
+                )
 
         if self.settings.curated_masterdata:
             self.__update_stats_in_readme(
