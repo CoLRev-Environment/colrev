@@ -93,7 +93,6 @@ class CuratedMasterdata(JsonSchemaMixin):
             },
             {"endpoint": "colrev_built_in.conditional_prescreen"},
         ]
-        settings.pdf_get.pdf_required_for_screen_and_synthesis = False
         settings.screen.screen_package_endpoints = []
         settings.pdf_get.pdf_get_package_endpoints = []
 

@@ -67,6 +67,9 @@ def test_full_run(tmp_path: Path, mocker) -> None:  # type: ignore
     prep_operation = review_manager.get_prep_operation()
     prep_operation.main(keep_ids=False)
 
+    search_operation = review_manager.get_search_operation()
+    search_operation.main(rerun=True)
+
     review_manager.logger.info("Start dedupe")
     review_manager = colrev.review_manager.ReviewManager()
     dedupe_operation = review_manager.get_dedupe_operation(
