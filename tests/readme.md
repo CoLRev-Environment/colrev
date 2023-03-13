@@ -8,5 +8,7 @@
 ```
 pytest
 coverage run -m pytest
+coverage html
+rm coverage.svg
 coverage-badge -o coverage.svg
 ```

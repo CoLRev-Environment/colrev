@@ -128,7 +128,7 @@ class Record:
         # Note : avoid parsing upon Record instantiation as much as possible
         # to maintain high performance and ensure pickle-abiligy (in multiprocessing)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
@@ -218,6 +218,7 @@ class Record:
 
     def __save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
         list_to_return = []
+        assert input_key in ["colrev_masterdata_provenance", "colrev_data_provenance"]
         if "colrev_masterdata_provenance" == input_key:
             for key, value in input_dict.items():
                 if isinstance(value, dict):
@@ -230,9 +231,6 @@ class Record:
             for key, value in input_dict.items():
                 if isinstance(value, dict):
                     list_to_return.append(f"{key}:{value['source']};{value['note']};")
-
-        else:
-            print(f"error in to_string of dict_field: {input_key}")
 
         return list_to_return
 
@@ -274,7 +272,9 @@ class Record:
 
         if not isinstance(self.data.get("colrev_origin", []), list):
             print(self.data)
-            self.data["colrev_origin"] = self.data["colrev_origin"].split(";")
+            self.data["colrev_origin"] = (
+                self.data["colrev_origin"].rstrip(";").split(";")
+            )
         assert isinstance(self.data.get("colrev_origin", []), list)
 
         if stringify:
@@ -289,6 +289,8 @@ class Record:
     def set_status(self, *, target_state: RecordState) -> None:
         """Set the record status"""
         if RecordState.md_prepared == target_state:
+            # Note : must be after import provenance
+            # masterdata_is_complete() relies on "missing" notes/"UNKNOWN" fields
             if not self.masterdata_is_complete():
                 target_state = RecordState.md_needs_manual_preparation
         self.data["colrev_status"] = target_state
