@@ -234,41 +234,35 @@ class Record:
 
         return list_to_return
 
-    def __get_stringified_record(self) -> dict:
-        data_copy = deepcopy(self.data)
-
-        def list_to_str(*, val: list) -> str:
-            return ("\n" + " " * 36).join([f.rstrip() for f in val])
-
-        # separated by \n
-        for key in self.list_fields_keys:
-            if key in data_copy:
-                if isinstance(data_copy[key], str):
-                    data_copy[key] = [
-                        element.lstrip().rstrip()
-                        for element in data_copy[key].split(";")
-                    ]
-                if key in ["colrev_origin"]:
-                    data_copy[key] = sorted(list(set(data_copy[key])))
-                for ind, val in enumerate(data_copy[key]):
-                    if len(val) > 0:
-                        if ";" != val[-1]:
-                            data_copy[key][ind] = val + ";"
-                data_copy[key] = list_to_str(val=data_copy[key])
-
-        for key in self.dict_fields_keys:
-            if key in data_copy:
-                if isinstance(data_copy[key], dict):
-                    data_copy[key] = self.__save_field_dict(
-                        input_dict=data_copy[key], input_key=key
-                    )
-                if isinstance(data_copy[key], list):
-                    data_copy[key] = list_to_str(val=data_copy[key])
-
-        return data_copy
-
     def get_data(self, *, stringify: bool = False) -> dict:
         """Get the record data (optionally: in stringified version, i.e., without lists/dicts)"""
+
+        def __get_stringified_record() -> dict:
+            data_copy = deepcopy(self.data)
+
+            def list_to_str(*, val: list) -> str:
+                return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+            for key in self.list_fields_keys:
+                if key in data_copy:
+                    if key in ["colrev_origin"]:
+                        data_copy[key] = sorted(list(set(data_copy[key])))
+                    for ind, val in enumerate(data_copy[key]):
+                        if len(val) > 0:
+                            if ";" != val[-1]:
+                                data_copy[key][ind] = val + ";"
+                    data_copy[key] = list_to_str(val=data_copy[key])
+
+            for key in self.dict_fields_keys:
+                if key in data_copy:
+                    if isinstance(data_copy[key], dict):
+                        data_copy[key] = self.__save_field_dict(
+                            input_dict=data_copy[key], input_key=key
+                        )
+                    if isinstance(data_copy[key], list):
+                        data_copy[key] = list_to_str(val=data_copy[key])
+
+            return data_copy
 
         if not isinstance(self.data.get("colrev_origin", []), list):
             print(self.data)
@@ -278,7 +272,7 @@ class Record:
         assert isinstance(self.data.get("colrev_origin", []), list)
 
         if stringify:
-            return self.__get_stringified_record()
+            return __get_stringified_record()
 
         return self.data
 
@@ -1320,14 +1314,17 @@ class Record:
         """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
-            if key in [
-                "colrev_id",
-                "colrev_status",
-                "ENTRYTYPE",
-                "ID",
-                "metadata_source_repository_paths",
-                "local_curated_metadata",
-            ]:
+            if (
+                key
+                in [
+                    "colrev_id",
+                    "ENTRYTYPE",
+                    "ID",
+                    "metadata_source_repository_paths",
+                    "local_curated_metadata",
+                ]
+                + self.provenance_keys
+            ):
                 continue
 
             if key in self.identifying_field_keys:
@@ -1653,6 +1650,7 @@ class Record:
 
         self.data["prescreen_exclusion"] = reason
 
+        # Note: when records are prescreen-excluded during prep:
         to_drop = []
         for key, value in self.data.items():
             if "UNKNOWN" == value:
@@ -1723,7 +1721,7 @@ class Record:
 
     def extract_pages(
         self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data["file"])
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)

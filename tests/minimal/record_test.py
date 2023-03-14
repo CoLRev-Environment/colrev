@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import pytest
+
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 v1 = {
@@ -455,6 +458,38 @@ def test_provenance() -> None:
     assert expected == actual
 
 
+def test_set_masterdata_complete() -> None:
+    R1_mod = R1.copy()
+
+    R1_mod.data["number"] = "UNKNOWN"
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "test", "note": "not_missing"},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "pages": "1--3",
+    }
+    R1_mod.set_masterdata_complete(source="test")
+    actual = R1_mod.data
+    print(R1_mod.data)
+    assert expected == actual
+
+
 def test_defects() -> None:
     v1 = {
         "ID": "R1",
@@ -501,14 +536,191 @@ def test_defects() -> None:
         assert R1.has_quality_defects()
 
 
+def test_apply_restrictions() -> None:
+    input = {"ENTRYTYPE": "phdthesis"}
+    R_test = colrev.record.Record(data=input)
+    restrictions = {
+        "ENTRYTYPE": "article",
+        "journal": "MISQ",
+        "booktitle": "ICIS",
+        "volume": True,
+        "number": True,
+    }
+    R_test.apply_restrictions(restrictions=restrictions)
+    expected = {
+        "ENTRYTYPE": "article",
+        "colrev_status": colrev.record.RecordState.md_needs_manual_preparation,
+        "colrev_masterdata_provenance": {
+            "author": {
+                "source": "colrev_curation.masterdata_restrictions",
+                "note": "missing",
+            },
+            "title": {
+                "source": "colrev_curation.masterdata_restrictions",
+                "note": "missing",
+            },
+            "year": {
+                "source": "colrev_curation.masterdata_restrictions",
+                "note": "missing",
+            },
+            "volume": {
+                "source": "colrev_curation.masterdata_restrictions",
+                "note": "missing",
+            },
+            "number": {
+                "source": "colrev_curation.masterdata_restrictions",
+                "note": "missing",
+            },
+        },
+        "journal": "MISQ",
+        "booktitle": "ICIS",
+    }
+    actual = R_test.data
+    assert expected == actual
+
+
+def test_get_container_title() -> None:
+    R1_mod = R1.copy()
+
+    # article
+    expected = "MIS Quarterly"
+    actual = R1_mod.get_container_title()
+    assert expected == actual
+
+    R1_mod.data["ENTRYTYPE"] = "inproceedings"
+    R1_mod.data["booktitle"] = "ICIS"
+    expected = "ICIS"
+    actual = R1_mod.get_container_title()
+    assert expected == actual
+
+    R1_mod.data["ENTRYTYPE"] = "book"
+    R1_mod.data["title"] = "Momo"
+    expected = "Momo"
+    actual = R1_mod.get_container_title()
+    assert expected == actual
+
+    R1_mod.data["ENTRYTYPE"] = "inbook"
+    R1_mod.data["booktitle"] = "Book title a"
+    expected = "Book title a"
+    actual = R1_mod.get_container_title()
+    assert expected == actual
+
+
+def test_complete_provenance() -> None:
+    R1_mod = R1.copy()
+    del R1_mod.data["colrev_masterdata_provenance"]
+    del R1_mod.data["colrev_data_provenance"]
+    R1_mod.update_field(key="url", value="www.test.eu", source="asdf")
+
+    R1_mod.complete_provenance(source_info="test")
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_data_provenance": {"url": {"source": "test", "note": ""}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+        "url": "www.test.eu",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "test", "note": ""},
+            "title": {"source": "test", "note": ""},
+            "author": {"source": "test", "note": ""},
+            "journal": {"source": "test", "note": ""},
+            "volume": {"source": "test", "note": ""},
+            "number": {"source": "test", "note": ""},
+            "pages": {"source": "test", "note": ""},
+        },
+    }
+    actual = R1_mod.data
+    assert expected == actual
+
+
+def test_get_toc_key() -> None:
+    expected = "mis-quarterly|45|1"
+    actual = R1.get_toc_key()
+    assert expected == actual
+
+    input = {
+        "ENTRYTYPE": "inproceedings",
+        "booktitle": "International Conference on Information Systems",
+        "year": "2012",
+    }
+    expected = "international-conference-on-information-systems|2012"
+    actual = colrev.record.Record(data=input).get_toc_key()
+    assert expected == actual
+
+    input = {
+        "ENTRYTYPE": "phdthesis",
+        "ID": "test",
+        "title": "Thesis on asteroids",
+        "year": "2012",
+    }
+    with pytest.raises(
+        colrev_exceptions.NotTOCIdentifiableException,
+        match="ENTRYTYPE .* not toc-identifiable",
+    ):
+        actual = colrev.record.Record(data=input).get_toc_key()
+
+
+def test_print_citation_format() -> None:
+    R1.print_citation_format()
+
+
+def test_print_diff_pair() -> None:
+    colrev.record.Record.print_diff_pair(
+        record_pair=[R1.data, R2.data], keys=["title", "journal", "booktitle"]
+    )
+
+
+def test_prescreen_exclude() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_status"] = colrev.record.RecordState.rev_synthesized
+    R1_mod.data["number"] = "UNKNOWN"
+    R1_mod.data["volume"] = "UNKNOWN"
+
+    R1_mod.prescreen_exclude(reason="retracted", print_warning=True)
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "pages": "1--3",
+        "prescreen_exclusion": "retracted",
+    }
+
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
+
+
 def test_parse_bib() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_origin"] = "import.bib/id_0001;md_crossref.bib/01;"
     expected = {
         "ID": "R1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:manual;check,test;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
         "colrev_data_provenance": "url:manual;test,1;",
         "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_origin": "import.bib/id_0001;",
+        "colrev_origin": "import.bib/id_0001;\n                                    md_crossref.bib/01;",
         "year": "2020",
         "title": "EDITORIAL",
         "author": "Rai, Arun",
@@ -517,12 +729,21 @@ def test_parse_bib() -> None:
         "number": "1",
         "pages": "1--3",
     }
-
-    actual = R1.get_data(stringify=True)
-    assert expected == actual
-
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_origin"] = "import.bib/id_0001;"
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:manual;check,test;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
+        "colrev_data_provenance": "url:manual;test,1;",
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": "import.bib/id_0001;\n                                    md_crossref.bib/01;",
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    print(type(R1_mod.data["colrev_origin"]))
     actual = R1_mod.get_data(stringify=True)
-    print(R1_mod.data["colrev_origin"])
     assert expected == actual
