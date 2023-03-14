@@ -350,20 +350,20 @@ class Record:
                 if self.data[key] == value:
                     return
 
-        self.data[key] = value
         if key in self.identifying_field_keys:
             if not self.masterdata_is_curated():
-                if append_edit:
-                    source = "original|" + source
-                    if key in self.data.get("colrev_data_provenance", {}):
+                if append_edit and key in self.data:
+                    if key in self.data.get("colrev_masterdata_provenance", {}):
                         source = (
                             self.data["colrev_masterdata_provenance"][key]["source"]
                             + "|"
                             + source
                         )
+                    else:
+                        source = "original|" + source
                 self.add_masterdata_provenance(key=key, source=source, note=note)
         else:
-            if append_edit:
+            if append_edit and key in self.data:
                 if key in self.data.get("colrev_data_provenance", {}):
                     source = (
                         self.data["colrev_data_provenance"][key]["source"]
@@ -372,8 +372,8 @@ class Record:
                     )
                 else:
                     source = "original|" + source
-
             self.add_data_provenance(key=key, source=source, note=note)
+        self.data[key] = value
 
     def rename_field(self, *, key: str, new_key: str) -> None:
         """Rename a field"""
@@ -399,7 +399,7 @@ class Record:
             if "inconsistent with entrytype" in value["note"]:
                 value["note"] = ""
         self.data["ENTRYTYPE"] = new_entrytype
-        if "inproceedings" == new_entrytype:
+        if new_entrytype in ["inproceedings", "proceedings"]:
             if "UNKNOWN" == self.data.get("volume", ""):
                 self.remove_field(key="volume")
             if "UNKNOWN" == self.data.get("number", ""):
@@ -409,40 +409,37 @@ class Record:
         elif "article" == new_entrytype:
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
-        elif "proceedings" == new_entrytype:
-            if "journal" in self.data:
-                self.rename_field(key="journal", new_key="booktitle")
 
         self.__apply_fields_keys_requirements()
+        if self.has_quality_defects() or self.get_missing_fields():
+            self.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
     ) -> None:
         """Remove a field"""
+
         if key in self.data:
             del self.data[key]
-            if not_missing_note:
-                if key in self.identifying_field_keys:
-                    # Example: journal without number
-                    # we should keep that information that a particular masterdata
-                    # field is not required
-                    if key not in self.data["colrev_masterdata_provenance"]:
-                        self.data["colrev_masterdata_provenance"][key] = {}
-                    self.data["colrev_masterdata_provenance"][key][
-                        "note"
-                    ] = "not_missing"
-                    if source != "":
-                        self.data["colrev_masterdata_provenance"][key][
-                            "source"
-                        ] = source
 
+        if not_missing_note and key in self.identifying_field_keys:
+            # Example: journal without number
+            # we should keep that information that a particular masterdata
+            # field is not required
+            if key not in self.data["colrev_masterdata_provenance"]:
+                self.data["colrev_masterdata_provenance"][key] = {}
+            self.data["colrev_masterdata_provenance"][key]["note"] = "not_missing"
+            if source != "":
+                self.data["colrev_masterdata_provenance"][key]["source"] = source
+        else:
+            if key in self.identifying_field_keys:
+                if key in self.data.get("colrev_masterdata_provenance", ""):
+                    del self.data["colrev_masterdata_provenance"][key]
             else:
-                if key in self.identifying_field_keys:
-                    if key in self.data.get("colrev_masterdata_provenance", ""):
-                        del self.data["colrev_masterdata_provenance"][key]
-                else:
-                    if key in self.data.get("colrev_data_provenance", ""):
-                        del self.data["colrev_data_provenance"][key]
+                if key in self.data.get("colrev_data_provenance", ""):
+                    del self.data["colrev_data_provenance"][key]
 
     def masterdata_is_complete(self) -> bool:
         """Check if the masterdata is complete"""
