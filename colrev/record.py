@@ -2858,24 +2858,9 @@ class RecordStateModel:
     def __init__(
         self,
         *,
-        state: Optional[RecordState] = None,
-        operation: Optional[colrev.operation.OperationsType] = None,
-        review_manager: Optional[colrev.review_manager.ReviewManager] = None,
+        state: RecordState,
     ) -> None:
-        if operation:
-            start_states: list[str] = [
-                str(x["source"])
-                for x in self.transitions
-                if str(operation) == x["trigger"]
-            ]
-            self.state = RecordState[start_states[0]]
-        elif state:
-            self.state = state
-        else:
-            print("ERROR: no operation or state provided")
-
-        if review_manager:
-            self.review_manager = review_manager
+        self.state = state
 
         logging.getLogger("transitions").setLevel(logging.WARNING)
 
@@ -2914,16 +2899,16 @@ class RecordStateModel:
         """Check the preconditions for an operation"""
 
         def get_states_set() -> set:
-            if not self.review_manager.dataset.records_file.is_file():
+            if not operation.review_manager.dataset.records_file.is_file():
                 return set()
-            records_headers = self.review_manager.dataset.load_records_dict(
+            records_headers = operation.review_manager.dataset.load_records_dict(
                 header_only=True
             )
             record_header_list = list(records_headers.values())
 
             return {el["colrev_status"] for el in record_header_list}
 
-        if "True" == self.review_manager.settings.project.delay_automated_processing:
+        if operation.review_manager.settings.project.delay_automated_processing:
             cur_state_list = get_states_set()
             # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
             # self.review_manager.logger.debug(f"precondition: {self.state}")

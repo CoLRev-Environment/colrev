@@ -104,7 +104,7 @@ class ReviewManagerNotNofiedError(CoLRevException):
 
     def __init__(self) -> None:
         self.message = (
-            "create a process and inform the review manager in advance"
+            "Create an operation and inform the review manager in advance"
             + " to avoid conflicts."
         )
         super().__init__(self.message)

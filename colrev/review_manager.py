@@ -254,9 +254,9 @@ class ReviewManager:
         """Notify the review_manager about the next operation"""
 
         try:
+            self.notified_next_operation = operation.type
             if state_transition:
                 operation.check_precondition()
-            self.notified_next_operation = operation.type
             self.dataset.reset_log_if_no_changes()
         except AttributeError as exc:
             if self.force_mode:

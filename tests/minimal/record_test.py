@@ -747,3 +747,150 @@ def test_parse_bib() -> None:
     print(type(R1_mod.data["colrev_origin"]))
     actual = R1_mod.get_data(stringify=True)
     assert expected == actual
+
+
+def test_pdf_prep_man_record() -> None:
+    R1_mod = colrev.record.PDFPrepManRecord(data=R1.copy().data)
+    R1_mod.data["abstract"] = "This paper focuses on ..."
+    R1_mod.data["url"] = "www.gs.eu"
+    R1_mod.data["colrev_data_provenance"]["file"] = {
+        "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
+    }
+
+    expected = """\x1b[91mRai, Arun\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMIS Quarterly (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n"""
+    actual = str(R1_mod)
+    print(actual)
+    assert expected == actual
+
+
+def test_record_state_model() -> None:
+    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_processed)
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_imported)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+    }
+    actual = rsm.get_preceding_states(
+        state=colrev.record.RecordState.md_needs_manual_preparation
+    )
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_prepared)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_processed)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+    }
+    actual = rsm.get_preceding_states(
+        state=colrev.record.RecordState.rev_prescreen_included
+    )
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.rev_prescreen_included,
+    }
+    actual = rsm.get_preceding_states(
+        state=colrev.record.RecordState.pdf_needs_manual_retrieval
+    )
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.rev_prescreen_included,
+        colrev.record.RecordState.pdf_needs_manual_retrieval,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_imported)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.rev_prescreen_included,
+        colrev.record.RecordState.pdf_needs_manual_retrieval,
+        colrev.record.RecordState.pdf_imported,
+    }
+    actual = rsm.get_preceding_states(
+        state=colrev.record.RecordState.pdf_needs_manual_preparation
+    )
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.rev_prescreen_included,
+        colrev.record.RecordState.pdf_needs_manual_retrieval,
+        colrev.record.RecordState.pdf_imported,
+        colrev.record.RecordState.pdf_needs_manual_preparation,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_prepared)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.pdf_needs_manual_retrieval,
+        colrev.record.RecordState.pdf_imported,
+        colrev.record.RecordState.pdf_prepared,
+        colrev.record.RecordState.pdf_needs_manual_preparation,
+        colrev.record.RecordState.rev_prescreen_included,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_included)
+    assert expected == actual
+
+    expected = {
+        colrev.record.RecordState.md_retrieved,
+        colrev.record.RecordState.md_imported,
+        colrev.record.RecordState.md_needs_manual_preparation,
+        colrev.record.RecordState.md_prepared,
+        colrev.record.RecordState.md_processed,
+        colrev.record.RecordState.pdf_needs_manual_retrieval,
+        colrev.record.RecordState.pdf_imported,
+        colrev.record.RecordState.pdf_prepared,
+        colrev.record.RecordState.pdf_needs_manual_preparation,
+        colrev.record.RecordState.rev_prescreen_included,
+        colrev.record.RecordState.rev_included,
+    }
+    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_synthesized)
+    assert expected == actual
