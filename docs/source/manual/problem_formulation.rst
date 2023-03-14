@@ -27,6 +27,8 @@ It is therefore recommended to familiarize with the different types of review. E
 ..
    (**TODO: link to resources/classifications/ideally a database overview**).
 
+Guidance on selecting an appropriate review type is provided by the `RightReview <https://rightreview.knowledgetranslation.net/>`_ tool.
+
 It can also be useful to check prior (related) reviews. This can help to justify the need for a new review paper and it can inform several decisions, such as the search terms and databases to be covered.
 
 Once the initial objectives and review type are specified, the CoLRev project can be initialized using the ``colrev init`` operation.
