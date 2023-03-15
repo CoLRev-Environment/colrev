@@ -20,7 +20,9 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.get_year_from_toc
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
+      ~LocalIndex.index_records
       ~LocalIndex.is_duplicate
+      ~LocalIndex.reinitialize_sqlite_db
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
@@ -43,4 +45,5 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.local_environment_path
       ~LocalIndex.max_len_sha256
       ~LocalIndex.request_timeout
+      ~LocalIndex.sqlite_connection
       ~LocalIndex.teiind_path

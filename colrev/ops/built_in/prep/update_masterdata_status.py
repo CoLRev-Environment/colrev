@@ -40,7 +40,9 @@ class UpdateMetadataStatusPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
     def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the record by updating its metadata status"""
 

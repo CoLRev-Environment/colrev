@@ -265,7 +265,6 @@ class Record:
             return data_copy
 
         if not isinstance(self.data.get("colrev_origin", []), list):
-            print(self.data)
             self.data["colrev_origin"] = (
                 self.data["colrev_origin"].rstrip(";").split(";")
             )
@@ -1758,6 +1757,8 @@ class Record:
         return cpid1
 
     def apply_fields_keys_requirements(self) -> None:
+        """Apply the field key requirements"""
+
         required_fields_keys = self.record_field_requirements["other"]
         if self.data["ENTRYTYPE"] in self.record_field_requirements:
             required_fields_keys = self.record_field_requirements[
@@ -1775,32 +1776,41 @@ class Record:
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
 
-        if "article" == self.data["ENTRYTYPE"]:
-            toc_key = (
-                self.data.get("journal", "-")
-                .replace(" ", "-")
-                .replace("\\", "")
-                .replace("&", "and")
-                .lower()
-            )
-            toc_key += f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
-            toc_key += f"|{self.data['number']}" if ("number" in self.data) else "|-"
+        try:
+            if "article" == self.data["ENTRYTYPE"]:
+                toc_key = (
+                    self.data["journal"]
+                    .replace(" ", "-")
+                    .replace("\\", "")
+                    .replace("&", "and")
+                    .lower()
+                )
+                toc_key += (
+                    f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
+                )
+                toc_key += (
+                    f"|{self.data['number']}" if ("number" in self.data) else "|-"
+                )
 
-        elif "inproceedings" == self.data["ENTRYTYPE"]:
-            toc_key = (
-                self.data.get("booktitle", "")
-                .replace(" ", "-")
-                .replace("\\", "")
-                .replace("&", "and")
-                .lower()
-                + f"|{self.data.get('year', '')}"
-            )
-        else:
-            msg = (
-                f"ENTRYTYPE {self.data['ENTRYTYPE']} "
-                + f"({self.data['ID']}) not toc-identifiable"
-            )
-            raise colrev_exceptions.NotTOCIdentifiableException(msg)
+            elif "inproceedings" == self.data["ENTRYTYPE"]:
+                toc_key = (
+                    self.data["booktitle"]
+                    .replace(" ", "-")
+                    .replace("\\", "")
+                    .replace("&", "and")
+                    .lower()
+                    + f"|{self.data.get('year', '')}"
+                )
+            else:
+                msg = (
+                    f"ENTRYTYPE {self.data['ENTRYTYPE']} "
+                    + f"({self.data['ID']}) not toc-identifiable"
+                )
+                raise colrev_exceptions.NotTOCIdentifiableException(msg)
+        except KeyError as exc:
+            raise colrev_exceptions.NotTOCIdentifiableException(
+                f"missing key {exc}"
+            ) from exc
 
         return toc_key
 
@@ -2050,6 +2060,8 @@ class Record:
         return False
 
     def print_prescreen_record(self) -> None:
+        """Print the record for prescreen operations"""
+
         ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
         ret_str += (
             f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
@@ -2079,6 +2091,7 @@ class Record:
         print(ret_str)
 
     def print_pdf_prep_man(self) -> None:
+        """Print the record for pdf-prep-man operations"""
         # pylint: disable=too-many-branches
         ret_str = ""
         if "file" in self.data:
@@ -2217,7 +2230,7 @@ class PrepRecord(Record):
         authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
         record.data["author"] = authors_string
 
-    def __container_is_abbreviated(self) -> bool:
+    def container_is_abbreviated(self) -> bool:
         """Check whether the container title is abbreviated"""
         if "journal" in self.data:
             if self.data["journal"].count(".") > 2:
@@ -2270,11 +2283,11 @@ class PrepRecord(Record):
         record = record_original.copy_prep_rec()
         retrieved_record = retrieved_record_original.copy_prep_rec()
 
-        if record.__container_is_abbreviated():
+        if record.container_is_abbreviated():
             min_len = get_abbrev_container_min_len(record=record)
             abbreviate_container(record=retrieved_record, min_len=min_len)
             abbreviate_container(record=record, min_len=min_len)
-        if retrieved_record.__container_is_abbreviated():
+        if retrieved_record.container_is_abbreviated():
             min_len = get_abbrev_container_min_len(record=retrieved_record)
             abbreviate_container(record=record, min_len=min_len)
             abbreviate_container(record=retrieved_record, min_len=min_len)
@@ -2534,6 +2547,20 @@ class RecordState(Enum):
         if state == RecordState.md_processed:
             return [
                 RecordState.md_processed,
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]
+
+        if state == RecordState.rev_prescreen_included:
+            return [
                 RecordState.rev_prescreen_included,
                 RecordState.rev_prescreen_excluded,
                 RecordState.pdf_needs_manual_retrieval,

@@ -740,7 +740,7 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        actual = colrev.record.Record(data=input).get_toc_key()
+        colrev.record.Record(data=input).get_toc_key()
 
 
 def test_print_citation_format() -> None:

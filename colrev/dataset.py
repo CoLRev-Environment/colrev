@@ -414,11 +414,10 @@ class Dataset:
         }
         """
 
-        pybtex.errors.set_strict_mode(False)
-
         if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
 
+        pybtex.errors.set_strict_mode(False)
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
@@ -445,7 +444,13 @@ class Dataset:
 
         return records_dict
 
-    def parse_bibtex_str(self, *, recs_dict_in: dict) -> str:
+    @classmethod
+    def parse_bibtex_str(
+        cls,
+        *,
+        recs_dict_in: dict,
+        review_manager: Optional[colrev.review_manager.ReviewManager] = None,
+    ) -> str:
         """Parse a records_dict to a BiBTex string"""
 
         # Note: we need a deepcopy because the parsing modifies dicts
@@ -475,12 +480,13 @@ class Dataset:
                         "en", "eng"
                     )
 
-                if len(record_dict["language"]) != 3:
-                    self.review_manager.logger.warn(
-                        "language (%s) of %s not in ISO 639-3 format",
-                        record_dict["language"],
-                        record_dict["ID"],
-                    )
+                if review_manager:
+                    if len(record_dict["language"]) != 3:
+                        review_manager.logger.warn(
+                            "language (%s) of %s not in ISO 639-3 format",
+                            record_dict["language"],
+                            record_dict["ID"],
+                        )
 
             field_order = [
                 "colrev_origin",  # must be in second line

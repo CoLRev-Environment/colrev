@@ -27,6 +27,7 @@ colrev.record.PrepRecord
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.cleanup_pdf_processing_fields
       ~PrepRecord.complete_provenance
+      ~PrepRecord.container_is_abbreviated
       ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id

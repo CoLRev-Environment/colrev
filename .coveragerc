@@ -4,3 +4,4 @@ omit =
     colrev/ops/built_in/*
     # omit everything in /usr
     /usr/*
+    *crossrefapi/crossref/*

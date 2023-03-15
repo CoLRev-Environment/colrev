@@ -212,6 +212,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             params["query"] = query_field
 
         else:
+            if "title" not in record.data:
+                raise colrev_exceptions.NotEnoughDataToIdentifyException()
+
             params = {"rows": "15"}
             if not isinstance(record.data.get("year", ""), str) or not isinstance(
                 record.data.get("title", ""), str
@@ -283,6 +286,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # Note : only returning a multiple-item list for jour_vol_iss_list
 
+        record_list = []
+        most_similar, most_similar_record = 0.0, {}
         try:
             record = record_input.copy_prep_rec()
 
@@ -290,7 +295,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 record=record, jour_vol_iss_list=jour_vol_iss_list
             )
             headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-            record_list = []
             session = review_manager.get_cached_session()
 
             # review_manager.logger.debug(url)
@@ -302,7 +306,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 # )
                 return []
 
-            most_similar, most_similar_record = 0.0, {}
             data = json.loads(ret.text)
             for item in data["message"]["items"]:
                 if "title" not in item:
@@ -331,10 +334,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 elif most_similar < similarity:
                     most_similar = similarity
                     most_similar_record = retrieved_record.get_data()
-        except json.decoder.JSONDecodeError:
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            json.decoder.JSONDecodeError,
+            requests.exceptions.RequestException,
+        ):
             pass
-        except requests.exceptions.RequestException:
-            return []
         # pylint: disable=duplicate-code
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -343,7 +348,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
             ) from exc
 
         if not jour_vol_iss_list:
-            record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+            if most_similar_record:
+                record_list = [colrev.record.PrepRecord(data=most_similar_record)]
 
         return record_list
 

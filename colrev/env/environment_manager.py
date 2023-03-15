@@ -316,13 +316,15 @@ class EnvironmentManager:
                             and "journal:" != line.lstrip()[:8]
                         ):
                             journal = line[line.find("{") + 1 : line.rfind("}")]
-                            outlets.append(journal)
+                            if "UNKNOWN" != journal:
+                                outlets.append(journal)
                         if (
                             "booktitle" == line.lstrip()[:9]
                             and "booktitle:" != line.lstrip()[:10]
                         ):
                             booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                            outlets.append(booktitle)
+                            if "UNKNOWN" != booktitle:
+                                outlets.append(booktitle)
 
                     if len(set(outlets)) != 1:
                         raise colrev_exceptions.CuratedOutletNotUnique(
