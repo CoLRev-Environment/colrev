@@ -7,10 +7,6 @@ on:
 jobs:
   test-minimal-deps:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v3
@@ -21,6 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install pytest
+        pip install pytest-mock
         pip install --no-cache-dir .
     - name: Run minimal-deps tests
       run: |
@@ -44,4 +41,4 @@ jobs:
         pip install --no-cache-dir .
     - name: Run full-deps tests
       run: |
-        pytest tests/full/
+        pytest tests

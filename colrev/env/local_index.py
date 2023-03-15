@@ -98,11 +98,10 @@ class LocalIndex:
         if init:
             Path(self.SQLITE_PATH).unlink(missing_ok=True)
 
-        if Path(self.SQLITE_PATH).is_file() or init:
-            self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
-            self.sqlite_connection.row_factory = self.__dict_factory
-            return self.sqlite_connection.cursor()
-        raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
+        self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
+        self.sqlite_connection.row_factory = self.__dict_factory
+        return self.sqlite_connection.cursor()
+        # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
