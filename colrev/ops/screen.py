@@ -296,6 +296,36 @@ class Screen(colrev.operation.Operation):
             "Included".ljust(29) + f"{nr_screen_included}".rjust(10, " ") + " records"
         )
 
+    def screen(
+        self,
+        *,
+        record: colrev.record.Record,
+        screen_inclusion: bool,
+        screening_criteria: str,
+        PAD: int = 40,
+    ) -> None:
+        """Save the screen decision"""
+
+        record.data["screening_criteria"] = screening_criteria
+        PAD = 40
+        if screen_inclusion:
+            record.set_status(target_state=colrev.record.RecordState.rev_included)
+
+            self.review_manager.report_logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "Included in screen"
+            )
+        else:
+            record.set_status(target_state=colrev.record.RecordState.rev_excluded)
+            self.review_manager.report_logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
+            )
+
+        record_dict = record.get_data()
+        self.review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
+        self.review_manager.dataset.add_record_changes()
+
     def main(self, *, split_str: str) -> None:
         """Screen records for inclusion (main entrypoint)"""
 

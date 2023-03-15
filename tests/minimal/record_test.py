@@ -129,7 +129,8 @@ def test_rename_field() -> None:
 
 def test_remove_field() -> None:
     R2_mod = R2.copy()
-    R2_mod.remove_field(key="number", not_missing_note=True)
+    del R2_mod.data["colrev_masterdata_provenance"]["number"]
+    R2_mod.remove_field(key="number", not_missing_note=True, source="test")
     expected = {
         "ID": "R1",
         "ENTRYTYPE": "article",
@@ -139,7 +140,7 @@ def test_remove_field() -> None:
             "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
-            "number": {"source": "import.bib/id_0001", "note": "not_missing"},
+            "number": {"source": "test", "note": "not_missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {},
@@ -154,7 +155,23 @@ def test_remove_field() -> None:
     }
 
     actual = R2_mod.data
+    print(actual)
     assert expected == actual
+
+
+def test_masterdata_is_complete() -> None:
+    R1_mod = R1.copy()
+
+    R1_mod.remove_field(key="number", not_missing_note=True, source="test")
+    assert R1_mod.masterdata_is_complete()
+
+    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
+    assert not R1_mod.masterdata_is_complete()
+
+    R1_mod.data["colrev_masterdata_provenance"] = {
+        "CURATED": {"source": ":https...", "note": ""}
+    }
+    assert R1_mod.masterdata_is_complete()
 
 
 def test_diff() -> None:
@@ -489,8 +506,66 @@ def test_set_masterdata_complete() -> None:
     print(R1_mod.data)
     assert expected == actual
 
+    R1_mod = R1.copy()
 
-def test_defects() -> None:
+    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
+    R1_mod.set_masterdata_complete(source="test")
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+
+    actual = R1_mod.data
+    print(R1_mod.data)
+    assert expected == actual
+
+    R1_mod.data["colrev_masterdata_provenance"] = {
+        "CURATED": {"source": ":https...", "note": ""}
+    }
+    R1_mod.set_masterdata_complete(source="test")
+    del R1_mod.data["colrev_masterdata_provenance"]
+    R1_mod.set_masterdata_complete(source="test")
+
+
+def test_get_record_similarity() -> None:
+    expected = 0.854
+    actual = colrev.record.Record.get_record_similarity(record_a=R1, record_b=R2)
+    assert expected == actual
+
+
+def test_get_incomplete_fields() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["title"] = "Editoria…"
+    expected = {"title"}
+    actual = R1_mod.get_incomplete_fields()
+    assert expected == actual
+
+    R1_mod.data["author"] = "Rai, Arun et al."
+    expected = {"title", "author"}
+    actual = R1_mod.get_incomplete_fields()
+    assert expected == actual
+
+
+def test_get_quality_defects() -> None:
     v1 = {
         "ID": "R1",
         "ENTRYTYPE": "article",
@@ -749,17 +824,90 @@ def test_parse_bib() -> None:
     assert expected == actual
 
 
-def test_pdf_prep_man_record() -> None:
-    R1_mod = colrev.record.PDFPrepManRecord(data=R1.copy().data)
+def test_print_prescreen_record(capfd) -> None:  # type: ignore
+    R1_mod = colrev.record.Record(data=R1.copy().data)
+    expected = "  ID: R1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
+
+    R1_mod.print_prescreen_record()
+    actual, err = capfd.readouterr()
+    assert expected == actual
+
+
+def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
+    R1_mod = colrev.record.Record(data=R1.copy().data)
     R1_mod.data["abstract"] = "This paper focuses on ..."
     R1_mod.data["url"] = "www.gs.eu"
     R1_mod.data["colrev_data_provenance"]["file"] = {
         "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
     }
 
-    expected = """\x1b[91mRai, Arun\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMIS Quarterly (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n"""
-    actual = str(R1_mod)
-    print(actual)
+    expected = """\x1b[91mRai, Arun\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMIS Quarterly (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
+
+    R1_mod.print_pdf_prep_man()
+    actual, err = capfd.readouterr()
+    assert expected == actual
+
+
+def test_format_author_field() -> None:
+    expected = "Smith, Tom"
+    actual = colrev.record.PrepRecord.format_author_field(input_string="Tom Smith")
+    assert expected == actual
+
+
+def test_format_if_mostly_upper() -> None:
+    prep_rec = R1.copy_prep_rec()
+
+    prep_rec.data["title"] = "ALL CAPS TITLE"
+    prep_rec.format_if_mostly_upper(key="title")
+    expected = "All caps title"
+    actual = prep_rec.data["title"]
+    assert expected == actual
+
+    prep_rec.data["title"] = "ALL CAPS TITLE"
+    prep_rec.format_if_mostly_upper(key="title", case="title")
+    expected = "All Caps Title"
+    actual = prep_rec.data["title"]
+    assert expected == actual
+
+
+def test_rename_fields_based_on_mapping() -> None:
+    prep_rec = R1.copy_prep_rec()
+
+    prep_rec.rename_fields_based_on_mapping(mapping={"Number": "issue"})
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+            "issue": {"source": "import.bib/id_0001|rename-from:number", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "pages": "1--3",
+        "issue": "1",
+    }
+
+    actual = prep_rec.data
+    assert expected == actual
+
+
+def test_unify_pages_field() -> None:
+    prep_rec = R1.copy_prep_rec()
+    prep_rec.data["pages"] = "1-2"
+    prep_rec.unify_pages_field()
+    expected = "1--2"
+    actual = prep_rec.data["pages"]
     assert expected == actual
 
 

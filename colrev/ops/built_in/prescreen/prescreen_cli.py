@@ -78,13 +78,13 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 if record_dict["ID"] not in split:
                     continue
 
-            prescreen_record = colrev.record.PrescreenRecord(data=record_dict)
+            record = colrev.record.Record(data=record_dict)
             ret, inclusion_decision_str = "NA", "NA"
             i += 1
 
             print("\n\n")
             print(f"Record {i} (of {stat_len})\n")
-            print(prescreen_record)
+            record.print_prescreen_record()
 
             while ret not in ["y", "n", "s", "q"]:
                 ret = input(
@@ -106,8 +106,8 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 continue
 
             inclusion_decision = "yes" == inclusion_decision_str
-            prescreen_record.prescreen(
-                review_manager=prescreen_operation.review_manager,
+            prescreen_operation.prescreen(
+                record=record,
                 prescreen_inclusion=inclusion_decision,
                 PAD=padding,
             )

@@ -205,7 +205,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         # )
 
         # to print only the essential information
-        print(colrev.record.PrescreenRecord(data=record.get_data()))
+        colrev.record.Record(data=record.get_data()).print_prescreen_record()
 
         if (
             colrev.record.RecordState.pdf_needs_manual_retrieval
@@ -245,16 +245,16 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                     filepath = self.__get_filepath(
                         pdf_get_man_operation=pdf_get_man_operation, record=record
                     )
-                    record.pdf_get_man(
-                        review_manager=pdf_get_man_operation.review_manager,
+                    pdf_get_man_operation.pdf_get_man_record(
+                        record=record,
                         filepath=filepath,
                     )
                     break
 
         if not filepath.is_file():
             if "n" == input("Is the PDF available (y/n)?"):
-                record.pdf_get_man(
-                    review_manager=pdf_get_man_operation.review_manager,
+                pdf_get_man_operation.pdf_get_man_record(
+                    record=record,
                     filepath=None,
                 )
 

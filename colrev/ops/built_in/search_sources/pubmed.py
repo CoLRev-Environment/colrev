@@ -696,7 +696,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         # TBD: how to distinguish other types?
         record.change_entrytype(new_entrytype="article")
-        record.import_provenance(review_manager=self.review_manager)
+        # record.import_provenance(review_manager=self.review_manager)
 
         return record
 

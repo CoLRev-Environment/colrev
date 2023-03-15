@@ -20,10 +20,7 @@ colrev.record
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFPrepManRecord
       PrepRecord
-      PrescreenRecord
       Record
       RecordState
       RecordStateModel
-      ScreenRecord

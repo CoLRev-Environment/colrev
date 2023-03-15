@@ -21,6 +21,7 @@ colrev.record.Record
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
+      ~Record.apply_fields_keys_requirements
       ~Record.apply_restrictions
       ~Record.change_entrytype
       ~Record.check_potential_retracts
@@ -53,14 +54,14 @@ colrev.record.Record
       ~Record.has_inconsistent_fields
       ~Record.has_overlapping_colrev_id
       ~Record.has_quality_defects
-      ~Record.import_provenance
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated
       ~Record.merge
-      ~Record.pdf_get_man
       ~Record.prescreen_exclude
       ~Record.print_citation_format
       ~Record.print_diff_pair
+      ~Record.print_pdf_prep_man
+      ~Record.print_prescreen_record
       ~Record.remove_field
       ~Record.remove_quality_defect_notes
       ~Record.rename_field
@@ -69,7 +70,6 @@ colrev.record.Record
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
       ~Record.set_pages_in_pdf
-      ~Record.set_pdf_man_prepared
       ~Record.set_status
       ~Record.set_text_from_pdf
       ~Record.shares_origins

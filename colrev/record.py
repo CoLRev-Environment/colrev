@@ -404,7 +404,7 @@ class Record:
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
 
-        self.__apply_fields_keys_requirements()
+        self.apply_fields_keys_requirements()
         if self.has_quality_defects() or self.get_missing_fields():
             self.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
@@ -1335,7 +1335,7 @@ class Record:
 
         return True
 
-    def get_incomplete_fields(self) -> list:
+    def get_incomplete_fields(self) -> set:
         """Get the list of incomplete fields"""
         incomplete_field_keys = []
         for key in self.data.keys():
@@ -1353,7 +1353,7 @@ class Record:
                 ):
                     incomplete_field_keys.append(key)
 
-        return list(set(incomplete_field_keys))
+        return set(incomplete_field_keys)
 
     def get_quality_defects(self) -> list:
         """Get the fields (keys) with quality defects"""
@@ -1691,7 +1691,7 @@ class Record:
                     # close open handles
                     converter.close()
                     fake_file_handle.close()
-            except (TypeError, KeyError):
+            except (TypeError, KeyError):  # pragma: no cover
                 pass
         return "".join(text_list)
 
@@ -1712,10 +1712,10 @@ class Record:
             text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
             self.data["text_from_pdf"] = text
 
-        except PDFSyntaxError:
+        except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key="file", note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-        except PDFTextExtractionNotAllowed:
+        except PDFTextExtractionNotAllowed:  # pragma: no cover
             self.add_data_provenance_note(key="file", note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
@@ -1757,31 +1757,7 @@ class Record:
         )
         return cpid1
 
-    def __set_initial_import_provenance(self) -> None:
-        # Initialize colrev_masterdata_provenance
-        colrev_masterdata_provenance, colrev_data_provenance = {}, {}
-
-        for key in self.data.keys():
-            if key in Record.identifying_field_keys:
-                if key not in colrev_masterdata_provenance:
-                    colrev_masterdata_provenance[key] = {
-                        "source": self.data["colrev_origin"][0],
-                        "note": "",
-                    }
-            elif key not in Record.provenance_keys and key not in [
-                "colrev_source_identifier",
-                "ID",
-                "ENTRYTYPE",
-            ]:
-                colrev_data_provenance[key] = {
-                    "source": self.data["colrev_origin"][0],
-                    "note": "",
-                }
-
-        self.data["colrev_data_provenance"] = colrev_data_provenance
-        self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
-
-    def __apply_fields_keys_requirements(self) -> None:
+    def apply_fields_keys_requirements(self) -> None:
         required_fields_keys = self.record_field_requirements["other"]
         if self.data["ENTRYTYPE"] in self.record_field_requirements:
             required_fields_keys = self.record_field_requirements[
@@ -1795,130 +1771,6 @@ class Record:
                     source="generic_field_requirements",
                     note="missing",
                 )
-
-    def __set_initial_non_curated_import_provenance(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> None:
-        masterdata_restrictions = review_manager.dataset.get_applicable_restrictions(
-            record_dict=self.get_data()
-        )
-        if masterdata_restrictions:
-            self.update_masterdata_provenance(
-                masterdata_restrictions=masterdata_restrictions
-            )
-        else:
-            self.__apply_fields_keys_requirements()
-
-        if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
-            inconsistent_fields = self.record_field_inconsistencies[
-                self.data["ENTRYTYPE"]
-            ]
-            for inconsistent_field in inconsistent_fields:
-                if inconsistent_field in self.data:
-                    inconsistency_note = (
-                        f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                    )
-                    self.add_masterdata_provenance_note(
-                        key=inconsistent_field, note=inconsistency_note
-                    )
-
-        incomplete_fields = self.get_incomplete_fields()
-        for incomplete_field in incomplete_fields:
-            self.add_masterdata_provenance_note(key=incomplete_field, note="incomplete")
-
-        defect_fields = self.get_quality_defects()
-        if defect_fields:
-            for defect_field in defect_fields:
-                self.add_masterdata_provenance_note(
-                    key=defect_field, note="quality_defect"
-                )
-
-    def import_provenance(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-    ) -> None:
-        """Set the provenance for an imported record"""
-
-        if not self.masterdata_is_curated():
-            self.__set_initial_import_provenance()
-            self.__set_initial_non_curated_import_provenance(
-                review_manager=review_manager
-            )
-
-    def pdf_get_man(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        filepath: Optional[Path] = None,
-        PAD: int = 40,
-    ) -> None:
-        """Record pdf-get-man decision"""
-        if filepath is not None:
-            self.set_status(target_state=RecordState.pdf_imported)
-            self.data.update(file=str(filepath.relative_to(review_manager.path)))
-            review_manager.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-            review_manager.logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-        else:
-            if review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
-                self.set_status(target_state=RecordState.pdf_not_available)
-                review_manager.report_logger.info(
-                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
-                )
-                review_manager.logger.info(
-                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
-                )
-            else:
-                self.set_status(target_state=RecordState.pdf_prepared)
-
-                self.add_data_provenance(
-                    key="file", source="pdf-get-man", note="not_available"
-                )
-
-                review_manager.report_logger.info(
-                    f" {self.data['ID']}".ljust(PAD, " ")
-                    + "recorded as not_available (and moved to screen)"
-                )
-                review_manager.logger.info(
-                    f" {self.data['ID']}".ljust(PAD, " ")
-                    + "recorded as not_available (and moved to screen)"
-                )
-
-        record_dict = self.get_data()
-        review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
-        )
-        review_manager.dataset.add_record_changes()
-
-    def set_pdf_man_prepared(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> None:
-        """Set the PDF to manually prepared"""
-
-        self.set_status(target_state=RecordState.pdf_prepared)
-        self.reset_pdf_provenance_notes()
-
-        pdf_path = Path(review_manager.path / Path(self.data["file"]))
-        prev_cpid = self.data.get("colrev_pdf_id", "NA")
-        self.data.update(
-            colrev_pdf_id=self.get_colrev_pdf_id(
-                review_manager=review_manager, pdf_path=pdf_path
-            )
-        )
-        if prev_cpid != self.data.get("colrev_pdf_id", "NA"):
-            self.add_data_provenance(key="file", source="manual")
-
-        record_dict = self.get_data()
-        review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
-        )
-        review_manager.dataset.add_changes(
-            path=review_manager.dataset.RECORDS_FILE_RELATIVE
-        )
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
@@ -2197,6 +2049,85 @@ class Record:
             return True
         return False
 
+    def print_prescreen_record(self) -> None:
+        ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
+        ret_str += (
+            f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
+            f"\n  {self.data.get('author', 'no-author')}"
+        )
+        if "article" == self.data["ENTRYTYPE"]:
+            ret_str += (
+                f"\n  {self.data.get('journal', 'no-journal')} "
+                f"({self.data.get('year', 'no-year')}) "
+                f"{self.data.get('volume', 'no-volume')}"
+                f"({self.data.get('number', '')})"
+            )
+        elif "inproceedings" == self.data["ENTRYTYPE"]:
+            ret_str += f"\n  {self.data.get('booktitle', 'no-booktitle')}"
+        if "abstract" in self.data:
+            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+            if lines:
+                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
+                ret_str += "\n  ".join(lines) + ""
+
+        if "url" in self.data:
+            ret_str += f"\n  url: {self.data['url']}"
+
+        if "file" in self.data:
+            ret_str += f"\n  file: {self.data['file']}"
+
+        print(ret_str)
+
+    def print_pdf_prep_man(self) -> None:
+        # pylint: disable=too-many-branches
+        ret_str = ""
+        if "file" in self.data:
+            ret_str += f"\nfile: {colors.ORANGE}{self.data['file']}{colors.END}\n\n"
+
+        pdf_prep_note = self.get_field_provenance(key="file")
+
+        if "author_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += (
+                f"{colors.RED}{self.data.get('author', 'no-author')}{colors.END}\n"
+            )
+        else:
+            ret_str += (
+                f"{colors.GREEN}{self.data.get('author', 'no-author')}{colors.END}\n"
+            )
+
+        if "title_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += f"{colors.RED}{self.data.get('title', 'no title')}{colors.END}\n"
+        else:
+            ret_str += (
+                f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
+            )
+
+        if "article" == self.data["ENTRYTYPE"]:
+            ret_str += (
+                f"{self.data.get('journal', 'no-journal')} "
+                f"({self.data.get('year', 'no-year')}) "
+                f"{self.data.get('volume', 'no-volume')}"
+                f"({self.data.get('number', '')})"
+            )
+            if "pages" in self.data:
+                if "nr_pages_not_matching" in pdf_prep_note["note"]:
+                    ret_str += f", {colors.RED}pp.{self.data['pages']}{colors.END}\n"
+                else:
+                    ret_str += f", pp.{colors.GREEN}{self.data['pages']}{colors.END}\n"
+            else:
+                ret_str += "\n"
+        elif "inproceedings" == self.data["ENTRYTYPE"]:
+            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
+        if "abstract" in self.data:
+            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+            ret_str += f"\nAbstract: {lines.pop(0)}\n"
+            ret_str += "\n".join(lines) + "\n"
+
+        if "url" in self.data:
+            ret_str += f"\nurl: {self.data['url']}\n"
+
+        print(ret_str)
+
 
 class PrepRecord(Record):
     """The PrepRecord class provides a range of convenience functions for record preparation"""
@@ -2286,7 +2217,7 @@ class PrepRecord(Record):
         authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
         record.data["author"] = authors_string
 
-    def container_is_abbreviated(self) -> bool:
+    def __container_is_abbreviated(self) -> bool:
         """Check whether the container title is abbreviated"""
         if "journal" in self.data:
             if self.data["journal"].count(".") > 2:
@@ -2339,11 +2270,11 @@ class PrepRecord(Record):
         record = record_original.copy_prep_rec()
         retrieved_record = retrieved_record_original.copy_prep_rec()
 
-        if record.container_is_abbreviated():
+        if record.__container_is_abbreviated():
             min_len = get_abbrev_container_min_len(record=record)
             abbreviate_container(record=retrieved_record, min_len=min_len)
             abbreviate_container(record=record, min_len=min_len)
-        if retrieved_record.container_is_abbreviated():
+        if retrieved_record.__container_is_abbreviated():
             min_len = get_abbrev_container_min_len(record=retrieved_record)
             abbreviate_container(record=record, min_len=min_len)
             abbreviate_container(record=retrieved_record, min_len=min_len)
@@ -2493,8 +2424,6 @@ class PrepRecord(Record):
 
     def update_metadata_status(
         self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> None:
         """Update the metadata status (retracts, incompleteness, inconsistencies, etc.)
         and setting the status accordingly"""
@@ -2507,18 +2436,6 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
             return
 
-        # review_manager.   (
-        #     f'is_incomplete({self.data["ID"]}): {not self.masterdata_is_complete()}'
-        # )
-        # review_manager.logger.debug(
-        #     f'has_inconsistent_fields({self.data["ID"]}): '
-        #     f"{self.has_inconsistent_fields()}"
-        # )
-        # review_manager.logger.debug(
-        #     f'has_incomplete_fields({self.data["ID"]}): '
-        #     f"{self.has_incomplete_fields()}"
-        # )
-
         if (
             self.masterdata_is_complete()
             and not self.has_incomplete_fields()
@@ -2528,103 +2445,6 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
         else:
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
-
-
-class PrescreenRecord(Record):
-    """The PrescreenRecord class provides convenience functions for record prescreen"""
-
-    def __str__(self) -> str:
-        ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
-        ret_str += (
-            f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
-            f"\n  {self.data.get('author', 'no-author')}"
-        )
-        if "article" == self.data["ENTRYTYPE"]:
-            ret_str += (
-                f"\n  {self.data.get('journal', 'no-journal')} "
-                f"({self.data.get('year', 'no-year')}) "
-                f"{self.data.get('volume', 'no-volume')}"
-                f"({self.data.get('number', '')})"
-            )
-        elif "inproceedings" == self.data["ENTRYTYPE"]:
-            ret_str += f"\n  {self.data.get('booktitle', 'no-booktitle')}"
-        if "abstract" in self.data:
-            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
-            if lines:
-                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
-                ret_str += "\n  ".join(lines) + ""
-
-        if "url" in self.data:
-            ret_str += f"\n  url: {self.data['url']}"
-
-        if "file" in self.data:
-            ret_str += f"\n  file: {self.data['file']}"
-
-        return ret_str
-
-    def prescreen(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        prescreen_inclusion: bool,
-        PAD: int = 40,
-    ) -> None:
-        """Save the prescreen decision"""
-        if prescreen_inclusion:
-            review_manager.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
-            )
-            self.set_status(target_state=RecordState.rev_prescreen_included)
-            review_manager.dataset.save_records_dict(
-                records={self.data["ID"]: self.get_data()}, partial=True
-            )
-
-        else:
-            review_manager.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
-            )
-            self.set_status(target_state=RecordState.rev_prescreen_excluded)
-            review_manager.dataset.save_records_dict(
-                records={self.data["ID"]: self.get_data()}, partial=True
-            )
-
-        review_manager.dataset.add_record_changes()
-
-
-class ScreenRecord(PrescreenRecord):
-    """The PrescreenRecord class provides convenience functions for record screening"""
-
-    # Note : currently still identical with PrescreenRecord
-
-    def screen(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        screen_inclusion: bool,
-        screening_criteria: str,
-        PAD: int = 40,
-    ) -> None:
-        """Save the screen decision"""
-
-        self.data["screening_criteria"] = screening_criteria
-        PAD = 40
-        if screen_inclusion:
-            self.set_status(target_state=RecordState.rev_included)
-
-            review_manager.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "Included in screen"
-            )
-        else:
-            self.set_status(target_state=RecordState.rev_excluded)
-            review_manager.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
-            )
-
-        record_dict = self.get_data()
-        review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
-        )
-        review_manager.dataset.add_record_changes()
 
 
 class RecordState(Enum):
@@ -2924,60 +2744,6 @@ class RecordStateModel:
                 raise colrev_exceptions.ProcessOrderViolation(
                     operation.type.name, str(self.state), list(intersection)
                 )
-
-
-class PDFPrepManRecord(Record):
-    """The PrescreenRecord class provides convenience functions for record pdf-prep-man"""
-
-    def __str__(self) -> str:
-        # pylint: disable=too-many-branches
-        ret_str = ""
-        if "file" in self.data:
-            ret_str += f"\nfile: {colors.ORANGE}{self.data['file']}{colors.END}\n\n"
-
-        pdf_prep_note = self.get_field_provenance(key="file")
-
-        if "author_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += (
-                f"{colors.RED}{self.data.get('author', 'no-author')}{colors.END}\n"
-            )
-        else:
-            ret_str += (
-                f"{colors.GREEN}{self.data.get('author', 'no-author')}{colors.END}\n"
-            )
-
-        if "title_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += f"{colors.RED}{self.data.get('title', 'no title')}{colors.END}\n"
-        else:
-            ret_str += (
-                f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
-            )
-
-        if "article" == self.data["ENTRYTYPE"]:
-            ret_str += (
-                f"{self.data.get('journal', 'no-journal')} "
-                f"({self.data.get('year', 'no-year')}) "
-                f"{self.data.get('volume', 'no-volume')}"
-                f"({self.data.get('number', '')})"
-            )
-            if "pages" in self.data:
-                if "nr_pages_not_matching" in pdf_prep_note["note"]:
-                    ret_str += f", {colors.RED}pp.{self.data['pages']}{colors.END}\n"
-                else:
-                    ret_str += f", pp.{colors.GREEN}{self.data['pages']}{colors.END}\n"
-            else:
-                ret_str += "\n"
-        elif "inproceedings" == self.data["ENTRYTYPE"]:
-            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
-        if "abstract" in self.data:
-            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
-            ret_str += f"\nAbstract: {lines.pop(0)}\n"
-            ret_str += "\n".join(lines) + "\n"
-
-        if "url" in self.data:
-            ret_str += f"\nurl: {self.data['url']}\n"
-
-        return ret_str
 
 
 if __name__ == "__main__":

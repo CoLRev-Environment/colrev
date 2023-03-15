@@ -45,12 +45,13 @@ class CustomPrescreen:
 
         for record in records.values():
             if random.random() < 0.5:
-                record.update(
-                    colrev_status=colrev.record.RecordState.rev_prescreen_included
+                prescreen_operation.prescreen(
+                    record=colrev.record.Record(data=record), prescreen_inclusion=True
                 )
+
             else:
-                record.update(
-                    colrev_status=colrev.record.RecordState.rev_prescreen_excluded
+                prescreen_operation.prescreen(
+                    record=colrev.record.Record(data=record), prescreen_inclusion=False
                 )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
@@ -60,12 +61,5 @@ class CustomPrescreen:
             manual_author=False,
             script_call="colrev prescreen",
         )
-
-        # Alternatively (does not change the records argument   )
-        # presscreen_data = prescreen_operation.get_data()
-        # for record in prescreen_data["items"]:
-        #   prescreen_record = PrescreenRecord(data=record)
-        #   prescreen_record.prescreen(review_manager=prescreen_operation.review_manager,
-        #                               prescreen_inclusion=True/False)
 
         return records

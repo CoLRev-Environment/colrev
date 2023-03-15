@@ -22,6 +22,7 @@ colrev.ops.pdf\_get\_man.PDFGetMan
       ~PDFGetMan.get_data
       ~PDFGetMan.get_pdf_get_man
       ~PDFGetMan.main
+      ~PDFGetMan.pdf_get_man_record
       ~PDFGetMan.pdfs_retrieved_manually
 
 

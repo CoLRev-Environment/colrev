@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -128,6 +129,60 @@ class PDFGetMan(colrev.operation.Operation):
     def pdfs_retrieved_manually(self) -> bool:
         """Check whether PDFs were retrieved manually"""
         return self.review_manager.dataset.has_changes()
+
+    def pdf_get_man_record(
+        self,
+        *,
+        record: colrev.record.Record,
+        filepath: Optional[Path] = None,
+        PAD: int = 40,
+    ) -> None:
+        """Record pdf-get-man decision"""
+        if filepath is not None:
+            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+            record.data.update(file=str(filepath.relative_to(self.review_manager.path)))
+            self.review_manager.report_logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+            self.review_manager.logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+        else:
+            if (
+                self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis
+            ):
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_not_available
+                )
+                self.review_manager.report_logger.info(
+                    f" {record.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available"
+                )
+                self.review_manager.logger.info(
+                    f" {record.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available"
+                )
+            else:
+                record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+
+                record.add_data_provenance(
+                    key="file", source="pdf-get-man", note="not_available"
+                )
+
+                self.review_manager.report_logger.info(
+                    f" {record.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+                self.review_manager.logger.info(
+                    f" {record.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+
+        record_dict = record.get_data()
+        self.review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
+        self.review_manager.dataset.add_record_changes()
 
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""

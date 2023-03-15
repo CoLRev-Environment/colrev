@@ -24,6 +24,7 @@ colrev.ops.screen.Screen
       ~Screen.get_screening_criteria
       ~Screen.include_all_in_screen
       ~Screen.main
+      ~Screen.screen
       ~Screen.set_screening_criteria
       ~Screen.setup_custom_script
 

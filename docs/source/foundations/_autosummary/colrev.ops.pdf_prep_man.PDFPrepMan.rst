@@ -27,6 +27,7 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
       ~PDFPrepMan.main
       ~PDFPrepMan.pdf_prep_man_stats
       ~PDFPrepMan.pdfs_prepared_manually
+      ~PDFPrepMan.set_pdf_man_prepared
 
 
 

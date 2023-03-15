@@ -124,11 +124,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 os.system("cls")
 
             print(stat)
-            record = colrev.record.PDFPrepManRecord(data=item)
-            print(record)
+            record = colrev.record.Record(data=item)
+            record.print_pdf_prep_man()
 
             record_dict = records[item["ID"]]
-            record = colrev.record.PDFPrepManRecord(data=record_dict)
+            record = colrev.record.Record(data=record_dict)
             if (
                 colrev.record.RecordState.pdf_needs_manual_preparation
                 != record_dict["colrev_status"]
@@ -213,9 +213,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                             pass
 
                     elif "y" == user_selection:
-                        record.set_pdf_man_prepared(
-                            review_manager=pdf_prep_man.review_manager
-                        )
+                        pdf_prep_man_operation.set_pdf_man_prepared(record=record)
                     elif "n" == user_selection:
                         record.remove_field(key="file")
                         record.set_status(

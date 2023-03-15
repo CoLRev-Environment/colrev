@@ -300,6 +300,30 @@ class PDFPrepMan(colrev.operation.Operation):
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
+    def set_pdf_man_prepared(self, *, record: colrev.record.Record) -> None:
+        """Set the PDF to manually prepared"""
+
+        record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+        record.reset_pdf_provenance_notes()
+
+        pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
+        prev_cpid = record.data.get("colrev_pdf_id", "NA")
+        record.data.update(
+            colrev_pdf_id=record.get_colrev_pdf_id(
+                review_manager=self.review_manager, pdf_path=pdf_path
+            )
+        )
+        if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
+            record.add_data_provenance(key="file", source="manual")
+
+        record_dict = record.get_data()
+        self.review_manager.dataset.save_records_dict(
+            records={record_dict["ID"]: record_dict}, partial=True
+        )
+        self.review_manager.dataset.add_changes(
+            path=self.review_manager.dataset.RECORDS_FILE_RELATIVE
+        )
+
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 

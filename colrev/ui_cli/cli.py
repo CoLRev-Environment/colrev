@@ -1461,8 +1461,8 @@ def __delete_first_pages_cli(
                     record_dict["file"]
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
-                colrev.record.Record(data=record_dict).set_pdf_man_prepared(
-                    review_manager=pdf_prep_man_operation.review_manager
+                pdf_prep_man_operation.set_pdf_man_prepared(
+                    record=colrev.record.Record(data=record_dict)
                 )
             else:
                 print("no file in record")

@@ -643,7 +643,7 @@ class Dataset:
                         record_dict=record_dict
                     )
                 )
-                record.update_metadata_status(review_manager=self.review_manager)
+                record.update_metadata_status()
 
             if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
                 record.reset_pdf_provenance_notes()

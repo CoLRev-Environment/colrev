@@ -21,12 +21,12 @@ colrev.record.PrepRecord
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_note
       ~PrepRecord.add_provenance_all
+      ~PrepRecord.apply_fields_keys_requirements
       ~PrepRecord.apply_restrictions
       ~PrepRecord.change_entrytype
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.cleanup_pdf_processing_fields
       ~PrepRecord.complete_provenance
-      ~PrepRecord.container_is_abbreviated
       ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id
@@ -57,16 +57,16 @@ colrev.record.PrepRecord
       ~PrepRecord.has_inconsistent_fields
       ~PrepRecord.has_overlapping_colrev_id
       ~PrepRecord.has_quality_defects
-      ~PrepRecord.import_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
-      ~PrepRecord.pdf_get_man
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
       ~PrepRecord.print_diff_pair
+      ~PrepRecord.print_pdf_prep_man
+      ~PrepRecord.print_prescreen_record
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
@@ -76,7 +76,6 @@ colrev.record.PrepRecord
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_pages_in_pdf
-      ~PrepRecord.set_pdf_man_prepared
       ~PrepRecord.set_status
       ~PrepRecord.set_text_from_pdf
       ~PrepRecord.shares_origins

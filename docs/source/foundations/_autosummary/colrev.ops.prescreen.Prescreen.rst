@@ -25,6 +25,7 @@ colrev.ops.prescreen.Prescreen
       ~Prescreen.include_all_in_prescreen
       ~Prescreen.include_records
       ~Prescreen.main
+      ~Prescreen.prescreen
       ~Prescreen.setup_custom_script
 
 

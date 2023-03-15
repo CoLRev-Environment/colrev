@@ -79,19 +79,19 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
 
-        screen_record = colrev.record.ScreenRecord(data=record_dict)
+        record = colrev.record.Record(data=record_dict)
         abstract_from_tei = False
         if (
-            "abstract" not in screen_record.data
-            and Path(screen_record.data.get("file", "")).suffix == ".pdf"
+            "abstract" not in record.data
+            and Path(record.data.get("file", "")).suffix == ".pdf"
         ):
             try:
                 abstract_from_tei = True
                 tei = screen_operation.review_manager.get_tei(
-                    pdf_path=Path(screen_record.data["file"]),
-                    tei_path=screen_record.get_tei_filename(),
+                    pdf_path=Path(record.data["file"]),
+                    tei_path=record.get_tei_filename(),
                 )
-                screen_record.data["abstract"] = tei.get_abstract()
+                record.data["abstract"] = tei.get_abstract()
             except (colrev_exceptions.ServiceNotAvailableException, XMLSyntaxError):
                 pass
 
@@ -100,7 +100,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
         print("\n\n")
         print(f"Record {self.__i} (of {self.__stat_len})")
-        print(screen_record)
+        print(record)
 
         if self.criteria_available:
             decisions = []
@@ -158,11 +158,11 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 )
 
             if abstract_from_tei:
-                if "abstract" in screen_record.data:
-                    del screen_record.data["abstract"]
+                if "abstract" in record.data:
+                    del record.data["abstract"]
 
-            screen_record.screen(
-                review_manager=screen_operation.review_manager,
+            screen_operation.screen(
+                record=record,
                 screen_inclusion=screen_inclusion,
                 screening_criteria=c_field,
                 PAD=self.__pad,
@@ -188,17 +188,17 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 return "quit"
 
             if abstract_from_tei:
-                if "abstract" in screen_record.data:
-                    del screen_record.data["abstract"]
+                if "abstract" in record.data:
+                    del record.data["abstract"]
             if decision == "y":
-                screen_record.screen(
-                    review_manager=screen_operation.review_manager,
+                screen_operation.screen(
+                    record=record,
                     screen_inclusion=True,
                     screening_criteria="NA",
                 )
             if decision == "n":
-                screen_record.screen(
-                    review_manager=screen_operation.review_manager,
+                screen_operation.screen(
+                    record=record,
                     screen_inclusion=False,
                     screening_criteria="NA",
                     PAD=self.__pad,

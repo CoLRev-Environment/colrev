@@ -153,15 +153,15 @@ class ASReviewPrescreen(JsonSchemaMixin):
             #  left_index=True, right_index=True)
 
             # for index, row in to_import.iterrows():
-            #     prescreen_record = PrescreenRecord(data=records[row["ID"]])
+            #     prescreen_record = Record(data=records[row["ID"]])
             #     if 1 == row["included"]:
-            #       prescreen_record.prescreen(
-            #          review_manager=prescreen.review_manager,
+            #       prescreen_operation.prescreen(
+            #          record=prescreen_record,
             #          prescreen_inclusion=True,
             #       )
             #     if 0 == row["included"]:
-            #        prescreen_record.prescreen(
-            #            review_manager=prescreen.review_manager,
+            #        prescreen_operation.prescreen(
+            #            record=prescreen_record,
             #            prescreen_inclusion=False,
             #        )
             # result_json_path = self.endpoint_path / Path("result.json")
@@ -180,17 +180,15 @@ class ASReviewPrescreen(JsonSchemaMixin):
         if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
             to_import = pd.read_csv(asreview_project_file)
             for _, row in to_import.iterrows():
-                prescreen_record = colrev.record.PrescreenRecord(
-                    data=records[row["ID"]]
-                )
+                prescreen_record = colrev.record.Record(data=records[row["ID"]])
                 if "1" == str(row["included"]):
-                    prescreen_record.prescreen(
-                        review_manager=prescreen_operation.review_manager,
+                    prescreen_operation.prescreen(
+                        record=prescreen_record,
                         prescreen_inclusion=True,
                     )
                 elif "0" == str(row["included"]):
-                    prescreen_record.prescreen(
-                        review_manager=prescreen_operation.review_manager,
+                    prescreen_operation.prescreen(
+                        record=prescreen_record,
                         prescreen_inclusion=False,
                     )
                 else:

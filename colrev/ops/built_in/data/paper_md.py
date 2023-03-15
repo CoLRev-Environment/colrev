@@ -400,6 +400,11 @@ class PaperMarkdown(JsonSchemaMixin):
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
+
+        screen_operation = self.data_operation.review_manager.get_screen_operation(
+            notify_state_transition_operation=False
+        )
+
         with open(temp.name, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
         ) as writer:
@@ -423,8 +428,8 @@ class PaperMarkdown(JsonSchemaMixin):
                     and record_id in records
                 ):
                     del synthesized_record_status_matrix[record_id]
-                    colrev.record.ScreenRecord(data=records[record_id]).screen(
-                        review_manager=self.data_operation.review_manager,
+                    screen_operation.screen(
+                        record=colrev.record.Record(data=records[record_id]),
                         screen_inclusion=False,
                         screening_criteria="NA",
                     )

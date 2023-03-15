@@ -15,6 +15,8 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=too-many-lines
+
 
 class Load(colrev.operation.Operation):
     """Load the records"""
@@ -485,6 +487,85 @@ class Load(colrev.operation.Operation):
             input_str = re.sub(r"<.*?>", "", input_str)
         return input_str
 
+    def import_provenance(
+        self,
+        *,
+        record: colrev.record.Record,
+    ) -> None:
+        """Set the provenance for an imported record"""
+
+        def set_initial_import_provenance(*, record: colrev.record.Record) -> None:
+            # Initialize colrev_masterdata_provenance
+            colrev_masterdata_provenance, colrev_data_provenance = {}, {}
+
+            for key in record.data.keys():
+                if key in colrev.record.Record.identifying_field_keys:
+                    if key not in colrev_masterdata_provenance:
+                        colrev_masterdata_provenance[key] = {
+                            "source": record.data["colrev_origin"][0],
+                            "note": "",
+                        }
+                elif key not in colrev.record.Record.provenance_keys and key not in [
+                    "colrev_source_identifier",
+                    "ID",
+                    "ENTRYTYPE",
+                ]:
+                    colrev_data_provenance[key] = {
+                        "source": record.data["colrev_origin"][0],
+                        "note": "",
+                    }
+
+            record.data["colrev_data_provenance"] = colrev_data_provenance
+            record.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
+
+        def set_initial_non_curated_import_provenance(
+            *, record: colrev.record.Record
+        ) -> None:
+            masterdata_restrictions = (
+                self.review_manager.dataset.get_applicable_restrictions(
+                    record_dict=record.get_data()
+                )
+            )
+            if masterdata_restrictions:
+                record.update_masterdata_provenance(
+                    masterdata_restrictions=masterdata_restrictions
+                )
+            else:
+                record.apply_fields_keys_requirements()
+
+            if (
+                record.data["ENTRYTYPE"]
+                in colrev.record.Record.record_field_inconsistencies
+            ):
+                inconsistent_fields = colrev.record.Record.record_field_inconsistencies[
+                    record.data["ENTRYTYPE"]
+                ]
+                for inconsistent_field in inconsistent_fields:
+                    if inconsistent_field in record.data:
+                        inconsistency_note = (
+                            f"inconsistent with entrytype ({record.data['ENTRYTYPE']})"
+                        )
+                        record.add_masterdata_provenance_note(
+                            key=inconsistent_field, note=inconsistency_note
+                        )
+
+            incomplete_fields = record.get_incomplete_fields()
+            for incomplete_field in incomplete_fields:
+                record.add_masterdata_provenance_note(
+                    key=incomplete_field, note="incomplete"
+                )
+
+            defect_fields = record.get_quality_defects()
+            if defect_fields:
+                for defect_field in defect_fields:
+                    record.add_masterdata_provenance_note(
+                        key=defect_field, note="quality_defect"
+                    )
+
+        if not record.masterdata_is_curated():
+            set_initial_import_provenance(record=record)
+            set_initial_non_curated_import_provenance(record=record)
+
     def __import_record(self, *, record_dict: dict) -> dict:
         # pylint: disable=too-many-branches
 
@@ -594,8 +675,8 @@ class Load(colrev.operation.Operation):
                 doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
             )
 
-        record.import_provenance(
-            review_manager=self.review_manager,
+        self.import_provenance(
+            record=record,
         )
         record.set_status(target_state=colrev.record.RecordState.md_imported)
 

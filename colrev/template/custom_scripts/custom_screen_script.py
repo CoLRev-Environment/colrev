@@ -48,14 +48,14 @@ class CustomScreen:
                 if record_dict["ID"] not in split:
                     continue
 
-            screen_record = colrev.record.ScreenRecord(data=record_dict)
+            record = colrev.record.Record(data=record_dict)
 
             if random.random() < 0.5:
                 if screening_criteria_available:
                     # record criteria
                     pass
-                screen_record.screen(
-                    review_manager=screen_operation.review_manager,
+                screen_operation.screen(
+                    record=record,
                     screen_inclusion=True,
                     screening_criteria="...",
                 )
@@ -64,8 +64,8 @@ class CustomScreen:
                 if screening_criteria_available:
                     # record criteria
                     pass
-                screen_record.screen(
-                    review_manager=screen_operation.review_manager,
+                screen_operation.screen(
+                    record=record,
                     screen_inclusion=False,
                     screening_criteria="...",
                 )

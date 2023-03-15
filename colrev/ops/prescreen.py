@@ -241,6 +241,38 @@ class Prescreen(colrev.operation.Operation):
             + " records"
         )
 
+    def prescreen(
+        self,
+        *,
+        record: colrev.record.Record,
+        prescreen_inclusion: bool,
+        PAD: int = 40,
+    ) -> None:
+        """Save the prescreen decision"""
+        if prescreen_inclusion:
+            self.review_manager.report_logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
+            )
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_included
+            )
+            self.review_manager.dataset.save_records_dict(
+                records={record.data["ID"]: record.get_data()}, partial=True
+            )
+
+        else:
+            self.review_manager.report_logger.info(
+                f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
+            )
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded
+            )
+            self.review_manager.dataset.save_records_dict(
+                records={record.data["ID"]: record.get_data()}, partial=True
+            )
+
+        self.review_manager.dataset.add_record_changes()
+
     def main(self, *, split_str: str) -> None:
         """Prescreen records (main entrypoint)"""
 
