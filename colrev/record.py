@@ -402,9 +402,19 @@ class Record:
         elif "article" == new_entrytype:
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
+        else:
+            raise colrev_exceptions.MissingRecordQualityRuleSpecification(
+                f"No ENTRYTYPE specification ({new_entrytype})"
+            )
 
         self.apply_fields_keys_requirements()
-        if self.has_quality_defects() or self.get_missing_fields():
+        missing_fields = []
+        try:
+            missing_fields = self.get_missing_fields()
+        except colrev_exceptions.MissingRecordQualityRuleSpecification:
+            pass
+
+        if self.has_quality_defects() or missing_fields:
             self.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
@@ -536,7 +546,12 @@ class Record:
                 note = self.data["colrev_masterdata_provenance"][identifying_field_key][
                     "note"
                 ]
-                if "incomplete" in self.data["colrev_masterdata_provenance"]:
+                if (
+                    "incomplete"
+                    in self.data["colrev_masterdata_provenance"][identifying_field_key][
+                        "note"
+                    ]
+                ):
                     self.data["colrev_masterdata_provenance"][identifying_field_key][
                         "note"
                     ] = note.replace("incomplete", "")
@@ -566,21 +581,22 @@ class Record:
                 or "" == self.data[x]
                 or "UNKNOWN" == self.data[x]
             ]
-        else:
-            missing_field_keys = ["no field requirements defined"]
-        return missing_field_keys
+            return missing_field_keys
+        raise colrev_exceptions.MissingRecordQualityRuleSpecification(
+            msg=f"Missing record_field_requirements for {self.data['ENTRYTYPE']}"
+        )
 
-    def get_inconsistencies(self) -> list:
+    def get_inconsistencies(self) -> set:
         """Get inconsistencies (between fields)"""
-        inconsistent_field_keys = []
+        inconsistent_field_keys = set()
         if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies:
             incons_fields = Record.record_field_inconsistencies[self.data["ENTRYTYPE"]]
-            inconsistent_field_keys = [x for x in incons_fields if x in self.data]
+            inconsistent_field_keys = {x for x in incons_fields if x in self.data}
         # Note: a thesis should be single-authored
         if "thesis" in self.data["ENTRYTYPE"] and " and " in self.data.get(
             "author", ""
         ):
-            inconsistent_field_keys.append("author")
+            inconsistent_field_keys.add("author")
         return inconsistent_field_keys
 
     def has_inconsistent_fields(self) -> bool:
@@ -1336,11 +1352,11 @@ class Record:
 
     def get_incomplete_fields(self) -> set:
         """Get the list of incomplete fields"""
-        incomplete_field_keys = []
+        incomplete_field_keys = set()
         for key in self.data.keys():
             if key in ["title", "journal", "booktitle", "author"]:
                 if self.data[key].endswith("...") or self.data[key].endswith("…"):
-                    incomplete_field_keys.append(key)
+                    incomplete_field_keys.add(key)
 
             if "author" == key:
                 if (
@@ -1350,9 +1366,9 @@ class Record:
                     or ", and " in self.data[key]
                     or self.data[key].rstrip().endswith(",")
                 ):
-                    incomplete_field_keys.append(key)
+                    incomplete_field_keys.add(key)
 
-        return set(incomplete_field_keys)
+        return incomplete_field_keys
 
     def get_quality_defects(self) -> list:
         """Get the fields (keys) with quality defects"""
@@ -1974,22 +1990,27 @@ class Record:
         if not self.masterdata_is_curated():
             if "colrev_masterdata_provenance" not in self.data:
                 self.data["colrev_masterdata_provenance"] = {}
-            missing_fields = self.get_missing_fields()
-            not_missing_fields = []
-            for missing_field in missing_fields:
-                if missing_field in self.data["colrev_masterdata_provenance"]:
-                    if (
-                        "not_missing"
-                        in self.data["colrev_masterdata_provenance"][missing_field][
-                            "note"
-                        ]
-                    ):
-                        not_missing_fields.append(missing_field)
-                        continue
-                self.add_masterdata_provenance_note(key=missing_field, note="missing")
+            try:
+                missing_fields = self.get_missing_fields()
+                not_missing_fields = []
+                for missing_field in missing_fields:
+                    if missing_field in self.data["colrev_masterdata_provenance"]:
+                        if (
+                            "not_missing"
+                            in self.data["colrev_masterdata_provenance"][missing_field][
+                                "note"
+                            ]
+                        ):
+                            not_missing_fields.append(missing_field)
+                            continue
+                    self.add_masterdata_provenance_note(
+                        key=missing_field, note="missing"
+                    )
 
-            for not_missing_field in not_missing_fields:
-                missing_fields.remove(not_missing_field)
+                for not_missing_field in not_missing_fields:
+                    missing_fields.remove(not_missing_field)
+            except colrev_exceptions.MissingRecordQualityRuleSpecification:
+                pass
 
             if masterdata_restrictions:
                 self.apply_restrictions(restrictions=masterdata_restrictions)

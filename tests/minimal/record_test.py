@@ -281,6 +281,22 @@ def test_change_entrytype_inproceedings() -> None:
     actual = R1_mod.data
     assert expected == actual
 
+    with pytest.raises(
+        colrev.exceptions.MissingRecordQualityRuleSpecification,
+    ):
+        R1_mod.change_entrytype(new_entrytype="dialoge")
+
+    # assert "" == R1_mod.data
+
+
+def test_get_inconsistencies() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "phdthesis"
+    R1_mod.data["author"] = "Author, Name and Other, Author"
+    expected = {"volume", "number", "journal", "author"}
+    actual = R1_mod.get_inconsistencies()
+    assert expected == actual
+
 
 def test_change_entrytype_article() -> None:
     input = {
@@ -476,9 +492,10 @@ def test_provenance() -> None:
 
 
 def test_set_masterdata_complete() -> None:
+    # field=UNKNOWN and no not_missing note
     R1_mod = R1.copy()
-
     R1_mod.data["number"] = "UNKNOWN"
+    R1_mod.data["volume"] = "UNKNOWN"
     expected = {
         "ID": "R1",
         "ENTRYTYPE": "article",
@@ -487,7 +504,7 @@ def test_set_masterdata_complete() -> None:
             "title": {"source": "import.bib/id_0001", "note": ""},
             "author": {"source": "manual", "note": "test,check"},
             "journal": {"source": "import.bib/id_0001", "note": ""},
-            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "test", "note": "not_missing"},
             "number": {"source": "test", "note": "not_missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
@@ -498,7 +515,6 @@ def test_set_masterdata_complete() -> None:
         "title": "EDITORIAL",
         "author": "Rai, Arun",
         "journal": "MIS Quarterly",
-        "volume": "45",
         "pages": "1--3",
     }
     R1_mod.set_masterdata_complete(source="test")
@@ -506,10 +522,42 @@ def test_set_masterdata_complete() -> None:
     print(R1_mod.data)
     assert expected == actual
 
+    # missing fields and no colrev_masterdata_provenance
     R1_mod = R1.copy()
-
-    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
+    del R1_mod.data["volume"]
+    del R1_mod.data["number"]
+    del R1_mod.data["colrev_masterdata_provenance"]["number"]
+    del R1_mod.data["colrev_masterdata_provenance"]["volume"]
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "test", "note": "not_missing"},
+            "number": {"source": "test", "note": "not_missing"},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "pages": "1--3",
+    }
     R1_mod.set_masterdata_complete(source="test")
+    actual = R1_mod.data
+    print(R1_mod.data)
+    assert expected == actual
+
+    # misleading "missing" note
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_masterdata_provenance"]["volume"]["note"] = "missing"
+    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
     expected = {
         "ID": "R1",
         "ENTRYTYPE": "article",
@@ -534,6 +582,7 @@ def test_set_masterdata_complete() -> None:
         "pages": "1--3",
     }
 
+    R1_mod.set_masterdata_complete(source="test")
     actual = R1_mod.data
     print(R1_mod.data)
     assert expected == actual
@@ -544,6 +593,207 @@ def test_set_masterdata_complete() -> None:
     R1_mod.set_masterdata_complete(source="test")
     del R1_mod.data["colrev_masterdata_provenance"]
     R1_mod.set_masterdata_complete(source="test")
+
+
+def test_set_masterdata_consistent() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_masterdata_provenance"]["journal"][
+        "note"
+    ] = "inconsistent with ENTRYTYPE"
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.set_masterdata_consistent()
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
+
+    R1_mod = R1.copy()
+    del R1_mod.data["colrev_masterdata_provenance"]
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {},
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.set_masterdata_consistent()
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
+
+
+def test_set_fields_complete() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "incomplete"
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+
+    R1_mod.set_fields_complete()
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
+
+
+def test_get_missing_fields() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "dialogue"
+
+    with pytest.raises(
+        colrev.exceptions.MissingRecordQualityRuleSpecification,
+    ):
+        R1_mod.get_missing_fields()
+
+
+def test_reset_pdf_provenance_notes() -> None:
+    # defects
+    R1_mod = R1.copy()
+    R1_mod.data["colrev_data_provenance"]["file"] = {
+        "source": "test",
+        "note": "defects",
+    }
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {
+            "url": {"source": "manual", "note": "test,1"},
+            "file": {"source": "test", "note": ""},
+        },
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.reset_pdf_provenance_notes()
+    actual = R1_mod.data
+    assert expected == actual
+
+    # missing provenance
+    R1_mod = R1.copy()
+    del R1_mod.data["colrev_data_provenance"]
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"file": {"source": "ORIGINAL", "note": ""}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.reset_pdf_provenance_notes()
+    actual = R1_mod.data
+    assert expected == actual
+
+    # file missing in missing provenance
+    R1_mod = R1.copy()
+    # del R1_mod.data["colrev_data_provenance"]["file"]
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {
+            "url": {"source": "manual", "note": "test,1"},
+            "file": {"source": "NA", "note": ""},
+        },
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.reset_pdf_provenance_notes()
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
 
 
 def test_get_record_similarity() -> None:

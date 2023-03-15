@@ -226,6 +226,14 @@ class FieldValueError(CoLRevException):
         super().__init__(self.message)
 
 
+class MissingRecordQualityRuleSpecification(CoLRevException):
+    """A quality rule is missing."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class StatusFieldValueError(CoLRevException):
     """An error in the status field values was detected."""
 
