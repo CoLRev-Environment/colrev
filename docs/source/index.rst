@@ -115,6 +115,7 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
    manual/collaboration
    manual/curation
    manual/extensions
+   manual/reference_manager
    manual/credits
    manual/help
 

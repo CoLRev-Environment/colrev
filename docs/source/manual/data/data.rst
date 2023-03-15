@@ -3,15 +3,22 @@
 colrev data
 ---------------------------------------------
 
-The following options for data are available:
+In the :program:`colrev data` operation, records transition from `rev_included` to `rev_synthesized`. The data analysis and synthesis can involve different activities (data endpoints). A record only transitions to `rev_synthesized` when **all** synthesis activities were completed.
 
-.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+Parallel independent data extraction is only supported through the built-in git mechanisms (merges). This works best for line-based contents. For csvs, daff may be helpful.
 
-    {{ make_list_table_from_mappings(
-        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
-        data['data'],
-        title='',
-        ) }}
+..
+    reconciliation should focus on categorical data more than numerical data?
+
+.. code:: bash
+
+    colrev data [options]
+
+    # Generate a sample profile.
+    colrev data --profile
+
+    # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
+    colrev data --reading_heuristics
 
 
 To set the data format, run any (combination) of the following:
@@ -34,22 +41,18 @@ To export the bibliography in different formats, run any of the following:
     colrev data --add citavi
     colrev data --add rdf_bibliontology
 
-Depending on the data format, the :program:`colrev data` command
 
-- adds new records to the manuscript (paper.md, after the <!-- NEW_RECORD_SOURCE --> marker)
-- creates (enhanced) TEI files
+The following options for data are available:
 
-.. code:: bash
+.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
-	colrev data [options]
+    {{ make_list_table_from_mappings(
+        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
+        data['data'],
+        title='',
+        ) }}
 
-.. option:: --profile
 
-    Generate a sample profile.
-
-.. option:: --reading_heuristics
-
-    Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
 
 .. TODO: include examples (figure) for data --profile/--reading_heuristics
 
