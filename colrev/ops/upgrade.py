@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import typing
+from importlib.metadata import version
 from pathlib import Path
 from shutil import copytree
 
@@ -97,6 +98,9 @@ class Upgrade(colrev.operation.Operation):
 
             if last_version == upcoming_version:
                 break
+
+        self.review_manager.settings.project.colrev_version = version("colrev")
+        self.review_manager.save_settings()
 
         if self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(
