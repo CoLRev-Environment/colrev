@@ -3,7 +3,12 @@ Collaboration
 ==================================
 
 
-Giving team members access to a CoLRev repository
+Selecting software
+-----------------------------------------------------
+
+CoLRev aims to support a broad range of software packages and offer seamless integration across all steps of the process. For example, in the synthesis step, users may want to rely on purley open-source setups involving Pandoc and Zotero, or proprietary software including Word and Endnote. Although automation, transparency, and efficient collaboration is a typical strength of open-source tools, team consensus may favor other setups. When planning collaborative literature review projects, it is therefore important to agree on the software that should be used by the team.
+
+Giving team members access
 -----------------------------------------------------
 
 - Explain how to invite collaborators (link from colrev init)
