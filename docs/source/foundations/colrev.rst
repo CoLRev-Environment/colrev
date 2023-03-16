@@ -6,7 +6,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 
 .. figure:: ../../figures/framework_design_areas.svg
    :align: center
-   :alt: Design areas
+   :alt: Areas
    :figwidth: 800px
 
 :any:`preliminaries`
@@ -18,7 +18,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 - :any:`systematicity_transparency`
 - :any:`typological_plurism`
 
-:any:`area_engineering`
+:any:`area_design`
 
 - :any:`architecture`
 - :any:`git_lr`
@@ -97,7 +97,7 @@ Guiding principles
 
 .. _area_methods:
 
-1. Design area: Methods
+1. Area: Methods
 ----------------------------------------------
 
 .. _research_framework:
@@ -147,9 +147,9 @@ The main propositions of CoLRev are:
 - In the other processes, differences between review types manifest in different parameters.
 - As an implication, tools should be designed to synergize in all operations that precede the synthesis and provide flexibility for different forms of synthesis that are in line with the respective type of review.
 
-.. _area_engineering:
+.. _area_design:
 
-2. Design area: Engineering
+2. Area: Design
 ------------------------------------
 
 .. _architecture:
@@ -399,7 +399,7 @@ Overview of packages and reasons for selection:
 
 .. _area_cognition:
 
-3. Design area: Cognition
+3. Area: Cognition
 ----------------------------------------------
 
 .. The growing amount of literature is challenging the limits of human processing capacities
@@ -441,7 +441,7 @@ E.g., prep-rounds, asreview ordered screen or reading heuristics
 
 .. _area_community:
 
-4. Design area: Community
+4. Area: Community
 ----------------------------------------------
 
 .. _adopting_a_shared_curation_standard:
