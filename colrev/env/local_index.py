@@ -86,11 +86,12 @@ class LocalIndex:
     def __init__(
         self,
         *,
+        index_tei: bool = False,
         verbose_mode: bool = False,
     ) -> None:
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        self.__index_tei = False
+        self.__index_tei = index_tei
 
         self.thread_lock = Lock()
 
@@ -199,7 +200,6 @@ class LocalIndex:
                 layered_fields = json.loads(row["layered_fields"])
 
             break
-
         for curated_field in curated_fields:
             if curated_field not in record_dict:
                 continue
@@ -239,10 +239,10 @@ class LocalIndex:
                     return fields_to_remove
             except colrev_exceptions.NotTOCIdentifiableException:
                 return fields_to_remove
-
             wo_nr = deepcopy(internal_record_dict)
             del wo_nr["number"]
             toc_key_wo_nr = colrev.record.Record(data=wo_nr).get_toc_key()
+
             if "NA" != toc_key_wo_nr:
                 if self.__toc_exists(toc_item=toc_key_wo_nr):
                     fields_to_remove.append("number")
@@ -325,6 +325,7 @@ class LocalIndex:
                         stored_colrev_id = colrev.record.Record(
                             data=stored_record
                         ).create_colrev_id()
+
                         if stored_colrev_id == item["colrev_id"]:
                             self.__amend_record(
                                 cur=cur, item=item, curated_fields=curated_fields
@@ -392,7 +393,9 @@ class LocalIndex:
 
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def _retrieve_from_github_curation(self, *, record_dict: dict) -> dict:
+    def _retrieve_from_github_curation(
+        self, *, record_dict: dict
+    ) -> dict:  # pragma: no cover
         ret = {}
         try:
             gh_url, record_id = record_dict["curation_ID"].split("#")
@@ -406,6 +409,8 @@ class LocalIndex:
                     str(target_path),
                     depth=1,
                 )
+                # TODO : save info on curations that were not available
+                # (to be displayed in gh-action/pull-request)
 
             content = ""
             with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:
@@ -526,6 +531,7 @@ class LocalIndex:
             cur.execute(f"SELECT * FROM {self.RECORD_INDEX} WHERE {query}")
             for row in cur.fetchall():
                 selected_row = row
+
                 retrieved_record = self.__get_record_from_row(row=selected_row)
 
                 retrieved_record = self.__prepare_record_for_return(
@@ -567,6 +573,12 @@ class LocalIndex:
         if "colrev_status" not in record_dict:
             raise colrev_exceptions.RecordNotIndexableException()
 
+        # Do not cover deprecated fields
+        for deprecated_field in ["pdf_hash"]:
+            if deprecated_field in record_dict:
+                print(f"Removing deprecated field: {deprecated_field}")
+                del record_dict[deprecated_field]
+
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
         if (
@@ -599,11 +611,6 @@ class LocalIndex:
             # between curated_metadata_repositories
             record_dict["local_curated_metadata"] = "yes"
 
-        # To fix pdf_hash fields that should have been renamed
-        if "pdf_hash" in record_dict:
-            record_dict["colrev_pdf_id"] = "cpid1:" + record_dict["pdf_hash"]
-            del record_dict["pdf_hash"]
-
         if "colrev_origin" in record_dict:
             del record_dict["colrev_origin"]
 
@@ -622,8 +629,8 @@ class LocalIndex:
 
         if record_dict.get("year", "NA").isdigit():
             record_dict["year"] = int(record_dict["year"])
-        elif "year" in record_dict:
-            del record_dict["year"]
+        else:
+            raise colrev_exceptions.RecordNotIndexableException()
 
         if "language" in record_dict:
             if len(record_dict["language"]) != 3:
@@ -768,7 +775,7 @@ class LocalIndex:
         if curated_masterdata:
             self.__add_index_toc(toc_to_index=toc_to_index)
 
-    def __load_masterdata_curations(self) -> dict:
+    def __load_masterdata_curations(self) -> dict:  # pragma: no cover
         # Note : the following should be replaced by heuristics
         # based on the data (between colrev load and prep)
         masterdata_curations = {}

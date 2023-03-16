@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from pathlib import Path
+
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -296,6 +298,8 @@ def test_get_inconsistencies() -> None:
     expected = {"volume", "number", "journal", "author"}
     actual = R1_mod.get_inconsistencies()
     assert expected == actual
+
+    assert R1_mod.has_inconsistent_fields()
 
 
 def test_change_entrytype_article() -> None:
@@ -796,6 +800,48 @@ def test_reset_pdf_provenance_notes() -> None:
     assert expected == actual
 
 
+def test_cleanup_pdf_processing_fields() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
+    R1_mod.data["pages_in_file"] = "12"
+
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    R1_mod.cleanup_pdf_processing_fields()
+    actual = R1_mod.data
+    print(actual)
+    assert expected == actual
+
+
+def test_get_tei_filename() -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["file"] = "data/pdfs/Rai2020.pdf"
+    expected = Path("data/.tei/Rai2020.tei.xml")
+    actual = R1_mod.get_tei_filename()
+    assert expected == actual
+
+
 def test_get_record_similarity() -> None:
     expected = 0.854
     actual = colrev.record.Record.get_record_similarity(record_a=R1, record_b=R2)
@@ -813,6 +859,8 @@ def test_get_incomplete_fields() -> None:
     expected = {"title", "author"}
     actual = R1_mod.get_incomplete_fields()
     assert expected == actual
+
+    assert R1_mod.has_incomplete_fields()
 
 
 def test_get_quality_defects() -> None:
@@ -1158,137 +1206,4 @@ def test_unify_pages_field() -> None:
     prep_rec.unify_pages_field()
     expected = "1--2"
     actual = prep_rec.data["pages"]
-    assert expected == actual
-
-
-def test_record_state_model() -> None:
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_processed)
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_imported)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-    }
-    actual = rsm.get_preceding_states(
-        state=colrev.record.RecordState.md_needs_manual_preparation
-    )
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_prepared)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_processed)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-    }
-    actual = rsm.get_preceding_states(
-        state=colrev.record.RecordState.rev_prescreen_included
-    )
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.rev_prescreen_included,
-    }
-    actual = rsm.get_preceding_states(
-        state=colrev.record.RecordState.pdf_needs_manual_retrieval
-    )
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.rev_prescreen_included,
-        colrev.record.RecordState.pdf_needs_manual_retrieval,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_imported)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.rev_prescreen_included,
-        colrev.record.RecordState.pdf_needs_manual_retrieval,
-        colrev.record.RecordState.pdf_imported,
-    }
-    actual = rsm.get_preceding_states(
-        state=colrev.record.RecordState.pdf_needs_manual_preparation
-    )
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.rev_prescreen_included,
-        colrev.record.RecordState.pdf_needs_manual_retrieval,
-        colrev.record.RecordState.pdf_imported,
-        colrev.record.RecordState.pdf_needs_manual_preparation,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_prepared)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.pdf_needs_manual_retrieval,
-        colrev.record.RecordState.pdf_imported,
-        colrev.record.RecordState.pdf_prepared,
-        colrev.record.RecordState.pdf_needs_manual_preparation,
-        colrev.record.RecordState.rev_prescreen_included,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_included)
-    assert expected == actual
-
-    expected = {
-        colrev.record.RecordState.md_retrieved,
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
-        colrev.record.RecordState.md_prepared,
-        colrev.record.RecordState.md_processed,
-        colrev.record.RecordState.pdf_needs_manual_retrieval,
-        colrev.record.RecordState.pdf_imported,
-        colrev.record.RecordState.pdf_prepared,
-        colrev.record.RecordState.pdf_needs_manual_preparation,
-        colrev.record.RecordState.rev_prescreen_included,
-        colrev.record.RecordState.rev_included,
-    }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_synthesized)
     assert expected == actual

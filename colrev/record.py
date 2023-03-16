@@ -13,6 +13,7 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+from typing import Set
 
 import dictdiffer
 import pandas as pd
@@ -408,11 +409,9 @@ class Record:
             )
 
         self.apply_fields_keys_requirements()
-        missing_fields = []
-        try:
-            missing_fields = self.get_missing_fields()
-        except colrev_exceptions.MissingRecordQualityRuleSpecification:
-            pass
+        missing_fields = set()
+        # Note: MissingRecordQualityRuleSpecification already raised before.
+        missing_fields = self.get_missing_fields()
 
         if self.has_quality_defects() or missing_fields:
             self.set_status(
@@ -569,18 +568,18 @@ class Record:
                     "note": "",
                 }
 
-    def get_missing_fields(self) -> list:
+    def get_missing_fields(self) -> set:
         """Get the missing fields"""
-        missing_field_keys = []
+        missing_field_keys = set()
         if self.data["ENTRYTYPE"] in Record.record_field_requirements:
             reqs = Record.record_field_requirements[self.data["ENTRYTYPE"]]
-            missing_field_keys = [
+            missing_field_keys = {
                 x
                 for x in reqs
                 if x not in self.data.keys()
                 or "" == self.data[x]
                 or "UNKNOWN" == self.data[x]
-            ]
+            }
             return missing_field_keys
         raise colrev_exceptions.MissingRecordQualityRuleSpecification(
             msg=f"Missing record_field_requirements for {self.data['ENTRYTYPE']}"
@@ -656,34 +655,27 @@ class Record:
     def __prevent_invalid_merges(self, *, merging_record: Record) -> None:
         """Prevents invalid merges like ... part 1 / ... part 2"""
 
-        # maybe also mention commentary to../response to/...?
-        if any(
-            self.data.get("title", "").lower().startswith(k)
-            for k in ["erratum", "correction"]
-        ) and not any(
-            merging_record.data.get("title", "").lower().startswith(k)
-            for k in ["erratum", "correction"]
-        ):
+        lower_title_a = self.data.get("title", "").lower()
+        lower_title_b = merging_record.data.get("title", "").lower()
+
+        part_match_a = re.findall(r"part [A-Za-z0-9]+$", lower_title_a)
+        part_match_b = re.findall(r"part [A-Za-z0-9]+$", lower_title_b)
+
+        if part_match_a != part_match_b:
             raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
 
-        if self.data.get("title", "").lower().endswith(
-            "part 1"
-        ) and not merging_record.data.get("title", "").lower().endwith("part 1"):
-            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
+        terms_required_to_match = [
+            "erratum",
+            "correction",
+            "corrigendum",
+            "comment",
+            "commentary",
+            "response",
+        ]
+        terms_in_a = [t for t in terms_required_to_match if t in lower_title_a]
+        terms_in_b = [t for t in terms_required_to_match if t in lower_title_b]
 
-        if self.data.get("title", "").lower().endswith(
-            "part 2"
-        ) and not merging_record.data.get("title", "").lower().endwith("part 2"):
-            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
-
-        if self.data.get("title", "").lower().endswith(
-            "part a"
-        ) and not merging_record.data.get("title", "").lower().endwith("part a"):
-            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
-
-        if self.data.get("title", "").lower().endswith(
-            "part b"
-        ) and not merging_record.data.get("title", "").lower().endwith("part b"):
+        if terms_in_a != terms_in_b:
             raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
 
     def merge(
@@ -1990,6 +1982,7 @@ class Record:
         if not self.masterdata_is_curated():
             if "colrev_masterdata_provenance" not in self.data:
                 self.data["colrev_masterdata_provenance"] = {}
+            missing_fields: Set[str] = set()
             try:
                 missing_fields = self.get_missing_fields()
                 not_missing_fields = []
@@ -2528,7 +2521,7 @@ class RecordState(Enum):
     def __lt__(self, other) -> bool:  # type: ignore
         if self.__class__ == RecordState and other.__class__ == RecordState:
             return self.value < other.value
-        return NotImplemented
+        raise NotImplementedError
 
     @classmethod
     def get_non_processed_states(cls) -> list:
@@ -2541,17 +2534,10 @@ class RecordState(Enum):
         ]
 
     @classmethod
-    def get_post_x_states(cls, *, state: RecordState) -> typing.List[RecordState]:
+    def get_post_x_states(cls, *, state: RecordState) -> typing.Set[RecordState]:
         """Get the states after state x (passed as a parameter)"""
-        if state == RecordState.pdf_prepared:
-            return [
-                colrev.record.RecordState.pdf_prepared,
-                colrev.record.RecordState.rev_excluded,
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
-            ]
         if state == RecordState.md_prepared:
-            return [
+            return {
                 RecordState.md_prepared,
                 RecordState.md_processed,
                 RecordState.rev_prescreen_included,
@@ -2564,9 +2550,9 @@ class RecordState(Enum):
                 RecordState.rev_excluded,
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
-            ]
+            }
         if state == RecordState.md_processed:
-            return [
+            return {
                 RecordState.md_processed,
                 RecordState.rev_prescreen_included,
                 RecordState.rev_prescreen_excluded,
@@ -2578,10 +2564,9 @@ class RecordState(Enum):
                 RecordState.rev_excluded,
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
-            ]
-
+            }
         if state == RecordState.rev_prescreen_included:
-            return [
+            return {
                 RecordState.rev_prescreen_included,
                 RecordState.rev_prescreen_excluded,
                 RecordState.pdf_needs_manual_retrieval,
@@ -2592,14 +2577,22 @@ class RecordState(Enum):
                 RecordState.rev_excluded,
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
-            ]
-
-        if state == RecordState.rev_included:
-            return [
+            }
+        if state == RecordState.pdf_prepared:
+            return {
+                RecordState.pdf_prepared,
                 RecordState.rev_excluded,
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
-            ]
+            }
+
+        if state == RecordState.rev_included:
+            return {
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+
         # pylint: disable=no-member
         raise colrev_exceptions.ParameterError(
             parameter="state", value="state", options=cls._member_names_
@@ -2739,9 +2732,9 @@ class RecordStateModel:
             initial=self.state,
         )
 
-    def get_valid_transitions(self) -> list:
+    def get_valid_transitions(self) -> set:
         """Get the list of valid transitions"""
-        return list(
+        return set(
             {x["trigger"] for x in self.transitions if x["source"] == self.state}
         )
 

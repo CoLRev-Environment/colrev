@@ -411,7 +411,7 @@ class StatusStats:
     def get_active_operations(self, *, current_origin_states_dict: dict) -> list:
         """Get the active processing functions"""
 
-        active_operations = []
+        active_operations: typing.List[str] = []
         for state in set(current_origin_states_dict.values()):
             srec = colrev.record.RecordStateModel(state=state)
             valid_transitions = srec.get_valid_transitions()
