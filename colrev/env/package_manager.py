@@ -860,8 +860,9 @@ class PackageManager:
                     "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
                     + endpoint_item["endpoint"].replace(".", "/")
                 )
+                # In separate packages, we the main readme.md file should be used
                 code_link = code_link[: code_link.rfind("/")]
-                code_link += ".py"
+                code_link += ".md"
                 if hasattr(endpoint, "link"):
                     link = endpoint.link
                 else:
@@ -884,9 +885,7 @@ class PackageManager:
                         endpoint_item["api_search"] = "Supported"
                     else:
                         endpoint_item["api_search"] = "NA"
-                    endpoint_item[
-                        "link"
-                    ] = f"`{endpoint.short_name} <{endpoint.link}>`_"
+                    endpoint_item["link"] = f"`{endpoint.short_name} <{link}>`_"
                     endpoint_item["instructions"] = f"`Instructions <{code_link}>`_"
 
             endpoint_list += package_endpoints["endpoints"][endpoint_type]
