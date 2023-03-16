@@ -117,7 +117,7 @@ Established frameworks for reproducible research using git do not apply to liter
 1.2 Shared model for the steps of the review process
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Effectively synchronizing work across teams of researchers, applying algorithms, and incorporating crowd-sourced changes requires a model defining a shared understanding of the review process.
-The model is enforced by the platform engine and the command-line interface provides convenience access to the reference implementation.
+The model is enforced by the environment and the command-line interface provides convenience access to the reference implementation.
 The overview defines the micro-level steps and situates them in the three macro-level processes of metadata preparation, full-text preparation and the main review process.
 Each step can effect a state transition for a record, as recorded in the *status* field.
 Key considerations are documented in the guides for the reference implementation.
@@ -159,7 +159,7 @@ The main propositions of CoLRev are:
 
 The architecture of CoLRev is divided into three packages:
 
-- The CoLRev core platform, **colrev**, operates standardized data structures and a process model on top of git repositories. It also offers an extensible reference implementation covering all process steps of the review process.
+- The CoLRev environment, **colrev**, operates standardized data structures and a process model on top of git repositories. It also offers an extensible reference implementation covering all process steps of the review process.
 - The CoLRev hooks, **colrev_hooks** (i.e., custom git pre-commit hooks) check conformance with the standardized structures before a new version of the project (git commit) is created.
 - The CoLRev command line interface, **colrev** (cli), provides access to the processing operations and additional features. Complexity is hidden behind the three-step workflow and the ``colrev status`` command that provides instructions based on the context of the project.
 
