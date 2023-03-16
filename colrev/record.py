@@ -1754,7 +1754,7 @@ class Record:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         pdf_path: Path,
-    ) -> str:
+    ) -> str:  # pragma: no cover
         """Generate the colrev_pdf_id"""
         pdf_hash_service = review_manager.get_pdf_hash_service()
         cpid1 = "cpid1:" + pdf_hash_service.get_pdf_hash(
@@ -2066,10 +2066,12 @@ class Record:
         """Check for potential retracts"""
         # Note : we retrieved metadata in get_masterdata_from_crossref()
         if self.data.get("crossmark", "") == "True":
-            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.remove_field(key="crossmark")
             return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
-            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.remove_field(key="warning")
             return True
         return False
 
@@ -2457,8 +2459,12 @@ class PrepRecord(Record):
 
         self.check_potential_retracts()
 
-        if "crossmark" in self.data:
+        if (
+            colrev.record.RecordState.rev_prescreen_excluded
+            == self.data["colrev_status"]
+        ):
             return
+
         if self.masterdata_is_curated():
             self.set_status(target_state=RecordState.md_prepared)
             return

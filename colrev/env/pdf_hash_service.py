@@ -30,9 +30,6 @@ class PDFHashService:
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF hash"""
 
-        assert isinstance(page_nr, int)
-        assert isinstance(hash_size, int)
-
         pdf_path = pdf_path.resolve()
         pdf_dir = pdf_path.parents[0]
 

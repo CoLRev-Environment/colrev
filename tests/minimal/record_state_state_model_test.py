@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 
 
@@ -252,6 +253,13 @@ def test_get_post_x_states() -> None:
         state=colrev.record.RecordState.md_prepared
     )
     assert expected == actual
+
+    with pytest.raises(
+        colrev_exceptions.ParameterError,
+    ):
+        colrev.record.RecordState.get_post_x_states(
+            state=colrev.record.RecordState.md_needs_manual_preparation
+        )
 
 
 def test_leq() -> None:

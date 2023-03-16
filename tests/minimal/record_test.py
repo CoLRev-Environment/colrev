@@ -56,6 +56,103 @@ v2 = {
 R1 = colrev.record.Record(data=v1)
 R2 = colrev.record.Record(data=v2)
 
+WagnerLukyanenkoParEtAl2022_pdf_content = """Debates and Perspectives Paper
+
+Artiﬁcial intelligence and the conduct of
+literature reviews
+
+Gerit Wagner, Roman Lukyanenko and Guy Par ´e 
+
+Journal of Information Technology
+2022, Vol. 37(2) 209–226
+© Association for Information
+Technology Trust 2021
+
+Article reuse guidelines:
+sagepub.com/journals-permissions
+DOI: 10.1177/02683962211048201
+Journals.sagepub.com/jinf
+
+Abstract
+Artiﬁcial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature
+reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured
+(meta)data, and pervade almost every type of paper published in information systems research or related social science
+disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual
+steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we
+propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our ﬁeld. With this agenda, we would
+like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research.
+
+Keywords
+Artiﬁcial
+automation, literature review
+
+intelligence, machine learning, natural
+
+language processing, research data management, data infrastructure,
+
+Introduction
+The potential of artiﬁcial intelligence (AI) to augment and
+partially automate research has sparked vivid debates in
+many scientiﬁc disciplines, including the health sciences
+(Adams et al., 2013; Tsafnat et al., 2014), biology (King
+et al., 2009), and management (Johnson et al., 2019). In
+particular, the concept of automated science is raising in-
+triguing questions related to the future of research in dis-
+ciplines that require “high-level abstract thinking, intricate
+knowledge of methodologies and epistemology, and per-
+suasive writing capabilities” (Johnson et al., 2019: 292).
+These debates resonate with scholars in Information Sys-
+tems (IS), who ponder which role AI and automation can
+play in theory development (Tremblay et al., 2018) and in
+combining data-driven and theory-driven research (Maass
+et al., 2018). With this commentary, we join the discussion
+which has been resumed recently by Johnson et al. (2019) in
+the business disciplines. The authors observe that across this
+multi-disciplinary discourse, two dominant narratives have
+emerged. The ﬁrst narrative adopts a provocative and vi-
+sionary perspective to present its audience with a choice
+between accepting or rejecting future research practices in
+which AI plays a dominant role. The second narrative
+acknowledges that a gradual adoption of AI-based research
+tools has already begun and aims at engaging its readers in a
+constructive debate on how to leverage AI-based tools for
+
+the beneﬁt of the research ﬁeld and its stakeholders. In this
+paper, our position resonates more with the latter per-
+spective, which is focused on the mid-term instead of the
+long-term, and well-positioned to advance the discourse
+with less speculative and more actionable discussions of the
+speciﬁc research processes that are more amenable appli-
+cations of AI and those processes that rely more on the
+human ingenuity of researchers.
+
+In this essay, we focus on the use of AI-based tools in the
+conduct of literature reviews. Advancing knowledge in this
+area is particularly promising since (1) standalone review
+projects require substantial efforts over months and years
+(Larsen et al., 2019), (2) the volume of reviews published in
+IS journals has been rising steadily (Schryen et al., 2020),
+and (3) literature reviews involve tasks that fall on a
+spectrum between the mechanical and the creative . At the
+same time, the process of reviewing literature is mostly
+conducted manually with sample sizes threatening to exceed
+the cognitive limits of human processing capacities. This
+
+Department of Information Technologies, HEC Montr´eal, Montr´eal,
+Qu´ebec, Canada
+
+Corresponding author:
+Guy Par´e, Research Chair in Digital Health, HEC Montr´eal, 3000, chemin
+de la C ˆote-Sainte-Catherin Montr´eal, Qu´ebec H3T 2A7, Canada.
+Email: guy.pare@hec.ca"""
+
+
+@pytest.fixture(scope="module")
+def script_loc(request) -> Path:  # type: ignore
+    """Return the directory of the currently running test script"""
+
+    return Path(request.fspath).parent
+
 
 def test_eq() -> None:
     assert R1 == R1
@@ -426,6 +523,66 @@ def test_get_value() -> None:
 
     expected = "custom_file"
     actual = R1.get_value(key="file", default="custom_file")
+    assert expected == actual
+
+
+def test_create_colrev_id() -> None:
+    # Test type: phdthesis
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "phdthesis"
+    R1_mod.data["school"] = "University of Minnesota"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = ["colrev_id1:|phdthesis|university-of-minnesota|2020|rai|editorial"]
+    actual = R1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test type: techreport
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "techreport"
+    R1_mod.data["institution"] = "University of Minnesota"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = ["colrev_id1:|techreport|university-of-minnesota|2020|rai|editorial"]
+    actual = R1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test type: inproceedings
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "inproceedings"
+    R1_mod.data["booktitle"] = "International Conference on Information Systems"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = [
+        "colrev_id1:|p|international-conference-on-information-systems|2020|rai|editorial"
+    ]
+    actual = R1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test type: article
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "article"
+    R1_mod.data["journal"] = "Journal of Management Information Systems"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = [
+        "colrev_id1:|a|journal-of-management-information-systems|45|1|2020|rai|editorial"
+    ]
+    actual = R1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test type: article
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "monogr"
+    R1_mod.data["series"] = "Lecture notes in cs"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = ["colrev_id1:|monogr|lecture-notes-in-cs|2020|rai|editorial"]
+    actual = R1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test type: article
+    R1_mod = R1.copy()
+    R1_mod.data["ENTRYTYPE"] = "online"
+    R1_mod.data["url"] = "www.loc.de/subpage.html"
+    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    expected = ["colrev_id1:|online|wwwlocde-subpagehtml|2020|rai|editorial"]
+    actual = R1_mod.get_colrev_id()
     assert expected == actual
 
 
@@ -1123,7 +1280,7 @@ def test_parse_bib() -> None:
 
 
 def test_print_prescreen_record(capfd) -> None:  # type: ignore
-    R1_mod = colrev.record.Record(data=R1.copy().data)
+    R1_mod = R1.copy()
     expected = "  ID: R1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
 
     R1_mod.print_prescreen_record()
@@ -1132,7 +1289,7 @@ def test_print_prescreen_record(capfd) -> None:  # type: ignore
 
 
 def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
-    R1_mod = colrev.record.Record(data=R1.copy().data)
+    R1_mod = R1.copy()
     R1_mod.data["abstract"] = "This paper focuses on ..."
     R1_mod.data["url"] = "www.gs.eu"
     R1_mod.data["colrev_data_provenance"]["file"] = {
@@ -1152,10 +1309,50 @@ def test_format_author_field() -> None:
     assert expected == actual
 
 
+def test_extract_text_by_page(script_loc: Path) -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+    expected = WagnerLukyanenkoParEtAl2022_pdf_content
+
+    actual = R1_mod.extract_text_by_page(pages=[0], project_path=script_loc)
+    actual = actual.rstrip()
+    assert expected == actual
+
+
+def test_set_pages_in_pdf(script_loc: Path) -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+    expected = 18
+    R1_mod.set_pages_in_pdf(project_path=script_loc)
+    actual = R1_mod.data["pages_in_file"]
+    assert expected == actual
+
+
+def test_set_text_from_pdf(script_loc: Path) -> None:
+    R1_mod = R1.copy()
+    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+    expected = WagnerLukyanenkoParEtAl2022_pdf_content
+    R1_mod.set_text_from_pdf(project_path=script_loc)
+    actual = R1_mod.data["text_from_pdf"]
+    actual = actual[0:4234]
+    assert expected == actual
+
+
+def test_get_retrieval_similarity() -> None:
+    expected = 0.934
+    actual = colrev.record.PrepRecord.get_retrieval_similarity(
+        record_original=R1, retrieved_record_original=R2
+    )
+    assert expected == actual
+
+
 def test_format_if_mostly_upper() -> None:
     prep_rec = R1.copy_prep_rec()
 
+    prep_rec.format_if_mostly_upper(key="year")
+
     prep_rec.data["title"] = "ALL CAPS TITLE"
+    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "quality_defect"
     prep_rec.format_if_mostly_upper(key="title")
     expected = "All caps title"
     actual = prep_rec.data["title"]
@@ -1206,4 +1403,131 @@ def test_unify_pages_field() -> None:
     prep_rec.unify_pages_field()
     expected = "1--2"
     actual = prep_rec.data["pages"]
+    assert expected == actual
+
+    del prep_rec.data["pages"]
+    prep_rec.unify_pages_field()
+
+    prep_rec.data["pages"] = ["1", "2"]
+    prep_rec.unify_pages_field()
+
+
+def test_preparation_save_condition() -> None:
+    prep_rec = R1.copy_prep_rec()
+    prep_rec.data["colrev_status"] = colrev.record.RecordState.md_imported
+    prep_rec.data["colrev_masterdata_provenance"]["title"][
+        "note"
+    ] = "disagreement with test"
+    expected = True
+    actual = prep_rec.preparation_save_condition()
+    assert expected == actual
+
+    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "record_not_in_toc"
+    expected = True
+    actual = prep_rec.preparation_save_condition()
+    assert expected == actual
+
+
+def test_preparation_break_condition() -> None:
+    prep_rec = R1.copy_prep_rec()
+    prep_rec.data["colrev_masterdata_provenance"]["title"][
+        "note"
+    ] = "disagreement with website"
+    expected = True
+    actual = prep_rec.preparation_break_condition()
+    assert expected == actual
+
+    prep_rec = R1.copy_prep_rec()
+    prep_rec.data["colrev_status"] = colrev.record.RecordState.rev_prescreen_excluded
+    expected = True
+    actual = prep_rec.preparation_break_condition()
+    assert expected == actual
+
+
+def test_update_metadata_status() -> None:
+    # Retracted (crossmark)
+    R1_mod = R1.copy_prep_rec()
+    R1_mod.data["crossmark"] = "True"
+    R1_mod.update_metadata_status()
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+        "prescreen_exclusion": "retracted",
+    }
+    actual = R1_mod.data
+    assert expected == actual
+
+    # Curated
+    R1_mod = R1.copy_prep_rec()
+    R1_mod.data["colrev_masterdata_provenance"] = {
+        "CURATED": {"source": "http...", "note": ""}
+    }
+    R1_mod.update_metadata_status()
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "CURATED": {"source": "http...", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    actual = R1_mod.data
+    assert expected == actual
+
+    # Quality defect
+    R1_mod = R1.copy_prep_rec()
+    R1_mod.data["author"] = "RAI, ARUN"
+    R1_mod.update_metadata_status()
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "manual", "note": "test,check"},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_status": colrev.record.RecordState.md_needs_manual_preparation,
+        "colrev_origin": ["import.bib/id_0001"],
+        "year": "2020",
+        "title": "EDITORIAL",
+        "author": "RAI, ARUN",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+    actual = R1_mod.data
     assert expected == actual

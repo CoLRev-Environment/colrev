@@ -5,3 +5,4 @@ omit =
     # omit everything in /usr
     /usr/*
     *crossrefapi/crossref/*
+    colrev/env/grobid_service.py

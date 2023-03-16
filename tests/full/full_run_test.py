@@ -19,7 +19,7 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
-def test_full_run(tmp_path: Path, mocker, script_loc) -> None:  # type: ignore
+def test_full_run(tmp_path: Path, mocker, script_loc: Path) -> None:  # type: ignore
     os.chdir(tmp_path)
 
     mocker.patch(
@@ -176,7 +176,36 @@ def test_full_run(tmp_path: Path, mocker, script_loc) -> None:  # type: ignore
 
     print(tmp_path)
 
-    # assert False
+    checker = colrev.checker.Checker(review_manager=review_manager)
+
+    expected = ["0.7.1", "0.7.1"]
+    actual = checker.get_colrev_versions()
+    assert expected == actual
+
+    checker.check_repository_setup()
+
+    assert False == checker.in_virtualenv()
+    expected = []
+    actual = checker.check_repo_extended()
+    print(actual)
+    assert expected == actual
+
+    expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
+    actual = checker.check_repo()  # type: ignore
+    print(actual)
+    assert expected == actual
+
+    expected = []
+    actual = checker.check_repo_basics()
+    print(actual)
+    assert expected == actual
+
+    expected = []
+    actual = checker.check_change_in_propagated_id(
+        prior_id="Srivastava2015", new_id="Srivastava2015a", project_context=tmp_path
+    )
+    print(actual)
+    assert expected == actual
 
 
 # Note : must run after full_run_test
