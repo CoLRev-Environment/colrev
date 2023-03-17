@@ -218,7 +218,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         # local_index_bib_path = script_loc.joinpath("local_index.bib")
 
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = Path(script_loc) / Path("local_index")
+        bib_files_to_index = Path(script_loc.parent) / Path("data/local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 

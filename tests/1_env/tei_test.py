@@ -15,7 +15,7 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 def test_tei(script_loc, tmp_path) -> None:  # type: ignore
-    tei_file = script_loc.joinpath("WagnerLukyanenkoParEtAl2022.tei.xml")
+    tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
     environment_manager = colrev.env.environment_manager.EnvironmentManager()
 

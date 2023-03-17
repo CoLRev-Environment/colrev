@@ -21,7 +21,7 @@ jobs:
         pip install --no-cache-dir .
     - name: Run minimal-deps tests
       run: |
-        pytest tests/minimal/
+        pytest tests/0_core/
 
   test-full-deps:
     needs: test-minimal-deps

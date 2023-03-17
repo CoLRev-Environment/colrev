@@ -6,6 +6,25 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
+
+@pytest.fixture(scope="module")
+def script_loc(request) -> Path:  # type: ignore
+    """Return the directory of the currently running test script"""
+
+    return Path(request.fspath).parent
+
+
+@pytest.fixture
+def record_with_pdf(script_loc: Path) -> colrev.record.Record:
+    return colrev.record.Record(
+        data={
+            "ID": "WagnerLukyanenkoParEtAl2022",
+            "ENTRYTYPE": "article",
+            "file": Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
+        }
+    )
+
+
 v1 = {
     "ID": "R1",
     "ENTRYTYPE": "article",
@@ -145,13 +164,6 @@ Corresponding author:
 Guy Par´e, Research Chair in Digital Health, HEC Montr´eal, 3000, chemin
 de la C ˆote-Sainte-Catherin Montr´eal, Qu´ebec H3T 2A7, Canada.
 Email: guy.pare@hec.ca"""
-
-
-@pytest.fixture(scope="module")
-def script_loc(request) -> Path:  # type: ignore
-    """Return the directory of the currently running test script"""
-
-    return Path(request.fspath).parent
 
 
 def test_eq() -> None:
@@ -1309,31 +1321,34 @@ def test_format_author_field() -> None:
     assert expected == actual
 
 
-def test_extract_text_by_page(script_loc: Path) -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+def test_extract_text_by_page(
+    script_loc: Path, record_with_pdf: colrev.record.Record
+) -> None:
+    record_with_pdf
     expected = WagnerLukyanenkoParEtAl2022_pdf_content
-
-    actual = R1_mod.extract_text_by_page(pages=[0], project_path=script_loc)
+    actual = record_with_pdf.extract_text_by_page(
+        pages=[0], project_path=script_loc.parent
+    )
     actual = actual.rstrip()
     assert expected == actual
 
 
-def test_set_pages_in_pdf(script_loc: Path) -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+def test_set_pages_in_pdf(
+    script_loc: Path, record_with_pdf: colrev.record.Record
+) -> None:
     expected = 18
-    R1_mod.set_pages_in_pdf(project_path=script_loc)
-    actual = R1_mod.data["pages_in_file"]
+    record_with_pdf.set_pages_in_pdf(project_path=script_loc.parent)
+    actual = record_with_pdf.data["pages_in_file"]
     assert expected == actual
 
 
-def test_set_text_from_pdf(script_loc: Path) -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["file"] = "WagnerLukyanenkoParEtAl2022.pdf"
+def test_set_text_from_pdf(
+    script_loc: Path, record_with_pdf: colrev.record.Record
+) -> None:
+    record_with_pdf
     expected = WagnerLukyanenkoParEtAl2022_pdf_content
-    R1_mod.set_text_from_pdf(project_path=script_loc)
-    actual = R1_mod.data["text_from_pdf"]
+    record_with_pdf.set_text_from_pdf(project_path=script_loc.parent)
+    actual = record_with_pdf.data["text_from_pdf"]
     actual = actual[0:4234]
     assert expected == actual
 

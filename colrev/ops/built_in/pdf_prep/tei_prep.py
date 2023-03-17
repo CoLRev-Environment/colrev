@@ -42,7 +42,7 @@ class TEIPDFPrep(JsonSchemaMixin):
             self.tei_path = (
                 pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
             )
-            self.tei_path.mkdir(exist_ok=True)
+            self.tei_path.mkdir(exist_ok=True, parents=True)
 
     @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(

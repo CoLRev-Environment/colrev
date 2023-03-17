@@ -34,5 +34,6 @@ colrev.ops.pdf\_prep.PDFPrep
       ~PDFPrep.to_prepare
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared
+      ~PDFPrep.pdf_prep_package_endpoints
       ~PDFPrep.force_mode
       ~PDFPrep.type

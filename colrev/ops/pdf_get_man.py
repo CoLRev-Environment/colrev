@@ -16,6 +16,8 @@ import colrev.record
 class PDFGetMan(colrev.operation.Operation):
     """Get PDFs manually"""
 
+    pdf_get_man_package_endpoints: dict[str, typing.Any]
+
     def __init__(
         self,
         *,
@@ -29,15 +31,6 @@ class PDFGetMan(colrev.operation.Operation):
         )
 
         self.verbose = True
-
-        package_manager = self.review_manager.get_package_manager()
-        self.pdf_get_man_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
-            selected_packages=review_manager.settings.pdf_get.pdf_get_man_package_endpoints,
-            operation=self,
-        )
 
     def get_pdf_get_man(self, *, records: dict) -> list:
         """Get the records that are missing a PDF"""
@@ -189,6 +182,15 @@ class PDFGetMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
+        package_manager = self.review_manager.get_package_manager()
+        self.pdf_get_man_package_endpoints: dict[
+            str, typing.Any
+        ] = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+            selected_packages=self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints,
+            operation=self,
+        )
+
         for (
             pdf_get_man_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints:
@@ -196,7 +198,7 @@ class PDFGetMan(colrev.operation.Operation):
                 pdf_get_man_package_endpoint["endpoint"]
             ]
 
-            records = endpoint.pdf_get_man(self, records)
+            records = endpoint.pdf_get_man(self, records)  # type: ignore
 
 
 if __name__ == "__main__":

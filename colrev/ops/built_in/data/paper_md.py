@@ -95,7 +95,7 @@ class PaperMarkdown(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         if "word_template" not in settings:
-            settings["word_template"] = self.__retrieve_default_word_template()
+            settings["word_template"] = Path("data/APA-7.docx")
 
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
@@ -134,7 +134,7 @@ class PaperMarkdown(JsonSchemaMixin):
         paper_md_endpoint_details = {
             "endpoint": "colrev_built_in.paper_md",
             "version": "0.1",
-            "word_template": self.__retrieve_default_word_template(),
+            "word_template": Path("data/APA-7.docx"),
         }
 
         return paper_md_endpoint_details
@@ -605,13 +605,17 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def __create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
-            retrieval_path = Path("template/paper_md/non_sample_references.bib")
-            colrev.env.utils.retrieve_package_file(
-                template_file=retrieval_path, target=self.NON_SAMPLE_REFERENCES_RELATIVE
-            )
-            self.data_operation.review_manager.dataset.add_changes(
-                path=self.NON_SAMPLE_REFERENCES_RELATIVE
-            )
+            try:
+                retrieval_path = Path("template/paper_md/non_sample_references.bib")
+                colrev.env.utils.retrieve_package_file(
+                    template_file=retrieval_path,
+                    target=self.NON_SAMPLE_REFERENCES_RELATIVE,
+                )
+                self.data_operation.review_manager.dataset.add_changes(
+                    path=self.NON_SAMPLE_REFERENCES_RELATIVE
+                )
+            except AttributeError:
+                pass
 
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str

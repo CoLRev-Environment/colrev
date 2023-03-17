@@ -35,7 +35,7 @@ class PDFGet(colrev.operation.Operation):
 
         self.package_manager = self.review_manager.get_package_manager()
 
-        self.review_manager.pdf_dir.mkdir(exist_ok=True)
+        self.review_manager.pdf_dir.mkdir(exist_ok=True, parents=True)
 
         self.filepath_directory_pattern = ""
         pdf_endpoints = [
