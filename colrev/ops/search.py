@@ -41,7 +41,8 @@ class Search(colrev.operation.Operation):
         file_path_string = file_path_string.replace("+", "_").replace(" ", "_")
 
         if file_path_string.endswith(suffix):
-            suffix = ""
+            file_path_string = file_path_string.rstrip(suffix)
+            # suffix = ""
         filename = Path(f"data/search/{file_path_string}{suffix}")
         existing_filenames = [x.filename for x in self.sources]
         if filename not in existing_filenames:
