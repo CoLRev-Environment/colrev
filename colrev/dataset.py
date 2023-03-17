@@ -1055,16 +1055,16 @@ class Dataset:
         if not self.__git_repo.is_dirty():
             self.review_manager.reset_report_logger()
 
-    def get_last_commit_sha(self) -> str:
+    def get_last_commit_sha(self) -> str:  # pragma: no cover
         """Get the last commit sha"""
         return str(self.__git_repo.head.commit.hexsha)
 
-    def get_tree_hash(self) -> str:
+    def get_tree_hash(self) -> str:  # pragma: no cover
         """Get the current tree hash"""
         tree_hash = self.__git_repo.git.execute(["git", "write-tree"])
         return str(tree_hash)
 
-    def __get_remote_commit_differences(self) -> list:
+    def __get_remote_commit_differences(self) -> list:  # pragma: no cover
         origin = self.__git_repo.remotes.origin
         if origin.exists():
             try:
@@ -1088,7 +1088,7 @@ class Dataset:
 
         return [nr_commits_behind, nr_commits_ahead]
 
-    def behind_remote(self) -> bool:
+    def behind_remote(self) -> bool:  # pragma: no cover
         """Check whether the repository is behind the remote"""
         nr_commits_behind = 0
         connected_remote = 0 != len(self.__git_repo.remotes)
@@ -1103,7 +1103,7 @@ class Dataset:
             return True
         return False
 
-    def remote_ahead(self) -> bool:
+    def remote_ahead(self) -> bool:  # pragma: no cover
         """Check whether the remote is ahead"""
         connected_remote = 0 != len(self.__git_repo.remotes)
         if connected_remote:
@@ -1117,13 +1117,13 @@ class Dataset:
             return True
         return False
 
-    def pull_if_repo_clean(self) -> None:
+    def pull_if_repo_clean(self) -> None:  # pragma: no cover
         """Pull project if repository is clean"""
         if not self.__git_repo.is_dirty():
             origin = self.__git_repo.remotes.origin
             origin.pull()
 
-    def get_remote_url(self) -> str:
+    def get_remote_url(self) -> str:  # pragma: no cover
         """Get the remote url"""
         remote_url = "NA"
         for remote in self.__git_repo.remotes:

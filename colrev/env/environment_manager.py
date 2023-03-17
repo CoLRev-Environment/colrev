@@ -13,10 +13,9 @@ import git
 import pandas as pd
 import yaml
 from docker.errors import DockerException
-from git.exc import InvalidGitRepositoryError
-from git.exc import NoSuchPathError
 from yaml import safe_load
 
+import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
@@ -98,8 +97,8 @@ class EnvironmentManager:
 
     def register_repo(self, *, path_to_register: Path) -> None:
         """Register a repository"""
-        environment_registry = self.load_environment_registry()
-        registered_paths = [x["repo_source_path"] for x in environment_registry]
+        self.environment_registry = self.load_environment_registry()
+        registered_paths = [x["repo_source_path"] for x in self.environment_registry]
 
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
@@ -116,11 +115,11 @@ class EnvironmentManager:
         for remote in git_repo.remotes:
             if remote.url:
                 new_record["repo_source_url"] = remote.url
-        environment_registry.append(new_record)
-        self.save_environment_registry(updated_registry=environment_registry)
+        self.environment_registry.append(new_record)
+        self.save_environment_registry(updated_registry=self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
-    def get_name_mail_from_git(self) -> typing.Tuple[str, str]:
+    def get_name_mail_from_git(self) -> typing.Tuple[str, str]:  # pragma: no cover
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
         username = check_output(["git", "config", "user.name"])
@@ -203,9 +202,7 @@ class EnvironmentManager:
                 print(exc)
         return status_dict
 
-    def get_environment_details(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> dict:
+    def get_environment_details(self) -> dict:
         """Get the environment details"""
 
         # def get_last_modified() -> str:
@@ -217,7 +214,9 @@ class EnvironmentManager:
         #     last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
         #     return last_mod.strftime("%Y-%m-%d %H:%M")
 
-        local_index = review_manager.get_local_index()
+        local_index = colrev.env.local_index.LocalIndex(
+            index_tei=True, verbose_mode=True
+        )
 
         environment_details = {}
         size = 0
@@ -282,12 +281,7 @@ class EnvironmentManager:
                 ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
-            except (
-                NoSuchPathError,
-                InvalidGitRepositoryError,
-                KeyError,
-                FileNotFoundError,
-            ):
+            except colrev_exceptions.CoLRevException:
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 

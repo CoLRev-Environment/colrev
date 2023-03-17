@@ -558,7 +558,8 @@ class Settings(JsonSchemaMixin):
             + str(self.data)
         )
 
-    def get_settings_schema(self) -> dict:
+    @classmethod
+    def get_settings_schema(cls) -> dict:
         """Get the json-schema for the settings"""
 
         class PathField(FieldEncoder):
@@ -572,7 +573,7 @@ class Settings(JsonSchemaMixin):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            schema = self.json_schema()
+            schema = cls.json_schema()
 
         sdefs = schema["definitions"]
         sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
@@ -625,7 +626,7 @@ class Settings(JsonSchemaMixin):
         return schema
 
 
-def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Settings:
+def load_settings(*, settings_path: Path) -> Settings:
     """Load the settings from file"""
 
     # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
@@ -643,17 +644,17 @@ def load_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Set
     #     return base_obj
     # print(selective_merge(default_settings, project_settings))
 
-    if not review_manager.settings_path.is_file():
+    if not settings_path.is_file():
         raise colrev_exceptions.RepoSetupError()
 
-    with open(review_manager.settings_path, encoding="utf-8") as file:
-        loaded_settings = json.load(file)
+    with open(settings_path, encoding="utf-8") as file:
+        loaded_dict = json.load(file)
 
     try:
         converters = {Path: Path, Enum: Enum}
         settings = from_dict(
             data_class=Settings,
-            data=loaded_settings,
+            data=loaded_dict,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
         for source in settings.sources:

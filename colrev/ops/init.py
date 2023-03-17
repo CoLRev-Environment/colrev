@@ -43,9 +43,6 @@ class Initializer:
         target_path: Optional[Path] = None,
         exact_call: str = "",
     ) -> None:
-        if review_type is None:
-            review_type = "literature_review"
-
         saved_args = locals()
         if example and local_pdf_collection:
             raise colrev_exceptions.RepoInitError(

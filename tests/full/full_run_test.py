@@ -2,6 +2,7 @@
 import os
 import shutil
 import typing
+from dataclasses import asdict
 from pathlib import Path
 
 import git
@@ -10,6 +11,7 @@ from pybtex.database.input import bibtex
 
 import colrev.env.utils
 import colrev.review_manager
+import colrev.settings
 
 
 @pytest.fixture(scope="module")
@@ -31,7 +33,9 @@ def test_full_run(tmp_path: Path, mocker, script_loc: Path) -> None:  # type: ig
         # local_index_bib_path = script_loc.joinpath("local_index.bib")
 
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = Path(script_loc) / Path("local_index")
+        bib_files_to_index = Path(script_loc.parent / Path("minimal")) / Path(
+            "local_index"
+        )
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
@@ -77,13 +81,13 @@ def test_full_run(tmp_path: Path, mocker, script_loc: Path) -> None:  # type: ig
 
     for filename in os.listdir(tmp_path):
         file_path = os.path.join(tmp_path, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
+        # try:
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        #     elif os.path.isdir(file_path):
+        #         shutil.rmtree(file_path)
+        # except Exception as e:
+        #     print(f"Failed to delete {file_path}. Reason: {e}")
 
     colrev.review_manager.ReviewManager.get_init_operation(
         review_type="literature_review",
@@ -187,24 +191,43 @@ def test_full_run(tmp_path: Path, mocker, script_loc: Path) -> None:  # type: ig
     assert False == checker.in_virtualenv()
     expected = []
     actual = checker.check_repo_extended()
-    print(actual)
     assert expected == actual
 
     expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
     actual = checker.check_repo()  # type: ignore
-    print(actual)
     assert expected == actual
 
     expected = []
     actual = checker.check_repo_basics()
-    print(actual)
     assert expected == actual
 
     expected = []
     actual = checker.check_change_in_propagated_id(
         prior_id="Srivastava2015", new_id="Srivastava2015a", project_context=tmp_path
     )
-    print(actual)
+    assert expected == actual
+
+    review_manager.get_search_sources()
+    expected = [  # type: ignore
+        {  # type: ignore
+            "endpoint": "colrev_built_in.pdfs_dir",
+            "filename": Path("data/search/pdfs.bib"),
+            "search_type": colrev.settings.SearchType.PDFS,
+            "search_parameters": {"scope": {"path": "data/pdfs"}},
+            "load_conversion_package_endpoint": {"endpoint": "colrev_built_in.bibtex"},
+            "comment": "",
+        },
+        {  # type: ignore
+            "endpoint": "colrev_built_in.unknown_source",
+            "filename": Path("data/search/test_records.bib"),
+            "search_type": colrev.settings.SearchType.DB,
+            "search_parameters": {},
+            "load_conversion_package_endpoint": {"endpoint": "colrev_built_in.bibtex"},
+            "comment": None,
+        },
+    ]
+    search_sources = review_manager.settings.sources
+    actual = [asdict(s) for s in search_sources]  # type: ignore
     assert expected == actual
 
 

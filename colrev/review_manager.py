@@ -145,7 +145,7 @@ class ReviewManager:
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
-        self.settings = colrev.settings.load_settings(review_manager=self)
+        self.settings = colrev.settings.load_settings(settings_path=self.settings_path)
         return self.settings
 
     def save_settings(self) -> None:
@@ -702,17 +702,17 @@ class ReviewManager:
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
 
-    def in_ci_environment(self, *, identifier: Optional[str] = None) -> bool:
+    def in_ci_environment(
+        self,
+        *,
+        identifier: Optional[str] = None,
+    ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
 
+        identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         if identifier:
-            if "GITHUB_ACTIONS" == identifier:
-                return "true" == os.getenv("GITHUB_ACTIONS")
-
-        return any(
-            "true" == os.getenv(x)
-            for x in ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
-        )
+            identifier_list = [identifier]
+        return any("true" == os.getenv(x) for x in identifier_list)
 
 
 if __name__ == "__main__":
