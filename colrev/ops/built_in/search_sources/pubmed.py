@@ -669,6 +669,29 @@ class PubMedSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for Pubmed"""
 
+        for record in records.values():
+            if "author" in record:
+                if record["author"].count(",") >= 1:
+                    # if 0 == record["author"].count(" and "):
+                    author_list = record["author"].split(", ")
+                    for i, author_part in enumerate(author_list):
+                        author_field_parts = author_part.split(" ")
+                        author_list[i] = (
+                            author_field_parts[0]
+                            + ", "
+                            + " ".join(author_field_parts[1:])
+                        )
+
+                    record["author"] = " and ".join(author_list)
+            if "first_author" in record:
+                del record["first_author"]
+            if "citation" in record:
+                del record["citation"]
+            if "create_date" in record:
+                del record["create_date"]
+            if "" != record.get("journal", ""):
+                record["ENTRYTYPE"] = "article"
+
         return records
 
     def prepare(

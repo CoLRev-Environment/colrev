@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
+import shutil
 import typing
 from dataclasses import asdict
 from pathlib import Path
 
+import git
 import pytest
 from pybtex.database.input import bibtex
 
@@ -12,8 +14,21 @@ import colrev.review_manager
 import colrev.settings
 
 
-@pytest.fixture(scope="session")
-def review_manager(session_mocker, tmp_path_factory: Path) -> colrev.review_manager.ReviewManager:  # type: ignore
+test_data_path = Path()
+
+
+def retrieve_test_file(*, source: Path, target: Path) -> None:
+    shutil.copy(
+        test_data_path / source,
+        target,
+    )
+
+
+@pytest.fixture(scope="module")
+def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.review_manager.ReviewManager:  # type: ignore
+    global test_data_path
+    test_data_path = Path(request.module.__file__).parents[1] / Path("data")
+
     test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     os.chdir(test_repo_dir)
@@ -89,8 +104,9 @@ def review_manager(session_mocker, tmp_path_factory: Path) -> colrev.review_mana
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(review_manager.path)
     )
-    colrev.env.utils.retrieve_package_file(
-        template_file=Path("template/example/test_records.bib"),
+
+    retrieve_test_file(
+        source=Path("search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
@@ -119,6 +135,32 @@ def test_load(review_manager: colrev.review_manager.ReviewManager) -> None:
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
 
 
+def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> None:
+    current_commit = review_manager.dataset.get_last_commit_sha()
+    pubmed_file = Path(colrev.__file__).parents[1] / Path(
+        "tests/data/search_files/pubmed-chatbot.csv"
+    )
+    shutil.copy(
+        pubmed_file, review_manager.path / Path("data/search/pubmed-chatbot.csv")
+    )
+    load_operation = review_manager.get_load_operation()
+    new_sources = load_operation.get_new_sources(skip_query=True)
+    new_sources[0].endpoint = "colrev_built_in.pubmed"
+    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+
+    expected = (
+        Path(colrev.__file__).parents[1]
+        / Path("tests/data/search_files/pubmed-chatbot-expected.bib")
+    ).read_text()
+    actual = (review_manager.path / Path("data/search/pubmed-chatbot.bib")).read_text()
+    assert expected == actual
+    repo = git.Repo(review_manager.path)
+
+    repo.head.reset(current_commit, index=True, working_tree=True)
+
+    review_manager.load_settings()
+
+
 def test_prep(review_manager: colrev.review_manager.ReviewManager) -> None:
     prep_operation = review_manager.get_prep_operation()
     prep_operation.main(keep_ids=False)
@@ -127,6 +169,18 @@ def test_prep(review_manager: colrev.review_manager.ReviewManager) -> None:
 def test_search(review_manager: colrev.review_manager.ReviewManager) -> None:
     search_operation = review_manager.get_search_operation()
     search_operation.main(rerun=True)
+
+    search_operation.view_sources()
+
+
+def test_search_get_unique_filename(
+    review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    search_operation = review_manager.get_search_operation()
+    expected = Path("data/search/test_records_1.bib")
+    actual = search_operation.get_unique_filename(file_path_string="test_records.bib")
+    print(actual)
+    assert expected == actual
 
 
 def test_dedupe(review_manager: colrev.review_manager.ReviewManager) -> None:
