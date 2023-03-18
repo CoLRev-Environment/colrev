@@ -1,5 +1,6 @@
 name: Publish to PyPI.org
 on:
+  workflow_dispatch:
   release:
     types: [published]
 jobs:
@@ -8,10 +9,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: python3 -m pip install --upgrade build && python3 -m build
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Setup poetry
+        run: poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry publish --build
