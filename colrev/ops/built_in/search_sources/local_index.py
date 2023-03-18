@@ -656,7 +656,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             else:
                 self.review_manager.logger.error(
                     "Repo behind remote. Pull first to avoid conflicts.\n"
-                    f"colrev env --update {check_operation.review_manager.path}"
+                    "colrev env --pull"
                 )
                 return False
 
