@@ -29,14 +29,12 @@ def retrieve_test_file(*, source: Path, target: Path) -> None:
 @pytest.fixture(scope="module")
 def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.review_manager.ReviewManager:  # type: ignore
     global test_data_path
-    test_data_path = Path(request.module.__file__).parents[1] / Path("data")
+    test_data_path = Path(request.fspath).parents[1] / Path("data")
 
     test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
 
     os.chdir(test_repo_dir)
-    global test_data_path
-    test_data_path = Path(request.fspath).parents[1] / Path("data")
 
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
