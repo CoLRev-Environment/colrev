@@ -680,6 +680,7 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
     exported_dict = asdict(
         review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
     )
+
     with open("settings.json", "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
     review_manager.dataset.add_changes(path=Path("settings.json"))

@@ -144,8 +144,7 @@ Example 2:
     def __set_fields(self) -> None:
         self.review_manager.logger.info("Add fields for data extraction")
         try:
-            git_repo = self.review_manager.dataset.get_repo()
-            print(list(git_repo.iter_commits("HEAD")))
+            _ = self.review_manager.dataset.get_repo()
         except GitCommandError:
             return
 

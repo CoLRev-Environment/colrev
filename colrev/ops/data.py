@@ -8,6 +8,7 @@ from typing import Optional
 import pandas as pd
 
 import colrev.operation
+import colrev.ops.built_in.pdf_prep.tei_prep
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -61,23 +62,28 @@ class Data(colrev.operation.Operation):
                 }
             )
 
-        tei_path = self.review_manager.path / Path("tei")
+        tei_path = colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep.TEI_PATH_RELATIVE
         required_records_ids = self.get_record_ids_for_synthesis(records)
-        missing = [
-            x
-            for x in list(tei_path.glob("*.tei.xml"))
-            if not any(i in str(x) for i in required_records_ids)
-        ]
-        if len(missing) > 0:
-            print(f"Records with missing tei file: {missing}")
 
-        for tei_file in tei_path.glob("*.tei.xml"):
-            data = tei_file.read_text()
+        missing = []
+        for required_records_id in required_records_ids:
+            tei_file = tei_path / Path(f"{required_records_id}.tei.xml")
+            if not tei_file.is_file():
+                missing.append(required_records_id)
+
+            tei_doc = self.review_manager.get_tei(
+                tei_path=tei_file,
+            )
+            tei_doc.mark_references(records=records)
+            data = tei_doc.get_tei_str()
             for enlit_item in enlit_list:
                 id_string = f'ID="{enlit_item["ID"]}"'
                 if id_string in data:
                     enlit_item["score"] += 1
                 enlit_item["score_intensity"] += data.count(id_string)
+
+        if len(missing) > 0:
+            print(f"Records with missing tei file: {missing}")
 
         enlit_list = sorted(enlit_list, key=lambda d: d["score"], reverse=True)
 
@@ -89,7 +95,7 @@ class Data(colrev.operation.Operation):
         self.review_manager.logger.info("Create sample profile")
 
         def prep_records(*, records: dict) -> pd.DataFrame:
-            for record in records:
+            for record in records.values():
                 record["outlet"] = record.get("journal", record.get("booktitle", "NA"))
 
             records_df = pd.DataFrame.from_records(list(records.values()))
