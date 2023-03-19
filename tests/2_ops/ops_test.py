@@ -13,6 +13,8 @@ import colrev.env.utils
 import colrev.review_manager
 import colrev.settings
 
+# Note : the following produces different relative paths locally/on github.
+# Path(colrev.__file__).parents[1]
 
 test_data_path = Path()
 
@@ -31,19 +33,19 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
 
     test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
+
     os.chdir(test_repo_dir)
-    script_loc = env_dir
+    global test_data_path
+    test_data_path = Path(request.fspath).parents[1] / Path("data")
 
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
     )
 
-    def load_test_records(script_loc) -> dict:  # type: ignore
+    def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = Path(script_loc.parent / Path("minimal")) / Path(
-            "local_index"
-        )
+        bib_files_to_index = test_data_path / Path("local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
@@ -60,7 +62,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     with session_mocker.patch.object(
         colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
     ):
-        test_records_dict = load_test_records(script_loc)
+        test_records_dict = load_test_records(test_data_path)
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
         local_index.reinitialize_sqlite_db()
 
@@ -90,8 +92,8 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         path_str=str(test_repo_dir), force_mode=True
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
     )
 
     review_manager.get_init_operation(
@@ -109,6 +111,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         source=Path("search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
+
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev_built_in.resolve_crossrefs"},
@@ -137,9 +140,8 @@ def test_load(review_manager: colrev.review_manager.ReviewManager) -> None:
 
 def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> None:
     current_commit = review_manager.dataset.get_last_commit_sha()
-    pubmed_file = Path(colrev.__file__).parents[1] / Path(
-        "tests/data/search_files/pubmed-chatbot.csv"
-    )
+
+    pubmed_file = test_data_path / Path("search_files/pubmed-chatbot.csv")
     shutil.copy(
         pubmed_file, review_manager.path / Path("data/search/pubmed-chatbot.csv")
     )
@@ -149,8 +151,7 @@ def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> Non
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
 
     expected = (
-        Path(colrev.__file__).parents[1]
-        / Path("tests/data/search_files/pubmed-chatbot-expected.bib")
+        test_data_path / Path("search_files/pubmed-chatbot-expected.bib")
     ).read_text()
     actual = (review_manager.path / Path("data/search/pubmed-chatbot.bib")).read_text()
     assert expected == actual

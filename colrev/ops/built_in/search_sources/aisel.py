@@ -94,7 +94,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 end_date = end_date.replace("%2F", "/")
 
             query = query[query.find("?q=") + 3 : query.find("&start")]
-            query_parts = query.split("%20")
+            query_parts = urllib.parse.unquote(query).split(" ")
 
             search_terms = []
             query_parts_merged = []
@@ -140,7 +140,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
             file_query = "aisel_" + file_query.lstrip("_").rstrip("_").replace(
                 "__", "_"
-            )
+            ).replace("%22", "").replace("*", "")
 
             filename = search_operation.get_unique_filename(
                 file_path_string=f"ais_{file_query}"
@@ -210,6 +210,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         params = self.search_source.search_parameters["query"]
         final_q = query_from_params(params)
+
         query_string = (
             "https://aisel.aisnet.org/do/search/results/refer?"
             + "start=0&context=509156&sort=score&facet=&dlt=Export122204"
@@ -217,6 +218,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         query_string = f"{query_string}&q={final_q}"
 
         response = requests.get(query_string)
+        response.raise_for_status()
 
         zotero_translation_service = (
             self.review_manager.get_zotero_translation_service()

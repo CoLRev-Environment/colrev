@@ -2,7 +2,7 @@
 The CoLRev Framework
 ====================================
 
-The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
+The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
 .. figure:: ../../figures/framework_design_areas.svg
    :align: center
