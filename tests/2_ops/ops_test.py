@@ -19,14 +19,22 @@ import colrev.settings
 test_data_path = Path()
 
 
+def retrieve_test_file(*, source: Path, target: Path) -> None:
+    shutil.copy(
+        test_data_path / source,
+        target,
+    )
+
+
 @pytest.fixture(scope="module")
 def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.review_manager.ReviewManager:  # type: ignore
+    global test_data_path
+    test_data_path = Path(request.fspath).parents[1] / Path("data")
+
     test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
 
     os.chdir(test_repo_dir)
-    global test_data_path
-    test_data_path = Path(request.fspath).parents[1] / Path("data")
 
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
@@ -97,9 +105,9 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         path_str=str(review_manager.path)
     )
 
-    example_records_file = test_data_path / Path("search_files/test_records.bib")
-    shutil.copy(
-        example_records_file, review_manager.path / Path("data/search/test_records.bib")
+    retrieve_test_file(
+        source=Path("search_files/test_records.bib"),
+        target=Path("data/search/test_records.bib"),
     )
 
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
@@ -130,6 +138,7 @@ def test_load(review_manager: colrev.review_manager.ReviewManager) -> None:
 
 def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> None:
     current_commit = review_manager.dataset.get_last_commit_sha()
+
     pubmed_file = test_data_path / Path("search_files/pubmed-chatbot.csv")
     shutil.copy(
         pubmed_file, review_manager.path / Path("data/search/pubmed-chatbot.csv")
