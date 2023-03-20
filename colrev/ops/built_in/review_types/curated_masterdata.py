@@ -119,12 +119,12 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "curation_url": "TODO",
                 "curated_masterdata": True,
                 "masterdata_restrictions": {
-                    "1900": {
-                        "ENTRYTYPE": "article",
-                        "volume": True,
-                        "number": True,
-                        "journal": "Journal Name",
-                    }
+                    # "1900": {
+                    #     "ENTRYTYPE": "article",
+                    #     "volume": True,
+                    #     "number": True,
+                    #     "journal": "Journal Name",
+                    # }
                 },
                 "curated_fields": ["doi", "url"],
             }
