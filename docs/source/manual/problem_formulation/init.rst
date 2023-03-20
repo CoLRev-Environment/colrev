@@ -9,6 +9,7 @@ colrev init
 With this operation, the directories and files, including the git history, are set up.
 Ideally, the selected review type is passed as a parameter.
 With this parameter, the ``settings.json`` file is created with reasonable defaults for the selected review type.
+
 For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
 The specific setup of the review types is available in the following table (currently pointing to the respective code that will be executed).
 
