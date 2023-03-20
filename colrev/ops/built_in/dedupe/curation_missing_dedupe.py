@@ -156,10 +156,13 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if record_dict["colrev_status"] in post_md_prepared_states:
                     continue
             else:
+                # only dedupe md_prepared records
                 if record_dict["colrev_status"] not in [
                     colrev.record.RecordState.md_prepared
                 ]:
                     continue
+            if "" == record_dict.get("title", ""):
+                continue
 
             record = colrev.record.Record(data=record_dict)
 
