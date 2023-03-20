@@ -45,22 +45,25 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
             self.zotero_translation_service = (
                 load_operation.review_manager.get_zotero_translation_service()
             )
-            self.zotero_translation_service.start_zotero_translators(
-                startup_without_waiting=True
-            )
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
         """Load records from the source"""
 
-        self.zotero_translation_service.start_zotero_translators()
+        load_operation.review_manager.logger.info(
+            "Starting Zotero translation services (Docker)"
+        )
+        self.zotero_translation_service.start()
+
         # pylint: disable=consider-using-with
+
         files = {"file": open(source.filename, "rb")}
         headers = {"Content-type": "text/plain"}
         ret = requests.post(
             "http://127.0.0.1:1969/import", headers=headers, files=files, timeout=30
         )
+
         headers = {"Content-type": "application/json"}
         if "No suitable translators found" == ret.content.decode("utf-8"):
             raise colrev_exceptions.ImportException(
@@ -73,7 +76,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
                 "http://127.0.0.1:1969/export?format=bibtex",
                 headers=headers,
                 json=zotero_format,
-                timeout=30,
+                timeout=60,
             )
             records = load_operation.review_manager.dataset.load_records_dict(
                 load_str=ret.content.decode("utf-8")
@@ -83,6 +86,8 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
             raise colrev_exceptions.ImportException(
                 f"Zotero import translators failed ({exc})"
             )
+
+        self.zotero_translation_service.stop()
 
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,

@@ -146,7 +146,7 @@ class BibliographyExport(JsonSchemaMixin):
         zotero_translation_service = (
             data_operation.review_manager.get_zotero_translation_service()
         )
-        zotero_translation_service.start_zotero_translators()
+        zotero_translation_service.start()
 
         headers = {"Content-type": "text/plain"}
         ret = requests.post(

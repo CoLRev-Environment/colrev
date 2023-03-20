@@ -16,5 +16,5 @@ colrev.env.zotero\_translation\_service.ZoteroTranslationService
    .. autosummary::
       :nosignatures:
 
-      ~ZoteroTranslationService.start_zotero_translators
-      ~ZoteroTranslationService.zotero_service_available
+      ~ZoteroTranslationService.start
+      ~ZoteroTranslationService.stop
