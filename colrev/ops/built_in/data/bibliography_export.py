@@ -126,8 +126,13 @@ class BibliographyExport(JsonSchemaMixin):
 
         # https://github.com/zotero/translation-server/blob/master/src/formats.js
         if self.settings.bib_format is BibFormats.endnote:
-            export_filepath = self.endpoint_path / Path("endnote.enl")
-            selected_format = "refer"
+            # Note: endnote .enl file is a binary:
+            # https://docs.fileformat.com/misc/enl/
+            export_filepath = self.endpoint_path / Path("endnote.xml")
+            selected_format = "endnote_xml"
+            data_operation.review_manager.logger.info(
+                "Import as Endnote-generated XML into an existing database"
+            )
 
         elif self.settings.bib_format is BibFormats.mendeley:
             export_filepath = self.endpoint_path / Path("mendeley.ris")

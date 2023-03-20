@@ -10,6 +10,10 @@ from docker.errors import DockerException
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 
+# https://github.com/zotero/translators/
+# https://www.zotero.org/support/dev/translators
+# https://github.com/zotero/translation-server/blob/master/src/formats.js
+
 
 class ZoteroTranslationService:
     """An environment service based on zotero translators"""
