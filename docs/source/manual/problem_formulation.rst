@@ -5,7 +5,7 @@
 Step 1: Problem formulation
 ==================================
 
-Literature reviews begin with the problem formulation step in which reviewers **specify the objective, the review type, and the plans for how the review team will conduct the review**.
+Literature reviews begin with the problem formulation step in which reviewers **specify objective, review type, and plans for how the review team will conduct the review**.
 This step may be informal and evolve throughout the review process, or be more formal.
 
 ..
@@ -29,21 +29,21 @@ It is therefore recommended to familiarize with the different types of review. E
 
 Guidance on selecting an appropriate review type is provided by the `RightReview <https://rightreview.knowledgetranslation.net/>`_ tool.
 
-It can also be useful to check prior (related) reviews. This can help to justify the need for a new review paper and it can inform several decisions, such as the search terms and databases to be covered.
+It can also be useful to check prior (related) reviews. This can help to justify the need for a new review paper and it can inform several decisions, such as search terms and databases to be covered.
 
 Once the initial objectives and review type are specified, the CoLRev project can be initialized using the ``colrev init`` operation.
 
 In most cases, activities related to the problem formulation step will continue after initializing the repository.
 The specification of plans for the review project may lead to the development of a review protocol.
-As a best practice recommendation, we suggest to keep notes on he review objective etc. in the ``data/paper.md`` file.
+As a best practice recommendation, we suggest to keep notes on review objective, review type etc. in the ``data/paper.md`` file.
 This document may also serve as the review protocol and evolve into the final review manuscript.
 Review protocols often involve the following:
 
-- Sharing the repository with your team (see `instructions <collaboration.html>`_).
-- Refining the review objectives and the characteristics of the review.
-- Defining focal concepts of the review.
-- Developing a search strategy and testing it.
-- If prior reviews were found, make plans to add their samples to the review project.
+- Sharing the repository with your team (see `instructions <collaboration.html>`_)
+- Refining the review objectives and the characteristics of the review
+- Defining focal concepts of the review
+- Developing a search strategy and testing it
+- If prior reviews were found, make plans to add their samples to the review project
 
 ..
    - working hypothesis: differences between review types primarily manifest in the data stage (in the other steps, it is mostly a question of parameters)
