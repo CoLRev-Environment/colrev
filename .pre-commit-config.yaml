@@ -15,8 +15,9 @@ repos:
     rev: v4.4.0
     hooks:
     -   id: trailing-whitespace
-        exclude: colrev/template/ops/status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt
+        exclude: colrev/template/ops/status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|^tests/data
     -   id: end-of-file-fixer
+        exclude: ^tests/data/
     -   id: check-docstring-first
     -   id: check-json
     -   id: check-yaml

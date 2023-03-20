@@ -1857,9 +1857,7 @@ def __print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     environment_manager = review_manager.get_environment_manager()
-    environment_details = environment_manager.get_environment_details(
-        review_manager=review_manager
-    )
+    environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
     print("Index\n")

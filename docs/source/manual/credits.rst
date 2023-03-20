@@ -48,9 +48,6 @@ Projects that power CoLRev:
 .. |asreviewactivity| image:: https://img.shields.io/github/commit-activity/y/asreview/asreview?color=green&style=plastic
    :height: 12pt
 
-.. |opensearchactivity| image:: https://img.shields.io/github/commit-activity/y/opensearch-project/OpenSearch?color=green&style=plastic
-   :height: 12pt
-
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1

@@ -685,8 +685,6 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{colors.END}"
             )
-            record.prescreen_exclude(reason="retracted", print_warning=True)
-            record.remove_field(key="warning")
 
         return record.get_data()
 

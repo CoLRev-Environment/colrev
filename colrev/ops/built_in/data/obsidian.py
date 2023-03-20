@@ -61,6 +61,12 @@ class Obsidian(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        # Set default values (if necessary)
+        if "version" not in settings:
+            settings["version"] = "0.1"
+        if "config" not in settings:
+            settings["config"] = {}
+
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.endpoint_path = (

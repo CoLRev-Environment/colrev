@@ -218,7 +218,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         # local_index_bib_path = script_loc.joinpath("local_index.bib")
 
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = Path(script_loc) / Path("local_index")
+        bib_files_to_index = Path(script_loc.parent) / Path("data/local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
@@ -226,9 +226,19 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
             with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(file.read())
-                test_records_dict[path] = colrev.dataset.Dataset.parse_records_dict(
+                loaded_records = colrev.dataset.Dataset.parse_records_dict(
                     records_dict=bib_data.entries
                 )
+                # Note : we only select one example for the TEI-indexing
+                for loaded_record in loaded_records.values():
+                    if (
+                        loaded_record["ID"] != "WagnerLukyanenkoParEtAl2022"
+                        and "file" in loaded_record
+                    ):
+                        del loaded_record["file"]
+
+                test_records_dict[path] = loaded_records
+
         return test_records_dict
 
     temp_sqlite = tmp_path / Path("sqlite_index_test.db")
@@ -237,7 +247,9 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
     ):
         test_records_dict = load_test_records(script_loc)
-        local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
+        local_index = colrev.env.local_index.LocalIndex(
+            index_tei=True, verbose_mode=True
+        )
         local_index.reinitialize_sqlite_db()
 
         for path, records in test_records_dict.items():
@@ -268,5 +280,11 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         test_get_fields_to_remove(local_index)
         test_retrieve_from_toc(local_index)
         test_retrieve_based_on_colrev_pdf_id(local_index)
+
+        # next tests: index_tei:
+        # we could leave the file field for WagnerLukyanenkoParEtAl2022
+        # but if the PDF does not exist, the field is removed
+        # del record_dict["file"]
+        # and the index_tei immediately returns.
 
     # def method(): # pragma: no cover

@@ -26,6 +26,8 @@ class PDFPrep(colrev.operation.Operation):
     pdf_prepared: int
     not_prepared: int
 
+    pdf_prep_package_endpoints: dict
+
     def __init__(
         self,
         *,
@@ -44,14 +46,6 @@ class PDFPrep(colrev.operation.Operation):
         self.reprocess = reprocess
 
         self.cpus = 4
-
-        package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_package_endpoints = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
-            selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
-            operation=self,
-            only_ci_supported=self.review_manager.in_ci_environment(),
-        )
 
     def __complete_successful_pdf_prep(
         self, *, record: colrev.record.Record, original_filename: str
@@ -415,6 +409,13 @@ class PDFPrep(colrev.operation.Operation):
 
         pdf_prep_data = self.__get_data(batch_size=batch_size)
 
+        package_manager = self.review_manager.get_package_manager()
+        self.pdf_prep_package_endpoints = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
+            operation=self,
+            only_ci_supported=self.review_manager.in_ci_environment(),
+        )
         self.review_manager.logger.info(
             "PDFs to prep".ljust(38) + f'{pdf_prep_data["nr_tasks"]} PDFs'
         )

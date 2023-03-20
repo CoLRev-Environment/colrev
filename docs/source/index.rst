@@ -9,16 +9,14 @@ Collaborative Literature Reviews
 
 
 CoLRev is an open-source environment for collaborative reviews.
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 Compared to other environments, the following features stand out:
 
-- an **extensible and open platform** based on shared data and process standards
-- builds on **git** and its transparent collaboration model for the entire literature review process
-- offers a **self-explanatory, fault-tolerant, and configurable** user workflow
-- implements a granular **data provenance** model and **robust identification** schemes
-- provides **end-to-end process support** and allows you to **plug in state-of-the-art tools**
-- enables **typological and methodological pluralism** throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
-- operates a **built-in model for content curation** and reuse
+- an open and extensible environment based on data and process standards
+- builds on git and its transparent collaboration model for the entire literature review process
+- offers a self-explanatory, fault-tolerant, and configurable user workflow
+- operates a model for data quality, record identification, content curation, and reuse
+- enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
 
 Getting started
 ---------------------------------------
@@ -115,6 +113,7 @@ Further information is provided in the `documentation <docs/source/index.rst>`_,
    manual/collaboration
    manual/curation
    manual/extensions
+   manual/reference_manager
    manual/credits
    manual/help
 

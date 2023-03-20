@@ -8,4 +8,4 @@ make html
 make linkcheck
 ```
 
-When errors occur during `make html`, it can help to delete the `colrev/docs/source/_autosummary` and rerun `make html`.
+When errors occur during `make html`, it can help to delete the `colrev/docs/source/foundations/_autosummary` and rerun `make html`.

@@ -81,7 +81,7 @@ class PRISMA(JsonSchemaMixin):
         prisma_endpoint_details = {
             "endpoint": "colrev_built_in.prisma",
             "version": "0.1",
-            "diagram_path": [Path("PRISMA.png")],
+            "diagram_path": ["PRISMA.png"],
         }
         return prisma_endpoint_details
 

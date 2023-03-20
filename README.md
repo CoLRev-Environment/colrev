@@ -7,27 +7,26 @@
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
-[![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Documentation Status](https://readthedocs.org/projects/colrev/badge/?version=latest)](https://colrev.readthedocs.io/en/latest/?badge=latest)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
 ![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/coverage.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
+<!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
 CoLRev is an open-source environment for collaborative reviews.
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 Compared to other environments, the following features stand out:
 
-- an **extensible and open platform** based on shared data and process standards
-- builds on **git** and its transparent collaboration model for the entire literature review process
-- offers a **self-explanatory, fault-tolerant, and configurable** user workflow
-- implements a granular **data provenance** model and **robust identification** schemes
-- provides **end-to-end process support** and allows you to **plug in state-of-the-art tools**
-- enables **typological and methodological pluralism** throughout the process
-- operates a **built-in model for content curation** and reuse
+- an open and extensible environment based on shared data and process standards
+- builds on git and its transparent collaboration model for the entire literature review process
+- offers a self-explanatory, fault-tolerant, and configurable user workflow
+- operates a model for data quality, record identification, content curation, and reuse
+- enables typological and methodological pluralism throughout the process
 
 See the [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
 

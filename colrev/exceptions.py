@@ -28,7 +28,7 @@ class RepoSetupError(CoLRevException):
     lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
     def __init__(self, msg: Optional[str] = None) -> None:
-        Path(".report.log").unlink()
+        Path(".report.log").unlink(missing_ok=True)
         if msg:
             self.message = f" {msg}"
         elif any(Path(Path.cwd()).iterdir()):
@@ -223,6 +223,14 @@ class FieldValueError(CoLRevException):
 
     def __init__(self, msg: str) -> None:
         self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class MissingRecordQualityRuleSpecification(CoLRevException):
+    """A quality rule is missing."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
         super().__init__(self.message)
 
 

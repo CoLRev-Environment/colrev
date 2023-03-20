@@ -41,6 +41,7 @@ colrev.exceptions
       InvalidQueryException
       InvalidSettingsError
       MissingDependencyError
+      MissingRecordQualityRuleSpecification
       NoPaperEndpointRegistered
       NoRecordsError
       NoSearchFeedRegistered

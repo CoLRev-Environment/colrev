@@ -796,7 +796,7 @@ class TEIParser:
                 section_citations[section_name.lower()] = citations
         return section_citations
 
-    def mark_references(self, *, records: list):  # type: ignore
+    def mark_references(self, *, records: dict):  # type: ignore
         """Mark references with the additional record ID"""
 
         tei_records = self.get_bibliography()
@@ -806,8 +806,8 @@ class TEIParser:
 
             max_sim = 0.9
             max_sim_record = {}
-            for local_record_dict in records:
-                if local_record_dict["status"] not in [
+            for local_record_dict in records.values():
+                if local_record_dict["colrev_status"] not in [
                     colrev.record.RecordState.rev_included,
                     colrev.record.RecordState.rev_synthesized,
                 ]:

@@ -14,8 +14,8 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
-def test_tei(script_loc) -> None:  # type: ignore
-    tei_file = script_loc.joinpath("WagnerLukyanenkoParEtAl2022.tei.xml")
+def test_tei(script_loc, tmp_path) -> None:  # type: ignore
+    tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
     environment_manager = colrev.env.environment_manager.EnvironmentManager()
 
@@ -1473,6 +1473,48 @@ def test_tei(script_loc) -> None:  # type: ignore
         },
     ] == tei_doc.get_bibliography()
 
+    assert [
+        {
+            "ID": "b58",
+            "ENTRYTYPE": "article",
+            "tei_id": "b58",
+            "reference_bibliography_id": "",
+            "author": "Larsen, K. and Hovorka, D. and Dennis, A. R",
+            "title": "Understanding the elephant: the discourse approach to boundary identification and corpus construction for theory review articles",
+            "year": "2019",
+            "journal": "Journal of the Association for Information Systems",
+            "volume": "20",
+            "number": "7",
+            "pages": "887--928",
+        },
+        {
+            "ID": "b62",
+            "ENTRYTYPE": "article",
+            "tei_id": "b62",
+            "reference_bibliography_id": "",
+            "author": "Li, J. and Larsen, K. and Abbasi, A.",
+            "title": "TheoryOn: a design framework and system for unlocking behavioral knowledge through ontology learning",
+            "year": "2020",
+            "journal": "MIS Quarterly",
+            "volume": "44",
+            "number": "4",
+            "pages": "1733--1772",
+        },
+        {
+            "ID": "b101",
+            "ENTRYTYPE": "article",
+            "tei_id": "b101",
+            "reference_bibliography_id": "",
+            "author": "Templier, M. and Paré, G.",
+            "title": "Transparency in literature reviews: an assessment of reporting practices across review types and genres in top IS journals",
+            "year": "2018",
+            "journal": "European Journal of Information Systems",
+            "volume": "27",
+            "number": "5",
+            "pages": "503--550",
+        },
+    ] == tei_doc.get_bibliography(min_intext_citations=6)
+
     assert {
         "introduction": [
             "b0",
@@ -1686,3 +1728,51 @@ def test_tei(script_loc) -> None:  # type: ignore
         ],
         "concluding remarks": ["b61", "b87", "b115"],
     } == tei_doc.get_citations_per_section()
+
+    # change tei_path to prevent changes to the original tei file
+    tei_doc.tei_path = tmp_path / Path("test.tei.xml")
+    tei_doc.mark_references(
+        records={
+            "TEST_ID": {
+                "ID": "TEST_ID",
+                "ENTRYTYPE": "article",
+                "colrev_status": colrev.record.RecordState.rev_included,
+                "title": "What constitutes a theoretical contribution?",
+                "journal": "Academy of Management Review",
+                "author": "Whetten, D. A",
+                "year": "1989",
+                "volume": "14",
+                "number": "4",
+            },
+            "NO_TITLE": {
+                "ID": "NO_TITLE",
+                "ENTRYTYPE": "article",
+                "colrev_status": colrev.record.RecordState.rev_included,
+                "journal": "Academy of Management Review",
+                "author": "Whetten, D. A",
+                "year": "1989",
+                "volume": "14",
+                "number": "4",
+            },
+            "NOT_INCLUDED": {
+                "ID": "NOT_INCLUDED",
+                "ENTRYTYPE": "article",
+                "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
+                "journal": "Academy of Management Review",
+                "author": "Whetten, D. A",
+                "year": "1989",
+                "volume": "14",
+                "number": "4",
+            },
+        }
+    )
+    actual = tei_doc.get_tei_str()
+    expected = '<biblStruct xml:id="b116" ID="TEST_ID">'
+    assert expected in actual
+
+    expected = 'theoretical rationale <ref type="bibr" target="#b116" ID="TEST_ID">(Whetten, 1989)</ref>, which is critical '
+    assert expected in actual
+
+    assert "NO_TITLE" not in actual
+
+    assert "NOT_INCLUDED" not in actual

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 
+import requests
 import zope.interface
 from crossref.restful import Etiquette
 from crossref.restful import Works
@@ -688,8 +689,11 @@ class PDFSearchSource(JsonSchemaMixin):
 
             if "doi" in record:
                 works = Works(etiquette=self.etiquette)
-                crossref_query_return = works.doi(record["doi"])
-                if not crossref_query_return:
+                try:
+                    crossref_query_return = works.doi(record["doi"])
+                    if not crossref_query_return:
+                        continue
+                except requests.exceptions.RequestException:
                     continue
                 retrieved_record_dict = connector_utils.json_to_record(
                     item=crossref_query_return

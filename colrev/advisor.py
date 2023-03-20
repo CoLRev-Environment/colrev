@@ -601,7 +601,7 @@ class Advisor:
                     instruction = {
                         "msg": "Updates available for curated repo "
                         f"({registered_path}).",
-                        "cmd": "colrev env --update",
+                        "cmd": "colrev env --pull",
                     }
 
                 elif pull_rebase_condition():
