@@ -111,6 +111,8 @@ class Load(colrev.operation.Operation):
     ) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
+        # pylint: disable=too-many-statements
+
         def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
             filetype = filepath.suffix.replace(".", "")
 
@@ -141,49 +143,73 @@ class Load(colrev.operation.Operation):
                 continue
             res = endpoint_class.heuristic(filepath, data)  # type: ignore
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
+            try:
+                if res["confidence"] > 0:
+                    result_item = {}
 
-            if res["confidence"] > 0:
-                result_item = {}
+                    res["endpoint"] = endpoint
 
-                res["endpoint"] = endpoint
+                    search_type = endpoint_class.search_type
+                    # Note : as the identifier, we use the filename
+                    # (if search results are added by file/not via the API)
 
-                search_type = endpoint_class.search_type
-                # Note : as the identifier, we use the filename
-                # (if search results are added by file/not via the API)
-
-                if "filename" not in res:
                     # Correct the file extension if necessary
-                    if re.search("%0", data) and filepath.suffix not in [".enl"]:
+                    if re.findall(
+                        r"^%0", data, re.MULTILINE
+                    ) and filepath.suffix not in [".enl"]:
                         new_filename = filepath.with_suffix(".enl")
                         self.review_manager.logger.info(
                             f"{colors.GREEN}Rename to {new_filename} "
                             f"(because the format is .enl){colors.END}"
                         )
                         filepath.rename(new_filename)
+                        self.review_manager.dataset.add_changes(
+                            path=filepath, remove=True
+                        )
                         filepath = new_filename
                         res["filename"] = filepath
                         self.review_manager.dataset.add_changes(path=new_filename)
+                        self.review_manager.create_commit(msg=f"Rename {filepath}")
 
-                if "load_conversion_package_endpoint" not in res:
-                    res[
-                        "load_conversion_package_endpoint"
-                    ] = get_load_conversion_package_endpoint(filepath=filepath)
+                    if re.findall(
+                        r"^TI ", data, re.MULTILINE
+                    ) and filepath.suffix not in [".ris"]:
+                        new_filename = filepath.with_suffix(".ris")
+                        self.review_manager.logger.info(
+                            f"{colors.GREEN}Rename to {new_filename} "
+                            f"(because the format is .ris){colors.END}"
+                        )
+                        filepath.rename(new_filename)
+                        self.review_manager.dataset.add_changes(
+                            path=filepath, remove=True
+                        )
+                        filepath = new_filename
+                        res["filename"] = filepath
+                        self.review_manager.dataset.add_changes(path=new_filename)
+                        self.review_manager.create_commit(msg=f"Rename {filepath}")
 
-                source_candidate = colrev.settings.SearchSource(
-                    endpoint=endpoint,
-                    filename=filepath,
-                    search_type=search_type,
-                    search_parameters={},
-                    load_conversion_package_endpoint=res[
-                        "load_conversion_package_endpoint"
-                    ],
-                    comment="",
-                )
+                    if "load_conversion_package_endpoint" not in res:
+                        res[
+                            "load_conversion_package_endpoint"
+                        ] = get_load_conversion_package_endpoint(filepath=filepath)
 
-                result_item["source_candidate"] = source_candidate
-                result_item["confidence"] = res["confidence"]
+                    source_candidate = colrev.settings.SearchSource(
+                        endpoint=endpoint,
+                        filename=filepath,
+                        search_type=search_type,
+                        search_parameters={},
+                        load_conversion_package_endpoint=res[
+                            "load_conversion_package_endpoint"
+                        ],
+                        comment="",
+                    )
 
-                results_list.append(result_item)
+                    result_item["source_candidate"] = source_candidate
+                    result_item["confidence"] = res["confidence"]
+
+                    results_list.append(result_item)
+            except colrev_exceptions.UnsupportedImportFormatError:
+                continue
 
         # Reduce the results_list when there are results with very high confidence
         if [r for r in results_list if r["confidence"] > 0.95]:
@@ -751,6 +777,11 @@ class Load(colrev.operation.Operation):
                 f"Loaded {source.get_corresponding_bib_file().name} "
                 f"with {len(search_records)} records"
             )
+        else:
+            self.review_manager.logger.error(
+                f"Did not find bib file {source.get_corresponding_bib_file().name} "
+            )
+            return []
 
         if len(search_records) == 0:
             self.review_manager.logger.info(
@@ -897,17 +928,23 @@ class Load(colrev.operation.Operation):
             return records
 
         def drop_empty_fields(*, records: dict) -> dict:
-            records_list = list(records.values())
-            records_list = [
-                {k: v for k, v in record.items() if v is not None}
-                for record in records_list
-            ]
-            records_list = [
-                {k: v for k, v in record.items() if v != "nan"}
-                for record in records_list
-            ]
+            for record_id in records:
+                records[record_id] = {
+                    k: v for k, v in records[record_id].items() if v is not None
+                }
+                records[record_id] = {
+                    k: v for k, v in records[record_id].items() if v != "nan"
+                }
+            return records
 
-            return {r["ID"]: r for r in records_list}
+        def drop_fields(*, records: dict) -> dict:
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+            return records
 
         if len(records) == 0:
             self.review_manager.report_logger.debug("No records loaded")
@@ -917,6 +954,7 @@ class Load(colrev.operation.Operation):
         records = fix_keys(records=records)
         records = set_incremental_ids(records=records)
         records = drop_empty_fields(records=records)
+        records = drop_fields(records=records)
 
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=corresponding_bib_file

@@ -48,6 +48,13 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
+        if data.count("UT WOS:") > 0.4 * data.count("TI "):
+            result["confidence"] = 0.7
+            result["load_conversion_package_endpoint"] = {  # type: ignore
+                "endpoint": "colrev_built_in.zotero_translate"
+            }
+            return result
+
         if "Unique-ID = {WOS:" in data:
             result["confidence"] = 0.7
             return result
