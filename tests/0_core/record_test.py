@@ -15,7 +15,7 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 @pytest.fixture
-def record_with_pdf(script_loc: Path) -> colrev.record.Record:
+def record_with_pdf() -> colrev.record.Record:
     return colrev.record.Record(
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
@@ -194,7 +194,7 @@ def test_update_field() -> None:
     R2_mod.update_field(
         key="non_identifying_field", value="changed", source="test", append_edit=True
     )
-    expectd = "import.bib/id_0001|test"
+    expected = "import.bib/id_0001|test"
     actual = R2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
     assert expected == actual
 

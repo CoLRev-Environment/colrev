@@ -788,7 +788,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
-        except requests.exceptions.JSONDecodeError as exc:
+        except (
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.Timeout,
+        ) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):

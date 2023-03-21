@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import typing
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -56,6 +55,9 @@ class Initializer:
 
         if target_path:
             os.chdir(target_path)
+            self.target_path = target_path
+        else:
+            self.target_path = Path.cwd()
 
         review_manager = colrev.review_manager.ReviewManager(
             path_str=str(target_path), force_mode=True, navigate_to_home_dir=False
@@ -75,12 +77,11 @@ class Initializer:
 
         self.__check_init_precondition()
 
-        self.title = str(Path.cwd().name)
-        self.instructions: typing.List[str] = []
+        self.title = str(self.target_path.name)
         self.logger = self.__setup_init_logger(level=logging.INFO)
 
         self.__setup_git()
-        self.__setup_files(path=Path.cwd())
+        self.__setup_files(path=self.target_path)
 
         if example:
             self.__create_example_repo()
@@ -96,36 +97,29 @@ class Initializer:
 
         self.__post_commit_edits()
 
-        if self.instructions:
-            print("\n")
-            for instruction in self.instructions:
-                self.review_manager.logger.info(instruction)
-
         self.review_manager.logger.info(
             "%sCompleted init operation%s", colors.GREEN, colors.END
         )
 
     def __check_init_precondition(self) -> None:
-        cur_content = [str(x.relative_to(Path.cwd())) for x in Path.cwd().glob("**/*")]
+        cur_content = [
+            str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
+        ]
         cur_content = [x for x in cur_content if not x.startswith("venv")]
 
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
             cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
         if cur_content:
             raise colrev_exceptions.NonEmptyDirectoryError(
-                filepath=Path.cwd(), content=cur_content
+                filepath=self.target_path, content=cur_content
             )
 
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        global_git_vars = environment_manager.get_name_mail_from_git()
-        if 2 != len(global_git_vars):
-            raise colrev_exceptions.CoLRevException(
-                "Global git variables (user name and email) not available."
-            )
+        environment_manager.get_name_mail_from_git()
 
         try:
             environment_manager.check_docker_installed()
-        except colrev_exceptions.MissingDependencyError as exc:
+        except colrev_exceptions.MissingDependencyError as exc:  # pragma: no cover
             if not self.light:
                 raise colrev_exceptions.CoLRevException(
                     "Docker not installed. Docker is optional but recommended.\n"
@@ -162,7 +156,7 @@ class Initializer:
         self.review_manager.logger.info("Register CoLRev repository")
 
         environment_manager = self.review_manager.get_environment_manager()
-        environment_manager.register_repo(path_to_register=Path.cwd())
+        environment_manager.register_repo(path_to_register=self.target_path)
 
     def __create_commit(self, *, saved_args: dict) -> None:
         del saved_args["local_pdf_collection"]
@@ -325,30 +319,34 @@ class Initializer:
         git_repo.git.add(all=True)
 
     def __post_commit_edits(self) -> None:
-        if "curated_masterdata" == self.review_type:
+        if "colrev_built_in.curated_masterdata" == self.review_type:
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
             self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
 
-            pdf_source = [
+            pdf_source_l = [
                 s
                 for s in self.review_manager.settings.sources
                 if "data/search/pdfs.bib" == str(s.filename)
-            ][0]
-            pdf_source.search_parameters = {
-                "scope": {
-                    "path": "pdfs",
-                    "journal": "TODO",
-                    "subdir_pattern": "TODO:volume_number|year",
+            ]
+            if pdf_source_l:
+                pdf_source = pdf_source_l[0]
+                pdf_source.search_parameters = {
+                    "scope": {
+                        "path": "pdfs",
+                        "journal": "TODO",
+                        "subdir_pattern": "TODO:volume_number|year",
+                    }
                 }
-            }
 
-            crossref_source = [
+            crossref_source_l = [
                 s
                 for s in self.review_manager.settings.sources
                 if "data/search/CROSSREF.bib" == str(s.filename)
-            ][0]
-            crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
+            ]
+            if crossref_source_l:
+                crossref_source = crossref_source_l[0]
+                crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
 
             self.review_manager.save_settings()
 
@@ -436,7 +434,6 @@ class Initializer:
             "local_pdf_collection"
         )
 
-        curdir = Path.cwd()
         if not local_pdf_collection_path.is_dir():
             local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_pdf_collection_path)
@@ -446,7 +443,7 @@ class Initializer:
             )
             self.logger.info("Created local_pdf_collection repository")
 
-        os.chdir(curdir)
+        os.chdir(self.target_path)
 
 
 if __name__ == "__main__":
