@@ -388,20 +388,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         save_feed: bool,
     ) -> colrev.record.Record:
         try:
-            retrieved_records = self.crossref_query(
-                review_manager=self.review_manager,
-                record_input=record,
-                jour_vol_iss_list=False,
-                timeout=timeout,
-            )
-            retrieved_record = retrieved_records.pop()
-
-            retries = 0
-            while (
-                not retrieved_record and retries < prep_operation.max_retries_on_error
-            ):
-                retries += 1
-
+            if "doi" in record.data:
+                retrieved_record = self.__query_doi(doi=record.data["doi"])
+            else:
                 retrieved_records = self.crossref_query(
                     review_manager=self.review_manager,
                     record_input=record,
@@ -409,6 +398,21 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     timeout=timeout,
                 )
                 retrieved_record = retrieved_records.pop()
+
+                retries = 0
+                while (
+                    not retrieved_record
+                    and retries < prep_operation.max_retries_on_error
+                ):
+                    retries += 1
+
+                    retrieved_records = self.crossref_query(
+                        review_manager=self.review_manager,
+                        record_input=record,
+                        jour_vol_iss_list=False,
+                        timeout=timeout,
+                    )
+                    retrieved_record = retrieved_records.pop()
 
             if 0 == len(retrieved_record.data) or "doi" not in retrieved_record.data:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException()
@@ -480,8 +484,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
-        ):
-            pass
+        ) as exc:
+            if prep_operation.review_manager.verbose_mode:
+                print(exc)
+
         return record
 
     def __check_doi_masterdata(

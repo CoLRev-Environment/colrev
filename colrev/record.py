@@ -1372,9 +1372,11 @@ class Record:
             if "UNKNOWN" == self.data[key]:
                 continue
             if "author" == key:
-                sanitized_authors = re.sub("[^a-zA-Z, ;1]+", "", self.data[key]).split(
-                    " and "
-                )
+                sanitized_authors = re.sub(
+                    "[^a-zA-Z, ;1]+",
+                    "",
+                    colrev.env.utils.remove_accents(input_str=self.data[key]),
+                ).split(" and ")
                 if not all(
                     re.findall(
                         r"^[\w .'’-]*, [\w .'’-]*$",
@@ -1387,13 +1389,15 @@ class Record:
                 # At least two capital letters per name
                 elif not all(
                     re.findall(
-                        r"[A-Z].*[A-Z]",
-                        sanitized_author,
+                        r"[A-Z]+",
+                        author_part,
                         re.UNICODE,
                     )
                     for sanitized_author in sanitized_authors
+                    for author_part in sanitized_author.split(",")
                 ):
                     defect_field_keys.append(key)
+
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
@@ -2353,8 +2357,8 @@ class PrepRecord(Record):
 
     def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
         """Format the field if it is mostly in upper case"""
-        if not re.match(r"[a-zA-Z]+", self.data[key]):
-            return
+        # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
+        #     return
 
         self.data[key] = self.data[key].replace("\n", " ")
 

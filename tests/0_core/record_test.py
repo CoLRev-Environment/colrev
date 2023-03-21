@@ -1066,6 +1066,15 @@ def test_get_quality_defects() -> None:
         assert expected == actual
         assert R1.has_quality_defects()
 
+    non_author_defects = ["Mourato, Inês and Dias, Álvaro and Pereira, Leandro"]
+    for non_author_defect in non_author_defects:
+        v1["author"] = non_author_defect
+        R1 = colrev.record.Record(data=v1)
+        expected = set()
+        actual = set(R1.get_quality_defects())
+        assert expected == actual
+        assert not R1.has_quality_defects()
+
     v1["author"] = "Rai, Arun"
 
     title_defects = ["EDITORIAL"]  # all-caps
