@@ -107,7 +107,19 @@ class PRISMA(JsonSchemaMixin):
             "duplicates", "n"
         ] = status_stats.currently.md_duplicates_removed
         prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
-        prisma_data.loc["records_excluded", "n"] = status_stats.overall.rev_excluded
+        prisma_data.loc[
+            "records_excluded", "n"
+        ] = status_stats.overall.rev_prescreen_excluded
+        if status_stats.currently.exclusion:
+            prisma_data.loc["dbr_excluded", "n"] = ";".join(
+                f"Reason {key}, {val}"
+                for key, val in status_stats.currently.exclusion.items()
+            )
+        else:
+            prisma_data.loc[
+                "dbr_excluded", "n"
+            ] = f"Overall, {status_stats.overall.rev_excluded}"
+
         prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
         prisma_data.loc[
@@ -116,11 +128,6 @@ class PRISMA(JsonSchemaMixin):
         prisma_data.loc[
             "dbr_sought_reports", "n"
         ] = status_stats.overall.rev_prescreen_included
-
-        exclusion_stats = []
-        for criterion, value in status_stats.currently.exclusion.items():
-            exclusion_stats.append(f"Reason {criterion}, {value}")
-        prisma_data.loc["dbr_excluded", "n"] = "; ".join(exclusion_stats)
 
         prisma_data.to_csv(self.csv_path, index=False)
         data_operation.review_manager.logger.debug(f"Exported {self.csv_path}")
