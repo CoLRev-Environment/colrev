@@ -134,7 +134,7 @@ class Data(colrev.operation.Operation):
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
             ].copy()
-            observations.loc[:, "year"] = observations.loc[:, "year"].astype(int)
+            observations.year = observations.year.astype(int)
             missing_outlet = observations[observations["outlet"].isnull()][
                 "ID"
             ].tolist()
@@ -182,6 +182,7 @@ class Data(colrev.operation.Operation):
         year_list = list(years)
         year_list.extend(["All"])  # type: ignore
         tabulated = tabulated[year_list]
+        tabulated.sort_values(by=("All"), ascending=True, inplace=True)
 
         self.review_manager.logger.info("Generate profile output/journals_years.csv")
         tabulated.to_csv(output_dir / Path("journals_years.csv"))

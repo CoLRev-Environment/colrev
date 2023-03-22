@@ -1,11 +1,42 @@
 #!/usr/bin/env python
 import os
+from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
 
+import pytest
+
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+
+
+expected_printout = """Review (literature_review):
+Search
+ - retrieve_forthcoming: True
+Sources
+colrev_built_in.pdfs_dir (type: PDFS, filename: data/search/pdfs.bib)
+   search parameters:   {'scope': {'path': 'data/pdfs'}}
+Load
+ - TODO
+Preparation
+ - prep_rounds:
+   - prep (colrev_built_in.resolve_crossrefs,colrev_built_in.source_specific_prep,colrev_built_in.exclude_non_latin_alphabets,...)
+ - fields_to_keep: []
+Dedupe
+ - same_source_merges: SameSourceMergePolicy.prevent
+ - colrev_built_in.active_learning_training,colrev_built_in.active_learning_automated
+Prescreen
+Prescreen package endoints: colrev_built_in.scope_prescreen,colrev_built_in.colrev_cli_prescreen
+PDF get
+ - pdf_path_type: PDFPathType.symlink - colrev_built_in.local_index,colrev_built_in.unpaywall,colrev_built_in.website_screenshot
+PDF prep
+ - colrev_built_in.pdf_check_ocr,colrev_built_in.remove_coverpage,colrev_built_in.remove_last_page,colrev_built_in.validate_pdf_metadata,colrev_built_in.validate_completeness,colrev_built_in.create_tei
+Screen
+ -
+Data
+ - """
 
 
 def test_settings_load() -> None:

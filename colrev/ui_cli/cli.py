@@ -1616,7 +1616,7 @@ def data(
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+            force_mode=(force or profile), verbose_mode=verbose, exact_call=EXACT_CALL
         )
         data_operation = review_manager.get_data_operation()
 

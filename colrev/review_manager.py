@@ -681,7 +681,7 @@ class ReviewManager:
         return colrev.ops.search_sources.SearchSources(review_manager=self)
 
     def get_review_types(
-        self, *, review_type: Optional[str] = None
+        self, *, review_type: str
     ) -> colrev.ops.review_types.ReviewTypes:
         """Get a ReviewTypes object"""
         import colrev.ops.review_types

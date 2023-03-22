@@ -6,3 +6,4 @@ omit =
     /usr/*
     *crossrefapi/crossref/*
     colrev/env/grobid_service.py
+    /tmp/*
