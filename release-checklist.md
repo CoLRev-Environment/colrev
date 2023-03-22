@@ -15,7 +15,7 @@
     - Select new tag
     - Enter the release notes
     - Publish the release
-    - The PyPI version is published through github actions
+    - The PyPI version is published through a [github action](https://github.com/CoLRev-Ecosystem/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
     - The zenodo version is published automatically
 
 - Run `pip3 install -e .` locally

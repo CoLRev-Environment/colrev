@@ -15,10 +15,12 @@
 ![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/coverage.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
-CoLRev is an open-source environment for collaborative reviews.
+CoLRev is an open-source environment for collaborative literature reviews. It takes care of the data, integrates with differerent synthesis tools, and facilitates Git-based collaboration.
+
 To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 Compared to other environments, the following features stand out:
 
@@ -38,7 +40,7 @@ Contributions, code and features are always welcome
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/CoLRev-Ecosystem/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/CoLRev-Ecosystem/colrev/releases).
+For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), and [releases](https://github.com/CoLRev-Ecosystem/colrev/releases).
 
 ## License
 
