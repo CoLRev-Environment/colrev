@@ -1498,9 +1498,18 @@ def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
     assert expected == actual
 
 
-def test_format_author_field() -> None:
-    expected = "Smith, Tom"
-    actual = colrev.record.PrepRecord.format_author_field(input_string="Tom Smith")
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ("Tom Smith", "Smith, Tom"),
+        (
+            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
+            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
+        ),
+    ],
+)
+def test_format_author_field(input: str, expected: str) -> None:
+    actual = colrev.record.PrepRecord.format_author_field(input_string=input)
     assert expected == actual
 
 

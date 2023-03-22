@@ -15,4 +15,11 @@ coverage run -m pytest
 coverage html
 rm coverage.svg
 coverage-badge -o coverage.svg
+
+# Keep tests short (check the ones that take most of the time)
+pytest --durations=5
 ```
+
+References
+
+- [Effective Python Testing With Pytest](https://realpython.com/pytest-python-testing/)

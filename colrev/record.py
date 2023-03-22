@@ -1782,6 +1782,7 @@ class Record:
                     value="UNKNOWN",
                     source="generic_field_requirements",
                     note="missing",
+                    append_edit=False,
                 )
 
     def get_toc_key(self) -> str:
@@ -2193,6 +2194,10 @@ class PrepRecord(Record):
             parsed_name = HumanName(name)
             if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
                 parsed_name.capitalize(force=True)
+
+            # Fix typical parser error
+            if parsed_name.last == "" and parsed_name.title != "":
+                parsed_name.last = parsed_name.title
 
             # pylint: disable=chained-comparison
             # Fix: when first names are abbreviated, nameparser creates errors:

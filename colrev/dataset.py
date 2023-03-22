@@ -966,10 +966,13 @@ class Dataset:
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
-        if remove:
-            self.__git_repo.index.remove([str(path)])
-        else:
-            self.__git_repo.index.add([str(path)])
+        try:
+            if remove:
+                self.__git_repo.index.remove([str(path)])
+            else:
+                self.__git_repo.index.add([str(path)])
+        except GitCommandError:
+            pass
 
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""
