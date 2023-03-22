@@ -31,7 +31,6 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
-from transitions import Machine
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -2726,30 +2725,32 @@ class RecordStateModel:
         item for sublist in non_processing_transitions for item in sublist
     ]
 
-    def __init__(
-        self,
-        *,
-        state: RecordState,
-    ) -> None:
-        self.state = state
+    # from transitions import Machine
+    # def __init__(
+    #     self,
+    #     *,
+    #     state: RecordState,
+    # ) -> None:
+    #     self.state = state
+
+    #     self.machine = Machine(
+    #         model=self,
+    #         states=RecordState,
+    #         transitions=self.transitions + self.transitions_non_processing,
+    #         initial=self.state,
+    #     )
+
+    @classmethod
+    def get_valid_transitions(cls, *, state: RecordState) -> set:
+        """Get the list of valid transitions"""
+        logging.getLogger("transitions").setLevel(logging.WARNING)
+        return set({x["trigger"] for x in cls.transitions if x["source"] == state})
+
+    @classmethod
+    def get_preceding_states(cls, *, state: RecordState) -> set:
+        """Get the states preceding the state that is given as a parameter"""
 
         logging.getLogger("transitions").setLevel(logging.WARNING)
-
-        self.machine = Machine(
-            model=self,
-            states=RecordState,
-            transitions=self.transitions + self.transitions_non_processing,
-            initial=self.state,
-        )
-
-    def get_valid_transitions(self) -> set:
-        """Get the list of valid transitions"""
-        return set(
-            {x["trigger"] for x in self.transitions if x["source"] == self.state}
-        )
-
-    def get_preceding_states(self, *, state: RecordState) -> set:
-        """Get the states preceding the state that is given as a parameter"""
         preceding_states: set[RecordState] = set()
         added = True
         while added:
@@ -2764,8 +2765,9 @@ class RecordStateModel:
                 added = False
         return preceding_states
 
+    @classmethod
     def check_operation_precondition(
-        self, *, operation: colrev.operation.Operation
+        cls, *, operation: colrev.operation.Operation
     ) -> None:
         """Check the preconditions for an operation"""
 
@@ -2780,10 +2782,17 @@ class RecordStateModel:
             return {el["colrev_status"] for el in record_header_list}
 
         if operation.review_manager.settings.project.delay_automated_processing:
+            start_states: list[str] = [
+                str(x["source"])
+                for x in colrev.record.RecordStateModel.transitions
+                if str(operation.type) == x["trigger"]
+            ]
+            state = colrev.record.RecordState[start_states[0]]
+
             cur_state_list = get_states_set()
             # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
             # self.review_manager.logger.debug(f"precondition: {self.state}")
-            required_absent = self.get_preceding_states(state=self.state)
+            required_absent = cls.get_preceding_states(state=state)
             # self.review_manager.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (
@@ -2793,7 +2802,7 @@ class RecordStateModel:
                 raise colrev_exceptions.NoRecordsError()
             if len(intersection) != 0:
                 raise colrev_exceptions.ProcessOrderViolation(
-                    operation.type.name, str(self.state), list(intersection)
+                    operation.type.name, str(state), list(intersection)
                 )
 
 

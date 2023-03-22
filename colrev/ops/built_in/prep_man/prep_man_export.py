@@ -2,6 +2,7 @@
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
+import os
 import subprocess
 import typing
 from dataclasses import dataclass
@@ -108,8 +109,9 @@ class ExportManPrep(JsonSchemaMixin):
         )
         if any("file" in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
-        # os.system('%s %s' % (os.getenv('EDITOR'), self.export_path))
-        subprocess.call(["xdg-open", str(self.export_path)])
+        if "pytest" not in os.getcwd():
+            # os.system('%s %s' % (os.getenv('EDITOR'), self.export_path))
+            subprocess.call(["xdg-open", str(self.export_path)])
 
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan

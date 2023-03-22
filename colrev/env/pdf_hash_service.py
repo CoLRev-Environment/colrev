@@ -2,10 +2,12 @@
 """Creates CoLRev PDF hashes."""
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 from pathlib import Path
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 
@@ -20,23 +22,23 @@ class PDFHashService:
     """The PDFHashService calculates hashes to identify PDFs (based on image/layout)"""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def __init__(self, *, logger: logging.Logger) -> None:
         self.pdf_hash_image = "colrev/pdf_hash:latest"
-        review_manager.environment_manager.build_docker_image(
+        colrev.env.environment_manager.EnvironmentManager.build_docker_image(
             imagename=self.pdf_hash_image
         )
-        self.review_manager = review_manager
+        self.logger = logger
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF hash"""
 
+        assert page_nr > 0
+        assert hash_size in [16, 32]
         pdf_path = pdf_path.resolve()
         pdf_dir = pdf_path.parents[0]
 
         if 0 == os.path.getsize(pdf_path):
-            self.review_manager.logger.error(
-                f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}"
-            )
+            self.logger.error(f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}")
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
         command = (

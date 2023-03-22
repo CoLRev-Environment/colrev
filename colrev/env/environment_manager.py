@@ -135,8 +135,9 @@ class EnvironmentManager:
             )
         return global_conf_details
 
+    @classmethod
     def build_docker_image(
-        self, *, imagename: str, image_path: Optional[Path] = None
+        cls, *, imagename: str, image_path: Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 
@@ -294,6 +295,7 @@ class EnvironmentManager:
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
+                # TODO : should come from the curation_data endpoint!
                 with open(f"{repo_source_path}/readme.md", encoding="utf-8") as file:
                     first_line = file.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))

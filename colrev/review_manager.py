@@ -439,7 +439,7 @@ class ReviewManager:
         """Get the pdf-hash-service object"""
         import colrev.env.pdf_hash_service
 
-        return colrev.env.pdf_hash_service.PDFHashService(review_manager=self)
+        return colrev.env.pdf_hash_service.PDFHashService(logger=self.logger)
 
     @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:

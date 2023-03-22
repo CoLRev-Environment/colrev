@@ -78,15 +78,7 @@ class Operation:
         # to make sure that the review_manager calls the right check_preconditions()
 
     def __check_record_state_model_precondition(self) -> None:
-        start_states: list[str] = [
-            str(x["source"])
-            for x in colrev.record.RecordStateModel.transitions
-            if str(self.type) == x["trigger"]
-        ]
-        state = colrev.record.RecordState[start_states[0]]
-
-        record_state_model = colrev.record.RecordStateModel(state=state)
-        record_state_model.check_operation_precondition(operation=self)
+        colrev.record.RecordStateModel.check_operation_precondition(operation=self)
 
     def __require_clean_repo_general(
         self,
