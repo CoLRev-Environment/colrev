@@ -618,7 +618,7 @@ class Record:
 
         if "colrev_origin" in merging_record.data:
             origins = self.data["colrev_origin"] + merging_record.data["colrev_origin"]
-            self.data["colrev_origin"] = list(set(origins))
+            self.data["colrev_origin"] = sorted(list(set(origins)))
 
     def __merge_status(self, *, merging_record: Record) -> None:
         """Merge the status with the merging_record"""

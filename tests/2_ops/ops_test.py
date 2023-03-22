@@ -21,6 +21,7 @@ test_data_path = Path()
 
 
 def retrieve_test_file(*, source: Path, target: Path) -> None:
+    target.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(
         test_data_path / source,
         target,

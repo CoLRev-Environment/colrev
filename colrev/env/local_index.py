@@ -156,15 +156,13 @@ class LocalIndex:
         if not self.__index_tei:
             return
         for record_dict in recs_to_index:
-            if "file" not in record_dict:
+            if not Path(record_dict.get("file", "NA")).is_file():
                 continue
 
             try:
                 paper_hash = record_dict["id"]
                 tei_path = self.__get_tei_index_file(paper_hash=paper_hash)
                 tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                if not Path(record_dict["file"]).is_file():
-                    continue
                 if not tei_path.is_file():
                     print(f"Create tei for {record_dict['file']}")
                 tei = colrev.env.tei_parser.TEIParser(
@@ -181,7 +179,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
-            ):
+            ):  # pragma: no cover
                 pass
 
     def __amend_record(
@@ -465,9 +463,6 @@ class LocalIndex:
 
         # Note : remove fulltext before parsing because it raises errors
         fulltext_backup = record_dict.get("fulltext", "NA")
-
-        if "fulltext" in record_dict:
-            del record_dict["fulltext"]
 
         keys_to_remove = (
             "colrev_origin",
