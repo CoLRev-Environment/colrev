@@ -2040,6 +2040,14 @@ def env(
         return
 
     if update_package_list:
+        if "y" != input(
+            "The following process instantiates objects listed in the "
+            + "colrev/template/package_endpoints.json "
+            + "(including ones that may not be secure). "
+            + "Please confirm (y) to proceed."
+        ):
+            return
+
         # pylint: disable=import-outside-toplevel
         import colrev.env.package_manager as p_manager
 
