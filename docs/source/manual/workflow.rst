@@ -22,7 +22,7 @@ The workflow, as illustrated in the following, consists of a three-step cycle th
 Although the validation step is generally recommended, it is more important for some operations than for others.
 For operations like init, or operations that do not create new versions (such as push or show), the validation can be skipped.
 
-The use of CoLRev operations ensures that the data is always formated consistently and that differences are readable.
+The use of CoLRev operations ensures that the data is always formated consistently and that diffs are readable.
 It is also possible to create versions through git commands, which automatically trigger CoLRev's pre-commit hooks.
 
 CoLRev status
