@@ -4,7 +4,7 @@
 colrev prescreen
 ---------------------------------------------
 
-In the :program:`colrev prescreen` operation, records transition from `md_processed` to `rev_prescreen_included` or `rev_prescreen_excluded`.
+In the :program:`colrev prescreen` operation, transitions from `md_processed` to `rev_prescreen_included` or `rev_prescreen_excluded` are recorded.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).
 Each author can independently screen the selection of records on a separate git branch.
