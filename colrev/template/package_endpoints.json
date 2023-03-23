@@ -362,7 +362,7 @@
             "package_endpoint_identifier": "colrev_built_in.bibutils",
             "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
             "short_description": "Loads bibliography files (based on bibutils)",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/bibutils_loader.md>`_"
         },
         {
