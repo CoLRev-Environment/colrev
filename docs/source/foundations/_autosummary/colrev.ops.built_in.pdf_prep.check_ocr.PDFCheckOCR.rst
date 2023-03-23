@@ -36,4 +36,3 @@ colrev.ops.built\_in.pdf\_prep.check\_ocr.PDFCheckOCR
    .. autosummary::
 
       ~PDFCheckOCR.ci_supported
-      ~PDFCheckOCR.language_detector

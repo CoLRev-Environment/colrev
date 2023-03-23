@@ -36,6 +36,7 @@ colrev.exceptions
       FieldValueError
       GitConflictError
       ImportException
+      InvalidLanguageCodeException
       InvalidMerge
       InvalidPDFException
       InvalidQueryException

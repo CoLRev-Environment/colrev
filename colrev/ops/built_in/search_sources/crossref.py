@@ -97,6 +97,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             self.crossref_lock = Lock()
 
+        self.language_service = colrev.env.language_service.LanguageService()
+
         _, self.email = source_operation.review_manager.get_committer()
 
         self.etiquette = Etiquette(
@@ -158,7 +160,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for item in crossref_query_return:
             yield connector_utils.json_to_record(item=item)
 
-    def __query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
+    def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
         # pylint: disable=import-outside-toplevel
@@ -172,9 +174,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             item=crossref_query_return
         )
         retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+
         return retrieved_record
 
-    def __journal_query(
+    def __query_journal(
         self, *, journal_issn: str, rerun: bool
     ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
@@ -270,6 +273,35 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # pp.pprint(retrieved_record_dict)
         return similarity
 
+    def __prep_crossref_record(
+        self,
+        *,
+        record: colrev.record.Record,
+        prep_main_record: bool = True,
+        crossref_source: str = "",
+    ) -> colrev.record.Record:
+        self.language_service.unify_to_iso_639_3_language_codes(record=record)
+        doi_connector.DOIConnector.get_link_from_doi(
+            review_manager=self.review_manager,
+            record=record,
+        )
+
+        if not prep_main_record:
+            # Skip steps for feed records
+            return record
+
+        if "retracted" in record.data.get(
+            "warning", ""
+        ) or "retracted" in record.data.get("prescreen_exclusion", ""):
+            record.prescreen_exclude(reason="retracted")
+            record.remove_field(key="warning")
+        else:
+            assert "" != crossref_source
+            record.set_masterdata_complete(source=crossref_source)
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+
+        return record
+
     def crossref_query(
         self,
         *,
@@ -318,16 +350,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
 
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
-                if "retracted" in retrieved_record.data.get("warning", ""):
-                    retrieved_record.prescreen_exclude(reason="retracted")
-                    retrieved_record.remove_field(key="warning")
 
-                source = (
-                    f'https://api.crossref.org/works/{retrieved_record.data["doi"]}'
-                )
-                retrieved_record.add_provenance_all(source=source)
+                # source = (
+                #     f'https://api.crossref.org/works/{retrieved_record.data["doi"]}'
+                # )
+                # retrieved_record.add_provenance_all(source=source)
 
-                record.set_masterdata_complete(source=source)
+                # record.set_masterdata_complete(source=source)
 
                 if jour_vol_iss_list:
                     record_list.append(retrieved_record)
@@ -389,7 +418,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         try:
             if "doi" in record.data:
-                retrieved_record = self.__query_doi(doi=record.data["doi"])
+                retrieved_record = self.query_doi(doi=record.data["doi"])
             else:
                 retrieved_records = self.crossref_query(
                     review_manager=self.review_manager,
@@ -450,24 +479,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     default_source=retrieved_record.data["colrev_origin"][0],
                 )
 
-                if "retracted" in retrieved_record.data.get(
-                    "warning", ""
-                ) or "retracted" in retrieved_record.data.get(
-                    "prescreen_exclusion", ""
-                ):
-                    record.prescreen_exclude(reason="retracted")
-                    record.remove_field(key="warning")
-                else:
-                    doi_connector.DOIConnector.get_link_from_doi(
-                        review_manager=self.review_manager,
-                        record=record,
-                    )
-                    record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0]
-                    )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
+                record = self.__prep_crossref_record(
+                    record=record,
+                    crossref_source=retrieved_record.data["colrev_origin"][0],
+                )
+
                 if save_feed:
                     crossref_feed.save_feed_file()
                 self.crossref_lock.release()
@@ -494,7 +510,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         try:
-            retrieved_record = self.__query_doi(doi=record.data["doi"])
+            retrieved_record = self.query_doi(doi=record.data["doi"])
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
@@ -616,7 +632,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         if "scope" in params:
             if "journal_issn" in params["scope"]:
                 for journal_issn in params["scope"]["journal_issn"].split("|"):
-                    yield from self.__journal_query(
+                    yield from self.__query_journal(
                         journal_issn=journal_issn, rerun=rerun
                     )
         else:
@@ -642,7 +658,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                retrieved_record = self.__query_doi(doi=feed_record_dict["doi"])
+                retrieved_record = self.query_doi(doi=feed_record_dict["doi"])
 
                 if retrieved_record.data["doi"] != feed_record.data["doi"]:
                     continue
@@ -726,10 +742,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         crossref_feed.feed_records[record_dict["ID"]]
                     )
 
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-                doi_connector.DOIConnector.get_link_from_doi(
-                    record=prep_record,
-                    review_manager=search_operation.review_manager,
+                prep_record = colrev.record.Record(data=record_dict)
+                prep_record = self.__prep_crossref_record(
+                    record=prep_record, prep_main_record=False
                 )
 
                 if "colrev_data_provenance" in prep_record.data:

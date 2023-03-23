@@ -5,13 +5,9 @@ from __future__ import annotations
 import re
 import typing
 from dataclasses import dataclass
-from importlib.metadata import version
 from pathlib import Path
 
-import requests
 import zope.interface
-from crossref.restful import Etiquette
-from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from pdfminer.pdfdocument import PDFDocument
@@ -20,8 +16,8 @@ from pdfminer.pdfparser import PDFParser
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -83,14 +79,10 @@ class PDFSearchSource(JsonSchemaMixin):
                 self.r_subdir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
             if "volume" == self.subdir_pattern:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
-
-        _, email = source_operation.review_manager.get_committer()
-
-        self.etiquette = Etiquette(
-            "CoLRev",
-            version("colrev"),
-            "https://github.com/CoLRev-Ecosystem/colrev",
-            email,
+        self.crossref_connector = (
+            colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
+                source_operation=source_operation
+            )
         )
 
     def __update_if_pdf_renamed(
@@ -688,15 +680,8 @@ class PDFSearchSource(JsonSchemaMixin):
                 del record["grobid-version"]
 
             if "doi" in record:
-                works = Works(etiquette=self.etiquette)
-                try:
-                    crossref_query_return = works.doi(record["doi"])
-                    if not crossref_query_return:
-                        continue
-                except requests.exceptions.RequestException:
-                    continue
-                retrieved_record_dict = connector_utils.json_to_record(
-                    item=crossref_query_return
+                retrieved_record = self.crossref_connector.query_doi(
+                    doi=record.data["doi"]
                 )
                 for key in [
                     "journal",
@@ -706,8 +691,8 @@ class PDFSearchSource(JsonSchemaMixin):
                     "year",
                     "pages",
                 ]:
-                    if key in retrieved_record_dict:
-                        record[key] = retrieved_record_dict[key]
+                    if key in retrieved_record.data:
+                        record[key] = retrieved_record.data[key]
 
         return records
 

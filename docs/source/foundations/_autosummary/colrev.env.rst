@@ -28,6 +28,7 @@ colrev.env
 
    colrev.env.environment_manager
    colrev.env.grobid_service
+   colrev.env.language_service
    colrev.env.local_index
    colrev.env.package_manager
    colrev.env.pdf_hash_service

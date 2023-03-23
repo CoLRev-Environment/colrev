@@ -16,6 +16,8 @@ from pdfminer.pdftypes import PDFException
 import colrev.env.package_manager
 import colrev.record
 
+# pylint: disable=duplicate-code
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 

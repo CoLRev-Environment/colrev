@@ -9,6 +9,7 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.record
 
@@ -90,8 +91,11 @@ class ScopePrescreen(JsonSchemaMixin):
             assert settings["TimeScopeTo"] > 1900
         if "TimeScopeTo" in settings:
             assert settings["TimeScopeTo"] < 2100
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-        # validate values (assert, e.g., LanguageScope)
+        if "LanguageScope" in settings:
+            self.language_service = colrev.env.language_service.LanguageService()
+            self.language_service.validate_iso_639_3_language_codes(
+                lang_code_list=settings["LanguageScope"]
+            )
 
         self.settings = self.settings_class.load_settings(data=settings)
 
