@@ -70,6 +70,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
+        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-return-statements
+
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
 

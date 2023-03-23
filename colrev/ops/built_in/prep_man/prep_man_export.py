@@ -33,6 +33,8 @@ class ExportManPrep(JsonSchemaMixin):
 
     ci_supported: bool = False
 
+    RELATIVE_PREP_MAN_PATH = Path("data/prep_man/records_prep_man.bib")
+
     @dataclass
     class ExportManPrepSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
@@ -62,19 +64,19 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.prep_man_path = prep_man_operation.review_manager.path / Path("prep_man")
-        self.prep_man_path.mkdir(exist_ok=True)
-        self.export_path = self.prep_man_path / Path("records_prep_man.bib")
+        self.review_manager = prep_man_operation.review_manager
+        self.export_path = self.review_manager.path / self.RELATIVE_PREP_MAN_PATH
+        self.export_path.parent.mkdir(exist_ok=True, parents=True)
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
-        prep_man_path_pdfs = self.prep_man_path / Path("data/pdfs")
+        prep_man_path_pdfs = self.export_path / Path("data/pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
         prep_man_path_pdfs.mkdir(exist_ok=True, parents=True)
 
         for record in records.values():
             if "file" in record:
-                target_path = self.prep_man_path / Path(record["file"])
+                target_path = self.export_path / Path(record["file"])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
                 if "symlink" == self.settings.pdf_handling_mode:

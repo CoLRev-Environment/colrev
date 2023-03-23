@@ -68,6 +68,11 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             dedupe_operation.review_manager.path / self.SETTINGS_FILE_RELATIVE
         )
 
+        if hasattr(dedupe_operation.review_manager, "dataset"):
+            dedupe_operation.review_manager.dataset.update_gitignore(
+                add=[self.SETTINGS_FILE_RELATIVE]
+            )
+
     def __setup_active_learning_dedupe(
         self,
         *,

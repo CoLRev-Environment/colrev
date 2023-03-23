@@ -79,6 +79,8 @@ class Obsidian(JsonSchemaMixin):
             data_operation.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
         )
         self.review_manager = data_operation.review_manager
+        if hasattr(self.review_manager, "dataset"):
+            self.review_manager.dataset.update_gitignore(add=self.GITIGNORE_LIST)
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""
@@ -206,16 +208,6 @@ class Obsidian(JsonSchemaMixin):
 
         # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
-    def __ignore_paths(self, *, data_operation: colrev.ops.data.Data) -> None:
-        gitignore_path = Path(data_operation.review_manager.path / ".gitignore")
-        git_ignore_content = gitignore_path.read_text(encoding="utf-8")
-
-        for ignore_item in self.GITIGNORE_LIST:
-            if ignore_item not in git_ignore_content:
-                with open(gitignore_path, "a", encoding="utf-8") as file:
-                    file.write(ignore_item + "\n")
-            data_operation.review_manager.dataset.add_changes(path=gitignore_path)
-
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
@@ -227,7 +219,6 @@ class Obsidian(JsonSchemaMixin):
 
         data_operation.review_manager.logger.debug("Export to obsidian endpoint")
 
-        self.__ignore_paths(data_operation=data_operation)
         self.__append_missing_records(
             data_operation=data_operation, records=records, silent_mode=silent_mode
         )
