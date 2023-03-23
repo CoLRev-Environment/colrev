@@ -102,7 +102,7 @@ def main(ctx: click.core.Context) -> None:
 
     Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
-    Documentation:  https://github.com/CoLRev-Ecosystem/colrev/docs
+    Documentation:  https://colrev.readthedocs.io/
     """
 
 
