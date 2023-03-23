@@ -3,7 +3,7 @@
 colrev load
 ==================================
 
-In the :program:`colrev search` operation, search results are added to the main records file following a three-step procedure:
+In the :program:`colrev load` operation, search results are added to the main records file following a three-step procedure:
 
 1. For each search results file (in the `data/search` directory), the SearchSource and search parameters are validated. For API-based searches, the SearchSource and search parameters are already recorded in the `settings.json`. For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/extensions.html#colrev.env.package_manager.SearchSourcePackageEndpointInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the `settings.json`.
 
