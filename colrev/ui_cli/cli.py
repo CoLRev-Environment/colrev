@@ -255,10 +255,10 @@ def retrieve(
     """Retrieve, a high-level operation, consists of search, load, prep, and dedupe.
 
     \b
-    To retrieve search results
-    - copy files (*.bib, *.ris, *.xlsx, ...) to the directory data/search or
-    - copy PDF files to the directory data/pdfs or
-    - add an API-based search, as described in the documentation:
+    To retrieve search results:
+    - Copy files (*.bib, *.ris, *.xlsx, ...) to the directory data/search or
+    - Copy PDF files to the directory data/pdfs or
+    - Add an API-based search, as described in the documentation:
 
     https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
     """
