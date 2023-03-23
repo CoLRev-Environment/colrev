@@ -3,7 +3,7 @@ Help
 ==================================
 
 We are here to help you and others who may struggle with the same issues.
-Here is how you can help us help you.
+Here is how you can help us, too.
 
 Identify the source
 ------------------------------
@@ -12,7 +12,7 @@ CoLRev uses many powerful libraries and data sources.
 In addition, the particular setup of your local machine and CoLRev environment may prevent us from replicating issues.
 We need your help in narrowing down the source of the issue by running the command with the `--verbose` option (e.g., `colrev load --verbose`) to retrieve the full details and error trace (if any).
 
-For example, this may help to identify
+For example, this may help to identify:
 
 - Errors in *colrev load* that are caused by the zotero translators
 - Errors in *colrev prep* that may result from several metadata sources or preparation scripts.
