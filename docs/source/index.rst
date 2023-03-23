@@ -2,10 +2,10 @@
 Collaborative Literature Reviews
 ========================================
 
-.. figure:: ../../figures/workflow.svg
-   :width: 600
+.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png
+   :width: 400
    :align: center
-   :alt: Workflow cycle
+   :alt: Logo
 
 
 CoLRev is an open-source environment for collaborative literature reviews. It takes care of the data, integrates with differerent synthesis tools, and facilitates Git-based collaboration.
@@ -37,7 +37,7 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 **The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next `operation <manual/operations.html>`_.
 After each operation, `validate the changes <manual/workflow.html#colrev-validate>`_.
 
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
+.. figure:: ../figures/workflow.svg
    :width: 600
    :align: center
    :alt: Workflow cycle
