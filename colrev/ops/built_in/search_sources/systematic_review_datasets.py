@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
-from importlib.metadata import version
 from pathlib import Path
 
 import zope.interface
-from crossref.restful import Etiquette
-from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.search_sources.utils as connector_utils
+import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
 
@@ -52,12 +49,10 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        _, email = source_operation.review_manager.get_committer()
-        self.etiquette = Etiquette(
-            "CoLRev",
-            version("colrev"),
-            "https://github.com/CoLRev-Ecosystem/colrev",
-            email,
+        self.crossref_connector = (
+            colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
+                source_operation=source_operation
+            )
         )
 
     @classmethod
@@ -132,27 +127,20 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
         """Source-specific preparation for systematic-review-datasets"""
 
         if "doi" in record.data:
-            works = Works(etiquette=self.etiquette)
-            crossref_query_return = works.doi(record.data["doi"])
-            if crossref_query_return:
-                retrieved_record_dict = connector_utils.json_to_record(
-                    item=crossref_query_return
-                )
-                record.change_entrytype(
-                    new_entrytype=retrieved_record_dict["ENTRYTYPE"]
-                )
-                for key in [
-                    "journal",
-                    "booktitle",
-                    "volume",
-                    "number",
-                    "year",
-                    "pages",
-                    "author",
-                    "title",
-                ]:
-                    if key in retrieved_record_dict:
-                        record.data[key] = retrieved_record_dict[key]
+            retrieved_record = self.crossref_connector.query_doi(doi=record.data["doi"])
+            record.change_entrytype(new_entrytype=retrieved_record.data["ENTRYTYPE"])
+            for key in [
+                "journal",
+                "booktitle",
+                "volume",
+                "number",
+                "year",
+                "pages",
+                "author",
+                "title",
+            ]:
+                if key in retrieved_record.data:
+                    record.data[key] = retrieved_record.data[key]
 
         return record
 

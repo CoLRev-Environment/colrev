@@ -53,6 +53,7 @@ colrev.dataset.Dataset
       ~Dataset.save_records_dict
       ~Dataset.save_records_dict_to_file
       ~Dataset.set_ids
+      ~Dataset.update_gitignore
 
 
 
@@ -62,5 +63,8 @@ colrev.dataset.Dataset
 
    .. autosummary::
 
+      ~Dataset.DEFAULT_GIT_IGNORE_ITEMS
+      ~Dataset.DEPRECATED_GIT_IGNORE_ITEMS
+      ~Dataset.GIT_IGNORE_FILE_RELATIVE
       ~Dataset.RECORDS_FILE_RELATIVE
       ~Dataset.records_file

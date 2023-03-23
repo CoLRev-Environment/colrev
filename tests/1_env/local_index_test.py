@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import os
+import shutil
 import typing
 from pathlib import Path
 
@@ -9,12 +11,22 @@ import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.review_manager
 
+test_data_path = Path()
+
 
 @pytest.fixture(scope="module")
 def script_loc(request) -> Path:  # type: ignore
     """Return the directory of the currently running test script"""
 
     return Path(request.fspath).parent
+
+
+def retrieve_test_file(*, source: Path, target: Path) -> None:
+    target.parent.mkdir(exist_ok=True, parents=True)
+    shutil.copy(
+        test_data_path / source,
+        target,
+    )
 
 
 def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
@@ -123,7 +135,6 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         actual = local_index.search(
             query="title LIKE '%Knowledge Management and Knowledge Management Systems%'"
         )
-        print(actual)
         assert expected == actual
 
     def test_get_fields_to_remove(local_index) -> None:  # type: ignore
@@ -135,6 +146,17 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
             "number": "2",
         }
         expected = ["number"]
+        actual = local_index.get_fields_to_remove(record_dict=record_dict)
+        assert expected == actual
+
+        record_dict = {
+            "ENTRYTYPE": "inproceedings",
+            "booktitle": "Communications of the Association for Information Systems",
+            "year": "2021",
+            "volume": "48",
+            "number": "2",
+        }
+        expected = []
         actual = local_index.get_fields_to_remove(record_dict=record_dict)
         assert expected == actual
 
@@ -178,7 +200,6 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         actual = local_index.retrieve_from_toc(
             record_dict=record_dict, similarity_threshold=0.8
         )
-        print(actual)
         assert expected == actual
 
     def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
@@ -211,7 +232,6 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         actual = local_index.retrieve_based_on_colrev_pdf_id(
             colrev_pdf_id=colrev_pdf_id
         )
-        print(actual)
         assert expected == actual
 
     def load_test_records(script_loc) -> dict:  # type: ignore
@@ -231,16 +251,32 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
                 )
                 # Note : we only select one example for the TEI-indexing
                 for loaded_record in loaded_records.values():
-                    if (
-                        loaded_record["ID"] != "WagnerLukyanenkoParEtAl2022"
-                        and "file" in loaded_record
-                    ):
+                    if "file" not in loaded_record:
+                        continue
+
+                    if loaded_record["ID"] != "WagnerLukyanenkoParEtAl2022":
                         del loaded_record["file"]
+                    else:
+                        loaded_record["file"] = str(
+                            tmp_path / Path(loaded_record["file"])
+                        )
 
                 test_records_dict[path] = loaded_records
 
         return test_records_dict
 
+    global test_data_path
+    test_data_path = script_loc.parent / Path("data")
+    retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        target=tmp_path / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
+    retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.tei.xml"),
+        target=tmp_path / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
+    )
+
+    os.chdir(tmp_path)
     temp_sqlite = tmp_path / Path("sqlite_index_test.db")
     print(temp_sqlite)
     with mocker.patch.object(

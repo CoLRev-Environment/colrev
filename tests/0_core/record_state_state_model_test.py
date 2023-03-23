@@ -8,19 +8,19 @@ import colrev.record
 
 
 def test_record_state_model() -> None:
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_processed)
-
     expected = {
         colrev.record.RecordState.md_retrieved,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_imported)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.md_imported
+    )
     assert expected == actual
 
     expected = {
         colrev.record.RecordState.md_retrieved,
         colrev.record.RecordState.md_imported,
     }
-    actual = rsm.get_preceding_states(
+    actual = colrev.record.RecordStateModel.get_preceding_states(
         state=colrev.record.RecordState.md_needs_manual_preparation
     )
     assert expected == actual
@@ -30,7 +30,9 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.md_imported,
         colrev.record.RecordState.md_needs_manual_preparation,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_prepared)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.md_prepared
+    )
     assert expected == actual
 
     expected = {
@@ -39,7 +41,9 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.md_needs_manual_preparation,
         colrev.record.RecordState.md_prepared,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.md_processed)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.md_processed
+    )
     assert expected == actual
 
     expected = {
@@ -49,7 +53,7 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.md_prepared,
         colrev.record.RecordState.md_processed,
     }
-    actual = rsm.get_preceding_states(
+    actual = colrev.record.RecordStateModel.get_preceding_states(
         state=colrev.record.RecordState.rev_prescreen_included
     )
     assert expected == actual
@@ -62,7 +66,7 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.md_processed,
         colrev.record.RecordState.rev_prescreen_included,
     }
-    actual = rsm.get_preceding_states(
+    actual = colrev.record.RecordStateModel.get_preceding_states(
         state=colrev.record.RecordState.pdf_needs_manual_retrieval
     )
     assert expected == actual
@@ -76,7 +80,9 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.rev_prescreen_included,
         colrev.record.RecordState.pdf_needs_manual_retrieval,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_imported)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.pdf_imported
+    )
     assert expected == actual
 
     expected = {
@@ -89,7 +95,7 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.pdf_needs_manual_retrieval,
         colrev.record.RecordState.pdf_imported,
     }
-    actual = rsm.get_preceding_states(
+    actual = colrev.record.RecordStateModel.get_preceding_states(
         state=colrev.record.RecordState.pdf_needs_manual_preparation
     )
     assert expected == actual
@@ -105,7 +111,9 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.pdf_imported,
         colrev.record.RecordState.pdf_needs_manual_preparation,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.pdf_prepared)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.pdf_prepared
+    )
     assert expected == actual
 
     expected = {
@@ -120,7 +128,9 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.pdf_needs_manual_preparation,
         colrev.record.RecordState.rev_prescreen_included,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_included)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.rev_included
+    )
     assert expected == actual
 
     expected = {
@@ -136,79 +146,83 @@ def test_record_state_model() -> None:
         colrev.record.RecordState.rev_prescreen_included,
         colrev.record.RecordState.rev_included,
     }
-    actual = rsm.get_preceding_states(state=colrev.record.RecordState.rev_synthesized)
+    actual = colrev.record.RecordStateModel.get_preceding_states(
+        state=colrev.record.RecordState.rev_synthesized
+    )
     assert expected == actual
 
 
 def test_get_valid_transitions() -> None:
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_retrieved)
     expected = {"load"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.md_retrieved
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_imported)
     expected = {"prep"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.md_imported
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(
+    expected = {"prep_man"}
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.md_needs_manual_preparation
     )
-    expected = {"prep_man"}
-    actual = rsm.get_valid_transitions()
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.md_prepared)
     expected = {"dedupe"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.md_prepared
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(
+    expected = set()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.rev_prescreen_excluded
     )
-    expected = set()
-    actual = rsm.get_valid_transitions()
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(
+    expected = {"pdf_get"}
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.rev_prescreen_included
     )
-    expected = {"pdf_get"}
-    actual = rsm.get_valid_transitions()
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.pdf_imported)
     expected = {"pdf_prep"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.pdf_imported
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(
+    expected = {"pdf_get_man"}
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.pdf_needs_manual_retrieval
     )
-    expected = {"pdf_get_man"}
-    actual = rsm.get_valid_transitions()
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.pdf_prepared)
     expected = {"screen"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.pdf_prepared
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(
+    expected = {"pdf_prep_man"}
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.pdf_needs_manual_preparation
     )
-    expected = {"pdf_prep_man"}
-    actual = rsm.get_valid_transitions()
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.rev_excluded)
     expected = set()
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.rev_excluded
+    )
     assert expected == actual
 
-    rsm = colrev.record.RecordStateModel(state=colrev.record.RecordState.rev_included)
     expected = {"data"}
-    actual = rsm.get_valid_transitions()
+    actual = colrev.record.RecordStateModel.get_valid_transitions(
+        state=colrev.record.RecordState.rev_included
+    )
     assert expected == actual
 
 

@@ -31,7 +31,6 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
-from transitions import Machine
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -618,7 +617,7 @@ class Record:
 
         if "colrev_origin" in merging_record.data:
             origins = self.data["colrev_origin"] + merging_record.data["colrev_origin"]
-            self.data["colrev_origin"] = list(set(origins))
+            self.data["colrev_origin"] = sorted(list(set(origins)))
 
     def __merge_status(self, *, merging_record: Record) -> None:
         """Merge the status with the merging_record"""
@@ -1372,9 +1371,11 @@ class Record:
             if "UNKNOWN" == self.data[key]:
                 continue
             if "author" == key:
-                sanitized_authors = re.sub("[^a-zA-Z, ;1]+", "", self.data[key]).split(
-                    " and "
-                )
+                sanitized_authors = re.sub(
+                    "[^a-zA-Z, ;1]+",
+                    "",
+                    colrev.env.utils.remove_accents(input_str=self.data[key]),
+                ).split(" and ")
                 if not all(
                     re.findall(
                         r"^[\w .'’-]*, [\w .'’-]*$",
@@ -1387,13 +1388,15 @@ class Record:
                 # At least two capital letters per name
                 elif not all(
                     re.findall(
-                        r"[A-Z].*[A-Z]",
-                        sanitized_author,
+                        r"[A-Z]+",
+                        author_part,
                         re.UNICODE,
                     )
                     for sanitized_author in sanitized_authors
+                    for author_part in sanitized_author.split(",")
                 ):
                     defect_field_keys.append(key)
+
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
@@ -1779,6 +1782,7 @@ class Record:
                     value="UNKNOWN",
                     source="generic_field_requirements",
                     note="missing",
+                    append_edit=False,
                 )
 
     def get_toc_key(self) -> str:
@@ -2191,6 +2195,10 @@ class PrepRecord(Record):
             if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
                 parsed_name.capitalize(force=True)
 
+            # Fix typical parser error
+            if parsed_name.last == "" and parsed_name.title != "":
+                parsed_name.last = parsed_name.title
+
             # pylint: disable=chained-comparison
             # Fix: when first names are abbreviated, nameparser creates errors:
             if (
@@ -2353,8 +2361,8 @@ class PrepRecord(Record):
 
     def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
         """Format the field if it is mostly in upper case"""
-        if not re.match(r"[a-zA-Z]+", self.data[key]):
-            return
+        # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
+        #     return
 
         self.data[key] = self.data[key].replace("\n", " ")
 
@@ -2722,30 +2730,32 @@ class RecordStateModel:
         item for sublist in non_processing_transitions for item in sublist
     ]
 
-    def __init__(
-        self,
-        *,
-        state: RecordState,
-    ) -> None:
-        self.state = state
+    # from transitions import Machine
+    # def __init__(
+    #     self,
+    #     *,
+    #     state: RecordState,
+    # ) -> None:
+    #     self.state = state
+
+    #     self.machine = Machine(
+    #         model=self,
+    #         states=RecordState,
+    #         transitions=self.transitions + self.transitions_non_processing,
+    #         initial=self.state,
+    #     )
+
+    @classmethod
+    def get_valid_transitions(cls, *, state: RecordState) -> set:
+        """Get the list of valid transitions"""
+        logging.getLogger("transitions").setLevel(logging.WARNING)
+        return set({x["trigger"] for x in cls.transitions if x["source"] == state})
+
+    @classmethod
+    def get_preceding_states(cls, *, state: RecordState) -> set:
+        """Get the states preceding the state that is given as a parameter"""
 
         logging.getLogger("transitions").setLevel(logging.WARNING)
-
-        self.machine = Machine(
-            model=self,
-            states=RecordState,
-            transitions=self.transitions + self.transitions_non_processing,
-            initial=self.state,
-        )
-
-    def get_valid_transitions(self) -> set:
-        """Get the list of valid transitions"""
-        return set(
-            {x["trigger"] for x in self.transitions if x["source"] == self.state}
-        )
-
-    def get_preceding_states(self, *, state: RecordState) -> set:
-        """Get the states preceding the state that is given as a parameter"""
         preceding_states: set[RecordState] = set()
         added = True
         while added:
@@ -2760,8 +2770,9 @@ class RecordStateModel:
                 added = False
         return preceding_states
 
+    @classmethod
     def check_operation_precondition(
-        self, *, operation: colrev.operation.Operation
+        cls, *, operation: colrev.operation.Operation
     ) -> None:
         """Check the preconditions for an operation"""
 
@@ -2776,10 +2787,17 @@ class RecordStateModel:
             return {el["colrev_status"] for el in record_header_list}
 
         if operation.review_manager.settings.project.delay_automated_processing:
+            start_states: list[str] = [
+                str(x["source"])
+                for x in colrev.record.RecordStateModel.transitions
+                if str(operation.type) == x["trigger"]
+            ]
+            state = colrev.record.RecordState[start_states[0]]
+
             cur_state_list = get_states_set()
             # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
             # self.review_manager.logger.debug(f"precondition: {self.state}")
-            required_absent = self.get_preceding_states(state=self.state)
+            required_absent = cls.get_preceding_states(state=state)
             # self.review_manager.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (
@@ -2789,7 +2807,7 @@ class RecordStateModel:
                 raise colrev_exceptions.NoRecordsError()
             if len(intersection) != 0:
                 raise colrev_exceptions.ProcessOrderViolation(
-                    operation.type.name, str(self.state), list(intersection)
+                    operation.type.name, str(state), list(intersection)
                 )
 
 

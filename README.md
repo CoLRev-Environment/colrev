@@ -15,18 +15,21 @@
 ![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/coverage.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Ecosystem/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Ecosystem/colrev/)
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
-CoLRev is an open-source environment for collaborative reviews.
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
+CoLRev is an open-source environment for collaborative literature reviews. It takes care of the data, integrates with differerent synthesis tools, and facilitates Git-based collaboration.
+
+To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 Compared to other environments, the following features stand out:
 
-- an open and extensible environment based on shared data and process standards
-- builds on git and its transparent collaboration model for the entire literature review process
-- offers a self-explanatory, fault-tolerant, and configurable user workflow
-- operates a model for data quality, record identification, content curation, and reuse
-- enables typological and methodological pluralism throughout the process
+- An open and extensible environment based on shared data and process standards
+- Builds on git and its transparent collaboration model for the entire literature review process
+- Offers a self-explanatory, fault-tolerant, and configurable user workflow
+- Operates a model for data quality, record identification, content curation, and reuse
+- Enables typological and methodological pluralism throughout the process
 
 See the [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
 
@@ -38,7 +41,7 @@ Contributions, code and features are always welcome
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/CoLRev-Ecosystem/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/CoLRev-Ecosystem/colrev/releases).
+For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), and [releases](https://github.com/CoLRev-Ecosystem/colrev/releases).
 
 ## License
 

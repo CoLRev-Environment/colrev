@@ -124,7 +124,7 @@ class WebsiteConnector:
         # Note: retrieve_md_from_url replaces prior data in RECORD
         # (record.copy() - deepcopy() before if necessary)
 
-        zotero_translation_service.start_zotero_translators()
+        zotero_translation_service.start()
 
         try:
             content_type_header = {"Content-type": "text/plain"}

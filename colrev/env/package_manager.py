@@ -71,7 +71,7 @@ class ReviewTypePackageEndpointInterface(
     # pylint: disable=no-self-argument
     def initialize(settings: dict) -> dict:  # type: ignore
         """Initialize the review type"""
-        return settings
+        return settings  # pragma: no cover
 
 
 class SearchSourceHeuristicStatus(Enum):
@@ -84,7 +84,7 @@ class SearchSourceHeuristicStatus(Enum):
     todo = "to_be_implemented"
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return f"{self.name}"  # pragma: no cover
 
 
 class SearchSourcePackageEndpointInterface(
@@ -238,8 +238,7 @@ class PDFGetPackageEndpointInterface(
     # pylint: disable=no-self-argument
     def get_pdf(pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: dict) -> dict:  # type: ignore
         """Run the pdf-get operation"""
-
-        return record
+        return record  # pragma: no cover
 
 
 class PDFGetManPackageEndpointInterface(
@@ -254,7 +253,7 @@ class PDFGetManPackageEndpointInterface(
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
     ) -> dict:
         """Run the pdf-get-man operation"""
-        return records
+        return records  # pragma: no cover
 
 
 class PDFPrepPackageEndpointInterface(
@@ -272,7 +271,7 @@ class PDFPrepPackageEndpointInterface(
         pad: int,
     ) -> dict:
         """Run the prep-pdf operation"""
-        return record.data
+        return record.data  # pragma: no cover
 
 
 class PDFPrepManPackageEndpointInterface(
@@ -287,7 +286,7 @@ class PDFPrepManPackageEndpointInterface(
         pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
         """Run the prep-man operation"""
-        return records
+        return records  # pragma: no cover
 
 
 class ScreenPackageEndpointInterface(
@@ -315,7 +314,7 @@ class DataPackageEndpointInterface(
     # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
         """Get the default setup for the data package endpoint"""
-        return {}
+        return {}  # pragma: no cover
 
     def update_data(  # type: ignore
         data_operation: colrev.ops.data.Data,
@@ -903,14 +902,14 @@ class PackageManager:
         # Check that we are in the colrev repo
         if colrev_spec is not None:
             assert Path.cwd() == Path(colrev_spec.origin).parents[1]  # type: ignore
-        else:
+        else:  # pragma: no cover
             print("Could not load colrev module")
             return
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/packages.json")
         )
-        if not filedata:
+        if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
                 "Package index not available (colrev/template/package_endpoints.json)"
             )
@@ -932,14 +931,14 @@ class PackageManager:
             endpoints_path = Path(module_spec.origin).parents[1] / Path(  # type:ignore
                 "endpoints.json"
             )
-            if not endpoints_path.is_file():
+            if not endpoints_path.is_file():  # pragma: no cover
                 print(f"File does not exist: {endpoints_path}")
                 continue
 
             try:
                 with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
-            except json.decoder.JSONDecodeError as exc:
+            except json.decoder.JSONDecodeError as exc:  # pragma: no cover
                 print(f"Invalid json {exc}")
                 continue
 
@@ -957,6 +956,7 @@ class PackageManager:
         json_object = json.dumps(package_endpoints_json, indent=4)
         with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
 
 
 if __name__ == "__main__":

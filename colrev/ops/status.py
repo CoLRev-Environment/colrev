@@ -413,8 +413,9 @@ class StatusStats:
 
         active_operations: typing.List[str] = []
         for state in set(current_origin_states_dict.values()):
-            srec = colrev.record.RecordStateModel(state=state)
-            valid_transitions = srec.get_valid_transitions()
+            valid_transitions = colrev.record.RecordStateModel.get_valid_transitions(
+                state=state
+            )
             active_operations.extend(valid_transitions)
 
         self.review_manager.logger.debug(f"active_operations: {set(active_operations)}")

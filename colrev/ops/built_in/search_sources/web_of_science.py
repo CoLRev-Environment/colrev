@@ -48,6 +48,13 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
+        if data.count("UT WOS:") > 0.4 * data.count("TI "):
+            result["confidence"] = 0.7
+            result["load_conversion_package_endpoint"] = {  # type: ignore
+                "endpoint": "colrev_built_in.zotero_translate"
+            }
+            return result
+
         if "Unique-ID = {WOS:" in data:
             result["confidence"] = 0.7
             return result
@@ -125,9 +132,12 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         return records
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Web of Science"""
+
+        if "UNKNOWN" != record.data.get("title", "UNKNOWN"):
+            record.format_if_mostly_upper(key="title")
 
         return record
 

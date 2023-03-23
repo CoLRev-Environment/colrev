@@ -10,6 +10,7 @@ import pytest
 from pybtex.database.input import bibtex
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 
@@ -20,6 +21,7 @@ test_data_path = Path()
 
 
 def retrieve_test_file(*, source: Path, target: Path) -> None:
+    target.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(
         test_data_path / source,
         target,
@@ -31,14 +33,16 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     global test_data_path
     test_data_path = Path(request.fspath).parents[1] / Path("data")
 
-    test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
-
-    os.chdir(test_repo_dir)
 
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
+    )
+
+    session_mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.register_repo",
+        return_value=(),
     )
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
@@ -86,6 +90,42 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
                 curated_masterdata=False,
             )
 
+    test_repo_dir = tmp_path_factory.mktemp("test_review_example")  # type: ignore
+    os.chdir(test_repo_dir)
+
+    colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
+        "test", encoding="utf-8"
+    )
+
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=str(test_repo_dir), force_mode=True
+    )
+    review_manager.settings = colrev.settings.load_settings(
+        settings_path=test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
+    )
+    with pytest.raises(colrev_exceptions.RepoInitError):
+        review_manager.get_init_operation(
+            review_type="literature_review",
+            example=True,
+            local_pdf_collection=True,
+            target_path=test_repo_dir,
+        )
+    with pytest.raises(colrev_exceptions.ParameterError):
+        review_manager.get_init_operation(
+            review_type="misspelled_review", target_path=test_repo_dir
+        )
+
+    review_manager.settings.project.title = "topic a - a review"
+    review_manager.get_init_operation(
+        review_type="literature_review",
+        example=True,
+        target_path=test_repo_dir,
+        light=True,
+    )
+
+    test_repo_dir = tmp_path_factory.mktemp("test_repo_local_pdf_collection")  # type: ignore
+    os.chdir(test_repo_dir)
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
@@ -95,8 +135,34 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     )
 
     review_manager.get_init_operation(
-        review_type="literature_review",
+        review_type="curated_masterdata",
         example=False,
+        local_pdf_collection=True,
+    )
+
+    test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
+    os.chdir(test_repo_dir)
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=str(test_repo_dir), force_mode=True
+    )
+    review_manager.settings = colrev.settings.load_settings(
+        settings_path=test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
+    )
+
+    # A .report.log file that should be removed
+    (test_repo_dir / colrev.review_manager.ReviewManager.REPORT_RELATIVE).write_text(
+        "test", encoding="utf-8"
+    )
+    Path("test.txt").write_text("test", encoding="utf-8")
+    with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
+        review_manager.get_init_operation(
+            review_type="literature_review", example=False, target_path=test_repo_dir
+        )
+    Path("test.txt").unlink()
+
+    review_manager.get_init_operation(
+        review_type="literature_review", example=False, target_path=test_repo_dir
     )
 
     # Note: the strategy is to test the workflow and the endpoints separately
@@ -104,6 +170,15 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(review_manager.path)
     )
+
+    # def test_check_operation_precondition(review_manager: colrev.review_manager.ReviewManager) -> None:
+    dedupe_operation = review_manager.get_dedupe_operation()
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = True
+    with pytest.raises(colrev_exceptions.NoRecordsError):
+        colrev.record.RecordStateModel.check_operation_precondition(
+            operation=dedupe_operation
+        )
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     retrieve_test_file(
         source=Path("search_files/test_records.bib"),
@@ -136,6 +211,18 @@ def test_load(review_manager: colrev.review_manager.ReviewManager) -> None:
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
 
 
+def test_check_operation_precondition(
+    review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    dedupe_operation = review_manager.get_dedupe_operation()
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = True
+    with pytest.raises(colrev_exceptions.ProcessOrderViolation):
+        colrev.record.RecordStateModel.check_operation_precondition(
+            operation=dedupe_operation
+        )
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = False
+
+
 def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> None:
     current_commit = review_manager.dataset.get_last_commit_sha()
 
@@ -153,8 +240,8 @@ def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> Non
     ).read_text()
     actual = (review_manager.path / Path("data/search/pubmed-chatbot.bib")).read_text()
     assert expected == actual
-    repo = git.Repo(review_manager.path)
 
+    repo = git.Repo(review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
     review_manager.load_settings()
@@ -162,7 +249,28 @@ def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> Non
 
 def test_prep(review_manager: colrev.review_manager.ReviewManager) -> None:
     prep_operation = review_manager.get_prep_operation()
+    current_commit = review_manager.dataset.get_last_commit_sha()
+    prep_operation.skip_prep()
+    repo = git.Repo(review_manager.path)
+    repo.head.reset(current_commit, index=True, working_tree=True)
+
     prep_operation.main(keep_ids=False)
+
+    current_commit = review_manager.dataset.get_last_commit_sha()
+
+    prep_operation.set_ids()
+    # TODO : difference set_ids - reset_ids?
+    prep_operation.setup_custom_script()
+    prep_operation.reset_ids()
+
+    repo = git.Repo(review_manager.path)
+    repo.head.reset(current_commit, index=True, working_tree=True)
+
+
+def test_prep_manp(review_manager: colrev.review_manager.ReviewManager) -> None:
+    prep_man_operation = review_manager.get_prep_man_operation()
+    prep_man_operation.prep_man_stats()
+    prep_man_operation.main()
 
 
 def test_search(review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -191,7 +299,17 @@ def test_dedupe(review_manager: colrev.review_manager.ReviewManager) -> None:
 
 def test_prescreen(review_manager: colrev.review_manager.ReviewManager) -> None:
     prescreen_operation = review_manager.get_prescreen_operation()
+    prescreen_operation.create_prescreen_split(create_split=2)
+    review_manager.settings.prescreen.prescreen_package_endpoints = [
+        {"endpoint": "colrev_built_in.conditional_prescreen"}
+    ]
+    prescreen_operation.main(split_str="NA")
     prescreen_operation.include_all_in_prescreen(persist=False)
+
+    current_commit = review_manager.dataset.get_last_commit_sha()
+    prescreen_operation.setup_custom_script()
+    repo = git.Repo(review_manager.path)
+    repo.head.reset(current_commit, index=True, working_tree=True)
 
 
 def test_pdf_get(review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -213,18 +331,37 @@ def test_pdf_discard(review_manager: colrev.review_manager.ReviewManager) -> Non
 
 def test_pdf_prep_man(review_manager: colrev.review_manager.ReviewManager) -> None:
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
+    pdf_prep_man_operation.main()
+    pdf_prep_man_operation.pdf_prep_man_stats()
+    pdf_prep_man_operation.extract_needs_pdf_prep_man()
     pdf_prep_man_operation.discard()
 
 
 def test_screen(review_manager: colrev.review_manager.ReviewManager) -> None:
     screen_operation = review_manager.get_screen_operation()
+    review_manager.settings.screen.screen_package_endpoints = []
+    screen_operation.main(split_str="NA")
     screen_operation.include_all_in_screen(persist=False)
+    screen_operation.create_screen_split(create_split=2)
+
+    current_commit = review_manager.dataset.get_last_commit_sha()
+    screen_operation.setup_custom_script()
+    repo = git.Repo(review_manager.path)
+    repo.head.reset(current_commit, index=True, working_tree=True)
 
 
 def test_data(review_manager: colrev.review_manager.ReviewManager) -> None:
     data_operation = review_manager.get_data_operation()
     data_operation.main()
     review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+    data_operation.profile()
+
+    current_commit = review_manager.dataset.get_last_commit_sha()
+    data_operation.setup_custom_script()
+    repo = git.Repo(review_manager.path)
+    repo.head.reset(current_commit, index=True, working_tree=True)
+
+    review_manager.load_settings()
 
 
 def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:

@@ -108,6 +108,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 - Named parameters are preferred over positional parameters to avoid ambiguity and facilitate code refactoring.
 - Variable names should help to avoid ambiguities and indicate their type if necessary (e.g., record for colrev.record.Record and record_dict for dicts).
+- All tests and code linters (pre-commit-hooks) should pass.
 
 ## Release
 

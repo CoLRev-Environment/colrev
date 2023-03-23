@@ -21,6 +21,7 @@ from pybtex.database import Person
 from pybtex.database.input import bibtex
 from tqdm import tqdm
 
+import colrev.env.language_service
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -41,12 +42,34 @@ class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
+    GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
+    DEFAULT_GIT_IGNORE_ITEMS = [
+        "*.bib.sav",
+        "venv",
+        ".corrections",
+        "data/pdfs",
+        ".report.log",
+        "__pycache__",
+        "output",
+        "data/pdf_get_man/missing_pdf_files.csv",
+        "data/.tei/",
+        "data/prep_man/records_prep_man.bib",
+    ]
+    DEPRECATED_GIT_IGNORE_ITEMS = [
+        "missing_pdf_files.csv",
+        "manual_cleansing_statistics.csv",
+        ".references_learned_settings",
+        "pdfs",
+        ".tei",
+    ]
+
     records_file: Path
     __git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
         self.records_file = review_manager.path / self.RECORDS_FILE_RELATIVE
+        self.git_ignore_file = review_manager.path / self.GIT_IGNORE_FILE_RELATIVE
 
         try:
             self.__git_repo = git.Repo(self.review_manager.path)
@@ -59,6 +82,31 @@ class Dataset:
             pybtex.io.stderr = temp_f
 
         self.masterdata_restrictions = self.__get_masterdata_restrictions()
+        self.update_gitignore(
+            add=self.DEFAULT_GIT_IGNORE_ITEMS, remove=self.DEPRECATED_GIT_IGNORE_ITEMS
+        )
+
+    def update_gitignore(
+        self, *, add: typing.Optional[list] = None, remove: typing.Optional[list] = None
+    ) -> None:
+        """Update the gitignore file by adding or removing particular paths"""
+        # The following may print warnings...
+
+        if self.git_ignore_file.is_file():
+            gitignore_content = self.git_ignore_file.read_text(encoding="utf-8")
+        else:
+            gitignore_content = ""
+        ignored_items = gitignore_content.splitlines()
+        if remove:
+            ignored_items = [x for x in ignored_items if x not in remove]
+        if add:
+            ignored_items = ignored_items + [
+                str(a) for a in add if str(a) not in ignored_items
+            ]
+
+        with self.git_ignore_file.open("w", encoding="utf-8") as file:
+            file.write("\n".join(ignored_items) + "\n")
+        self.add_changes(path=self.git_ignore_file)
 
     def get_origin_state_dict(
         self, *, file_object: Optional[io.StringIO] = None
@@ -449,7 +497,6 @@ class Dataset:
         cls,
         *,
         recs_dict_in: dict,
-        review_manager: Optional[colrev.review_manager.ReviewManager] = None,
     ) -> str:
         """Parse a records_dict to a BiBTex string"""
 
@@ -461,7 +508,7 @@ class Dataset:
             return f",\n   {field} {padd} = {{{value}}}"
 
         bibtex_str = ""
-
+        language_service = colrev.env.language_service.LanguageService()
         first = True
         for record_id, record_dict in recs_dict.items():
             if not first:
@@ -470,23 +517,12 @@ class Dataset:
 
             bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
 
-            if "language" in record_dict:
-                # convert to ISO 639-3
-                # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-                # other languages/more systematically
-                # (see database_connectors) > in record.py?
-                if "en" == record_dict["language"]:
-                    record_dict["language"] = record_dict["language"].replace(
-                        "en", "eng"
-                    )
-
-                if review_manager:
-                    if len(record_dict["language"]) != 3:
-                        review_manager.logger.warn(
-                            "language (%s) of %s not in ISO 639-3 format",
-                            record_dict["language"],
-                            record_dict["ID"],
-                        )
+            try:
+                language_service.unify_to_iso_639_3_language_codes(
+                    record=colrev.record.Record(data=record_dict)
+                )
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record_dict["language"]
 
             field_order = [
                 "colrev_origin",  # must be in second line
@@ -966,10 +1002,13 @@ class Dataset:
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
-        if remove:
-            self.__git_repo.index.remove([str(path)])
-        else:
-            self.__git_repo.index.add([str(path)])
+        try:
+            if remove:
+                self.__git_repo.index.remove([str(path)])
+            else:
+                self.__git_repo.index.add([str(path)])
+        except GitCommandError:
+            pass
 
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""

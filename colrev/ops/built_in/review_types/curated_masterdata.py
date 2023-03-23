@@ -96,10 +96,6 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.screen.screen_package_endpoints = []
         settings.pdf_get.pdf_get_package_endpoints = []
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-        # Deactivate languages, ...
-        # exclusion and add a complementary exclusion built-in script
-
         settings.dedupe.dedupe_package_endpoints = [
             {
                 "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
@@ -119,12 +115,12 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "curation_url": "TODO",
                 "curated_masterdata": True,
                 "masterdata_restrictions": {
-                    "1900": {
-                        "ENTRYTYPE": "article",
-                        "volume": True,
-                        "number": True,
-                        "journal": "Journal Name",
-                    }
+                    # "1900": {
+                    #     "ENTRYTYPE": "article",
+                    #     "volume": True,
+                    #     "number": True,
+                    #     "journal": "Journal Name",
+                    # }
                 },
                 "curated_fields": ["doi", "url"],
             }

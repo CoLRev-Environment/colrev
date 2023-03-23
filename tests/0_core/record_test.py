@@ -15,7 +15,7 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 @pytest.fixture
-def record_with_pdf(script_loc: Path) -> colrev.record.Record:
+def record_with_pdf() -> colrev.record.Record:
     return colrev.record.Record(
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
@@ -194,7 +194,7 @@ def test_update_field() -> None:
     R2_mod.update_field(
         key="non_identifying_field", value="changed", source="test", append_edit=True
     )
-    expectd = "import.bib/id_0001|test"
+    expected = "import.bib/id_0001|test"
     actual = R2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
     assert expected == actual
 
@@ -630,37 +630,38 @@ def test_has_overlapping_colrev_id() -> None:
 
 
 def test_provenance() -> None:
-    R1 = colrev.record.Record(data=v1)
-    R1.add_data_provenance(key="url", source="manual", note="test")
+    R1_mod = R1.copy()
+
+    R1_mod.add_data_provenance(key="url", source="manual", note="test")
     expected = "manual"
-    actual = R1.data["colrev_data_provenance"]["url"]["source"]
+    actual = R1_mod.data["colrev_data_provenance"]["url"]["source"]
     assert expected == actual
 
     expected = "test"
-    actual = R1.data["colrev_data_provenance"]["url"]["note"]
+    actual = R1_mod.data["colrev_data_provenance"]["url"]["note"]
     assert expected == actual
 
-    R1.add_data_provenance_note(key="url", note="1")
+    R1_mod.add_data_provenance_note(key="url", note="1")
     expected = "test,1"
-    actual = R1.data["colrev_data_provenance"]["url"]["note"]
+    actual = R1_mod.data["colrev_data_provenance"]["url"]["note"]
     assert expected == actual
 
     expected = {"source": "manual", "note": "test,1"}  # type: ignore
-    actual = R1.get_field_provenance(key="url")
+    actual = R1_mod.get_field_provenance(key="url")
     assert expected == actual
 
-    R1.add_masterdata_provenance(key="author", source="manual", note="test")
+    R1_mod.add_masterdata_provenance(key="author", source="manual", note="test")
     expected = "test"
-    actual = R1.data["colrev_masterdata_provenance"]["author"]["note"]
+    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
     assert expected == actual
 
-    actual = R1.data["colrev_masterdata_provenance"]["author"]["source"]
+    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["source"]
     expected = "manual"
     assert expected == actual
 
-    R1.add_masterdata_provenance_note(key="author", note="check")
+    R1_mod.add_masterdata_provenance_note(key="author", note="check")
     expected = "test,check"
-    actual = R1.data["colrev_masterdata_provenance"]["author"]["note"]
+    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
     assert expected == actual
 
 
@@ -675,13 +676,13 @@ def test_set_masterdata_complete() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "test", "note": "not_missing"},
             "number": {"source": "test", "note": "not_missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -707,13 +708,13 @@ def test_set_masterdata_complete() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "test", "note": "not_missing"},
             "number": {"source": "test", "note": "not_missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -737,13 +738,13 @@ def test_set_masterdata_complete() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -779,13 +780,13 @@ def test_set_masterdata_consistent() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -807,7 +808,7 @@ def test_set_masterdata_consistent() -> None:
         "ID": "R1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {},
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -833,13 +834,13 @@ def test_set_fields_complete() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -880,14 +881,13 @@ def test_reset_pdf_provenance_notes() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {
-            "url": {"source": "manual", "note": "test,1"},
             "file": {"source": "test", "note": ""},
         },
         "colrev_status": colrev.record.RecordState.md_prepared,
@@ -913,7 +913,7 @@ def test_reset_pdf_provenance_notes() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
@@ -943,14 +943,13 @@ def test_reset_pdf_provenance_notes() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {
-            "url": {"source": "manual", "note": "test,1"},
             "file": {"source": "NA", "note": ""},
         },
         "colrev_status": colrev.record.RecordState.md_prepared,
@@ -980,13 +979,13 @@ def test_cleanup_pdf_processing_fields() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -1032,8 +1031,198 @@ def test_get_incomplete_fields() -> None:
     assert R1_mod.has_incomplete_fields()
 
 
+def test_merge_select_non_all_caps() -> None:
+    # Select title-case (not all-caps title) and full author name
+    R1 = colrev.record.Record(data=v1)
+    R2 = colrev.record.Record(data=v2)
+
+    R1_mod = R1.copy()
+    R2_mod = R2.copy()
+    print(R1_mod)
+    print(R2_mod)
+    R1_mod.data["title"] = "Editorial"
+    R2_mod.data["colrev_origin"] = ["import.bib/id_0002"]
+    expected = {
+        "ID": "R1",
+        "ENTRYTYPE": "article",
+        "colrev_masterdata_provenance": {
+            "year": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": ""},
+            "author": {"source": "import.bib/id_0001", "note": ""},
+            "journal": {"source": "import.bib/id_0001", "note": ""},
+            "volume": {"source": "import.bib/id_0001", "note": ""},
+            "number": {"source": "import.bib/id_0001", "note": ""},
+            "pages": {"source": "import.bib/id_0001", "note": ""},
+        },
+        "colrev_data_provenance": {},
+        "colrev_status": colrev.record.RecordState.md_prepared,
+        "colrev_origin": ["import.bib/id_0001", "import.bib/id_0002"],
+        "year": "2020",
+        "title": "Editorial",
+        "author": "Rai, Arun",
+        "journal": "MIS Quarterly",
+        "volume": "45",
+        "number": "1",
+        "pages": "1--3",
+    }
+
+    R1_mod.merge(merging_record=R2_mod, default_source="test")
+    actual = R1_mod.data
+    assert expected == actual
+
+
+def test_merge_except_errata() -> None:
+    # Mismatching part suffixes
+    R1_mod = R1.copy()
+    R2_mod = R2.copy()
+    R1_mod.data["title"] = "Editorial - Part 1"
+    R2_mod.data["title"] = "Editorial - Part 2"
+    with pytest.raises(
+        colrev.exceptions.InvalidMerge,
+    ):
+        R2_mod.merge(merging_record=R1_mod, default_source="test")
+
+    # Mismatching erratum (a-b)
+    R1_mod = R1.copy()
+    R2_mod = R2.copy()
+    R2_mod.data["title"] = "Erratum - Editorial"
+    with pytest.raises(
+        colrev.exceptions.InvalidMerge,
+    ):
+        R1_mod.merge(merging_record=R2_mod, default_source="test")
+
+    # Mismatching erratum (b-a)
+    R1_mod = R1.copy()
+    R2_mod = R2.copy()
+    R1_mod.data["title"] = "Erratum - Editorial"
+    with pytest.raises(
+        colrev.exceptions.InvalidMerge,
+    ):
+        R2_mod.merge(merging_record=R1_mod, default_source="test")
+
+    # Mismatching commentary
+    R1_mod = R1.copy()
+    R2_mod = R2.copy()
+    R1_mod.data["title"] = "Editorial - a commentary to the other paper"
+    with pytest.raises(
+        colrev.exceptions.InvalidMerge,
+    ):
+        R2_mod.merge(merging_record=R1_mod, default_source="test")
+
+
+def test_merge_local_index(mocker) -> None:  # type: ignore
+    import colrev.record
+    import colrev.env.local_index
+
+    mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
+        return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
+    )
+
+    R1_mod = colrev.record.Record(
+        data={
+            "ID": "R1",
+            "colrev_data_provenance": {},
+            "colrev_masterdata_provenance": {
+                "volume": {"source": "source-1", "note": ""}
+            },
+            "colrev_status": colrev.record.RecordState.md_prepared,
+            "colrev_origin": ["orig1"],
+            "title": "EDITORIAL",
+            "author": "Rai, Arun",
+            "journal": "MIS Quarterly",
+            "volume": "45",
+            "pages": "1--3",
+        }
+    )
+    R2_mod = colrev.record.Record(
+        data={
+            "ID": "R2",
+            "colrev_data_provenance": {},
+            "colrev_masterdata_provenance": {
+                "volume": {"source": "source-1", "note": ""},
+                "number": {"source": "source-1", "note": ""},
+            },
+            "colrev_status": colrev.record.RecordState.md_prepared,
+            "colrev_origin": ["orig2"],
+            "title": "Editorial",
+            "author": "ARUN RAI",
+            "journal": "MISQ",
+            "volume": "45",
+            "number": "4",
+            "pages": "1--3",
+        }
+    )
+
+    R1_mod.merge(merging_record=R2, default_source="test")
+    print(R1_mod)
+
+    # from colrev.env import LocalIndex
+
+    # LOCAL_INDEX = LocalIndex()
+    # record = {
+    #     "ID": "StandingStandingLove2010",
+    #     "ENTRYTYPE": "article",
+    #     "colrev_origin": "lr_db.bib/Standing2010",
+    #     "colrev_status": RecordState.rev_synthesized,
+    #     "colrev_id": "colrev_id1:|a|decision-support-systems|49|1|2010|standing-standing-love|a-review-of-research-on-e-marketplaces-1997-2008;",
+    #     "colrev_pdf_id": "cpid1:ffffffffffffffffc3f00fffc2000023c2000023c0000003ffffdfffc0005fffc007ffffffffffffffffffffc1e00003c1e00003cfe00003ffe00003ffe00003ffffffffe7ffffffe3dd8003c0008003c0008003c0008003c0008003c0008003c0008003c0008003c0018003ffff8003e7ff8003e1ffffffffffffffffffffff",
+    #     "exclusion_criteria": "NA",
+    #     "file": "/home/gerit/ownCloud/data/journals/DSS/49_1/A-review-of-research-on-e-marketplaces-1997-2008_2010.pdf",
+    #     "doi": "10.1016/J.DSS.2009.12.008",
+    #     "author": "Standing, Susan and Standing, Craig and Love, Peter E. D",
+    #     "journal": "Decision Support Systems",
+    #     "title": "A review of research on e-marketplaces 1997–2008",
+    #     "year": "2010",
+    #     "volume": "49",
+    #     "number": "1",
+    #     "pages": "41--51",
+    #     "literature_review": "yes",
+    #     "metadata_source_repository_paths": "/home/gerit/ownCloud/data/AI Research/Literature Reviews/LRDatabase/wip/lrs_target_variable",
+    # }
+
+    # LOCAL_INDEX.index_record(record=record)
+
+    # DEDUPE test:
+
+    LOCAL_INDEX = colrev.env.local_index.LocalIndex()
+    mocker.patch(
+        "colrev.env.local_index.LocalIndex.is_duplicate", return_value="unknown"
+    )
+
+    # short cids / empty lists
+    assert "unknown" == LOCAL_INDEX.is_duplicate(
+        record1_colrev_id=[], record2_colrev_id=[]
+    )
+    assert "unknown" == LOCAL_INDEX.is_duplicate(
+        record1_colrev_id=["short"], record2_colrev_id=["short"]
+    )
+
+    # Same repo and overlapping colrev_ids -> duplicate
+    # assert "yes" == LOCAL_INDEX.is_duplicate(
+    #     record1_colrev_id=[
+    #         "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
+    #     ],
+    #     record2_colrev_id=[
+    #         "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|review-power-and-information-technology-research-a-metatriangulation-review"
+    #     ],
+    # )
+
+    mocker.patch("colrev.env.local_index.LocalIndex.is_duplicate", return_value="no")
+
+    # Different curated repos -> no duplicate
+    assert "no" == LOCAL_INDEX.is_duplicate(
+        record1_colrev_id=[
+            "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
+        ],
+        record2_colrev_id=[
+            "colrev_id1:|a|information-systems-research|15|2|2004|fichman|real-options-and-it-platform-adoption-implications-for-theory-and-practice"
+        ],
+    )
+
+
 def test_get_quality_defects() -> None:
-    v1 = {
+    v_t = {
         "ID": "R1",
         "ENTRYTYPE": "article",
         "colrev_data_provenance": {},
@@ -1059,23 +1248,32 @@ def test_get_quality_defects() -> None:
         "University, Villanova and Sipior, Janice",  # University in author field
     ]
     for author_defect in author_defects:
-        v1["author"] = author_defect
-        R1 = colrev.record.Record(data=v1)
+        v_t["author"] = author_defect
+        R1_mod = colrev.record.Record(data=v_t)
         expected = {"author"}
-        actual = set(R1.get_quality_defects())
+        actual = set(R1_mod.get_quality_defects())
         assert expected == actual
-        assert R1.has_quality_defects()
+        assert R1_mod.has_quality_defects()
 
-    v1["author"] = "Rai, Arun"
+    non_author_defects = ["Mourato, Inês and Dias, Álvaro and Pereira, Leandro"]
+    for non_author_defect in non_author_defects:
+        v_t["author"] = non_author_defect
+        R1_mod = colrev.record.Record(data=v_t)
+        expected = set()
+        actual = set(R1_mod.get_quality_defects())
+        assert expected == actual
+        assert not R1_mod.has_quality_defects()
+
+    v_t["author"] = "Rai, Arun"
 
     title_defects = ["EDITORIAL"]  # all-caps
     for title_defect in title_defects:
-        v1["title"] = title_defect
-        R1 = colrev.record.Record(data=v1)
+        v_t["title"] = title_defect
+        R1_mod = colrev.record.Record(data=v_t)
         expected = {"title"}
-        actual = set(R1.get_quality_defects())
+        actual = set(R1_mod.get_quality_defects())
         assert expected == actual
-        assert R1.has_quality_defects()
+        assert R1_mod.has_quality_defects()
 
 
 def test_apply_restrictions() -> None:
@@ -1233,11 +1431,11 @@ def test_prescreen_exclude() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -1259,23 +1457,8 @@ def test_parse_bib() -> None:
     expected = {
         "ID": "R1",
         "ENTRYTYPE": "article",
-        "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:manual;check,test;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
-        "colrev_data_provenance": "url:manual;test,1;",
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_origin": "import.bib/id_0001;\n                                    md_crossref.bib/01;",
-        "year": "2020",
-        "title": "EDITORIAL",
-        "author": "Rai, Arun",
-        "journal": "MIS Quarterly",
-        "volume": "45",
-        "number": "1",
-        "pages": "1--3",
-    }
-    expected = {
-        "ID": "R1",
-        "ENTRYTYPE": "article",
-        "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:manual;check,test;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
-        "colrev_data_provenance": "url:manual;test,1;",
+        "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:import.bib/id_0001;;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
+        "colrev_data_provenance": "",
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": "import.bib/id_0001;\n                                    md_crossref.bib/01;",
         "year": "2020",
@@ -1301,23 +1484,32 @@ def test_print_prescreen_record(capfd) -> None:  # type: ignore
 
 
 def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
-    R1_mod = R1.copy()
-    R1_mod.data["abstract"] = "This paper focuses on ..."
-    R1_mod.data["url"] = "www.gs.eu"
-    R1_mod.data["colrev_data_provenance"]["file"] = {
+    R2_mod = R2.copy()
+    R2_mod.data["abstract"] = "This paper focuses on ..."
+    R2_mod.data["url"] = "www.gs.eu"
+    R2_mod.data["colrev_data_provenance"]["file"] = {
         "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
     }
 
-    expected = """\x1b[91mRai, Arun\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMIS Quarterly (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
+    expected = """\x1b[91mRai, A\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMISQ (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
 
-    R1_mod.print_pdf_prep_man()
+    R2_mod.print_pdf_prep_man()
     actual, err = capfd.readouterr()
     assert expected == actual
 
 
-def test_format_author_field() -> None:
-    expected = "Smith, Tom"
-    actual = colrev.record.PrepRecord.format_author_field(input_string="Tom Smith")
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ("Tom Smith", "Smith, Tom"),
+        (
+            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
+            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
+        ),
+    ],
+)
+def test_format_author_field(input: str, expected: str) -> None:
+    actual = colrev.record.PrepRecord.format_author_field(input_string=input)
     assert expected == actual
 
 
@@ -1390,13 +1582,13 @@ def test_rename_fields_based_on_mapping() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
             "issue": {"source": "import.bib/id_0001|rename-from:number", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -1470,13 +1662,13 @@ def test_update_metadata_status() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -1503,7 +1695,7 @@ def test_update_metadata_status() -> None:
         "colrev_masterdata_provenance": {
             "CURATED": {"source": "http...", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
@@ -1519,7 +1711,7 @@ def test_update_metadata_status() -> None:
 
     # Quality defect
     R1_mod = R1.copy_prep_rec()
-    R1_mod.data["author"] = "RAI, ARUN"
+    R1_mod.data["author"] = "Rai, Arun, ARUN"
     R1_mod.update_metadata_status()
     expected = {
         "ID": "R1",
@@ -1527,18 +1719,18 @@ def test_update_metadata_status() -> None:
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
             "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "manual", "note": "test,check"},
+            "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
-        "colrev_data_provenance": {"url": {"source": "manual", "note": "test,1"}},
+        "colrev_data_provenance": {},
         "colrev_status": colrev.record.RecordState.md_needs_manual_preparation,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
         "title": "EDITORIAL",
-        "author": "RAI, ARUN",
+        "author": "Rai, Arun, ARUN",
         "journal": "MIS Quarterly",
         "volume": "45",
         "number": "1",

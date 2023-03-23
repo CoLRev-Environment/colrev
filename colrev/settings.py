@@ -31,8 +31,6 @@ if False:  # pylint: disable=using-constant-test
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
 
-# https://stackoverflow.com/questions/66807878/pretty-print-dataclasses-prettier
-
 
 # Project
 
@@ -122,7 +120,10 @@ class ProjectSettings(JsonSchemaMixin):
     colrev_version: str
 
     def __str__(self) -> str:
-        return f"Review ({self.review_type}): {self.title}"
+        project_str = f"Review ({self.review_type}):"
+        if self.title:
+            project_str += f" {self.title}"
+        return project_str
 
 
 # Search
@@ -304,7 +305,7 @@ class PrepSettings(JsonSchemaMixin):
 
     def __str__(self) -> str:
         return (
-            " - prep_rounds: \n   - "
+            " - prep_rounds:\n   - "
             + "\n   - ".join([str(prep_round) for prep_round in self.prep_rounds])
             + f"\n - fields_to_keep: {self.fields_to_keep}"
         )
@@ -475,7 +476,9 @@ class ScreenSettings(JsonSchemaMixin):
     screen_package_endpoints: list
 
     def __str__(self) -> str:
-        return " - " + "\n - ".join([str(c) for c in self.criteria])
+        if self.criteria:
+            return " - " + "\n - ".join([str(c) for c in self.criteria])
+        return " -"
 
 
 # Data
@@ -626,30 +629,7 @@ class Settings(JsonSchemaMixin):
         return schema
 
 
-def load_settings(*, settings_path: Path) -> Settings:
-    """Load the settings from file"""
-
-    # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
-    # possible extension : integrate/merge global, default settings
-    # from colrev.environment import EnvironmentManager
-    # def selective_merge(base_obj, delta_obj):
-    #     if not isinstance(base_obj, dict):
-    #         return delta_obj
-    #     common_keys = set(base_obj).intersection(delta_obj)
-    #     new_keys = set(delta_obj).difference(common_keys)
-    #     for k in common_keys:
-    #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
-    #     for k in new_keys:
-    #         base_obj[k] = delta_obj[k]
-    #     return base_obj
-    # print(selective_merge(default_settings, project_settings))
-
-    if not settings_path.is_file():
-        raise colrev_exceptions.RepoSetupError()
-
-    with open(settings_path, encoding="utf-8") as file:
-        loaded_dict = json.load(file)
-
+def __load_settings_from_dict(*, loaded_dict: dict) -> Settings:
     try:
         converters = {Path: Path, Enum: Enum}
         settings = from_dict(
@@ -669,9 +649,23 @@ def load_settings(*, settings_path: Path) -> Settings:
             raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
     except (ValueError, MissingValueError, WrongTypeError, AssertionError) as exc:
-        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
+        raise colrev_exceptions.InvalidSettingsError(
+            msg=str(exc)
+        ) from exc  # pragma: no cover
 
     return settings
+
+
+def load_settings(*, settings_path: Path) -> Settings:
+    """Load the settings from file"""
+
+    if not settings_path.is_file():
+        raise colrev_exceptions.RepoSetupError()
+
+    with open(settings_path, encoding="utf-8") as file:
+        loaded_dict = json.load(file)
+
+    return __load_settings_from_dict(loaded_dict=loaded_dict)
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:

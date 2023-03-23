@@ -3,7 +3,7 @@
 colrev prep
 ==================================
 
-In the :program:`colrev search` operation, records with sufficient metadata quality transition from `md_imported` to `md_prepared` (`md_needs_manual_preparation` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
+In the :program:`colrev prep` operation, records with sufficient metadata quality transition from `md_imported` to `md_prepared` (`md_needs_manual_preparation` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
 
 Quality rules:
 
@@ -23,6 +23,8 @@ Preparation procedures (the specific preparation depends on the specified settin
 - Consolidation with high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
 - Linking with CoLRev curations, which establishes a quality curation loop
 - Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets.
+
+Before starting the :program:`colrev prep-man` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning prep).
 
 ..
     - heuristic metadata improvements

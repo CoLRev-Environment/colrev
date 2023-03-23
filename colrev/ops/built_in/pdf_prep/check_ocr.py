@@ -9,8 +9,8 @@ from pathlib import Path
 import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from lingua.builder import LanguageDetectorBuilder
 
+import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
@@ -46,14 +46,11 @@ class PDFCheckOCR(JsonSchemaMixin):
             pdf_prep_operation.review_manager.environment_manager.build_docker_image(
                 imagename=self.ocrmypdf_image
             )
-
-    language_detector = (
-        LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
-    )
+        self.language_service = colrev.env.language_service.LanguageService()
 
     def __text_is_english(self, *, text: str) -> bool:
         # Format: ENGLISH
-        confidence_values = self.language_detector.compute_language_confidence_values(
+        confidence_values = self.language_service.compute_language_confidence_values(
             text=text
         )
         for lang, conf in confidence_values:
@@ -120,8 +117,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         if not record.data["file"].endswith(".pdf"):
             return record.data
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-        # allow for other languages in this and the following if statement
+        # We may allow for other languages in this and the following if statement
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             pdf_prep_operation.review_manager.report_logger.info(
                 f'apply_ocr({record.data["ID"]})'
