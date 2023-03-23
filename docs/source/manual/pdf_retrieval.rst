@@ -5,7 +5,7 @@ Step 4: PDF retrieval
 ==================================
 
 The step of PDF retrieval refers to the activities to acquire PDF documents (or documents in other formats) as well as to ascertain or improve their quality.
-It should ensure that PDF documents correspond to their associated metadata (no mismatches), that they are machine readable (OCR and semantically anotated), that unnecessary materials (such as coverpages) are removed.
+It should ensure that PDF documents correspond to their associated metadata (no mismatches), that they are machine readable (OCR and semantically annotated), that unnecessary materials (such as coverpages) are removed.
 
 PDFs are stored in the ``data/pdfs`` directory.
 Per default, PDF documents are not versioned by git to ensure that CoLRev repositories can be published without violating copyright restrictions.
@@ -23,7 +23,7 @@ PDF retrieval is a high-level operation consisting of the following operations:
 
 - The **pdf-prep** operation, which refers to the preparation of PDF documents. It may refer users to ``pdf-prep-man`` as the manual fallback when the record state is set to ``pdf_needs_manual_preparation``.
 
-To start the pdfs operation, run
+To start the pdfs operation, run:
 
 .. code:: bash
 
