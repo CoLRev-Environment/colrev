@@ -2,7 +2,7 @@
 Roadmap
 ==================================
 
-**Development status**: Currently recommend for users with technical experience. Once CoLRev has matured, UIs should make it accessible to a broader user base. CoLRev is the result of intense prototyping, research and development. We use it for our own projects and believe it is ready to be released - after all, git ensures that your work is never lost.
+**Development status**: Currently recommended for users with technical experience. Once CoLRev has matured, UIs should make it accessible to a broader user base. CoLRev is the result of intense prototyping, research and development. We use it for our own projects and believe it is ready to be released - after all, git ensures that your work is never lost.
 
 The goal is to release new versions on a bi-monthly basis.
 
