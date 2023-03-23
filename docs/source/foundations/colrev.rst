@@ -493,7 +493,7 @@ Per default, every CoLRev repository that is registered locally makes its data a
 This means that all general operations (e.g., preparing metadata or linking PDFs) are completed automatically once indexed.
 Of course, reuse is the most powerful when curated content (such as reviews, topic or journal-related repositories) is shared within teams or publicly.
 
-..	
+..
 	**References**
 
 	bibliography::
