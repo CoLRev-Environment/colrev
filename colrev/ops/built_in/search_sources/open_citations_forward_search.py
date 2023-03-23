@@ -5,19 +5,16 @@ from __future__ import annotations
 import json
 import typing
 from dataclasses import dataclass
-from importlib.metadata import version
 from pathlib import Path
 
 import requests
 import zope.interface
-from crossref.restful import Etiquette
-from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.utils as connector_utils
+import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -49,13 +46,10 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
-        _, email = source_operation.review_manager.get_committer()
-
-        self.etiquette = Etiquette(
-            "CoLRev",
-            version("colrev"),
-            "https://github.com/CoLRev-Ecosystem/colrev",
-            email,
+        self.crossref_connector = (
+            colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
+                source_operation=source_operation
+            )
         )
 
     @classmethod
@@ -129,15 +123,11 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             items = json.loads(ret.text)
 
             for doi in [x["citing"] for x in items]:
-                works = Works(etiquette=self.etiquette)
-                crossref_query_return = works.doi(doi)
-                if not crossref_query_return:
-                    raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-                retrieved_record_dict = connector_utils.json_to_record(
-                    item=crossref_query_return
-                )
-                retrieved_record_dict["ID"] = retrieved_record_dict["doi"]
-                forward_citations.append(retrieved_record_dict)
+                retrieved_record = self.crossref_connector.query_doi(doi=doi)
+                # if not crossref_query_return:
+                #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                retrieved_record.data["ID"] = retrieved_record.data["doi"]
+                forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
             self.review_manager.logger.info(
                 f"Error retrieving citations from Opencitations for {record_dict['ID']}"

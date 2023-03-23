@@ -14,6 +14,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
 
+import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
@@ -56,6 +57,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
         self.review_manager = source_operation.review_manager
+        self.language_service = colrev.env.language_service.LanguageService()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -300,16 +302,16 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.remove_field(key="fulltext")
 
         if "language" in record.data:
-            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-            # use https://pypi.org/project/langcodes/
-            record.update_field(
-                key="language",
-                value=record.data["language"]
-                .replace("English", "eng")
-                .replace("ENG", "eng"),
-                source="unkown_source_prep",
-                keep_source_if_equal=True,
-            )
+            try:
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+                record.update_field(
+                    key="language",
+                    value=record.data["language"],
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data["language"]
 
         for field in list(record.data.keys()):
             # Note : some dois (and their provenance) contain html entities

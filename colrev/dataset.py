@@ -21,6 +21,7 @@ from pybtex.database import Person
 from pybtex.database.input import bibtex
 from tqdm import tqdm
 
+import colrev.env.language_service
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -461,7 +462,7 @@ class Dataset:
             return f",\n   {field} {padd} = {{{value}}}"
 
         bibtex_str = ""
-
+        language_service = colrev.env.language_service.LanguageService()
         first = True
         for record_id, record_dict in recs_dict.items():
             if not first:
@@ -470,23 +471,12 @@ class Dataset:
 
             bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
 
-            if "language" in record_dict:
-                # convert to ISO 639-3
-                # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-                # other languages/more systematically
-                # (see database_connectors) > in record.py?
-                if "en" == record_dict["language"]:
-                    record_dict["language"] = record_dict["language"].replace(
-                        "en", "eng"
-                    )
-
-                if review_manager:
-                    if len(record_dict["language"]) != 3:
-                        review_manager.logger.warn(
-                            "language (%s) of %s not in ISO 639-3 format",
-                            record_dict["language"],
-                            record_dict["ID"],
-                        )
+            try:
+                language_service.unify_to_iso_639_3_language_codes(
+                    record=colrev.record.Record(data=record_dict)
+                )
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record_dict["language"]
 
             field_order = [
                 "colrev_origin",  # must be in second line

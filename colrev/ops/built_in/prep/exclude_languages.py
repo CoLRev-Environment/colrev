@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import pycountry
 import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from lingua.builder import LanguageDetectorBuilder
 
+import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
@@ -37,28 +36,16 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        # Note : Lingua is tested/evaluated relative to other libraries:
-        # https://github.com/pemistahl/lingua-py
-        # It performs particularly well for short strings (single words/word pairs)
-        # The langdetect library is non-deterministic, especially for short strings
-        # https://pypi.org/project/langdetect/
-
         # Note : the following objects have heavy memory footprints and should be
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
         languages_to_include = ["eng"]
         if not prep_operation.review_manager.in_ci_environment():
-            self.language_detector = (
-                LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
-            )
-            # Language formats: ISO 639-1 standard language codes
-            # https://github.com/flyingcircusio/pycountry
+            self.language_service = colrev.env.language_service.LanguageService()
 
             prescreen_package_endpoints = (
                 prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
             )
-            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/64
-            # set as settings parameter?
             if "scope_prescreen" in [
                 s["endpoint"] for s in prescreen_package_endpoints
             ]:
@@ -70,14 +57,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                     languages_to_include.extend(
                         scope_prescreen.get("LanguageScope", ["eng"])
                     )
+            self.language_service.validate_iso_639_3_language_codes(
+                lang_code_list=languages_to_include
+            )
         self.languages_to_include = list(set(languages_to_include))
-
-        self.lang_code_mapping = {}
-        for country in pycountry.languages:
-            try:
-                self.lang_code_mapping[country.name.lower()] = country.alpha_3
-            except AttributeError:
-                pass
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
@@ -86,10 +69,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
-
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-return-statements
-        # pylint: disable=too-many-branches
 
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
@@ -117,12 +96,12 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             and record.data.get("title", "").count("[") == 1
         ):
             confidence_values_part1 = (
-                self.language_detector.compute_language_confidence_values(
+                self.language_service.compute_language_confidence_values(
                     text=record.data["title"].split("[")[0]
                 )
             )
             confidence_values_part2 = (
-                self.language_detector.compute_language_confidence_values(
+                self.language_service.compute_language_confidence_values(
                     text=record.data["title"].split("[")[1]
                 )
             )
@@ -136,14 +115,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             lang_1, conf_1 = confidence_values_part1[0]
             lang_2, conf_2 = confidence_values_part2[0]
 
-            predicted_language_1 = lang_1
-            if lang_1.name.lower() in self.lang_code_mapping:
-                predicted_language_1 = self.lang_code_mapping[lang_1.name.lower()]
-
-            predicted_language_2 = lang_2
-            if lang_2.name.lower() in self.lang_code_mapping:
-                predicted_language_2 = self.lang_code_mapping[lang_2.name.lower()]
-
             if conf_1 < 0.9 and conf_2 < 0.9:
                 record.update_field(
                     key="title",
@@ -156,9 +127,9 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 )
                 return record
 
-            if "eng" == predicted_language_1:
+            if "eng" == lang_1:
                 record.update_field(
-                    key=f"title_{predicted_language_2}",
+                    key=f"title_{lang_2}",
                     value=record.data["title"].split("[")[1].rstrip("]"),
                     source="LanguageDetector_split",
                 )
@@ -175,7 +146,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 )
             else:
                 record.update_field(
-                    key=f"title_{predicted_language_1}",
+                    key=f"title_{lang_1}",
                     value=record.data["title"].split("[")[0].rstrip(),
                     source="LanguageDetector_split",
                 )
@@ -196,7 +167,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
             return record
 
-        confidence_values = self.language_detector.compute_language_confidence_values(
+        confidence_values = self.language_service.compute_language_confidence_values(
             text=record.data["title"]
         )
         # if prep_operation.review_manager.verbose_mode:
@@ -204,12 +175,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         #     prep_operation.review_manager.p_printer.pprint(confidence_values)
         # If language not in record, add language (always - needed in dedupe.)
         set_most_likely_language = False
-        for lang, conf in confidence_values:
-            predicted_language = "not-found"
-            # Map to ISO 639-3 language code
-            if lang.name.lower() in self.lang_code_mapping:
-                predicted_language = self.lang_code_mapping[lang.name.lower()]
-
+        for predicted_language, conf in confidence_values:
             if not set_most_likely_language:
                 record.update_field(
                     key="language",
