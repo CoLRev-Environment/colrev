@@ -453,18 +453,18 @@ TODO: some introductory words, sub chapter stars directly with bulletpoints, inc
 4.1 Adopting a shared standard for content curation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-advancing a built-in model for content curation and reuse
-conditions for including records in the localindex (prepared + deduped, set curation-marks in provenance)
+Advancing a built-in model for content curation and reuse
+conditions for including records in the localindex (prepared + deduped, set curation-marks in provenance).
 
 CoLRev builds on a comprehensive vision of reusing community-curated data.
 This includes:
 
-- assigning shared IDs in the load process
-- curated record metadata in the preparation process
-- data on duplicate/non-duplicate relationships
-- urls and local paths for PDFs
-- fingerprints (hashes) to identify and verify PDFs
-- any other label or data associated with the curated records
+- Assigning shared IDs in the load process
+- Curated record metadata in the preparation process
+- Data on duplicate/non-duplicate relationships
+- Urls and local paths for PDFs
+- Fingerprints (hashes) to identify and verify PDFs
+- Any other label or data associated with the curated records
 
 The colrev_cml_assistant extension provides an environment supporting researchers in curating shared repositories based on crowdsourcing and machine-learning.
 
@@ -473,17 +473,20 @@ The colrev_cml_assistant extension provides an environment supporting researcher
 4.2 Layered and multifaceted view
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Layers principle: distinction between project repos, topic repos and curated repos - efficient reuse (push/pull, search-source, sync, distribute)
+TODO: some introductory words, sub chapter stars directly with bulletpoints, inconstent with prior sub chapters
+
+- Layers principle: distinction between project repos, topic repos and curated repos 
+- Efficient reuse (push/pull, search-source, sync, distribute)
 - Be aware that some types of research do not hold a singular truth but multiple interpretations
-- for records: push/pull does not change the sample size (does not add records), search-source changes the sample size (explicit source/lineage)
-- distribute: push-logic to feed records into topic repositories
+- For records: push/pull does not change the sample size (does not add records), search-source changes the sample size (explicit source/lineage)
+- Distribute: push-logic to feed records into topic repositories
 
 .. _curation_per_default:
 
 4.3 Curation per default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Reuse of curated content shoudl be the default (as easy as possible, expected by authors, journals, ...)
+Reuse of curated content should be the default (as easy as possible, expected by authors, journals, ...).
 
 Reuse of community-curated data is a built-in feature of CoLRev, aimed at saving efforts across projects as well as increasing accuracy and richness of the process.
 Per default, every CoLRev repository that is registered locally makes its data accessible to all other local repositories.
