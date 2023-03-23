@@ -7,7 +7,7 @@ CLI Reference
    (not declared in any toctree) to remove an unnecessary intermediate page; index.rst instead points directly to the
    package page. DO NOT REMOVE THIS FILE!
 
-This documentation provides an overview of the cli commands and the corresponding operations. The parameters for each command should be stored in the settings.json.
+This documentation provides an overview of the CLI commands and the corresponding operations. The parameters for each command should be stored in the settings.json.
 
 .. click:: colrev.ui_cli.cli:status
    :prog: colrev status
