@@ -16,12 +16,13 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Ecosystem/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Ecosystem/colrev/)
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
 CoLRev is an open-source environment for collaborative literature reviews. It takes care of the data, integrates with differerent synthesis tools, and facilitates Git-based collaboration.
 
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
+To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 Compared to other environments, the following features stand out:
 
 - An open and extensible environment based on shared data and process standards

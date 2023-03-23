@@ -196,7 +196,6 @@ class Initializer:
                 Path(".github/workflows/pre-commit.yml"),
             ],
             [Path("template/init/gitattributes"), Path(".gitattributes")],
-            [Path("template/init/gitignore"), Path(".gitignore")],
             [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
                 Path(

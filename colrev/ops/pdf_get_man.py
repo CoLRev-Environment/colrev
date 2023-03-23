@@ -17,6 +17,7 @@ class PDFGetMan(colrev.operation.Operation):
     """Get PDFs manually"""
 
     pdf_get_man_package_endpoints: dict[str, typing.Any]
+    MISSING_PDF_FILES_RELATIVE = Path("data/pdf_get_man/missing_pdf_files.csv")
 
     def __init__(
         self,
@@ -30,6 +31,9 @@ class PDFGetMan(colrev.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
+        self.missing_pdf_files_csv = (
+            self.review_manager.path / self.MISSING_PDF_FILES_RELATIVE
+        )
         self.verbose = True
 
     def get_pdf_get_man(self, *, records: dict) -> list:
@@ -47,7 +51,6 @@ class PDFGetMan(colrev.operation.Operation):
         """Export a table for manual PDF retrieval"""
 
         missing_records = self.get_pdf_get_man(records=records)
-        missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
         if len(missing_records) > 0:
             missing_records_df = pd.DataFrame.from_records(missing_records)
@@ -65,12 +68,13 @@ class PDFGetMan(colrev.operation.Operation):
                 "doi",
             ]
             missing_records_df = missing_records_df.reindex(col_order, axis=1)
+            self.missing_pdf_files_csv.parent.mkdir(exist_ok=True, parents=True)
             missing_records_df.to_csv(
-                missing_pdf_files_csv, index=False, quoting=csv.QUOTE_ALL
+                self.missing_pdf_files_csv, index=False, quoting=csv.QUOTE_ALL
             )
 
             self.review_manager.logger.info(
-                "Created missing_pdf_files.csv with paper details"
+                f"Created {self.missing_pdf_files_csv} with paper details"
             )
 
     def discard(self) -> None:
