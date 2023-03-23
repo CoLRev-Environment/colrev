@@ -2,10 +2,10 @@
 Collaborative Literature Reviews
 ========================================
 
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png
-   :width: 400
+.. figure:: ../../figures/workflow.svg
+   :width: 600
    :align: center
-   :alt: Logo
+   :alt: Workflow cycle
 
 
 CoLRev is an open-source environment for collaborative reviews.
