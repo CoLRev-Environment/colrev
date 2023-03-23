@@ -27,9 +27,9 @@ Users can pull an existing one (with the url provided by the project manager):
 Coordinating different modes of collaboration
 -----------------------------------------------------
 
-- The composition of human and algorithmic work can vary throughout the steps. It is at the reviewers discretion to complete operations manually, to
+The composition of human and algorithmic work can vary throughout the steps. It is at the reviewers discretion to complete operations manually, too.
 
-The init/prescreen/screen/data tend to be the steps where humans take the lead. Machines should take the lead on the more mechanical tasks (runnign the search/load/prep/dedupe/pdf-get/pdf-prep).
+The init/prescreen/screen/data tend to be the steps where humans take the lead. Machines should take the lead on the more mechanical tasks (running the search/load/prep/dedupe/pdf-get/pdf-prep).
 
 - Start with collaboration between humans, between humans and machines/algorithms (need for validation/tracing/reset functionality, highlight that benchmarking "between-machines" is also important and supported)
 - Explain how colrev/git support asynchronous (merge) and synchronous (example: data) collaboration
@@ -74,7 +74,7 @@ CoLRev implements the following measures to avoid merge conflicts:
 
 - CoLRev relies on `colrev-hooks <https://github.com/CoLRev-Ecosystem/colrev-hooks>`_ (`pre-commit hooks <https://pre-commit.com/>`_) to enforce consistent formatting across repositories
 - CoLRev uses collaboration instructions (part of :program:`colrev status`) to encourage users to share (git push) and integrate (git pull) changes often because keeping all repositories synchronized reduces the likelihood of merge conflicts
-- CoLRev recommends that all records should be *processed* before sharing them (git push) because the metadata preparation steps can involve sorting changes (when setting record IDs) and raise git commit merges when executed in parallel.
+- CoLRev recommends that all records should be *processed* before sharing them (git push) because the metadata preparation steps can involve sorting changes (when setting record IDs) and raise git commit merges when executed in parallel
 
 Thereby, CoLRev implements a conservative strategy to prevent merge conflicts per default.
 This seems appropriate for most cases in which the search and preparation is completed individually and with high degrees of automation.
