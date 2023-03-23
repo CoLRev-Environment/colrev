@@ -257,7 +257,7 @@ Individual records in the MAIN_REFERENCES are augmented with:
 
 BibTeX:
 
-- Quasi-standard format that is supported by most reference managers and literature review tools for input/output [1](https://en.wikipedia.org/wiki/Comparison_of_reference_management_software)
+- Quasi-standard format that is supported by most reference managers and literature review tools for input/output `overview <https://en.wikipedia.org/wiki/Comparison_of_reference_management_software>`_.
 - BibTeX is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS)
 - BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name)
 - BibTeX can be augmented (including additional fields for the record origin, status, etc.)
@@ -493,7 +493,7 @@ Per default, every CoLRev repository that is registered locally makes its data a
 This means that all general operations (e.g., preparing metadata or linking PDFs) are completed automatically once indexed.
 Of course, reuse is the most powerful when curated content (such as reviews, topic or journal-related repositories) is shared within teams or publicly.
 
+..	
+	**References**
 
-**References**
-
-.. bibliography::
+	bibliography::
