@@ -475,7 +475,7 @@ The colrev_cml_assistant extension provides an environment supporting researcher
 
 TODO: some introductory words, sub chapter stars directly with bulletpoints, inconstent with prior sub chapters
 
-- Layers principle: distinction between project repos, topic repos and curated repos 
+- Layers principle: distinction between project repos, topic repos and curated repos
 - Efficient reuse (push/pull, search-source, sync, distribute)
 - Be aware that some types of research do not hold a singular truth but multiple interpretations
 - For records: push/pull does not change the sample size (does not add records), search-source changes the sample size (explicit source/lineage)
