@@ -16,6 +16,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Ecosystem/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Ecosystem/colrev/)
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
