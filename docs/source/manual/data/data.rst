@@ -17,7 +17,7 @@ Parallel independent data extraction is only supported through the built-in git 
     # Generate a sample profile.
     colrev data --profile
 
-    # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
+    # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts.
     colrev data --reading_heuristics
 
 
@@ -25,21 +25,21 @@ To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev data --add colrev_built_in.manuscript
-    colrev data --add colrev_built_in.structured
-    colrev data --add colrev_built_in.prisma
+    colrev data -a colrev_built_in.manuscript
+    colrev data -a colrev_built_in.structured
+    colrev data -a colrev_built_in.prisma
     ...
 
 To export the bibliography in different formats, run any of the following:
 
 .. code:: bash
 
-    colrev data --add endnote
-    colrev data --add zotero
-    colrev data --add jabref
-    colrev data --add mendeley
-    colrev data --add citavi
-    colrev data --add rdf_bibliontology
+    colrev data -a endnote
+    colrev data -a zotero
+    colrev data -a jabref
+    colrev data -a mendeley
+    colrev data -a citavi
+    colrev data -a rdf_bibliontology
 
 
 The following options for data are available:

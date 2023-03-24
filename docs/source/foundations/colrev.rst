@@ -21,7 +21,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 :any:`area_design`
 
 - :any:`architecture`
-- :any:`git_lr`
+- :any:`Git_lr`
 - :any:`data_structures_provenance`
 - :any:`algorithms`
 
@@ -53,8 +53,6 @@ Current status of the proposed CoLRev standard:
 Definitions:
 
 A **literature review** is a collaborative process involving researcher-crowd-machine ensembles, which takes records (search results in the form of metadata) and full-text documents as qualitative, semi-structured input to develop a synthesis. The result can take different forms, including codified standalone review papers, published web repositories, or a locally curated living reviews.
-
-.. TODO: define "bibliographically distinct"
 
 Guiding principles:
 
@@ -105,7 +103,7 @@ Guiding principles:
 1.1 Framework for (reproducible) research
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Established frameworks for reproducible research using git do not apply to literature reviews:
+Established frameworks for reproducible research using Git do not apply to literature reviews:
 
 - **Dynamics**: Common notions of raw/immutable input data do not apply. In literature reviews, data and interpretations evolve dynamically throughout the process
 - **Non-determinism**: Common notions of deterministic computational processing operations do not apply. In literature reviews, processing operations are often manual, rely on external (changing) data sources and are inherently non-deterministic
@@ -126,13 +124,17 @@ Key considerations are documented in the guides for the reference implementation
 
 1.3 Systematicity and transparency
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: some introductory words, sub chapter stars directly with bulletpoints, inconstent with prior sub chapters
 
-- Every review varies on a scale of systematicity (internal rigor) and transparency (external rigor, as reported)
-- For clarity, "qualitative systematic reviews" (as a very particular type of review) should be distinguished from general notions of literature reviews
-- Tools should support and encourage high levels of systematicity (internal rigor) per default
-- It should be at the users discretion to further increase systematicity, especially if this requires manual efforts that may not be in line with the goals and nature of the review
-- It is a legitimate decision for some literature reviews to place less emphasis on a detailed and explicit reporting (transparency)
+The design of tools can have a profound impact on the systematicity (internal rigor) and transparency (external rigor, as reported) of literature reviews.
+
+- Per default, tools should encourage high levels of systematicity (internal rigor) and provide functionality that efficiently supports systematic review practices.
+- It should be at the users discretion to choose higher or lower degrees of systematicity. This is particularly relevant if systematicity requires additional manual efforts that may not be in line with the goals and nature of the review.
+
+Sidenote: When presenting a literature review, "qualitative systematic reviews" (as a very particular type of review) should be distinguished from general notions of literature reviews (that are conducted in a systematic manner). Every review varies on a scale of systematicity and transparency .
+
+..
+   It should be at the discretion of authors
+   - It is a leGitimate decision for some literature reviews to place less emphasis on a detailed and explicit reporting (transparency).
 
 .. _typological_plurism:
 
@@ -160,8 +162,8 @@ The main propositions of CoLRev are:
 
 The architecture of CoLRev is divided into three packages:
 
-- The CoLRev environment, **colrev**, operates standardized data structures and a process model on top of git repositories. It also offers an extensible reference implementation covering all process steps of the review process
-- The CoLRev hooks, **colrev_hooks** (i.e., custom git pre-commit hooks) check conformance with the standardized structures before a new version of the project (git commit) is created
+- The CoLRev environment, **colrev**, operates standardized data structures and a process model on top of Git repositories. It also offers an extensible reference implementation covering all process steps of the review process
+- The CoLRev hooks, **colrev_hooks** (i.e., custom Git pre-commit hooks) check conformance with the standardized structures before a new version of the project (Git commit) is created
 - The CoLRev command line interface, **colrev** (cli), provides access to the processing operations and additional features. Complexity is hidden behind the three-step workflow and the ``colrev status`` command that provides instructions based on the context of the project
 
 The extensible part of **colrev** adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
@@ -181,193 +183,195 @@ The extensible part of **colrev** adopts **batteries included but swappable** as
 
    Ecosystem principles: modularity (recombination), open-source (evaluation, inspection, improvement)
 
-.. _git_lr:
+.. _Git_lr:
 
 2.2 Git for literature reviews
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: the following senctence needs improvements
-Leveraging the transparent collaboration model of git for the entire literature review process. Versioning and collaboration principles:
 
-.. - CoLRev builds on git as the most capable collaborative versioning system currently available.
-.. - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
+The CoLRev environment tightly integrates with the transparent collaboration model of Git for the entire review process. A key lessons from the tidyverse (R) is that a shared philosophy of the data is instrumental for collaboration, as well as the application and development of functionality provided by complementary packages. The design is based on the following versioning and collaboration principles:
 
-- One benefit of building on git is that CoLRev has the full flexibility of `distributed workflow setups <TODO:ADD_LINK>`_ built in
+- As a foundation, Git provides the full flexibility of `distributed workflow setups <https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`_.
+- CoLRev serves as the database management system (or "workflow engine") that takes care of data consistency, operates a shared model of the review steps, and thereby enables collaboration. This is a missing element in current Git-based literature reviews.
+- It should always be possible to edit the data directly. Before creating a commit, the validation and formatting of changes is automatically triggered by the pre-commit hooks. This built-in feature makes CoLRev projects fault-tolerant and facilitates collaboration through Git.
+- Commits should be atomic. A commit corresponds to an individual operation, which facilitates validation efforts. Commits and pushes/pulls should be frequent to avoid merge conflicts.
+- CoLRev uses Git to facilitate collaboration between researchers and machines. As such, all operations should be prepared to be called by humans or machines. For example, the search could be updated manually or by a Github action. This does not mean that all steps should be completed automatically. For example, if the setup requires manual screening, machines should be able to call the screen operation, but it should not lead to record state transitions.
+
+Notes:
+
 - Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents)
-- A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration
-- A commit corresponds to an individual processing step
-- Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
-- Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether researchers or algorithms edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify)
-- **Currently**: One-branch principle (do not consider branching in the pipeline
-- Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
-- Git versions should be frequent but also well thought-through and checked/reviewed
-- Committed changes should be as small as possible for collaboration/merging purposes (also for checking/restoring)
-- Scripts should add their changes to the index
+- Versions are accompanied by a commit report, which provides a quick overview of the status.
 
-A key lessons from the tidyverse (R) is that a shared philosophy of the data is instrumental for collaboration, as well as the application and development of functionality provided by complementary packages.
-
-The notion of atomic processing of individual records underlines the need for a shared model of the review process.
-Such a state model will shape the data structures, the processing operations and workflow and the content curation.
-
+..
+   The notion of atomic processing of individual records underlines the need for a shared model of the review process.
+   Such a state model will shape the data structures, the processing operations and workflow and the content curation.
+   - Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
+   The hooks should exercise relatively strict control because not all authors of a review may be familiar with Git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify)
+   - CoLRev builds on Git as the most capable collaborative versioning system currently available.
+   - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and Git has been an integral part of the reproducible research movement. A particular strength of Git is its capability to merge different versions of a repository.
 
 .. _data_structures_provenance:
 
-2.3 Data structures and data provenance
+2.3 Data structures and provenance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: the following senctence needs improvements
-Creating an extensible ecosystem of file-based interfaces following open data standards
-implementing a granular data provenance model and a robust identification scheme.
+
+..
+   Connect to (even link?) text from the readme:
+   Creating an extensible ecosystem of file-based interfaces following open data standards
+   implementing a granular data provenance model and a robust identification scheme.
 
 The CoLRev framework is based on an opinionated and scientifically grounded selection of data structures, file-paths and operating principles.
 Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data), freeing time and mental energy for literature analysis and synthesis.
 
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
-Examples of transparent changes and a commit report are available in the `changes section <../guides/changes.html>`_.
+To accomplish these goals, CoLRev tracks a `colrev_status` for each record (see the `model <../manual/operations.html>`_):
 
-To accomplish these goals, CoLRev tracks a status for each record (see the *Shared model for the steps of the review process*):
-
-- The status is used to determine the current state of the review project
-- It is used by the ReviewManager to determine which operations are valid according to the processing order (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
-- Tracking record status enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
-- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., status="synthesized" implies pdf_prepared, md_prepared, rev_included, rev_prescreen_included - no need to check consistency between different screening decisions)
+- The `colrev_status` is used to determine the current state of the review project
+- It is used by the ReviewManager to determine which operations are valid according to the order of operations (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
+- Tracking the `colrev_status`` enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
+- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., `colrev_status="synthesized"`` implies `pdf_prepared`, `md_prepared`, `rev_included`, `rev_prescreen_included`)
 - An underlying assumption is that different types of reviews share the same process model (with different parameters) and that the main differences are in the data extraction and analysis stages (e.g., requiring structured or unstructured data formats)
+
+The data structures distinguish raw data sources (stored in `data/search/`) and the main records (stored in `data/records.bib`).
 
 Raw data sources:
 
-- Major reference formats supported (e.g., RIS, BibTeX, Endnote)
-- Transformed to BibTeX by CoLRev to facilitate more efficient processing
-TODO what is the * doing in the following bulletpoint?
-- Can be immutable (e.g., results extracted from databases) * Exception: fixing incompatibilities with BibTeX Standard
-- Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
+- Raw data sources represent the latest version of the records retrieved from source, i.e., they can be updated by API-based sources. Manual edits should be applied to the main records (`data/records.bib`).
+- Input reference formats (e.g., RIS, BibTeX, Endnote) are transformed to BibTeX to facilitate more efficient processing
 
-The MAIN_REFERENCES contain all records.
-They are considered the "single version of truth" (with the corresponding version history).
-They are sorted according to IDs, which makes it easy to examine deduplication decisions. Once propagated to the review process (the prescreen), the ID field (e.g., BaranBerkowicz2021) is considered immutable and used to identify the record throughout the review process.
-To facilitate an efficient visual analysis of deduplication decisions (and preparation changes), CoLRev attempts to set the final IDs (based on formatted and completed metadata) when importing records into the MAIN_REFERENCEs (IDs may be updated until the deduplication step if the author and year fields change).
+..
+   - Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
+   Can be immutable (e.g., results extracted from databases). Exception: fixing incompatibilities with BibTeX Standard
 
-ID formats, such as three-author+year (automatically generated by CoLRev), is recommended because:
+Main records:
 
-- Semantic IDs are easier to remember (compared to arbitrary ones like DOIs or numbers that are incremented)
-- Global identifiers (like DOIs or Web of Science accession numbers) are not available for every record (such as conference papers, books, or unpublished reports)
-- Shorter formats (like first-author+year) may often require arbitrary suffixes
 
-Individual records in the MAIN_REFERENCES are augmented with:
+- The file contains all records.
+- It is considered the single version of truth with a corresponding version history.
+- Records are sorted according to IDs, which makes it easy to examine deduplication decisions. Once propagated to the review process (the prescreen), the ID field (e.g., BaranBerkowicz2021) is considered immutable and used to identify the record throughout the review process.
+- To facilitate an efficient visual analysis of deduplication decisions (and preparation changes), CoLRev attempts to set the final IDs (based on formatted and completed metadata) when importing records into the main records file (IDs may be updated until the deduplication step if the author and year fields change).
 
-- The ``status`` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between a references file and a screening sheet/data sheet/manuscript)
-- The ``origin`` field to enable traceability and analyses (in both directions)
+For main records, ID formats such as three-author+year (automatically generated by CoLRev), are recommended because:
 
-BibTeX:
+- Semantic IDs are easier to remember compared to arbitrary ones like DOIs or numbers that are incremented.
+- Global identifiers (like DOIs or Web of Science accession numbers) are not available for every record (such as conference papers, books, or unpublished reports).
+- Shorter formats (like first-author+year) may often require arbitrary suffixes.
 
-- Quasi-standard format that is supported by most reference managers and literature review tools for input/output `overview <https://en.wikipedia.org/wiki/Comparison_of_reference_management_software>`_.
-- BibTeX is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS)
+Individual records in the main records are augmented with:
+
+- The `colrev_status` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between the main records file and a screening sheet, data sheet, and manuscript)
+- The ``colrev_origin`` field to enable traceability and analyses (in both directions).
+
+For the main records and the converted raw data, the BibTeX is selected for the following reasons:
+
+- BiBTeX is a quasi-standard format that is supported by most reference managers and literature review tools (`overview <https://en.wikipedia.org/wiki/Comparison_of_reference_management_software>`_).
+- BibTeX is easier for humans to analyze in Git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (tabular, column-based formats like csv are hard to analyze in Git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS).
 - BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name)
-- BibTeX can be augmented (including additional fields for the record origin, status, etc.)
+- BibTeX can be augmented (including additional fields for the `colrev_origin`, `colrev_status`, etc.)
 - BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
-- Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple
-- Current policy (may change): do not use the crossref field (i.e., resolve it in the preparation). Efficient abbreviation of conference proceedings, can be accomplished through the pandoc `citation abbreviation options <https://pandoc.org/MANUAL.html#option--citation-abbreviations>`_. In addition, the crossreferenced record would not be displayed next to the original record, making it harder to visually validate (preparation) changes. The crossref-fields would also require special treatment in the deduplication process, the retrieval (across repositories) and operations reading records from the disk
-- The order of the first fields is fixed to enable efficient status checks (reading the first n lines of each record instead of parsing the whole file)
+
+..
+   - Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the Git history simple
+   - Current policy (may change): do not use the crossref field (i.e., resolve it in the preparation). Efficient abbreviation of conference proceedings, can be accomplished through the pandoc `citation abbreviation options <https://pandoc.org/MANUAL.html#option--citation-abbreviations>`_. In addition, the crossreferenced record would not be displayed next to the original record, making it harder to visually validate (preparation) changes. The crossref-fields would also require special treatment in the deduplication process, the retrieval (across repositories) and operations reading records from the disk
+   - The order of the first fields is fixed to enable efficient status checks (reading the first n lines of each record instead of parsing the whole file)
 
 
-.. We should require a single PDF/file (otherwise, the preparation status of each PDF could be different...)
-.. or : allow multiple but consider the file linked in data_provenance?
+..
+   We should require a single PDF/file (otherwise, the preparation status of each PDF could be different...)
+   or : allow multiple but consider the file linked in data_provenance?
   - pdf paths should be reusable/shareable, i.e., relative (not dependent upon a local/absolute path)
   - For example, indexing Dropboxed PDFs and adding a symlinked pdfs dir that points to the Dropbox folder enables retrieval/reuse within teams
   - Always call Path(repo.path + record['file']) - explicitly specify the base dir
 
+   Principles for provenance:
 
-Principles for provenance:
+   - The identification scheme is part of the data provenance model
+   - State model
+   - Lineage: origins
+   - Transparency
+   - set_curated: after setting colrev_masterdata = https:... : remove colrev_masterdata_provenance (it is available in the corresponding curated repository)
+   - masterdata: key data to identify a record, built-in corrections (feedback-loop to curated repository) (volatile fields are not in masterdata)
+   - All masterdata (identifying metdata) should have the same source for curated records -> it is sufficient to store it once (in the colrev_masterdata field)
+   - CURATED: for masterdata (**collectively** : masterdata belong together, should not be versioned/combined independently/separately) and for complementary fields (individually)
+   - Focus on confidence values internally but focus on qualitative assessments for users (use confidence values in the decisions/scripts and maybe add it to the qualitative assessments)
 
-- The identification scheme is part of the data provenance model
-- State model
-- Lineage: origins
-- Transparency
-- Think about: removing provenance information after merge? (optional/explicit?)
-- set_curated: after setting colrev_masterdata = https:... : remove colrev_masterdata_provenance (it is available in the corresponding curated repository)
-- colrev_file_provenance is not optional (contains the cpid)
-- masterdata: key data to identify a record, built-in corrections (feedback-loop to curated repository) (volatile fields are not in masterdata)
-- All masterdata (identifying metdata) should have the same source for curated records -> it is sufficient to store it once (in the colrev_masterdata field)
-- CURATED: for masterdata (**collectively** : masterdata belong together, should not be versioned/combined independently/separately) and for complementary fields (individually)
-- Focus on confidence values internally but focus on qualitative assessments for users (use confidence values in the decisions/scripts and maybe add it to the qualitative assessments)
+   Related to preparation:
 
-Related to preparation:
-TODO: the following bulletpoints do not appear as bulletpoints
+   - Separate prep/polish: polish does not effect a state transition!
+   - Metadata: completeness and quality metrics
+   - Fields-specific quality labels
+   - Fusion of records (after "matching" decision)
+   - Protection of curated content (all changes are explicit corrections that feed back into the original repo) -> avoid "deterioration" of curated metadata
+   - Clear distinction between curated/non-curated content (metadata/duplicates/pdf-fingerprints) would be essential to ensure quality
 
-- Separate prep/polish: polish does not effect a state transition!
-- Metadata: completeness and quality metrics
-- Fields-specific quality labels
-- Fusion of records (after "matching" decision)
-- Protection of curated content (all changes are explicit corrections that feed back into the original repo) -> avoid "deterioration" of curated metadata
-- Clear distinction between curated/non-curated content (metadata/duplicates/pdf-fingerprints) would be essential to ensure quality
+   .. https://blog.diffbot.com/knowledge-graph-glossary/data-provenance/
 
-.. https://blog.diffbot.com/knowledge-graph-glossary/data-provenance/
+   Record with **non-curated masterdata**: *colrev_masterdata* indicates that fields were fused from multiple sources
 
-Record with **non-curated masterdata**: *colrev_masterdata* indicates that fields were fused from multiple sources
+   .. code-block::
+      :emphasize-lines: 4,5
 
-.. code-block::
-   :emphasize-lines: 4,5
+      @article{Webster2002,
+         colrev_origin                = {crossref/Webster002;dblp/Webster002}
+         colrev_status                = {md_prepared},
+         colrev_masterdata_provenance = {title:https://api.crossref.org/works/10.17705/1cais.04607;;
+                                          author:dblp....;incomplete;},
+         colrev_data_provenance       = {file: ...,
+                                          doi:....,
+                                          citations:https://api.crossref.org/works/10.17705/1cais.04607;
+                                          literature_review:https://Github.../lrs;},
+         colrev_id                    = {...;....}
+         colrev_cpid                  = {...;...}
 
-   @article{Webster2002,
-      colrev_origin                = {crossref/Webster002;dblp/Webster002}
-      colrev_status                = {md_prepared},
-      colrev_masterdata_provenance = {title:https://api.crossref.org/works/10.17705/1cais.04607;;
-                                       author:dblp....;incomplete;},
-      colrev_data_provenance       = {file: ...,
-                                       doi:....,
-                                       citations:https://api.crossref.org/works/10.17705/1cais.04607;
-                                       literature_review:https://github.../lrs;},
-      colrev_id                    = {...;....}
-      colrev_cpid                  = {...;...}
+         doi                          = {...},
+         dblp_key                     = {...},
+         file                         = {pdfs/Webster2002.pdf},
 
-      doi                          = {...},
-      dblp_key                     = {...},
-      file                         = {pdfs/Webster2002.pdf},
+         title                        = {Literature reviews...},
+         journal                      = {MISQ},
+         year                         = {2002},
 
-      title                        = {Literature reviews...},
-      journal                      = {MISQ},
-      year                         = {2002},
-
-      literature_review            = {no},
-   }
+         literature_review            = {no},
+      }
 
 
-Record with **curated masterdata**: *colrev_masterdata* indicates the location of the repository containing the curated masterdata
+   Record with **curated masterdata**: *colrev_masterdata* indicates the location of the repository containing the curated masterdata
 
-.. code-block::
-   :emphasize-lines: 4
+   .. code-block::
+      :emphasize-lines: 4
 
-   @article{Webster2002,
-      colrev_origin                = {crossref/Webster002;dblp/Webster002}
-      colrev_status                = {md_prepared},
-      colrev_masterdata_provenance = {CURATED:https://github.com/c...},
-      colrev_data_provenance       = {file: ...,
-                                       doi:....,
-                                       citations:https://api.crossref.org/works/10.17705/1cais.04607;
-                                       literature_review:https://github.../lrs;},
-      colrev_id                    = {...;....}
-      colrev_cpid                  = {...;...}
+      @article{Webster2002,
+         colrev_origin                = {crossref/Webster002;dblp/Webster002}
+         colrev_status                = {md_prepared},
+         colrev_masterdata_provenance = {CURATED:https://github.com/c...},
+         colrev_data_provenance       = {file: ...,
+                                          doi:....,
+                                          citations:https://api.crossref.org/works/10.17705/1cais.04607;
+                                          literature_review:https://github.../lrs;},
+         colrev_id                    = {...;....}
+         colrev_cpid                  = {...;...}
 
-      doi                          = {...},
-      dblp_key                     = {...},
-      file                         = {pdfs/Webster2002.pdf},
+         doi                          = {...},
+         dblp_key                     = {...},
+         file                         = {pdfs/Webster2002.pdf},
 
-      title                        = {Literature reviews...},
-      journal                      = {MISQ},
-      year                         = {2002},
+         title                        = {Literature reviews...},
+         journal                      = {MISQ},
+         year                         = {2002},
 
-      literature_review            = {no},
-   }
+         literature_review            = {no},
+      }
 
-.. the corresponding provenance information is stored in the curated repo.
+   the corresponding provenance information is stored in the curated repo.
 
-.. colrev_ids for convenient robust access (based on origin/historical records stored in the repo)
-.. ID: unique in the project, CoLRev mechanisms aim at preventing ID conflicts across projects (for convenience), but content-based identification/explicit origins mean that changes in IDs do not introduce problems
+   colrev_ids for convenient robust access (based on origin/historical records stored in the repo)
+   ID: unique in the project, CoLRev mechanisms aim at preventing ID conflicts across projects (for convenience), but content-based identification/explicit origins mean that changes in IDs do not introduce problems
 
-colrev_id:
-TODO: the following bulletpoints do not appear as bulletpoints
+   colrev_id:
 
-- Advantage of full/long colrev_ids: manual interpretation/comparison and similarity-measures are meaningful (in retrieval)
-- Should always be based on full records in the repository (enables updating of colrev_id fields/schemes)
-- Should be combined in the indexing process
-- Exact, ID/container-based identification should be used within a repository (not between reposistories)
+   - Advantage of full/long colrev_ids: manual interpretation/comparison and similarity-measures are meaningful (in retrieval)
+   - Should always be based on full records in the repository (enables updating of colrev_id fields/schemes)
+   - Should be combined in the indexing process
+   - Exact, ID/container-based identification should be used within a repository (not between reposistories)
 
 .. _algorithms:
 
@@ -389,7 +393,7 @@ Overview of packages and reasons for selection:
 - **pybtex**: the most actively developed pythonic BibTeX parser with high load performance
 - **Tesseract/ocrmypdf**: the leading (non-proprietary) OCR engine (machine-readability of PDF content)
 - **dedupe**: one of the leading python packages for record linkage, offering convenience functions supporting active learning, learnable similarity functions and blocking algorithms
-- **Pandoc** and **CSL**: the leading projects for creating scientific documents from markdown, the standard for git-versioned manuscripts
+- **Pandoc** and **CSL**: the leading projects for creating scientific documents from markdown, the standard for Git-versioned manuscripts
 - **Opensearch**: the leading open source search engine and search dashboard
 
 ..
@@ -416,8 +420,8 @@ Desigining a self-explanatory, fault-tolerant, and configurable user workflow
 - Simple, self-explanatory end-to-end user workflow (3 steps, 1 command: status) : suggesting next steps (hiding complexity), preventing errors, improving efficiency
 
 
-In its basic form, the workflow consists of iteratively calling ``colrev status`` > ``colrev [process]`` > ``git [process]``.
-It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``git [process]``.
+In its basic form, the workflow consists of iteratively calling ``colrev status`` > ``colrev [process]`` > ``Git [process]``.
+It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``Git [process]``.
 
 .. figure:: ../../figures/workflow.svg
    :width: 600
@@ -433,15 +437,16 @@ Design processing operations in such a way that cognitive effort is saved and al
 Changes with similar degrees of confidence are bundled in commits (rounds) to facilitate prioritized validation
 e.g., prep-rounds, as review ordered screen or reading heuristics.
 
-.. _check_and_undo:
+.. _validate_and_undo:
 
-3.3 Check-and-undo
+3.3 Validate-and-undo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: some introductory words, sub chapter stars directly with bulletpoints, inconstent with prior sub chapters
 
-- Check and undo
-- Algorithmic application of changes and (efficient) undo is preferred over manual entry/changes
-- Reuse (curated, across projects) to avoid redundant efforts
+To maintain high data quality, it is imperative to facilitate efficient validation and undoing of changes.
+
+- Validation and undoind of changes should be supported by every operation.
+- Algorithmic application of changes and (efficient) undo operations are preferred over manual entry/changes.
+- Reuse (curated content, across projects) should be facilitated to avoid redundant efforts.
 
 .. _area_community:
 
@@ -473,13 +478,15 @@ The colrev_cml_assistant extension provides an environment supporting researcher
 4.2 Layered and multifaceted view
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TODO: some introductory words, sub chapter stars directly with bulletpoints, inconstent with prior sub chapters
+Ideally, CoLRev projects form highly connected networks with data flowing between individual repositories that focus metadata, content curation, broad topic reviews, and specific review papers. In some cases, it is useful to require data that is reconciled to a singular version of the truth, while in other cases, different philosophical and theoretical perspectives may better be represented by separate data layers.
 
-- Layers principle: distinction between project repos, topic repos and curated repos
-- Efficient reuse (push/pull, search-source, sync, distribute)
-- Be aware that some types of research do not hold a singular truth but multiple interpretations
-- For records: push/pull does not change the sample size (does not add records), search-source changes the sample size (explicit source/lineage)
-- Distribute: push-logic to feed records into topic repositories
+- Integration and data flows between project repositories, topic repositories, and curated metadata/data repositories should be supported.
+- Reconciliation of singular truths and the development of alternative interpretative layers should be supported.
+
+..
+   - Efficient reuse (push/pull, search-source, sync, distribute)
+   - Distribute: push-logic to feed records into topic repositories
+   - For records: push/pull does not change the sample size (does not add records), search-source changes the sample size (explicit source/lineage)
 
 .. _curation_per_default:
 
