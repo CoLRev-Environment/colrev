@@ -64,7 +64,7 @@ def test_compute_language_confidence_values(
     expected_lang, expected_conf = expected  # type: ignore
     # predicted_lang = predicted_lang.name.lower()
     assert expected_lang == predicted_lang  # type: ignore
-    assert expected_conf > predicted_conf  # type: ignore
+    assert expected_conf < predicted_conf  # type: ignore
 
 
 @pytest.mark.parametrize(
