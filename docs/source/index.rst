@@ -66,7 +66,7 @@ After each operation, `validate the changes <manual/workflow.html#colrev-validat
    # Complete the forms of data analysis and synthesis, as specified in the settings
    colrev data
 
-For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
+For each operation, the ``colrev settings`` document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
 
 .. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.svg
    :width: 600
@@ -75,7 +75,7 @@ For each operation, the **colrev settings** document the tools and parameters. Y
 
 
 **The project collaboration loop** allows you to synchronize the project repository with your team.
-The *colrev pull* and *colrev push* operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
+The ``colrev pull`` and ``colrev push`` operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
 In essence, a CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a record-level curation loop.
 
 **The record curation loop** proposes a new vision for the review process.
@@ -89,7 +89,7 @@ The more records are curated, the more you can focus on the synthesis.
    :align: center
    :alt: Reuse vision
 
-Further information is provided in the `documentation <index.html>`_, the developer `api reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
+Further information is provided in the `documentation <index.html>`_, the developer `API reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
 
 
 .. toctree::
