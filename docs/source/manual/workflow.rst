@@ -80,7 +80,7 @@ The following figure illustrates the validation for a prep operation:
    :alt: Validation (prep)
 
 Validate is a general operation that allows users to validate changes in different types of commits (prep, dedupe, ...),
-but also changes of particular users, properties of the review or other (see `docs <technical_documentation/cli.html#colrev-validate>`_).
+but also changes of particular users, properties of the review or other (see `docs <../foundations/cli.html#colrev-validate>`_).
 For some operations (such as prep and dedupe), CoLRev provides custom validation functionality, which displays the most substantial changes first.
 In other cases, CoLRev opens gitk, which displays all committed changes.
 If necessary, whole versions can be undone through git clients (for an overview of git GUI clients, see `here <https://git-scm.com/downloads/guis>`_).
