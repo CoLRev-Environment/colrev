@@ -4,7 +4,7 @@
 colrev screen
 ---------------------------------------------
 
-In the :program:`colrev screen` operation, records transition from `pdf_prepared` to `rev_included` or `rev_excluded`. Decisions on individual screening criteria (if any) are reported in the `screening_criteria` field.
+In the :program:`colrev screen` operation, records transition from ``pdf_prepared`` to ``rev_included`` or ``rev_excluded``. Decisions on individual screening criteria (if any) are reported in the ``screening_criteria`` field.
 
 The selection of screening criteria is recorded when initializing the screen.
 
