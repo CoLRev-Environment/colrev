@@ -4,12 +4,12 @@ Steps and operations
 
 CoLRev is based on a shared model of six methodological **steps** of the literature review process:
 
-1. Problem formulation,
-2. Metadata retrieval,
-3. Metadata prescreen,
-4. PDF retrieval,
-5. PDF screen, and
-6. Data extraction and synthesis.
+1. Problem formulation
+2. Metadata retrieval
+3. Metadata prescreen
+4. PDF retrieval
+5. PDF screen
+6. Data extraction and synthesis
 
 These steps, which typically involve iterations, are operationalized through operations as displayed in the figure:
 
