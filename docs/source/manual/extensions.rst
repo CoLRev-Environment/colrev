@@ -21,7 +21,7 @@ Everything is specified in the settings.json (simply add the extension/script na
     },
     ...
 
-The endpoints for extensions are documented in the `extension endpoints <../technical_documentation/extensions.html>`_ section.
+The endpoints for extensions are documented in the `extension endpoints <../foundations/extensions.html>`_ section.
 
 Registered extensions are public Python packages that can be installed via PyPI.
 They contain an ``endpoints.json`` file in the top-level directory (`colrev_built_in <https://github.com/CoLRev-Ecosystem/colrev/blob/main/endpoints.json>`_ provides an example).
