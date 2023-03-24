@@ -12,7 +12,7 @@ TODO
 
 If you already completed a literature review project, it is very easy to set it up as a curation.
 Make your repository available to the intended audience (publicly or within a team), and set the curation fields in the settings.
-Suggest using a repo as a curation refers primarily to the data associated with individual papers (record level). It is always possible to clone/extend a colrev project or to include the sample in a new colrev project (show how this would be supported but state that this is not what we mean by *curation*).
+Suggest using a repository as a curation refers primarily to the data associated with individual papers (record level). It is always possible to clone/extend a colrev project or to include the sample in a new colrev project (show how this would be supported but state that this is not what we mean by *curation*).
 
 This enables you to reuse record-level data within other local projects, within a research team, or across the research community.
 
@@ -26,7 +26,7 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
       colrev env --install https://github.com/u_name/repo_name
       colrev env --index
 
-See `reuse of community-curated data <../../foundations_governance/colrev.html>`_ for details.
+See `reuse of community-curated data <../foundations/colrev.html>`_ for details.
 
 ..    This may become a separate chapter:
       Local review environments

@@ -12,7 +12,7 @@ Repeatedly calling ``colrev status`` should guide you through the different step
 
 .. The main purpose of the three-step workflow is to make your work easier.
 
-The workflow, as illustrated in the following, consists of a three-step cycle that iterates from colrev status to a colrev operation to colrev validate and back to colrev status:
+The workflow, as illustrated in the following, consists of a three-step cycle that iterates from ``colrev status`` to a ``colrev [operation]`` to ``colrev validate`` and back to ``colrev status``:
 
 .. figure:: ../../figures/workflow.svg
    :width: 600
@@ -20,15 +20,15 @@ The workflow, as illustrated in the following, consists of a three-step cycle th
    :alt: Workflow cycle
 
 Although the validation step is generally recommended, it is more important for some operations than for others.
-For operations like init, or operations that do not create new versions (such as push or show), the validation can be skipped.
+For operations like ``init``, or operations that do not create new versions (such as ``push`` or ``show``), the validation can be skipped.
 
 The use of CoLRev operations ensures that the data is always formated consistently and that diffs are readable.
-It is also possible to create verisons through git commands, which automatically trigger CoLRev's pre-commit hooks.
+It is also possible to create versions through git commands, which automatically trigger CoLRev's pre-commit hooks.
 
 CoLRev status
 -------------------------------
 
-The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
+The ``colrev status`` command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
 It consists of the following (as shown below):
 
 
@@ -51,7 +51,7 @@ It consists of the following (as shown below):
 
 - The **next operation** section, which provides situational instructions on the next steps of the review project (highlighted in yellow), versioning and collaboration, and the local CoLRev environment
 
-In the background, colrev status also checks consistency of file formats and structure.
+In the background, ``colrev status`` also checks consistency of file formats and structure.
 Like all other operations, it also offers the possibility to display more detailed information (simply add ``-v``).
 
 
@@ -65,29 +65,29 @@ Detailed information on the steps and operations are provided on the following p
 CoLRev validate
 -------------------------------
 
-After each step, you can check and validate the changes using
+After each step, you can check and validate the changes using:
 
 .. code-block:: bash
 
       colrev validate .
 
 This operation displays the most substantial changes for the selected commit and allows users to undo selected changes efficiently.
-The following figure illustrates the validation for a prep operation:
+The following figure illustrates the validation for a ``prep`` operation:
 
 .. figure:: ../../figures/cli-validate.png
    :width: 600
    :align: center
    :alt: Validation (prep)
 
-Validate is a general operation that allows users to validate changes in different types of commits (prep, dedupe, ...),
-but also changes of particular users, properties of the review or other (see `docs <technical_documentation/cli.html#colrev-validate>`_).
-For some operations (such as prep and dedupe), CoLRev provides custom validation functionality, which displays the most substantial changes first.
+``validate`` is a general operation that allows users to validate changes in different types of commits (``prep``, ``dedupe``, ...),
+but also changes of particular users, properties of the review or other (see `docs <../foundations/cli.html#colrev-validate>`_).
+For some operations (such as ``prep`` and ``dedupe``), CoLRev provides custom validation functionality, which displays the most substantial changes first.
 In other cases, CoLRev opens gitk, which displays all committed changes.
 If necessary, whole versions can be undone through git clients (for an overview of git GUI clients, see `here <https://git-scm.com/downloads/guis>`_).
 
-It is also possible to validate previous versions.
-This could be done to validate the changes introduced by algorithms and teammates, and it facilitates validation of any CoLRev project by external authors.
-To validate commits going back in history, run:
+It is also possible to ``validate`` previous versions.
+This could be done to ``validate`` the changes introduced by algorithms and teammates, and it facilitates validation of any CoLRev project by external authors.
+To ``validate`` commits going back in history, run:
 
 .. code-block:: bash
 

@@ -13,11 +13,11 @@ CoLRev is an open-source environment for collaborative literature reviews. It ta
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 The following features stand out:
 
-- an open and extensible environment based on data and process standards
-- builds on git and its transparent collaboration model for the entire literature review process
-- offers a self-explanatory, fault-tolerant, and configurable user workflow
-- operates a model for data quality, record identification, content curation, and reuse
-- enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
+- An open and extensible environment based on data and process standards
+- Builds on git and its transparent collaboration model for the entire literature review process
+- Offers a self-explanatory, fault-tolerant, and configurable user workflow
+- Operates a model for data quality, record identification, content curation, and reuse
+- Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
 
 Please consult the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/roadmap.html).
 
@@ -39,7 +39,7 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 **The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next `operation <manual/operations.html>`_.
 After each operation, `validate the changes <manual/workflow.html#colrev-validate>`_.
 
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/workflow.svg
+.. figure:: ../figures/workflow.svg
    :width: 600
    :align: center
    :alt: Workflow cycle
@@ -77,7 +77,7 @@ For each operation, the **colrev settings** document the tools and parameters. Y
 
 
 **The project collaboration loop** allows you to synchronize the project repository with your team.
-The *colrev pull* and *colrev push* operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
+The ``colrev pull`` and ``colrev push`` operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
 In essence, a CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a record-level curation loop.
 
 **The record curation loop** proposes a new vision for the review process.
@@ -91,7 +91,7 @@ The more records are curated, the more you can focus on the synthesis.
    :align: center
    :alt: Reuse vision
 
-Further information is provided in the `documentation <docs/source/index.rst>`_, the developer `api reference <docs/build/foundations/api.html>`_, and the `CoLRev framework <docs/build/foundations/colrev.html>`_ summarizing the scientific foundations.
+Further information is provided in the `documentation <index.html>`_, the developer `API reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
 
 
 .. toctree::

@@ -2,7 +2,7 @@
 Example
 ==================================
 
-Exampel 1: colrev_cml_assistant
+Example 1: colrev_cml_assistant
 
 Aimed at supporting crowdsourcing and machine-learning based on CoLRev datasets.
 

@@ -35,15 +35,15 @@ Once the initial objectives and review type are specified, the CoLRev project ca
 
 In most cases, activities related to the problem formulation step will continue after initializing the repository.
 The specification of plans for the review project may lead to the development of a review protocol.
-As a best practice recommendation, we suggest to keep notes on he review objective etc. in the ``data/paper.md`` file.
+As a best practice recommendation, we suggest to keep notes on the review objective, review type etc. in the ``data/paper.md`` file.
 This document may also serve as the review protocol and evolve into the final review manuscript.
 Review protocols often involve the following:
 
-- Sharing the repository with your team (see `instructions <collaboration.html>`_).
-- Refining the review objectives and the characteristics of the review.
-- Defining focal concepts of the review.
-- Developing a search strategy and testing it.
-- If prior reviews were found, make plans to add their samples to the review project.
+- Sharing the repository with your team (see `instructions <collaboration.html>`_)
+- Refining the review objectives and the characteristics of the review
+- Defining focal concepts of the review
+- Developing a search strategy and testing it
+- If prior reviews were found, make plans to add their samples to the review project
 
 ..
    - working hypothesis: differences between review types primarily manifest in the data stage (in the other steps, it is mostly a question of parameters)

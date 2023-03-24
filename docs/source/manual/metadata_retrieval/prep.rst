@@ -3,28 +3,28 @@
 colrev prep
 ==================================
 
-In the :program:`colrev prep` operation, records with sufficient metadata quality transition from `md_imported` to `md_prepared` (`md_needs_manual_preparation` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
+In the :program:`colrev prep` operation, records with sufficient metadata quality transition from ``md_imported`` to ``md_prepared`` (``md_needs_manual_preparation`` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
 
 Quality rules:
 
-- Completeness of fields based on rules and external sources, e.g., a journal article requires author, title, year, journal, volume (and issue) fields.
+- Completeness of fields based on rules and external sources, e.g., a journal article requires author, title, year, journal, volume (and issue) fields
 - Completeness of field values, e.g., author fields should not end with "and others", journal fields should not end with "..."
 - Consistency between fields, e.g., inproceedings records cannot have a journal field
-- Format consistency, e.g., fields should not be capitalized, author fields should be formatted correctly, dois should follow a predefined pattern
-- Consistency between metadata associated with ids, e.g., metadata associated with the doi should be in line with the metadata associated displayed on the website (linked in the url field)
+- Format consistency, e.g., fields should not be capitalized, author fields should be formatted correctly, DOIs should follow a predefined pattern
+- Consistency between metadata associated with ids, e.g., metadata associated with the DOI should be in line with the metadata associated displayed on the website (linked in the URL field)
 
 ..
     -> explain the rules/criteria (with examples) in the architecture rationales (or the colrev framework)
 
 Preparation procedures (the specific preparation depends on the specified settings, they typically consist of steps like the following):
 
-- General rules, such as resolving BiBTeX cross-references, formatting doi fields, and determining the language of records.
+- General rules, such as resolving BiBTeX cross-references, formatting DOI fields, and determining the language of records
 - SearchSource-specific rules to fix quality defects, such as incorrect use of field names (without affecting other SearchSources)
 - Consolidation with high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
 - Linking with CoLRev curations, which establishes a quality curation loop
-- Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets.
+- Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets
 
-Before starting the :program:`colrev prep-man` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning prep).
+Before starting the :program:`colrev prep-man` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning ``prep``).
 
 ..
     - heuristic metadata improvements
@@ -74,7 +74,7 @@ In addition, :program:`colrev prep-man` provides an interactive convenience func
 
     If the error was introduced in a 'prep' commit, the commit message will guide you to the source.
 
-The following options for prep are available:
+The following options for ``prep`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
@@ -84,7 +84,7 @@ The following options for prep are available:
         title='',
         ) }}
 
-The following options for prep-man are available:
+The following options for ``prep-man`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 

@@ -15,16 +15,16 @@ Another dimension is the nature of the analyses and the corresponding level at w
 
 - Scientometric analyses are often concerned with structural patterns of publication metadata, author characteristics, or citation networks.
 - Descriptive analyses can be dedicated to distributional patterns of research methods, qualitative vs. quantitative designs, or levels of analysis.
-- Analyses aimed at aggregating scientific evidence typically involve a structured data extraction, risk-of-bias assessment, and meta-analtic regressions.
+- Analyses aimed at aggregating scientific evidence typically involve a structured data extraction, risk-of-bias assessment, and meta-analytic regressions.
 - Conceptual synthesis activities can be dedicated to underlying theories and in-depth problematization of meta-theoretical issues.
 
 The outcomes of the last step can involve various elements, such as:
 
 - A synthesis document (manuscript) and complementary appendices
-- A bibliography containing the sample in Formats such as ris, bib, enl
+- A bibliography containing the sample in formats such as ris, bib, enl
 - Reporting items related to the sample and review process (e.g., profile of the study, PRISMA diagram)
 - The project repository including the full sample and intermediate steps
-- Complementary web resources (e.g., on Github pages)
+- Complementary web resources (e.g., Github pages)
 
 The available data endpoints, which can be registered in the ``settings.json``, are provided in the data operation page.
 Advice on the active data endpoints is provided through ``colrev status``.

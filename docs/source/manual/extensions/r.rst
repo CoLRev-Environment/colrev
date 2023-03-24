@@ -3,7 +3,7 @@ R
 ==================================
 
 
-For analytical extensions
+For analytical extensions:
 
 .. code-block:: R
 
@@ -13,7 +13,7 @@ For analytical extensions
     df <- bib2df("references.bib")
     df
 
-For extensions aimed at changing records
+For extensions aimed at changing records:
 
 .. code-block:: R
 

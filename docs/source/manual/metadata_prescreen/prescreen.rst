@@ -4,7 +4,7 @@
 colrev prescreen
 ---------------------------------------------
 
-In the :program:`colrev prescreen` operation, records transition from `md_processed` to `rev_prescreen_included` or `rev_prescreen_excluded`.
+In the :program:`colrev prescreen` operation, the records transition from ``md_processed`` to ``rev_prescreen_included`` or ``rev_prescreen_excluded``.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).
 Each author can independently screen the selection of records on a separate git branch.
@@ -16,7 +16,7 @@ or in general (using ``colrev prescreen --include_all_always``).
 ..
     - mention possible transitions to md_needs_manual_preparation
 
-:program:`colrev prescreen` supports interactive prescreening
+:program:`colrev prescreen` supports interactive prescreening:
 
 .. code:: bash
 
@@ -32,7 +32,7 @@ or in general (using ``colrev prescreen --include_all_always``).
     colrev prescreen --split STR
 
 
-The following options for prescreen are available:
+The following options for ``prescreen`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 

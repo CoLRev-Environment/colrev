@@ -1,4 +1,3 @@
-
 .. _PDF screen:
 
 Step 5: PDF screen
