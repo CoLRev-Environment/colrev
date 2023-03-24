@@ -11,7 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-
+import colrev.ui_cli.cli_colors as colors
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -50,7 +50,7 @@ class GithubPages(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
+        data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
         # Set default values (if necessary)
@@ -60,6 +60,7 @@ class GithubPages(JsonSchemaMixin):
             settings["auto_push"] = True
 
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = data_operation.review_manager
 
     def get_default_setup(self) -> dict:
         """Get the default setup"""
@@ -172,6 +173,22 @@ class GithubPages(JsonSchemaMixin):
             if not silent_mode:
                 data_operation.review_manager.logger.info("No remotes specified")
 
+    def __check_gh_pages_setup(self, *, git_repo: git.Repo) -> None:
+        username, project = (
+            git_repo.remotes.origin.url.replace("https://github.com/", "")
+            .replace(".git", "")
+            .split("/")
+        )
+        gh_page_link = f"https://{username}.github.io/{project}/"
+        if gh_page_link not in (self.review_manager.path / Path("readme.md")).read_text(
+            encoding="utf-8"
+        ):
+            print(
+                f"{colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
+                "To make it easier to access the page, add the following to the readme.md file:\n"
+                f"\n    [Github page]({gh_page_link}){colors.END}\n"
+            )
+
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
@@ -201,6 +218,7 @@ class GithubPages(JsonSchemaMixin):
                 data_operation=data_operation, git_repo=git_repo
             )
 
+        self.__check_gh_pages_setup(git_repo=git_repo)
         git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
 
         self.__update_data(data_operation=data_operation, silent_mode=silent_mode)

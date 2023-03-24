@@ -28,7 +28,7 @@ class TEIPDFPrep(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
-    TEI_PATH_RELATIVE = Path("data/.tei")
+    TEI_PATH_RELATIVE = Path("data/.tei/")
     ci_supported: bool = False
 
     def __init__(
