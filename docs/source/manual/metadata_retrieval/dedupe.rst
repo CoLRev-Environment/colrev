@@ -3,7 +3,7 @@
 colrev dedupe
 ==================================
 
-The :program:`colrev dedupe` operation identifies and merges duplicate records. Non-duplicate records transition from `md_prepared` to `md_processed`. Duplicate records are integrated based on a quality-aware merge function and the combined record transitions to `md_processed`. The predecessors of a merged record can be identified through the `colrev_origin` list, enabling ex-post validation and offering the possibility to undo merges.
+The ``colrev dedupe`` operation identifies and merges duplicate records. Non-duplicate records transition from ``md_prepared`` to ``md_processed``. Duplicate records are integrated based on a quality-aware merge function and the combined record transitions to ``md_processed``. The predecessors of a merged record can be identified through the ``colrev_origin`` list, enabling ex-post validation and offering the possibility to undo merges.
 
 ..
     - mention languages (as an open issue/our approach)
@@ -32,7 +32,7 @@ The :program:`colrev dedupe` operation identifies and merges duplicate records. 
     .. figure:: ../../../figures/duplicate_validation.png
     :alt: Validation of duplicates
 
-The following options for dedupe are available:
+The following options for ``dedupe`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
