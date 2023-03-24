@@ -7,5 +7,3 @@ Check out the `contribution guidelines <https://github.com/CoLRev-Ecosystem/colr
 
 - Lead developer: `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`_
 - Project manager: Julian Prester
-
-TODO: Emails are missing
