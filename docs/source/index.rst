@@ -66,7 +66,7 @@ After each operation, `validate the changes <manual/workflow.html#colrev-validat
    # Complete the forms of data analysis and synthesis, as specified in the settings
    colrev data
 
-For each operation, the ``colrev settings`` document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
+For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
 
 .. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.svg
    :width: 600
