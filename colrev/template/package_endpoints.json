@@ -3,8 +3,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.conceptual_review",
             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Conceptual review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.md>`_"
@@ -12,8 +12,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.critical_review",
             "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Critical review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.md>`_"
@@ -21,8 +21,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.curated_masterdata",
             "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Curated masterdata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.md>`_"
@@ -30,8 +30,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.descriptive_review",
             "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Descriptive review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.md>`_"
@@ -39,8 +39,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.literature_review",
             "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Literature review (simple)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.md>`_"
@@ -57,8 +57,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.narrative_review",
             "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Narrative review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.md>`_"
@@ -84,8 +84,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scoping_review",
             "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Scoping review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.md>`_"
@@ -93,8 +93,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.theoretical_review",
             "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview",
-            "status": "\ud83d\udd34",
-            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Theoretical review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.md>`_"

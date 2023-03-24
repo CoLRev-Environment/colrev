@@ -2,36 +2,35 @@
     "review_type": [
         {
             "package_endpoint_identifier": "colrev_built_in.conceptual_review",
-            "status": "RED",
-            "issue_link": "TODO"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.curated_masterdata",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.literature_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.narrative_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.descriptive_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.scoping_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.critical_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.theoretical_review",
-            "status": "RED"
+            "status": "ORANGE"
         },
         {
             "package_endpoint_identifier": "colrev_built_in.qualitative_systematic_review",
