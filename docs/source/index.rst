@@ -89,7 +89,7 @@ The more records are curated, the more you can focus on the synthesis.
    :align: center
    :alt: Reuse vision
 
-Further information is provided in the `documentation <docs/source/index.rst>`_, the developer `api reference <docs/build/foundations/api.html>`_, and the `CoLRev framework <docs/build/foundations/colrev.html>`_ summarizing the scientific foundations.
+Further information is provided in the `documentation <index.html>`_, the developer `api reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
 
 
 .. toctree::
