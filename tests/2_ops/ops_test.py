@@ -187,17 +187,17 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
 
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev_built_in.resolve_crossrefs"},
-        {"endpoint": "colrev_built_in.source_specific_prep"},
-        {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
-        {"endpoint": "colrev_built_in.exclude_collections"},
+        {"endpoint": "colrev.resolve_crossrefs"},
+        {"endpoint": "colrev.source_specific_prep"},
+        {"endpoint": "colrev.exclude_non_latin_alphabets"},
+        {"endpoint": "colrev.exclude_collections"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
-        {"endpoint": "colrev_built_in.simple_dedupe"}
+        {"endpoint": "colrev.simple_dedupe"}
     ]
 
     review_manager.settings.pdf_get.pdf_get_package_endpoints = [
-        {"endpoint": "colrev_built_in.local_index"}
+        {"endpoint": "colrev.local_index"}
     ]
     review_manager.settings.pdf_prep.pdf_prep_package_endpoints = []
     review_manager.settings.data.data_package_endpoints = []
@@ -232,7 +232,7 @@ def test_load_pubmed(review_manager: colrev.review_manager.ReviewManager) -> Non
     )
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
-    new_sources[0].endpoint = "colrev_built_in.pubmed"
+    new_sources[0].endpoint = "colrev.pubmed"
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
 
     expected = (
@@ -301,7 +301,7 @@ def test_prescreen(review_manager: colrev.review_manager.ReviewManager) -> None:
     prescreen_operation = review_manager.get_prescreen_operation()
     prescreen_operation.create_prescreen_split(create_split=2)
     review_manager.settings.prescreen.prescreen_package_endpoints = [
-        {"endpoint": "colrev_built_in.conditional_prescreen"}
+        {"endpoint": "colrev.conditional_prescreen"}
     ]
     prescreen_operation.main(split_str="NA")
     prescreen_operation.include_all_in_prescreen(persist=False)
@@ -397,19 +397,19 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     review_manager.get_search_sources()
     expected = [  # type: ignore
         {  # type: ignore
-            "endpoint": "colrev_built_in.pdfs_dir",
+            "endpoint": "colrev.pdfs_dir",
             "filename": Path("data/search/pdfs.bib"),
             "search_type": colrev.settings.SearchType.PDFS,
             "search_parameters": {"scope": {"path": "data/pdfs"}},
-            "load_conversion_package_endpoint": {"endpoint": "colrev_built_in.bibtex"},
+            "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             "comment": "",
         },
         {  # type: ignore
-            "endpoint": "colrev_built_in.unknown_source",
+            "endpoint": "colrev.unknown_source",
             "filename": Path("data/search/test_records.bib"),
             "search_type": colrev.settings.SearchType.DB,
             "search_parameters": {},
-            "load_conversion_package_endpoint": {"endpoint": "colrev_built_in.bibtex"},
+            "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             "comment": None,
         },
     ]

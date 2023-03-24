@@ -1,8 +1,10 @@
+# Collaborative Literature Reviews (CoLRev)
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
 
-# Collaborative Literature Reviews (CoLRev)
+<div align="center">
 
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Ecosystem/colrev/releases/)
@@ -20,6 +22,10 @@
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
+</div>
+
+## Summary
+
 CoLRev is an open-source environment for collaborative literature reviews. It takes care of the data, integrates with differerent synthesis tools, and facilitates Git-based collaboration.
 
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
@@ -31,7 +37,7 @@ The following features stand out:
 - Operates a model for data quality, record identification, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
+See the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/roadmap.html) and [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
 
 ## Contributing, changes, and releases
 

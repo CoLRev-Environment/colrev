@@ -78,9 +78,7 @@ def test_search_source_interfaces(
                 "filename": Path("test.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {"scope": {"path": "test"}},
-                "load_conversion_package_endpoint": {
-                    "endpoint": "colrev_built_in.bibtex"
-                },
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": "",
                 "interface_test": True,
             }
@@ -183,11 +181,11 @@ def test_dedupe_package_interfaces(
         selected_packages=[
             {"endpoint": p}
             for p in dedupe_identifiers
-            if p not in ["colrev_built_in.curation_full_outlet_dedupe"]
+            if p not in ["colrev.curation_full_outlet_dedupe"]
         ]
         + [
             {
-                "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
+                "endpoint": "colrev.curation_full_outlet_dedupe",
                 "selected_source": "test",
             },
         ],
@@ -216,7 +214,7 @@ def test_prescreen_package_interfaces(
             }
             for p in prescreen_identifiers
             # Note : asreview dependency fails on gh actions
-            if p not in ["colrev_built_in.asreview_prescreen"]
+            if p not in ["colrev.asreview_prescreen"]
         ],
         operation=prescreen_operation,
         instantiate_objects=True,
@@ -369,14 +367,14 @@ def test_data_package_interfaces(
             for p in data_identifiers
             if p
             not in [
-                "colrev_built_in.obsidian",
-                "colrev_built_in.colrev_curation",
+                "colrev.obsidian",
+                "colrev.colrev_curation",
             ]
         ]
         + [
-            {"endpoint": "colrev_built_in.obsidian", "version": "0.1.0", "config": {}},
+            {"endpoint": "colrev.obsidian", "version": "0.1.0", "config": {}},
             {
-                "endpoint": "colrev_built_in.colrev_curation",
+                "endpoint": "colrev.colrev_curation",
                 "curation_url": "",
                 "curated_masterdata": True,
                 "masterdata_restrictions": {},

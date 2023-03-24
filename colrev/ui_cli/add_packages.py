@@ -72,7 +72,7 @@ def add_search_source(
             )
         else:
             filename = search_operation.get_unique_filename(
-                file_path_string=f"{query_dict['endpoint'].replace('colrev_built_in.', '')}"
+                file_path_string=f"{query_dict['endpoint'].replace('colrev.', '')}"
             )
             i = 0
             while filename in [x.filename for x in search_operation.sources]:
@@ -97,13 +97,11 @@ def add_search_source(
 
         if "load_conversion_package_endpoint" not in query_dict:
             query_dict["load_conversion_package_endpoint"] = {
-                "endpoint": "colrev_built_in.bibtex"
+                "endpoint": "colrev.bibtex"
             }
         if query_dict["search_type"] == colrev.settings.SearchType.DB:
             feed_config = {
-                "load_conversion_package_endpoint": {
-                    "endpoint": "colrev_built_in.bibtex"
-                },
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             }
             query_dict["load_conversion_package_endpoint"] = feed_config[
                 "load_conversion_package_endpoint"
@@ -155,7 +153,7 @@ def add_data(
 
         default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
 
-        if "colrev_built_in.paper_md" == add:
+        if "colrev.paper_md" == add:
             if "y" == input("Select a custom word template (y/n)?"):
                 template_name = input(
                     'Please copy the word template to " \
@@ -195,10 +193,10 @@ def add_data(
     ]:
         package_endpoints = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.data,
-            selected_packages=[{"endpoint": "colrev_built_in.bibliography_export"}],
+            selected_packages=[{"endpoint": "colrev.bibliography_export"}],
             operation=data_operation,
         )
-        endpoint = package_endpoints["colrev_built_in.bibliography_export"]
+        endpoint = package_endpoints["colrev.bibliography_export"]
         default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
         default_endpoint_conf["bib_format"] = add
         data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
@@ -214,9 +212,7 @@ def add_data(
     review_manager = colrev.review_manager.ReviewManager(force_mode=True)
     data_operation = colrev.ops.data.Data(review_manager=review_manager)
 
-    data_operation.main(
-        selection_list=["colrev_built_in.bibliography_export"], silent_mode=True
-    )
+    data_operation.main(selection_list=["colrev.bibliography_export"], silent_mode=True)
     data_operation.review_manager.logger.info(
         f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
     )

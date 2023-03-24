@@ -927,7 +927,7 @@ class Dataset:
         curated_endpoints = [
             x
             for x in self.review_manager.settings.data.data_package_endpoints
-            if x["endpoint"] == "colrev_built_in.colrev_curation"
+            if x["endpoint"] == "colrev.colrev_curation"
         ]
         if curated_endpoints:
             curated_endpoint = curated_endpoints[0]
@@ -999,6 +999,9 @@ class Dataset:
 
     def add_changes(self, *, path: Path, remove: bool = False) -> None:
         """Add changed file to git"""
+
+        if path.is_absolute():
+            path = path.relative_to(self.review_manager.path)
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)

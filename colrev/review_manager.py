@@ -29,6 +29,7 @@ class ReviewManager:
     """Class for managing individual CoLRev review project (repositories)"""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-statements
     # pylint: disable=too-many-public-methods
     # pylint: disable=import-outside-toplevel
     # pylint: disable=redefined-outer-name
@@ -40,12 +41,18 @@ class ReviewManager:
     SETTINGS_RELATIVE = Path("settings.json")
     REPORT_RELATIVE = Path(".report.log")
     CORRECTIONS_PATH_RELATIVE = Path(".corrections")
-    PDF_DIR_RELATIVE = Path("data/pdfs")
-    SEARCHDIR_RELATIVE = Path("data/search")
     README_RELATIVE = Path("readme.md")
     STATUS_RELATIVE = Path("status.yaml")
+
+    SEARCHDIR_RELATIVE = Path("data/search")
+    PREP_RELATIVE = Path("data/prep")
+    DEDUPE_RELATIVE = Path("data/dedupe")
+    PRESCREEN_RELATIVE = Path("data/prescreen")
+    PDF_DIR_RELATIVE = Path("data/pdfs")
+    SCREEN_RELATIVE = Path("data/screen")
+    DATA_DIR_RELATIVE = Path("data/data")
+
     OUTPUT_DIR_RELATIVE = Path("output")
-    DATA_DIR_RELATIVE = Path("data")
 
     dataset: colrev.dataset.Dataset
     """The review dataset object"""
@@ -82,12 +89,19 @@ class ReviewManager:
         self.settings_path = self.path / self.SETTINGS_RELATIVE
         self.report_path = self.path / self.REPORT_RELATIVE
         self.corrections_path = self.path / self.CORRECTIONS_PATH_RELATIVE
-        self.pdf_dir = self.path / self.PDF_DIR_RELATIVE
-        self.search_dir = self.path / self.SEARCHDIR_RELATIVE
         self.readme = self.path / self.README_RELATIVE
         self.status = self.path / self.STATUS_RELATIVE
-        self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
+
+        self.search_dir = self.path / self.SEARCHDIR_RELATIVE
+        self.prep_dir = self.path / self.PREP_RELATIVE
+        self.dedupe_dir = self.path / self.DEDUPE_RELATIVE
+        self.prescreen_dir = self.path / self.PRESCREEN_RELATIVE
+        self.pdf_dir = self.path / self.PDF_DIR_RELATIVE
+        self.screen_dir = self.path / self.SCREEN_RELATIVE
         self.data_dir = self.path / self.DATA_DIR_RELATIVE
+
+        self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
+
         self.exact_call = exact_call
 
         try:

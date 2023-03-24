@@ -33,7 +33,7 @@ class ExportManPrep(JsonSchemaMixin):
 
     ci_supported: bool = False
 
-    RELATIVE_PREP_MAN_PATH = Path("data/prep_man/records_prep_man.bib")
+    RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
 
     @dataclass
     class ExportManPrepSettings(
@@ -65,11 +65,15 @@ class ExportManPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.review_manager = prep_man_operation.review_manager
-        self.export_path = self.review_manager.path / self.RELATIVE_PREP_MAN_PATH
-        self.export_path.parent.mkdir(exist_ok=True, parents=True)
+
+        self.prep_man_bib_path = (
+            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_PATH
+        )
+
+        self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
-        prep_man_path_pdfs = self.export_path / Path("data/pdfs")
+        prep_man_path_pdfs = self.review_manager.prep_dir / Path("pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
         prep_man_path_pdfs.mkdir(exist_ok=True, parents=True)
@@ -97,7 +101,7 @@ class ExportManPrep(JsonSchemaMixin):
         records: typing.Dict[str, typing.Dict],
     ) -> None:
         prep_man_operation.review_manager.logger.info(
-            f"Export records for man-prep to {self.export_path}"
+            f"Export records for man-prep to {self.prep_man_bib_path}"
         )
 
         man_prep_recs = {
@@ -107,13 +111,13 @@ class ExportManPrep(JsonSchemaMixin):
             == v["colrev_status"]
         }
         prep_man_operation.review_manager.dataset.save_records_dict_to_file(
-            records=man_prep_recs, save_path=self.export_path
+            records=man_prep_recs, save_path=self.prep_man_bib_path
         )
         if any("file" in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
         if "pytest" not in os.getcwd():
-            # os.system('%s %s' % (os.getenv('EDITOR'), self.export_path))
-            subprocess.call(["xdg-open", str(self.export_path)])
+            # os.system('%s %s' % (os.getenv('EDITOR'), self.prep_man_bib_path))
+            subprocess.call(["xdg-open", str(self.prep_man_bib_path)])
 
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
@@ -123,10 +127,10 @@ class ExportManPrep(JsonSchemaMixin):
 
         prep_man_operation.review_manager.logger.info(
             "Load import changes from "
-            f"{self.export_path.relative_to(prep_man_operation.review_manager.path)}"
+            f"{self.prep_man_bib_path.relative_to(prep_man_operation.review_manager.path)}"
         )
 
-        with open(self.export_path, encoding="utf8") as target_bib:
+        with open(self.prep_man_bib_path, encoding="utf8") as target_bib:
             man_prep_recs = prep_man_operation.review_manager.dataset.load_records_dict(
                 load_str=target_bib.read()
             )
@@ -205,14 +209,14 @@ class ExportManPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
 
-        if not self.export_path.is_file():
+        if not self.prep_man_bib_path.is_file():
             self.__export_prep_man(
                 prep_man_operation=prep_man_operation, records=records
             )
         else:
             if "y" == input(
                 "Import changes from "
-                f"{self.export_path.relative_to(prep_man_operation.review_manager.path)} [y,n]?"
+                f"{self.prep_man_bib_path.relative_to(prep_man_operation.review_manager.path)} [y,n]?"
             ):
                 self.__import_prep_man(prep_man_operation=prep_man_operation)
 

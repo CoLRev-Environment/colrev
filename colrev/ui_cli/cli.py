@@ -1576,7 +1576,7 @@ def pdf_prep_man(
     "-a",
     "--add",
     type=str,
-    help="Add a data_format endpoint (e.g., colrev_built_in.structured)",
+    help="Add a data_format endpoint (e.g., colrev.structured)",
 )
 @click.option(
     "-scs",
@@ -1657,13 +1657,13 @@ def data(
                     "No data format not specified. "
                     "To register a data endpoint, "
                     "use one (or several) of the following \n"
-                    "    colrev data --add colrev_built_in.paper_md\n"
-                    "    colrev data --add colrev_built_in.structured\n"
-                    "    colrev data --add colrev_built_in.bibliography_export\n"
-                    "    colrev data --add colrev_built_in.prisma\n"
-                    "    colrev data --add colrev_built_in.github_pages\n"
-                    "    colrev data --add colrev_built_in.zettlr\n"
-                    "    colrev data --add colrev_built_in.colrev_curation"
+                    "    colrev data --add colrev.paper_md\n"
+                    "    colrev data --add colrev.structured\n"
+                    "    colrev data --add colrev.bibliography_export\n"
+                    "    colrev data --add colrev.prisma\n"
+                    "    colrev data --add colrev.github_pages\n"
+                    "    colrev data --add colrev.zettlr\n"
+                    "    colrev data --add colrev.colrev_curation"
                 )
 
     except colrev_exceptions.CoLRevException as exc:
@@ -2148,7 +2148,7 @@ def settings(
         # keywords like prescreen.sripts.LAST_POSITION)
         # maybe prescreen.scripts.1.REPLACE/ADD/DELETE = ....
         # modify = 'dedupe.dedupe_package_endpoints='
-        # '[{"endpoint":"colrev_built_in.simple_dedupe"}]'
+        # '[{"endpoint":"colrev.simple_dedupe"}]'
 
         path, value_string = modify.split("=")
         value = ast.literal_eval(value_string)

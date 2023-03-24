@@ -14,19 +14,20 @@ Everything is specified in the settings.json (simply add the extension/script na
         "criteria": [],
         "scripts": [
             {
-   -             "endpoint": "colrev_built_in.colrev_cli_screen"
+   -             "endpoint": "colrev.colrev_cli_screen"
    +             "endpoint": "custom_screen_script"
             }
         ]
     },
     ...
 
-The endpoints for extensions are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
+The endpoints for extensions are documented in the `extension endpoints <../technical_documentation/extensions.html>`_ section.
 
 Registered extensions are public Python packages that can be installed via PyPI.
-They contain an ``endpoints.json`` file in the top-level directory (`colrev_built_in <https://github.com/CoLRev-Ecosystem/colrev/blob/main/endpoints.json>`_ provides an example).
+They contain an ``endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Ecosystem/colrev/blob/main/endpoints.json>`_ provides an example).
 To register a new extension, create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/packages.json>`_.
-When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation. The development status is automatically added to the `package_status.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
+When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
+The development status is automatically added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
 
 
 ..

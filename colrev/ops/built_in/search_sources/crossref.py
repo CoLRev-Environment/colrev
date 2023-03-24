@@ -85,13 +85,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.search_source = crossref_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev_built_in.crossref",
+                    endpoint="colrev.crossref",
                     filename=self.__crossref_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
+                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -866,26 +864,26 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 file_path_string=f"crossref_{query}"
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.crossref",
+                endpoint="colrev.crossref",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
-        if "crossref:jissn=" in query.replace("colrev_built_in.", ""):
-            query = query.replace("crossref:jissn=", "").replace("colrev_built_in.", "")
+        if "crossref:jissn=" in query.replace("colrev.", ""):
+            query = query.replace("crossref:jissn=", "").replace("colrev.", "")
 
             filename = search_operation.get_unique_filename(
                 file_path_string=f"crossref_jissn_{query}"
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.crossref",
+                endpoint="colrev.crossref",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"scope": {"journal_issn": query}},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source

@@ -656,11 +656,11 @@ class PDFSearchSource(JsonSchemaMixin):
             filename = search_operation.get_unique_filename(file_path_string="pdfs")
             # pylint: disable=no-value-for-parameter
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.pdfs_dir",
+                endpoint="colrev.pdfs_dir",
                 filename=filename,
                 search_type=colrev.settings.SearchType.PDFS,
                 search_parameters={"scope": {"path": "data/pdfs"}},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source

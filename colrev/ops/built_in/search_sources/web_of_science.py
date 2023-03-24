@@ -51,7 +51,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         if data.count("UT WOS:") > 0.4 * data.count("TI "):
             result["confidence"] = 0.7
             result["load_conversion_package_endpoint"] = {  # type: ignore
-                "endpoint": "colrev_built_in.zotero_translate"
+                "endpoint": "colrev.zotero_translate"
             }
             return result
 

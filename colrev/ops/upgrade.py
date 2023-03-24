@@ -2,6 +2,7 @@
 """Upgrades CoLRev projects."""
 from __future__ import annotations
 
+import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
@@ -35,6 +36,13 @@ class Upgrade(colrev.operation.Operation):
         )
         self.review_manager = review_manager
 
+    def __move_file(self, source: Path, target: Path) -> None:
+        target.parent.mkdir(exist_ok=True, parents=True)
+        if source.is_file():
+            shutil.move(str(source), self.review_manager.path / target)
+            self.review_manager.dataset.add_changes(path=source, remove=True)
+            self.review_manager.dataset.add_changes(path=target)
+
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
 
@@ -54,12 +62,13 @@ class Upgrade(colrev.operation.Operation):
         # {'from': '0.4.0', "to": '0.5.0', 'script': __migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': __migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"from": "0.7.0", "to": upcoming_version, "script": self.__migrate_0_7_0},
+            {"from": "0.7.0", "to": "0.7.1", "script": self.__migrate_0_7_0},
+            {"from": "0.7.1", "to": upcoming_version, "script": self.__migrate_0_7_1},
         ]
 
         # Start with the first step if the version is older:
         if last_version not in [x["from"] for x in migration_scripts]:
-            last_version = "0.4.0"
+            last_version = "0.7.0"
 
         while current_version in [x["from"] for x in migration_scripts]:
             self.review_manager.logger.info("Current CoLRev version: %s", last_version)
@@ -89,6 +98,7 @@ class Upgrade(colrev.operation.Operation):
             if last_version == upcoming_version:
                 break
 
+        self.review_manager.load_settings()
         self.review_manager.settings.project.colrev_version = version("colrev")
         self.review_manager.save_settings()
 
@@ -132,6 +142,28 @@ class Upgrade(colrev.operation.Operation):
             with open(".pre-commit-config.yaml", "w", encoding="utf-8") as file:
                 file.write(pre_commit_contents)
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
+
+    def __migrate_0_7_1(self) -> None:
+        settings_content = (self.review_manager.path / Path("settings.json")).read_text(
+            encoding="utf-8"
+        )
+        settings_content = settings_content.replace("colrev_built_in.", "colrev.")
+
+        with open(Path("settings.json"), "w", encoding="utf-8") as file:
+            file.write(settings_content)
+
+        self.review_manager.dataset.add_changes(path=Path("settings.json"))
+
+        self.__move_file(
+            source=Path("data/paper.md"), target=Path("data/data/paper.md")
+        )
+        self.__move_file(
+            source=Path("data/APA-7.docx"), target=Path("data/data/APA-7.docx")
+        )
+        self.__move_file(
+            source=Path("data/non_sample_references.bib"),
+            target=Path("data/data/non_sample_references.bib"),
+        )
 
 
 if __name__ == "__main__":

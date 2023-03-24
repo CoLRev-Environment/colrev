@@ -184,7 +184,7 @@ class PDFPrep(colrev.operation.Operation):
 
             if failed:
                 msg_str = f"{endpoint.settings.endpoint}"  # type: ignore
-                msg_str = msg_str.replace("colrev_built_in.", "")
+                msg_str = msg_str.replace("colrev.", "")
                 detailed_msgs.append(f"{colors.ORANGE}{msg_str}{colors.END}")
 
             if failed:
@@ -359,7 +359,7 @@ class PDFPrep(colrev.operation.Operation):
 
         self.review_manager.logger.info("Generate TEI documents")
         endpoint = colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep(
-            pdf_prep_operation=self, settings={"endpoint": "colrev_built_in.create_tei"}
+            pdf_prep_operation=self, settings={"endpoint": "colrev.create_tei"}
         )
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
@@ -433,7 +433,7 @@ class PDFPrep(colrev.operation.Operation):
                 s["endpoint"]
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
-            if "colrev_built_in.create_tei" in endpoint_names:  # type: ignore
+            if "colrev.create_tei" in endpoint_names:  # type: ignore
                 pool = Pool(mp.cpu_count() // 2)
             else:
                 pool = Pool(self.cpus)

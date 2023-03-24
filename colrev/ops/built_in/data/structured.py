@@ -52,7 +52,7 @@ class StructuredData(JsonSchemaMixin):
         endpoint: str
         version: str
         fields: typing.List[Field]
-        data_path_relative: Path = Path("data/data.csv")
+        data_path_relative: Path = Path("data.csv")
 
         _details = {
             "fields": {"tooltip": "Fields for the structured data extraction"},
@@ -84,11 +84,11 @@ Example 2:
         if "fields" not in settings:
             settings["fields"] = []
         if "data_path_relative" not in settings:
-            settings["data_path_relative"] = Path("data/data.csv")
+            settings["data_path_relative"] = Path("data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
         self.data_path = (
-            data_operation.review_manager.path / self.settings.data_path_relative
+            data_operation.review_manager.data_dir / self.settings.data_path_relative
         )
         self.review_manager = data_operation.review_manager
 
@@ -98,7 +98,7 @@ Example 2:
         # Note : add fields interactively upon update_data()
 
         structured_endpoint_details = {
-            "endpoint": "colrev_built_in.structured",
+            "endpoint": "colrev.structured",
             "version": "0.1",
             "fields": [],
             "data_path_relative": "data/data.csv",

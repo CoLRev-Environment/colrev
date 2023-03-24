@@ -6,6 +6,7 @@ import collections.abc
 import dataclasses
 import importlib.util
 import json
+import os
 import sys
 import typing
 from copy import deepcopy
@@ -24,6 +25,8 @@ import colrev.operation
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
+
+# pylint: disable=too-many-lines
 
 
 # Inspiration for package descriptions:
@@ -462,6 +465,15 @@ class PackageManager:
         self.verbose = verbose
         self.packages = self.__load_package_endpoints_index()
         self.__flag_installed_packages()
+        colrev_spec = importlib.util.find_spec("colrev")
+        if colrev_spec is None:  # pragma: no cover
+            raise colrev_exceptions.MissingDependencyError(dep="colrev")
+        if colrev_spec.origin is None:  # pragma: no cover
+            raise colrev_exceptions.MissingDependencyError(dep="colrev")
+        self.__colrev_path = Path(colrev_spec.origin).parents[1]
+        self.__package_endpoints_json_file = self.__colrev_path / Path(
+            "colrev/template/package_endpoints.json"
+        )
 
     def __load_package_endpoints_index(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
@@ -686,6 +698,7 @@ class PackageManager:
     ) -> typing.Dict:
         # avoid changes in the config
         selected_packages = deepcopy(selected_packages)
+
         packages_dict: typing.Dict = {}
         for selected_package in selected_packages:
             package_identifier = selected_package["endpoint"].lower()
@@ -826,7 +839,11 @@ class PackageManager:
         return packages_dict
 
     def __add_package_endpoints(
-        self, *, package_endpoints_json: dict, package_endpoints: dict
+        self,
+        *,
+        package_endpoints_json: dict,
+        package_endpoints: dict,
+        package_status: dict,
     ) -> None:
         for endpoint_type, endpoint_list in package_endpoints_json.items():
             if endpoint_type not in package_endpoints["endpoints"]:
@@ -844,6 +861,37 @@ class PackageManager:
                 endpoint = self.load_package_endpoint(
                     package_type=PackageEndpointType[endpoint_type],
                     package_identifier=endpoint_item["package_endpoint_identifier"],
+                )
+
+                # Add development status information (if available on package_status)
+                e_list = [
+                    x
+                    for x in package_status[endpoint_type]
+                    if x["package_endpoint_identifier"]
+                    == endpoint_item["package_endpoint_identifier"]
+                ]
+                if e_list:
+                    endpoint_item["status"] = e_list[0]["status"]
+                else:
+                    package_status[endpoint_type].append(
+                        {
+                            "package_endpoint_identifier": endpoint_item[
+                                "package_endpoint_identifier"
+                            ],
+                            "status": "RED",
+                        }
+                    )
+                    endpoint_item["status"] = "RED"
+
+                endpoint_item["status"] = (
+                    endpoint_item["status"]
+                    .replace("GREEN", "🟢")
+                    .replace("ORANGE", "🟡")
+                    .replace("RED", "🔴")
+                )
+                endpoint_item["status_linked"] = (
+                    f"`{endpoint_item['status']} "
+                    + "<https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_"
                 )
 
                 # Generate the contents displayed in the docs (see "datatemplate:json")
@@ -889,47 +937,46 @@ class PackageManager:
 
             endpoint_list += package_endpoints["endpoints"][endpoint_type]
 
-    def update_package_list(self) -> None:
-        """Generates the template/package_endpoints.json
-        based on the packages in template/packages.json
-        and the endpoints.json files in the top directory of each package."""
-
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
-
-        colrev_spec = importlib.util.find_spec("colrev")
-
-        # Check that we are in the colrev repo
-        if colrev_spec is not None:
-            assert Path.cwd() == Path(colrev_spec.origin).parents[1]  # type: ignore
-        else:  # pragma: no cover
-            print("Could not load colrev module")
-            return
-
+    def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/packages.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/package_endpoints.json)"
+                "Package index not available (colrev/template/packages.json)"
             )
+        packages = json.loads(filedata.decode("utf-8"))
+        return packages
 
-        package_endpoints_json_file = Path(Path(colrev_spec.origin).parent) / Path(  # type: ignore
-            "template/package_endpoints.json"
+    def __load_package_status_json(self) -> dict:
+        filedata = colrev.env.utils.get_package_file_content(
+            file_path=Path("template/package_status.json")
         )
-        if package_endpoints_json_file.is_file():
-            package_endpoints_json_file.unlink()
+        if not filedata:  # pragma: no cover
+            raise colrev_exceptions.CoLRevException(
+                "Package index not available (colrev/template/package_status.json)"
+            )
+        packages = json.loads(filedata.decode("utf-8"))
+        return packages
+
+    def update_package_list(self) -> None:
+        """Generates the template/package_endpoints.json
+        based on the packages in template/packages.json
+        and the endpoints.json files in the top directory of each package."""
+
+        os.chdir(self.__colrev_path)
+        packages = self.__load_packages_json()
+        package_status = self.__load_package_status_json()
+        self.__package_endpoints_json_file.unlink(missing_ok=True)
 
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
         }
-
-        packages = json.loads(filedata.decode("utf-8"))
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
             endpoints_path = Path(module_spec.origin).parents[1] / Path(  # type:ignore
-                "endpoints.json"
+                ".colrev_endpoints.json"
             )
             if not endpoints_path.is_file():  # pragma: no cover
                 print(f"File does not exist: {endpoints_path}")
@@ -945,6 +992,7 @@ class PackageManager:
             self.__add_package_endpoints(
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
+                package_status=package_status,
             )
 
         for key in package_endpoints_json.keys():
@@ -954,7 +1002,14 @@ class PackageManager:
             )
 
         json_object = json.dumps(package_endpoints_json, indent=4)
-        with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
+        with open(self.__package_endpoints_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+        json_object = json.dumps(package_status, indent=4)
+        with open(
+            Path("colrev/template/package_status.json"), "w", encoding="utf-8"
+        ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 

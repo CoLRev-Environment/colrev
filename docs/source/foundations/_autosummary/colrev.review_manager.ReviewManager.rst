@@ -85,10 +85,14 @@ colrev.review\_manager.ReviewManager
 
       ~ReviewManager.CORRECTIONS_PATH_RELATIVE
       ~ReviewManager.DATA_DIR_RELATIVE
+      ~ReviewManager.DEDUPE_RELATIVE
       ~ReviewManager.OUTPUT_DIR_RELATIVE
       ~ReviewManager.PDF_DIR_RELATIVE
+      ~ReviewManager.PREP_RELATIVE
+      ~ReviewManager.PRESCREEN_RELATIVE
       ~ReviewManager.README_RELATIVE
       ~ReviewManager.REPORT_RELATIVE
+      ~ReviewManager.SCREEN_RELATIVE
       ~ReviewManager.SEARCHDIR_RELATIVE
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE

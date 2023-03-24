@@ -56,13 +56,13 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     def get_default_source(cls) -> colrev.settings.SearchSource:
         """Get the default SearchSource settings"""
         return colrev.settings.SearchSource(
-            endpoint="colrev_built_in.open_citations_forward_search",
+            endpoint="colrev.open_citations_forward_search",
             filename=Path("data/search/forward_search.bib"),
             search_type=colrev.settings.SearchType.FORWARD_SEARCH,
             search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"}
             },
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 

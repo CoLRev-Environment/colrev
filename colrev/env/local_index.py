@@ -830,7 +830,7 @@ class LocalIndex:
             curation_endpoints = [
                 x
                 for x in check_operation.review_manager.settings.data.data_package_endpoints
-                if x["endpoint"] == "colrev_built_in.colrev_curation"
+                if x["endpoint"] == "colrev.colrev_curation"
             ]
 
             curated_fields = []

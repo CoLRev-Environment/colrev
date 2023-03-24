@@ -69,7 +69,7 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
 
     # review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev_built_in.source_specific_prep"},
+        {"endpoint": "colrev.source_specific_prep"},
     ]
     review_manager.settings.sources = []
 
@@ -83,9 +83,9 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, expected_file",
     [
-        (Path("ais.txt"), "colrev_built_in.ais_library", Path("ais_result.bib")),
-        (Path("pubmed.csv"), "colrev_built_in.pubmed", Path("pubmed_result.bib")),
-        (Path("dblp.bib"), "colrev_built_in.dblp", Path("dblp_result.bib")),
+        (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
+        (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
+        (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
     ],
 )
 def test_source(

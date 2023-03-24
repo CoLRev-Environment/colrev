@@ -57,14 +57,14 @@ class BackwardSearchSource(JsonSchemaMixin):
         """Get the default SearchSource settings"""
 
         return colrev.settings.SearchSource(
-            endpoint="colrev_built_in.pdf_backward_search",
+            endpoint="colrev.pdf_backward_search",
             filename=Path("data/search/pdf_backward_search.bib"),
             search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
             search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 

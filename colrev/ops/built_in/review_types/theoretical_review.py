@@ -39,12 +39,12 @@ class TheoreticalReview(JsonSchemaMixin):
 
         settings.data.data_package_endpoints = [
             {
-                "endpoint": "colrev_built_in.obsidian",
+                "endpoint": "colrev.obsidian",
                 "version": "0.1",
                 "config": {},
             },
             {
-                "endpoint": "colrev_built_in.paper_md",
+                "endpoint": "colrev.paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
             },

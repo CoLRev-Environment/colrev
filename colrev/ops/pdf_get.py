@@ -41,7 +41,7 @@ class PDFGet(colrev.operation.Operation):
         pdf_endpoints = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev_built_in.pdfs_dir"
+            if s.endpoint == "colrev.pdfs_dir"
         ]
         if pdf_endpoints:
             self.filepath_directory_pattern = (
@@ -224,7 +224,7 @@ class PDFGet(colrev.operation.Operation):
         corresponding_origin: str
         source_records: typing.List[typing.Dict] = []
         for source in self.review_manager.settings.sources:
-            if "colrev_built_in.pdfs_dir" != source.endpoint:
+            if "colrev.pdfs_dir" != source.endpoint:
                 continue
 
             if not source.filename.is_file():

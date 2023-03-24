@@ -215,7 +215,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "Sample size too small for active learning. "
                 "Use simple_dedupe instead:\n"
                 f"{colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
-                f'[{{"endpoint":"colrev_built_in.simple_dedupe"}}]\'{colors.END}'
+                f'[{{"endpoint":"colrev.simple_dedupe"}}]\'{colors.END}'
             )
 
         if self.training_file.is_file():

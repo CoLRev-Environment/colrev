@@ -17,7 +17,7 @@ Parallel independent data extraction is only supported through the built-in git 
     # Generate a sample profile.
     colrev data --profile
 
-    # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts.
+    # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
     colrev data --reading_heuristics
 
 
@@ -25,21 +25,21 @@ To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev data -a colrev_built_in.manuscript
-    colrev data -a colrev_built_in.structured
-    colrev data -a colrev_built_in.prisma
+    colrev data --add colrev.manuscript
+    colrev data --add colrev.structured
+    colrev data --add colrev.prisma
     ...
 
 To export the bibliography in different formats, run any of the following:
 
 .. code:: bash
 
-    colrev data -a endnote
-    colrev data -a zotero
-    colrev data -a jabref
-    colrev data -a mendeley
-    colrev data -a citavi
-    colrev data -a rdf_bibliontology
+    colrev data --add colrev.endnote
+    colrev data --add colrev.zotero
+    colrev data --add colrev.jabref
+    colrev data --add colrev.mendeley
+    colrev data --add colrev.citavi
+    colrev data --add colrev.rdf_bibliontology
 
 
 The following options for data are available:
@@ -47,7 +47,7 @@ The following options for data are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
+        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
         data['data'],
         title='',
         ) }}

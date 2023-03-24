@@ -33,7 +33,7 @@ colrev.ops.pdf\_get\_man.PDFGetMan
 
    .. autosummary::
 
-      ~PDFGetMan.MISSING_PDF_PATH_RELATIVE
+      ~PDFGetMan.MISSING_PDF_FILES_RELATIVE
       ~PDFGetMan.pdf_get_man_package_endpoints
       ~PDFGetMan.force_mode
       ~PDFGetMan.type

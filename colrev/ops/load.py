@@ -220,7 +220,7 @@ class Load(colrev.operation.Operation):
             or len([r for r in results_list if r["confidence"] > 0.5]) == 0
         ):
             source_candidate = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.unknown_source",
+                endpoint="colrev.unknown_source",
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
                 search_parameters={},
@@ -344,10 +344,7 @@ class Load(colrev.operation.Operation):
                         heuristic_source = heuristic_result_list[int(selection) - 1]
                         break
 
-            if (
-                "colrev_built_in.unknown_source"
-                == heuristic_source["source_candidate"].endpoint
-            ):
+            if "colrev.unknown_source" == heuristic_source["source_candidate"].endpoint:
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
                 if not skip_query:

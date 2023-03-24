@@ -79,7 +79,7 @@ class PRISMA(JsonSchemaMixin):
         """Get the default setup"""
 
         prisma_endpoint_details = {
-            "endpoint": "colrev_built_in.prisma",
+            "endpoint": "colrev.prisma",
             "version": "0.1",
             "diagram_path": ["PRISMA.png"],
         }
