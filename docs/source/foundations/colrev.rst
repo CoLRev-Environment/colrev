@@ -46,9 +46,9 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 
 Current status of the proposed CoLRev standard:
 
-- The CoLRev standard is currently in **draft status** and subject to frequent and substantial revisions
-- Comments on this document are welcome. Please participate through Github pull requests
-- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_
+- The CoLRev standard is currently in **draft status** and subject to frequent and substantial revisions.
+- Comments on this document are welcome. Please participate through Github pull requests.
+- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_.
 
 Definitions:
 
@@ -105,10 +105,10 @@ Guiding principles:
 
 Established frameworks for reproducible research using Git do not apply to literature reviews:
 
-- **Dynamics**: Common notions of raw/immutable input data do not apply. In literature reviews, data and interpretations evolve dynamically throughout the process
-- **Non-determinism**: Common notions of deterministic computational processing operations do not apply. In literature reviews, processing operations are often manual, rely on external (changing) data sources and are inherently non-deterministic
-- **Atomicity**: Common notions of processing the dataset as a whole are insufficient, i.e., the in-memory-processing model, as exemplified by the tidyverse pipe operators, does not apply. In literature reviews, processing occurs on a per-paper basis, requiring validation and (potentially) corrections on a more granular level
-- **Structure**: Common notions of data as structured lists-of-unique-observations do not apply. In literature reviews, search results (metadata) are retrieved redundantly from multiple sources (to compensate for imperfect coverage/errors in the retrieval procedures) and associations between structured metadata and semi-structured full-text documents can form complex, layered graphs
+- **Dynamics**: Common notions of raw/immutable input data do not apply. In literature reviews, data and interpretations evolve dynamically throughout the process.
+- **Non-determinism**: Common notions of deterministic computational processing operations do not apply. In literature reviews, processing operations are often manual, rely on external (changing) data sources and are inherently non-deterministic.
+- **Atomicity**: Common notions of processing the dataset as a whole are insufficient, i.e., the in-memory-processing model, as exemplified by the tidyverse pipe operators, does not apply. In literature reviews, processing occurs on a per-paper basis, requiring validation and (potentially) corrections on a more granular level.
+- **Structure**: Common notions of data as structured lists-of-unique-observations do not apply. In literature reviews, search results (metadata) are retrieved redundantly from multiple sources (to compensate for imperfect coverage/errors in the retrieval procedures) and associations between structured metadata and semi-structured full-text documents can form complex, layered graphs.
 
 .. _shared_model:
 
@@ -130,7 +130,7 @@ The design of tools can have a profound impact on the systematicity (internal ri
 - Per default, tools should encourage high levels of systematicity (internal rigor) and provide functionality that efficiently supports systematic review practices.
 - It should be at the users discretion to choose higher or lower degrees of systematicity. This is particularly relevant if systematicity requires additional manual efforts that may not be in line with the goals and nature of the review.
 
-Sidenote: When presenting a literature review, "qualitative systematic reviews" (as a very particular type of review) should be distinguished from general notions of literature reviews (that are conducted in a systematic manner). Every review varies on a scale of systematicity and transparency .
+Note: When presenting a literature review, "qualitative systematic reviews" (as a very particular type of review) should be distinguished from general notions of literature reviews (that are conducted in a systematic manner). Every review varies on a scale of systematicity and transparency .
 
 ..
    It should be at the discretion of authors
@@ -145,10 +145,10 @@ The methodological literature increasingly emphasizes typological pluralism, ref
 As a result, a key question is how literature review technology should differ depending on the type of review.
 The main propositions of CoLRev are:
 
-- The generic literature review process (search, prescreen, screen, synthesize with the corresponding record management steps) applies to all types of reviews
-- The most substantial differences are found in the synthesis step, which involves different types of data (e.g., structured, unstructured), different forms of synthesis (e.g., narrative, statistical) and subtasks (e.g., quality appraisal, meta-analysis, manuscript development)
-- In the other processes, differences between review types manifest in different parameters
-- As an implication, tools should be designed to synergize in all operations that precede the synthesis and provide flexibility for different forms of synthesis that are in line with the respective type of review
+- The generic literature review process (search, prescreen, screen, synthesize with the corresponding record management steps) applies to all types of reviews.
+- The most substantial differences are found in the synthesis step, which involves different types of data (e.g., structured, unstructured), different forms of synthesis (e.g., narrative, statistical) and subtasks (e.g., quality appraisal, meta-analysis, manuscript development).
+- In the other processes, differences between review types manifest in different parameters.
+- As an implication, tools should be designed to synergize in all operations that precede the synthesis and provide flexibility for different forms of synthesis that are in line with the respective type of review.
 
 .. _area_design:
 
@@ -162,9 +162,9 @@ The main propositions of CoLRev are:
 
 The architecture of CoLRev is divided into three packages:
 
-- The CoLRev environment, **colrev**, operates standardized data structures and a process model on top of Git repositories. It also offers an extensible reference implementation covering all process steps of the review process
-- The CoLRev hooks, **colrev_hooks** (i.e., custom Git pre-commit hooks) check conformance with the standardized structures before a new version of the project (Git commit) is created
-- The CoLRev command line interface, **colrev** (cli), provides access to the processing operations and additional features. Complexity is hidden behind the three-step workflow and the ``colrev status`` command that provides instructions based on the context of the project
+- The CoLRev environment, **colrev**, operates standardized data structures and a process model on top of Git repositories. It also offers an extensible reference implementation covering all process steps of the review process.
+- The CoLRev hooks, **colrev_hooks** (i.e., custom Git pre-commit hooks) check conformance with the standardized structures before a new version of the project (Git commit) is created.
+- The CoLRev command line interface, **colrev** (cli), provides access to the processing operations and additional features. Complexity is hidden behind the three-step workflow and the ``colrev status`` command that provides instructions based on the context of the project.
 
 The extensible part of **colrev** adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
 
@@ -198,7 +198,7 @@ The CoLRev environment tightly integrates with the transparent collaboration mod
 
 Notes:
 
-- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents)
+- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
 - Versions are accompanied by a commit report, which provides a quick overview of the status.
 
 ..
@@ -225,18 +225,18 @@ Ideally, constraining the set of possible data formatting and storage options im
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
 To accomplish these goals, CoLRev tracks a `colrev_status` for each record (see the `model <../manual/operations.html>`_):
 
-- The `colrev_status` is used to determine the current state of the review project
-- It is used by the ReviewManager to determine which operations are valid according to the order of operations (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
-- Tracking the `colrev_status`` enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
-- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., `colrev_status="synthesized"`` implies `pdf_prepared`, `md_prepared`, `rev_included`, `rev_prescreen_included`)
-- An underlying assumption is that different types of reviews share the same process model (with different parameters) and that the main differences are in the data extraction and analysis stages (e.g., requiring structured or unstructured data formats)
+- The `colrev_status` is used to determine the current state of the review project.
+- It is used by the ReviewManager to determine which operations are valid according to the order of operations (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen).
+- Tracking the `colrev_status`` enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations).
+- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., `colrev_status="synthesized"`` implies `pdf_prepared`, `md_prepared`, `rev_included`, `rev_prescreen_included`).
+- An underlying assumption is that different types of reviews share the same process model (with different parameters) and that the main differences are in the data extraction and analysis stages (e.g., requiring structured or unstructured data formats).
 
 The data structures distinguish raw data sources (stored in `data/search/`) and the main records (stored in `data/records.bib`).
 
 Raw data sources:
 
 - Raw data sources represent the latest version of the records retrieved from source, i.e., they can be updated by API-based sources. Manual edits should be applied to the main records (`data/records.bib`).
-- Input reference formats (e.g., RIS, BibTeX, Endnote) are transformed to BibTeX to facilitate more efficient processing
+- Input reference formats (e.g., RIS, BibTeX, Endnote) are transformed to BibTeX to facilitate more efficient processing.
 
 ..
    - Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
@@ -258,16 +258,16 @@ For main records, ID formats such as three-author+year (automatically generated 
 
 Individual records in the main records are augmented with:
 
-- The `colrev_status` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between the main records file and a screening sheet, data sheet, and manuscript)
-- The ``colrev_origin`` field to enable traceability and analyses (in both directions).
+- The `colrev_status` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between the main records file and a screening sheet, data sheet, and manuscript).
+- The `colrev_origin` field to enable traceability and analyses (in both directions).
 
 For the main records and the converted raw data, the BibTeX is selected for the following reasons:
 
 - BiBTeX is a quasi-standard format that is supported by most reference managers and literature review tools (`overview <https://en.wikipedia.org/wiki/Comparison_of_reference_management_software>`_).
 - BibTeX is easier for humans to analyze in Git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (tabular, column-based formats like csv are hard to analyze in Git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS).
-- BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name)
-- BibTeX can be augmented (including additional fields for the `colrev_origin`, `colrev_status`, etc.)
-- BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
+- BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
+- BibTeX can be augmented (including additional fields for the `colrev_origin`, `colrev_status`, etc.).
+- BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL).
 
 ..
    - Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the Git history simple
@@ -388,7 +388,7 @@ Overview of packages and reasons for selection:
 
 - **Git**: the leading collaborative versioning environment with a broad academic userbase
 - **Docker**: one of the leading platforms for container-based microservices and supported by most of the relevant academic microservices (e.g., GROBID, Zotero, Opensearch)
-- **GROBID**: the leading bibliographic reference and citation parser :cite:p:`Tkaczyk2018`.
+- **GROBID**: the leading bibliographic reference and citation parser :cite:p:`Tkaczyk2018`
 - **Zotero import translators**: one of the most active projects for translating bibliographic reference formats
 - **pybtex**: the most actively developed pythonic BibTeX parser with high load performance
 - **Tesseract/ocrmypdf**: the leading (non-proprietary) OCR engine (machine-readability of PDF content)
@@ -461,8 +461,7 @@ To maintain high data quality, it is imperative to facilitate efficient validati
 Advancing a built-in model for content curation and reuse
 conditions for including records in the localindex (prepared + deduped, set curation-marks in provenance).
 
-CoLRev builds on a comprehensive vision of reusing community-curated data.
-This includes:
+CoLRev builds on a comprehensive vision of reusing community-curated data. This includes:
 
 - Assigning shared IDs in the load process
 - Curated record metadata in the preparation process

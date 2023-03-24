@@ -2,7 +2,7 @@
 
 colrev pdf-get
 ==================================
-In the ``colrev pdf-get`` operation, records transition from ``rev_prescreen_included`` to ``pdf_imported`` or ``pdf_needs_manual_retrieval``. 
+In the ``colrev pdf-get`` operation, records transition from ``rev_prescreen_included`` to ``pdf_imported`` or ``pdf_needs_manual_retrieval``.
 It is possible to adapt the settings for ``pdf_required_for_screen_and_synthesis``, ``pdf_path_type``, and ``rename_pdfs``.
 
 The retrieval based on ``colrev_built_in.local_index`` may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use ``colrev pdf-get`` to collect PDFs from their local machines.
