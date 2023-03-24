@@ -1,4 +1,4 @@
-colrev.ops.remove
+﻿colrev.ops.remove
 =================
 
 .. automodule:: colrev.ops.remove

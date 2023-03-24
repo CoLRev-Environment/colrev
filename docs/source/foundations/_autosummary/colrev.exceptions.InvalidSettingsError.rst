@@ -1,4 +1,4 @@
-colrev.exceptions.InvalidSettingsError
+﻿colrev.exceptions.InvalidSettingsError
 ======================================
 
 .. currentmodule:: colrev.exceptions

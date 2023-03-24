@@ -3,6 +3,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.conceptual_review",
             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Conceptual review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.md>`_"
@@ -10,6 +12,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.critical_review",
             "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Critical review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.md>`_"
@@ -17,6 +21,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.curated_masterdata",
             "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Curated masterdata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.md>`_"
@@ -24,6 +30,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.descriptive_review",
             "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Descriptive review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.md>`_"
@@ -31,6 +39,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.literature_review",
             "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Literature review (simple)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.md>`_"
@@ -38,6 +48,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.meta_analysis",
             "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Meta-analysis",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.md>`_"
@@ -45,6 +57,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.narrative_review",
             "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Narrative review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.md>`_"
@@ -52,6 +66,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.qualitative_systematic_review",
             "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Qualitative systematic review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.md>`_"
@@ -59,6 +75,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scientometric",
             "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Scientometric study",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/scientometric.md>`_"
@@ -66,6 +84,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scoping_review",
             "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Scoping review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.md>`_"
@@ -73,6 +93,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.theoretical_review",
             "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Theoretical review",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.md>`_"
@@ -82,6 +104,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.abi_inform_proquest",
             "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for ABI/INFORM (ProQuest)",
             "ci_supported": false,
             "link": "`ABI/INFORM (ProQuest) <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
@@ -92,6 +116,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.acm_digital_library",
             "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the ACM digital Library",
             "ci_supported": false,
             "link": "`ACM Digital Library <https://dl.acm.org/>`_",
@@ -102,6 +128,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.ais_library",
             "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the AIS electronic Library (AISeL)",
             "ci_supported": true,
             "link": "`AIS eLibrary <https://aisel.aisnet.org/>`_",
@@ -112,6 +140,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_project",
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a search in a CoLRev project",
             "ci_supported": true,
             "link": "`CoLRev project <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_",
@@ -122,6 +152,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.crossref",
             "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the Crossref API",
             "ci_supported": true,
             "link": "`Crossref <https://www.crossref.org/>`_",
@@ -132,6 +164,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.dblp",
             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for DBLP",
             "ci_supported": true,
             "link": "`DBLP <https://dblp.org/>`_",
@@ -142,6 +176,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.ebsco_host",
             "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for EBSCOHost",
             "ci_supported": false,
             "link": "`EBSCOHost <https://search.ebscohost.com/>`_",
@@ -152,6 +188,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.eric",
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for ERIC",
             "ci_supported": false,
             "link": "`ERIC <https://eric.ed.gov/>`_",
@@ -162,6 +200,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.europe_pmc",
             "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Europe PMC",
             "ci_supported": true,
             "link": "`Europe PMC <https://europepmc.org/>`_",
@@ -172,6 +212,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.google_scholar",
             "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for GoogleScholar",
             "ci_supported": false,
             "link": "`GoogleScholar <https://scholar.google.de/>`_",
@@ -182,6 +224,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.ieee",
             "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for IEEEXplore",
             "ci_supported": false,
             "link": "`IEEE Xplore <https://ieeexplore.ieee.org/>`_",
@@ -192,6 +236,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.jstor",
             "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for JSTOR",
             "ci_supported": false,
             "link": "`JSTOR <https://www.jstor.org/>`_",
@@ -202,6 +248,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.local_index",
             "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a search in the LocalIndex",
             "ci_supported": true,
             "link": "`LocalIndex <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_",
@@ -212,6 +260,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.open_citations_forward_search",
             "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a forward search based on OpenCitations",
             "ci_supported": true,
             "link": "`OpenCitations forward search <https://opencitations.net/>`_",
@@ -222,6 +272,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.pdf_backward_search",
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a backward search extracting references from PDFs using GROBID",
             "ci_supported": false,
             "link": "`PDF backward search <https://github.com/kermitt2/grobid>`_",
@@ -232,6 +284,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.pdfs_dir",
             "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for PDF directories (based on GROBID)",
             "ci_supported": false,
             "link": "`PDF directory <https://github.com/kermitt2/grobid>`_",
@@ -242,6 +296,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.psycinfo",
             "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for PsycINFO",
             "ci_supported": false,
             "link": "`PsycInfo (APA) <https://www.apa.org/pubs/databases/psycinfo>`_",
@@ -252,6 +308,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.pubmed",
             "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Pubmed",
             "ci_supported": true,
             "link": "`PubMed <https://pubmed.ncbi.nlm.nih.gov/>`_",
@@ -262,6 +320,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scopus",
             "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for scopus",
             "ci_supported": false,
             "link": "`Scopus <http://www.scopus.com>`_",
@@ -272,6 +332,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.springer_link",
             "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Springer Link",
             "ci_supported": false,
             "link": "`Springer Link <https://link.springer.com/>`_",
@@ -282,6 +344,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.systematic_review_datasets",
             "endpoint": "colrev.ops.built_in.search_sources.systematic_review_datasets.SystematicReviewDatasetsSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for systematic-review-datasets",
             "ci_supported": false,
             "link": "`systematic-review-datasets <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
@@ -292,6 +356,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.taylor_and_francis",
             "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Taylor and Francis",
             "ci_supported": false,
             "link": "`Taylor and Francis <https://www.tandfonline.com/>`_",
@@ -302,6 +368,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.trid",
             "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Transport Research International Documentation",
             "ci_supported": false,
             "link": "`TRID <https://trid.trb.org/>`_",
@@ -312,6 +380,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.unknown_source",
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for unknown search results",
             "ci_supported": false,
             "link": "`Unknown Source <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_",
@@ -322,6 +392,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.video_dir",
             "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for directory containing video files",
             "ci_supported": false,
             "link": "`Video directory <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_",
@@ -332,6 +404,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.web_of_science",
             "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Web of Science",
             "ci_supported": false,
             "link": "`Web of Science <https://www.webofknowledge.com>`_",
@@ -342,6 +416,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.wiley",
             "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Wiley",
             "ci_supported": false,
             "link": "`Wiley <https://onlinelibrary.wiley.com/>`_",
@@ -354,6 +430,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.bibtex",
             "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads BibTeX files (based on pybtex)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/bib_pybtex_loader.md>`_"
@@ -361,6 +439,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.bibutils",
             "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads bibliography files (based on bibutils)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/bibutils_loader.md>`_"
@@ -368,6 +448,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.csv",
             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.CSVLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads csv files (based on pandas)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.md>`_"
@@ -375,6 +457,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.excel",
             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.ExcelLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads Excel (xls, xlsx) files (based on pandas)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.md>`_"
@@ -382,6 +466,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.md_to_bib",
             "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads reference strings from text (md) files (based on GROBID)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/markdown_loader.md>`_"
@@ -389,6 +475,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.zotero_translate",
             "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Loads bibliography files (based on Zotero).",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/load_conversion/zotero_loader.md>`_"
@@ -398,6 +486,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.curation_prep",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Preparation of curations",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/curation_prep.md>`_"
@@ -405,6 +495,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_collections",
             "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by excluding collection entries (e.g., proceedings)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_collections.md>`_"
@@ -412,6 +504,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_complementary_materials",
             "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by excluding complementary materials",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_complementary_materials.md>`_"
@@ -419,6 +513,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_languages",
             "endpoint": "colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by excluding ones that are not in the languages_to_include",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.md>`_"
@@ -426,6 +522,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.exclude_non_latin_alphabets",
             "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by excluding ones that have a non-latin alphabet",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.md>`_"
@@ -433,6 +531,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.general_polish",
             "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by applying polishing rules",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/general_polish.md>`_"
@@ -440,6 +540,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_doi_from_sem_scholar",
             "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on SemanticScholar metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/semantic_scholar_prep.md>`_"
@@ -447,6 +549,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_doi_from_urls",
             "endpoint": "colrev.ops.built_in.prep.doi_from_urls_prep.DOIFromURLsPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by retrieving its DOI from the website (URL)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/doi_from_urls_prep.md>`_"
@@ -454,6 +558,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_citeas",
             "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on citeas.org metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/citeas_prep.md>`_"
@@ -461,6 +567,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_crossref",
             "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on crossref.org metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/crossref_metadata_prep.md>`_"
@@ -468,6 +576,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_dblp",
             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on dblp.org metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/dblp_metadata_prep.md>`_"
@@ -475,6 +585,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_doi",
             "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on doi.org metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/doi_metadata_prep.md>`_"
@@ -482,6 +594,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_europe_pmc",
             "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on Europe PCM metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/europe_pmc_prep.md>`_"
@@ -489,6 +603,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_local_index",
             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on LocalIndex metadata",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.md>`_"
@@ -496,6 +612,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_open_library",
             "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on openlibrary.org metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/open_library_prep.md>`_"
@@ -503,6 +621,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_pubmed",
             "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on Pubmed metadata",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/pubmed_metadata_prep.md>`_"
@@ -510,6 +630,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.get_year_from_vol_iss_jour",
             "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on year-volume-issue dependency",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.md>`_"
@@ -517,6 +639,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.global_ids_consistency_check",
             "endpoint": "colrev.ops.built_in.prep.global_id_consistency.GlobalIDConsistencyPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.md>`_"
@@ -524,6 +648,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.remove_broken_ids",
             "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by removing invalid IDs DOIs/ISBNs",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/remove_broken_ids.md>`_"
@@ -531,6 +657,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.remove_urls_with_500_errors",
             "endpoint": "colrev.ops.built_in.prep.remove_error500_urls.RemoveError500URLsPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by removing urls that are not available",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.md>`_"
@@ -538,6 +666,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.resolve_crossrefs",
             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/bibtex_crossref_resolution.md>`_"
@@ -545,6 +675,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.source_specific_prep",
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on the prepare scripts specified by the SearchSource",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/source_specific_prep.md>`_"
@@ -552,6 +684,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.update_metadata_status",
             "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by updating the metadata status",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/update_masterdata_status.md>`_"
@@ -561,6 +695,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.export_man_prep",
             "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_export.md>`_"
@@ -568,6 +704,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.prep_man_curation_jupyter",
             "endpoint": "colrev.ops.built_in.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Manual preparation based on a Jupyter Notebook",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep_man/curation_jupyter_prep_man.md>`_"
@@ -577,6 +715,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.active_learning_automated",
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Applies trained (active learning) model",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`_"
@@ -584,6 +724,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.active_learning_training",
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Active learning: training phase (minimum sample size of 50 required)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`_"
@@ -591,6 +733,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.curation_full_outlet_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Deduplication endpoint for curations with full journals/proceedings",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.md>`_"
@@ -598,6 +742,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.curation_missing_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_missing_dedupe.CurationMissingDedupe",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Deduplication of remaining records in a curated metadata repository",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/curation_missing_dedupe.md>`_"
@@ -605,6 +751,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.simple_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Simple duplicate identification (for small sample sizes)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/dedupe/simple_dedupe.md>`_"
@@ -614,6 +762,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.asreview_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "ASReview-based prescreen",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.md>`_"
@@ -621,6 +771,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "CLI-based prescreen",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.md>`_"
@@ -628,6 +780,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.conditional_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Conditional prescreen (currently: include all)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.md>`_"
@@ -635,6 +789,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.prescreen_table",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Table-based prescreen (exported and imported)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.md>`_"
@@ -642,6 +798,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.scope_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Rule-based prescreen (scope)",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.md>`_"
@@ -651,6 +809,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.local_index",
             "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Get PDFs from LocalIndex",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/local_index_pdf_get.md>`_"
@@ -658,6 +818,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.unpaywall",
             "endpoint": "colrev.ops.built_in.pdf_get.unpaywall.Unpaywall",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Get PDFs from unpaywall.org",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/unpaywall.md>`_"
@@ -665,6 +827,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.website_screenshot",
             "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Get PDFs from webisite screenshot (for \"online\" ENTRYTYPES)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get/website_screenshot.md>`_"
@@ -674,6 +838,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_get_man",
             "endpoint": "colrev.ops.built_in.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Get PDFs manually based on a CLI",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_get_man/pdf_get_man_cli.md>`_"
@@ -683,6 +849,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.create_tei",
             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by creating an annotated TEI document",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/tei_prep.md>`_"
@@ -690,6 +858,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.pdf_check_ocr",
             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/check_ocr.md>`_"
@@ -697,6 +867,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.remove_coverpage",
             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/cover_page.md>`_"
@@ -704,6 +876,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.remove_last_page",
             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/last_page.md>`_"
@@ -711,6 +885,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.validate_completeness",
             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by validating its completeness (based on the number of pages)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/completeness_validation.md>`_"
@@ -718,6 +894,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.validate_pdf_metadata",
             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepare PDFs by validating it against its associated metadata",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep/metadata_validation.md>`_"
@@ -727,6 +905,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_prep_man",
             "endpoint": "colrev.ops.built_in.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Manually prepare PDFs based on a CLI (not yet implemented)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/pdf_prep_man/pdf_prep_man_cli.md>`_"
@@ -736,6 +916,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_cli_screen",
             "endpoint": "colrev.ops.built_in.screen.screen_cli.CoLRevCLIScreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Screen documents using a CLI",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/screen/screen_cli.md>`_"
@@ -743,6 +925,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.screen_table",
             "endpoint": "colrev.ops.built_in.screen.screen_table.TableScreen",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Screen documents using tables (exported and imported)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/screen/screen_table.md>`_"
@@ -752,6 +936,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.bibliography_export",
             "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Export the sample references in Endpoint format",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/bibliography_export.md>`_"
@@ -759,6 +945,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.colrev_curation",
             "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "CoLRev Curation",
             "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/colrev_curation.md>`_"
@@ -766,6 +954,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.github_pages",
             "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Export the literature review into a Github Page",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/github_pages.md>`_"
@@ -773,6 +963,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.obsidian",
             "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Export the sample into an Obsidian database",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/obsidian.md>`_"
@@ -780,6 +972,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.paper_md",
             "endpoint": "colrev.ops.built_in.data.paper_md.PaperMarkdown",
+            "status": "\ud83d\udfe1",
+            "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Synthesize the literature in a markdown paper",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/paper_md.md>`_"
@@ -787,6 +981,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.prisma",
             "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Create a PRISMA diagram",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/prisma.md>`_"
@@ -794,6 +990,8 @@
         {
             "package_endpoint_identifier": "colrev_built_in.structured",
             "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
+            "status": "\ud83d\udd34",
+            "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Summarize the literature in a structured data extraction (a table)",
             "ci_supported": false,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/structured.md>`_"

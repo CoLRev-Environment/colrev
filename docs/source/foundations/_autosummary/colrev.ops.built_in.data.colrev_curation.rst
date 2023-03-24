@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.colrev\_curation
+﻿colrev.ops.built\_in.data.colrev\_curation
 ==========================================
 
 .. automodule:: colrev.ops.built_in.data.colrev_curation

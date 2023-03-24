@@ -1,4 +1,4 @@
-colrev.env.utils.inplace\_change
+﻿colrev.env.utils.inplace\_change
 ================================
 
 .. currentmodule:: colrev.env.utils

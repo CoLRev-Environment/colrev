@@ -1,4 +1,4 @@
-colrev.ops.built\_in.dedupe.curation\_dedupe.CurationDedupe
+﻿colrev.ops.built\_in.dedupe.curation\_dedupe.CurationDedupe
 ===========================================================
 
 .. currentmodule:: colrev.ops.built_in.dedupe.curation_dedupe

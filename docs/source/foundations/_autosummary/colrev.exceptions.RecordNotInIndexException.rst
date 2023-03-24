@@ -1,4 +1,4 @@
-colrev.exceptions.RecordNotInIndexException
+﻿colrev.exceptions.RecordNotInIndexException
 ===========================================
 
 .. currentmodule:: colrev.exceptions

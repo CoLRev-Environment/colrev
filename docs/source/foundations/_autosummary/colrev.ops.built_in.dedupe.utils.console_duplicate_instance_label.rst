@@ -1,4 +1,4 @@
-colrev.ops.built\_in.dedupe.utils.console\_duplicate\_instance\_label
+﻿colrev.ops.built\_in.dedupe.utils.console\_duplicate\_instance\_label
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.dedupe.utils

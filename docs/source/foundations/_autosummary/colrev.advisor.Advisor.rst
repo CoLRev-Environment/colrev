@@ -1,4 +1,4 @@
-colrev.advisor.Advisor
+﻿colrev.advisor.Advisor
 ======================
 
 .. currentmodule:: colrev.advisor

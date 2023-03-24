@@ -1,4 +1,4 @@
-colrev.exceptions.InvalidQueryException
+﻿colrev.exceptions.InvalidQueryException
 =======================================
 
 .. currentmodule:: colrev.exceptions

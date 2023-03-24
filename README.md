@@ -31,7 +31,7 @@ The following features stand out:
 - Operates a model for data quality, record identification, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
+See the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/roadmap.html) and [documentation](https://colrev.readthedocs.io/en/latest/) for more details.
 
 ## Contributing, changes, and releases
 

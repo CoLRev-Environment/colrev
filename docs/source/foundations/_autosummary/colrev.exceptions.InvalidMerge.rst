@@ -1,4 +1,4 @@
-colrev.exceptions.InvalidMerge
+﻿colrev.exceptions.InvalidMerge
 ==============================
 
 .. currentmodule:: colrev.exceptions

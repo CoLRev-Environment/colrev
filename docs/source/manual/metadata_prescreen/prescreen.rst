@@ -37,7 +37,7 @@ The following options for prescreen are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Prescreen packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link")],
+        [("Prescreen packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
         data['prescreen'],
         title='',
         ) }}

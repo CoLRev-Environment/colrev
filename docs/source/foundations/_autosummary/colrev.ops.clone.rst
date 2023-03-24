@@ -1,4 +1,4 @@
-colrev.ops.clone
+﻿colrev.ops.clone
 ================
 
 .. automodule:: colrev.ops.clone

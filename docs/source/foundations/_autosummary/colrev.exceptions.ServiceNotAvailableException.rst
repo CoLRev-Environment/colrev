@@ -1,4 +1,4 @@
-colrev.exceptions.ServiceNotAvailableException
+﻿colrev.exceptions.ServiceNotAvailableException
 ==============================================
 
 .. currentmodule:: colrev.exceptions

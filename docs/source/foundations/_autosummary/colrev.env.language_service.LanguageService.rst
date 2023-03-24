@@ -1,4 +1,4 @@
-colrev.env.language\_service.LanguageService
+﻿colrev.env.language\_service.LanguageService
 ============================================
 
 .. currentmodule:: colrev.env.language_service

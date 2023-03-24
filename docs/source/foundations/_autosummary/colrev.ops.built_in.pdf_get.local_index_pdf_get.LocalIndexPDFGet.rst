@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_get.local\_index\_pdf\_get.LocalIndexPDFGet
+﻿colrev.ops.built\_in.pdf\_get.local\_index\_pdf\_get.LocalIndexPDFGet
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_get.local_index_pdf_get

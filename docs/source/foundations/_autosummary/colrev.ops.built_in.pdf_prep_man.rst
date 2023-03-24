@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_prep\_man
+﻿colrev.ops.built\_in.pdf\_prep\_man
 ===================================
 
 .. automodule:: colrev.ops.built_in.pdf_prep_man

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.obsidian
+﻿colrev.ops.built\_in.data.obsidian
 ==================================
 
 .. automodule:: colrev.ops.built_in.data.obsidian

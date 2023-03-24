@@ -1,4 +1,4 @@
-colrev.dataset
+﻿colrev.dataset
 ==============
 
 .. automodule:: colrev.dataset

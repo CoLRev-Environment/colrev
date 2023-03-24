@@ -1,4 +1,4 @@
-colrev.ops.commit
+﻿colrev.ops.commit
 =================
 
 .. automodule:: colrev.ops.commit

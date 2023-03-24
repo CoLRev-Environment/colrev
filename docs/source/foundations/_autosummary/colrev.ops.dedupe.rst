@@ -1,4 +1,4 @@
-colrev.ops.dedupe
+﻿colrev.ops.dedupe
 =================
 
 .. automodule:: colrev.ops.dedupe

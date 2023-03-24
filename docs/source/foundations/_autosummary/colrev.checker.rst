@@ -1,4 +1,4 @@
-colrev.checker
+﻿colrev.checker
 ==============
 
 .. automodule:: colrev.checker
