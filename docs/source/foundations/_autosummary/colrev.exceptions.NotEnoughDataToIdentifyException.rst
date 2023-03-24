@@ -1,4 +1,4 @@
-﻿colrev.exceptions.NotEnoughDataToIdentifyException
+colrev.exceptions.NotEnoughDataToIdentifyException
 ==================================================
 
 .. currentmodule:: colrev.exceptions

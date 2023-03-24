@@ -1,4 +1,4 @@
-﻿colrev.exceptions.RecordNotFoundInPrepSourceException
+colrev.exceptions.RecordNotFoundInPrepSourceException
 =====================================================
 
 .. currentmodule:: colrev.exceptions

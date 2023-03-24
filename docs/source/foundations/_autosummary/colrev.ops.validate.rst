@@ -1,4 +1,4 @@
-﻿colrev.ops.validate
+colrev.ops.validate
 ===================
 
 .. automodule:: colrev.ops.validate

@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.data.paper\_md.PaperMarkdown
+colrev.ops.built\_in.data.paper\_md.PaperMarkdown
 =================================================
 
 .. currentmodule:: colrev.ops.built_in.data.paper_md

@@ -1,4 +1,4 @@
-﻿colrev.exceptions.RepoInitError
+colrev.exceptions.RepoInitError
 ===============================
 
 .. currentmodule:: colrev.exceptions

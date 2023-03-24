@@ -1,4 +1,4 @@
-﻿colrev.exceptions.NoSearchFeedRegistered
+colrev.exceptions.NoSearchFeedRegistered
 ========================================
 
 .. currentmodule:: colrev.exceptions

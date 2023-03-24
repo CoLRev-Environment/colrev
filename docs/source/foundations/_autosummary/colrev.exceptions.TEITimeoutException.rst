@@ -1,4 +1,4 @@
-﻿colrev.exceptions.TEITimeoutException
+colrev.exceptions.TEITimeoutException
 =====================================
 
 .. currentmodule:: colrev.exceptions

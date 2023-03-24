@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.data.github\_pages.GithubPages
+colrev.ops.built\_in.data.github\_pages.GithubPages
 ===================================================
 
 .. currentmodule:: colrev.ops.built_in.data.github_pages

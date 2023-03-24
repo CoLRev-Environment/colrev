@@ -1,4 +1,4 @@
-﻿colrev.ops.status
+colrev.ops.status
 =================
 
 .. automodule:: colrev.ops.status

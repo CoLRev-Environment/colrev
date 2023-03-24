@@ -1,4 +1,4 @@
-﻿colrev.ops.pull
+colrev.ops.pull
 ===============
 
 .. automodule:: colrev.ops.pull

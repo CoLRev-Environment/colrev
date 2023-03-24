@@ -54,7 +54,7 @@ class PaperMarkdown(JsonSchemaMixin):
     If IDs are moved to other parts of the paper,
     the corresponding record will be marked as rev_synthesized."""
 
-    NON_SAMPLE_REFERENCES_RELATIVE = Path("data/non_sample_references.bib")
+    NON_SAMPLE_REFERENCES_RELATIVE = Path("non_sample_references.bib")
 
     ci_supported: bool = False
 
@@ -108,7 +108,9 @@ class PaperMarkdown(JsonSchemaMixin):
         self.settings.word_template = (
             data_operation.review_manager.data_dir / self.settings.word_template
         )
-
+        self.non_sample_references = (
+            data_operation.review_manager.data_dir / self.NON_SAMPLE_REFERENCES_RELATIVE
+        )
         self.data_operation = data_operation
 
         self.settings.paper_output = (
@@ -149,9 +151,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if filedata:
             with open(template_name, "wb") as file:
                 file.write(filedata)
-        self.data_operation.review_manager.dataset.add_changes(
-            path=template_name.relative_to(self.data_operation.review_manager.path)
-        )
+        self.data_operation.review_manager.dataset.add_changes(path=template_name)
         return template_name
 
     def __retrieve_default_csl(self) -> None:
@@ -488,7 +488,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if filedata:
             non_sample_records = {}
-            with open(self.NON_SAMPLE_REFERENCES_RELATIVE, encoding="utf8") as file:
+            with open(self.non_sample_references, encoding="utf8") as file:
                 non_sample_records = (
                     self.data_operation.review_manager.dataset.load_records_dict(
                         load_str=file.read()
@@ -525,7 +525,7 @@ class PaperMarkdown(JsonSchemaMixin):
             non_sample_records = {**non_sample_records, **records_to_add}
             self.data_operation.review_manager.dataset.save_records_dict_to_file(
                 records=non_sample_records,
-                save_path=self.NON_SAMPLE_REFERENCES_RELATIVE,
+                save_path=self.non_sample_references,
             )
             self.data_operation.review_manager.dataset.add_changes(
                 path=self.NON_SAMPLE_REFERENCES_RELATIVE
@@ -609,10 +609,10 @@ class PaperMarkdown(JsonSchemaMixin):
                 retrieval_path = Path("template/paper_md/non_sample_references.bib")
                 colrev.env.utils.retrieve_package_file(
                     template_file=retrieval_path,
-                    target=self.NON_SAMPLE_REFERENCES_RELATIVE,
+                    target=self.non_sample_references,
                 )
                 self.data_operation.review_manager.dataset.add_changes(
-                    path=self.NON_SAMPLE_REFERENCES_RELATIVE
+                    path=self.non_sample_references
                 )
             except AttributeError:
                 pass

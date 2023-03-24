@@ -1,4 +1,4 @@
-﻿colrev.exceptions.UnsupportedImportFormatError
+colrev.exceptions.UnsupportedImportFormatError
 ==============================================
 
 .. currentmodule:: colrev.exceptions

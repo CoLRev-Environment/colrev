@@ -1,4 +1,4 @@
-﻿colrev.hooks.check.main
+colrev.hooks.check.main
 =======================
 
 .. currentmodule:: colrev.hooks.check

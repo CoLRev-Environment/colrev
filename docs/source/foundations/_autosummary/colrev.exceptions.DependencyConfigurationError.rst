@@ -1,4 +1,4 @@
-﻿colrev.exceptions.DependencyConfigurationError
+colrev.exceptions.DependencyConfigurationError
 ==============================================
 
 .. currentmodule:: colrev.exceptions

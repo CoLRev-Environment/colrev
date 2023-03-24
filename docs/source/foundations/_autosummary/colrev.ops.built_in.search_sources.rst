@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources
+colrev.ops.built\_in.search\_sources
 ====================================
 
 .. automodule:: colrev.ops.built_in.search_sources

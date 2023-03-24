@@ -1,4 +1,4 @@
-﻿colrev.ops.load
+colrev.ops.load
 ===============
 
 .. automodule:: colrev.ops.load

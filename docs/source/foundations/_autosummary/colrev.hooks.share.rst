@@ -1,4 +1,4 @@
-﻿colrev.hooks.share
+colrev.hooks.share
 ==================
 
 .. automodule:: colrev.hooks.share

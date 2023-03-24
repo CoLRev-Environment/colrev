@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep\_man
+colrev.ops.built\_in.prep\_man
 ==============================
 
 .. automodule:: colrev.ops.built_in.prep_man

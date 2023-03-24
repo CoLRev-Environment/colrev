@@ -1,4 +1,4 @@
-﻿colrev.env.utils.percent\_upper\_chars
+colrev.env.utils.percent\_upper\_chars
 ======================================
 
 .. currentmodule:: colrev.env.utils

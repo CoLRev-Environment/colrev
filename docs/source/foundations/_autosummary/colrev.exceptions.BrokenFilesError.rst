@@ -1,4 +1,4 @@
-﻿colrev.exceptions.BrokenFilesError
+colrev.exceptions.BrokenFilesError
 ==================================
 
 .. currentmodule:: colrev.exceptions

@@ -1,4 +1,4 @@
-﻿colrev.record
+colrev.record
 =============
 
 .. automodule:: colrev.record

@@ -1,4 +1,4 @@
-﻿colrev.exceptions.TOCNotAvailableException
+colrev.exceptions.TOCNotAvailableException
 ==========================================
 
 .. currentmodule:: colrev.exceptions

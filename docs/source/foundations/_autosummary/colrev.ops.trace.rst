@@ -1,4 +1,4 @@
-﻿colrev.ops.trace
+colrev.ops.trace
 ================
 
 .. automodule:: colrev.ops.trace

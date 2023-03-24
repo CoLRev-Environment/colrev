@@ -1,4 +1,4 @@
-﻿colrev.hooks.check
+colrev.hooks.check
 ==================
 
 .. automodule:: colrev.hooks.check

@@ -2,6 +2,7 @@
 """Upgrades CoLRev projects."""
 from __future__ import annotations
 
+import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
@@ -35,6 +36,13 @@ class Upgrade(colrev.operation.Operation):
         )
         self.review_manager = review_manager
 
+    def __move_file(self, source: Path, target: Path) -> None:
+        target.parent.mkdir(exist_ok=True, parents=True)
+        if source.is_file():
+            shutil.move(str(source), self.review_manager.path / target)
+            self.review_manager.dataset.add_changes(path=source, remove=True)
+            self.review_manager.dataset.add_changes(path=target)
+
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
 
@@ -60,7 +68,7 @@ class Upgrade(colrev.operation.Operation):
 
         # Start with the first step if the version is older:
         if last_version not in [x["from"] for x in migration_scripts]:
-            last_version = "0.4.0"
+            last_version = "0.7.0"
 
         while current_version in [x["from"] for x in migration_scripts]:
             self.review_manager.logger.info("Current CoLRev version: %s", last_version)
@@ -90,6 +98,7 @@ class Upgrade(colrev.operation.Operation):
             if last_version == upcoming_version:
                 break
 
+        self.review_manager.load_settings()
         self.review_manager.settings.project.colrev_version = version("colrev")
         self.review_manager.save_settings()
 
@@ -139,13 +148,21 @@ class Upgrade(colrev.operation.Operation):
             encoding="utf-8"
         )
         settings_content = settings_content.replace("colrev_built_in.", "colrev.")
-        with open(
-            (self.review_manager.path / Path("settings.json")), "w", encoding="utf-8"
-        ) as file:
+
+        with open(Path("settings.json"), "w", encoding="utf-8") as file:
             file.write(settings_content)
 
-        self.review_manager.dataset.add_changes(
-            path=(self.review_manager.path / Path("settings.json"))
+        self.review_manager.dataset.add_changes(path=Path("settings.json"))
+
+        self.__move_file(
+            source=Path("data/paper.md"), target=Path("data/data/paper.md")
+        )
+        self.__move_file(
+            source=Path("data/APA-7.docx"), target=Path("data/data/APA-7.docx")
+        )
+        self.__move_file(
+            source=Path("data/non_sample_references.bib"),
+            target=Path("data/data/non_sample_references.bib"),
         )
 
 

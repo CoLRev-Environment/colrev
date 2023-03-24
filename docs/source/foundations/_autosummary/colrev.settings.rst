@@ -1,4 +1,4 @@
-﻿colrev.settings
+colrev.settings
 ===============
 
 .. automodule:: colrev.settings

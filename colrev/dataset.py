@@ -1000,6 +1000,9 @@ class Dataset:
     def add_changes(self, *, path: Path, remove: bool = False) -> None:
         """Add changed file to git"""
 
+        if path.is_absolute():
+            path = path.relative_to(self.review_manager.path)
+
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
