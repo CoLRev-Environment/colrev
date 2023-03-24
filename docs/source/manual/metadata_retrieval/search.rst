@@ -38,25 +38,25 @@ Examples:
 
 .. code-block:: bash
 
-    colrev search -a "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
-    colrev search -a "https://dblp.org/search?q=microsourcing"
-    colrev search -a "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
-    colrev search -a backward-search
-    colrev search -a forward-search
-    colrev search -a "local_index:title LIKE '%dark side%'"
-    colrev search -a "/path/to/local/file.bib"
+    colrev search -a colrev.crossref:"https://search.crossref.org/?q=+microsourcing&from_ui=yes"
+    colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+    colrev search -a colrev.ais_library:"https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
+    colrev search -a colrev.pdf_backward_search:backward-search
+    colrev search -a colrev.open_citations_forward_search:forward-search
+    colrev search -a colrev.local_index:"local_index:title LIKE '%dark side%'"
+    colrev search -a colrev.colrev_project:"/path/to/local/file.bib"
 
 ..
     Examples:
-    .. colrev search -a colrev_built_in.crossref:jissn=19417225
+    .. colrev search -a colrev.crossref:jissn=19417225
 
-    colrev search -a '{"endpoint": "colrev_built_in.dblp","search_parameters": {"scope": {"venue_key": "journals/dss", "journal_abbreviation": "Decis. Support Syst."}}}'
+    colrev search -a '{"endpoint": "colrev.dblp","search_parameters": {"scope": {"venue_key": "journals/dss", "journal_abbreviation": "Decis. Support Syst."}}}'
 
-    colrev search -a '{"endpoint": "colrev_built_in.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
+    colrev search -a '{"endpoint": "colrev.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a '{"endpoint": "colrev_built_in.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
+    colrev search -a '{"endpoint": "colrev.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a '{"endpoint": "colrev_built_in.pdfs_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
+    colrev search -a '{"endpoint": "colrev.pdfs_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
 
 SearchSources are used to keep a trace to the file or API the records originate (using the `colrev_origin` field).
 This makes iterative searches more efficient.
