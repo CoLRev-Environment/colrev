@@ -1,4 +1,4 @@
-﻿colrev.ops.sync
+colrev.ops.sync
 ===============
 
 .. automodule:: colrev.ops.sync

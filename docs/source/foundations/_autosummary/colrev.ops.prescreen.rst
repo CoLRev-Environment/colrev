@@ -1,4 +1,4 @@
-﻿colrev.ops.prescreen
+colrev.ops.prescreen
 ====================
 
 .. automodule:: colrev.ops.prescreen

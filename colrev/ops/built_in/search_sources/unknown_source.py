@@ -34,7 +34,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
-    source_identifier = "colrev_built_in.unknown_source"
+    source_identifier = "colrev.unknown_source"
     search_type = colrev.settings.SearchType.DB
     api_search_supported = False
     ci_supported: bool = False
@@ -132,10 +132,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not record.has_inconsistent_fields() or record.masterdata_is_curated():
             return record
 
-        if (
-            "colrev_built_in.md_to_bib"
-            == source.load_conversion_package_endpoint["endpoint"]
-        ):
+        if "colrev.md_to_bib" == source.load_conversion_package_endpoint["endpoint"]:
             if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
                 record.update_field(
                     key="ENTRYTYPE", value="book", source="unkown_source_prep"

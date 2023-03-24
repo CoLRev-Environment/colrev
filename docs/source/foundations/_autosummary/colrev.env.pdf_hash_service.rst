@@ -1,4 +1,4 @@
-﻿colrev.env.pdf\_hash\_service
+colrev.env.pdf\_hash\_service
 =============================
 
 .. automodule:: colrev.env.pdf_hash_service

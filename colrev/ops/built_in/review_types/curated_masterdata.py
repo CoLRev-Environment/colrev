@@ -61,22 +61,22 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.search.retrieve_forthcoming = False
 
         settings.prep.prep_rounds[0].prep_package_endpoints = [
-            {"endpoint": "colrev_built_in.resolve_crossrefs"},
-            {"endpoint": "colrev_built_in.source_specific_prep"},
-            {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
-            {"endpoint": "colrev_built_in.exclude_collections"},
-            {"endpoint": "colrev_built_in.exclude_complementary_materials"},
-            {"endpoint": "colrev_built_in.exclude_languages"},
-            {"endpoint": "colrev_built_in.remove_urls_with_500_errors"},
-            {"endpoint": "colrev_built_in.remove_broken_ids"},
-            {"endpoint": "colrev_built_in.global_ids_consistency_check"},
-            {"endpoint": "colrev_built_in.get_doi_from_urls"},
-            {"endpoint": "colrev_built_in.get_year_from_vol_iss_jour"},
+            {"endpoint": "colrev.resolve_crossrefs"},
+            {"endpoint": "colrev.source_specific_prep"},
+            {"endpoint": "colrev.exclude_non_latin_alphabets"},
+            {"endpoint": "colrev.exclude_collections"},
+            {"endpoint": "colrev.exclude_complementary_materials"},
+            {"endpoint": "colrev.exclude_languages"},
+            {"endpoint": "colrev.remove_urls_with_500_errors"},
+            {"endpoint": "colrev.remove_broken_ids"},
+            {"endpoint": "colrev.global_ids_consistency_check"},
+            {"endpoint": "colrev.get_doi_from_urls"},
+            {"endpoint": "colrev.get_year_from_vol_iss_jour"},
         ]
 
         settings.prep.prep_man_package_endpoints = [
-            {"endpoint": "colrev_built_in.prep_man_curation_jupyter"},
-            {"endpoint": "colrev_built_in.export_man_prep"},
+            {"endpoint": "colrev.prep_man_curation_jupyter"},
+            {"endpoint": "colrev.export_man_prep"},
         ]
         settings.prescreen.explanation = (
             "All records are automatically prescreen included."
@@ -88,29 +88,29 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         settings.prescreen.prescreen_package_endpoints = [
             {
-                "endpoint": "colrev_built_in.scope_prescreen",
+                "endpoint": "colrev.scope_prescreen",
                 "ExcludeComplementaryMaterials": True,
             },
-            {"endpoint": "colrev_built_in.conditional_prescreen"},
+            {"endpoint": "colrev.conditional_prescreen"},
         ]
         settings.screen.screen_package_endpoints = []
         settings.pdf_get.pdf_get_package_endpoints = []
 
         settings.dedupe.dedupe_package_endpoints = [
             {
-                "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
+                "endpoint": "colrev.curation_full_outlet_dedupe",
                 "selected_source": "data/search/CROSSREF.bib",
             },
             {
-                "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
+                "endpoint": "colrev.curation_full_outlet_dedupe",
                 "selected_source": "data/search/pdfs.bib",
             },
-            {"endpoint": "colrev_built_in.curation_missing_dedupe"},
+            {"endpoint": "colrev.curation_missing_dedupe"},
         ]
 
         settings.data.data_package_endpoints = [
             {
-                "endpoint": "colrev_built_in.colrev_curation",
+                "endpoint": "colrev.colrev_curation",
                 "version": "0.1",
                 "curation_url": "TODO",
                 "curated_masterdata": True,

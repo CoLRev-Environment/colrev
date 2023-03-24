@@ -146,11 +146,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 file_path_string=f"ais_{file_query}"
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.ais_library",
+                endpoint="colrev.ais_library",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source

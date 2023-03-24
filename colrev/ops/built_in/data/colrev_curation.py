@@ -64,7 +64,7 @@ class ColrevCuration(JsonSchemaMixin):
         """Get the default setup"""
 
         curation_endpoint_details = {
-            "endpoint": "colrev_built_in.colrev_curation",
+            "endpoint": "colrev.colrev_curation",
             "version": "0.1",
             "curation_url": "TODO",
             "curated_masterdata": True,

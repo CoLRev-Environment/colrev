@@ -292,7 +292,7 @@ class Data(colrev.operation.Operation):
             if not silent_mode:
                 print()
                 self.review_manager.logger.info(
-                    f"Data: {data_package_endpoint['endpoint'].replace('colrev_built_in.', '')}"
+                    f"Data: {data_package_endpoint['endpoint'].replace('colrev.', '')}"
                 )
 
             endpoint_dict = package_manager.load_packages(

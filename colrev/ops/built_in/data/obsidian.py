@@ -85,7 +85,7 @@ class Obsidian(JsonSchemaMixin):
     def get_default_setup(self) -> dict:
         """Get the default setup"""
         obsidian_endpoint_details = {
-            "endpoint": "colrev_built_in.obsidian",
+            "endpoint": "colrev.obsidian",
             "version": "0.1",
             "config": {},
         }

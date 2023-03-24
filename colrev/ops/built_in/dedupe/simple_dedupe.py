@@ -313,7 +313,7 @@ class SimpleDedupe(JsonSchemaMixin):
         pd.options.mode.chained_assignment = None  # type: ignore  # noqa
 
         dedupe_operation.review_manager.logger.info(
-            "Dedupe operation [colrev_built_in.simple_dedupe]"
+            "Dedupe operation [colrev.simple_dedupe]"
         )
         dedupe_operation.review_manager.logger.info(
             "Duplicate identification based on static similarity measure and record pairs"

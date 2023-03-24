@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.load\_conversion
+colrev.ops.built\_in.load\_conversion
 =====================================
 
 .. automodule:: colrev.ops.built_in.load_conversion

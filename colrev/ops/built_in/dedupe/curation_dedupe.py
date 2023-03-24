@@ -158,7 +158,7 @@ class CurationDedupe(JsonSchemaMixin):
             dedupe_sources = [
                 s["selected_source"]
                 for s in dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints
-                if "colrev_built_in.curation_full_outlet_dedupe" == s["endpoint"]
+                if "colrev.curation_full_outlet_dedupe" == s["endpoint"]
             ]
             sources_missing_in_dedupe = [
                 x for x in available_sources if x not in dedupe_sources
@@ -166,7 +166,7 @@ class CurationDedupe(JsonSchemaMixin):
             if len(sources_missing_in_dedupe) > 0:
                 dedupe_operation.review_manager.logger.warning(
                     f"{colors.ORANGE}Sources missing in "
-                    "dedupe.scripts.colrev_built_in.curation_full_outlet_dedupe: "
+                    "dedupe.scripts.colrev.curation_full_outlet_dedupe: "
                     f"{','.join(sources_missing_in_dedupe)}{colors.END}"
                 )
                 if "y" == input("Add sources [y,n]?"):
@@ -176,7 +176,7 @@ class CurationDedupe(JsonSchemaMixin):
                         )
                         penultimate_position = len(dedupe_package_endpoints) - 1
                         dedupe_script_to_add = {
-                            "endpoint": "colrev_built_in.curation_full_outlet_dedupe",
+                            "endpoint": "colrev.curation_full_outlet_dedupe",
                             "selected_source": source_missing_in_dedupe,
                         }
                         dedupe_package_endpoints.insert(
@@ -539,7 +539,7 @@ class CurationDedupe(JsonSchemaMixin):
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "colrev_built_in.pdfs_dir" == relevant_source[0].endpoint
+            pdf_source = "colrev.pdfs_dir" == relevant_source[0].endpoint
         return pdf_source
 
     def __first_source_selected(
@@ -606,7 +606,7 @@ class CurationDedupe(JsonSchemaMixin):
         preferred_masterdata_sources = [
             s
             for s in dedupe_operation.review_manager.settings.sources
-            if s.endpoint != "colrev_built_in.pdfs_dir"
+            if s.endpoint != "colrev.pdfs_dir"
         ]
         dedupe_operation.apply_merges(
             results=decision_list,

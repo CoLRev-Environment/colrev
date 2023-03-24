@@ -1,4 +1,4 @@
-﻿colrev.exceptions.NotTOCIdentifiableException
+colrev.exceptions.NotTOCIdentifiableException
 =============================================
 
 .. currentmodule:: colrev.exceptions

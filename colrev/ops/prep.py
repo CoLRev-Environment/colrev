@@ -752,7 +752,7 @@ class Prep(colrev.operation.Operation):
         # because it must always be executed at the end
         if prep_round.name not in ["source_specific_prep", "exclusion"]:
             prep_round.prep_package_endpoints.append(
-                {"endpoint": "colrev_built_in.update_metadata_status"}
+                {"endpoint": "colrev.update_metadata_status"}
             )
 
         if self.debug_mode:
@@ -768,7 +768,7 @@ class Prep(colrev.operation.Operation):
 
         required_prep_package_endpoints = list(prep_round.prep_package_endpoints)
         required_prep_package_endpoints.append(
-            {"endpoint": "colrev_built_in.update_metadata_status"}
+            {"endpoint": "colrev.update_metadata_status"}
         )
 
         package_manager = self.review_manager.get_package_manager()
@@ -954,7 +954,7 @@ class Prep(colrev.operation.Operation):
                     prep_pe_names = [
                         r["endpoint"] for r in prep_round.prep_package_endpoints
                     ]
-                    if "colrev_built_in.exclude_languages" in prep_pe_names:  # type: ignore
+                    if "colrev.exclude_languages" in prep_pe_names:  # type: ignore
                         self.review_manager.logger.info(
                             "Info: The language detector requires RAM and may take longer"
                         )

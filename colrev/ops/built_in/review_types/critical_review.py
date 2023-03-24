@@ -38,9 +38,9 @@ class CriticalReview(JsonSchemaMixin):
         """Initialize a critical review"""
 
         settings.data.data_package_endpoints = [
-            {"endpoint": "colrev_built_in.prisma", "version": "1.0"},
+            {"endpoint": "colrev.prisma", "version": "1.0"},
             {
-                "endpoint": "colrev_built_in.paper_md",
+                "endpoint": "colrev.paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
             },

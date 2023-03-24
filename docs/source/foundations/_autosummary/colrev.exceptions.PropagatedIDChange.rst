@@ -1,4 +1,4 @@
-﻿colrev.exceptions.PropagatedIDChange
+colrev.exceptions.PropagatedIDChange
 ====================================
 
 .. currentmodule:: colrev.exceptions

@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidation
+colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidation
 =================================================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_prep.completeness_validation

@@ -1,4 +1,4 @@
-﻿colrev.env.package\_manager.PackageEndpointType
+colrev.env.package\_manager.PackageEndpointType
 ===============================================
 
 .. currentmodule:: colrev.env.package_manager

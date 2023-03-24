@@ -1,4 +1,4 @@
-﻿colrev.exceptions.ParameterError
+colrev.exceptions.ParameterError
 ================================
 
 .. currentmodule:: colrev.exceptions

@@ -1,4 +1,4 @@
-﻿colrev.env.package\_manager.PackageManager
+colrev.env.package\_manager.PackageManager
 ==========================================
 
 .. currentmodule:: colrev.env.package_manager

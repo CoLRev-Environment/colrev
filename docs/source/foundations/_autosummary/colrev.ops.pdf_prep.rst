@@ -1,4 +1,4 @@
-﻿colrev.ops.pdf\_prep
+colrev.ops.pdf\_prep
 ====================
 
 .. automodule:: colrev.ops.pdf_prep

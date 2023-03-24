@@ -1,4 +1,4 @@
-﻿colrev.ops.upgrade
+colrev.ops.upgrade
 ==================
 
 .. automodule:: colrev.ops.upgrade

@@ -1,4 +1,4 @@
-﻿colrev.env.resources
+colrev.env.resources
 ====================
 
 .. automodule:: colrev.env.resources

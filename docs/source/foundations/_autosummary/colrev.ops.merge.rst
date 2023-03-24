@@ -1,4 +1,4 @@
-﻿colrev.ops.merge
+colrev.ops.merge
 ================
 
 .. automodule:: colrev.ops.merge

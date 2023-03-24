@@ -46,17 +46,20 @@ class Dedupe(colrev.operation.Operation):
         )
 
         self.non_dupe_file_xlsx = (
-            self.review_manager.path / self.NON_DUPLICATE_FILE_XLSX
+            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
         )
-        self.non_dupe_file_txt = self.review_manager.path / self.NON_DUPLICATE_FILE_TXT
-        self.dupe_file = self.review_manager.path / self.DUPLICATES_TO_VALIDATE
+        self.non_dupe_file_txt = (
+            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
+        )
+        self.dupe_file = self.review_manager.dedupe_dir / self.DUPLICATES_TO_VALIDATE
 
         self.same_source_merge_file = (
-            self.review_manager.path / self.SAME_SOURCE_MERGE_FILE
+            self.review_manager.dedupe_dir / self.SAME_SOURCE_MERGE_FILE
         )
         self.prevented_same_source_merge_file = (
-            self.review_manager.path / self.PREVENTED_SAME_SOURCE_MERGE_FILE
+            self.review_manager.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
         )
+        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
 
     def __pre_process(self, *, key: str, value: str) -> str | None:
         if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:

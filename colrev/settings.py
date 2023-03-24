@@ -518,7 +518,7 @@ class Settings(JsonSchemaMixin):
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
-            if x["endpoint"] == "colrev_built_in.colrev_curation"
+            if x["endpoint"] == "colrev.colrev_curation"
         ]
         return bool(curation_endpoints)
 
@@ -528,7 +528,7 @@ class Settings(JsonSchemaMixin):
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
-            if x["endpoint"] == "colrev_built_in.colrev_curation"
+            if x["endpoint"] == "colrev.colrev_curation"
         ]
         if curation_endpoints:
             curation_endpoint = curation_endpoints[0]

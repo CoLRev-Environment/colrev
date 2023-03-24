@@ -1,4 +1,4 @@
-﻿colrev.hooks.report.main
+colrev.hooks.report.main
 ========================
 
 .. currentmodule:: colrev.hooks.report
