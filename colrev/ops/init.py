@@ -51,7 +51,7 @@ class Initializer:
 
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
         if "." not in self.review_type:
-            self.review_type = "colrev_built_in." + self.review_type
+            self.review_type = "colrev." + self.review_type
 
         if target_path:
             os.chdir(target_path)
@@ -67,7 +67,7 @@ class Initializer:
             res = review_manager.get_review_types(review_type=self.review_type)
         except colrev.exceptions.MissingDependencyError as exc:
             res = review_manager.get_review_types(
-                review_type="colrev_built_in.literature_review"
+                review_type="colrev.literature_review"
             )
             raise colrev_exceptions.ParameterError(
                 parameter="init.review_type",
@@ -270,12 +270,10 @@ class Initializer:
             settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
-                if x["endpoint"] not in ["colrev_built_in.paper_md"]
+                if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x
-                for x in settings.sources
-                if x.endpoint not in ["colrev_built_in.pdfs_dir"]
+                x for x in settings.sources if x.endpoint not in ["colrev.pdfs_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [
@@ -283,10 +281,10 @@ class Initializer:
                 for x in settings.pdf_prep.pdf_prep_package_endpoints
                 if x["endpoint"]
                 not in [
-                    "colrev_built_in.pdf_check_ocr",
-                    "colrev_built_in.remove_coverpage",
-                    "colrev_built_in.remove_last_page",
-                    "colrev_built_in.create_tei",
+                    "colrev.pdf_check_ocr",
+                    "colrev.remove_coverpage",
+                    "colrev.remove_last_page",
+                    "colrev.create_tei",
                 ]
             ]
 
@@ -302,13 +300,13 @@ class Initializer:
 
         for source in settings.sources:
             self.review_manager.logger.info(
-                " add search %s", source.endpoint.replace("colrev_built_in.", "")
+                " add search %s", source.endpoint.replace("colrev.", "")
             )
 
         for data_package_endpoint in settings.data.data_package_endpoints:
             self.review_manager.logger.info(
                 " add data   %s",
-                data_package_endpoint["endpoint"].replace("colrev_built_in.", ""),
+                data_package_endpoint["endpoint"].replace("colrev.", ""),
             )
 
         with open("data/records.bib", mode="w", encoding="utf-8") as file:
@@ -318,7 +316,7 @@ class Initializer:
         git_repo.git.add(all=True)
 
     def __post_commit_edits(self) -> None:
-        if "colrev_built_in.curated_masterdata" == self.review_type:
+        if "colrev.curated_masterdata" == self.review_type:
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
             self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
@@ -418,7 +416,7 @@ class Initializer:
             settings = json.load(file)
 
         settings["dedupe"]["dedupe_package_endpoints"] = [
-            {"endpoint": "colrev_built_in.simple_dedupe"}
+            {"endpoint": "colrev.simple_dedupe"}
         ]
 
         with open("settings.json", "w", encoding="utf-8") as outfile:
@@ -437,7 +435,7 @@ class Initializer:
             local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_pdf_collection_path)
             Initializer(
-                review_type="colrev_built_in.literature_review",
+                review_type="colrev.literature_review",
                 local_pdf_collection=True,
             )
             self.logger.info("Created local_pdf_collection repository")

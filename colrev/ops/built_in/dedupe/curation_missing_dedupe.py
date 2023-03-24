@@ -305,7 +305,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             preferred_masterdata_sources = [
                 s
                 for s in dedupe_operation.review_manager.settings.sources
-                if s.endpoint != "colrev_built_in.pdfs_dir"
+                if s.endpoint != "colrev.pdfs_dir"
             ]
 
             dedupe_operation.apply_merges(

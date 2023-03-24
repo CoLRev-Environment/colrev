@@ -396,7 +396,7 @@ class Search(colrev.operation.Operation):
             filename=Path("data/search/custom_search.bib"),
             search_type=colrev.settings.SearchType.DB,
             search_parameters={},
-            load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 

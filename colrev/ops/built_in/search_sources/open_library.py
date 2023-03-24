@@ -70,13 +70,11 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 self.search_source = open_library_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev_built_in.open_library",
+                    endpoint="colrev.open_library",
                     filename=self.__open_library_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
+                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 

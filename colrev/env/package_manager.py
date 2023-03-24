@@ -698,6 +698,7 @@ class PackageManager:
     ) -> typing.Dict:
         # avoid changes in the config
         selected_packages = deepcopy(selected_packages)
+
         packages_dict: typing.Dict = {}
         for selected_package in selected_packages:
             package_identifier = selected_package["endpoint"].lower()
@@ -975,7 +976,7 @@ class PackageManager:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
             endpoints_path = Path(module_spec.origin).parents[1] / Path(  # type:ignore
-                "endpoints.json"
+                ".colrev_endpoints.json"
             )
             if not endpoints_path.is_file():  # pragma: no cover
                 print(f"File does not exist: {endpoints_path}")

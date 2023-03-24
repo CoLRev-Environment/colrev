@@ -54,7 +54,8 @@ class Upgrade(colrev.operation.Operation):
         # {'from': '0.4.0', "to": '0.5.0', 'script': __migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': __migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"from": "0.7.0", "to": upcoming_version, "script": self.__migrate_0_7_0},
+            {"from": "0.7.0", "to": "0.7.1", "script": self.__migrate_0_7_0},
+            {"from": "0.7.1", "to": upcoming_version, "script": self.__migrate_0_7_1},
         ]
 
         # Start with the first step if the version is older:
@@ -132,6 +133,20 @@ class Upgrade(colrev.operation.Operation):
             with open(".pre-commit-config.yaml", "w", encoding="utf-8") as file:
                 file.write(pre_commit_contents)
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
+
+    def __migrate_0_7_1(self) -> None:
+        settings_content = (self.review_manager.path / Path("settings.json")).read_text(
+            encoding="utf-8"
+        )
+        settings_content = settings_content.replace("colrev_built_in.", "colrev.")
+        with open(
+            (self.review_manager.path / Path("settings.json")), "w", encoding="utf-8"
+        ) as file:
+            file.write(settings_content)
+
+        self.review_manager.dataset.add_changes(
+            path=(self.review_manager.path / Path("settings.json"))
+        )
 
 
 if __name__ == "__main__":

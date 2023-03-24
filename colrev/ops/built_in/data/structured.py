@@ -98,7 +98,7 @@ Example 2:
         # Note : add fields interactively upon update_data()
 
         structured_endpoint_details = {
-            "endpoint": "colrev_built_in.structured",
+            "endpoint": "colrev.structured",
             "version": "0.1",
             "fields": [],
             "data_path_relative": "data/data.csv",

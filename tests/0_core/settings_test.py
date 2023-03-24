@@ -16,23 +16,23 @@ expected_printout = """Review (literature_review):
 Search
  - retrieve_forthcoming: True
 Sources
-colrev_built_in.pdfs_dir (type: PDFS, filename: data/search/pdfs.bib)
+colrev.pdfs_dir (type: PDFS, filename: data/search/pdfs.bib)
    search parameters:   {'scope': {'path': 'data/pdfs'}}
 Load
  - TODO
 Preparation
  - prep_rounds:
-   - prep (colrev_built_in.resolve_crossrefs,colrev_built_in.source_specific_prep,colrev_built_in.exclude_non_latin_alphabets,...)
+   - prep (colrev.resolve_crossrefs,colrev.source_specific_prep,colrev.exclude_non_latin_alphabets,...)
  - fields_to_keep: []
 Dedupe
  - same_source_merges: SameSourceMergePolicy.prevent
- - colrev_built_in.active_learning_training,colrev_built_in.active_learning_automated
+ - colrev.active_learning_training,colrev.active_learning_automated
 Prescreen
-Prescreen package endoints: colrev_built_in.scope_prescreen,colrev_built_in.colrev_cli_prescreen
+Prescreen package endoints: colrev.scope_prescreen,colrev.colrev_cli_prescreen
 PDF get
- - pdf_path_type: PDFPathType.symlink - colrev_built_in.local_index,colrev_built_in.unpaywall,colrev_built_in.website_screenshot
+ - pdf_path_type: PDFPathType.symlink - colrev.local_index,colrev.unpaywall,colrev.website_screenshot
 PDF prep
- - colrev_built_in.pdf_check_ocr,colrev_built_in.remove_coverpage,colrev_built_in.remove_last_page,colrev_built_in.validate_pdf_metadata,colrev_built_in.validate_completeness,colrev_built_in.create_tei
+ - colrev.pdf_check_ocr,colrev.remove_coverpage,colrev.remove_last_page,colrev.validate_pdf_metadata,colrev.validate_completeness,colrev.create_tei
 Screen
  -
 Data
@@ -58,13 +58,11 @@ def test_settings_load() -> None:
         },
         "sources": [
             {
-                "endpoint": "colrev_built_in.pdfs_dir",
+                "endpoint": "colrev.pdfs_dir",
                 "filename": Path("data/search/pdfs.bib"),
                 "search_type": colrev.settings.SearchType.PDFS,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "load_conversion_package_endpoint": {
-                    "endpoint": "colrev_built_in.bibtex"
-                },
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": "",
             }
         ],
@@ -77,47 +75,43 @@ def test_settings_load() -> None:
                     "name": "prep",
                     "similarity": 0.8,
                     "prep_package_endpoints": [
-                        {"endpoint": "colrev_built_in.resolve_crossrefs"},
-                        {"endpoint": "colrev_built_in.source_specific_prep"},
-                        {"endpoint": "colrev_built_in.exclude_non_latin_alphabets"},
-                        {"endpoint": "colrev_built_in.exclude_collections"},
-                        {"endpoint": "colrev_built_in.exclude_complementary_materials"},
-                        {"endpoint": "colrev_built_in.get_masterdata_from_local_index"},
-                        {"endpoint": "colrev_built_in.exclude_languages"},
-                        {"endpoint": "colrev_built_in.remove_urls_with_500_errors"},
-                        {"endpoint": "colrev_built_in.remove_broken_ids"},
-                        {"endpoint": "colrev_built_in.global_ids_consistency_check"},
-                        {"endpoint": "colrev_built_in.get_doi_from_urls"},
-                        {"endpoint": "colrev_built_in.get_year_from_vol_iss_jour"},
-                        {"endpoint": "colrev_built_in.get_masterdata_from_crossref"},
-                        {"endpoint": "colrev_built_in.get_masterdata_from_pubmed"},
-                        {"endpoint": "colrev_built_in.get_masterdata_from_europe_pmc"},
-                        {"endpoint": "colrev_built_in.get_masterdata_from_dblp"},
-                        {
-                            "endpoint": "colrev_built_in.get_masterdata_from_open_library"
-                        },
+                        {"endpoint": "colrev.resolve_crossrefs"},
+                        {"endpoint": "colrev.source_specific_prep"},
+                        {"endpoint": "colrev.exclude_non_latin_alphabets"},
+                        {"endpoint": "colrev.exclude_collections"},
+                        {"endpoint": "colrev.exclude_complementary_materials"},
+                        {"endpoint": "colrev.get_masterdata_from_local_index"},
+                        {"endpoint": "colrev.exclude_languages"},
+                        {"endpoint": "colrev.remove_urls_with_500_errors"},
+                        {"endpoint": "colrev.remove_broken_ids"},
+                        {"endpoint": "colrev.global_ids_consistency_check"},
+                        {"endpoint": "colrev.get_doi_from_urls"},
+                        {"endpoint": "colrev.get_year_from_vol_iss_jour"},
+                        {"endpoint": "colrev.get_masterdata_from_crossref"},
+                        {"endpoint": "colrev.get_masterdata_from_pubmed"},
+                        {"endpoint": "colrev.get_masterdata_from_europe_pmc"},
+                        {"endpoint": "colrev.get_masterdata_from_dblp"},
+                        {"endpoint": "colrev.get_masterdata_from_open_library"},
                     ],
                 }
             ],
-            "prep_man_package_endpoints": [
-                {"endpoint": "colrev_built_in.export_man_prep"}
-            ],
+            "prep_man_package_endpoints": [{"endpoint": "colrev.export_man_prep"}],
         },
         "dedupe": {
             "same_source_merges": colrev.settings.SameSourceMergePolicy.prevent,
             "dedupe_package_endpoints": [
-                {"endpoint": "colrev_built_in.active_learning_training"},
-                {"endpoint": "colrev_built_in.active_learning_automated"},
+                {"endpoint": "colrev.active_learning_training"},
+                {"endpoint": "colrev.active_learning_automated"},
             ],
         },
         "prescreen": {
             "explanation": "",
             "prescreen_package_endpoints": [
                 {
-                    "endpoint": "colrev_built_in.scope_prescreen",
+                    "endpoint": "colrev.scope_prescreen",
                     "LanguageScope": ["eng"],
                 },
-                {"endpoint": "colrev_built_in.colrev_cli_prescreen"},
+                {"endpoint": "colrev.colrev_cli_prescreen"},
             ],
         },
         "pdf_get": {
@@ -125,34 +119,32 @@ def test_settings_load() -> None:
             "pdf_required_for_screen_and_synthesis": True,
             "rename_pdfs": True,
             "pdf_get_package_endpoints": [
-                {"endpoint": "colrev_built_in.local_index"},
-                {"endpoint": "colrev_built_in.unpaywall"},
-                {"endpoint": "colrev_built_in.website_screenshot"},
+                {"endpoint": "colrev.local_index"},
+                {"endpoint": "colrev.unpaywall"},
+                {"endpoint": "colrev.website_screenshot"},
             ],
             "pdf_get_man_package_endpoints": [
-                {"endpoint": "colrev_built_in.colrev_cli_pdf_get_man"}
+                {"endpoint": "colrev.colrev_cli_pdf_get_man"}
             ],
         },
         "pdf_prep": {
             "keep_backup_of_pdfs": True,
             "pdf_prep_package_endpoints": [
-                {"endpoint": "colrev_built_in.pdf_check_ocr"},
-                {"endpoint": "colrev_built_in.remove_coverpage"},
-                {"endpoint": "colrev_built_in.remove_last_page"},
-                {"endpoint": "colrev_built_in.validate_pdf_metadata"},
-                {"endpoint": "colrev_built_in.validate_completeness"},
-                {"endpoint": "colrev_built_in.create_tei"},
+                {"endpoint": "colrev.pdf_check_ocr"},
+                {"endpoint": "colrev.remove_coverpage"},
+                {"endpoint": "colrev.remove_last_page"},
+                {"endpoint": "colrev.validate_pdf_metadata"},
+                {"endpoint": "colrev.validate_completeness"},
+                {"endpoint": "colrev.create_tei"},
             ],
             "pdf_prep_man_package_endpoints": [
-                {"endpoint": "colrev_built_in.colrev_cli_pdf_prep_man"}
+                {"endpoint": "colrev.colrev_cli_pdf_prep_man"}
             ],
         },
         "screen": {
             "explanation": None,
             "criteria": {},
-            "screen_package_endpoints": [
-                {"endpoint": "colrev_built_in.colrev_cli_screen"}
-            ],
+            "screen_package_endpoints": [{"endpoint": "colrev.colrev_cli_screen"}],
         },
         "data": {"data_package_endpoints": []},
     }

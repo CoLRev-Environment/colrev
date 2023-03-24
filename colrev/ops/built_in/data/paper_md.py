@@ -132,7 +132,7 @@ class PaperMarkdown(JsonSchemaMixin):
         """Get the default setup"""
 
         paper_md_endpoint_details = {
-            "endpoint": "colrev_built_in.paper_md",
+            "endpoint": "colrev.paper_md",
             "version": "0.1",
             "word_template": Path("data/APA-7.docx"),
         }
@@ -535,7 +535,7 @@ class PaperMarkdown(JsonSchemaMixin):
         prisma_endpoint_l = [
             d
             for d in self.data_operation.review_manager.settings.data.data_package_endpoints
-            if d["endpoint"] == "colrev_built_in.prisma"
+            if d["endpoint"] == "colrev.prisma"
         ]
         if prisma_endpoint_l:
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):

@@ -53,7 +53,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         self.crossref_prefixes = [
             s.get_origin_prefix()
             for s in prep_operation.review_manager.settings.sources
-            if s.endpoint == "colrev_built_in.crossref"
+            if s.endpoint == "colrev.crossref"
         ]
 
     def check_availability(

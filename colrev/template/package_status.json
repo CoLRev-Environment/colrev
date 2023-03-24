@@ -1,423 +1,423 @@
 {
     "review_type": [
         {
-            "package_endpoint_identifier": "colrev_built_in.conceptual_review",
+            "package_endpoint_identifier": "colrev.conceptual_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.curated_masterdata",
+            "package_endpoint_identifier": "colrev.curated_masterdata",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.literature_review",
+            "package_endpoint_identifier": "colrev.literature_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.narrative_review",
+            "package_endpoint_identifier": "colrev.narrative_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.descriptive_review",
+            "package_endpoint_identifier": "colrev.descriptive_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.scoping_review",
+            "package_endpoint_identifier": "colrev.scoping_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.critical_review",
+            "package_endpoint_identifier": "colrev.critical_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.theoretical_review",
+            "package_endpoint_identifier": "colrev.theoretical_review",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.qualitative_systematic_review",
+            "package_endpoint_identifier": "colrev.qualitative_systematic_review",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.meta_analysis",
+            "package_endpoint_identifier": "colrev.meta_analysis",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.scientometric",
+            "package_endpoint_identifier": "colrev.scientometric",
             "status": "RED"
         }
     ],
     "search_source": [
         {
-            "package_endpoint_identifier": "colrev_built_in.unknown_source",
+            "package_endpoint_identifier": "colrev.unknown_source",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.abi_inform_proquest",
+            "package_endpoint_identifier": "colrev.abi_inform_proquest",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.systematic_review_datasets",
+            "package_endpoint_identifier": "colrev.systematic_review_datasets",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.taylor_and_francis",
+            "package_endpoint_identifier": "colrev.taylor_and_francis",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.ebsco_host",
+            "package_endpoint_identifier": "colrev.ebsco_host",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.crossref",
+            "package_endpoint_identifier": "colrev.crossref",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.dblp",
+            "package_endpoint_identifier": "colrev.dblp",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.europe_pmc",
+            "package_endpoint_identifier": "colrev.europe_pmc",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.acm_digital_library",
+            "package_endpoint_identifier": "colrev.acm_digital_library",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.pubmed",
+            "package_endpoint_identifier": "colrev.pubmed",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.wiley",
+            "package_endpoint_identifier": "colrev.wiley",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.ieee",
+            "package_endpoint_identifier": "colrev.ieee",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.psycinfo",
+            "package_endpoint_identifier": "colrev.psycinfo",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.jstor",
+            "package_endpoint_identifier": "colrev.jstor",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.eric",
+            "package_endpoint_identifier": "colrev.eric",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.springer_link",
+            "package_endpoint_identifier": "colrev.springer_link",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.ais_library",
+            "package_endpoint_identifier": "colrev.ais_library",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.google_scholar",
+            "package_endpoint_identifier": "colrev.google_scholar",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.web_of_science",
+            "package_endpoint_identifier": "colrev.web_of_science",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.scopus",
+            "package_endpoint_identifier": "colrev.scopus",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.pdfs_dir",
+            "package_endpoint_identifier": "colrev.pdfs_dir",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.video_dir",
+            "package_endpoint_identifier": "colrev.video_dir",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.pdf_backward_search",
+            "package_endpoint_identifier": "colrev.pdf_backward_search",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.open_citations_forward_search",
+            "package_endpoint_identifier": "colrev.open_citations_forward_search",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_project",
+            "package_endpoint_identifier": "colrev.colrev_project",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.local_index",
+            "package_endpoint_identifier": "colrev.local_index",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.trid",
+            "package_endpoint_identifier": "colrev.trid",
             "status": "RED"
         }
     ],
     "load_conversion": [
         {
-            "package_endpoint_identifier": "colrev_built_in.bibtex",
+            "package_endpoint_identifier": "colrev.bibtex",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.csv",
+            "package_endpoint_identifier": "colrev.csv",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.excel",
+            "package_endpoint_identifier": "colrev.excel",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.zotero_translate",
+            "package_endpoint_identifier": "colrev.zotero_translate",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.md_to_bib",
+            "package_endpoint_identifier": "colrev.md_to_bib",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.bibutils",
+            "package_endpoint_identifier": "colrev.bibutils",
             "status": "ORANGE"
         }
     ],
     "prep": [
         {
-            "package_endpoint_identifier": "colrev_built_in.source_specific_prep",
+            "package_endpoint_identifier": "colrev.source_specific_prep",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.exclude_complementary_materials",
+            "package_endpoint_identifier": "colrev.exclude_complementary_materials",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.exclude_non_latin_alphabets",
+            "package_endpoint_identifier": "colrev.exclude_non_latin_alphabets",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.exclude_languages",
+            "package_endpoint_identifier": "colrev.exclude_languages",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.exclude_collections",
+            "package_endpoint_identifier": "colrev.exclude_collections",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.remove_urls_with_500_errors",
+            "package_endpoint_identifier": "colrev.remove_urls_with_500_errors",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.remove_broken_ids",
+            "package_endpoint_identifier": "colrev.remove_broken_ids",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.global_ids_consistency_check",
+            "package_endpoint_identifier": "colrev.global_ids_consistency_check",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.resolve_crossrefs",
+            "package_endpoint_identifier": "colrev.resolve_crossrefs",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_doi_from_sem_scholar",
+            "package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_doi_from_urls",
+            "package_endpoint_identifier": "colrev.get_doi_from_urls",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_doi",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_doi",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_crossref",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_crossref",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_pubmed",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_pubmed",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_europe_pmc",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_europe_pmc",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_dblp",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_dblp",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_open_library",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_open_library",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_citeas",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_year_from_vol_iss_jour",
+            "package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.get_masterdata_from_local_index",
+            "package_endpoint_identifier": "colrev.get_masterdata_from_local_index",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.update_metadata_status",
+            "package_endpoint_identifier": "colrev.update_metadata_status",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.general_polish",
+            "package_endpoint_identifier": "colrev.general_polish",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.curation_prep",
+            "package_endpoint_identifier": "colrev.curation_prep",
             "status": "RED"
         }
     ],
     "prep_man": [
         {
-            "package_endpoint_identifier": "colrev_built_in.export_man_prep",
+            "package_endpoint_identifier": "colrev.export_man_prep",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.prep_man_curation_jupyter",
+            "package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
             "status": "RED"
         }
     ],
     "dedupe": [
         {
-            "package_endpoint_identifier": "colrev_built_in.simple_dedupe",
+            "package_endpoint_identifier": "colrev.simple_dedupe",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.active_learning_training",
+            "package_endpoint_identifier": "colrev.active_learning_training",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.active_learning_automated",
+            "package_endpoint_identifier": "colrev.active_learning_automated",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.curation_full_outlet_dedupe",
+            "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.curation_missing_dedupe",
+            "package_endpoint_identifier": "colrev.curation_missing_dedupe",
             "status": "RED"
         }
     ],
     "prescreen": [
         {
-            "package_endpoint_identifier": "colrev_built_in.scope_prescreen",
+            "package_endpoint_identifier": "colrev.scope_prescreen",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_cli_prescreen",
+            "package_endpoint_identifier": "colrev.colrev_cli_prescreen",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.asreview_prescreen",
+            "package_endpoint_identifier": "colrev.asreview_prescreen",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.conditional_prescreen",
+            "package_endpoint_identifier": "colrev.conditional_prescreen",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.prescreen_table",
+            "package_endpoint_identifier": "colrev.prescreen_table",
             "status": "ORANGE"
         }
     ],
     "pdf_get": [
         {
-            "package_endpoint_identifier": "colrev_built_in.unpaywall",
+            "package_endpoint_identifier": "colrev.unpaywall",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.local_index",
+            "package_endpoint_identifier": "colrev.local_index",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.website_screenshot",
+            "package_endpoint_identifier": "colrev.website_screenshot",
             "status": "RED"
         }
     ],
     "pdf_get_man": [
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_get_man",
+            "package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
             "status": "ORANGE"
         }
     ],
     "pdf_prep": [
         {
-            "package_endpoint_identifier": "colrev_built_in.pdf_check_ocr",
+            "package_endpoint_identifier": "colrev.pdf_check_ocr",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.remove_coverpage",
+            "package_endpoint_identifier": "colrev.remove_coverpage",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.remove_last_page",
+            "package_endpoint_identifier": "colrev.remove_last_page",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.validate_pdf_metadata",
+            "package_endpoint_identifier": "colrev.validate_pdf_metadata",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.validate_completeness",
+            "package_endpoint_identifier": "colrev.validate_completeness",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.create_tei",
+            "package_endpoint_identifier": "colrev.create_tei",
             "status": "ORANGE"
         }
     ],
     "pdf_prep_man": [
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_cli_pdf_prep_man",
+            "package_endpoint_identifier": "colrev.colrev_cli_pdf_prep_man",
             "status": "ORANGE"
         }
     ],
     "screen": [
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_cli_screen",
+            "package_endpoint_identifier": "colrev.colrev_cli_screen",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.screen_table",
+            "package_endpoint_identifier": "colrev.screen_table",
             "status": "ORANGE"
         }
     ],
     "data": [
         {
-            "package_endpoint_identifier": "colrev_built_in.paper_md",
+            "package_endpoint_identifier": "colrev.paper_md",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.structured",
+            "package_endpoint_identifier": "colrev.structured",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.bibliography_export",
+            "package_endpoint_identifier": "colrev.bibliography_export",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.prisma",
+            "package_endpoint_identifier": "colrev.prisma",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.github_pages",
+            "package_endpoint_identifier": "colrev.github_pages",
             "status": "ORANGE"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.obsidian",
+            "package_endpoint_identifier": "colrev.obsidian",
             "status": "RED"
         },
         {
-            "package_endpoint_identifier": "colrev_built_in.colrev_curation",
+            "package_endpoint_identifier": "colrev.colrev_curation",
             "status": "ORANGE"
         }
     ]

@@ -67,13 +67,11 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.search_source = pubmed_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev_built_in.pubmed",
+                    endpoint="colrev.pubmed",
                     filename=self.__pubmed_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
+                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -121,11 +119,11 @@ class PubMedSearchSource(JsonSchemaMixin):
                 + query
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.pubmed",
+                endpoint="colrev.pubmed",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source

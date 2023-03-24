@@ -96,13 +96,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.search_source = dblp_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev_built_in.dblp",
+                    endpoint="colrev.dblp",
                     filename=self.__dblp_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={
-                        "endpoint": "colrev_built_in.bibtex"
-                    },
+                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
         self.dblp_lock = Lock()
@@ -639,11 +637,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 file_path_string=f"dblp_{query.replace('https://dblp.org/search/publ/api?q=', '')}"
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev_built_in.dblp",
+                endpoint="colrev.dblp",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev_built_in.bibtex"},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
