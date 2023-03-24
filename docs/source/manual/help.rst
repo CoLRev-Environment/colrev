@@ -3,7 +3,7 @@ Help
 ==================================
 
 We are here to help you and others who may struggle with the same issues.
-Here is how you can help us, too.
+Here is how you can help us help you.
 
 Identify the source
 ------------------------------

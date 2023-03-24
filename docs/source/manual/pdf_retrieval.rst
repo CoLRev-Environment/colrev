@@ -19,9 +19,9 @@ It is recommended to share PDFs through file synchronization clients and to crea
 
 PDF retrieval is a high-level operation consisting of the following operations:
 
-- The ``pdf-get`` operation, which retrieves PDFs from sources like the local_index or unpaywall. It may refer users to ``pdf-get-man`` as the manual fallback when the record state is set to ``pdf_needs_manual_retrieval``
+- The ``pdf-get`` operation, which retrieves PDFs from sources like the local_index or unpaywall. It may refer users to ``pdf-get-man`` as the manual fallback when the record state is set to ``pdf_needs_manual_retrieval``.
 
-- The ``pdf-prep`` operation, which refers to the preparation of PDF documents. It may refer users to ``pdf-prep-man`` as the manual fallback when the record state is set to ``pdf_needs_manual_preparation``
+- The ``pdf-prep`` operation, which refers to the preparation of PDF documents. It may refer users to ``pdf-prep-man`` as the manual fallback when the record state is set to ``pdf_needs_manual_preparation``.
 
 To start the ``pdfs`` operation, run:
 
