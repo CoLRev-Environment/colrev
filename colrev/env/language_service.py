@@ -69,7 +69,7 @@ class LanguageService:
         if record.data["language"].lower() in ["en"]:
             record.data["language"] = "eng"
 
-        if record.data["language"].lower() in ["fr"]:
+        elif record.data["language"].lower() in ["fr"]:
             record.data["language"] = "fra"
 
         if 3 != len(record.data["language"]):

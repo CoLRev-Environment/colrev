@@ -61,6 +61,8 @@ class Dataset:
         ".references_learned_settings",
         "pdfs",
         ".tei",
+        "data.csv",
+        "requests_cache.sqlite",
     ]
 
     records_file: Path
