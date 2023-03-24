@@ -138,6 +138,9 @@ def json_to_record(*, item: dict) -> dict:
             retrieved_abstract = retrieved_abstract.lstrip().rstrip()
             record_dict.update(abstract=retrieved_abstract)
 
+    if "language" in item:
+        record_dict["language"] = item["language"]
+
     if (
         not any(x in item for x in ["published-print", "published"])
         # and "volume" not in record_dict
