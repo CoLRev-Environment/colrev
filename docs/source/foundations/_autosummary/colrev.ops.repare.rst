@@ -1,4 +1,4 @@
-colrev.ops.repare
+﻿colrev.ops.repare
 =================
 
 .. automodule:: colrev.ops.repare

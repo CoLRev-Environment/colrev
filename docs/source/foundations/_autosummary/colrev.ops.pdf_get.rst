@@ -1,4 +1,4 @@
-colrev.ops.pdf\_get
+﻿colrev.ops.pdf\_get
 ===================
 
 .. automodule:: colrev.ops.pdf_get

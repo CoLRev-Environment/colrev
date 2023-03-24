@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.bibliography\_export.BibFormats
+﻿colrev.ops.built\_in.data.bibliography\_export.BibFormats
 =========================================================
 
 .. currentmodule:: colrev.ops.built_in.data.bibliography_export

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.review\_types
+﻿colrev.ops.built\_in.review\_types
 ==================================
 
 .. automodule:: colrev.ops.built_in.review_types

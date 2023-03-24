@@ -1,4 +1,4 @@
-colrev.exceptions.StatusFieldValueError
+﻿colrev.exceptions.StatusFieldValueError
 =======================================
 
 .. currentmodule:: colrev.exceptions

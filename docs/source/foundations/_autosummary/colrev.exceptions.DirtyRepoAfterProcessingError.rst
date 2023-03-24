@@ -1,4 +1,4 @@
-colrev.exceptions.DirtyRepoAfterProcessingError
+﻿colrev.exceptions.DirtyRepoAfterProcessingError
 ===============================================
 
 .. currentmodule:: colrev.exceptions

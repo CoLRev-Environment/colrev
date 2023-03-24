@@ -1,4 +1,4 @@
-colrev.env.utils.load\_complementary\_material\_strings
+﻿colrev.env.utils.load\_complementary\_material\_strings
 =======================================================
 
 .. currentmodule:: colrev.env.utils

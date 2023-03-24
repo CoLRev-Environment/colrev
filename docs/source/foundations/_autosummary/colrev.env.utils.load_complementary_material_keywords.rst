@@ -1,4 +1,4 @@
-colrev.env.utils.load\_complementary\_material\_keywords
+﻿colrev.env.utils.load\_complementary\_material\_keywords
 ========================================================
 
 .. currentmodule:: colrev.env.utils

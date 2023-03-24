@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_get.unpaywall.Unpaywall
+﻿colrev.ops.built\_in.pdf\_get.unpaywall.Unpaywall
 =================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_get.unpaywall

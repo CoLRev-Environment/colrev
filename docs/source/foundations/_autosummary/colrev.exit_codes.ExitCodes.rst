@@ -1,4 +1,4 @@
-colrev.exit\_codes.ExitCodes
+﻿colrev.exit\_codes.ExitCodes
 ============================
 
 .. currentmodule:: colrev.exit_codes

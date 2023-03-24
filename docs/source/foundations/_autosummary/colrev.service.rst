@@ -1,4 +1,4 @@
-colrev.service
+﻿colrev.service
 ==============
 
 .. automodule:: colrev.service

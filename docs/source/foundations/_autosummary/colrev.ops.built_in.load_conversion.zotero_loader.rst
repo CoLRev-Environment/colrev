@@ -1,4 +1,4 @@
-colrev.ops.built\_in.load\_conversion.zotero\_loader
+﻿colrev.ops.built\_in.load\_conversion.zotero\_loader
 ====================================================
 
 .. automodule:: colrev.ops.built_in.load_conversion.zotero_loader

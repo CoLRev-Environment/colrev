@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
+﻿colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
 ===================================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_get.website_screenshot

@@ -1,4 +1,4 @@
-colrev.logger.setup\_report\_logger
+﻿colrev.logger.setup\_report\_logger
 ===================================
 
 .. currentmodule:: colrev.logger

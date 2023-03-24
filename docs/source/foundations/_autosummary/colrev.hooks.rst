@@ -1,4 +1,4 @@
-colrev.hooks
+﻿colrev.hooks
 ============
 
 .. automodule:: colrev.hooks

@@ -1,4 +1,4 @@
-colrev.env.grobid\_service
+﻿colrev.env.grobid\_service
 ==========================
 
 .. automodule:: colrev.env.grobid_service

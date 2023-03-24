@@ -1,4 +1,4 @@
-colrev.env.environment\_manager
+﻿colrev.env.environment\_manager
 ===============================
 
 .. automodule:: colrev.env.environment_manager

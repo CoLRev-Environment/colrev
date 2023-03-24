@@ -1,4 +1,4 @@
-colrev.ops.built\_in.load\_conversion.bib\_pybtex\_loader.BibPybtexLoader
+﻿colrev.ops.built\_in.load\_conversion.bib\_pybtex\_loader.BibPybtexLoader
 =========================================================================
 
 .. currentmodule:: colrev.ops.built_in.load_conversion.bib_pybtex_loader
