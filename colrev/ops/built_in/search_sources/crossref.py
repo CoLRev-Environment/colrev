@@ -165,8 +165,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
         from crossref.restful import Works
 
         works = Works(etiquette=self.etiquette)
-        crossref_query_return = works.doi(doi)
-        if not crossref_query_return:
+        try:
+            crossref_query_return = works.doi(doi)
+        except requests.exceptions.JSONDecodeError:
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+        if crossref_query_return is None:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException()
         retrieved_record_dict = connector_utils.json_to_record(
             item=crossref_query_return

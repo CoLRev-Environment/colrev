@@ -1,7 +1,7 @@
 ---
 title: "{{project_title}}"
 author: "{{author}}"
-bibliography: [data/records.bib,data/non_sample_references.bib]
+bibliography: [data/records.bib,data/data/non_sample_references.bib]
 figPrefix: "Figure"
 tblPrefix: "Table"
 csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl"

@@ -680,19 +680,23 @@ class PDFSearchSource(JsonSchemaMixin):
                 del record["grobid-version"]
 
             if "doi" in record:
-                retrieved_record = self.crossref_connector.query_doi(
-                    doi=record.data["doi"]
-                )
-                for key in [
-                    "journal",
-                    "booktitle",
-                    "volume",
-                    "number",
-                    "year",
-                    "pages",
-                ]:
-                    if key in retrieved_record.data:
-                        record[key] = retrieved_record.data[key]
+                try:
+                    retrieved_record = self.crossref_connector.query_doi(
+                        doi=record["doi"]
+                    )
+
+                    for key in [
+                        "journal",
+                        "booktitle",
+                        "volume",
+                        "number",
+                        "year",
+                        "pages",
+                    ]:
+                        if key in retrieved_record.data:
+                            record[key] = retrieved_record.data[key]
+                except colrev_exceptions.RecordNotFoundInPrepSourceException:
+                    pass
 
         return records
 
