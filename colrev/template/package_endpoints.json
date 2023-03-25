@@ -516,7 +516,7 @@
             "status": "\ud83d\udfe1",
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by excluding ones that are not in the languages_to_include",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.md>`_"
         },
         {
@@ -642,7 +642,7 @@
             "status": "\ud83d\udfe1",
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.md>`_"
         },
         {
@@ -660,7 +660,7 @@
             "status": "\ud83d\udfe1",
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records by removing urls that are not available",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.md>`_"
         },
         {

@@ -28,7 +28,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that are not in the languages_to_include"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = True
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
