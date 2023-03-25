@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 
@@ -169,6 +170,12 @@ class PrepMan(colrev.operation.Operation):
 
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
+
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="colrev prep-man",
+                detailed_trace="prep-man not available in ci environment",
+            )
 
         records = self.review_manager.dataset.load_records_dict()
 

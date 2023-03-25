@@ -60,6 +60,9 @@ class Upgrade(colrev.operation.Operation):
             {"version": CoLRevVersion("0.7.1"), "script": self.__migrate_0_7_1},
         ]
 
+        if settings_version == migration_scripts[-1]["version"]:
+            return
+
         self.review_manager.logger.info(
             "Current CoLRev repository version: %s", settings_version
         )
@@ -94,12 +97,6 @@ class Upgrade(colrev.operation.Operation):
         if self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(
                 msg=f"Upgrade to CoLRev {migrator['version']}",
-            )
-        else:
-            self.review_manager.logger.info("Nothing to do.")
-            self.review_manager.logger.info(
-                "If the update notification occurs again, run\n "
-                "git commit -n -m --allow-empty 'update colrev'"
             )
 
     def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
@@ -160,7 +157,18 @@ class Upgrade(colrev.operation.Operation):
             source=Path("data/non_sample_references.bib"),
             target=Path("data/data/non_sample_references.bib"),
         )
-        if not Path(".github/workflows/colrev_update.yml").is_file():
+
+        if self.review_manager.settings.is_curated_masterdata_repo():
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/colrev_update_curation.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.review_manager.dataset.add_changes(
+                path=Path(".github/workflows/colrev_update.yml")
+            )
+        else:
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
@@ -169,14 +177,14 @@ class Upgrade(colrev.operation.Operation):
                 path=Path(".github/workflows/colrev_update.yml")
             )
 
-        if not Path(".github/workflows/pre-commit.yml").is_file():
-            colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/pre-commit.yml"),
-                target=Path(".github/workflows/pre-commit.yml"),
-            )
-            self.review_manager.dataset.add_changes(
-                path=Path(".github/workflows/pre-commit.yml")
-            )
+        Path(".github/workflows/pre-commit.yml").unlink(missing_ok=True)
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path("template/init/pre-commit.yml"),
+            target=Path(".github/workflows/pre-commit.yml"),
+        )
+        self.review_manager.dataset.add_changes(
+            path=Path(".github/workflows/pre-commit.yml")
+        )
         return self.review_manager.dataset.has_changes()
 
 

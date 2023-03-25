@@ -96,7 +96,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                             "colrev_status"
                         ] = colrev.record.RecordState.md_needs_manual_preparation
                         record.add_masterdata_provenance_note(
-                            key=key, note=f"disagreement with doi metadata ({value})"
+                            key=key, note="disagreement with doi metadata"
                         )
 
     def __validate_against_url_metadata(self, *, record: colrev.record.Record) -> None:

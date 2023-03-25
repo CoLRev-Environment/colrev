@@ -780,6 +780,18 @@ class Prep(colrev.operation.Operation):
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
+        if not all(
+            x["endpoint"].lower() in self.prep_package_endpoints
+            for x in required_prep_package_endpoints
+        ):
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    dep="colrev prep",
+                    detailed_trace="prep not available in ci environment",
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="colrev prep", detailed_trace="prep not available"
+            )
 
         for endpoint_name, endpoint in self.prep_package_endpoints.items():
             check_function = getattr(endpoint, "check_availability", None)

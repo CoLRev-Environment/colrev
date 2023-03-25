@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.built_in.prescreen.conditional_prescreen
 import colrev.ops.built_in.prescreen.prescreen_table
@@ -308,7 +309,14 @@ class Prescreen(colrev.operation.Operation):
                 self.review_manager.logger.info(
                     f'Skip {prescreen_package_endpoint["endpoint"]} (not available)'
                 )
-                continue
+                if self.review_manager.in_ci_environment():
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        dep="colrev presceen",
+                        detailed_trace="presceen not available in ci environment",
+                    )
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    dep="colrev presceen", detailed_trace="presceen not available"
+                )
 
             endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
 

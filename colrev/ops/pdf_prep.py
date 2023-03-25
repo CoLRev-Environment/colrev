@@ -386,6 +386,12 @@ class PDFPrep(colrev.operation.Operation):
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="colrev pdf-prep",
+                detailed_trace="pdf-prep not available in ci environment",
+            )
+
         self.review_manager.logger.info("Prep PDFs")
         self.review_manager.logger.info(
             "Prepare PDFs, validating them against their metadata, "
@@ -416,6 +422,7 @@ class PDFPrep(colrev.operation.Operation):
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
+
         self.review_manager.logger.info(
             "PDFs to prep".ljust(38) + f'{pdf_prep_data["nr_tasks"]} PDFs'
         )

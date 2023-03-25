@@ -150,8 +150,8 @@ class ReviewManager:
         # it should only be called when the versions differ.
         # last_version, current_version = self.get_colrev_versions()
         # if last_version != current_version:
-        # upgrade_operation = self.get_upgrade()
-        # upgrade_operation.main()
+        upgrade_operation = self.get_upgrade()
+        upgrade_operation.main()
 
     def get_committer(self) -> typing.Tuple[str, str]:
         """Get the committer name and email"""
@@ -734,6 +734,9 @@ class ReviewManager:
         identifier: Optional[str] = None,
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
+
+        if "pytest" in os.getcwd():
+            return False
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         if identifier:

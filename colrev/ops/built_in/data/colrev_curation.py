@@ -255,7 +255,8 @@ class ColrevCuration(JsonSchemaMixin):
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
 
-        source_comparison_xlsx = self.data_operation.review_manager.path / Path(
+        self.data_operation.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
+        source_comparison_xlsx = self.data_operation.review_manager.dedupe_dir / Path(
             "source_comparison.xlsx"
         )
 
