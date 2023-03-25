@@ -9,6 +9,7 @@ from pathlib import Path
 
 import colrev.env.utils
 import colrev.operation
+import colrev.ui_cli.cli_colors as colors
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -46,57 +47,45 @@ class Upgrade(colrev.operation.Operation):
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
 
-        last_version, current_version = self.review_manager.get_colrev_versions()
+        (
+            settings_version_str,
+            _,  # installed_version_str,
+        ) = self.review_manager.get_colrev_versions()
 
-        if "+" in last_version:
-            last_version = last_version[: last_version.find("+")]
-        if "+" in current_version:
-            current_version = current_version[: current_version.find("+")]
+        settings_version = CoLRevVersion(settings_version_str)
+        # installed_version = CoLRevVersion(installed_version_str)
 
-        cur_major = current_version[: current_version.rfind(".")]
-        next_minor = str(int(current_version[current_version.rfind(".") + 1 :]) + 1)
-        upcoming_version = cur_major + "." + next_minor
-
-        # next version should be:
-        # ...
-        # {'from': '0.4.0', "to": '0.5.0', 'script': __migrate_0_4_0}
-        # {'from': '0.5.0', "to": upcoming_version, 'script': __migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"from": "0.7.0", "to": "0.7.1", "script": self.__migrate_0_7_0},
-            {"from": "0.7.1", "to": upcoming_version, "script": self.__migrate_0_7_1},
+            {"version": CoLRevVersion("0.7.0"), "script": self.__migrate_0_7_0},
+            {"version": CoLRevVersion("0.7.1"), "script": self.__migrate_0_7_1},
         ]
 
+        self.review_manager.logger.info(
+            "Current CoLRev repository version: %s", settings_version
+        )
+
         # Start with the first step if the version is older:
-        if last_version not in [x["from"] for x in migration_scripts]:
-            last_version = "0.7.0"
+        if settings_version not in [x["version"] for x in migration_scripts]:
+            settings_version = CoLRevVersion("0.7.0")
 
-        while current_version in [x["from"] for x in migration_scripts]:
-            self.review_manager.logger.info("Current CoLRev version: %s", last_version)
+        skipping_versions_before_settings_version = True
+        while migration_scripts:
+            migrator = migration_scripts.pop(0)
 
-            migrator = [x for x in migration_scripts if x["from"] == last_version].pop()
+            if (
+                migrator["version"] != settings_version
+                and skipping_versions_before_settings_version
+            ):
+                continue
+            skipping_versions_before_settings_version = False
 
             migration_script = migrator["script"]
 
-            self.review_manager.logger.info(
-                "Migrating from %s to %s", migrator["from"], migrator["to"]
-            )
-
             updated = migration_script()
-            if updated:
-                self.review_manager.logger.info("Updated to: %s", last_version)
-            else:
-                self.review_manager.logger.info("Nothing to do.")
-                self.review_manager.logger.info(
-                    "If the update notification occurs again, run\n "
-                    "git commit -n -m --allow-empty 'update colrev'"
-                )
-
-            # Note : the version in the commit message will be set to
-            # the current_version immediately. Therefore, use the migrator['to'] field.
-            last_version = migrator["to"]
-
-            if last_version == upcoming_version:
-                break
+            if not updated:
+                continue
+            self.review_manager.logger.info("Update to: %s", migrator["version"])
+            self.__print_release_notes(selected_version=migrator["version"])
 
         self.review_manager.load_settings()
         self.review_manager.settings.project.colrev_version = version("colrev")
@@ -104,9 +93,8 @@ class Upgrade(colrev.operation.Operation):
 
         if self.review_manager.dataset.has_changes():
             self.review_manager.create_commit(
-                msg=f"Upgrade to CoLRev {upcoming_version}",
+                msg=f"Upgrade to CoLRev {migrator['version']}",
             )
-            self.__print_release_notes(selected_version=upcoming_version)
         else:
             self.review_manager.logger.info("Nothing to do.")
             self.review_manager.logger.info(
@@ -114,23 +102,26 @@ class Upgrade(colrev.operation.Operation):
                 "git commit -n -m --allow-empty 'update colrev'"
             )
 
-    def __print_release_notes(self, *, selected_version: str) -> None:
+    def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("../CHANGELOG.md")
         )
         active = False
         if filedata:
             for line in filedata.decode("utf-8").split("\n"):
-                if selected_version in line:
+                if str(selected_version) in line:
                     active = True
-                    print(f"Release notes v{selected_version}")
+                    print(f"{colors.ORANGE}Release notes v{selected_version}")
                     continue
-                if "### [" in line and selected_version not in line:
+                if "### [" in line and str(selected_version) not in line:
                     active = False
                 if active:
                     print(line)
+        if not active:
+            print(f"{colors.ORANGE}No release notes")
+        print(f"{colors.END}")
 
-    def __migrate_0_7_0(self) -> None:
+    def __migrate_0_7_0(self) -> bool:
         pre_commit_contents = Path(".pre-commit-config.yaml").read_text(
             encoding="utf-8"
         )
@@ -142,8 +133,9 @@ class Upgrade(colrev.operation.Operation):
             with open(".pre-commit-config.yaml", "w", encoding="utf-8") as file:
                 file.write(pre_commit_contents)
         self.review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
+        return self.review_manager.dataset.has_changes()
 
-    def __migrate_0_7_1(self) -> None:
+    def __migrate_0_7_1(self) -> bool:
         settings_content = (self.review_manager.path / Path("settings.json")).read_text(
             encoding="utf-8"
         )
@@ -153,6 +145,10 @@ class Upgrade(colrev.operation.Operation):
             file.write(settings_content)
 
         self.review_manager.dataset.add_changes(path=Path("settings.json"))
+        self.review_manager.load_settings()
+        if self.review_manager.settings.is_curated_masterdata_repo():
+            self.review_manager.settings.project.delay_automated_processing = False
+        self.review_manager.save_settings()
 
         self.__move_file(
             source=Path("data/paper.md"), target=Path("data/data/paper.md")
@@ -164,6 +160,53 @@ class Upgrade(colrev.operation.Operation):
             source=Path("data/non_sample_references.bib"),
             target=Path("data/data/non_sample_references.bib"),
         )
+        if not Path(".github/workflows/colrev_update.yml").is_file():
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/colrev_update.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.review_manager.dataset.add_changes(
+                path=Path(".github/workflows/colrev_update.yml")
+            )
+
+        if not Path(".github/workflows/pre-commit.yml").is_file():
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/pre-commit.yml"),
+                target=Path(".github/workflows/pre-commit.yml"),
+            )
+            self.review_manager.dataset.add_changes(
+                path=Path(".github/workflows/pre-commit.yml")
+            )
+        return self.review_manager.dataset.has_changes()
+
+
+class CoLRevVersion:
+    """Class for handling the CoLRev version"""
+
+    def __init__(self, version_string: str) -> None:
+        if "+" in version_string:
+            version_string = version_string[: version_string.find("+")]
+
+        self.major = version_string[: version_string.find(".")]
+        self.minor = version_string[
+            version_string.find(".") + 1 : version_string.rfind(".")
+        ]
+        self.patch = version_string[version_string.rfind(".") + 1 :]
+
+    def __eq__(self, other) -> bool:  # type: ignore
+        return str(self) == str(other)
+
+    def __lt__(self, other) -> bool:  # type: ignore
+        if self.major < other.major:
+            return True
+        if self.minor < other.minor:
+            return True
+        if self.patch < other.patch:
+            return True
+        return False
+
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
 
 
 if __name__ == "__main__":

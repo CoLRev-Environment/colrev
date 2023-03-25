@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+### [0.7.1] - 2023-03-25
+
+### Changed
+
+- Changed package prefix from ``colrev_built_in`` to ``colrev``
+
 ### [0.7.0] - 2023-01-16
 
 ### Added

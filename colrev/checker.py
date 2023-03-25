@@ -43,19 +43,12 @@ class Checker:
             self.records = self.review_manager.dataset.load_records_dict()
 
     def get_colrev_versions(self) -> list[str]:
-        """Get the colrev version as a list: (last-version, current-version)"""
+        """Get the colrev version as a list: (last_version, current_version)"""
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
-        try:
-            last_commit_message = self.review_manager.dataset.get_commit_message(
-                commit_nr=0
-            )
-            cmsg_lines = last_commit_message.split("\n")
-            for cmsg_line in cmsg_lines[0:100]:
-                if "colrev:" in cmsg_line and "version" in cmsg_line:
-                    last_colrev_version = cmsg_line[cmsg_line.find("version ") + 8 :]
-        except ValueError:
-            pass
+        last_colrev_version = self.review_manager.settings.project.colrev_version
+        if last_colrev_version.endswith("."):
+            last_colrev_version += "0"
         return [last_colrev_version, current_colrev_version]
 
     def __check_software(self) -> None:

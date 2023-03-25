@@ -141,6 +141,18 @@ class ReviewManager:
             else:
                 raise exc
 
+        self.__check_update()
+
+    def __check_update(self) -> None:
+        if not hasattr(self, "dataset"):
+            return
+        # Once the following has run for all repositories,
+        # it should only be called when the versions differ.
+        # last_version, current_version = self.get_colrev_versions()
+        # if last_version != current_version:
+        # upgrade_operation = self.get_upgrade()
+        # upgrade_operation.main()
+
     def get_committer(self) -> typing.Tuple[str, str]:
         """Get the committer name and email"""
         return self.environment_manager.get_name_mail_from_git()

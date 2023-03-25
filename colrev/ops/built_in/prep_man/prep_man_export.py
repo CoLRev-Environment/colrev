@@ -80,7 +80,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         for record in records.values():
             if "file" in record:
-                target_path = self.export_path / Path(record["file"])
+                target_path = self.review_manager.prep_dir / Path(record["file"])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
                 if "symlink" == self.settings.pdf_handling_mode:
@@ -214,10 +214,10 @@ class ExportManPrep(JsonSchemaMixin):
                 prep_man_operation=prep_man_operation, records=records
             )
         else:
-            if "y" == input(
-                "Import changes from "
-                f"{self.prep_man_bib_path.relative_to(prep_man_operation.review_manager.path)} [y,n]?"
-            ):
+            selected_path = self.prep_man_bib_path.relative_to(
+                prep_man_operation.review_manager.path
+            )
+            if "y" == input(f"Import changes from {selected_path} [y,n]?"):
                 self.__import_prep_man(prep_man_operation=prep_man_operation)
 
         return records

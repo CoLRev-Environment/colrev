@@ -2562,8 +2562,8 @@ def upgrade(
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )
-    upgrad_operation = review_manager.get_upgrade()
-    upgrad_operation.main()
+    upgrade_operation = review_manager.get_upgrade()
+    upgrade_operation.main()
 
 
 @main.command(hidden=True, help_priority=30)

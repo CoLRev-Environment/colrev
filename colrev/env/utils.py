@@ -16,12 +16,12 @@ import colrev.exceptions as colrev_exceptions
 def retrieve_package_file(*, template_file: Path, target: Path) -> None:
     """Retrieve a file from the CoLRev package"""
     filedata = pkgutil.get_data("colrev", str(template_file))
-    if filedata:
-        target.parent.mkdir(exist_ok=True, parents=True)
-        with open(target, "w", encoding="utf8") as file:
-            file.write(filedata.decode("utf-8"))
-        return
-    raise colrev_exceptions.RepoSetupError(f"{template_file} not available")
+    if not filedata:
+        raise colrev_exceptions.RepoSetupError(f"{template_file} not available")
+
+    target.parent.mkdir(exist_ok=True, parents=True)
+    with open(target, "w", encoding="utf8") as file:
+        file.write(filedata.decode("utf-8"))
 
 
 def get_package_file_content(*, file_path: Path) -> typing.Union[bytes, None]:

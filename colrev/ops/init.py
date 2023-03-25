@@ -223,7 +223,8 @@ class Initializer:
         ]
 
         colrev_version = version("colrev")
-        colrev_version = colrev_version[: colrev_version.find("+")]
+        if "+" in colrev_version:
+            colrev_version = colrev_version[: colrev_version.rfind("+")]
         settings.project.colrev_version = colrev_version
 
         settings.project.title = self.title
