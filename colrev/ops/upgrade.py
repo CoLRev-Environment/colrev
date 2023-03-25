@@ -49,23 +49,36 @@ class Upgrade(colrev.operation.Operation):
 
         (
             settings_version_str,
-            _,  # installed_version_str,
+            _,
         ) = self.review_manager.get_colrev_versions()
 
         settings_version = CoLRevVersion(settings_version_str)
-        # installed_version = CoLRevVersion(installed_version_str)
 
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"version": CoLRevVersion("0.7.0"), "script": self.__migrate_0_7_0},
-            {"version": CoLRevVersion("0.7.1"), "script": self.__migrate_0_7_1},
+            {
+                "version": CoLRevVersion("0.7.0"),
+                "script": self.__migrate_0_7_0,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.7.1"),
+                "script": self.__migrate_0_7_1,
+                "released": True,
+            },
+            # Note : we may add a flag to update to pre-released versions
+            {
+                "version": CoLRevVersion("0.7.2"),
+                "script": self.__migrate_0_7_2,
+                "released": False,
+            },
         ]
 
         if settings_version == migration_scripts[-1]["version"]:
             return
 
-        self.review_manager.logger.info(
-            "Current CoLRev repository version: %s", settings_version
-        )
+        # self.review_manager.logger.info(
+        #     "Current CoLRev repository version: %s", settings_version
+        # )
 
         # Start with the first step if the version is older:
         if settings_version not in [x["version"] for x in migration_scripts]:
@@ -88,15 +101,19 @@ class Upgrade(colrev.operation.Operation):
             if not updated:
                 continue
             self.review_manager.logger.info("Update to: %s", migrator["version"])
-            self.__print_release_notes(selected_version=migrator["version"])
+            if migrator["released"]:
+                self.__print_release_notes(selected_version=migrator["version"])
 
         self.review_manager.load_settings()
         self.review_manager.settings.project.colrev_version = version("colrev")
         self.review_manager.save_settings()
 
         if self.review_manager.dataset.has_changes():
+            msg = str(migrator["version"])
+            if not migrator["released"]:
+                msg += " (pre-release)"
             self.review_manager.create_commit(
-                msg=f"Upgrade to CoLRev {migrator['version']}",
+                msg=f"Upgrade to CoLRev {msg}",
             )
 
     def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
@@ -158,6 +175,7 @@ class Upgrade(colrev.operation.Operation):
             target=Path("data/data/non_sample_references.bib"),
         )
 
+        Path(".github/workflows/").mkdir(exist_ok=True, parents=True)
         if self.review_manager.settings.is_curated_masterdata_repo():
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
@@ -185,6 +203,9 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.add_changes(
             path=Path(".github/workflows/pre-commit.yml")
         )
+        return self.review_manager.dataset.has_changes()
+
+    def __migrate_0_7_2(self) -> bool:
         return self.review_manager.dataset.has_changes()
 
 

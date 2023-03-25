@@ -372,6 +372,8 @@ class Search(colrev.operation.Operation):
                 if not self.review_manager.settings.search.retrieve_forthcoming:
                     self.__remove_forthcoming(source=source)
 
+                self.review_manager.dataset.format_records_file()
+                self.review_manager.dataset.add_record_changes()
                 self.review_manager.dataset.add_changes(path=source.filename)
                 if not skip_commit:
                     self.review_manager.create_commit(msg="Run search")

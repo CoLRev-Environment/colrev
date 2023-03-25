@@ -40,26 +40,24 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
         languages_to_include = ["eng"]
-        if not prep_operation.review_manager.in_ci_environment():
-            self.language_service = colrev.env.language_service.LanguageService()
+        # if not prep_operation.review_manager.in_ci_environment():
+        self.language_service = colrev.env.language_service.LanguageService()
 
-            prescreen_package_endpoints = (
-                prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
-            )
-            if "scope_prescreen" in [
-                s["endpoint"] for s in prescreen_package_endpoints
+        prescreen_package_endpoints = (
+            prep_operation.review_manager.settings.prescreen.prescreen_package_endpoints
+        )
+        if "scope_prescreen" in [s["endpoint"] for s in prescreen_package_endpoints]:
+            for scope_prescreen in [
+                s
+                for s in prescreen_package_endpoints
+                if "scope_prescreen" == s["endpoint"]
             ]:
-                for scope_prescreen in [
-                    s
-                    for s in prescreen_package_endpoints
-                    if "scope_prescreen" == s["endpoint"]
-                ]:
-                    languages_to_include.extend(
-                        scope_prescreen.get("LanguageScope", ["eng"])
-                    )
-            self.language_service.validate_iso_639_3_language_codes(
-                lang_code_list=languages_to_include
-            )
+                languages_to_include.extend(
+                    scope_prescreen.get("LanguageScope", ["eng"])
+                )
+        self.language_service.validate_iso_639_3_language_codes(
+            lang_code_list=languages_to_include
+        )
         self.languages_to_include = list(set(languages_to_include))
 
     @timeout_decorator.timeout(60, use_signals=False)
