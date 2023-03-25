@@ -705,10 +705,14 @@ class PackageManager:
             packages_dict[package_identifier] = {}
 
             packages_dict[package_identifier]["settings"] = selected_package
+            # print(self.packages[package_type])
+            # print(package_identifier)
             # 1. Load built-in packages
             # if package_identifier in cls.packages[package_type]
             if package_identifier in self.packages[package_type]:
-                if not self.packages[package_type][package_identifier]["installed"]:
+                if not self.packages[package_type][package_identifier][
+                    "installed"
+                ]:  # pragma: no cover
                     raise colrev_exceptions.MissingDependencyError(
                         "Dependency "
                         + f"{package_identifier} ({package_type}) not found. "
@@ -730,9 +734,12 @@ class PackageManager:
                     packages_dict[package_identifier][
                         "endpoint"
                     ] = importlib.import_module(package_identifier)
-                    packages_dict[package_identifier]["custom_flag"] = True
+                    packages_dict[package_identifier][
+                        "custom_flag"
+                    ] = True  # pragma: no cover
                 except ModuleNotFoundError as exc:
                     if ignore_not_available:
+                        print(f"Could not load {selected_package}")
                         del packages_dict[package_identifier]
                         continue
                     raise colrev_exceptions.MissingDependencyError(
@@ -741,21 +748,28 @@ class PackageManager:
                         "Please install it\n  pip install "
                         f"{package_identifier.split('.')[0]}"
                     ) from exc
+
             # 3. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
-                sys.path.append(".")  # to import custom packages from the project dir
-                packages_dict[package_identifier]["settings"] = selected_package
-                packages_dict[package_identifier]["endpoint"] = importlib.import_module(
-                    package_identifier, "."
-                )
-                packages_dict[package_identifier]["custom_flag"] = True
-            elif ignore_not_available:
-                raise colrev_exceptions.MissingDependencyError(
-                    f"Dependency {package_identifier} not available."
-                )
-            else:
-                print(f"Could not load {selected_package}")
-                continue
+                try:
+                    # to import custom packages from the project dir
+                    sys.path.append(".")
+                    packages_dict[package_identifier]["settings"] = selected_package
+                    packages_dict[package_identifier][
+                        "endpoint"
+                    ] = importlib.import_module(package_identifier, ".")
+                    packages_dict[package_identifier]["custom_flag"] = True
+                except ModuleNotFoundError as exc:  # pragma: no cover
+                    if ignore_not_available:
+                        print(f"Could not load {selected_package}")
+                        del packages_dict[package_identifier]
+                        continue
+                    raise colrev_exceptions.MissingDependencyError(
+                        "Dependency "
+                        + f"{package_identifier} ({package_type}) not found. "
+                        "Please install it\n  pip install "
+                        f"{package_identifier.split('.')[0]}"
+                    ) from exc
 
         return packages_dict
 

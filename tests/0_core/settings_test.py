@@ -156,6 +156,19 @@ def test_settings_load() -> None:
 
     assert not settings.is_curated_repo()
 
+    actual = str(settings)  # type: ignore
+    assert expected_printout == actual
+
+    broken_settings = deepcopy(expected)
+    broken_settings["sources"][0]["filename"] = Path("broken_filepath/test.bib")  # type: ignore
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings.__load_settings_from_dict(loaded_dict=broken_settings)
+
+    broken_settings["sources"][0]["filename"] = Path("data/search/pdfs.bib")  # type: ignore
+    broken_settings["sources"].append(broken_settings["sources"][0])  # type: ignore
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings.__load_settings_from_dict(loaded_dict=broken_settings)
+
 
 def test_settings_schema() -> None:
     expected = {

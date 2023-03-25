@@ -1,24 +1,18 @@
 #!/usr/bin/env python
+import importlib.util
 import os
 from pathlib import Path
 
 import pytest
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 
 
 @pytest.fixture
-def settings() -> colrev.settings.Settings:
-    return colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
-    )
-
-
-@pytest.fixture
-def review_manager(mocker, tmp_path: Path) -> colrev.review_manager.ReviewManager:  # type: ignore
+def review_manager(mocker, tmp_path: Path, request) -> colrev.review_manager.ReviewManager:  # type: ignore
     os.chdir(tmp_path)
     mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
@@ -29,9 +23,21 @@ def review_manager(mocker, tmp_path: Path) -> colrev.review_manager.ReviewManage
         path_str=str(tmp_path), force_mode=True
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=Path(request.fspath).parents[2]
+        / Path("colrev/template/init/settings.json")
     )
+
+    review_manager.get_init_operation(
+        review_type="literature_review",
+        example=True,
+        target_path=tmp_path,
+        light=True,
+    )
+
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=str(tmp_path), force_mode=True
+    )
+
     return review_manager
 
 
@@ -350,6 +356,45 @@ def test_data_package_interfaces(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     package_manager = review_manager.get_package_manager()
+
+    prep_operation = review_manager.get_prep_operation()
+    prep_operation.setup_custom_script()
+
+    package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        selected_packages=[
+            {
+                "endpoint": "custom_prep_script",
+            }
+        ],
+        operation=prep_operation,
+        instantiate_objects=True,
+    )
+
+    with pytest.raises(colrev_exceptions.MissingDependencyError):
+        package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            selected_packages=[
+                {
+                    "endpoint": "broken_identifier",
+                }
+            ],
+            operation=prep_operation,
+            instantiate_objects=True,
+        )
+
+    package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        selected_packages=[
+            {
+                "endpoint": "broken_identifier",
+            }
+        ],
+        operation=prep_operation,
+        instantiate_objects=True,
+        ignore_not_available=True,
+    )
+
     data_operation = review_manager.get_data_operation(
         notify_state_transition_operation=False
     )
@@ -358,6 +403,7 @@ def test_data_package_interfaces(
         package_type=colrev.env.package_manager.PackageEndpointType.data,
         installed_only=True,
     )
+
     package_manager.load_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data,
         selected_packages=[
@@ -384,3 +430,32 @@ def test_data_package_interfaces(
         operation=data_operation,
         instantiate_objects=True,
     )
+
+
+def test_get_package_details(
+    review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    package_manager = review_manager.get_package_manager()
+    expected = {
+        "type": "object",
+        "required": ["endpoint"],
+        "properties": {"endpoint": {"type": "string"}},
+        "description": "Endpoint settings",
+        "$schema": "http://json-schema.org/draft-06/schema#",
+    }
+    actual = package_manager.get_package_details(
+        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        package_identifier="colrev.curation_prep",
+    )
+    print(actual)
+    assert expected == actual
+
+
+def test_update_package_list(
+    review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    package_manager = review_manager.get_package_manager()
+    colrev_spec = importlib.util.find_spec("colrev")
+
+    os.chdir(Path(colrev_spec.origin).parents[1])  # type: ignore
+    package_manager.update_package_list()

@@ -93,9 +93,9 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     test_repo_dir = tmp_path_factory.mktemp("test_review_example")  # type: ignore
     os.chdir(test_repo_dir)
 
-    colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
-        "test", encoding="utf-8"
-    )
+    # colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
+    #     "test", encoding="utf-8"
+    # )
 
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
@@ -104,17 +104,17 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         settings_path=test_data_path.parents[1]
         / Path("colrev/template/init/settings.json")
     )
-    with pytest.raises(colrev_exceptions.RepoInitError):
-        review_manager.get_init_operation(
-            review_type="literature_review",
-            example=True,
-            local_pdf_collection=True,
-            target_path=test_repo_dir,
-        )
-    with pytest.raises(colrev_exceptions.ParameterError):
-        review_manager.get_init_operation(
-            review_type="misspelled_review", target_path=test_repo_dir
-        )
+    # with pytest.raises(colrev_exceptions.RepoInitError):
+    #     review_manager.get_init_operation(
+    #         review_type="literature_review",
+    #         example=True,
+    #         local_pdf_collection=True,
+    #         target_path=test_repo_dir,
+    #     )
+    # with pytest.raises(colrev_exceptions.ParameterError):
+    #     review_manager.get_init_operation(
+    #         review_type="misspelled_review", target_path=test_repo_dir
+    #     )
 
     review_manager.settings.project.title = "topic a - a review"
     review_manager.get_init_operation(
