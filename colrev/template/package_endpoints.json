@@ -633,7 +633,7 @@
             "status": "\ud83d\udd34",
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Prepares records based on year-volume-issue dependency",
-            "ci_supported": false,
+            "ci_supported": true,
             "link": "`Link <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.md>`_"
         },
         {

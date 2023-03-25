@@ -780,13 +780,15 @@ class Prep(colrev.operation.Operation):
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
-        if not all(
-            x["endpoint"].lower() in self.prep_package_endpoints
+        non_available_endpoints = [
+            x["endpoint"].lower()
             for x in required_prep_package_endpoints
-        ):
+            if x["endpoint"].lower() not in self.prep_package_endpoints
+        ]
+        if non_available_endpoints:
             if self.review_manager.in_ci_environment():
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    dep="colrev prep",
+                    dep=f"colrev prep ({','.join(non_available_endpoints)})",
                     detailed_trace="prep not available in ci environment",
                 )
             raise colrev_exceptions.ServiceNotAvailableException(
