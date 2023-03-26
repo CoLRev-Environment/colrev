@@ -3,7 +3,7 @@
 colrev pdf-prep
 ==================================
 
-In the :program:`colrev pdf-prep` operation, records transition from ``pdf_imported`` to ``pdf_prepared`` or ``pdf_needs_manual_preparation``.
+In the ``colrev pdf-prep`` operation, records transition from ``pdf_imported`` to ``pdf_prepared`` or ``pdf_needs_manual_preparation``.
 Depending on the settings, this operation may involve any of the following:
 
 - Check whether the PDF is machine readable and apply OCR if necessary
@@ -14,7 +14,7 @@ Depending on the settings, this operation may involve any of the following:
 Per default, CoLRev keeps a backup of PDFs that are changed by the ``pdf-prep`` operation. The ``keep_backup_of_pdfs`` option of the ``pdf_prep`` settings can be modified to change this behavior:
 
 ..
-    :program:`colrev pdf-prep` prepares PDFs for the screen and analysis as follows:
+    ``colrev pdf-prep`` prepares PDFs for the screen and analysis as follows:
     - Mention discard
 
 .. code:: bash
@@ -32,7 +32,7 @@ The following options for pdf-prep are available:
         title='',
         ) }}
 
-The :program:`colrev pdf-prep-man` operation provides an interactive convenience function for PDFs that cannot be prepared automatically, with records transitioning from ``pdf_needs_manual_preparation`` to ``pdf_prepared``.
+The ``colrev pdf-prep-man`` operation provides an interactive convenience function for PDFs that cannot be prepared automatically, with records transitioning from ``pdf_needs_manual_preparation`` to ``pdf_prepared``.
 
 .. code:: bash
 

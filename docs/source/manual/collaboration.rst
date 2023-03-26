@@ -73,7 +73,7 @@ While **git merge conflicts** are useful (they prevent errors), they should be a
 CoLRev implements the following measures to avoid merge conflicts:
 
 - CoLRev relies on `colrev-hooks <https://github.com/CoLRev-Ecosystem/colrev-hooks>`_ (`pre-commit hooks <https://pre-commit.com/>`_) to enforce consistent formatting across repositories.
-- CoLRev uses collaboration instructions (part of :program:`colrev status`) to encourage users to share (git push) and integrate (git pull) changes often because keeping all repositories synchronized reduces the likelihood of merge conflicts.
+- CoLRev uses collaboration instructions (part of ``colrev status``) to encourage users to share (git push) and integrate (git pull) changes often because keeping all repositories synchronized reduces the likelihood of merge conflicts.
 - CoLRev recommends that all records should be *processed* before sharing them (git push) because the metadata preparation steps can involve sorting changes (when setting record IDs) and raise git commit merges when executed in parallel.
 
 Thereby, CoLRev implements a conservative strategy to prevent merge conflicts per default.

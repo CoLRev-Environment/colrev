@@ -8,7 +8,7 @@ Developing CoLRev extensions in Python/R is easy. Instructions and examples are 
 
 **Recommendations**:
 
-- Get paths (as shown in :program:`colrev settings`) from REVIEW_MANAGER.paths
+- Get paths (as shown in ``colrev settings``) from REVIEW_MANAGER.paths
 - Use the logger (report vs tool/extension)
     - colrev_report logger: log info that are helpful to examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available
     - extension logger: log info on the progress. The output should be relatively short and allow users to see the progress and judge whether any errors occurred

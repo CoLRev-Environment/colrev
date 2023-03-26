@@ -3,16 +3,16 @@
 colrev pdf-get
 ==================================
 
-In the :program:`colrev pdf-get` operation, records transition from `rev_prescreen_included` to `pdf_imported` or `pdf_needs_manual_retrieval`.
+In the ``colrev pdf-get`` operation, records transition from `rev_prescreen_included` to `pdf_imported` or `pdf_needs_manual_retrieval`.
 It is possible to adapt the settings for `pdf_required_for_screen_and_synthesis`, `pdf_path_type`, and `rename_pdfs`.
 
-The retrieval based on `colrev.local_index` may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use :program:`colrev pdf-get` to collect PDFs from their local machines.
-When PDFs cannot be retrieved automatically, CoLRev provides an interactive convenience function :program:`colrev pdf-get-man`.
+The retrieval based on `colrev.local_index` may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use ``colrev pdf-get`` to collect PDFs from their local machines.
+When PDFs cannot be retrieved automatically, CoLRev provides an interactive convenience function ``colrev pdf-get-man``.
 
 ..
     - Mention discard
 
-    :program:`colrev pdf-get` retrieves PDFs based on
+    ``colrev pdf-get` retrieves PDFs based on
 
     - unpaywall.org
     - any other local CoLRev repository
@@ -38,7 +38,7 @@ The following options for pdf-get are available:
         ) }}
 
 
-In the :program:`colrev pdf-get-man` operation, records transition from `pdf_needs_manual_retrieval` to `pdf_imported` or `pdf_not_available`.
+In the ``colrev pdf-get-man`` operation, records transition from `pdf_needs_manual_retrieval` to `pdf_imported` or `pdf_not_available`.
 
 ..
      goes through the list of missing PDFs and asks the researcher to retrieve it:

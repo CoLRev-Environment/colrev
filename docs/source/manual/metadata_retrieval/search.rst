@@ -3,7 +3,7 @@
 colrev search
 ==================================
 
-In the :program:`colrev search` operation, records (metadata) are retrieved and stored in the ``data/search`` directory. Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different sources:
+In the ``colrev search`` operation, records (metadata) are retrieved and stored in the ``data/search`` directory. Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different sources:
 
 - Search results can be obtained automatically from different APIs as explained below.
 - In addition, search results that are obtained manually from academic databases can be added to the ``data/search`` directory.
