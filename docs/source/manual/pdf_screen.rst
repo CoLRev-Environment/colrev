@@ -14,7 +14,7 @@ CoLRev supports the reconciliation with the ``colrev merge`` operation.
 
 Although most methodological sources suggest to complete the screen before the data analysis and synthesis step, others propose an integrated cycle of materials screening, assessment, mapping, and synthesis.
 In CoLRev, this can be accomplished by means of a retrospective screen, in which all records are included initially (using ``colrev screen --include_all_always``), but potentialy excluded during the cycle iterations.
-For example, this can be done using the `EXCLUDE annotation <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/manuscript.py#L405>`_ in a paper.
+For example, this can be done using the `EXCLUDE annotation <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/ops/built_in/data/paper_md.md>`_ in a paper.
 
 ..
    TODO : add colrev screen --exclude IDs

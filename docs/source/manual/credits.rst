@@ -188,8 +188,5 @@ Projects that power CoLRev:
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
      - `BSD 3 <https://github.com/pandas-dev/pandas/blob/main/LICENSE>`__
      - |pandasactivity|
-   * - `OpenSearch <https://github.com/opensearch-project/OpenSearch>`_ \*: local record indexing and searching
-     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt>`__
-     - |opensearchactivity|
 
 \* dynamically loaded

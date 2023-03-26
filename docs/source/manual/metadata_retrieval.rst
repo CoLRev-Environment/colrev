@@ -14,7 +14,7 @@ Standalone literature reviews are typically based on a search strategy, which co
 
 - The **search scope** can restrict the journals, disciplines (based on reasons related to their topics or source reputation), time, or publication type (grey vs. academic literature).
 - The **search type and iterations** can be exploratory or systematic, and may evolve throughout the search iterations.
-- The **combination of search techniques, sources, and parameters**. Search techniques can be database searches, citation searches (backward or forward snowballing), table-of-content searches, for example. Examples of sources are available `here </manual/6_sources.html>`_. For databases, the parameters (or search strings) can be developed based on a concept matrix (e.g., in line with the PICO framework), boolean operators, and search query translation tools.
+- The **combination of search techniques, sources, and parameters**. Search techniques can be database searches, citation searches (backward or forward snowballing), table-of-content searches, for example. Examples of sources are available `here <metadata_retrieval/search.html>`_. For databases, the parameters (or search strings) can be developed based on a concept matrix (e.g., in line with the PICO framework), boolean operators, and search query translation tools.
 - The **termination rule** specifies the criteria for stopping the search process.
 
 The methodological choices related to the search strategy should be documented for reporting purposes. This can be done in the ``data/paper.md`` or the ``readme.md``.
