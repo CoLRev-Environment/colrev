@@ -198,9 +198,7 @@ class Initializer:
             [Path("template/init/gitattributes"), Path(".gitattributes")],
             [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
-                Path(
-                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
-                ),
+                Path("template/init/colrev_update.yml"),
                 Path(".github/workflows/colrev_update.yml"),
             ],
         ]

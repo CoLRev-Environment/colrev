@@ -47,6 +47,13 @@ class Upgrade(colrev.operation.Operation):
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
 
+        try:
+            repo = self.review_manager.dataset.get_repo()
+            repo.iter_commits()
+        except ValueError:
+            # Git repository has no initial commit
+            return
+
         (
             settings_version_str,
             _,
@@ -214,7 +221,6 @@ class Upgrade(colrev.operation.Operation):
         return self.review_manager.dataset.has_changes()
 
     def __migrate_0_9_0(self) -> bool:
-        print("Nothing to do (yet).")
         return self.review_manager.dataset.has_changes()
 
 

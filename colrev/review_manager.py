@@ -133,6 +133,7 @@ class ReviewManager:
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
+            self.__check_update()
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
@@ -140,8 +141,6 @@ class ReviewManager:
                     self.logger.debug(exc)
             else:
                 raise exc
-
-        self.__check_update()
 
     def __check_update(self) -> None:
         if not hasattr(self, "dataset"):
