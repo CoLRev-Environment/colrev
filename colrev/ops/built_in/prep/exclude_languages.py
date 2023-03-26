@@ -117,13 +117,14 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             lang_1, conf_1 = confidence_values_part1[0]
             lang_2, conf_2 = confidence_values_part2[0]
 
-            if conf_1 < 0.9 and conf_2 < 0.9:
+            if conf_1 < 0.8 and conf_2 < 0.8:
                 record.update_field(
                     key="title",
                     value=record.data.get("title", ""),
                     source="",
                     note="quality_defect,language-not-found",
                 )
+                record.remove_field(key="language")
                 record.set_status(
                     target_state=colrev.record.RecordState.md_needs_manual_preparation
                 )
