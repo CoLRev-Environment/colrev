@@ -187,7 +187,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             )
             return record
 
-        predicted_language, conf = confidence_values.pop()
+        predicted_language, conf = confidence_values.pop(0)
 
         if conf > 0.8:
             record.update_field(
