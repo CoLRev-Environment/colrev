@@ -141,10 +141,10 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         except AttributeError:
             pass
 
-    @timeout_decorator.timeout(20, use_signals=False)
+    @timeout_decorator.timeout(40, use_signals=False)
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare records by removing IDs (DOIs/URLs) that do not match with the metadata
@@ -152,7 +152,8 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
-        # pylint: disable=too-many-branches
+        if prep_operation.polish and not prep_operation.force_mode:
+            return record
 
         self.__validate_against_doi_metadata(record=record)
 

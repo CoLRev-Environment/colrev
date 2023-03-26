@@ -905,8 +905,10 @@ class Prep(colrev.operation.Operation):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
-
-        self.review_manager.logger.info("Prep")
+        if not polish:
+            self.review_manager.logger.info("Prep")
+        else:
+            self.review_manager.logger.info("Prep (polish mode)")
         self.review_manager.logger.info(
             "Prep completes and corrects record metadata based on APIs and preparation rules."
         )

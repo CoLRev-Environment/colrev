@@ -48,6 +48,9 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
 
+        if prep_operation.polish and not prep_operation.force_mode:
+            return record
+
         if "doi" in record.data:
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
             doi_match = re.match(r"^10.\d{4,9}\/", record.data["doi"])

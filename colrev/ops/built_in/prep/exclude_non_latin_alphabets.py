@@ -47,10 +47,13 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
+
+        if prep_operation.polish:
+            return record
 
         def mostly_latin_alphabet(str_to_check: str) -> bool:
             assert len(str_to_check) != 0
