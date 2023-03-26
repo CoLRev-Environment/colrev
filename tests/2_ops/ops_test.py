@@ -373,7 +373,8 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
 
     checker.check_repository_setup()
 
-    assert False == checker.in_virtualenv()
+    assert True == checker.in_virtualenv()
+
     expected = []
     actual = checker.check_repo_extended()
     assert expected == actual

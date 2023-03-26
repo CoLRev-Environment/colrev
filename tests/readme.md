@@ -10,7 +10,7 @@
 - After running the following commands, a detailed coverage report is available at ``htmlcov/index.html``
 
 ```
-pytest
+poetry run pytest
 coverage run -m pytest
 coverage html
 rm coverage.svg
