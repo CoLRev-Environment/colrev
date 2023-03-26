@@ -394,7 +394,9 @@ class InvalidMerge(DedupeError):
     def __init__(
         self, record_a: colrev.record.Record, record_b: colrev.record.Record
     ) -> None:
-        self.message = f"attempted merge: {record_a.data['ID']} - {record_b.data['ID']}"
+        id_a = record_a.data.get("ID", "no-id")
+        id_b = record_b.data.get("ID", "no-id")
+        self.message = f"attempted merge: {id_a} - {id_b}"
         super().__init__(self.message)
 
 
