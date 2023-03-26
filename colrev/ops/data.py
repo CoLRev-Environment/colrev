@@ -376,6 +376,8 @@ class Data(colrev.operation.Operation):
             self.review_manager.logger.info(
                 f"{colors.GREEN}Completed data operation{colors.END}"
             )
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
         return {
             "ask_to_commit": True,

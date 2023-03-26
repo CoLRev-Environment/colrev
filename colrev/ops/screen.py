@@ -390,6 +390,8 @@ class Screen(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed screen operation{colors.END}"
         )
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
 
 if __name__ == "__main__":

@@ -332,6 +332,8 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.logger.info(
             "%sCompleted prescreen operation%s", colors.GREEN, colors.END
         )
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
 
 if __name__ == "__main__":

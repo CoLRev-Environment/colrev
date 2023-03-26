@@ -378,6 +378,9 @@ class Search(colrev.operation.Operation):
                 if not skip_commit:
                     self.review_manager.create_commit(msg="Run search")
 
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
+
     def setup_custom_script(self) -> None:
         """Setup a custom search script"""
 

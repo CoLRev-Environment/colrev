@@ -930,6 +930,9 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")
 
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
+
 
 if __name__ == "__main__":
     pass
