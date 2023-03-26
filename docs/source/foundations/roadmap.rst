@@ -99,15 +99,23 @@ Releases: Upcoming
 - Synchronous session support
 - `Additional SearchSources <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_
 
-Release: v0.8.0 (expected 04-01)
+Release: v0.9.0 (expected 06-01)
 -----------------------------------------------------------------
 
-- User tests
-- Unit tests (extension and efficiency)
-- Documentation (methods)
 - Advanced validation options (e.g., for prescreen)
-- Data endpoint for bibliography exports
 - R package
+
+Release: v0.8.0 (2023-03-26)
+-----------------------------------------------------------------
+
+- Unit tests (coverage 70%)
+- User tests and numerous changes
+- Documentation and development status
+- Data endpoint for bibliography exports
+- Github-actions setup for colrev and colrev repositories
+- Docker dependency is now optional
+- Replace OpenSearch by sqlite
+- Update the SearchSource interface
 
 Release: v0.7.0 (2023-01-16)
 -----------------------------------------------------------------

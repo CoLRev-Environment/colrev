@@ -20,4 +20,5 @@ colrev.ops.upgrade
       :template: custom-class-template.rst
       :nosignatures:
 
+      CoLRevVersion
       Upgrade

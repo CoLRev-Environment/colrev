@@ -167,7 +167,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
         works = Works(etiquette=self.etiquette)
         try:
             crossref_query_return = works.doi(doi)
-        except requests.exceptions.JSONDecodeError as exc:
+        except (
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.ConnectTimeout,
+        ) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException() from exc
         if crossref_query_return is None:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException()

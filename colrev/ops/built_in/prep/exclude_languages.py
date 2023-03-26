@@ -174,54 +174,47 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         confidence_values = self.language_service.compute_language_confidence_values(
             text=record.data["title"]
         )
-        # if prep_operation.review_manager.verbose_mode:
-        #     print(record.data["title"].lower())
-        #     prep_operation.review_manager.p_printer.pprint(confidence_values)
-        # If language not in record, add language (always - needed in dedupe.)
-        set_most_likely_language = False
-        for predicted_language, conf in confidence_values:
-            if not set_most_likely_language:
-                record.update_field(
-                    key="language",
-                    value=predicted_language,
-                    source="LanguageDetector",
-                    note="",
-                )
-                set_most_likely_language = True
-            if "eng" == predicted_language:
-                if conf > 0.9:
-                    record.data["language"] = "eng"
-                    return record
-
-            if conf < 0.8:
-                record.update_field(
-                    key="title",
-                    value=record.data.get("title", ""),
-                    source="",
-                    note="quality_defect,language-not-found",
-                    append_edit=True,
-                )
-                record.remove_field(key="language")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                return record
 
         if len(confidence_values) == 0:
             record.update_field(
                 key="title",
                 value=record.data.get("title", ""),
                 source="LanguageDetector",
-                note="cannt_predict_language",
+                note="cannot_predict_language",
             )
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
             return record
 
-        record.prescreen_exclude(
-            reason=f"language of title not in [{','.join(self.languages_to_include)}]"
-        )
+        predicted_language, conf = confidence_values.pop()
+
+        if conf > 0.8:
+            record.update_field(
+                key="language",
+                value=predicted_language,
+                source="LanguageDetector",
+                note="",
+                append_edit=False,
+            )
+
+        else:
+            record.update_field(
+                key="title",
+                value=record.data.get("title", ""),
+                source="",
+                note="quality_defect,language-not-found",
+                append_edit=True,
+            )
+            record.remove_field(key="language")
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
+
+        if record.data.get("language", "") not in self.languages_to_include:
+            record.prescreen_exclude(
+                reason=f"language of title not in [{','.join(self.languages_to_include)}]"
+            )
 
         return record
 

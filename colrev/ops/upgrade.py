@@ -67,8 +67,13 @@ class Upgrade(colrev.operation.Operation):
             },
             # Note : we may add a flag to update to pre-released versions
             {
-                "version": CoLRevVersion("0.7.2"),
-                "script": self.__migrate_0_7_2,
+                "version": CoLRevVersion("0.8.0"),
+                "script": self.__migrate_0_8_0,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.9.0"),
+                "script": self.__migrate_0_9_0,
                 "released": False,
             },
         ]
@@ -175,6 +180,9 @@ class Upgrade(colrev.operation.Operation):
             target=Path("data/data/non_sample_references.bib"),
         )
 
+        return self.review_manager.dataset.has_changes()
+
+    def __migrate_0_8_0(self) -> bool:
         Path(".github/workflows/").mkdir(exist_ok=True, parents=True)
         if self.review_manager.settings.is_curated_masterdata_repo():
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
@@ -205,7 +213,8 @@ class Upgrade(colrev.operation.Operation):
         )
         return self.review_manager.dataset.has_changes()
 
-    def __migrate_0_7_2(self) -> bool:
+    def __migrate_0_9_0(self) -> bool:
+        print("Nothing to do (yet).")
         return self.review_manager.dataset.has_changes()
 
 

@@ -2043,7 +2043,7 @@ def env(
         if "y" != input(
             "The following process instantiates objects listed in the "
             + "colrev/template/package_endpoints.json "
-            + "(including ones that may not be secure). "
+            + "(including ones that may not be secure).\n"
             + "Please confirm (y) to proceed."
         ):
             return
