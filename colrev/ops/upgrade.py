@@ -78,11 +78,11 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_0,
                 "released": True,
             },
-            {
-                "version": CoLRevVersion("0.9.0"),
-                "script": self.__migrate_0_9_0,
-                "released": False,
-            },
+            # {
+            #     "version": CoLRevVersion("0.9.0"),
+            #     "script": self.__migrate_0_9_0,
+            #     "released": False,
+            # },
         ]
 
         if settings_version == migration_scripts[-1]["version"]:
