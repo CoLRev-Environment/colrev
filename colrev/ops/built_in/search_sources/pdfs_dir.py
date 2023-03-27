@@ -599,7 +599,7 @@ class PDFSearchSource(JsonSchemaMixin):
                         )
                         res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
                         if res:
-                            record["doi"] = res[0].upper()
+                            record.data["doi"] = res[0].upper()
                         del record.data["text_from_pdf"]
 
                 elif search_operation.review_manager.force_mode:
