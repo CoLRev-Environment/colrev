@@ -198,7 +198,7 @@ class Prep(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "To correct errors in the endpoint,"
                 " open an issue at "
-                "https://github.com/CoLRev-Ecosystem/colrev/issues"
+                "https://github.com/CoLRev-Environment/colrev/issues"
             )
             self.review_manager.logger.info(
                 "To correct potential errors at source,"

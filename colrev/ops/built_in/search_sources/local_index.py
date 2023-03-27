@@ -43,7 +43,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
     link = (
-        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/local_index.py"
     )
     __local_index_md_filename = Path("data/search/md_curated.bib")
@@ -780,7 +780,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if key not in self.essential_md_keys:
                     continue
                 record_dict[key] = value
-            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
+            # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
             # deal with remove/merge
 
         check_operation.review_manager.dataset.save_records_dict(records=records)
@@ -906,7 +906,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             webbrowser.open(pull_request_link, new=2)
 
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/63
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
         # handle cases where update branch already exists
         return success
 

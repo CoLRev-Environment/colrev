@@ -113,7 +113,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
             )
-            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/37
+            # gh_issue https://github.com/CoLRev-Environment/colrev/issues/37
             # consider similar proportions of post-md_processed/md_prepared?
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
@@ -136,7 +136,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # Training
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/37
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/37
         # creating a corpus from all fields may create memory issues...
 
         # Define the fields dedupe will pay attention to

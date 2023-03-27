@@ -17,7 +17,7 @@ The following features stand out:
 - Builds on git and its transparent collaboration model for the entire literature review process
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, record identification, content curation, and reuse
-- Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Ecosystem/colrev/issues/110>`_)
+- Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
 Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=fuLpu8X1Mr0>`_.
 
@@ -138,5 +138,5 @@ Further information is provided in the `documentation <index.html>`_, the develo
    :caption: Links
    :maxdepth: 1
 
-   Github repository <https://github.com/CoLRev-Ecosystem/colrev>
+   Github repository <https://github.com/CoLRev-Environment/colrev>
    PyPI <https://pypi.org/project/colrev/>

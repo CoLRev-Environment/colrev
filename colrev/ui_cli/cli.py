@@ -2130,7 +2130,7 @@ def settings(
                 "pre-commit",
                 "autoupdate",
                 "--repo",
-                "https://github.com/CoLRev-Ecosystem/colrev-hooks",
+                "https://github.com/CoLRev-Environment/colrev-hooks",
             ],
         ]
         for script_to_call in scripts_to_call:

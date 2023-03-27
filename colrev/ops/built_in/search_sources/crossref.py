@@ -102,7 +102,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
-            "https://github.com/CoLRev-Ecosystem/colrev",
+            "https://github.com/CoLRev-Environment/colrev",
             self.email,
         )
         self.review_manager = source_operation.review_manager

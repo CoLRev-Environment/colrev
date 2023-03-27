@@ -17,10 +17,10 @@
 - Test `colrev upgrade` in local repositories
 - Run `git push --atomic origin main $VERSION`.
 
-- Create [new release on Github](https://github.com/CoLRev-Ecosystem/colrev/releases/new)
+- Create [new release on Github](https://github.com/CoLRev-Environment/colrev/releases/new)
     - Select new tag
     - Enter the release notes
     - Publish the release
-    - The PyPI version is published through a [github action](https://github.com/CoLRev-Ecosystem/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
+    - The PyPI version is published through a [github action](https://github.com/CoLRev-Environment/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
     - The zenodo version is published automatically
     - Trigger/test the Github-action in a curated metadata repository

@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Changed
 
-- Numerous modifications based on the [user tests](https://github.com/CoLRev-Ecosystem/colrev/issues/41)
+- Numerous modifications based on the [user tests](https://github.com/CoLRev-Environment/colrev/issues/41)
 - Replaced OpenSearch with sqlite
 - SearchSource interface: ``run_search`` and ``add_package`` are now mandatory
 - Documentation review, including detailed information on development status

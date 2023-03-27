@@ -65,7 +65,7 @@ When search results are added, we apply heuristics to identify their source. Kno
 - When you run ``colrev search`` (or ``colrev search --udpate``), the metadata will be updated automatically (e.g., when a paper was retracted, or when fields like citation counts or URLs have changed).
 - In addition, some SearchSources have unique data quality issues (e.g., incorrect use of fields or record types). Each source can have its unique preparation steps, and restricting the scope of preparation rules allows us to prevent side effects on other records originating from high-quality sources.
 
-The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_):
+The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/CoLRev-Environment/colrev/issues/106>`_):
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
@@ -78,4 +78,4 @@ The following SearchSources are covered (additional ones are on the `SearchSourc
 Notes:
     - Other SearchSources are handled by "Unknown Source"
     - NA: Not applicable
-    - For updates, fixes, and additions of SearchSources, check the `Github issues <https://github.com/CoLRev-Ecosystem/colrev/labels/search_source>`_.
+    - For updates, fixes, and additions of SearchSources, check the `Github issues <https://github.com/CoLRev-Environment/colrev/labels/search_source>`_.

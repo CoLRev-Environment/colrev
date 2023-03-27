@@ -35,7 +35,7 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
             {
                 "repo_name": "colrev",
                 "repo_source_path": Path(colrev.__file__).parents[1],
-                "repo_source_url": "https://github.com/CoLRev-Ecosystem/colrev.git",
+                "repo_source_url": "https://github.com/CoLRev-Environment/colrev.git",
             }
         ]
         print(script_loc)
@@ -57,7 +57,7 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
                     {
                         "repo_name": "colrev",
                         "repo_source_path": str(Path(colrev.__file__).parents[1]),
-                        "repo_source_url": "https://github.com/CoLRev-Ecosystem/colrev.git",
+                        "repo_source_url": "https://github.com/CoLRev-Environment/colrev.git",
                     }
                 ],
             },

@@ -52,7 +52,7 @@ class Distribute(colrev.operation.Operation):
 
         if path.is_file():
             if path.suffix == ".bib":
-                # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/69
+                # gh_issue https://github.com/CoLRev-Environment/colrev/issues/69
                 # append records (check duplicates/duplicate IDs)
                 # if path already exists
                 # should the following really rename the file?

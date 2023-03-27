@@ -1,6 +1,6 @@
 # {{project_title}}
 
-This repository is based on the [ColRev](https://github.com/CoLRev-Ecosystem/colrev) standard.
+This repository is based on the [ColRev](https://github.com/CoLRev-Environment/colrev) standard.
 
 ```
 # To work on this project, run

@@ -97,7 +97,7 @@ Releases: Upcoming
 - Extension colrev_cml_assistant
 - Templates for review_types
 - Synchronous session support
-- `Additional SearchSources <https://github.com/CoLRev-Ecosystem/colrev/issues/106>`_
+- `Additional SearchSources <https://github.com/CoLRev-Environment/colrev/issues/106>`_
 
 Release: v0.9.0 (expected 06-01)
 -----------------------------------------------------------------

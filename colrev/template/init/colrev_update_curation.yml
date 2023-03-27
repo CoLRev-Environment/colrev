@@ -12,7 +12,7 @@ jobs:
       - name: Checkout this repository
         uses: actions/checkout@v2
       - run: |
-          pip install git+https://github.com/CoLRev-Ecosystem/colrev.git#egg=colrev
+          pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
       - name: delete-branch
         uses: dawidd6/action-delete-branch@v3
         with:
@@ -42,4 +42,4 @@ jobs:
           pr_body: |
             *CoLRev updates*
 
-            _Created by [colrev gh-action updater](https://github.com/CoLRev-Ecosystem/colrev/tree/main/colrev/template)_
+            _Created by [colrev gh-action updater](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_

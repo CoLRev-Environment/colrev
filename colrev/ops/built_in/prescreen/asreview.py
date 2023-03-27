@@ -69,7 +69,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
 
         prescreen.review_manager.logger.info("Export: asreview")
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/74
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/74
         # tbd. whether the selection is necessary
         records = {
             ID: r
@@ -115,12 +115,12 @@ class ASReviewPrescreen(JsonSchemaMixin):
 
         print(f"Loading prescreen results from {asreview_project_file}")
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/74
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/74
         # get asreview (python package) version / Docker asreview version
         # If both are available (and if they differ), the user will have to select
         # the one that was actually used
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/74
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/74
         # if the included column is not set, no decision has been recorded
         # The idea of asreview is that they could be set to "excluded" automatically
         # We would probably want to do that in a separate commit
@@ -194,7 +194,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
                 else:
                     print(f'not prescreened: {row["ID"]}')
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/74
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/74
         # add version
 
         prescreen_operation.review_manager.create_commit(
@@ -237,7 +237,7 @@ class ASReviewPrescreen(JsonSchemaMixin):
             input("\n  Press Enter to start and ctrl+c to stop ...")
             print("\n\n  ASReview will open shortly.")
 
-            # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/74
+            # gh_issue https://github.com/CoLRev-Environment/colrev/issues/74
             # if not available: ask to "pip install asreview"
             # pylint: disable=import-outside-toplevel
             from asreview.entry_points import LABEntryPoint
