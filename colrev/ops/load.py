@@ -809,8 +809,6 @@ class Load(colrev.operation.Operation):
         self, *, source: colrev.settings.SearchSource, keep_ids: bool
     ) -> None:
         search_records = self.__get_search_records(source=source)
-        if len(search_records) == 0:
-            return
 
         record_list = self.__prep_records_for_import(
             source=source, search_records=search_records
@@ -823,6 +821,8 @@ class Load(colrev.operation.Operation):
         source.setup_for_load(
             record_list=record_list, imported_origins=imported_origins
         )
+        if len(search_records) == 0:
+            return
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
@@ -957,6 +957,19 @@ class Load(colrev.operation.Operation):
             records=records, save_path=corresponding_bib_file
         )
 
+    def __load_active_sources(
+        self, *, new_sources: typing.List[colrev.settings.SearchSource]
+    ) -> list:
+        checker = self.review_manager.get_checker()
+        checker.check_sources()
+        sources = []
+        for source in self.review_manager.settings.sources:
+            sources.append(source)
+        for source in new_sources:
+            if source.filename not in [s.filename for s in sources]:
+                sources.append(source)
+        return sources
+
     def main(
         self,
         *,
@@ -966,22 +979,11 @@ class Load(colrev.operation.Operation):
     ) -> None:
         """Load records (main entrypoint)"""
 
-        def load_active_sources() -> list:
-            checker = self.review_manager.get_checker()
-            checker.check_sources()
-            sources = []
-            for source in self.review_manager.settings.sources:
-                sources.append(source)
-            for source in new_sources:
-                if source.filename not in [s.filename for s in sources]:
-                    sources.append(source)
-            return sources
-
         if not self.review_manager.high_level_operation:
             print()
         git_repo = self.review_manager.dataset.get_repo()
         part_exact_call = self.review_manager.exact_call
-        for source in load_active_sources():
+        for source in self.__load_active_sources(new_sources=new_sources):
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
 
@@ -997,8 +999,6 @@ class Load(colrev.operation.Operation):
                             self.review_manager.dataset.add_changes(
                                 path=Path(obj.b_path), remove=True
                             )
-
-                records = {}
 
                 # 1. convert to bib and fix format (if necessary)
                 load_conversion_package_endpoint_dict = self.package_manager.load_packages(
@@ -1023,15 +1023,19 @@ class Load(colrev.operation.Operation):
 
                 # 3. load and add records to data/records.bib
                 self.__load_source_records(source=source, keep_ids=keep_ids)
-                if 0 == getattr(source, "to_import", 0):
-                    if not self.review_manager.high_level_operation:
-                        print()
-                    continue
+                if (
+                    0 == getattr(source, "to_import", 0)
+                    and not self.review_manager.high_level_operation
+                ):
+                    print()
 
                 # 4. validate load
                 self.__validate_load(source=source)
 
-                git_repo.git.stash("push", "--keep-index")
+                stashed = "No local changes to save" != git_repo.git.stash(
+                    "push", "--keep-index"
+                )
+
                 if not combine_commits:
                     self.review_manager.exact_call = (
                         f"{part_exact_call} -s {source.filename.name}"
@@ -1039,7 +1043,8 @@ class Load(colrev.operation.Operation):
                     self.review_manager.create_commit(
                         msg=f"Load {source.filename.name}",
                     )
-                git_repo.git.stash("pop")
+                if stashed:
+                    git_repo.git.stash("pop")
                 if not self.review_manager.high_level_operation:
                     print()
             except colrev_exceptions.ImportException as exc:
