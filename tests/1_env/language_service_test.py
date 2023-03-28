@@ -50,6 +50,14 @@ def language_service() -> colrev.env.language_service.LanguageService:  # type: 
             "An Integrated Framework for Understanding Digital Work in Organizations",
             ("eng", 0.9),
         ),
+        (
+            "Editorial",
+            ("eng", 0.9),
+        ),
+        (
+            "Introduction",
+            ("eng", 0.9),
+        ),
     ],
 )
 def test_compute_language_confidence_values(

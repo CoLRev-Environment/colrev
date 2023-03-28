@@ -34,6 +34,9 @@ class LanguageService:
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""
 
+        if text.lower() in ["editorial", "introduction"]:
+            return [("eng", 1.0)]
+
         predictions = (
             self.__lingua_language_detector.compute_language_confidence_values(
                 text=text
