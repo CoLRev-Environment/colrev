@@ -526,22 +526,29 @@ class PDFSearchSource(JsonSchemaMixin):
                     f" extract metadata from {pdf_path}"
                 )
                 try:
-                    # retrieve_based_on_colrev_pdf_id
-                    pdf_hash_service = (
-                        search_operation.review_manager.get_pdf_hash_service()
-                    )
-                    colrev_pdf_id = pdf_hash_service.get_pdf_hash(
-                        pdf_path=Path(pdf_path),
-                        page_nr=1,
-                        hash_size=32,
-                    )
-                    new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                        colrev_pdf_id="cpid1:" + colrev_pdf_id
-                    )
-                    new_record["file"] = str(pdf_path)
-                    # Note : an alternative to replacing all data with the curated version
-                    # is to just add the curation_ID
-                    # (and retrieve the curated metadata separately/non-redundantly)
+                    if (
+                        not search_operation.review_manager.settings.is_curated_masterdata_repo()
+                    ):
+                        # retrieve_based_on_colrev_pdf_id
+                        pdf_hash_service = (
+                            search_operation.review_manager.get_pdf_hash_service()
+                        )
+                        colrev_pdf_id = pdf_hash_service.get_pdf_hash(
+                            pdf_path=Path(pdf_path),
+                            page_nr=1,
+                            hash_size=32,
+                        )
+                        new_record = local_index.retrieve_based_on_colrev_pdf_id(
+                            colrev_pdf_id="cpid1:" + colrev_pdf_id
+                        )
+                        new_record["file"] = str(pdf_path)
+                        # Note : an alternative to replacing all data with the curated version
+                        # is to just add the curation_ID
+                        # (and retrieve the curated metadata separately/non-redundantly)
+                    else:
+                        new_record = self.__get_grobid_metadata(
+                            search_operation=search_operation, pdf_path=pdf_path
+                        )
                 except (
                     colrev_exceptions.PDFHashError,
                     colrev_exceptions.RecordNotInIndexException,
@@ -592,7 +599,7 @@ class PDFSearchSource(JsonSchemaMixin):
                         )
                         res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
                         if res:
-                            record["doi"] = res[0].upper()
+                            record.data["doi"] = res[0].upper()
                         del record.data["text_from_pdf"]
 
                 elif search_operation.review_manager.force_mode:
@@ -680,19 +687,23 @@ class PDFSearchSource(JsonSchemaMixin):
                 del record["grobid-version"]
 
             if "doi" in record:
-                retrieved_record = self.crossref_connector.query_doi(
-                    doi=record.data["doi"]
-                )
-                for key in [
-                    "journal",
-                    "booktitle",
-                    "volume",
-                    "number",
-                    "year",
-                    "pages",
-                ]:
-                    if key in retrieved_record.data:
-                        record[key] = retrieved_record.data[key]
+                try:
+                    retrieved_record = self.crossref_connector.query_doi(
+                        doi=record["doi"]
+                    )
+
+                    for key in [
+                        "journal",
+                        "booktitle",
+                        "volume",
+                        "number",
+                        "year",
+                        "pages",
+                    ]:
+                        if key in retrieved_record.data:
+                            record[key] = retrieved_record.data[key]
+                except colrev_exceptions.RecordNotFoundInPrepSourceException:
+                    pass
 
         return records
 

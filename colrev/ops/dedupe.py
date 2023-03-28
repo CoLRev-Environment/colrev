@@ -890,7 +890,14 @@ class Dedupe(colrev.operation.Operation):
                 self.review_manager.logger.info(
                     f'Skip {dedupe_package_endpoint["endpoint"]} (not available)'
                 )
-                continue
+                if self.review_manager.in_ci_environment():
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        dep="colrev dedupe",
+                        detailed_trace="dedupe not available in ci environment",
+                    )
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    dep="colrev dedupe", detailed_trace="dedupe not available"
+                )
 
             endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 
@@ -922,6 +929,9 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")
+
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
 
 if __name__ == "__main__":

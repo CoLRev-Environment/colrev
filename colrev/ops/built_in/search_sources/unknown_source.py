@@ -41,7 +41,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
     link = (
-        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.py"
     )
 

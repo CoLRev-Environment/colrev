@@ -198,9 +198,7 @@ class Initializer:
             [Path("template/init/gitattributes"), Path(".gitattributes")],
             [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
-                Path(
-                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
-                ),
+                Path("template/init/colrev_update.yml"),
                 Path(".github/workflows/colrev_update.yml"),
             ],
         ]
@@ -223,7 +221,8 @@ class Initializer:
         ]
 
         colrev_version = version("colrev")
-        colrev_version = colrev_version[: colrev_version.find("+")]
+        if "+" in colrev_version:
+            colrev_version = colrev_version[: colrev_version.rfind("+")]
         settings.project.colrev_version = colrev_version
 
         settings.project.title = self.title

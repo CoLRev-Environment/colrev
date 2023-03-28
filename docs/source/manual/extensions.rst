@@ -4,7 +4,7 @@ Extensions
 
 CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process.
 At the same time you can easily include other extensions or custom scripts (batteries are swappable).
-Everything is specified in the settings.json (simply add the extension/script name as the endpoint to any of the `scripts elements <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/settings.json>`_):
+Everything is specified in the settings.json (simply add the extension/script name as the endpoint in the ``settings.json`` of the project):
 
 
 .. code-block:: diff
@@ -12,7 +12,7 @@ Everything is specified in the settings.json (simply add the extension/script na
    ...
     "screen": {
         "criteria": [],
-        "scripts": [
+        "screen_package_endpoints": [
             {
    -             "endpoint": "colrev.colrev_cli_screen"
    +             "endpoint": "custom_screen_script"
@@ -21,13 +21,13 @@ Everything is specified in the settings.json (simply add the extension/script na
     },
     ...
 
-The endpoints for extensions are documented in the `extension endpoints <../technical_documentation/extensions.html>`_ section.
+The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
 
 Registered extensions are public Python packages that can be installed via PyPI.
-They contain an ``endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Ecosystem/colrev/blob/main/endpoints.json>`_ provides an example).
-To register a new extension, create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/packages.json>`_.
-When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
-The development status is automatically added to the `package_endpoints.json <https://github.com/CoLRev-Ecosystem/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
+They contain an ``.colrev_endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/.colrev_endpoints.json>`_ provides an example).
+To register a new extension, create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/packages.json>`_.
+When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
+The development status is automatically added to the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
 
 
 ..

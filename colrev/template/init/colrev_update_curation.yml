@@ -5,11 +5,6 @@ on:
   schedule:
     - cron: '10 2 * * *'
 
-# Note : requires github/settings/actions/general/workflow permissions/read and write
-# Note : requires github/settings/actions/general/workflow permissions/create and approve pull requests
-# Note : pr_body should contain the code that was run and the potential errors
-# Note : implement heuristics for downloading/indexing curations (e.g., all curations in records + all curations corresponding to tocs)
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -30,7 +25,6 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
           git branch colrev-update
           git checkout colrev-update
-          colrev env -i
           colrev search -f
           colrev load
           colrev prep

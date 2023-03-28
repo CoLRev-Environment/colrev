@@ -3,7 +3,7 @@
 colrev prep
 ==================================
 
-In the :program:`colrev prep` operation, records with sufficient metadata quality transition from ``md_imported`` to ``md_prepared`` (``md_needs_manual_preparation`` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
+In the ``colrev prep`` operation, records with sufficient metadata quality transition from ``md_imported`` to ``md_prepared`` (``md_needs_manual_preparation`` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
 
 Quality rules:
 
@@ -24,7 +24,7 @@ Preparation procedures (the specific preparation depends on the specified settin
 - Linking with CoLRev curations, which establishes a quality curation loop
 - Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets
 
-Before starting the :program:`colrev prep-man` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning ``prep``).
+Before starting the ``colrev prep-man`` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning ``prep``).
 
 ..
     - heuristic metadata improvements
@@ -55,10 +55,10 @@ Before starting the :program:`colrev prep-man` operation, it is recommended to c
     .. figure:: ../../../figures/man_prep_jabref.png
     :alt: Manual preparation with Jabref
 
-    Note: after preparing the records, simply run :program:`colrev status`, which will update the status field and formatting according to the CoLRev standard.
+    Note: after preparing the records, simply run ``colrev status``, which will update the status field and formatting according to the CoLRev standard.
 
 
-In addition, :program:`colrev prep-man` provides an interactive convenience function.
+In addition, ``colrev prep-man`` provides an interactive convenience function.
 
 .. code:: bash
 

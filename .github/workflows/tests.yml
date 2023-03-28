@@ -14,14 +14,16 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install poetry
+      run: pipx install poetry
+    - name: Setup poetry
+      run: poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+    - name: Install poetry dependencies
       run: |
-        pip install pytest
-        pip install pytest-mock
-        pip install --no-cache-dir .
-    - name: Run minimal-deps tests
-      run: |
-        pytest tests/0_core/
+        poetry install --extras dev || echo "No dev extras"
+        poetry install --with dev || echo "No dev dependency group"
+    - name: Run poetry tests (minimal-deps)
+      run: poetry run pytest tests/0_core/
 
   test-full-deps:
     needs: test-minimal-deps
@@ -34,11 +36,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Install dependencies
+    - name: Install poetry
+      run: pipx install poetry
+    - name: Setup poetry
+      run: poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+    - name: Install poetry dependencies
       run: |
-        pip install pytest
-        pip install pytest-mock
-        pip install --no-cache-dir .
-    - name: Run full-deps tests
-      run: |
-        pytest tests
+        poetry install --extras dev || echo "No dev extras"
+        poetry install --with dev || echo "No dev dependency group"
+    - name: Run poetry tests
+      run: poetry run pytest

@@ -44,11 +44,6 @@ class TEIPDFPrep(JsonSchemaMixin):
             )
             self.tei_path.mkdir(exist_ok=True, parents=True)
 
-        if hasattr(pdf_prep_operation.review_manager, "dataset"):
-            pdf_prep_operation.review_manager.dataset.update_gitignore(
-                add=[self.TEI_PATH_RELATIVE]
-            )
-
     @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(
         self,

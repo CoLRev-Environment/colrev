@@ -102,7 +102,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.etiquette = Etiquette(
             "CoLRev",
             version("colrev"),
-            "https://github.com/CoLRev-Ecosystem/colrev",
+            "https://github.com/CoLRev-Environment/colrev",
             self.email,
         )
         self.review_manager = source_operation.review_manager
@@ -165,8 +165,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
         from crossref.restful import Works
 
         works = Works(etiquette=self.etiquette)
-        crossref_query_return = works.doi(doi)
-        if not crossref_query_return:
+        try:
+            crossref_query_return = works.doi(doi)
+        except (
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.ConnectTimeout,
+        ) as exc:
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException() from exc
+        if crossref_query_return is None:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException()
         retrieved_record_dict = connector_utils.json_to_record(
             item=crossref_query_return

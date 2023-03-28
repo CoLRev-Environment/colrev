@@ -133,6 +133,7 @@ class ReviewManager:
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
+            self.__check_update()
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
@@ -140,6 +141,16 @@ class ReviewManager:
                     self.logger.debug(exc)
             else:
                 raise exc
+
+    def __check_update(self) -> None:
+        if not hasattr(self, "dataset"):
+            return
+        # Once the following has run for all repositories,
+        # it should only be called when the versions differ.
+        # last_version, current_version = self.get_colrev_versions()
+        # if last_version != current_version:
+        upgrade_operation = self.get_upgrade()
+        upgrade_operation.main()
 
     def get_committer(self) -> typing.Tuple[str, str]:
         """Get the committer name and email"""
@@ -722,6 +733,9 @@ class ReviewManager:
         identifier: Optional[str] = None,
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
+
+        if "pytest" in os.getcwd():
+            return False
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         if identifier:

@@ -15,6 +15,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## [0.8.0] - 2023-03-26
+
+### Added
+
+- Unit tests: increased test coverage to 70%, added Github actions matrix tests across OS and Python versions
+- Completed OpenSSF Best Practices checks ([1](https://bestpractices.coreinfrastructure.org/de/projects/7148))
+- Added forward and backward searches based on [OpenCitations](https://opencitations.net/)
+- Moved documentation to [readthedocs](https://colrev.readthedocs.io/en/latest/) and revised documentation
+- Added dependabot and pre-commit.ci: automated code and secrity checks
+- Added support for Github actions, distinguishing packages that are supported in ci-environments (``ci_supported`` flag)
+- Added Pubmed API searches and metadata preparation support
+- Option to initialize and run CoLRev repositories without requiring Docker
+- Overview video presented at ESMARConf2023 [1](https://www.youtube.com/watch?v=fuLpu8X1Mr0)
+- CITATION.cff and Zenodo
+- API-searches for the AIS eLibrary
+
+### Changed
+
+- Numerous modifications based on the [user tests](https://github.com/CoLRev-Environment/colrev/issues/41)
+- Replaced OpenSearch with sqlite
+- SearchSource interface: ``run_search`` and ``add_package`` are now mandatory
+- Documentation review, including detailed information on development status
+- Consistent setup of Github actions (test, publish to PyPI)
+- Built-in packages renamed from ``colrev_built_in`` to ``colrev``
+- Data package ``manuscript``renamed to ``paper_md``
+- Simplified upgrade operation and activated upgrades per default
+- Extracted and refactored language-service
+
+### Fixed
+
+- Several bugfixes
+
+### [0.7.1] - 2023-03-25
+
+### Changed
+
+- Changed package prefix from ``colrev_built_in`` to ``colrev``
+
 ### [0.7.0] - 2023-01-16
 
 ### Added

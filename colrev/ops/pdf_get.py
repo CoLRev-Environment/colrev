@@ -9,6 +9,7 @@ from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -591,6 +592,12 @@ class PDFGet(colrev.operation.Operation):
 
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
+
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="colrev pdf-prep",
+                detailed_trace="pdf-prep not available in ci environment",
+            )
 
         self.review_manager.logger.info("Get PDFs")
         self.review_manager.logger.info(

@@ -13,7 +13,7 @@ jobs:
     - uses: actions/setup-python@v3
     - name: Install dependencies
       run: |
-        python -m pip install 'colrev @ git+https://github.com/CoLRev-Ecosystem/colrev'
+        python -m pip install 'colrev @ git+https://github.com/CoLRev-Environment/colrev'
         git config user.name "Pre-commit hooks"
         git config user.email "actions@users.noreply.github.com"
     - uses: pre-commit/action@v3.0.0

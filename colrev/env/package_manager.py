@@ -601,7 +601,7 @@ class PackageManager:
                             "options"
                         ] = settings_class._details[parameter]["options"]
 
-        # gh_issue https://github.com/CoLRev-Ecosystem/colrev/issues/66
+        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/66
         # apply validation when parsing settings during package init (based on _details)
         # later : package version?
 
@@ -904,7 +904,7 @@ class PackageManager:
                 endpoint_item["ci_supported"] = endpoint.ci_supported
 
                 code_link = (
-                    "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
+                    "https://github.com/CoLRev-Environment/colrev/blob/main/"
                     + endpoint_item["endpoint"].replace(".", "/")
                 )
                 # In separate packages, we the main readme.md file should be used

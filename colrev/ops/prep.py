@@ -198,7 +198,7 @@ class Prep(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "To correct errors in the endpoint,"
                 " open an issue at "
-                "https://github.com/CoLRev-Ecosystem/colrev/issues"
+                "https://github.com/CoLRev-Environment/colrev/issues"
             )
             self.review_manager.logger.info(
                 "To correct potential errors at source,"
@@ -780,6 +780,20 @@ class Prep(colrev.operation.Operation):
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
+        non_available_endpoints = [
+            x["endpoint"].lower()
+            for x in required_prep_package_endpoints
+            if x["endpoint"].lower() not in self.prep_package_endpoints
+        ]
+        if non_available_endpoints:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    dep=f"colrev prep ({','.join(non_available_endpoints)})",
+                    detailed_trace="prep not available in ci environment",
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="colrev prep", detailed_trace="prep not available"
+            )
 
         for endpoint_name, endpoint in self.prep_package_endpoints.items():
             check_function = getattr(endpoint, "check_availability", None)
@@ -891,8 +905,10 @@ class Prep(colrev.operation.Operation):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
-
-        self.review_manager.logger.info("Prep")
+        if not polish:
+            self.review_manager.logger.info("Prep")
+        else:
+            self.review_manager.logger.info("Prep (polish mode)")
         self.review_manager.logger.info(
             "Prep completes and corrects record metadata based on APIs and preparation rules."
         )
@@ -1026,6 +1042,8 @@ class Prep(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed prep operation{colors.END}"
         )
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
 
 if __name__ == "__main__":

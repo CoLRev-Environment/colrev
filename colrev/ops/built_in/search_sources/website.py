@@ -31,7 +31,7 @@ class WebsiteConnector:
 
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.todo
     link = (
-        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/website.py"
     )
 

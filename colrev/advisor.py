@@ -484,16 +484,19 @@ class Advisor:
                     }
                 )
 
+        pdfs_no_longer_available = []
         for record_dict in status_stats.records.values():
             if "file" in record_dict:
                 if not (self.review_manager.path / Path(record_dict["file"])).is_file():
-                    review_instructions.append(
-                        {
-                            "level": "WARNING",
-                            "msg": f"PDF no longer available: {record_dict['file']}",
-                            "cmd": "colrev repare",
-                        }
-                    )
+                    pdfs_no_longer_available.append(record_dict["file"])
+        if pdfs_no_longer_available:
+            review_instructions.append(
+                {
+                    "level": "WARNING",
+                    "msg": f"PDF no longer available: {','.join(pdfs_no_longer_available)}",
+                    "cmd": "colrev repare",
+                }
+            )
 
     def __append_iteration_completed_instructions(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
+from subprocess import CalledProcessError
 from subprocess import check_output
 from typing import Optional
 
@@ -122,13 +123,17 @@ class EnvironmentManager:
     def get_name_mail_from_git(self) -> typing.Tuple[str, str]:  # pragma: no cover
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
-        username = check_output(["git", "config", "user.name"])
-        email = check_output(["git", "config", "user.email"])
-        global_conf_details = (
-            username.decode("utf-8").replace("\n", ""),
-            email.decode("utf-8").replace("\n", ""),
-        )
-
+        try:
+            username = check_output(["git", "config", "user.name"])
+            email = check_output(["git", "config", "user.email"])
+            global_conf_details = (
+                username.decode("utf-8").replace("\n", ""),
+                email.decode("utf-8").replace("\n", ""),
+            )
+        except CalledProcessError as exc:
+            raise colrev_exceptions.CoLRevException(
+                "Global git variables (user name and email) not available."
+            ) from exc
         if ("NA", "NA") == global_conf_details:
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."

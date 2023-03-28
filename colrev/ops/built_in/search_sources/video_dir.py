@@ -39,7 +39,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Video directory"
     link = (
-        "https://github.com/CoLRev-Ecosystem/colrev/blob/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/video_dir.py"
     )
 

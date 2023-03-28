@@ -27,11 +27,11 @@ To solve issues efficiently, minimum reproducible examples are given priority. W
 Check prior documentation and file the issue
 ----------------------------------------------
 
-Please check prior issues in the `issue tracker <https://github.com/CoLRev-Ecosystem/colrev/issues>`__ and run a quick Google search for possible solutions.
+Please check prior issues in the `issue tracker <https://github.com/CoLRev-Environment/colrev/issues>`__ and run a quick Google search for possible solutions.
 
 You can ask questions on `Stackoverflow <https://stackoverflow.com/>`_, using the colrev tag.
 
-You can also file a bug report in the `issue tracker <https://github.com/CoLRev-Ecosystem/colrev/issues>`__ or propose a solution by opening a pull request.
+You can also file a bug report in the `issue tracker <https://github.com/CoLRev-Environment/colrev/issues>`__ or propose a solution by opening a pull request.
 
 ..
     FAQ

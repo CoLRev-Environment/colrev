@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
@@ -366,7 +367,14 @@ class Screen(colrev.operation.Operation):
                 self.review_manager.logger.info(
                     f'Skip {screen_package_endpoint["endpoint"]} (not available)'
                 )
-                continue
+                if self.review_manager.in_ci_environment():
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        dep="colrev sceen",
+                        detailed_trace="sceen not available in ci environment",
+                    )
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    dep="colrev sceen", detailed_trace="sceen not available"
+                )
 
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
 
@@ -382,6 +390,8 @@ class Screen(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed screen operation{colors.END}"
         )
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
 
 
 if __name__ == "__main__":

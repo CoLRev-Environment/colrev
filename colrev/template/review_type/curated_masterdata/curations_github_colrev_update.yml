@@ -16,7 +16,7 @@ jobs:
       - name: Checkout this repository
         uses: actions/checkout@v2
       - run: |
-          pip install git+https://github.com/CoLRev-Ecosystem/colrev.git#egg=colrev
+          pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
       - run: |
           git config user.name "CoLRev update"
           git config user.email "actions@users.noreply.github.com"
@@ -41,4 +41,4 @@ jobs:
           pr_body: |
             *CoLRev updates*
 
-            _Created by [colrev gh-action updater](https://github.com/CoLRev-Ecosystem/colrev/tree/main/colrev/template)_
+            _Created by [colrev gh-action updater](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_

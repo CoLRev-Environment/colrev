@@ -5,7 +5,7 @@ colrev init
 -------------------------------
 
 
-:program:`colrev init` initializes a new CoLRev project. It requires an empty directory.
+``colrev init`` initializes a new CoLRev project. It requires an empty directory.
 With this operation, the directories and files, including the git history, are set up.
 Ideally, the selected review type is passed as a parameter:
 

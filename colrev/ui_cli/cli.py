@@ -2043,7 +2043,7 @@ def env(
         if "y" != input(
             "The following process instantiates objects listed in the "
             + "colrev/template/package_endpoints.json "
-            + "(including ones that may not be secure). "
+            + "(including ones that may not be secure).\n"
             + "Please confirm (y) to proceed."
         ):
             return
@@ -2130,7 +2130,7 @@ def settings(
                 "pre-commit",
                 "autoupdate",
                 "--repo",
-                "https://github.com/CoLRev-Ecosystem/colrev-hooks",
+                "https://github.com/CoLRev-Environment/colrev-hooks",
             ],
         ]
         for script_to_call in scripts_to_call:
@@ -2562,8 +2562,8 @@ def upgrade(
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )
-    upgrad_operation = review_manager.get_upgrade()
-    upgrad_operation.main()
+    upgrade_operation = review_manager.get_upgrade()
+    upgrade_operation.main()
 
 
 @main.command(hidden=True, help_priority=30)

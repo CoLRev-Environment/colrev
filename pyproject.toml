@@ -1,20 +1,23 @@
 [tool.poetry]
 name = "colrev"
-version = "0.7.1" # automatically injected by poetry-dynamic-versioning
+version = "0.8.0"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
 readme = "README.md"
 homepage="https://colrev.readthedocs.io/en/latest/"
-repository = "https://github.com/CoLRev-Ecosystem/colrev"
+repository = "https://github.com/CoLRev-Environment/colrev"
 documentation = "https://colrev.readthedocs.io/en/latest/"
 keywords = ["research", "reproducible research", "open science", "literature", "literature review", "systematic review", "systematic literature review"]
 classifiers = [
-   "Development Status :: 2 - Pre-Alpha",
+   "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
     "Operating System :: OS Independent",
     "Typing :: Typed",
