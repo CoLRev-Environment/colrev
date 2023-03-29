@@ -646,6 +646,13 @@ def prep(
     help="Print statistics of records with colrev_status md_needs_manual_preparation",
 )
 @click.option(
+    "-l",
+    "--languages",
+    is_flag=True,
+    default=False,
+    help="Export spreadsheet to add missing language fields.",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -660,7 +667,9 @@ def prep(
     help="Force mode",
 )
 @click.pass_context
-def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -> None:
+def prep_man(
+    ctx: click.core.Context, stats: bool, languages: bool, verbose: bool, force: bool
+) -> None:
     """Prepare records manually"""
 
     try:
@@ -668,6 +677,9 @@ def prep_man(ctx: click.core.Context, stats: bool, verbose: bool, force: bool) -
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
         )
         prep_man_operation = review_manager.get_prep_man_operation()
+        if languages:
+            prep_man_operation.prep_man_langs()
+            return
 
         if stats:
             prep_man_operation.prep_man_stats()
