@@ -1800,10 +1800,14 @@ class Record:
                     .lower()
                 )
                 toc_key += (
-                    f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
+                    f"|{self.data['volume']}"
+                    if ("UNKNOWN" != self.data.get("volume", "UNKNOWN"))
+                    else "|-"
                 )
                 toc_key += (
-                    f"|{self.data['number']}" if ("number" in self.data) else "|-"
+                    f"|{self.data['number']}"
+                    if ("UNKNOWN" != self.data.get("number", "UNKNOWN"))
+                    else "|-"
                 )
 
             elif "inproceedings" == self.data["ENTRYTYPE"]:

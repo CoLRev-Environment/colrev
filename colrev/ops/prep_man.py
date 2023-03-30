@@ -165,10 +165,15 @@ class PrepMan(colrev.operation.Operation):
                         record.data["colrev_masterdata_provenance"]["title"][
                             "note"
                         ] = ""
-
-                    # by resetting to md_imported,
-                    # the prescreen-exclusion based on languages will be reapplied.
-                    record.data["colrev_status"] = colrev.record.RecordState.md_imported
+                    if (
+                        record.data["colrev_status"]
+                        == colrev.record.RecordState.md_needs_manual_preparation
+                    ):
+                        # by resetting to md_imported,
+                        # the prescreen-exclusion based on languages will be reapplied.
+                        record.data[
+                            "colrev_status"
+                        ] = colrev.record.RecordState.md_imported
 
             self.review_manager.dataset.save_records_dict(records=records)
 

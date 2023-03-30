@@ -999,7 +999,7 @@ class LocalIndex:
 
         if not toc_items and search_across_tocs:
             try:
-                partial_toc_key = toc_key.replace("|-", "|")
+                partial_toc_key = toc_key.replace("|-", "")
                 retrieved_tocs = self.__get_items_from_index(
                     index_name=self.TOC_INDEX,
                     query=f"toc_key LIKE '{partial_toc_key}%'",
