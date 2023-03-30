@@ -481,6 +481,8 @@ class Record:
         md_p_dict = self.data["colrev_masterdata_provenance"]
 
         for identifying_field_key in self.identifying_field_keys:
+            if identifying_field_key in ["author", "title", "year"]:
+                continue
             if "UNKNOWN" == self.data.get(identifying_field_key, "NA"):
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
