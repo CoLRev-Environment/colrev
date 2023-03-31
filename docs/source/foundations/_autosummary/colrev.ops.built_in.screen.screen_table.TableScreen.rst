@@ -38,4 +38,5 @@ colrev.ops.built\_in.screen.screen\_table.TableScreen
    .. autosummary::
 
       ~TableScreen.ci_supported
+      ~TableScreen.export_todos_only
       ~TableScreen.screen_table_path
