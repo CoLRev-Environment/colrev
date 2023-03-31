@@ -171,45 +171,26 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
             return record
 
-        confidence_values = self.language_service.compute_language_confidence_values(
-            text=record.data["title"]
-        )
-
-        if len(confidence_values) == 0:
+        language = self.language_service.compute_language(text=record.data["title"])
+        if not language:
             record.update_field(
                 key="title",
                 value=record.data.get("title", ""),
                 source="LanguageDetector",
-                note="cannot_predict_language",
+                note="language-not-found",
             )
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
             return record
 
-        predicted_language, conf = confidence_values.pop(0)
-
-        if conf > 0.2:
-            record.update_field(
-                key="language",
-                value=predicted_language,
-                source="LanguageDetector",
-                note="",
-                append_edit=False,
-            )
-
-        else:
-            record.update_field(
-                key="title",
-                value=record.data.get("title", ""),
-                source="",
-                note="quality_defect,language-not-found",
-                append_edit=True,
-            )
-            record.remove_field(key="language")
-            record.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
+        record.update_field(
+            key="language",
+            value=language,
+            source="LanguageDetector",
+            note="",
+            append_edit=False,
+        )
 
         if record.data.get("language", "") not in self.languages_to_include:
             record.prescreen_exclude(

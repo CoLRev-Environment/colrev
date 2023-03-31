@@ -31,6 +31,13 @@ class LanguageService:
         for country in pycountry.languages:
             self.__lang_code_mapping[country.name.lower()] = country.alpha_3
 
+    def compute_language(self, *, text: str) -> str:
+        """Compute the most likely language code"""
+        language = self.__lingua_language_detector.detect_language_of(text)
+        if language:
+            return language.name.lower()
+        return language
+
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""
 
