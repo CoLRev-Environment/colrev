@@ -41,10 +41,12 @@ Examples:
     colrev search -a colrev.crossref:"https://search.crossref.org/?q=+microsourcing&from_ui=yes"
     colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
     colrev search -a colrev.ais_library:"https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
-    colrev search -a colrev.pdf_backward_search:backward-search
-    colrev search -a colrev.open_citations_forward_search:forward-search
+    colrev search -a colrev.pdf_backward_search:default
+    colrev search -a colrev.open_citations_forward_search:default
     colrev search -a colrev.local_index:"local_index:title LIKE '%dark side%'"
     colrev search -a colrev.colrev_project:"/path/to/local/file.bib"
+
+    colrev search -a /home/user/references.bib
 
 ..
     Examples:

@@ -2,7 +2,6 @@
 """Scripts to add packages using the cli."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import requests
@@ -31,103 +30,31 @@ def add_search_source(
         )
         dst = search_operation.review_manager.search_dir / Path(filename).name
         shutil.copyfile(query, dst)
-        search_operation.review_manager.logger.info(
-            f"Copied {filename} to repo. Run colrev load"
-        )
+        search_operation.review_manager.logger.info(f"Copied {filename} to repo.")
+        load_operation = search_operation.review_manager.get_load_operation()
+        new_sources = load_operation.get_new_sources()
+        load_operation.main(new_sources=new_sources)
         # Note : load runs the heuristics.
         return
 
+    if ":" not in query:
+        search_operation.review_manager.logger.error(
+            "Could not find package identifier at the beginning of the query"
+        )
+        return
+    package_identifier = query[: query.find(":")]
+    query = query[query.find(":") + 1 :]
+
     package_manager = search_operation.review_manager.get_package_manager()
 
-    search_source_identifiers = package_manager.discover_packages(
+    search_source = package_manager.load_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-        installed_only=True,
-    )
-
-    search_sources = package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-        selected_packages=[{"endpoint": p} for p in search_source_identifiers],
+        selected_packages=[{"endpoint": package_identifier}],
         operation=search_operation,
         instantiate_objects=False,
     )
 
-    results_list = []
-    for endpoint_class in search_sources.values():
-        if search_operation.review_manager.verbose_mode:
-            search_operation.review_manager.logger.info(f"Test {endpoint_class}")
-        res = endpoint_class.add_endpoint(search_operation, query)  # type: ignore
-        if search_operation.review_manager.verbose_mode:
-            search_operation.review_manager.logger.info(f"res={res}")
-        if res:
-            results_list.append(res)
-
-    if not results_list:
-        query_dict = json.loads(query)
-
-        assert "endpoint" in query_dict
-
-        if "filename" in query_dict:
-            filename = search_operation.get_unique_filename(
-                file_path_string=query_dict["filename"]
-            )
-        else:
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"{query_dict['endpoint'].replace('colrev.', '')}"
-            )
-            i = 0
-            while filename in [x.filename for x in search_operation.sources]:
-                i += 1
-                filename = Path(
-                    str(filename)[: str(filename).find("_query") + 6] + f"_{i}.bib"
-                )
-        feed_file_path = search_operation.review_manager.path / filename
-        assert not feed_file_path.is_file()
-        query_dict["filename"] = filename
-
-        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/68
-        # get search_type from the SearchSource
-        # query validation based on ops.built_in.search_source settings
-        # prevent duplicate sources (same endpoint and search_parameters)
-        if "search_type" not in query_dict:
-            query_dict["search_type"] = colrev.settings.SearchType.DB
-        else:
-            query_dict["search_type"] = colrev.settings.SearchType[
-                query_dict["search_type"]
-            ]
-
-        if "load_conversion_package_endpoint" not in query_dict:
-            query_dict["load_conversion_package_endpoint"] = {
-                "endpoint": "colrev.bibtex"
-            }
-        if query_dict["search_type"] == colrev.settings.SearchType.DB:
-            feed_config = {
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-            }
-            query_dict["load_conversion_package_endpoint"] = feed_config[
-                "load_conversion_package_endpoint"
-            ]
-
-        # NOTE: for now, the parameters are limited to whole journals.
-        add_source = colrev.settings.SearchSource(
-            endpoint=query_dict["endpoint"],
-            filename=filename,
-            search_type=colrev.settings.SearchType(query_dict["search_type"]),
-            search_parameters=query_dict.get("search_parameters", {}),
-            load_conversion_package_endpoint=query_dict[
-                "load_conversion_package_endpoint"
-            ],
-            comment="",
-        )
-
-    if len(results_list) > 2:
-        search_operation.review_manager.logger.info(
-            "TODO : select one (remove the others from the list)."
-        )
-        print(results_list)
-        return
-
-    add_source = results_list[0]
-
+    add_source = search_source[package_identifier].add_endpoint(search_operation, query)  # type: ignore
     search_operation.add_source(add_source=add_source)
 
 
