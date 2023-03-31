@@ -58,6 +58,10 @@ def language_service() -> colrev.env.language_service.LanguageService:  # type: 
             "Introduction",
             ("eng", 0.9),
         ),
+        (
+            "“Escaping the rat race”: Justifications in digital nomadism",
+            ("eng", 0.45),
+        ),
     ],
 )
 def test_compute_language_confidence_values(

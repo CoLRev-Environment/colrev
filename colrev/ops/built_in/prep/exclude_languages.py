@@ -114,10 +114,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 )
                 return record
 
-            lang_1, conf_1 = confidence_values_part1[0]
-            lang_2, conf_2 = confidence_values_part2[0]
+            lang_1, conf_1 = confidence_values_part1.pop(0)
+            lang_2, conf_2 = confidence_values_part2.pop(0)
 
-            if conf_1 < 0.8 and conf_2 < 0.8:
+            if conf_1 < 0.2 and conf_2 < 0.2:
                 record.update_field(
                     key="title",
                     value=record.data.get("title", ""),
@@ -189,7 +189,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
         predicted_language, conf = confidence_values.pop(0)
 
-        if conf > 0.8:
+        if conf > 0.2:
             record.update_field(
                 key="language",
                 value=predicted_language,
