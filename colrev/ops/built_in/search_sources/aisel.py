@@ -78,6 +78,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
 
+        query = query.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
+
         host = urlparse(query).hostname
 
         if host and host.endswith("aisel.aisnet.org"):

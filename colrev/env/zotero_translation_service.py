@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 
 import docker
+import requests
 from docker.errors import DockerException
 
 import colrev.env.environment_manager
@@ -52,7 +53,26 @@ class ZoteroTranslationService:
                 auto_remove=True,
                 detach=True,
             )
-            time.sleep(12)
+
+            tries = 0
+            while tries < 10:
+                try:
+                    headers = {"Content-type": "text/plain"}
+                    requests.post(
+                        "http://127.0.0.1:1969/import",
+                        headers=headers,
+                        data=b"%T Paper title\n\n",
+                        timeout=10,
+                    )
+
+                except requests.ConnectionError:
+                    time.sleep(5)
+                    continue
+                return
+
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=""
+            )
 
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
