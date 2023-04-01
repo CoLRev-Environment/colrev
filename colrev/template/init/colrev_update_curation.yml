@@ -13,18 +13,12 @@ jobs:
         uses: actions/checkout@v2
       - run: |
           pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
-      - name: delete-branch
-        uses: dawidd6/action-delete-branch@v3
-        with:
-          github_token: ${{github.token}}
-          branches: colrev-update
-          soft_fail: true
       - run: |
           git config user.name "CoLRev update"
           git config user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
-          git branch colrev-update
-          git checkout colrev-update
+          export BRANCH_NAME=colrev-update/$(uuidgen)
+          git checkout -b $BRANCH_NAME
           colrev search -f
           colrev load
           colrev prep
@@ -32,11 +26,11 @@ jobs:
           colrev prescreen
           colrev pdfs
           colrev screen
-          git push --set-upstream origin colrev-update
+          git push --set-upstream origin $BRANCH_NAME
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
-          source_branch: "colrev-update"
+          source_branch: "$BRANCH_NAME"
           destination_branch: "main"
           pr_title: "Pull colrev search updates"
           pr_body: |
