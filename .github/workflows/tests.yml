@@ -18,14 +18,12 @@ jobs:
       run: pipx install poetry
     - name: Install poetry dependencies
       run: |
-        poetry install --extras dev || echo "No dev extras"
         poetry install --with dev || echo "No dev dependency group"
     - name: Run poetry tests (minimal-deps)
       run: poetry run pytest tests/0_core/
 
   test-full-deps:
     needs: test-minimal-deps
-    name: test-full-deps
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,7 +36,6 @@ jobs:
       run: pipx install poetry
     - name: Install poetry dependencies
       run: |
-        poetry install --extras dev || echo "No dev extras"
         poetry install --with dev || echo "No dev dependency group"
     - name: Run poetry tests
       run: poetry run pytest
