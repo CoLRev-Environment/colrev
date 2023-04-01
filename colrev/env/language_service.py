@@ -35,8 +35,9 @@ class LanguageService:
         """Compute the most likely language code"""
         language = self.__lingua_language_detector.detect_language_of(text)
         if language:
-            return language.name.lower()
-        return language
+            return language.iso_code_639_3.name.lower()
+        else:
+            return ""
 
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""
