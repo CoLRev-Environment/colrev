@@ -12,6 +12,8 @@ import colrev.record
 class LanguageService:
     """Service to detect languages and handle language codes"""
 
+    __eng_false_negatives = ["editorial", "introduction"]
+
     def __init__(self) -> None:
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
@@ -33,16 +35,19 @@ class LanguageService:
 
     def compute_language(self, *, text: str) -> str:
         """Compute the most likely language code"""
+
+        if text.lower() in self.__eng_false_negatives:
+            return "eng"
+
         language = self.__lingua_language_detector.detect_language_of(text)
         if language:
             return language.iso_code_639_3.name.lower()
-        else:
-            return ""
+        return ""
 
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""
 
-        if text.lower() in ["editorial", "introduction"]:
+        if text.lower() in self.__eng_false_negatives:
             return [("eng", 1.0)]
 
         predictions = (
@@ -52,11 +57,7 @@ class LanguageService:
         )
         predictions_unified = []
         for lang, conf in predictions:
-            if lang.name.lower() not in self.__lang_code_mapping:
-                continue
-            predictions_unified.append(
-                (self.__lang_code_mapping[lang.name.lower()], conf)
-            )
+            predictions_unified.append((lang.iso_code_639_3.name.lower(), conf))
 
         return predictions_unified
 
