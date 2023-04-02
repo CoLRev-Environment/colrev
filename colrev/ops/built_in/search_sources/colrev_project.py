@@ -41,7 +41,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     short_name = "CoLRev project"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/colrev_project.py"
+        + "colrev/ops/built_in/search_sources/colrev_project.md"
     )
 
     def __init__(

@@ -44,7 +44,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     short_name = "LocalIndex"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/local_index.py"
+        + "colrev/ops/built_in/search_sources/local_index.md"
     )
     __local_index_md_filename = Path("data/search/md_curated.bib")
 

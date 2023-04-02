@@ -42,7 +42,10 @@ class PDFSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"
-    link = "https://github.com/kermitt2/grobid"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/pdfs_dir.md"
+    )
 
     __doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 

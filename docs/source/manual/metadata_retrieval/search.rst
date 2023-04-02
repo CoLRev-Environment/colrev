@@ -72,7 +72,7 @@ The following SearchSources are covered (additional ones are on the `SearchSourc
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource", "link"), ("Identifier", "package_endpoint_identifier"), ("API search", "api_search"), ("Search instructions", "instructions"), ("Status", "status_linked")],
+        [("SearchSource instructions", "link"), ("Identifier", "package_endpoint_identifier"), ("API search", "api_search"), ("Status", "status_linked")],
         data['search_source'],
         title='',
         ) }}

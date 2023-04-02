@@ -39,7 +39,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"
-    link = "https://aisel.aisnet.org/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/aisel.md"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

@@ -42,7 +42,10 @@ class PubMedSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PubMed"
-    link = "https://pubmed.ncbi.nlm.nih.gov/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/pubmed.md"
+    )
     __pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(

@@ -59,7 +59,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    link = "https://www.crossref.org/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/crossref.md"
+    )
     short_name = "Crossref"
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 

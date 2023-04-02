@@ -33,7 +33,10 @@ class ERICSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     short_name = "ERIC"
-    link = "https://eric.ed.gov/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/eric.md"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict

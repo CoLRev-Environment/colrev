@@ -43,7 +43,10 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "systematic-review-datasets"
-    link = "https://about.proquest.com/en/products-services/abi_inform_complete/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/systematic_review_datasets.md"
+    )
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
