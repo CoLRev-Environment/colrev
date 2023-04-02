@@ -58,7 +58,7 @@ def elp(
         ),
     ],
 )
-def test_prep_endpoint(
+def test_prep_exclude_languages(
     elp: colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep,
     input: dict,
     expected: dict,
