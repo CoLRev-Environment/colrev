@@ -3,26 +3,31 @@ import os
 import shutil
 from pathlib import Path
 
+import git
 import pytest
 
 import colrev.review_manager
 
-test_data_path = Path()
 
+class Helpers:
+    test_data_path = Path(__file__).parent / Path("data")
 
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
+    @staticmethod
+    def retrieve_test_file(*, source: Path, target: Path) -> None:
+        target.parent.mkdir(exist_ok=True, parents=True)
+        shutil.copy(
+            Helpers.test_data_path / source,
+            target,
+        )
 
 
 @pytest.fixture(scope="session")
-def base_repo_review_manager(session_mocker, tmp_path_factory):  # type: ignore
-    global test_data_path
-    test_data_path = Path(__file__) / Path("data")
+def helpers():  # type: ignore
+    return Helpers
 
+
+@pytest.fixture(scope="session")
+def base_repo_review_manager_setup(session_mocker, tmp_path_factory):  # type: ignore
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
@@ -44,4 +49,16 @@ def base_repo_review_manager(session_mocker, tmp_path_factory):  # type: ignore
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
+    repo = git.Repo()
+    commit = repo.head.object.hexsha
+    review_manager.commit = commit
     return review_manager
+
+
+@pytest.fixture
+def base_repo_review_manager(base_repo_review_manager_setup):  # type: ignore
+    """Resets the repo state for base_repo_review_manager_setup"""
+    os.chdir(str(base_repo_review_manager_setup.path))
+    repo = git.Repo(base_repo_review_manager_setup.path)
+    repo.git.reset("--hard", base_repo_review_manager_setup.commit)
+    return base_repo_review_manager_setup

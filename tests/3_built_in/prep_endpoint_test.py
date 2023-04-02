@@ -5,7 +5,7 @@ import colrev.ops.built_in.prep.exclude_languages
 import colrev.ops.prep
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture
 def prep_operation(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> colrev.ops.prep.Prep:
@@ -13,7 +13,7 @@ def prep_operation(
     return prep_operation
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture
 def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep:

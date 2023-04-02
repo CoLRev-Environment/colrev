@@ -22,14 +22,6 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
-
-
 @pytest.fixture(scope="module")
 def pdf_hash_service(tmp_path_factory: Path, request) -> colrev.env.pdf_hash_service.PDFHashService:  # type: ignore
     global test_data_path
@@ -55,9 +47,9 @@ def pdf_hash_service(tmp_path_factory: Path, request) -> colrev.env.pdf_hash_ser
         (Path("zero-size-pdf.pdf"), "InvalidPDFException"),
     ],
 )
-def test_pdf_hash_service(pdf_path, expected_result, pdf_hash_service) -> None:  # type: ignore
+def test_pdf_hash_service(pdf_path, expected_result, pdf_hash_service, helpers) -> None:  # type: ignore
     target_path = env_dir / Path("data/pdfs/") / pdf_path
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=pdf_path,
         target=target_path,
     )

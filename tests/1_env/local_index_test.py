@@ -21,15 +21,7 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
-
-
-def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
+def test_local_index(mocker, tmp_path, script_loc, helpers) -> None:  # type: ignore
     def test_is_duplicate(local_index, test_records_dict) -> None:  # type: ignore
         record1_colrev_id = colrev.record.Record(
             data=test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
@@ -267,11 +259,11 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
 
     global test_data_path
     test_data_path = script_loc.parent / Path("data")
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
         target=tmp_path / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=Path("WagnerLukyanenkoParEtAl2022.tei.xml"),
         target=tmp_path / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
     )
