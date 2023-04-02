@@ -61,9 +61,26 @@ def __validate_dedupe(
 def __validate_prep(
     *,
     validate_operation: colrev.operation.Operation,
-    validation_details: dict,
+    validation_details: list,
     threshold: float,
 ) -> None:
+    # Note : for testing:
+    # prescreen_excluded_to_validate = [
+    # e for e in validation_details if not e["prescreen_exclusion_mark"]
+    # ]
+    prescreen_excluded_to_validate = [
+        e for e in validation_details if e["prescreen_exclusion_mark"]
+    ]
+    print("Prescreen excluded:")
+    for i, validation_detail in enumerate(prescreen_excluded_to_validate):
+        print(i)
+        colrev.record.Record(
+            data=validation_detail["record_dict"]
+        ).print_citation_format()
+
+    # TODO : print all, allow users to undo (-> needs_manual_preparation)
+    # by selecting number of record
+
     displayed = False
     for validation_element in validation_details:
         if validation_element["change_score"] < threshold:
