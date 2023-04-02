@@ -395,6 +395,16 @@ class Dedupe(colrev.operation.Operation):
 
         return is_cross_level_merge_attempt
 
+    def __gids_conflict(
+        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+    ) -> bool:
+        gid_conflict = False
+
+        if main_record.data.get("doi", "doi-a") != dupe_record.data.get("doi", "doi-b"):
+            gid_conflict = True
+
+        return gid_conflict
+
     def __print_merge_stats(
         self,
         *,
@@ -487,6 +497,15 @@ class Dedupe(colrev.operation.Operation):
                 ):
                     self.review_manager.logger.debug(
                         "Prevented cross-level merge: "
+                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                    )
+                    continue
+
+                if self.__gids_conflict(
+                    main_record=main_record, dupe_record=dupe_record
+                ):
+                    self.review_manager.logger.debug(
+                        "Prevented merge with conflicting global IDs: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
                     continue
@@ -860,6 +879,67 @@ class Dedupe(colrev.operation.Operation):
         results = [{"ID1": merge_ids[0], "ID2": merge_ids[1], "decision": "duplicate"}]
         self.apply_merges(results=results)
 
+    def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
+        """Merge records based on global IDs (e.g., doi)"""
+
+        # pylint: disable=too-many-branches
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        global_keys = ["doi", "colrev_id", "pubmedid", "dblp_key", "url"]
+        if "colrev_id" in global_keys:
+            for record in records.values():
+                try:
+                    record["colrev_id"] = colrev.record.Record(
+                        data=record
+                    ).create_colrev_id()
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
+                    pass
+
+        results = []
+        for global_key in global_keys:
+            key_dict: typing.Dict[str, list] = {}
+            for record in records.values():
+                if global_key not in record:
+                    continue
+                if record[global_key] in key_dict:
+                    key_dict[record[global_key]].append(record["ID"])
+                else:
+                    key_dict[record[global_key]] = [record["ID"]]
+
+            key_dict = {k: v for k, v in key_dict.items() if len(v) > 1}
+            for record_ids in key_dict.values():
+                for ref_rec_id in range(1, len(record_ids)):
+                    results.append(
+                        {
+                            "ID1": record_ids[0],
+                            "ID2": record_ids[ref_rec_id],
+                            "decision": "duplicate",
+                        }
+                    )
+
+        if apply:
+            self.review_manager.settings.dedupe.same_source_merges = (
+                colrev.settings.SameSourceMergePolicy.warn
+            )
+            self.apply_merges(results=results)
+            self.review_manager.create_commit(
+                msg="Merge records (identical global IDs)"
+            )
+
+        elif results:
+            print()
+            self.review_manager.logger.info("Found records with identical global-ids:")
+            print(results)
+            self.review_manager.logger.info(
+                f"{colors.ORANGE}To merge records with identical global-ids, "
+                f"run colrev merge -gid{colors.END}"
+            )
+            print()
+
+        else:
+            print()
+
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
 
@@ -873,6 +953,8 @@ class Dedupe(colrev.operation.Operation):
 
         if not self.review_manager.high_level_operation:
             print()
+
+        self.merge_based_on_global_ids(apply=True)
 
         package_manager = self.review_manager.get_package_manager()
         for (

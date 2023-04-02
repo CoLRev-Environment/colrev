@@ -723,6 +723,12 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     "or non_duplicates_to_validate.xlsx or "
     "a dupes.txt file containing comma-separated ID tuples",
 )
+@click.option(
+    "-gid",
+    help="Merge records with identical global IDs (e.g., DOI)",
+    is_flag=True,
+    default=False,
+)
 @click.option("-v", "--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
     "-v",
@@ -744,6 +750,7 @@ def dedupe(
     merge: str,
     unmerge: str,
     fix_errors: bool,
+    gid: bool,
     view: bool,
     verbose: bool,
     force: bool,
@@ -769,7 +776,9 @@ def dedupe(
         if unmerge:
             dedupe_operation.unmerge_records(current_record_ids=unmerge.split(","))
             return
-
+        if gid:
+            dedupe_operation.merge_based_on_global_ids(apply=True)
+            return
         if fix_errors:
             dedupe_operation.fix_errors()
             print(

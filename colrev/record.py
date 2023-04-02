@@ -1631,6 +1631,12 @@ class Record:
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 
+        # Safeguard against titles that are rarely distinct
+        if any(x in srep for x in ["|minitrack-introduction|"]):
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                msg="Title typically non-distinct", missing_fields=["title"]
+            )
+
         return srep
 
     def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
