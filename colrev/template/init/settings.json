@@ -8,7 +8,8 @@
         "id_pattern": "three_authors_year",
         "share_stat_req": "processed",
         "delay_automated_processing": false,
-        "colrev_version": "-"
+        "colrev_version": "-",
+        "auto_upgrade": true
     },
     "sources": [
         {
