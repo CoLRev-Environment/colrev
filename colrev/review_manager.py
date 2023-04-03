@@ -131,9 +131,10 @@ class ReviewManager:
             self.environment_manager = self.get_environment_manager()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+            # run update before settings/data (which may require changes/fail without update)
+            self.__check_update()
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
-            self.__check_update()
 
         except Exception as exc:  # pylint: disable=broad-except
             if force_mode:
@@ -143,8 +144,6 @@ class ReviewManager:
                 raise exc
 
     def __check_update(self) -> None:
-        if not hasattr(self, "dataset"):
-            return
         # Once the following has run for all repositories,
         # it should only be called when the versions differ.
         # last_version, current_version = self.get_colrev_versions()
