@@ -71,6 +71,10 @@ class Validate(colrev.operation.Operation):
             if "changed_in_target_commit" not in record_dict:
                 continue
             del record_dict["changed_in_target_commit"]
+            prescreen_excluded = (
+                colrev.record.RecordState.rev_prescreen_excluded
+                == record_dict["colrev_status"]
+            )
             del record_dict["colrev_status"]
             for cur_record_link in record_dict["colrev_origin"]:
                 prior_records = [
@@ -89,6 +93,7 @@ class Validate(colrev.operation.Operation):
                                 "prior_record_dict": prior_record_dict,
                                 "record_dict": record_dict,
                                 "change_score": change_score,
+                                "prescreen_exclusion_mark": prescreen_excluded,
                             }
                         )
                         covered_ids.append(record_dict["ID"])

@@ -933,7 +933,6 @@ class PackageManager:
                     else:
                         endpoint_item["api_search"] = "NA"
                     endpoint_item["link"] = f"`{endpoint.short_name} <{link}>`_"
-                    endpoint_item["instructions"] = f"`Instructions <{code_link}>`_"
 
             endpoint_list += package_endpoints["endpoints"][endpoint_type]
 

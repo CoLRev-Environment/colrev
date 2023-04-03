@@ -19,6 +19,7 @@ colrev.ops.prep\_man.PrepMan
       ~PrepMan.check_precondition
       ~PrepMan.get_data
       ~PrepMan.main
+      ~PrepMan.prep_man_langs
       ~PrepMan.prep_man_stats
       ~PrepMan.set_data
 

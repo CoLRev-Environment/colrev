@@ -108,10 +108,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for ABI/INFORM (ProQuest)",
             "ci_supported": false,
-            "link": "`ABI/INFORM (ProQuest) <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
+            "link": "`ABI/INFORM (ProQuest) <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.acm_digital_library",
@@ -120,10 +119,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the ACM digital Library",
             "ci_supported": false,
-            "link": "`ACM Digital Library <https://dl.acm.org/>`_",
+            "link": "`ACM Digital Library <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.ais_library",
@@ -132,10 +130,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the AIS electronic Library (AISeL)",
             "ci_supported": true,
-            "link": "`AIS eLibrary <https://aisel.aisnet.org/>`_",
+            "link": "`AIS eLibrary <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.colrev_project",
@@ -144,10 +141,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a search in a CoLRev project",
             "ci_supported": true,
-            "link": "`CoLRev project <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.py>`_",
+            "link": "`CoLRev project <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.crossref",
@@ -156,10 +152,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for the Crossref API",
             "ci_supported": true,
-            "link": "`Crossref <https://www.crossref.org/>`_",
+            "link": "`Crossref <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.md>`_",
             "heuristic": "ONI",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
@@ -168,10 +163,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for DBLP",
             "ci_supported": true,
-            "link": "`DBLP <https://dblp.org/>`_",
+            "link": "`DBLP <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.ebsco_host",
@@ -180,10 +174,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for EBSCOHost",
             "ci_supported": false,
-            "link": "`EBSCOHost <https://search.ebscohost.com/>`_",
+            "link": "`EBSCOHost <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.eric",
@@ -192,10 +185,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for ERIC",
             "ci_supported": false,
-            "link": "`ERIC <https://eric.ed.gov/>`_",
+            "link": "`ERIC <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_",
             "heuristic": "ONI",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
@@ -204,10 +196,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Europe PMC",
             "ci_supported": true,
-            "link": "`Europe PMC <https://europepmc.org/>`_",
+            "link": "`Europe PMC <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.google_scholar",
@@ -216,10 +207,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for GoogleScholar",
             "ci_supported": false,
-            "link": "`GoogleScholar <https://scholar.google.de/>`_",
+            "link": "`GoogleScholar <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.ieee",
@@ -228,10 +218,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for IEEEXplore",
             "ci_supported": false,
-            "link": "`IEEE Xplore <https://ieeexplore.ieee.org/>`_",
+            "link": "`IEEE Xplore <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
@@ -240,10 +229,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for JSTOR",
             "ci_supported": false,
-            "link": "`JSTOR <https://www.jstor.org/>`_",
+            "link": "`JSTOR <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
@@ -252,10 +240,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a search in the LocalIndex",
             "ci_supported": true,
-            "link": "`LocalIndex <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.py>`_",
+            "link": "`LocalIndex <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.open_citations_forward_search",
@@ -264,10 +251,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a forward search based on OpenCitations",
             "ci_supported": true,
-            "link": "`OpenCitations forward search <https://opencitations.net/>`_",
+            "link": "`OpenCitations forward search <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
@@ -276,10 +262,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "Performs a backward search extracting references from PDFs using GROBID",
             "ci_supported": false,
-            "link": "`PDF backward search <https://github.com/kermitt2/grobid>`_",
+            "link": "`PDF backward search <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.pdfs_dir",
@@ -288,10 +273,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for PDF directories (based on GROBID)",
             "ci_supported": false,
-            "link": "`PDF directory <https://github.com/kermitt2/grobid>`_",
+            "link": "`PDF directory <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.psycinfo",
@@ -300,10 +284,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for PsycINFO",
             "ci_supported": false,
-            "link": "`PsycInfo (APA) <https://www.apa.org/pubs/databases/psycinfo>`_",
+            "link": "`PsycInfo (APA) <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.md>`_",
             "heuristic": "ONI",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
@@ -312,10 +295,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Pubmed",
             "ci_supported": true,
-            "link": "`PubMed <https://pubmed.ncbi.nlm.nih.gov/>`_",
+            "link": "`PubMed <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.scopus",
@@ -324,10 +306,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for scopus",
             "ci_supported": false,
-            "link": "`Scopus <http://www.scopus.com>`_",
+            "link": "`Scopus <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.springer_link",
@@ -336,10 +317,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Springer Link",
             "ci_supported": false,
-            "link": "`Springer Link <https://link.springer.com/>`_",
+            "link": "`Springer Link <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.systematic_review_datasets",
@@ -348,10 +328,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for systematic-review-datasets",
             "ci_supported": false,
-            "link": "`systematic-review-datasets <https://about.proquest.com/en/products-services/abi_inform_complete/>`_",
+            "link": "`systematic-review-datasets <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.taylor_and_francis",
@@ -360,10 +339,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Taylor and Francis",
             "ci_supported": false,
-            "link": "`Taylor and Francis <https://www.tandfonline.com/>`_",
+            "link": "`Taylor and Francis <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.trid",
@@ -372,10 +350,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Transport Research International Documentation",
             "ci_supported": false,
-            "link": "`TRID <https://trid.trb.org/>`_",
+            "link": "`TRID <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/trid.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/trid.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
@@ -384,10 +361,9 @@
             "status_linked": "`\ud83d\udfe1 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for unknown search results",
             "ci_supported": false,
-            "link": "`Unknown Source <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.py>`_",
+            "link": "`Unknown Source <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`_",
             "heuristic": "NA",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.video_dir",
@@ -396,10 +372,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for directory containing video files",
             "ci_supported": false,
-            "link": "`Video directory <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.py>`_",
+            "link": "`Video directory <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.md>`_",
             "heuristic": "Supported",
-            "api_search": "Supported",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.md>`_"
+            "api_search": "Supported"
         },
         {
             "package_endpoint_identifier": "colrev.web_of_science",
@@ -408,10 +383,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Web of Science",
             "ci_supported": false,
-            "link": "`Web of Science <https://www.webofknowledge.com>`_",
+            "link": "`Web of Science <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.md>`_"
+            "api_search": "NA"
         },
         {
             "package_endpoint_identifier": "colrev.wiley",
@@ -420,10 +394,9 @@
             "status_linked": "`\ud83d\udd34 <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_",
             "short_description": "SearchSource for Wiley",
             "ci_supported": false,
-            "link": "`Wiley <https://onlinelibrary.wiley.com/>`_",
+            "link": "`Wiley <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.md>`_",
             "heuristic": "Supported",
-            "api_search": "NA",
-            "instructions": "`Instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.md>`_"
+            "api_search": "NA"
         }
     ],
     "load_conversion": [

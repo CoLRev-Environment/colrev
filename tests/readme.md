@@ -13,8 +13,8 @@
 poetry run pytest
 coverage run -m pytest
 coverage html
-rm coverage.svg
-coverage-badge -o coverage.svg
+rm tests/coverage.svg
+coverage-badge -o tests/coverage.svg
 
 # Keep tests short (check the ones that take most of the time)
 pytest --durations=5

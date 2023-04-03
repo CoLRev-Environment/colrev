@@ -38,3 +38,4 @@ colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
    .. autosummary::
 
       ~TablePrescreen.ci_supported
+      ~TablePrescreen.export_todos_only

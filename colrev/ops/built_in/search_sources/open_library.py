@@ -44,7 +44,10 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
-    link = "https://openlibrary.org/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/open_library.md"
+    )
     __open_library_md_filename = Path("data/search/md_open_library.bib")
 
     def __init__(

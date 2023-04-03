@@ -68,10 +68,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-return-statements
-
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
 
@@ -92,124 +88,53 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.data["language"] = "eng"
             return record
 
-        # Deal with title fields containing titles in two languages
-        if (
-            len(record.data.get("title", "")) > 40
-            and record.data.get("title", "").count("[") == 1
-        ):
-            confidence_values_part1 = (
-                self.language_service.compute_language_confidence_values(
-                    text=record.data["title"].split("[")[0]
-                )
-            )
-            confidence_values_part2 = (
-                self.language_service.compute_language_confidence_values(
-                    text=record.data["title"].split("[")[1]
-                )
-            )
-
-            if len(confidence_values_part1) == 0 or len(confidence_values_part2) == 0:
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                return record
-
-            lang_1, conf_1 = confidence_values_part1[0]
-            lang_2, conf_2 = confidence_values_part2[0]
-
-            if conf_1 < 0.8 and conf_2 < 0.8:
-                record.update_field(
-                    key="title",
-                    value=record.data.get("title", ""),
-                    source="",
-                    note="quality_defect,language-not-found",
-                    append_edit=True,
-                )
-                record.remove_field(key="language")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                return record
-
-            if "eng" == lang_1:
-                record.update_field(
-                    key=f"title_{lang_2}",
-                    value=record.data["title"].split("[")[1].rstrip("]"),
-                    source="LanguageDetector_split",
-                )
-                record.update_field(
-                    key="title",
-                    value=record.data["title"].split("[")[0].rstrip(),
-                    source="LanguageDetector_split",
-                )
-                record.update_field(
-                    key="language",
-                    value="eng",
-                    source="LanguageDetector",
-                    note="",
-                )
-            else:
-                record.update_field(
-                    key=f"title_{lang_1}",
-                    value=record.data["title"].split("[")[0].rstrip(),
-                    source="LanguageDetector_split",
-                )
-                record.update_field(
-                    key="title",
-                    value=record.data["title"].split("[")[1].rstrip(),
-                    source="LanguageDetector_split",
-                )
-                record.update_field(
-                    key="language",
-                    value="eng",
-                    source="LanguageDetector",
-                    note="",
-                )
-                record.prescreen_exclude(
-                    reason=f"language of title(s) not in [{','.join(self.languages_to_include)}]"
-                )
-
-            return record
-
-        confidence_values = self.language_service.compute_language_confidence_values(
-            text=record.data["title"]
-        )
-
-        if len(confidence_values) == 0:
-            record.update_field(
-                key="title",
-                value=record.data.get("title", ""),
-                source="LanguageDetector",
-                note="cannot_predict_language",
-            )
-            record.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
-            return record
-
-        predicted_language, conf = confidence_values.pop(0)
-
-        if conf > 0.8:
+        if record.data.get("title", "").count("[") == 0:
+            language = self.language_service.compute_language(text=record.data["title"])
             record.update_field(
                 key="language",
-                value=predicted_language,
+                value=language,
                 source="LanguageDetector",
                 note="",
                 append_edit=False,
             )
-
         else:
+            # Deal with title fields containing titles in two or more languages
+            split_titles = [
+                x.rstrip().rstrip("]") for x in record.data["title"].split("[")
+            ]
+            for i, split_title in enumerate(split_titles):
+                lang_split_title = self.language_service.compute_language(
+                    text=split_title
+                )
+                if 0 == i:
+                    record.update_field(
+                        key="title",
+                        value=split_title.rstrip(),
+                        source="LanguageDetector_split",
+                    )
+                    record.update_field(
+                        key="language",
+                        value=lang_split_title,
+                        source="LanguageDetector_split",
+                    )
+                else:
+                    record.update_field(
+                        key=f"title_{lang_split_title}",
+                        value=split_title.rstrip("]"),
+                        source="LanguageDetector_split",
+                    )
+
+        if "" == record.data.get("language", ""):
             record.update_field(
                 key="title",
                 value=record.data.get("title", ""),
-                source="",
-                note="quality_defect,language-not-found",
-                append_edit=True,
+                source="LanguageDetector",
+                note="language-not-found",
             )
-            record.remove_field(key="language")
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
+            return record
 
         if record.data.get("language", "") not in self.languages_to_include:
             record.prescreen_exclude(

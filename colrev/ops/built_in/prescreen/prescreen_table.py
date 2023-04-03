@@ -33,6 +33,7 @@ class TablePrescreen(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    export_todos_only: bool = True
 
     def __init__(
         self,
@@ -82,13 +83,15 @@ class TablePrescreen(JsonSchemaMixin):
 
             if colrev.record.RecordState.md_processed == record["colrev_status"]:
                 inclusion_1 = "TODO"
+            elif self.export_todos_only:
+                continue
             elif (
                 colrev.record.RecordState.rev_prescreen_excluded
                 == record["colrev_status"]
             ):
-                inclusion_1 = "no"
+                inclusion_1 = "out"
             else:
-                inclusion_1 = "yes"
+                inclusion_1 = "in"
 
             # pylint: disable=duplicate-code
             row = {
@@ -117,6 +120,15 @@ class TablePrescreen(JsonSchemaMixin):
             screen_df.to_excel("prescreen.xlsx", index=False, sheet_name="screen")
             prescreen_operation.review_manager.logger.info("Created prescreen.xlsx")
 
+        prescreen_operation.review_manager.logger.info(
+            f"To prescreen records, {colors.ORANGE}enter [in|out] "
+            f"in the presceen_inclusion column.{colors.END}"
+        )
+        prescreen_operation.review_manager.logger.info(
+            f"Afterwards, run {colors.ORANGE}colrev prescreen --import_table "
+            f"prescreen.{export_table_format.lower()}{colors.END}"
+        )
+
     def import_table(
         self,
         *,
@@ -125,6 +137,8 @@ class TablePrescreen(JsonSchemaMixin):
         import_table_path: str = "prescreen.csv",
     ) -> None:
         """Import a prescreen table"""
+
+        # pylint: disable=too-many-branches
 
         prescreen_operation.review_manager.logger.info(f"Load {import_table_path}")
 
@@ -151,8 +165,19 @@ class TablePrescreen(JsonSchemaMixin):
         for prescreened_record in prescreened_records:
             if prescreened_record.get("ID", "") in records:
                 record = records[prescreened_record.get("ID", "")]
+                if record[
+                    "colrev_status"
+                ] in colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.rev_prescreen_included
+                ):
+                    if (
+                        "in" == prescreened_record.get("presceen_inclusion", "")
+                        and colrev.record.RecordState.rev_prescreen_excluded
+                        != record["colrev_status"]
+                    ):
+                        continue
 
-                if "no" == prescreened_record.get("presceen_inclusion", ""):
+                if "out" == prescreened_record.get("presceen_inclusion", ""):
                     if (
                         record["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_excluded
@@ -162,7 +187,7 @@ class TablePrescreen(JsonSchemaMixin):
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_excluded
 
-                elif "yes" == prescreened_record.get("presceen_inclusion", ""):
+                elif "in" == prescreened_record.get("presceen_inclusion", ""):
                     if (
                         record["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_included

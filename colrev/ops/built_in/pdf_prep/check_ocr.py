@@ -53,13 +53,11 @@ class PDFCheckOCR(JsonSchemaMixin):
         confidence_values = self.language_service.compute_language_confidence_values(
             text=text
         )
-        for lang, conf in confidence_values:
-            if "eng" == lang:
-                if conf > 0.85:
-                    return True
-            # else:
-            #     print(text)
-            #     print(conf)
+        lang, conf = confidence_values.pop(0)
+        if "eng" == lang:
+            if conf > 0.1:
+                return True
+
         return False
 
     def __apply_ocr(

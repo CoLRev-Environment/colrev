@@ -44,7 +44,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     short_name = "LocalIndex"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/local_index.py"
+        + "colrev/ops/built_in/search_sources/local_index.md"
     )
     __local_index_md_filename = Path("data/search/md_curated.bib")
 
@@ -384,6 +384,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
+        # pylint: disable=too-many-return-statements
 
         if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
             # Already linked to a local-index record
@@ -446,10 +447,20 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         include_file=False,
                         search_across_tocs=True,
                     )
-                except (
-                    colrev_exceptions.RecordNotInIndexException,
-                    colrev_exceptions.RecordNotInTOCException,
-                ):
+                except colrev_exceptions.RecordNotInTOCException as exc:
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_needs_manual_preparation
+                    )
+                    if "journal" in record.data:
+                        record.add_masterdata_provenance_note(
+                            key="journal", note=f"record_not_in_toc {exc.toc_key}"
+                        )
+                    elif "booktitle" in record.data:
+                        record.add_masterdata_provenance_note(
+                            key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
+                        )
+                    return record
+                except (colrev_exceptions.RecordNotInIndexException,):
                     return record
             except colrev_exceptions.NotTOCIdentifiableException:
                 return record

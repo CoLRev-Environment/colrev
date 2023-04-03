@@ -481,6 +481,8 @@ class Record:
         md_p_dict = self.data["colrev_masterdata_provenance"]
 
         for identifying_field_key in self.identifying_field_keys:
+            if identifying_field_key in ["author", "title", "year"]:
+                continue
             if "UNKNOWN" == self.data.get(identifying_field_key, "NA"):
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
@@ -1629,6 +1631,12 @@ class Record:
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 
+        # Safeguard against titles that are rarely distinct
+        if any(x in srep for x in ["|minitrack-introduction|"]):
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                msg="Title typically non-distinct", missing_fields=["title"]
+            )
+
         return srep
 
     def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
@@ -1798,10 +1806,14 @@ class Record:
                     .lower()
                 )
                 toc_key += (
-                    f"|{self.data['volume']}" if ("volume" in self.data) else "|-"
+                    f"|{self.data['volume']}"
+                    if ("UNKNOWN" != self.data.get("volume", "UNKNOWN"))
+                    else "|-"
                 )
                 toc_key += (
-                    f"|{self.data['number']}" if ("number" in self.data) else "|-"
+                    f"|{self.data['number']}"
+                    if ("UNKNOWN" != self.data.get("number", "UNKNOWN"))
+                    else "|-"
                 )
 
             elif "inproceedings" == self.data["ENTRYTYPE"]:

@@ -40,7 +40,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
     short_name = "Video directory"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/video_dir.py"
+        + "colrev/ops/built_in/search_sources/video_dir.md"
     )
 
     def __init__(

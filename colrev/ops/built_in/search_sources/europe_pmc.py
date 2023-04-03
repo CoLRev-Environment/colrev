@@ -52,7 +52,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
-    link = "https://europepmc.org/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/europe_pmc.md"
+    )
     __europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
 
     @dataclass

@@ -2,8 +2,13 @@
 """CoLRev prep_man operation: Prepare metadata manually."""
 from __future__ import annotations
 
-import pandas as pd
+import csv
+from pathlib import Path
 
+import pandas as pd
+from tqdm import tqdm
+
+import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
@@ -86,6 +91,91 @@ class PrepMan(colrev.operation.Operation):
         self.review_manager.p_printer.pprint(stats["ENTRYTYPE"])
 
         return pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
+
+    def prep_man_langs(self) -> None:
+        """Add missing language fields based on spreadsheets"""
+
+        lang_prep_csv_path = self.review_manager.prep_dir / Path(
+            "missing_lang_recs_df.csv"
+        )
+        lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        if not lang_prep_csv_path.is_file():
+            language_service = colrev.env.language_service.LanguageService()
+
+            missing_lang_recs = []
+            self.review_manager.logger.info(
+                "Calculate most likely languages for records without language field"
+            )
+            for record in tqdm(records.values()):
+                if "title" not in record:
+                    continue
+                if "language" not in record:
+                    confidence_values = (
+                        language_service.compute_language_confidence_values(
+                            text=record["title"]
+                        )
+                    )
+                    predicted_language, conf = confidence_values.pop(0)
+
+                    lang_rec = {
+                        "ID": record["ID"],
+                        "title": record["title"],
+                        "most_likely_language": predicted_language,
+                        "confidence": conf,
+                    }
+                    missing_lang_recs.append(lang_rec)
+
+            missing_lang_recs_df = pd.DataFrame(missing_lang_recs)
+            missing_lang_recs_df.to_csv(
+                lang_prep_csv_path, index=False, quoting=csv.QUOTE_ALL
+            )
+            self.review_manager.logger.info(f"Exported table to {lang_prep_csv_path}")
+            self.review_manager.logger.info(
+                "Update the language column and rerun colrev prep-man -l"
+            )
+
+        else:
+            self.review_manager.logger.info(
+                f"Import language fields from {lang_prep_csv_path}"
+            )
+            languages_df = pd.read_csv(lang_prep_csv_path)
+            language_records = languages_df.to_dict("records")
+            for language_record in language_records:
+                if "" == language_record["most_likely_language"]:
+                    continue
+                if language_record["ID"] not in records:
+                    # warn
+                    continue
+                record_dict = records[language_record["ID"]]
+                record = colrev.record.Record(data=record_dict)
+                record.update_field(
+                    key="language",
+                    value=language_record["most_likely_language"],
+                    source="LanguageDetector/Manual",
+                    note="",
+                )
+                if "language of title not in [eng]" == record.data.get(
+                    "prescreen_exclusion", ""
+                ):
+                    record.remove_field(key="prescreen_exclusion")
+                    if "title" in record.data["colrev_masterdata_provenance"]:
+                        record.data["colrev_masterdata_provenance"]["title"][
+                            "note"
+                        ] = ""
+                    if (
+                        record.data["colrev_status"]
+                        == colrev.record.RecordState.md_needs_manual_preparation
+                    ):
+                        # by resetting to md_imported,
+                        # the prescreen-exclusion based on languages will be reapplied.
+                        record.data[
+                            "colrev_status"
+                        ] = colrev.record.RecordState.md_imported
+
+            self.review_manager.dataset.save_records_dict(records=records)
 
     def prep_man_stats(self) -> None:
         """Print statistics on prep_man"""

@@ -50,6 +50,18 @@ def language_service() -> colrev.env.language_service.LanguageService:  # type: 
             "An Integrated Framework for Understanding Digital Work in Organizations",
             ("eng", 0.9),
         ),
+        (
+            "Editorial",
+            ("eng", 0.9),
+        ),
+        (
+            "Introduction",
+            ("eng", 0.9),
+        ),
+        (
+            "“Escaping the rat race”: Justifications in digital nomadism",
+            ("eng", 0.45),
+        ),
     ],
 )
 def test_compute_language_confidence_values(
@@ -65,6 +77,36 @@ def test_compute_language_confidence_values(
     # predicted_lang = predicted_lang.name.lower()
     assert expected_lang == predicted_lang  # type: ignore
     assert expected_conf < predicted_conf  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "text, expected_lang",
+    [
+        (
+            "An Integrated Framework for Understanding Digital Work in Organizations",
+            "eng",
+        ),
+        (
+            "Editorial",
+            "eng",
+        ),
+        (
+            "Introduction",
+            "eng",
+        ),
+        (
+            "“Escaping the rat race”: Justifications in digital nomadism",
+            "eng",
+        ),
+    ],
+)
+def test_compute_language(
+    text: str,
+    expected_lang: str,
+    language_service: colrev.env.language_service.LanguageService,
+) -> None:
+    predicted_lang = language_service.compute_language(text=text)
+    assert expected_lang == predicted_lang
 
 
 @pytest.mark.parametrize(

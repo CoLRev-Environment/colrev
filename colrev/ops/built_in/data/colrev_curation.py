@@ -374,6 +374,14 @@ class ColrevCuration(JsonSchemaMixin):
                 "detailed_msg": "records missing language field: ",
             }
 
+        if not self.settings.masterdata_restrictions:
+            advice = {
+                "msg": "Curation: masterdata_restrictions not set. See "
+                + "https://github.com/CoLRev-Environment/colrev/blob/main/"
+                + "colrev/ops/built_in/data/colrev_curation.md for details.",
+                "detailed_msg": "records missing language field: ",
+            }
+
         return advice
 
 

@@ -59,7 +59,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    link = "https://www.crossref.org/"
+    link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/crossref.md"
+    )
     short_name = "Crossref"
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 
@@ -808,17 +811,17 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.add_record_changes()
 
         except (
-            requests.exceptions.JSONDecodeError,
             requests.exceptions.Timeout,
+            requests.exceptions.JSONDecodeError,
         ) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    "Crossref (check https://status.crossref.org/)"
+                    f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
                 )
             raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({exc})"
+                f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
             )
 
     def run_search(

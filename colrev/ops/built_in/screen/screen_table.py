@@ -30,6 +30,7 @@ class TableScreen(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    export_todos_only: bool = True
 
     screen_table_path = Path("screen/screen.csv")
 
@@ -65,14 +66,16 @@ class TableScreen(JsonSchemaMixin):
             inclusion_2 = "NA"
 
             if colrev.record.RecordState.pdf_prepared == record["colrev_status"]:
-                inclusion_2 = "TODO (yes/no)"
+                inclusion_2 = "TODO"
+            elif self.export_todos_only:
+                continue
             if colrev.record.RecordState.rev_excluded == record["colrev_status"]:
-                inclusion_2 = "no"
+                inclusion_2 = "out"
             if record["colrev_status"] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
             ]:
-                inclusion_2 = "yes"
+                inclusion_2 = "in"
 
             # pylint: disable=duplicate-code
             row = {
@@ -97,7 +100,7 @@ class TableScreen(JsonSchemaMixin):
                 # Code criteria
                 screening_criteria_field = record.get("screening_criteria", "")
                 if screening_criteria_field == "":
-                    # and inclusion_2 == "yes"
+                    # and inclusion_2 == "in"
                     for criterion_name in screening_criteria.keys():
                         row[criterion_name] = "TODO (in/out)"
                 else:
@@ -180,9 +183,9 @@ class TableScreen(JsonSchemaMixin):
             if screened_record.get("ID", "") in records:
                 record = records[screened_record.get("ID", "")]
                 if "screen_inclusion" in screened_record:
-                    if "yes" == screened_record["screen_inclusion"]:
+                    if "in" == screened_record["screen_inclusion"]:
                         record["colrev_status"] = colrev.record.RecordState.rev_included
-                    elif "no" == screened_record["screen_inclusion"]:
+                    elif "out" == screened_record["screen_inclusion"]:
                         record["colrev_status"] = colrev.record.RecordState.rev_excluded
                     else:
                         print(
