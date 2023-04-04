@@ -30,6 +30,7 @@ def ssp_review_manager(base_repo_review_manager) -> colrev.review_manager.Review
         (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
         (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
         (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
+        # (Path("europe_pmc.bib"), "colrev.europe_pmc", Path("europe_pmc_result.bib")),
     ],
 )
 def test_source(  # type: ignore
@@ -49,11 +50,12 @@ def test_source(  # type: ignore
         target=Path("data/search/") / source_filepath,
     )
 
-    # Run load and test heuristics
+    # Run load and test the heuristics
     load_operation = ssp_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation.main(new_sources=new_sources)
     actual_source_identifier = ssp_review_manager.settings.sources[0].endpoint
+    # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
 
     # Run prep nad test source-specific prep
