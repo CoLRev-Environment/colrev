@@ -9,11 +9,12 @@
 - Collect release notes and update the `CHANGELOG.md`.
 - Update version in `CITATION.cff`.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated.
-- Update the [roadmap](https://colrev.readthedocs.io/en/latest/foundations/roadmap.html)
+- Update the Github milestones, make plans for the next milestones
 - Commit the changes.
+- Run `pip3 install -e .` locally (before testing upgrade in local repositories).
+- Check whether the tests pass locally (``pytest tests``).
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION`.
-- Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Test `colrev upgrade` in local repositories
 - Run `git push --atomic origin main $VERSION`.
 
@@ -23,4 +24,4 @@
     - Publish the release
     - The PyPI version is published through a [github action](https://github.com/CoLRev-Environment/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
     - The zenodo version is published automatically
-    - Trigger/test the Github-action in a curated metadata repository
+    - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)

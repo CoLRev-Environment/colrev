@@ -3,28 +3,31 @@ name: Run colrev update
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 2 * * *'
+    - cron: '10 2 * * 3'
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout this repository
-        uses: actions/checkout@v2
-      - run: |
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Install CoLRev
+        run: |
           pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
-      - name: delete-branch
-        uses: dawidd6/action-delete-branch@v3
-        with:
-          github_token: ${{github.token}}
-          branches: colrev-update
-          soft_fail: true
-      - run: |
+      - name: Setup git
+        run: |
           git config user.name "CoLRev update"
           git config user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
-          git branch colrev-update
-          git checkout colrev-update
+      - name: Set branch name
+        run: |
+          echo "BRANCH_NAME=colrev-update-$(date '+%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+          echo ${{ env.BRANCH_NAME }}
+      - name: Switch to branch ${{ env.BRANCH_NAME }}
+        run: |
+          git checkout -b ${{ env.BRANCH_NAME }}
+      - name: Run CoLRev update
+        run: |
           colrev search -f
           colrev load
           colrev prep
@@ -32,14 +35,14 @@ jobs:
           colrev prescreen
           colrev pdfs
           colrev screen
-          git push --set-upstream origin colrev-update
-      - name: pull-request
+          git push --set-upstream origin ${{ env.BRANCH_NAME }}
+      - name: Create pull request
         uses: repo-sync/pull-request@v2
         with:
-          source_branch: "colrev-update"
+          source_branch: "${{ env.BRANCH_NAME }}"
           destination_branch: "main"
-          pr_title: "Pull colrev search updates"
+          pr_title: "Pull CoLRev updates"
           pr_body: |
             *CoLRev updates*
 
-            _Created by [colrev gh-action updater](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_
+            _Created by [colrev gh-action](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_

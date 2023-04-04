@@ -27,5 +27,6 @@ colrev.ops.upgrade.Upgrade
 
    .. autosummary::
 
+      ~Upgrade.repo
       ~Upgrade.force_mode
       ~Upgrade.type

@@ -43,3 +43,4 @@ colrev.settings.ProjectSettings
       ~ProjectSettings.share_stat_req
       ~ProjectSettings.delay_automated_processing
       ~ProjectSettings.colrev_version
+      ~ProjectSettings.auto_upgrade

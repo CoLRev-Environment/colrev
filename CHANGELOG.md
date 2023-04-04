@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## [0.8.1] - 2023-04-04
+
+### Changed
+
+- Update the Github action workflows in CoLRev repositories
+- Add auto-upgrade flag to settings
+
 ## [0.8.0] - 2023-03-26
 
 ### Added

@@ -118,6 +118,7 @@ class ProjectSettings(JsonSchemaMixin):
     share_stat_req: ShareStatReq
     delay_automated_processing: bool
     colrev_version: str
+    auto_upgrade: bool
 
     def __str__(self) -> str:
         project_str = f"Review ({self.review_type}):"
