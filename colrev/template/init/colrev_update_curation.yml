@@ -9,16 +9,25 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout this repository
+      - name: Checkout the repository
         uses: actions/checkout@v3
-      - run: |
+      - name: Install CoLRev
+        run: |
           pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
-      - run: |
+      - name: Setup git
+        run: |
           git config user.name "CoLRev update"
           git config user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
-          echo "BRANCH_NAME=colrev-update/$(uuidgen)" >> $GITHUB_ENV
+      - name: Set branch name
+        run: |
+          echo "BRANCH_NAME=colrev-update-$(date '+%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+          echo ${{ env.BRANCH_NAME }}
+      - name: Switch to branch ${{ env.BRANCH_NAME }}
+        run: |
           git checkout -b ${{ env.BRANCH_NAME }}
+      - name: Run CoLRev update
+        run: |
           colrev search -f
           colrev load
           colrev prep
@@ -27,13 +36,13 @@ jobs:
           colrev pdfs
           colrev screen
           git push --set-upstream origin ${{ env.BRANCH_NAME }}
-      - name: pull-request
+      - name: Create pull request
         uses: repo-sync/pull-request@v2
         with:
           source_branch: "${{ env.BRANCH_NAME }}"
           destination_branch: "main"
-          pr_title: "Pull colrev search updates"
+          pr_title: "Pull CoLRev updates"
           pr_body: |
             *CoLRev updates*
 
-            _Created by [colrev gh-action updater](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_
+            _Created by [colrev gh-action](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_
