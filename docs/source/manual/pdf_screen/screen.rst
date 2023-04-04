@@ -24,7 +24,7 @@ The selection of screening criteria is recorded when initializing the screen.
     colrev screen --split STR
 
 
-The following options for screen are available:
+The following options for ``screen`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
