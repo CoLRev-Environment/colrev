@@ -327,7 +327,7 @@ class EnvironmentManager:
                             if "UNKNOWN" != booktitle:
                                 outlets.append(booktitle)
 
-                    if len(set(outlets)) != 1:
+                    if len(set(outlets)) > 1:
                         raise colrev_exceptions.CuratedOutletNotUnique(
                             "Error: Duplicate outlets in curated_metadata of "
                             f"{repo_source_path} : {','.join(list(set(outlets)))}"

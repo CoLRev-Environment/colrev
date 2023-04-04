@@ -70,6 +70,7 @@ class ReviewManager:
         high_level_operation: bool = False,
         navigate_to_home_dir: bool = True,
         exact_call: str = "",
+        skip_upgrade: bool = True,
     ) -> None:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
@@ -132,7 +133,8 @@ class ReviewManager:
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
-            self.__check_update()
+            if not skip_upgrade:
+                self.__check_update()
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
 
