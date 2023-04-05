@@ -275,7 +275,8 @@ class GithubPages(JsonSchemaMixin):
             self.__check_gh_pages_setup(git_repo=git_repo)
         else:
             data_operation.review_manager.logger.warning(
-                "Cannot push github pages because there is no remote origin. gh-pages branch will only be created locally."
+                "Cannot push github pages because there is no remote origin. "
+                "gh-pages branch will only be created locally."
             )
             # create branch
             if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
