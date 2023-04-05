@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+import git
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -18,7 +19,6 @@ if False:  # pylint: disable=using-constant-test
 
     if TYPE_CHECKING:
         import colrev.ops.data
-        import git
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -128,6 +128,16 @@ class GithubPages(JsonSchemaMixin):
     ) -> None:
         if not silent_mode:
             data_operation.review_manager.logger.info("Update data on github pages")
+
+        if not Path("pre-commit-config.yaml").is_file():
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/github_pages/pre-commit-config.yaml"),
+                target=Path(".pre-commit-config.yaml"),
+            )
+            data_operation.review_manager.dataset.add_changes(
+                path=Path(".pre-commit-config.yaml")
+            )
+
         records = data_operation.review_manager.dataset.load_records_dict()
 
         # pylint: disable=duplicate-code
@@ -162,7 +172,16 @@ class GithubPages(JsonSchemaMixin):
             data_operation.review_manager.logger.info("Push to github pages")
         if "origin" in git_repo.remotes:
             if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
-                git_repo.git.push("origin", self.GH_PAGES_BRANCH_NAME, "--no-verify")
+                try:
+                    git_repo.remotes.origin.push(
+                        refspec=f"{self.GH_PAGES_BRANCH_NAME}:{self.GH_PAGES_BRANCH_NAME}"
+                    )
+                except git.exc.GitCommandError:  # pylint: disable=no-member
+                    data_operation.review_manager.logger.error(
+                        "Could not push branch gh-pages. Please resolve manually, i.e., run "
+                        f"{colors.ORANGE}git switch gh-pages && "
+                        f"git pull --rebase && git push{colors.END}"
+                    )
             else:
                 git_repo.git.push(
                     "--set-upstream",
@@ -191,14 +210,16 @@ class GithubPages(JsonSchemaMixin):
             .split("/")
         )
         gh_page_link = f"https://{username}.github.io/{project}/"
-        if gh_page_link not in (self.review_manager.path / Path("readme.md")).read_text(
-            encoding="utf-8"
-        ):
-            print(
-                f"{colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
-                "To make it easier to access the page, add the following to the readme.md file:\n"
-                f"\n    [Github page]({gh_page_link}){colors.END}\n"
-            )
+        if Path("readme.md").is_file():
+            if gh_page_link in (self.review_manager.path / Path("readme.md")).read_text(
+                encoding="utf-8"
+            ):
+                return
+        print(
+            f"{colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
+            "To make it easier to access the page, add the following to the readme.md file:\n"
+            f"\n    [Github page]({gh_page_link}){colors.END}\n"
+        )
 
     def update_data(
         self,
