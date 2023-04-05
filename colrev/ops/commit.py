@@ -196,7 +196,10 @@ class Commit:
 
         if self.review_manager.dataset.has_changes():
             self.review_manager.logger.debug("Prepare commit: checks and updates")
-            if "gh-pages" != self.review_manager.dataset.get_repo().active_branch.branch_name:
+            if (
+                "gh-pages"
+                != self.review_manager.dataset.get_repo().active_branch.branch_name
+            ):
                 self.review_manager.update_status_yaml()
                 self.review_manager.dataset.add_changes(
                     path=self.review_manager.STATUS_RELATIVE
