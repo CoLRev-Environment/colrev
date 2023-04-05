@@ -54,7 +54,7 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
     )
 
     review_manager.settings.project.title = "topic a - a review"
-    review_manager.get_init_operation(
+    colrev.review_manager.get_init_operation(
         review_type="literature_review",
         example=False,
         target_path=test_repo_dir,

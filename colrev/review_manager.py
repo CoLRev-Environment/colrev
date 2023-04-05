@@ -474,29 +474,6 @@ class ReviewManager:
 
         return colrev.env.resources.Resources()
 
-    # pylint: disable=too-many-arguments
-    @classmethod
-    def get_init_operation(
-        cls,
-        review_type: str,
-        example: bool = False,
-        light: bool = False,
-        local_pdf_collection: bool = False,
-        target_path: Optional[Path] = None,
-        exact_call: str = "",
-    ) -> colrev.ops.init.Initializer:
-        """Get an init operation object"""
-        import colrev.ops.init
-
-        return colrev.ops.init.Initializer(
-            review_type=review_type,
-            example=example,
-            light=light,
-            local_pdf_collection=local_pdf_collection,
-            target_path=target_path,
-            exact_call=exact_call,
-        )
-
     @classmethod
     def get_sync_operation(cls) -> colrev.ops.sync.Sync:
         """Get a sync operation object"""
@@ -742,6 +719,27 @@ class ReviewManager:
         if identifier:
             identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
+
+
+def get_init_operation(
+    review_type: str,
+    example: bool = False,
+    light: bool = False,
+    local_pdf_collection: bool = False,
+    target_path: Optional[Path] = None,
+    exact_call: str = "",
+) -> colrev.ops.init.Initializer:
+    """Get an init operation object"""
+    import colrev.ops.init
+
+    return colrev.ops.init.Initializer(
+        review_type=review_type,
+        example=example,
+        light=light,
+        local_pdf_collection=local_pdf_collection,
+        target_path=target_path,
+        exact_call=exact_call,
+    )
 
 
 if __name__ == "__main__":
