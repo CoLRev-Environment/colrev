@@ -76,29 +76,28 @@ class GithubPages(JsonSchemaMixin):
         self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
     ) -> None:
         # if branch does not exist: create and add index.html
-        data_operation.review_manager.logger.info("Setup github pages")
-        git_repo.create_head(self.GH_PAGES_BRANCH_NAME)
-        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
-        title = "Manuscript template"
-        readme_file = data_operation.review_manager.readme
-        if readme_file.is_file():
-            with open(readme_file, encoding="utf-8") as file:
-                title = file.readline()
-                title = title.replace("# ", "").replace("\n", "")
-                title = '"' + title + '"'
+        data_operation.review_manager.logger.info("Setup gh-pages branch")
+        git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
         git_repo.git.rm("-rf", Path("."))
 
-        gitignore_file = Path(".gitignore")
-        git_repo.git.checkout("HEAD", "--", gitignore_file)
-        with gitignore_file.open("a", encoding="utf-8") as file:
-            file.write("status.yaml\n")
-        data_operation.review_manager.dataset.add_changes(path=gitignore_file)
+        colrev.env.utils.retrieve_package_file(
+            template_file=Path("template/github_pages/README.md"),
+            target=Path("README.md"),
+        )
+        project_title = data_operation.review_manager.settings.project.title
+        colrev.env.utils.inplace_change(
+            filename=Path("README.md"),
+            old_string="{{project_title}}",
+            new_string=project_title.rstrip(" ").capitalize(),
+        )
+        data_operation.review_manager.dataset.add_changes(path=Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/index.html"),
             target=Path("index.html"),
         )
         data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
+
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/_config.yml"),
             target=Path("_config.yml"),
@@ -106,14 +105,17 @@ class GithubPages(JsonSchemaMixin):
         colrev.env.utils.inplace_change(
             filename=Path("_config.yml"),
             old_string="{{project_title}}",
-            new_string=title,
+            new_string=project_title,
         )
         data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
+
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/about.md"),
             target=Path("about.md"),
         )
         data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
+
+        data_operation.review_manager.create_commit(msg="Setup gh-pages branch")
 
     def __update_data(
         self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo, silent_mode: bool
