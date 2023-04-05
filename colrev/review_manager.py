@@ -309,6 +309,7 @@ class ReviewManager:
         manual_author: bool = False,
         script_call: str = "",
         saved_args: Optional[dict] = None,
+        skip_status_yaml: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
@@ -323,7 +324,7 @@ class ReviewManager:
             script_name=script_call,
             saved_args=saved_args,
         )
-        ret = commit.create()
+        ret = commit.create(skip_status_yaml=skip_status_yaml)
         return ret
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
