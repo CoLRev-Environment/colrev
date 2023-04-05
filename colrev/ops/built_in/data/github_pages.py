@@ -118,7 +118,11 @@ class GithubPages(JsonSchemaMixin):
         data_operation.review_manager.create_commit(msg="Setup gh-pages branch")
 
     def __update_data(
-        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo, silent_mode: bool
+        self,
+        *,
+        data_operation: colrev.ops.data.Data,
+        git_repo: git.Repo,
+        silent_mode: bool,
     ) -> None:
         if not silent_mode:
             data_operation.review_manager.logger.info("Update data on github pages")
@@ -221,12 +225,18 @@ class GithubPages(JsonSchemaMixin):
         if "origin" in git_repo.remotes:
             # check if remote.origin has a gh-pages branch
             git_repo.remotes.origin.fetch()
-            if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [r.name for r in git_repo.remotes.origin.refs]:
+            if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [
+                r.name for r in git_repo.remotes.origin.refs
+            ]:
                 git_repo.pull("origin", self.GH_PAGES_BRANCH_NAME)
 
                 # update
                 git_repo.git.checkout(active_branch)
-                self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
+                self.__update_data(
+                    data_operation=data_operation,
+                    git_repo=git_repo,
+                    silent_mode=silent_mode,
+                )
 
                 # Push gh-pages branch to remote origin
                 if self.settings.auto_push:
@@ -244,7 +254,11 @@ class GithubPages(JsonSchemaMixin):
 
                 # update
                 git_repo.git.checkout(active_branch)
-                self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
+                self.__update_data(
+                    data_operation=data_operation,
+                    git_repo=git_repo,
+                    silent_mode=silent_mode,
+                )
 
                 # Push gh-pages branch to remote origin
                 if self.settings.auto_push:
@@ -267,7 +281,11 @@ class GithubPages(JsonSchemaMixin):
 
             # update
             git_repo.git.checkout(active_branch)
-            self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
+            self.__update_data(
+                data_operation=data_operation,
+                git_repo=git_repo,
+                silent_mode=silent_mode,
+            )
 
         git_repo.git.checkout(active_branch)
 
