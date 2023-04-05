@@ -1,3 +1,7 @@
+body > div.wy-grid-for-nav > nav > div > div.wy-side-nav-search > a {
+    font-size: 150%;
+}
+
 .wy-nav-content {
     max-width: 900px !important;
 }
