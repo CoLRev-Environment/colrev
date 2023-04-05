@@ -25,6 +25,35 @@ if False:  # pylint: disable=using-constant-test
 # pylint: disable=too-few-public-methods
 
 
+class CoLRevVersion:
+    """Class for handling the CoLRev version"""
+
+    def __init__(self, version_string: str) -> None:
+        if "+" in version_string:
+            version_string = version_string[: version_string.find("+")]
+
+        self.major = version_string[: version_string.find(".")]
+        self.minor = version_string[
+            version_string.find(".") + 1 : version_string.rfind(".")
+        ]
+        self.patch = version_string[version_string.rfind(".") + 1 :]
+
+    def __eq__(self, other) -> bool:  # type: ignore
+        return str(self) == str(other)
+
+    def __lt__(self, other) -> bool:  # type: ignore
+        if self.major < other.major:
+            return True
+        if self.minor < other.minor:
+            return True
+        if self.patch < other.patch:
+            return True
+        return False
+
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+
 class Upgrade(colrev.operation.Operation):
     """Upgrade a CoLRev project"""
 
@@ -144,8 +173,7 @@ class Upgrade(colrev.operation.Operation):
             if not migrator["released"]:
                 msg += " (pre-release)"
             review_manager = colrev.review_manager.ReviewManager()
-            review_manager.create_commit(
-                msg=msg,
+            review_manager.create_commit(msg=msg)
 
     def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
         filedata = colrev.env.utils.get_package_file_content(
@@ -257,35 +285,6 @@ class Upgrade(colrev.operation.Operation):
         self.__save_settings(settings)
 
         return self.repo.is_dirty()
-
-
-class CoLRevVersion:
-    """Class for handling the CoLRev version"""
-
-    def __init__(self, version_string: str) -> None:
-        if "+" in version_string:
-            version_string = version_string[: version_string.find("+")]
-
-        self.major = version_string[: version_string.find(".")]
-        self.minor = version_string[
-            version_string.find(".") + 1 : version_string.rfind(".")
-        ]
-        self.patch = version_string[version_string.rfind(".") + 1 :]
-
-    def __eq__(self, other) -> bool:  # type: ignore
-        return str(self) == str(other)
-
-    def __lt__(self, other) -> bool:  # type: ignore
-        if self.major < other.major:
-            return True
-        if self.minor < other.minor:
-            return True
-        if self.patch < other.patch:
-            return True
-        return False
-
-    def __str__(self) -> str:
-        return f"{self.major}.{self.minor}.{self.patch}"
 
 
 if __name__ == "__main__":
