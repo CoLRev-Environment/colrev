@@ -5,7 +5,7 @@ colrev data
 
 In the ``colrev data`` operation, records transition from ``rev_included`` to ``rev_synthesized``. The data analysis and synthesis can involve different activities (data endpoints). A record only transitions to ``rev_synthesized`` when **all** synthesis activities were completed.
 
-Parallel independent data extraction is only supported through the built-in git mechanisms (merges). This works best for line-based contents. For csvs, daff may be helpful.
+Parallel independent data extraction is only supported through the built-in git mechanisms (merges). This works best for line-based contents. For ``csv`` files, daff may be helpful.
 
 ..
     reconciliation should focus on categorical data more than numerical data?
@@ -54,6 +54,6 @@ The following options for ``data`` are available:
 
 
 
-.. TODO: include examples (figure) for data --profile/--reading_heuristics
-
-Links and references for standalone literature reviews will be made available here (TODO).
+..
+    TODO: include examples (figure) for data --profile/--reading_heuristics
+    Links and references for standalone literature reviews will be made available here (TODO).
