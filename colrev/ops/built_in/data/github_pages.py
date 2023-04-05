@@ -116,7 +116,7 @@ class GithubPages(JsonSchemaMixin):
         data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
 
     def __update_data(
-        self, *, data_operation: colrev.ops.data.Data, silent_mode: bool
+        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo, silent_mode: bool
     ) -> None:
         if not silent_mode:
             data_operation.review_manager.logger.info("Update data on github pages")
@@ -132,6 +132,7 @@ class GithubPages(JsonSchemaMixin):
                 colrev.record.RecordState.rev_included,
             ]
         }
+        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
         data_file = Path("data.bib")
         data_operation.review_manager.dataset.save_records_dict_to_file(
             records=included_records, save_path=data_file
@@ -213,22 +214,58 @@ class GithubPages(JsonSchemaMixin):
         git_repo = data_operation.review_manager.dataset.get_repo()
         active_branch = git_repo.active_branch
 
-        if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
-            self.__setup_github_pages_branch(
-                data_operation=data_operation, git_repo=git_repo
+        # check if there is an "origin" remote
+
+        if "origin" in git_repo.remotes:
+            # check if remote.origin has a gh-pages branch
+            git_repo.remotes.origin.fetch()
+            if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [r.name for r in git_repo.remotes.origin.refs]:
+                git_repo.pull("origin", self.GH_PAGES_BRANCH_NAME)
+
+                # update
+                git_repo.git.checkout(active_branch)
+                self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
+
+                # Push gh-pages branch to remote origin
+                if self.settings.auto_push:
+                    self.__push_branch(
+                        data_operation=data_operation,
+                        git_repo=git_repo,
+                        silent_mode=silent_mode,
+                    )
+            else:
+                # create branch
+                if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
+                    self.__setup_github_pages_branch(
+                        data_operation=data_operation, git_repo=git_repo
+                    )
+
+                # update
+                git_repo.git.checkout(active_branch)
+                self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
+
+                # Push gh-pages branch to remote origin
+                if self.settings.auto_push:
+                    self.__push_branch(
+                        data_operation=data_operation,
+                        git_repo=git_repo,
+                        silent_mode=silent_mode,
+                    )
+            git_repo.git.checkout(active_branch)
+            self.__check_gh_pages_setup(git_repo=git_repo)
+        else:
+            data_operation.review_manager.logger.warning(
+                "Cannot push github pages because there is no remote origin. gh-pages branch will only be created locally."
             )
+            # create branch
+            if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
+                self.__setup_github_pages_branch(
+                    data_operation=data_operation, git_repo=git_repo
+                )
 
-        self.__check_gh_pages_setup(git_repo=git_repo)
-        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
-
-        self.__update_data(data_operation=data_operation, silent_mode=silent_mode)
-
-        if self.settings.auto_push:
-            self.__push_branch(
-                data_operation=data_operation,
-                git_repo=git_repo,
-                silent_mode=silent_mode,
-            )
+            # update
+            git_repo.git.checkout(active_branch)
+            self.__update_data(data_operation=data_operation, git_repo=git_repo, silent_mode=silent_mode)
 
         git_repo.git.checkout(active_branch)
 
