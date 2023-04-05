@@ -349,18 +349,24 @@ class ColrevCuration(JsonSchemaMixin):
             try:
                 if record_dict[
                     "colrev_status"
-                ] in colrev.record.RecordState.get_post_x_states(
+                ] not in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_prepared
                 ):
-                    cid = colrev.record.Record(data=record_dict).create_colrev_id(
-                        assume_complete=True
-                    )
-                    if cid in identical_colrev_ids:
-                        identical_colrev_ids[cid] = identical_colrev_ids[cid] + [
-                            record_dict["ID"]
-                        ]
-                    else:
-                        identical_colrev_ids[cid] = [record_dict["ID"]]
+                    continue
+                if (
+                    record_dict["colrev_status"]
+                    == colrev.record.RecordState.rev_prescreen_excluded
+                ):
+                    continue
+                cid = colrev.record.Record(data=record_dict).create_colrev_id(
+                    assume_complete=True
+                )
+                if cid in identical_colrev_ids:
+                    identical_colrev_ids[cid] = identical_colrev_ids[cid] + [
+                        record_dict["ID"]
+                    ]
+                else:
+                    identical_colrev_ids[cid] = [record_dict["ID"]]
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 non_identifiable_records.append(record_dict["ID"])
 
