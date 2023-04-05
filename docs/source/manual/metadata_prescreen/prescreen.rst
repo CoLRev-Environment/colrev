@@ -4,6 +4,16 @@
 colrev prescreen
 ---------------------------------------------
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 In the ``colrev prescreen`` operation, the records transition from ``md_processed`` to ``rev_prescreen_included`` or ``rev_prescreen_excluded``.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).

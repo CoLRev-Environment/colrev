@@ -3,6 +3,16 @@
 colrev pdf-get
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 In the ``colrev pdf-get`` operation, records transition from ``rev_prescreen_included`` to ``pdf_imported`` or ``pdf_needs_manual_retrieval``.
 It is possible to adapt the settings for ``pdf_required_for_screen_and_synthesis``, ``pdf_path_type``, and ``rename_pdfs``.
 

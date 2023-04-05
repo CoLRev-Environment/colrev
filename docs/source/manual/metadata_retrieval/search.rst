@@ -3,6 +3,16 @@
 colrev search
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 In the ``colrev search`` operation, records (metadata) are retrieved and stored in the ``data/search`` directory. Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different sources:
 
 - Search results can be obtained automatically from different APIs as explained below.

@@ -3,6 +3,16 @@
 colrev dedupe
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 The ``colrev dedupe`` operation identifies and merges duplicate records. Non-duplicate records transition from ``md_prepared`` to ``md_processed``. Duplicate records are integrated based on a quality-aware merge function and the combined record transitions to ``md_processed``. The predecessors of a merged record can be identified through the ``colrev_origin`` list, enabling ex-post validation and offering the possibility to undo merges.
 
 ..

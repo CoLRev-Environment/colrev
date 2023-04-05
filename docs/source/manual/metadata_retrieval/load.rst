@@ -3,6 +3,16 @@
 colrev load
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 In the ``colrev load`` operation, search results are added to the main records file following a three-step procedure:
 
 1. For each search results file (in the ``data/search`` directory), the SearchSource and search parameters are validated. For API-based searches, the SearchSource and search parameters are already recorded in the ``settings.json``. For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/extensions.html#colrev.env.package_manager.SearchSourcePackageEndpointInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.

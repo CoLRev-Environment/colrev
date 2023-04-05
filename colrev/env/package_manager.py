@@ -885,14 +885,11 @@ class PackageManager:
 
                 endpoint_item["status"] = (
                     endpoint_item["status"]
-                    .replace("GREEN", "🟢")
-                    .replace("ORANGE", "🟡")
-                    .replace("RED", "🔴")
+                    .replace("STABLE", "|STABLE|")
+                    .replace("MATURING", "|MATURING|")
+                    .replace("EXPERIMENTAL", "|EXPERIMENTAL|")
                 )
-                endpoint_item["status_linked"] = (
-                    f"`{endpoint_item['status']} "
-                    + "<https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_"
-                )
+                endpoint_item["status_linked"] = endpoint_item["status"]
 
                 # Generate the contents displayed in the docs (see "datatemplate:json")
                 # load short_description dynamically...

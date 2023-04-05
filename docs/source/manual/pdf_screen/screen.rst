@@ -4,6 +4,15 @@
 colrev screen
 ---------------------------------------------
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
 
 In the ``colrev screen`` operation, records transition from ``pdf_prepared`` to ``rev_included`` or ``rev_excluded``. Decisions on individual screening criteria (if any) are reported in the ``screening_criteria`` field.
 
