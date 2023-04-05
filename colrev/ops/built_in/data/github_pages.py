@@ -115,7 +115,9 @@ class GithubPages(JsonSchemaMixin):
         )
         data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
 
-        data_operation.review_manager.create_commit(msg="Setup gh-pages branch", skip_status_yaml=True)
+        data_operation.review_manager.create_commit(
+            msg="Setup gh-pages branch", skip_status_yaml=True
+        )
 
     def __update_data(
         self,
@@ -145,7 +147,9 @@ class GithubPages(JsonSchemaMixin):
         )
         data_operation.review_manager.dataset.add_changes(path=data_file)
 
-        data_operation.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
+        data_operation.review_manager.create_commit(
+            msg="Update sample", skip_status_yaml=True
+        )
 
     def __push_branch(
         self,
