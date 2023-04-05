@@ -721,6 +721,9 @@ class ReviewManager:
         return any("true" == os.getenv(x) for x in identifier_list)
 
 
+# pylint: disable=redefined-outer-name
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-arguments
 def get_init_operation(
     review_type: str,
     example: bool = False,
