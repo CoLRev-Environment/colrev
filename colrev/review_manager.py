@@ -309,6 +309,7 @@ class ReviewManager:
         manual_author: bool = False,
         script_call: str = "",
         saved_args: Optional[dict] = None,
+        skip_status_yaml: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
@@ -323,7 +324,7 @@ class ReviewManager:
             script_name=script_call,
             saved_args=saved_args,
         )
-        ret = commit.create()
+        ret = commit.create(skip_status_yaml=skip_status_yaml)
         return ret
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
@@ -473,29 +474,6 @@ class ReviewManager:
         import colrev.env.resources
 
         return colrev.env.resources.Resources()
-
-    # pylint: disable=too-many-arguments
-    @classmethod
-    def get_init_operation(
-        cls,
-        review_type: str,
-        example: bool = False,
-        light: bool = False,
-        local_pdf_collection: bool = False,
-        target_path: Optional[Path] = None,
-        exact_call: str = "",
-    ) -> colrev.ops.init.Initializer:
-        """Get an init operation object"""
-        import colrev.ops.init
-
-        return colrev.ops.init.Initializer(
-            review_type=review_type,
-            example=example,
-            light=light,
-            local_pdf_collection=local_pdf_collection,
-            target_path=target_path,
-            exact_call=exact_call,
-        )
 
     @classmethod
     def get_sync_operation(cls) -> colrev.ops.sync.Sync:
@@ -742,6 +720,30 @@ class ReviewManager:
         if identifier:
             identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
+
+
+# pylint: disable=redefined-outer-name
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-arguments
+def get_init_operation(
+    review_type: str,
+    example: bool = False,
+    light: bool = False,
+    local_pdf_collection: bool = False,
+    target_path: Optional[Path] = None,
+    exact_call: str = "",
+) -> colrev.ops.init.Initializer:
+    """Get an init operation object"""
+    import colrev.ops.init
+
+    return colrev.ops.init.Initializer(
+        review_type=review_type,
+        example=example,
+        light=light,
+        local_pdf_collection=local_pdf_collection,
+        target_path=target_path,
+        exact_call=exact_call,
+    )
 
 
 if __name__ == "__main__":

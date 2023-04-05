@@ -2,6 +2,8 @@
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
+import re
+import statistics
 from dataclasses import dataclass
 
 import timeout_decorator
@@ -60,6 +62,17 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         )
         self.languages_to_include = list(set(languages_to_include))
 
+    def __title_has_multiple_languages(self, *, title: str) -> bool:
+        if "[" not in title:
+            return False
+        split_titles = [
+            re.sub(r"\d", "", x.rstrip().rstrip("]")) for x in title.split("[")
+        ]
+        min_len = statistics.mean(len(x) for x in split_titles) - 20
+        if all(len(x) > min_len for x in split_titles):
+            return True
+        return False
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
@@ -88,7 +101,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.data["language"] = "eng"
             return record
 
-        if record.data.get("title", "").count("[") == 0:
+        if not self.__title_has_multiple_languages(title=record.data.get("title", "")):
             language = self.language_service.compute_language(text=record.data["title"])
             record.update_field(
                 key="language",

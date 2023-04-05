@@ -66,7 +66,7 @@ class Checker:
 
         # 1. git repository?
         if not self.__is_git_repo():
-            raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
+            raise colrev_exceptions.RepoSetupError()
 
         # 2. colrev project?
         if not self.__is_colrev_project():
@@ -107,6 +107,8 @@ class Checker:
 
     def __is_git_repo(self) -> bool:
         try:
+            if not (self.review_manager.path / Path(".git")).is_dir():
+                return False
             _ = self.review_manager.dataset.get_repo().git_dir
             return True
         except InvalidGitRepositoryError:

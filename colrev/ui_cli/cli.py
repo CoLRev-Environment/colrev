@@ -162,7 +162,7 @@ def init(
     import colrev.ui_web.settings_editor
 
     try:
-        colrev.review_manager.ReviewManager.get_init_operation(
+        colrev.review_manager.get_init_operation(
             review_type=type,
             example=example,
             light=light,

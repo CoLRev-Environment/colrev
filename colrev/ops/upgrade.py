@@ -78,6 +78,13 @@ class Upgrade(colrev.operation.Operation):
         settings_version_str = settings["project"]["colrev_version"]
 
         settings_version = CoLRevVersion(settings_version_str)
+        # Start with the first step if the version is older:
+        if settings_version < CoLRevVersion("0.7.0"):
+            settings_version = CoLRevVersion("0.7.0")
+        installed_colrev_version = CoLRevVersion(version("colrev"))
+
+        if installed_colrev_version == settings_version:
+            return
 
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
@@ -103,12 +110,9 @@ class Upgrade(colrev.operation.Operation):
             },
         ]
 
-        if settings_version == migration_scripts[-1]["version"]:
-            return
-
-        # Start with the first step if the version is older:
-        if settings_version not in [x["version"] for x in migration_scripts]:
-            settings_version = CoLRevVersion("0.7.0")
+        # Note: we should always update the colrev_version in settings.json because the
+        # checker.__check_software requires the settings version and
+        # the installed version to be identical
 
         # skipping_versions_before_settings_version = True
         run_migration = False
@@ -132,17 +136,16 @@ class Upgrade(colrev.operation.Operation):
                 self.__print_release_notes(selected_version=migrator["version"])
 
         settings = self.__load_settings_dict()
-        settings["project"]["colrev_version"] = str(version("colrev"))
+        settings["project"]["colrev_version"] = str(installed_colrev_version)
         self.__save_settings(settings)
 
         if self.repo.is_dirty():
-            msg = str(migrator["version"])
+            msg = f"Upgrade to CoLRev {installed_colrev_version}"
             if not migrator["released"]:
                 msg += " (pre-release)"
-            self.repo.index.commit(
-                msg,
-                skip_hooks=True,
-            )
+            review_manager = colrev.review_manager.ReviewManager()
+            review_manager.create_commit(
+                msg=msg,
 
     def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
         filedata = colrev.env.utils.get_package_file_content(
