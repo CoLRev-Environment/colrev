@@ -22,11 +22,11 @@ A detailed overview of the project status and the roadmap is provided below. The
    * - Status
      - Description
    * - |EXPERIMENTAL|
-     - Experimental: Functionality may not be fully implemented, tested, or documented. **Recommended for developers, not for general users.**
+     - Functionality may not be fully implemented, tested, or documented. **Recommended for developers, not for general users.**
    * - |MATURING|
-     - Maturing: Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
+     - Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
    * -  |STABLE|
-     - Stable: Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
+     - Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
 
 The goal is to release new versions on a bi-monthly basis. The current focus is on the data management and integration with Git. Once CoLRev has matured, UIs should make it accessible to a broader user base. For details see the `milestones on GitHub <https://github.com/CoLRev-Environment/colrev/milestones>`_.
 
