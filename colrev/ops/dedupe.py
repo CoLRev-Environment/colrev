@@ -415,6 +415,8 @@ class Dedupe(colrev.operation.Operation):
         set_to_md_processed: list,
     ) -> None:
         for record_id, duplicate_ids in duplicate_id_mappings.items():
+            if record_id not in records:
+                continue
             if (
                 colrev.record.RecordState.md_prepared
                 == records[record_id]["colrev_status"]
