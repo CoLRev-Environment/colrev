@@ -3,13 +3,13 @@
 colrev pdf-prep
 ==================================
 
-.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
@@ -40,6 +40,7 @@ The following options for ``pdf-prep`` are available:
         [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Status", "status_linked")],
         data['pdf_prep'],
         title='',
+        columns=[25,55,20]
         ) }}
 
 The ``colrev pdf-prep-man`` operation provides an interactive convenience function for PDFs that cannot be prepared automatically, with records transitioning from ``pdf_needs_manual_preparation`` to ``pdf_prepared``.
@@ -56,4 +57,5 @@ The following options for ``pdf-prep-man`` are available:
         [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Status", "status_linked")],
         data['pdf_prep_man'],
         title='',
+        columns=[25,55,20]
         ) }}

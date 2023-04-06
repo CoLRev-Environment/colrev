@@ -916,24 +916,6 @@ class PackageManager:
                     endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
                 )
 
-                if (
-                    PackageEndpointType.search_source
-                    == PackageEndpointType[endpoint_type]
-                ):
-                    # Note : heuristic_status is mandatory (interface definition)
-                    endpoint_item["heuristic"] = (
-                        str(endpoint.heuristic_status)
-                        .replace("oni", "ONI")
-                        .replace("supported", "Supported")
-                        .replace("na", "NA")
-                    )
-
-                    if endpoint.api_search_supported:
-                        endpoint_item["api_search"] = "Supported"
-                    else:
-                        endpoint_item["api_search"] = "NA"
-                    endpoint_item["link"] = f"`{endpoint.short_name} <{link}>`_"
-
             endpoint_list += package_endpoints["endpoints"][endpoint_type]
 
     def __load_packages_json(self) -> list:

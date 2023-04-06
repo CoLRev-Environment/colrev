@@ -4,13 +4,13 @@
 colrev init
 -------------------------------
 
-.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
@@ -33,6 +33,7 @@ The specific setup of the available review types is available in the following t
         [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status_linked")],
         data['review_type'],
         title='',
+        columns=[25,55,20]
         ) }}
 
 

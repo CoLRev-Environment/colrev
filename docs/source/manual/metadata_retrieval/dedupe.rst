@@ -3,13 +3,13 @@
 colrev dedupe
 ==================================
 
-.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
@@ -50,4 +50,5 @@ The following options for ``dedupe`` are available:
         [("Identifier", "package_endpoint_identifier"), ("Dedupe packages", "short_description"), ("Status", "status_linked")],
         data['dedupe'],
         title='',
+        columns=[25,55,20]
         ) }}

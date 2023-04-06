@@ -3,13 +3,13 @@
 colrev search
 ==================================
 
-.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
-.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
@@ -82,9 +82,10 @@ The following SearchSources are covered (additional ones are on the `SearchSourc
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("SearchSource instructions", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("SearchSource packages", "short_description"), ("Status", "status_linked")],
         data['search_source'],
         title='',
+        columns=[25,55,20]
         ) }}
 
 Notes:

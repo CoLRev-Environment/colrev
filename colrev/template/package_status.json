@@ -422,7 +422,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.structured",
-            "status": "RED"
+            "status": "EXPERIMENTAL"
         }
     ]
 }
