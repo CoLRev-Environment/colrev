@@ -23,6 +23,8 @@ if False:  # pylint: disable=using-constant-test
     if TYPE_CHECKING:
         import colrev.review_manager
 
+# pylint: disable=too-many-lines
+
 
 class Dedupe(colrev.operation.Operation):
     """Deduplicate records (entity resolution)"""

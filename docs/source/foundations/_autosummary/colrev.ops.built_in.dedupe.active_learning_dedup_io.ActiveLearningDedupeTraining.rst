@@ -17,6 +17,7 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
       :nosignatures:
 
       ~ActiveLearningDedupeTraining.all_json_schemas
+      ~ActiveLearningDedupeTraining.apply_active_learning
       ~ActiveLearningDedupeTraining.field_mapping
       ~ActiveLearningDedupeTraining.from_dict
       ~ActiveLearningDedupeTraining.from_json
@@ -24,6 +25,7 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
       ~ActiveLearningDedupeTraining.json_schema
       ~ActiveLearningDedupeTraining.register_field_encoders
       ~ActiveLearningDedupeTraining.run_dedupe
+      ~ActiveLearningDedupeTraining.setup_active_learning_dedupe
       ~ActiveLearningDedupeTraining.to_dict
       ~ActiveLearningDedupeTraining.to_json
 
