@@ -5,13 +5,13 @@ colrev dedupe
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
 The ``colrev dedupe`` operation identifies and merges duplicate records. Non-duplicate records transition from ``md_prepared`` to ``md_processed``. Duplicate records are integrated based on a quality-aware merge function and the combined record transitions to ``md_processed``. The predecessors of a merged record can be identified through the ``colrev_origin`` list, enabling ex-post validation and offering the possibility to undo merges.
 
@@ -47,7 +47,7 @@ The following options for ``dedupe`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Dedupe packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Dedupe packages", "short_description"), ("Status", "status_linked")],
         data['dedupe'],
         title='',
         ) }}

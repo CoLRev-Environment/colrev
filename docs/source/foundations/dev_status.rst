@@ -1,16 +1,16 @@
 
-Development status and roadmap
+Development status
 ==================================
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
 Currently, CoLRev is recommended for users with technical expertise. We use it for our own projects and the use of Git versioning prevents data losses.
 A detailed overview of the project status and the roadmap is provided below. The maturity is rated as follows:
@@ -21,12 +21,15 @@ A detailed overview of the project status and the roadmap is provided below. The
 
    * - Status
      - Description
-   * -  |STABLE|
-     - Stable: Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
-   * - |MATURING|
-     - Maturing: Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
    * - |EXPERIMENTAL|
      - Experimental: Functionality may not be fully implemented, tested, or documented. **Recommended for developers, not for general users.**
+   * - |MATURING|
+     - Maturing: Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
+   * -  |STABLE|
+     - Stable: Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
+
+The goal is to release new versions on a bi-monthly basis. The current focus is on the data management and integration with Git. Once CoLRev has matured, UIs should make it accessible to a broader user base. For details see the `milestones on GitHub <https://github.com/CoLRev-Environment/colrev/milestones>`_.
+
 
 Status: Core functionality
 -----------------------------------------------------------------
@@ -37,17 +40,17 @@ Status: Core functionality
 
 ..
     To activate:
-    - Dataset: 🟡
-    - Records: 🟡
-    - ReviewManager: 🟡
-    - Operation load: 🟡
-    - Operation prep: 🟡
-    - Operation dedupe: 🟡
-    - Operation prescreen: 🟡
-    - Operation pdfs: 🟡
-    - Operation screen: 🟡
-    - Operation data: 🟡
-    - Other operations: 🟡
+    - Dataset: |MATURING|
+    - Records: |MATURING|
+    - ReviewManager: |MATURING|
+    - Operation load: |MATURING|
+    - Operation prep: |MATURING|
+    - Operation dedupe: |MATURING|
+    - Operation prescreen: |MATURING|
+    - Operation pdfs: |MATURING|
+    - Operation screen: |MATURING|
+    - Operation data: |MATURING|
+    - Other operations: |MATURING|
 
 Status: Collaboration
 -----------------------------------------------------------------
@@ -82,13 +85,6 @@ Status: Methods
 
 ..
     TODO : cover differences between review types in setup/validation
-
-Roadmap
------------------------------------------------------------------
-
-- The goal is to release new versions on a bi-monthly basis.
-- Current focus: on the data management and integration with Git.
-- Once CoLRev has matured, UIs should make it accessible to a broader user base.
 
 ..
     Once CoLRev has matured, UIs should make it accessible to a broader user base. CoLRev is the result of intense prototyping, research and development. We use it for our own projects and believe it is ready to be released - after all, git ensures that your work is never lost.

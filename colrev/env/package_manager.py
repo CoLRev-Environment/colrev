@@ -912,7 +912,10 @@ class PackageManager:
                 else:
                     link = code_link
                 # Note: link format for the sphinx docs
-                endpoint_item["link"] = f"`Link <{link}>`_"
+                endpoint_item["short_description"] = (
+                    endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
+                )
+
                 if (
                     PackageEndpointType.search_source
                     == PackageEndpointType[endpoint_type]

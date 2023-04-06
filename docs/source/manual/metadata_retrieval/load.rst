@@ -5,13 +5,13 @@ colrev load
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
 In the ``colrev load`` operation, search results are added to the main records file following a three-step procedure:
 
@@ -36,7 +36,7 @@ The following options for ``load_conversion`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Load conversion packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Load conversion packages", "short_description"), ("Status", "status_linked")],
         data['load_conversion'],
         title='',
         ) }}

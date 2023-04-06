@@ -19,7 +19,7 @@ The following features stand out:
 - Operates a model for data quality, record identification, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
-Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
+Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/dev_status.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
 
 Getting started
 ---------------------------------------
@@ -129,7 +129,7 @@ Further information is provided in the `documentation <index.html>`_, the develo
    foundations/api
    foundations/cli
    foundations/extensions
-   foundations/roadmap
+   foundations/dev_status
    foundations/about
 
 

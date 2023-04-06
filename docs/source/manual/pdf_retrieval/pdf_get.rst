@@ -5,13 +5,13 @@ colrev pdf-get
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
 In the ``colrev pdf-get`` operation, records transition from ``rev_prescreen_included`` to ``pdf_imported`` or ``pdf_needs_manual_retrieval``.
 It is possible to adapt the settings for ``pdf_required_for_screen_and_synthesis``, ``pdf_path_type``, and ``rename_pdfs``.
@@ -42,7 +42,7 @@ The following options for ``pdf-get`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("PDF get packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("PDF get packages", "short_description"), ("Status", "status_linked")],
         data['pdf_get'],
         title='',
         ) }}
@@ -66,7 +66,7 @@ The following options for ``pdf-get-man`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("PDF prep packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("PDF prep packages", "short_description"), ("Status", "status_linked")],
         data['pdf_get_man'],
         title='',
         ) }}

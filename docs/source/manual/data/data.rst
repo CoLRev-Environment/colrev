@@ -5,13 +5,13 @@ colrev data
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
 
 In the ``colrev data`` operation, records transition from ``rev_included`` to ``rev_synthesized``. The data analysis and synthesis can involve different activities (data endpoints). A record only transitions to ``rev_synthesized`` when **all** synthesis activities were completed.
 
@@ -57,7 +57,7 @@ The following options for ``data`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Data packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Data packages", "short_description"), ("Status", "status_linked")],
         data['data'],
         title='',
         ) }}
