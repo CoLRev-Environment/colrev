@@ -2,26 +2,36 @@
 Development status and roadmap
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 Currently, CoLRev is recommended for users with technical expertise. We use it for our own projects and the use of Git versioning prevents data losses.
 A detailed overview of the project status and the roadmap is provided below. The maturity is rated as follows:
 
 .. list-table::
-   :widths: 10 90
+   :widths: 20 80
    :header-rows: 1
 
    * - Status
      - Description
-   * -  🟢
-     - Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
-   * - 🟡
-     - Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
-   * - 🔴
-     - Functionality may not be fully implemented, tested, or documented. **Recommended for developers, not for general users.**
+   * -  |STABLE|
+     - Stable: Functionality is fully implemented, including unit and user tests, as well as comprehensive documentation. Reviewed from a technical and methodological perspective. **Recommended for use.**
+   * - |MATURING|
+     - Maturing: Functionality is implemented, partially tested, and documented. **Recommended for users with technical expertise.**
+   * - |EXPERIMENTAL|
+     - Experimental: Functionality may not be fully implemented, tested, or documented. **Recommended for developers, not for general users.**
 
 Status: Core functionality
 -----------------------------------------------------------------
 
-**Development status overall**: 🟡/🟢
+**Development status overall**: |MATURING|
 
 **Summary statement**: The core functionality related to data management, operations, and environment services are fairly well documented and tested, although work is still in progress.
 
@@ -42,14 +52,14 @@ Status: Core functionality
 Status: Collaboration
 -----------------------------------------------------------------
 
-**Development status overall**: 🟡/🟢
+**Development status overall**: |MATURING|
 
 **Summary statement**: The collaboration model relies on established git mechanisms. CoLRev partly supports the collaboration by applying formatting and consistency checks. More specific collaboration principles and guidelines are currently developed.
 
 Status: Packages
 -----------------------------------------------------------------
 
-**Development status overall**: 🔴/🟡
+**Development status overall**: |EXPERIMENTAL|
 
 **Summary statement**: The packages are generally under heavy development. Packages vary in maturity but most are not yet completed and require testing as well as documentation. At the same time, we use most packages regularly and quickly fix bugs.
 
@@ -66,7 +76,7 @@ The status of each package is provided in the operations subpages (`init <../man
 Status: Methods
 -----------------------------------------------------------------
 
-**Development status overall**: 🔴/🟡
+**Development status overall**: |EXPERIMENTAL|
 
 **Summary statement**: The operations are `aligned <../manual/operations.html>`_ with the established methodological steps of the review process and differences between review types and the typical forms of data analysis are considered during project setup. The *encoding of review methodology* is in progress and requires documentation.
 

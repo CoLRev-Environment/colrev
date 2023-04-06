@@ -4,6 +4,16 @@
 colrev init
 -------------------------------
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 
 ``colrev init`` initializes a new CoLRev project. It requires an empty directory.
 With this operation, the directories and files, including the git history, are set up.
@@ -14,9 +24,6 @@ Ideally, the selected review type is passed as a parameter:
 	colrev init --type REVIEW_TYPE
 
 With this parameter, the ``settings.json`` file is created with reasonable defaults for the selected review type. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
-
-
-
 
 The specific setup of the available review types is available in the following table:
 

@@ -3,13 +3,23 @@
 colrev pdf-prep
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+
 In the ``colrev pdf-prep`` operation, records transition from ``pdf_imported`` to ``pdf_prepared`` or ``pdf_needs_manual_preparation``.
 Depending on the settings, this operation may involve any of the following:
 
 - Check whether the PDF is machine readable and apply OCR if necessary
 - Identify and remove additional pages and decorations (may interfere with machine learning tools)
 - Validate whether the PDF matches the record metadata and whether the PDF is complete (matches the number of pages)
-- Create unique PDF identifiers (pdf hashes) that can be used for retrieval and validation (e.g., in crowdsourcing)
+- Create unique PDF identifiers (PDF hashes) that can be used for retrieval and validation (e.g., in crowdsourcing)
 
 Per default, CoLRev keeps a backup of PDFs that are changed by the ``pdf-prep`` operation. The ``keep_backup_of_pdfs`` option of the ``pdf_prep`` settings can be modified to change this behavior:
 
@@ -22,7 +32,7 @@ Per default, CoLRev keeps a backup of PDFs that are changed by the ``pdf-prep`` 
 	colrev pdf-prep [options]
 
 
-The following options for pdf-prep are available:
+The following options for ``pdf-prep`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 

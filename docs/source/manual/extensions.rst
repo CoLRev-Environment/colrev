@@ -43,4 +43,3 @@ The development status is automatically added to the `package_status.json <https
    extensions/python
    extensions/r
    extensions/custom_extensions
-   extensions/example

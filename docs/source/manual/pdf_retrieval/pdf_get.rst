@@ -3,10 +3,20 @@
 colrev pdf-get
 ==================================
 
-In the ``colrev pdf-get`` operation, records transition from `rev_prescreen_included` to `pdf_imported` or `pdf_needs_manual_retrieval`.
-It is possible to adapt the settings for `pdf_required_for_screen_and_synthesis`, `pdf_path_type`, and `rename_pdfs`.
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/Lifecycle-Experimental-339999
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |MATURING| image:: https://img.shields.io/badge/Lifecycle-Maturing-007EC6
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
+.. |STABLE| image:: https://img.shields.io/badge/Lifecycle-Stable-97ca00
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/roadmap.html
 
-The retrieval based on `colrev.local_index` may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use ``colrev pdf-get`` to collect PDFs from their local machines.
+In the ``colrev pdf-get`` operation, records transition from ``rev_prescreen_included`` to ``pdf_imported`` or ``pdf_needs_manual_retrieval``.
+It is possible to adapt the settings for ``pdf_required_for_screen_and_synthesis``, ``pdf_path_type``, and ``rename_pdfs``.
+
+The retrieval based on ``colrev.local_index`` may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use ``colrev pdf-get`` to collect PDFs from their local machines.
 When PDFs cannot be retrieved automatically, CoLRev provides an interactive convenience function ``colrev pdf-get-man``.
 
 ..
@@ -22,12 +32,12 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
 	colrev pdf-get [options]
 
-Per default, CoLRev creates symlinks (setting `pdf_path_type=symlink`). To copy PDFs to the repository per default, set `pdf_path_type=copy` in settings.json.
+Per default, CoLRev creates symlinks (setting ``pdf_path_type=symlink``). To copy PDFs to the repository per default, set ``pdf_path_type=copy`` in ``settings.json``.
 
 .. link to justification of pdf handling (reuse/shared settings)
 .. the use of shared/team PDFs is built in (just clone and index!)
 
-The following options for pdf-get are available:
+The following options for ``pdf-get`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
@@ -51,7 +61,7 @@ In the ``colrev pdf-get-man`` operation, records transition from `pdf_needs_manu
 	colrev pdf-get-man [options]
 
 
-The following options for pdf-get-man are available:
+The following options for ``pdf-get-man`` are available:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
