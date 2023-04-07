@@ -356,7 +356,7 @@ def test_data(review_manager: colrev.review_manager.ReviewManager) -> None:
 def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     checker = colrev.checker.Checker(review_manager=review_manager)
 
-    expected = ["0.8.0", "0.8.0"]
+    expected = ["0.8.2", "0.8.2"]
     actual = checker.get_colrev_versions()
     assert expected == actual
 
