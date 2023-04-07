@@ -37,7 +37,7 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/roadmap.html) and [documentation](https://colrev.readthedocs.io/en/latest/) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
+See the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/dev_status.html) and [documentation](https://colrev.readthedocs.io/en/latest/) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
 
 ## Contributing, changes, and releases
 
