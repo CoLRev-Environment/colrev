@@ -11,6 +11,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Optional
 
+import git
 import requests_cache
 import yaml
 
@@ -22,6 +23,7 @@ import colrev.logger
 import colrev.operation
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 from colrev.exit_codes import ExitCodes
 
 
@@ -139,6 +141,13 @@ class ReviewManager:
             self.dataset = colrev.dataset.Dataset(review_manager=self)
 
         except Exception as exc:  # pylint: disable=broad-except
+            if (self.path / Path(".git")).is_dir():
+                if "gh-pages" == git.Repo().active_branch.name:
+                    raise colrev_exceptions.RepoSetupError(
+                        msg="Currently on gh-pages branch. Switch to main: "
+                        + f"{colors.ORANGE}git switch main{colors.END}"
+                    )
+
             if force_mode:
                 if debug_mode:
                     self.logger.debug(exc)
