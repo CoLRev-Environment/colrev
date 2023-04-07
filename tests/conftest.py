@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import os
 import shutil
+import typing
 from pathlib import Path
 
 import git
 import pytest
+from pybtex.database.input import bibtex
 
 import colrev.review_manager
 
@@ -27,7 +29,7 @@ def helpers():  # type: ignore
 
 
 @pytest.fixture(scope="session")
-def base_repo_review_manager_setup(session_mocker, tmp_path_factory):  # type: ignore
+def base_repo_review_manager_setup(session_mocker, tmp_path_factory, helpers):  # type: ignore
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
@@ -52,6 +54,52 @@ def base_repo_review_manager_setup(session_mocker, tmp_path_factory):  # type: i
     repo = git.Repo()
     commit = repo.head.object.hexsha
     review_manager.commit = commit
+
+    def load_test_records(test_data_path) -> dict:  # type: ignore
+        test_records_dict: typing.Dict[Path, dict] = {}
+        bib_files_to_index = test_data_path / Path("local_index")
+        for file_path in bib_files_to_index.glob("**/*"):
+            test_records_dict[Path(file_path.name)] = {}
+
+        for path in test_records_dict.keys():
+            with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
+                parser = bibtex.Parser()
+                bib_data = parser.parse_string(file.read())
+                test_records_dict[path] = colrev.dataset.Dataset.parse_records_dict(
+                    records_dict=bib_data.entries
+                )
+        return test_records_dict
+
+    temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
+    with session_mocker.patch.object(
+        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+    ):
+        test_records_dict = load_test_records(helpers.test_data_path)
+        local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
+        local_index.reinitialize_sqlite_db()
+
+        for path, records in test_records_dict.items():
+            if "cura" in str(path):
+                continue
+            local_index.index_records(
+                records=records,
+                repo_source_path=path,
+                curated_fields=[],
+                curation_url="gh...",
+                curated_masterdata=True,
+            )
+
+        for path, records in test_records_dict.items():
+            if "cura" not in str(path):
+                continue
+            local_index.index_records(
+                records=records,
+                repo_source_path=path,
+                curated_fields=["literature_review"],
+                curation_url="gh...",
+                curated_masterdata=False,
+            )
+
     return review_manager
 
 
