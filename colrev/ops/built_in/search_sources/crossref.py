@@ -287,7 +287,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_main_record: bool = True,
         crossref_source: str = "",
     ) -> colrev.record.Record:
-        self.language_service.unify_to_iso_639_3_language_codes(record=record)
+        if "language" in record.data:
+            try:
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data["language"]
+
         doi_connector.DOIConnector.get_link_from_doi(
             review_manager=self.review_manager,
             record=record,
