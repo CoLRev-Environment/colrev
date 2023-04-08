@@ -84,6 +84,12 @@ class LanguageService:
         elif record.data["language"].lower() in ["fr"]:
             record.data["language"] = "fra"
 
+        elif record.data["language"].lower() in ["ar"]:
+            record.data["language"] = "ara"
+
+        elif record.data["language"].lower() in ["de"]:
+            record.data["language"] = "deu"
+
         if 3 != len(record.data["language"]):
             if record.data["language"].lower() in self.__lang_code_mapping:
                 record.data["language"] = self.__lang_code_mapping[
