@@ -1242,6 +1242,14 @@ class Record:
                 "note": note,
             }
 
+        existing_note = self.data["colrev_masterdata_provenance"][key]["note"]
+        if "quality_defect" in existing_note and any(
+            x in existing_note for x in ["missing", "disagreement"]
+        ):
+            self.data["colrev_masterdata_provenance"][key]["note"] = (
+                existing_note.replace("quality_defect", "").rstrip(",").lstrip(",")
+            )
+
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
         if "colrev_data_provenance" not in self.data:
@@ -1431,7 +1439,7 @@ class Record:
 
         if "colrev_masterdata_provenance" in self.data:
             for field, provenance in self.data["colrev_masterdata_provenance"].items():
-                if any(x in provenance for x in ["disagreement", "missing"]):
+                if any(x in provenance["note"] for x in ["disagreement", "missing"]):
                     defect_field_keys.append(field)
 
         return list(set(defect_field_keys))
