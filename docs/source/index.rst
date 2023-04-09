@@ -105,8 +105,8 @@ Further information is provided in the `documentation <index.html>`_, the develo
    :caption: Manual
 
    Introduction <manual/manual>
-   manual/operations
    manual/workflow
+   manual/operations
    manual/problem_formulation
    manual/metadata_retrieval
    manual/metadata_prescreen
