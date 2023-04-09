@@ -78,9 +78,6 @@ def __validate_prep(
             data=validation_detail["record_dict"]
         ).print_citation_format()
 
-    # TODO : print all, allow users to undo (-> needs_manual_preparation)
-    # by selecting number of record
-
     displayed = False
     for validation_element in validation_details:
         if validation_element["change_score"] < threshold:

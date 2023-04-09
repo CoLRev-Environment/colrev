@@ -408,8 +408,6 @@ class LocalIndex:
                     str(target_path),
                     depth=1,
                 )
-                # TODO : save info on curations that were not available
-                # (to be displayed in gh-action/pull-request)
 
             content = ""
             with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:

@@ -286,6 +286,8 @@ class Record:
             # masterdata_is_complete() relies on "missing" notes/"UNKNOWN" fields
             if not self.masterdata_is_complete():
                 target_state = RecordState.md_needs_manual_preparation
+            if self.has_quality_defects():
+                target_state = RecordState.md_needs_manual_preparation
         self.data["colrev_status"] = target_state
 
     def shares_origins(self, *, other_record: Record) -> bool:
@@ -1405,7 +1407,9 @@ class Record:
                     defect_field_keys.append(key)
                 elif len(self.data[key]) < 5:
                     defect_field_keys.append(key)
-                elif any(x in str(self.data[key]) for x in ["�", "http", "University"]):
+                elif any(
+                    x in str(self.data[key]) for x in ["�", "http", "University", "™"]
+                ):
                     defect_field_keys.append(key)
 
             if "title" == key:
@@ -1424,6 +1428,11 @@ class Record:
                     defect_field_keys.append(key)
                 if "�" in str(self.data[key]):
                     defect_field_keys.append(key)
+
+        if "colrev_masterdata_provenance" in self.data:
+            for field, provenance in self.data["colrev_masterdata_provenance"].items():
+                if any(x in provenance for x in ["disagreement", "missing"]):
+                    defect_field_keys.append(field)
 
         return list(set(defect_field_keys))
 
