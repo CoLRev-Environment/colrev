@@ -799,9 +799,9 @@ class PaperMarkdown(JsonSchemaMixin):
 
         advice = {
             "msg": f"{data_endpoint}"
-            + "\n    1. Edit the paper (data/paper.md)"
+            + "\n    1. Edit the paper (data/data/paper.md)"
             + "\n    2. To build the paper (output/paper.docx), run: colrev data"
-            + "\n    3. To create a version, run: git add data/paper.md && "
+            + "\n    3. To create a version, run: git add data/data/paper.md && "
             + "git commit -m 'update paper'",
             "detailed_msg": "... with a link to the docs etc.",
         }
