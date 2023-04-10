@@ -47,6 +47,10 @@
     ],
     "search_source": [
         {
+            "package_endpoint_identifier": "colrev.open_library",
+            "status": "EXPERIMENTAL"
+        },
+        {
             "package_endpoint_identifier": "colrev.unknown_source",
             "status": "MATURING"
         },

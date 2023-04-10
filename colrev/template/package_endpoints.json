@@ -203,6 +203,14 @@
             "ci_supported": true
         },
         {
+            "package_endpoint_identifier": "colrev.open_library",
+            "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "SearchSource for the OpenLibrary API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_library.md>`_)",
+            "ci_supported": true
+        },
+        {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
             "status": "|MATURING|",
