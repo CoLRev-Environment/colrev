@@ -64,6 +64,8 @@ class LanguageService:
     def validate_iso_639_3_language_codes(self, *, lang_code_list: list) -> None:
         """Validates whether a list of language codes complies with the ISO 639-3 standard"""
 
+        assert isinstance(lang_code_list, list)
+
         invalid_language_codes = [x for x in lang_code_list if 3 != len(x)]
         if invalid_language_codes:
             raise colrev_exceptions.InvalidLanguageCodeException(
