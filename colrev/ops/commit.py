@@ -140,7 +140,7 @@ class Commit:
                 dir=self.__temp_path, mode="r+b", delete=False
             ) as temp:
                 with open(self.review_manager.report_path, "r+b") as file:
-                    shutil.copyfileobj(file, temp)
+                    shutil.copyfileobj(file, temp) # type: ignore
             # self.report_path.rename(temp.name)
             with open(temp.name, encoding="utf8") as reader, open(
                 self.review_manager.report_path, "w", encoding="utf8"
