@@ -48,14 +48,14 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
 
         # Note : the ID of the crossrefed record_dict may have changed.
         # we need to trace based on the colrev_origin
-        crossref_origin = record_dict["colrev_origin"]
-        crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
-        crossref_origin = crossref_origin + "/" + record_dict["crossref"]
-        for (
-            candidate_record_dict
-        ) in prep_operation.review_manager.dataset.read_next_record():
-            if crossref_origin in candidate_record_dict["colrev_origin"]:
-                return candidate_record_dict
+        for crossref_origin in record_dict["colrev_origin"]:
+            crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
+            crossref_origin = crossref_origin + "/" + record_dict["crossref"]
+            for (
+                candidate_record_dict
+            ) in prep_operation.review_manager.dataset.read_next_record():
+                if crossref_origin in candidate_record_dict["colrev_origin"]:
+                    return candidate_record_dict
         return {}
 
     def prepare(
@@ -69,6 +69,7 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
         crossref_record = self.__get_crossref_record(
             prep_operation=prep_operation, record_dict=record.data
         )
+
         if not crossref_record:
             return record
 
@@ -80,6 +81,7 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
                     source="crossref_resolution",
                     append_edit=False,
                 )
+        del record.data["crossref"]
 
         return record
 

@@ -140,7 +140,8 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                         note="",
                     )
                     record.prescreen_exclude(
-                        reason=f"language of title(s) not in [{','.join(self.languages_to_include)}]"
+                        reason="language of title(s) not in ["
+                        + f"{','.join(self.languages_to_include)}]"
                     )
 
                 return record
