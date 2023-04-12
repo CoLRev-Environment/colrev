@@ -2,11 +2,11 @@
     "review_type": [
         {
             "package_endpoint_identifier": "colrev.conceptual_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.curated_masterdata",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.literature_review",
@@ -14,23 +14,23 @@
         },
         {
             "package_endpoint_identifier": "colrev.narrative_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.descriptive_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.scoping_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.critical_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.theoretical_review",
-            "status": "MATURING"
+            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.qualitative_systematic_review",

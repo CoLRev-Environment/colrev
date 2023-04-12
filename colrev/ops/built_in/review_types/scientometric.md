@@ -1,4 +1,4 @@
-# ReviewType: Enter review type
+# ReviewType: Scientometric
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -8,6 +8,8 @@ Note: This document is currently under development. It will contain the followin
 - goals
 - dimensions
 - differences between disciplines
+
+For the analysis of citation data, established software packages like [VosViewer](https://www.vosviewer.com/) are recommended.
 
 ## Steps and operations
 
