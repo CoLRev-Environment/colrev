@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 import os
-import typing
 from pathlib import Path
 
 import pytest
-from pybtex.database.input import bibtex
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser

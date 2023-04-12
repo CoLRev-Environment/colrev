@@ -27,6 +27,8 @@ if False:  # pylint: disable=using-constant-test
 class Checker:
     """The CoLRev checker makes sure the project setup is ok"""
 
+    records: typing.Dict[str, typing.Any] = {}
+
     def __init__(
         self,
         *,
@@ -37,10 +39,6 @@ class Checker:
         self.review_manager.notified_next_operation = (
             colrev.operation.OperationsType.check
         )
-
-        self.records: typing.Dict[str, typing.Any] = {}
-        if self.review_manager.dataset.records_file.is_file():
-            self.records = self.review_manager.dataset.load_records_dict()
 
     def get_colrev_versions(self) -> list[str]:
         """Get the colrev version as a list: (last_version, current_version)"""
@@ -68,7 +66,7 @@ class Checker:
 
         # 1. git repository?
         if not self.__is_git_repo():
-            raise colrev_exceptions.RepoSetupError("no git repository. Use colrev init")
+            raise colrev_exceptions.RepoSetupError()
 
         # 2. colrev project?
         if not self.__is_colrev_project():
@@ -109,6 +107,8 @@ class Checker:
 
     def __is_git_repo(self) -> bool:
         try:
+            if not (self.review_manager.path / Path(".git")).is_dir():
+                return False
             _ = self.review_manager.dataset.get_repo().git_dir
             return True
         except InvalidGitRepositoryError:
@@ -580,6 +580,10 @@ class Checker:
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
+
+        if self.review_manager.dataset.records_file.is_file():
+            self.records = self.review_manager.dataset.load_records_dict()
+
         check_scripts: list[dict[str, typing.Any]] = []
         data_checks = [
             {
@@ -632,6 +636,10 @@ class Checker:
         """Calls all checks that require prior data (take longer)"""
 
         # pylint: disable=not-a-mapping
+
+        self.records: typing.Dict[str, typing.Any] = {}
+        if self.review_manager.dataset.records_file.is_file():
+            self.records = self.review_manager.dataset.load_records_dict()
 
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.

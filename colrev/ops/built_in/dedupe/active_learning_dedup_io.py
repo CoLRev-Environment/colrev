@@ -73,7 +73,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 add=[self.SETTINGS_FILE_RELATIVE]
             )
 
-    def __setup_active_learning_dedupe(
+    def setup_active_learning_dedupe(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
@@ -244,12 +244,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     def __get_nr_non_duplicates(self, *, result_list: list) -> int:
         return len([i for i in result_list if "no_duplicate" == i["decision"]])
 
-    def __apply_active_learning(
+    def apply_active_learning(
         self,
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         results: list,
     ) -> None:
+        """Apply the active learning results"""
         if (
             self.__get_nr_duplicates(result_list=results) > 10
             and self.__get_nr_non_duplicates(result_list=results) > 10
@@ -489,7 +490,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         #     dict_writer.writerows(manual_dedupe_decision_list)
 
         # Apply and commit
-        self.__apply_active_learning(
+        self.apply_active_learning(
             dedupe_operation=dedupe_operation,
             results=manual_dedupe_decision_list,
         )
@@ -505,7 +506,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         ram = psutil.virtual_memory().total
         in_memory = sample_size * 5000000 < ram
 
-        self.__setup_active_learning_dedupe(
+        self.setup_active_learning_dedupe(
             dedupe_operation=dedupe_operation, retrain=False, in_memory=in_memory
         )
 

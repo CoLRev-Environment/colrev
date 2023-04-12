@@ -162,7 +162,7 @@ def init(
     import colrev.ui_web.settings_editor
 
     try:
-        colrev.review_manager.ReviewManager.get_init_operation(
+        colrev.review_manager.get_init_operation(
             review_type=type,
             example=example,
             light=light,
@@ -2559,6 +2559,12 @@ def web(
 
 @main.command(hidden=True, help_priority=29)
 @click.option(
+    "--disable_auto",
+    is_flag=True,
+    default=False,
+    help="Disable automated upgrades",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2575,11 +2581,21 @@ def web(
 @click.pass_context
 def upgrade(
     ctx: click.core.Context,
+    disable_auto: bool,
     verbose: bool,
     force: bool,
 ) -> None:
     """Upgrade to the latest CoLRev project version."""
 
+    if disable_auto:
+        review_manager = colrev.review_manager.ReviewManager(
+            force_mode=True, verbose_mode=verbose, skip_upgrade=True
+        )
+
+        review_manager.settings.project.auto_upgrade = False
+        review_manager.save_settings()
+        review_manager.create_commit(msg="Disable auto-upgrade")
+        return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )

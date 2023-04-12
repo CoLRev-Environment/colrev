@@ -54,6 +54,8 @@ class Dataset:
         "data/pdf_get_man/missing_pdf_files.csv",
         "data/.tei/",
         "data/prep_man/records_prep_man.bib",
+        "data/prep/",
+        "data/dedupe/",
     ]
     DEPRECATED_GIT_IGNORE_ITEMS = [
         "missing_pdf_files.csv",

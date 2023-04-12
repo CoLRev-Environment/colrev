@@ -28,6 +28,7 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # import binascii
 
@@ -407,8 +408,6 @@ class LocalIndex:
                     str(target_path),
                     depth=1,
                 )
-                # TODO : save info on curations that were not available
-                # (to be displayed in gh-action/pull-request)
 
             content = ""
             with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:
@@ -823,6 +822,12 @@ class LocalIndex:
             check_operation = colrev.operation.CheckOperation(
                 review_manager=review_manager
             )
+
+            if "main" != review_manager.dataset.get_repo().active_branch.name:
+                print(
+                    f"{colors.ORANGE}Warning: {repo_source_path} not on main branch{colors.END}"
+                )
+
             if not check_operation.review_manager.dataset.records_file.is_file():
                 return
             records = check_operation.review_manager.dataset.load_records_dict()

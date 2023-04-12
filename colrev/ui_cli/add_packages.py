@@ -53,8 +53,8 @@ def add_search_source(
         operation=search_operation,
         instantiate_objects=False,
     )
-
-    add_source = search_source[package_identifier].add_endpoint(search_operation, query)  # type: ignore
+    s_obj = search_source[package_identifier]
+    add_source = s_obj.add_endpoint(search_operation, query)  # type: ignore
     search_operation.add_source(add_source=add_source)
 
 

@@ -11,6 +11,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Optional
 
+import git
 import requests_cache
 import yaml
 
@@ -22,6 +23,7 @@ import colrev.logger
 import colrev.operation
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
 from colrev.exit_codes import ExitCodes
 
 
@@ -70,6 +72,7 @@ class ReviewManager:
         high_level_operation: bool = False,
         navigate_to_home_dir: bool = True,
         exact_call: str = "",
+        skip_upgrade: bool = True,
     ) -> None:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
@@ -131,11 +134,20 @@ class ReviewManager:
             self.environment_manager = self.get_environment_manager()
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+            # run update before settings/data (which may require changes/fail without update)
+            if not skip_upgrade:
+                self.__check_update()
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
-            self.__check_update()
 
         except Exception as exc:  # pylint: disable=broad-except
+            if (self.path / Path(".git")).is_dir():
+                if "gh-pages" == git.Repo().active_branch.name:
+                    raise colrev_exceptions.RepoSetupError(
+                        msg="Currently on gh-pages branch. Switch to main: "
+                        + f"{colors.ORANGE}git switch main{colors.END}"
+                    )
+
             if force_mode:
                 if debug_mode:
                     self.logger.debug(exc)
@@ -143,8 +155,6 @@ class ReviewManager:
                 raise exc
 
     def __check_update(self) -> None:
-        if not hasattr(self, "dataset"):
-            return
         # Once the following has run for all repositories,
         # it should only be called when the versions differ.
         # last_version, current_version = self.get_colrev_versions()
@@ -308,6 +318,7 @@ class ReviewManager:
         manual_author: bool = False,
         script_call: str = "",
         saved_args: Optional[dict] = None,
+        skip_status_yaml: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
         import colrev.ops.commit
@@ -322,7 +333,7 @@ class ReviewManager:
             script_name=script_call,
             saved_args=saved_args,
         )
-        ret = commit.create()
+        ret = commit.create(skip_status_yaml=skip_status_yaml)
         return ret
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
@@ -472,29 +483,6 @@ class ReviewManager:
         import colrev.env.resources
 
         return colrev.env.resources.Resources()
-
-    # pylint: disable=too-many-arguments
-    @classmethod
-    def get_init_operation(
-        cls,
-        review_type: str,
-        example: bool = False,
-        light: bool = False,
-        local_pdf_collection: bool = False,
-        target_path: Optional[Path] = None,
-        exact_call: str = "",
-    ) -> colrev.ops.init.Initializer:
-        """Get an init operation object"""
-        import colrev.ops.init
-
-        return colrev.ops.init.Initializer(
-            review_type=review_type,
-            example=example,
-            light=light,
-            local_pdf_collection=local_pdf_collection,
-            target_path=target_path,
-            exact_call=exact_call,
-        )
 
     @classmethod
     def get_sync_operation(cls) -> colrev.ops.sync.Sync:
@@ -741,6 +729,30 @@ class ReviewManager:
         if identifier:
             identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
+
+
+# pylint: disable=redefined-outer-name
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-arguments
+def get_init_operation(
+    review_type: str,
+    example: bool = False,
+    light: bool = False,
+    local_pdf_collection: bool = False,
+    target_path: Optional[Path] = None,
+    exact_call: str = "",
+) -> colrev.ops.init.Initializer:
+    """Get an init operation object"""
+    import colrev.ops.init
+
+    return colrev.ops.init.Initializer(
+        review_type=review_type,
+        example=example,
+        light=light,
+        local_pdf_collection=local_pdf_collection,
+        target_path=target_path,
+        exact_call=exact_call,
+    )
 
 
 if __name__ == "__main__":

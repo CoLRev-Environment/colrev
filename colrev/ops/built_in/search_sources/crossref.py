@@ -287,7 +287,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_main_record: bool = True,
         crossref_source: str = "",
     ) -> colrev.record.Record:
-        self.language_service.unify_to_iso_639_3_language_codes(record=record)
+        if "language" in record.data:
+            try:
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data["language"]
+
         doi_connector.DOIConnector.get_link_from_doi(
             review_manager=self.review_manager,
             record=record,
@@ -389,32 +394,32 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record_list
 
-    def __check_journal(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        timeout: int,
-        save_feed: bool,
-    ) -> colrev.record.Record:
-        """When there is no doi, journal names can be checked against crossref"""
+    # def __check_journal(
+    #     self,
+    #     prep_operation: colrev.ops.prep.Prep,
+    #     record: colrev.record.Record,
+    #     timeout: int,
+    #     save_feed: bool,
+    # ) -> colrev.record.Record:
+    #     """When there is no doi, journal names can be checked against crossref"""
 
-        if "article" == record.data["ENTRYTYPE"]:
-            # If type article and doi not in record and
-            # journal name not found in journal-query: notify
-            journals = Journals(etiquette=self.etiquette)
-            # record.data["journal"] = "Information Systems Research"
-            found = False
-            ret = journals.query(record.data["journal"])
-            for rets in ret:
-                if rets["title"]:
-                    found = True
-                    break
-            if not found:
-                record.add_masterdata_provenance_note(
-                    key="journal", note="quality_defect:journal not in crossref"
-                )
+    #     if "article" == record.data["ENTRYTYPE"]:
+    #         # If type article and doi not in record and
+    #         # journal name not found in journal-query: notify
+    #         journals = Journals(etiquette=self.etiquette)
+    #         # record.data["journal"] = "Information Systems Research"
+    #         found = False
+    #         ret = journals.query(record.data["journal"])
+    #         for rets in ret:
+    #             if rets["title"]:
+    #                 found = True
+    #                 break
+    #         if not found:
+    #             record.add_masterdata_provenance_note(
+    #                 key="journal", note="quality_defect:journal not in crossref"
+    #             )
 
-        return record
+    #     return record
 
     def __get_masterdata_record(
         self,
@@ -568,13 +573,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
             save_feed=save_feed,
         )
 
-        if "doi" not in record.data:
-            record = self.__check_journal(
-                prep_operation=prep_operation,
-                record=record,
-                timeout=timeout,
-                save_feed=save_feed,
-            )
+        # Note: this should be optional
+        # if "doi" not in record.data:
+        #     record = self.__check_journal(
+        #         prep_operation=prep_operation,
+        #         record=record,
+        #         timeout=timeout,
+        #         save_feed=save_feed,
+        #     )
 
         return record
 
@@ -810,7 +816,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
 
-        except (requests.exceptions.Timeout,) as exc:
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.JSONDecodeError,
+        ) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):

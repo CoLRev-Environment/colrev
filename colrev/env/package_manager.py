@@ -899,14 +899,11 @@ class PackageManager:
 
                 endpoint_item["status"] = (
                     endpoint_item["status"]
-                    .replace("GREEN", "🟢")
-                    .replace("ORANGE", "🟡")
-                    .replace("RED", "🔴")
+                    .replace("STABLE", "|STABLE|")
+                    .replace("MATURING", "|MATURING|")
+                    .replace("EXPERIMENTAL", "|EXPERIMENTAL|")
                 )
-                endpoint_item["status_linked"] = (
-                    f"`{endpoint_item['status']} "
-                    + "<https://colrev.readthedocs.io/en/latest/foundations/roadmap.html>`_"
-                )
+                endpoint_item["status_linked"] = endpoint_item["status"]
 
                 # Generate the contents displayed in the docs (see "datatemplate:json")
                 # load short_description dynamically...
@@ -929,24 +926,9 @@ class PackageManager:
                 else:
                     link = code_link
                 # Note: link format for the sphinx docs
-                endpoint_item["link"] = f"`Link <{link}>`_"
-                if (
-                    PackageEndpointType.search_source
-                    == PackageEndpointType[endpoint_type]
-                ):
-                    # Note : heuristic_status is mandatory (interface definition)
-                    endpoint_item["heuristic"] = (
-                        str(endpoint.heuristic_status)
-                        .replace("oni", "ONI")
-                        .replace("supported", "Supported")
-                        .replace("na", "NA")
-                    )
-
-                    if endpoint.api_search_supported:
-                        endpoint_item["api_search"] = "Supported"
-                    else:
-                        endpoint_item["api_search"] = "NA"
-                    endpoint_item["link"] = f"`{endpoint.short_name} <{link}>`_"
+                endpoint_item["short_description"] = (
+                    endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
+                )
 
             endpoint_list += package_endpoints["endpoints"][endpoint_type]
 

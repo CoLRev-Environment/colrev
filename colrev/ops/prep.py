@@ -621,7 +621,6 @@ class Prep(colrev.operation.Operation):
         prep_round: colrev.settings.PrepRound,
         debug_file: Optional[Path] = None,
         debug_ids: str,
-        max_n: int = 2500,
         polish: bool = False,
     ) -> list:
         if self.debug_mode:

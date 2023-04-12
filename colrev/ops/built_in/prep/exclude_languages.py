@@ -2,6 +2,8 @@
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
+import re
+import statistics
 from dataclasses import dataclass
 
 import timeout_decorator
@@ -60,6 +62,17 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         )
         self.languages_to_include = list(set(languages_to_include))
 
+    def __title_has_multiple_languages(self, *, title: str) -> bool:
+        if "[" not in title:
+            return False
+        split_titles = [
+            re.sub(r"\d", "", x.rstrip().rstrip("]")) for x in title.split("[")
+        ]
+        min_len = statistics.mean(len(x) for x in split_titles) - 20
+        if all(len(x) > min_len for x in split_titles):
+            return True
+        return False
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
@@ -67,10 +80,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
-
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-return-statements
 
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
@@ -92,62 +101,43 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.data["language"] = "eng"
             return record
 
-        # Deal with title fields containing titles in two languages
-        if (
-            len(record.data.get("title", "")) > 40
-            and record.data.get("title", "").count("[") == 1
-        ):
-            lang_1 = self.language_service.compute_language(
-                text=record.data["title"].split("[")[0]
+        if not self.__title_has_multiple_languages(title=record.data.get("title", "")):
+            language = self.language_service.compute_language(text=record.data["title"])
+            record.update_field(
+                key="language",
+                value=language,
+                source="LanguageDetector",
+                note="",
+                append_edit=False,
             )
-            lang_2 = self.language_service.compute_language(
-                text=record.data["title"].split("[")[1]
-            )
-
-            if lang_1 != "" and lang_2 != "":
-                if "eng" == lang_1:
-                    record.update_field(
-                        key=f"title_{lang_2}",
-                        value=record.data["title"].split("[")[1].rstrip("]"),
-                        source="LanguageDetector_split",
-                    )
+        else:
+            # Deal with title fields containing titles in two or more languages
+            split_titles = [
+                x.rstrip().rstrip("]") for x in record.data["title"].split("[")
+            ]
+            for i, split_title in enumerate(split_titles):
+                lang_split_title = self.language_service.compute_language(
+                    text=split_title
+                )
+                if 0 == i:
                     record.update_field(
                         key="title",
-                        value=record.data["title"].split("[")[0].rstrip(),
+                        value=split_title.rstrip(),
                         source="LanguageDetector_split",
                     )
                     record.update_field(
                         key="language",
-                        value="eng",
-                        source="LanguageDetector",
-                        note="",
+                        value=lang_split_title,
+                        source="LanguageDetector_split",
                     )
                 else:
                     record.update_field(
-                        key=f"title_{lang_1}",
-                        value=record.data["title"].split("[")[0].rstrip(),
+                        key=f"title_{lang_split_title}",
+                        value=split_title.rstrip("]"),
                         source="LanguageDetector_split",
                     )
-                    record.update_field(
-                        key="title",
-                        value=record.data["title"].split("[")[1].rstrip(),
-                        source="LanguageDetector_split",
-                    )
-                    record.update_field(
-                        key="language",
-                        value="eng",
-                        source="LanguageDetector",
-                        note="",
-                    )
-                    record.prescreen_exclude(
-                        reason="language of title(s) not in ["
-                        + f"{','.join(self.languages_to_include)}]"
-                    )
 
-                return record
-
-        language = self.language_service.compute_language(text=record.data["title"])
-        if not language:
+        if "" == record.data.get("language", ""):
             record.update_field(
                 key="title",
                 value=record.data.get("title", ""),
@@ -158,14 +148,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
             return record
-
-        record.update_field(
-            key="language",
-            value=language,
-            source="LanguageDetector",
-            note="",
-            append_edit=False,
-        )
 
         if record.data.get("language", "") not in self.languages_to_include:
             record.prescreen_exclude(

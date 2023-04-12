@@ -55,6 +55,7 @@ def test_settings_load() -> None:
             "share_stat_req": colrev.settings.ShareStatReq.processed,
             "delay_automated_processing": False,
             "colrev_version": "-",
+            "auto_upgrade": True,
         },
         "sources": [
             {
@@ -216,6 +217,7 @@ def test_settings_schema() -> None:
                     "share_stat_req",
                     "delay_automated_processing",
                     "colrev_version",
+                    "auto_upgrade",
                 ],
                 "properties": {
                     "title": {"type": "string"},
@@ -236,6 +238,7 @@ def test_settings_schema() -> None:
                     },
                     "delay_automated_processing": {"type": "boolean"},
                     "colrev_version": {"type": "string"},
+                    "auto_upgrade": {"type": "boolean"},
                 },
                 "description": "Project settings",
             },

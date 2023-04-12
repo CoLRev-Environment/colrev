@@ -32,7 +32,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_distribute_operation
       ~ReviewManager.get_environment_manager
       ~ReviewManager.get_grobid_service
-      ~ReviewManager.get_init_operation
       ~ReviewManager.get_load_operation
       ~ReviewManager.get_local_index
       ~ReviewManager.get_merge_operation

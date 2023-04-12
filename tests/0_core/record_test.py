@@ -1688,6 +1688,7 @@ def test_update_metadata_status() -> None:
     R1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": "http...", "note": ""}
     }
+    R1_mod.data["title"] = "Editorial"
     R1_mod.update_metadata_status()
     expected = {
         "ID": "R1",
@@ -1699,7 +1700,7 @@ def test_update_metadata_status() -> None:
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
-        "title": "EDITORIAL",
+        "title": "Editorial",
         "author": "Rai, Arun",
         "journal": "MIS Quarterly",
         "volume": "45",

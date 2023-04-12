@@ -138,6 +138,8 @@ def test_validate_iso_639_3_language_codes(
         ("ENGLISH", "eng"),
         ("en", "eng"),
         ("fr", "fra"),
+        ("de", "deu"),
+        ("ar", "ara"),
     ],
 )
 def test_unify_to_iso_639_3_language_codes(

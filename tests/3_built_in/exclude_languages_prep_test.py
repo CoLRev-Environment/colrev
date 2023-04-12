@@ -41,14 +41,45 @@ def elp(
         ),
         (
             {
+                "title": 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
+            },
+            {
+                "title": 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
+                "language": "eng",
+                "colrev_data_provenance": {
+                    "language": {"note": "", "source": "LanguageDetector"}
+                },
+            },
+        ),
+        (
+            {
                 "title": "A discussion about Action Research studies and their variations in Smart Cities and the challenges in Latin America [Uma discussão sobre o uso da Pesquisa-Ação e suas variações em estudos sobre Cidades Inteligentes e os desafios na América Latina]"
             },
             {
                 "title": "A discussion about Action Research studies and their variations in Smart Cities and the challenges in Latin America",
                 "title_por": "Uma discussão sobre o uso da Pesquisa-Ação e suas variações em estudos sobre Cidades Inteligentes e os desafios na América Latina",
                 "colrev_data_provenance": {
-                    "language": {"note": "", "source": "LanguageDetector"},
+                    "language": {"note": "", "source": "LanguageDetector_split"},
                     "title_por": {"note": "", "source": "LanguageDetector_split"},
+                },
+                "colrev_masterdata_provenance": {
+                    "title": {"note": "", "source": "original|LanguageDetector_split"}
+                },
+                "language": "eng",
+            },
+        ),
+        (
+            {
+                "title": "Coliving housing: home cultures of precarity for the new creative class [Alojamiento en convivencia: culturas domésticas de la precariedad para la nueva clase creativa] [La vie en colocation : les cultures du domicile issues de la précarité et la nouvelle classe créative]"
+            },
+            {
+                "title": "Coliving housing: home cultures of precarity for the new creative class",
+                "title_spa": "Alojamiento en convivencia: culturas domésticas de la precariedad para la nueva clase creativa",
+                "title_fra": "La vie en colocation : les cultures du domicile issues de la précarité et la nouvelle classe créative",
+                "colrev_data_provenance": {
+                    "language": {"note": "", "source": "LanguageDetector_split"},
+                    "title_fra": {"note": "", "source": "LanguageDetector_split"},
+                    "title_spa": {"note": "", "source": "LanguageDetector_split"},
                 },
                 "colrev_masterdata_provenance": {
                     "title": {"note": "", "source": "original|LanguageDetector_split"}
@@ -63,7 +94,7 @@ def test_prep_exclude_languages(
     input: dict,
     expected: dict,
 ) -> None:
-    record = colrev.record.Record(data=input)
+    record = colrev.record.PrepRecord(data=input)
     returned_record = elp.prepare(prep_operation=elp, record=record)
     actual = returned_record.data
     assert expected == actual

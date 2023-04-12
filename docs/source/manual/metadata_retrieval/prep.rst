@@ -3,6 +3,16 @@
 colrev prep
 ==================================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+
 In the ``colrev prep`` operation, records with sufficient metadata quality transition from ``md_imported`` to ``md_prepared`` (``md_needs_manual_preparation`` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
 
 Quality rules:
@@ -79,7 +89,7 @@ The following options for ``prep`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Preparation packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Preparation packages", "short_description"), ("Status", "status_linked")],
         data['prep'],
         title='',
         ) }}
@@ -90,7 +100,8 @@ The following options for ``prep-man`` are available:
 
 
     {{ make_list_table_from_mappings(
-        [("Manual preparation packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Manual preparation packages", "short_description"), ("Status", "status_linked")],
         data['prep_man'],
         title='',
+        columns=[25,55,20]
         ) }}
