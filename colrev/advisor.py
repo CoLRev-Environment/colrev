@@ -76,7 +76,7 @@ class Advisor:
         non_staged = [
             item.a_path
             for item in git_repo.index.diff(None)
-            if item.a_path[-4] == ".bib"
+            if item.a_path[-4:] == ".bib"
         ]
         if len(non_staged) > 0:
             item = {
