@@ -76,7 +76,7 @@ class Advisor:
         non_staged = [
             item.a_path
             for item in git_repo.index.diff(None)
-            if ".bib" == item.a_path[-4:]
+            if item.a_path[-4] == ".bib"
         ]
         if len(non_staged) > 0:
             item = {
@@ -280,7 +280,7 @@ class Advisor:
             )
 
             for transitioned_record in transitioned_records:
-                if "no_source_state" == transitioned_record["dest"]:
+                if transitioned_record["dest"] == "no_source_state":
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
@@ -289,7 +289,7 @@ class Advisor:
                             "priority": "yes",
                         }
                     )
-                if "invalid_transition" == transitioned_record["operations_type"]:
+                if transitioned_record["operations_type"] == "invalid_transition":
                     msg = (
                         f"Resolve invalid transition ({transitioned_record['ID']}): "
                         + f"{transitioned_record['source']} to "
@@ -630,10 +630,10 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-                if "journal" == line.lstrip()[:7]:
+                if line.lstrip()[:7] == "journal":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
-                if "booktitle" == line.lstrip()[:9]:
+                if line.lstrip()[:9] == "booktitle":
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 

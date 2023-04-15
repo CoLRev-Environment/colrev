@@ -198,13 +198,13 @@ class DBLPSearchSource(JsonSchemaMixin):
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
         retrieved_record = {}
-        if "Withdrawn Items" == item["type"]:
-            if "journals" == item["key"][:8]:
+        if item["type"] == "Withdrawn Items":
+            if item["key"][:8] == "journals":
                 item["type"] = "Journal Articles"
-            if "conf" == item["key"][:4]:
+            if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
             retrieved_record["warning"] = "Withdrawn (according to DBLP)"
-        if "Journal Articles" == item["type"]:
+        if item["type"] == "Journal Articles":
             retrieved_record["ENTRYTYPE"] = "article"
             lpos = item["key"].find("/") + 1
             rpos = item["key"].rfind("/")
@@ -216,7 +216,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 venue_string=ven_key,
                 venue_type="Journal",
             )
-        if "Conference and Workshop Papers" == item["type"]:
+        if item["type"] == "Conference and Workshop Papers":
             retrieved_record["ENTRYTYPE"] = "inproceedings"
             lpos = item["key"].find("/") + 1
             rpos = item["key"].rfind("/")
@@ -666,7 +666,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for DBLP"""
 
-        if "UNKNOWN" != record.data.get("author", "UNKNOWN"):
+        if record.data.get("author", "UNKNOWN") != "UNKNOWN":
             # DBLP appends identifiers to non-unique authors
             record.update_field(
                 key="author",

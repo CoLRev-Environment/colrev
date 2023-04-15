@@ -273,7 +273,7 @@ class Screen(colrev.operation.Operation):
         for record_dict in records.values():
             if record_dict["ID"] in screen_excluded:
                 reasons = record_dict.get("screening_criteria", "NA")
-                if "NA" == reasons:
+                if reasons == "NA":
                     reasons = ""
                 else:
                     reasons = f"({reasons})"

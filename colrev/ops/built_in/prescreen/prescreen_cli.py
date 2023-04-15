@@ -47,7 +47,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         stat_len: int,
         padding: int,
     ) -> bool:
-        if "" == prescreen_operation.review_manager.settings.prescreen.explanation:
+        if prescreen_operation.review_manager.settings.prescreen.explanation == "":
             print(
                 f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "
                 "(why should particular papers be included?):"
@@ -91,9 +91,9 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                     "\nInclude this record "
                     "[enter y,n,s,q for yes, no, skip/decide later, quit-and-save]? "
                 )
-                if "q" == ret:
+                if ret == "q":
                     quit_pressed = True
-                elif "s" == ret:
+                elif ret == "s":
                     continue
                 else:
                     inclusion_decision_str = ret.replace("y", "yes").replace("n", "no")
@@ -102,7 +102,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 prescreen_operation.review_manager.logger.info("Stop prescreen")
                 break
 
-            if "s" == ret:
+            if ret == "s":
                 continue
 
             inclusion_decision = "yes" == inclusion_decision_str
@@ -147,7 +147,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         # Users can still squash commits.
         # Note: originall: completed = self.__fun_cli_prescreen(...
         # if not completed:
-        #     if "y" != input("Create commit (y/n)?"):
+        #     if input("Create commit (y/n)?") != "y":
         #         return records
 
         prescreen_operation.review_manager.create_commit(

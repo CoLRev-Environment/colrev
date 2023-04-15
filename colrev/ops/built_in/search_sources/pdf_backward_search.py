@@ -264,7 +264,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if "backwardsearch" == query.replace("_", "").replace("-", ""):
+        if query.replace("_", "").replace("-", "") == "backwardsearch":
             return cls.get_default_source()
 
         return None
@@ -301,7 +301,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         ):
             record.prescreen_exclude(reason="grobid-error")
 
-        if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
+        if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
             record.data["ENTRYTYPE"] = "book"
 
         return record

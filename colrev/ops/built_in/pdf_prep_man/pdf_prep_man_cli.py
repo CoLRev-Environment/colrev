@@ -57,14 +57,14 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         while user_selection not in valid_selections:
             user_selection = input("Selection: ")
 
-            if "s" == user_selection:
+            if user_selection == "s":
                 break
-            if "a" == user_selection:
+            if user_selection == "a":
                 author = input("Authors:")
                 record.update_field(
                     key="author", value=author, source="manual_correction"
                 )
-            elif "c" == user_selection:
+            elif user_selection == "c":
                 if "journal" in record.data:
                     journal = input("Journal:")
                     record.update_field(
@@ -75,22 +75,22 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                     record.update_field(
                         key="booktitle", value=booktitle, source="manual_correction"
                     )
-            elif "t" == user_selection:
+            elif user_selection == "t":
                 title = input("Title:")
                 record.update_field(
                     key="title", value=title, source="manual_correction"
                 )
-            elif "v" == user_selection:
+            elif user_selection == "v":
                 volume = input("Volume:")
                 record.update_field(
                     key="volume", value=volume, source="manual_correction"
                 )
-            elif "n" == user_selection:
+            elif user_selection == "n":
                 number = input("Number:")
                 record.update_field(
                     key="number", value=number, source="manual_correction"
                 )
-            elif "p" == user_selection:
+            elif user_selection == "p":
                 pages = input("Pages:")
                 record.update_field(
                     key="pages", value=pages, source="manual_correction"
@@ -178,23 +178,23 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                             nonlocal to_skip
                             to_skip = int(user_selection[1:])
                         return records
-                    if "q" == user_selection:
+                    if user_selection == "q":
                         raise QuitPressedException()
 
-                    if "m" == user_selection:
+                    if user_selection == "m":
                         self.__update_metadata(record=record)
                         print(intro_paragraph)
-                    elif "c" == user_selection:
+                    elif user_selection == "c":
                         try:
                             pdf_prep_man_operation.extract_coverpage(filepath=filepath)
                         except colrev_exceptions.InvalidPDFException:
                             pass
-                    elif "l" == user_selection:
+                    elif user_selection == "l":
                         try:
                             pdf_prep_man_operation.extract_lastpage(filepath=filepath)
                         except colrev_exceptions.InvalidPDFException:
                             pass
-                    elif "r" == user_selection:
+                    elif user_selection == "r":
                         range_str = ""
                         while not re.match(r"(\d)+-(\d)+", range_str):
                             range_str = input('Page range to remove (e.g., "0-10"):')
@@ -212,9 +212,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                         except colrev_exceptions.InvalidPDFException:
                             pass
 
-                    elif "y" == user_selection:
+                    elif user_selection == "y":
                         pdf_prep_man_operation.set_pdf_man_prepared(record=record)
-                    elif "n" == user_selection:
+                    elif user_selection == "n":
                         record.remove_field(key="file")
                         record.set_status(
                             target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
@@ -251,7 +251,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         pdf_prep_man_operation.review_manager.dataset.add_record_changes()
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
-            if "y" == input("Create commit (y/n)?"):
+            if input("Create commit (y/n)?") == "y":
                 pdf_prep_man_operation.review_manager.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,

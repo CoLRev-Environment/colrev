@@ -142,7 +142,7 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if (self.path / Path(".git")).is_dir():
-                if "gh-pages" == git.Repo().active_branch.name:
+                if git.Repo().active_branch.name == "gh-pages":
                     raise colrev_exceptions.RepoSetupError(
                         msg="Currently on gh-pages branch. Switch to main: "
                         + f"{colors.ORANGE}git switch main{colors.END}"

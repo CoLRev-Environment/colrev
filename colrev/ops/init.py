@@ -315,7 +315,7 @@ class Initializer:
         git_repo.git.add(all=True)
 
     def __post_commit_edits(self) -> None:
-        if "colrev.curated_masterdata" == self.review_type:
+        if self.review_type == "colrev.curated_masterdata":
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
             self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
@@ -387,7 +387,7 @@ class Initializer:
                     self.logger.debug("%s...", script_to_call["description"])
                 check_call(script_to_call["command"], stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
-                if "pre-commit autoupdate" == " ".join(script_to_call["command"]):
+                if " ".join(script_to_call["command"]) == "pre-commit autoupdate":
                     pass
                 else:
                     self.logger.error(

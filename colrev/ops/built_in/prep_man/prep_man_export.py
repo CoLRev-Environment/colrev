@@ -83,10 +83,10 @@ class ExportManPrep(JsonSchemaMixin):
                 target_path = self.review_manager.prep_dir / Path(record["file"])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
-                if "symlink" == self.settings.pdf_handling_mode:
+                if self.settings.pdf_handling_mode == "symlink":
                     target_path.symlink_to(Path(record["file"]).resolve())
 
-                if "copy_first_page" == self.settings.pdf_handling_mode:
+                if self.settings.pdf_handling_mode == "copy_first_page":
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if len(pdf_reader.pages) >= 1:
                         writer = PdfFileWriter()
@@ -217,7 +217,7 @@ class ExportManPrep(JsonSchemaMixin):
             selected_path = self.prep_man_bib_path.relative_to(
                 prep_man_operation.review_manager.path
             )
-            if "y" == input(f"Import changes from {selected_path} [y,n]?"):
+            if input(f"Import changes from {selected_path} [y,n]?") == "y":
                 self.__import_prep_man(prep_man_operation=prep_man_operation)
 
         return records

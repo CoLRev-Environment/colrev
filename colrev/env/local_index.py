@@ -223,7 +223,7 @@ class LocalIndex:
         # pylint: disable=too-many-return-statements
 
         fields_to_remove: typing.List[str] = []
-        if "journal" not in record_dict and "article" != record_dict["ENTRYTYPE"]:
+        if "journal" not in record_dict and record_dict["ENTRYTYPE"] != "article":
             return fields_to_remove
 
         internal_record_dict = deepcopy(record_dict)
@@ -242,7 +242,7 @@ class LocalIndex:
             del wo_nr["number"]
             toc_key_wo_nr = colrev.record.Record(data=wo_nr).get_toc_key()
 
-            if "NA" != toc_key_wo_nr:
+            if toc_key_wo_nr != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_nr):
                     fields_to_remove.append("number")
                     return fields_to_remove
@@ -250,7 +250,7 @@ class LocalIndex:
             wo_vol = deepcopy(internal_record_dict)
             del wo_vol["volume"]
             toc_key_wo_vol = colrev.record.Record(data=wo_vol).get_toc_key()
-            if "NA" != toc_key_wo_vol:
+            if toc_key_wo_vol != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_vol):
                     fields_to_remove.append("volume")
                     return fields_to_remove
@@ -259,7 +259,7 @@ class LocalIndex:
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
             toc_key_wo_vol_nr = colrev.record.Record(data=wo_vol_nr).get_toc_key()
-            if "NA" != toc_key_wo_vol_nr:
+            if toc_key_wo_vol_nr != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_vol_nr):
                     fields_to_remove.append("number")
                     fields_to_remove.append("volume")
@@ -302,7 +302,7 @@ class LocalIndex:
                 for records_index_required_key in self.RECORDS_INDEX_KEYS:
                     if records_index_required_key not in item:
                         item[records_index_required_key] = ""
-                if "" == item["id"]:
+                if item["id"] == "":
                     print("NO ID IN RECORD")
                     break
                 try:
@@ -489,7 +489,7 @@ class LocalIndex:
                 del record_dict["colrev_id"]
 
         if include_file:
-            if "NA" != fulltext_backup:
+            if fulltext_backup != "NA":
                 record_dict["fulltext"] = fulltext_backup
         else:
             if "file" in record_dict:
@@ -823,7 +823,7 @@ class LocalIndex:
                 review_manager=review_manager
             )
 
-            if "main" != review_manager.dataset.get_repo().active_branch.name:
+            if review_manager.dataset.get_repo().active_branch.name != "main":
                 print(
                     f"{colors.ORANGE}Warning: {repo_source_path} not on main branch{colors.END}"
                 )
@@ -1118,7 +1118,7 @@ class LocalIndex:
             else:
                 retrieved_record = selected_row
 
-            if "colrev_id" == key:
+            if key == "colrev_id":
                 if (
                     value
                     != colrev.record.Record(data=retrieved_record).create_colrev_id()

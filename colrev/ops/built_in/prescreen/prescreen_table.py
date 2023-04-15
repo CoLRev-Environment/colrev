@@ -110,12 +110,12 @@ class TablePrescreen(JsonSchemaMixin):
             }
             tbl.append(row)
 
-        if "csv" == export_table_format.lower():
+        if export_table_format.lower() == "csv":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv("prescreen.csv", index=False, quoting=csv.QUOTE_ALL)
             prescreen_operation.review_manager.logger.info("Created prescreen.csv")
 
-        if "xlsx" == export_table_format.lower():
+        if export_table_format.lower() == "xlsx":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel("prescreen.xlsx", index=False, sheet_name="screen")
             prescreen_operation.review_manager.logger.info("Created prescreen.xlsx")
@@ -177,7 +177,7 @@ class TablePrescreen(JsonSchemaMixin):
                     ):
                         continue
 
-                if "out" == prescreened_record.get("presceen_inclusion", ""):
+                if prescreened_record.get("presceen_inclusion", "") == "out":
                     if (
                         record["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_excluded
@@ -187,7 +187,7 @@ class TablePrescreen(JsonSchemaMixin):
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_excluded
 
-                elif "in" == prescreened_record.get("presceen_inclusion", ""):
+                elif prescreened_record.get("presceen_inclusion", "") == "in":
                     if (
                         record["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_included
@@ -196,7 +196,7 @@ class TablePrescreen(JsonSchemaMixin):
                     record[
                         "colrev_status"
                     ] = colrev.record.RecordState.rev_prescreen_included
-                elif "TODO" == prescreened_record.get("presceen_inclusion", ""):
+                elif prescreened_record.get("presceen_inclusion", "") == "TODO":
                     nr_todo += 1
                 else:
                     prescreen_operation.review_manager.logger.warning(
@@ -234,16 +234,16 @@ class TablePrescreen(JsonSchemaMixin):
     ) -> dict:
         """Prescreen records based on screening tables"""
 
-        if "y" == input("create prescreen table [y,n]?"):
+        if input("create prescreen table [y,n]?") == "y":
             self.export_table(
                 prescreen_operation=prescreen_operation, records=records, split=split
             )
 
-        if "y" == input("import prescreen table [y,n]?"):
+        if input("import prescreen table [y,n]?") == "y":
             self.import_table(prescreen_operation=prescreen_operation, records=records)
 
         if prescreen_operation.review_manager.dataset.has_changes():
-            if "y" == input("create commit [y,n]?"):
+            if input("create commit [y,n]?") == "y":
                 prescreen_operation.review_manager.create_commit(
                     msg="Pre-screen (table)",
                     manual_author=True,

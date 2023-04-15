@@ -107,9 +107,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             for query_part in query_parts:
                 if query_part not in ["(", ")"] and "" == parenthesis_expression:
                     query_parts_merged.append(query_part)
-                elif "(" == query_part:
+                elif query_part == "(":
                     parenthesis_expression += "("
-                elif ")" == query_part:
+                elif query_part == ")":
                     parenthesis_expression = parenthesis_expression.rstrip().replace(
                         "(", ""
                     )
@@ -456,7 +456,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
 
-        if "inproceedings" == record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] == "inproceedings":
             if "ICIS" in record.data.get("booktitle", ""):
                 record.update_field(
                     key="booktitle",
@@ -538,7 +538,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
 
         if "abstract" in record.data:
-            if "N/A" == record.data["abstract"]:
+            if record.data["abstract"] == "N/A":
                 record.remove_field(key="abstract")
         if "author" in record.data:
             record.update_field(

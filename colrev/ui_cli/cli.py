@@ -1487,7 +1487,7 @@ def __delete_first_pages_cli(
                 )
             else:
                 print("no file in record")
-        if "n" == input("Extract coverpage from another PDF? (y/n)"):
+        if input("Extract coverpage from another PDF? (y/n)") == "n":
             break
         record_id = input("ID of next PDF for coverpage extraction:")
 
@@ -1669,7 +1669,7 @@ def data(
                 )
         else:
             if ret["ask_to_commit"]:
-                if "y" == input("Create commit (y/n)?"):
+                if input("Create commit (y/n)?") == "y":
                     review_manager.create_commit(
                         msg="Data and synthesis", manual_author=True
                     )
@@ -1882,7 +1882,7 @@ def __print_environment_status(
 
     print("\nCoLRev environment status\n")
     print("Index\n")
-    if "up" == environment_details["index"]["status"]:
+    if environment_details["index"]["status"] == "up":
         print(f" - Status: {colors.GREEN}up{colors.END}")
         print(f' - Path          : {environment_details["index"]["path"]}')
         print(f' - Size          : {environment_details["index"]["size"]} records')
@@ -2243,10 +2243,10 @@ def sync(
                 print(f"2: {v_2}")
                 print("      " + val[1].data.get("source_url", ""))
                 user_selection = input("Import version 1 or 2 (or skip)?")
-                if "1" == user_selection:
+                if user_selection == "1":
                     sync_operation.add_to_records_to_import(record=val[0])
                     continue
-                if "2" == user_selection:
+                if user_selection == "2":
                     sync_operation.add_to_records_to_import(record=val[1])
                     continue
 
@@ -2417,7 +2417,7 @@ def service(
         print("\nPressed ctrl-c. Shutting down service")
 
     if review_manager.dataset.has_changes():
-        if "y" == input("Commit current changes (y/n)?"):
+        if input("Commit current changes (y/n)?") == "y":
             review_manager.create_commit(msg="Update (using CoLRev service)")
     else:
         print("No changes to commit")
@@ -2459,7 +2459,7 @@ def show(  # type: ignore
     import colrev.operation
     import colrev.ui_cli.show_printer
 
-    if "venv" == keyword:
+    if keyword == "venv":
         colrev.ui_cli.show_printer.print_venv_notes()
         return
 
@@ -2467,18 +2467,18 @@ def show(  # type: ignore
         force_mode=force, verbose_mode=verbose
     )
 
-    if "sample" == keyword:
+    if keyword == "sample":
         colrev.ui_cli.show_printer.print_sample(review_manager=review_manager)
 
-    elif "settings" == keyword:
+    elif keyword == "settings":
         print(f"Settings:\n{review_manager.settings}")
 
-    elif "prisma" == keyword:
+    elif keyword == "prisma":
         status_operation = review_manager.get_status_operation()
         stats_report = status_operation.get_review_status_report()
         print(stats_report)
 
-    elif "cmd_history" == keyword:
+    elif keyword == "cmd_history":
         cmds = []
         colrev.operation.CheckOperation(review_manager=review_manager)
         revlist = review_manager.dataset.get_repo().iter_commits()
@@ -2777,7 +2777,7 @@ def undo(
         force_mode=force, verbose_mode=verbose
     )
 
-    if "commit" == selection:
+    if selection == "commit":
         colrev.operation.CheckOperation(review_manager=review_manager)
         git_repo = review_manager.dataset.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")

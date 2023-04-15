@@ -54,7 +54,7 @@ class PDFCheckOCR(JsonSchemaMixin):
             text=text
         )
         lang, conf = confidence_values.pop(0)
-        if "eng" == lang:
+        if lang == "eng":
             if conf > 0.1:
                 return True
 

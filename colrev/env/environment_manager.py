@@ -317,14 +317,14 @@ class EnvironmentManager:
                             and "journal:" != line.lstrip()[:8]
                         ):
                             journal = line[line.find("{") + 1 : line.rfind("}")]
-                            if "UNKNOWN" != journal:
+                            if journal != "UNKNOWN":
                                 outlets.append(journal)
                         if (
-                            "booktitle" == line.lstrip()[:9]
-                            and "booktitle:" != line.lstrip()[:10]
+                            line.lstrip()[:9] == "booktitle"
+                            and line.lstrip()[:10] != "booktitle:"
                         ):
                             booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                            if "UNKNOWN" != booktitle:
+                            if booktitle != "UNKNOWN":
                                 outlets.append(booktitle)
 
                     if len(set(outlets)) > 1:

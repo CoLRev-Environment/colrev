@@ -42,7 +42,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Get a PDF of the website (screenshot)"""
 
-        if "online" != record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] != "online":
             return record
 
         screenshot_service = pdf_get_operation.review_manager.get_screenshot_service()

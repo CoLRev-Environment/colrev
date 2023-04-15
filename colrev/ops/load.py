@@ -344,7 +344,7 @@ class Load(colrev.operation.Operation):
                         heuristic_source = heuristic_result_list[int(selection) - 1]
                         break
 
-            if "colrev.unknown_source" == heuristic_source["source_candidate"].endpoint:
+            if heuristic_source["source_candidate"].endpoint == "colrev.unknown_source":
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
                 if not skip_query:
@@ -369,7 +369,7 @@ class Load(colrev.operation.Operation):
                 custom_load_conversion_package_endpoint = input(
                     "provide custom load_conversion_package_endpoint [or NA]:"
                 )
-                if "NA" == custom_load_conversion_package_endpoint:
+                if custom_load_conversion_package_endpoint == "NA":
                     heuristic_source[
                         "source_candidate"
                     ].load_conversion_package_endpoint = {}
@@ -642,7 +642,7 @@ class Load(colrev.operation.Operation):
                         .replace("}", "")
                     )
 
-            if "UNKNOWN" != record_dict.get("title", "UNKNOWN"):
+            if record_dict.get("title", "UNKNOWN") != "UNKNOWN":
                 record_dict["title"] = (
                     re.sub(r"\s+", " ", record_dict["title"])
                     .lstrip()
@@ -658,7 +658,7 @@ class Load(colrev.operation.Operation):
                 record_dict["pages"] = record_dict["pages"].replace("–", "--")
                 if record_dict["pages"].count("-") == 1:
                     record_dict["pages"] = record_dict["pages"].replace("-", "--")
-                if "n.pag" == record_dict["pages"].lower():
+                if record_dict["pages"].lower() == "n.pag":
                     del record_dict["pages"]
 
             if "number" not in record_dict and "issue" in record_dict:
@@ -720,7 +720,7 @@ class Load(colrev.operation.Operation):
             for key in colrev.record.Record.provenance_keys + [
                 "screening_criteria",
             ]:
-                if "colrev_status" == key:
+                if key == "colrev_status":
                     continue
                 if key in record:
                     del record[key]

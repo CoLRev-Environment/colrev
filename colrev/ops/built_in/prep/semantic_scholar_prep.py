@@ -66,7 +66,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         if "abstract" in item:
             retrieved_record.update(abstract=item["abstract"])
         if "doi" in item:
-            if "none" != str(item["doi"]).lower():
+            if str(item["doi"]).lower() != "none":
                 retrieved_record.update(doi=str(item["doi"]).upper())
         if "title" in item:
             retrieved_record.update(title=item["title"])

@@ -95,12 +95,12 @@ class PDFGet(colrev.operation.Operation):
     def get_target_filepath(self, *, record: colrev.record.Record) -> Path:
         """Get the target filepath for a PDF"""
 
-        if "year" == self.filepath_directory_pattern:
+        if self.filepath_directory_pattern == "year":
             target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
                 f"{record.data.get('year', 'no_year')}/{record.data['ID']}.pdf"
             )
 
-        elif "volume_number" == self.filepath_directory_pattern:
+        elif self.filepath_directory_pattern == "volume_number":
             if "volume" in record.data and "number" in record.data:
                 target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
                     f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
@@ -225,7 +225,7 @@ class PDFGet(colrev.operation.Operation):
         corresponding_origin: str
         source_records: typing.List[typing.Dict] = []
         for source in self.review_manager.settings.sources:
-            if "colrev.pdfs_dir" != source.endpoint:
+            if source.endpoint != "colrev.pdfs_dir":
                 continue
 
             if not source.filename.is_file():

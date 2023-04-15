@@ -293,10 +293,10 @@ class SimpleDedupe(JsonSchemaMixin):
             )
 
             # set potential_duplicates
-            if "y" == user_input:
+            if user_input == "y":
                 potential_duplicate["decision"] = "duplicate"
                 n_match += 1
-            if "n" == user_input:
+            if user_input == "n":
                 potential_duplicate["decision"] = "no_duplicate"
                 n_distinct += 1
 
@@ -345,7 +345,7 @@ class SimpleDedupe(JsonSchemaMixin):
         dedupe_operation.apply_merges(
             results=dedupe_batch_results, complete_dedupe=True
         )
-        if [x for x in dedupe_batch_results if "duplicate" == x["decision"]]:
+        if [x for x in dedupe_batch_results if x["decision"] == "duplicate"]:
             dedupe_operation.review_manager.logger.info(
                 "Completed application of merges"
             )

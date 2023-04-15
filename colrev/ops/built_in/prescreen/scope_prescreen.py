@@ -149,7 +149,7 @@ class ScopePrescreen(JsonSchemaMixin):
             if "list" in self.settings.OutletExclusionScope:
                 for resource in self.settings.OutletExclusionScope["list"]:
                     for key, value in resource.items():
-                        if "resource" == key and "predatory_journals_beal" == value:
+                        if key == "resource" and value == "predatory_journals_beal":
                             if "journal" in record_dict:
                                 if (
                                     record_dict["journal"].lower()

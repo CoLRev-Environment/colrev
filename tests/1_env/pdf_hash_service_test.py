@@ -61,10 +61,10 @@ def test_pdf_hash_service(pdf_path, expected_result, pdf_hash_service) -> None: 
         source=pdf_path,
         target=target_path,
     )
-    if "InvalidPDFException" == expected_result:
+    if expected_result == "InvalidPDFException":
         with pytest.raises(colrev_exceptions.InvalidPDFException):
             pdf_hash_service.get_pdf_hash(pdf_path=target_path, page_nr=1, hash_size=32)
-    elif "PDFHashError" == expected_result:
+    elif expected_result == "PDFHashError":
         with pytest.raises(colrev_exceptions.PDFHashError):
             pdf_hash_service.get_pdf_hash(pdf_path=target_path, page_nr=1, hash_size=32)
 

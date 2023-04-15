@@ -137,7 +137,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                         source="LanguageDetector_split",
                     )
 
-        if "" == record.data.get("language", ""):
+        if record.data.get("language", "") == "":
             record.update_field(
                 key="title",
                 value=record.data.get("title", ""),

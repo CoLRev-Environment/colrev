@@ -77,9 +77,9 @@ def print_collaboration_instructions(
     if "status" in collaboration_instructions:
         if "title" in collaboration_instructions["status"]:
             title = collaboration_instructions["status"]["title"]
-            if "WARNING" == collaboration_instructions["status"].get("level", "NA"):
+            if collaboration_instructions["status"].get("level", "NA") == "WARNING":
                 print(f"  {colors.RED}{title}{colors.END}")
-            elif "SUCCESS" == collaboration_instructions["status"].get("level", "NA"):
+            elif collaboration_instructions["status"].get("level", "NA") == "SUCCESS":
                 print(f"  {colors.GREEN}{title}{colors.END}")
             else:
                 print("  " + title)
@@ -89,9 +89,9 @@ def print_collaboration_instructions(
     for item in collaboration_instructions["items"]:
         if "title" in item:
             if "level" in item:
-                if "WARNING" == item["level"]:
+                if item["level"] == "WARNING":
                     print(f'  {colors.RED}{item["title"]}{colors.END}')
-                elif "SUCCESS" == item["level"]:
+                elif item["level"] == "SUCCESS":
                     print(f'  {colors.GREEN}{item["title"]}{colors.END}')
             else:
                 print("  " + item["title"])

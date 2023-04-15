@@ -179,7 +179,7 @@ class Sync:
 
                 for ordered_field in field_order:
                     if ordered_field in record_dict:
-                        if "" == record_dict[ordered_field]:
+                        if record_dict[ordered_field] == "":
                             continue
                         if isinstance(record_dict[ordered_field], (list, dict)):
                             continue

@@ -276,9 +276,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                         id_type = article_id_node_item.attrib.get("IdType")
                         id_text = article_id_node_item.text
                         if id_type is not None and id_text is not None:
-                            if "pubmed" == id_type:
+                            if id_type == "pubmed":
                                 id_type = "pubmedid"
-                            if "doi" == id_type:
+                            if id_type == "doi":
                                 id_text = id_text.upper()
                             retrieved_record_dict[id_type] = id_text
 
@@ -690,7 +690,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 del record["citation"]
             if "create_date" in record:
                 del record["create_date"]
-            if "" != record.get("journal", ""):
+            if record.get("journal", "") != "":
                 record["ENTRYTYPE"] = "article"
 
         return records
@@ -704,11 +704,11 @@ class PubMedSearchSource(JsonSchemaMixin):
             record.remove_field(key="first_author")
         if "journal/book" in record.data:
             record.rename_field(key="journal/book", new_key="journal")
-        if "UNKNOWN" == record.data.get("author") and "authors" in record.data:
+        if record.data.get("author") == "UNKNOWN" and "authors" in record.data:
             record.remove_field(key="author")
             record.rename_field(key="authors", new_key="author")
 
-        if "UNKNOWN" == record.data.get("year"):
+        if record.data.get("year") == "UNKNOWN":
             record.remove_field(key="year")
             if "publication_year" in record.data:
                 record.rename_field(key="publication_year", new_key="year")

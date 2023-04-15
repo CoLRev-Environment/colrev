@@ -233,8 +233,8 @@ class Dataset:
         # pylint: disable=too-many-branches
 
         return_dict = {}
-        if "colrev_masterdata_provenance" == field:
-            if "CURATED" == value[:7]:
+        if field == "colrev_masterdata_provenance":
+            if value[:7] == "CURATED":
                 if value.count(";") == 0:
                     value += ";;"  # Note : temporary fix (old format)
                 if value.count(";") == 1:
@@ -249,7 +249,7 @@ class Dataset:
                     "note": "",
                 }
 
-            elif "" != value:
+            elif value != "":
                 # Pybtex automatically replaces \n in fields.
                 # For consistency, we also do that for header_only mode:
                 if "\n" in value:
@@ -269,11 +269,11 @@ class Dataset:
                     else:
                         print(f"problem with masterdata_provenance_item {item}")
 
-        elif "colrev_data_provenance" == field:
-            if "" != value:
+        elif field == "colrev_data_provenance":
+            if value != "":
                 # Note : pybtex replaces \n upon load
                 for item in (value + " ").split("; "):
-                    if "" == item:
+                    if item == "":
                         continue
                     item += ";"  # removed by split
                     key_source = item[: item[:-1].rfind(";")]
@@ -368,15 +368,15 @@ class Dataset:
 
                 key = key.lstrip().rstrip()
                 value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-                if "colrev_origin" == key:
+                if key == "colrev_origin":
                     value_list = value.replace("\n", "").split(";")
                     value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
                     return key, value_list
-                if "colrev_status" == key:
+                if key == "colrev_status":
                     return key, colrev.record.RecordState[value]
-                if "colrev_masterdata_provenance" == key:
+                if key == "colrev_masterdata_provenance":
                     return key, self.__load_field_dict(value=value, field=key)
-                if "file" == key:
+                if key == "file":
                     return key, Path(value)
             except IndexError as exc:
                 raise colrev_exceptions.BrokenFilesError(
@@ -419,7 +419,7 @@ class Dataset:
                 current_header_item_count = 0
                 continue
 
-            if "@" in line[:2] and "NA" != record_header_item["ID"]:
+            if "@" in line[:2] and record_header_item["ID"] != "NA":
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0
@@ -427,17 +427,17 @@ class Dataset:
             current_key_value_pair_str += line
             if "}," in line or "@" in line[:2]:
                 key, value = parse_k_v(current_key_value_pair_str)
-                if "colrev_masterdata_provenance" == key:
-                    if "NA" == value:
+                if key == "colrev_masterdata_provenance":
+                    if value == "NA":
                         value = {}
-                if "NA" == value:
+                if value == "NA":
                     current_key_value_pair_str = ""
                     continue
                 current_key_value_pair_str = ""
                 if key in record_header_item:
                     current_header_item_count += 1
                     record_header_item[key] = value
-        if "NA" != record_header_item["colrev_origin"]:
+        if record_header_item["colrev_origin"] != "NA":
             record_header_items.append(record_header_item)
         return [
             {k: v for k, v in record_header_item.items() if "NA" != v}
@@ -558,7 +558,7 @@ class Dataset:
 
             for ordered_field in field_order:
                 if ordered_field in record_dict:
-                    if "" == record_dict[ordered_field]:
+                    if record_dict[ordered_field] == "":
                         continue
                     bibtex_str += format_field(
                         ordered_field, record_dict[ordered_field]
@@ -706,7 +706,7 @@ class Dataset:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
 
         saved_args = locals()
-        if "all" == paper_ids:
+        if paper_ids == "all":
             # self.review_manager.logger.info("Removing/reprocessing all records")
             os.remove(self.records_file)
             self.__git_repo.index.remove(
@@ -742,7 +742,7 @@ class Dataset:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-            if "" != record_dict.get("author", record_dict.get("editor", "")):
+            if record_dict.get("author", record_dict.get("editor", "")) != "":
                 authors_string = record_dict.get(
                     "author", record_dict.get("editor", "Anonymous")
                 )
@@ -980,16 +980,16 @@ class Dataset:
         if relative_path:
             main_recs_changed = False
             try:
-                if "all" == change_type:
+                if change_type == "all":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.index.diff(None)
                     ] + [item.a_path for item in self.__git_repo.head.commit.diff()]
-                elif "staged" == change_type:
+                elif change_type == "staged":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.head.commit.diff()
                     ]
 
-                elif "unstaged" == change_type:
+                elif change_type == "unstaged":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.index.diff(None)
                     ]
@@ -1173,7 +1173,7 @@ class Dataset:
         """Get the remote url"""
         remote_url = "NA"
         for remote in self.__git_repo.remotes:
-            if "origin" == remote.name:
+            if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
 

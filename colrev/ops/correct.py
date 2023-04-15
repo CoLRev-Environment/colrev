@@ -109,13 +109,13 @@ class Corrections:
             if not isinstance(key, str):
                 continue
 
-            if "add" != change_type and "" == key:
+            if change_type != "add" and key == "":
                 continue
 
             if key.split(".")[0] in self.keys_to_ignore:
                 continue
 
-            if "add" == change_type:
+            if change_type == "add":
                 for add_item in val:
                     add_item_key, add_item_val = add_item
                     if not isinstance(add_item_key, str):
@@ -126,7 +126,7 @@ class Corrections:
                         ("add", "", [(add_item_key, add_item_val)])
                     )
 
-            elif "change" == change_type:
+            elif change_type == "change":
                 selected_change_items.append(change_item)
 
         if len(selected_change_items) == 0:

@@ -311,7 +311,7 @@ class Checker:
 
                 elif str(colrev.record.RecordState.rev_excluded) == status:
                     if ["NA"] == criteria:
-                        if "NA" == screen_crit:
+                        if screen_crit == "NA":
                             continue
                         field_errors.append(f"screen_crit field not NA: {screen_crit}")
 

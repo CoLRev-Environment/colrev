@@ -139,7 +139,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Web of Science"""
 
-        if "UNKNOWN" != record.data.get("title", "UNKNOWN"):
+        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
             record.format_if_mostly_upper(key="title")
 
         return record

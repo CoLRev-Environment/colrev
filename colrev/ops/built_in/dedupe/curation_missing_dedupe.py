@@ -161,7 +161,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     colrev.record.RecordState.md_prepared
                 ]:
                     continue
-            if "" == record_dict.get("title", ""):
+            if record_dict.get("title", "") == "":
                 continue
 
             record = colrev.record.Record(data=record_dict)
@@ -233,17 +233,17 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     f"({nr_recs_checked}/{nr_recs_to_merge}) "
                     f"Merge with record [{1}...{i+1} / s / a / p / q]?   "
                 )
-                if "s" == ret:
+                if ret == "s":
                     valid_selection = True
-                elif "q" == ret:
+                elif ret == "q":
                     quit_pressed = True
                     valid_selection = True
-                elif "a" == ret:
+                elif ret == "a":
                     results["add_records_to_md_processed_list"].append(
                         record.data["ID"]
                     )
                     valid_selection = True
-                elif "p" == ret:
+                elif ret == "p":
                     results["records_to_prepare"].append(record.data["ID"])
                     valid_selection = True
                 elif ret.isdigit():

@@ -56,7 +56,7 @@ class WebsiteConnector:
 
         record.data["ID"] = item["key"]
         record.data["ENTRYTYPE"] = "article"  # default
-        if "journalArticle" == item.get("itemType", ""):
+        if item.get("itemType", "") == "journalArticle":
             record.data["ENTRYTYPE"] = "article"
             if "publicationTitle" in item:
                 record.data["journal"] = item["publicationTitle"]
@@ -64,7 +64,7 @@ class WebsiteConnector:
                 record.data["volume"] = item["volume"]
             if "issue" in item:
                 record.data["number"] = item["issue"]
-        if "conferencePaper" == item.get("itemType", ""):
+        if item.get("itemType", "") == "conferencePaper":
             record.data["ENTRYTYPE"] = "inproceedings"
             if "proceedingsTitle" in item:
                 record.data["booktitle"] = item["proceedingsTitle"]
@@ -145,7 +145,7 @@ class WebsiteConnector:
                 self.zotero_lock.release()
                 return
             item = items[0]
-            if "Shibboleth Authentication Request" == item["title"]:
+            if item["title"] == "Shibboleth Authentication Request":
                 self.zotero_lock.release()
                 return
 

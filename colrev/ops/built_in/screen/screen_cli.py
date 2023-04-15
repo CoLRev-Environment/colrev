@@ -123,9 +123,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                         f" {color}{criterion_name}{colors.END}"
                         " [y,n,q,s for yes,no,quit,skip to decide later]? "
                     )
-                    if "q" == ret:
+                    if ret == "q":
                         quit_pressed = True
-                    elif "s" == ret:
+                    elif ret == "s":
                         skip_pressed = True
                         continue
                     elif ret in ["y", "n"]:
@@ -175,9 +175,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                     f"({self.__i}/{self.__stat_len}) "
                     "Include [y,n,q,s for yes, no, quit, skip/screen later]? "
                 )
-                if "q" == ret:
+                if ret == "q":
                     quit_pressed = True
-                elif "s" == ret:
+                elif ret == "s":
                     skip_pressed = True
                     return "skip"
                 elif ret in ["y", "n"]:
@@ -236,9 +236,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 screen_operation=screen_operation, record_dict=record_dict
             )
 
-            if "skip" == ret:
+            if ret == "skip":
                 continue
-            if "quit" == ret:
+            if ret == "quit":
                 screen_operation.review_manager.logger.info("Stop screen")
                 break
 
@@ -249,7 +249,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         screen_operation.review_manager.dataset.add_record_changes()
 
         if self.__i < self.__stat_len:  # if records remain for screening
-            if "y" != input("Create commit (y/n)?"):
+            if input("Create commit (y/n)?") != "y":
                 return records
 
         screen_operation.review_manager.create_commit(
