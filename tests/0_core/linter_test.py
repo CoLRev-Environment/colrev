@@ -1,3 +1,4 @@
+"""Test the custom CoLRev linter"""
 import astroid
 import pylint.testutils
 
@@ -5,9 +6,13 @@ import colrev.linter.colrev_lint
 
 
 class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
+    """TestDirectStatusAssignmentChecker class"""
+
     CHECKER_CLASS = colrev.linter.colrev_lint.DirectStatusAssignmentChecker
 
     def test_finds_direct_status_assignment(self) -> None:
+        """Test whether the pylint checker finds direct colrev_status assignments"""
+
         assignment_node = astroid.extract_node(
             """
         def test(record_dict):
