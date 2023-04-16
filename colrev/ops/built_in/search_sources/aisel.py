@@ -222,7 +222,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
         query_string = f"{query_string}&q={final_q}"
 
-        response = requests.get(query_string)
+        response = requests.get(query_string, timeout=300)
         response.raise_for_status()
 
         zotero_translation_service = (
