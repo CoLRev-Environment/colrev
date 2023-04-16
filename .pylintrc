@@ -16,3 +16,6 @@ extension-pkg-whitelist=lxml.etree
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
+
+load-plugins=
+     colrev.linter.colrev_lint

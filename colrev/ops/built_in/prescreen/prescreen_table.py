@@ -164,38 +164,40 @@ class TablePrescreen(JsonSchemaMixin):
         prescreen_operation.review_manager.logger.info("Update prescreen results")
         for prescreened_record in prescreened_records:
             if prescreened_record.get("ID", "") in records:
-                record = records[prescreened_record.get("ID", "")]
-                if record[
+                record = colrev.record.Record(
+                    data=records[prescreened_record.get("ID", "")]
+                )
+                if record.data[
                     "colrev_status"
                 ] in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.rev_prescreen_included
                 ):
                     if (
-                        "in" == prescreened_record.get("presceen_inclusion", "")
+                        "in" == prescreened_record.data.get("presceen_inclusion", "")
                         and colrev.record.RecordState.rev_prescreen_excluded
-                        != record["colrev_status"]
+                        != record.data["colrev_status"]
                     ):
                         continue
 
                 if "out" == prescreened_record.get("presceen_inclusion", ""):
                     if (
-                        record["colrev_status"]
+                        record.data["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_excluded
                     ):
                         prescreen_excluded += 1
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.rev_prescreen_excluded
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_prescreen_excluded
+                    )
 
                 elif "in" == prescreened_record.get("presceen_inclusion", ""):
                     if (
-                        record["colrev_status"]
+                        record.data["colrev_status"]
                         != colrev.record.RecordState.rev_prescreen_included
                     ):
                         prescreen_included += 1
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.rev_prescreen_included
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_prescreen_included
+                    )
                 elif "TODO" == prescreened_record.get("presceen_inclusion", ""):
                     nr_todo += 1
                 else:

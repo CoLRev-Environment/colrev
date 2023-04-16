@@ -60,9 +60,9 @@ class CurationPrep(JsonSchemaMixin):
             return record
 
         if record.data.get("year", "UNKNOWN") == "UNKNOWN":
-            record.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.md_needs_manual_preparation
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
             colrev.record.Record(data=record.data).add_masterdata_provenance(
                 key="year",
                 source="colrev_curation.masterdata_restrictions",

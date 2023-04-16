@@ -116,9 +116,10 @@ class Repare(colrev.operation.Operation):
 
             record_dict["colrev_status_backup"] = record_dict["colrev_status"]
             del record_dict["file"]
-            record_dict[
-                "colrev_status"
-            ] = colrev.record.RecordState.rev_prescreen_included
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_included
+            )
 
     def __fix_provenance(self, *, records: dict) -> None:
         # pylint: disable=too-many-nested-blocks

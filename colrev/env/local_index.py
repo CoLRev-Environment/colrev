@@ -501,7 +501,8 @@ class LocalIndex:
             if "colrev_pdf_id" in record_dict.get("colrev_data_provenance", {}):
                 del record_dict["colrev_data_provenance"]["colrev_pdf_id"]
 
-        record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
+        record = colrev.record.Record(data=record_dict)
+        record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
         if "CURATED" in record_dict.get("colrev_masterdata_provenance", {}):
             identifier_string = (

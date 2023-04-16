@@ -171,9 +171,9 @@ class PrepMan(colrev.operation.Operation):
                     ):
                         # by resetting to md_imported,
                         # the prescreen-exclusion based on languages will be reapplied.
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_imported
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_imported
+                        )
 
             self.review_manager.dataset.save_records_dict(records=records)
 
