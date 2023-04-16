@@ -355,12 +355,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # Note : to avoid modifying the feed-records
         records = deepcopy(records)
 
-        for record in records.values():
-            curation_url = record["curation_ID"].split("#")[0]
-            record["colrev_masterdata_provenance"] = {
+        for record_dict in records.values():
+            curation_url = record_dict["curation_ID"].split("#")[0]
+            record_dict["colrev_masterdata_provenance"] = {
                 "CURATED": {"source": curation_url, "note": ""}
             }
-            record["colrev_status"] = colrev.record.RecordState.md_prepared
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
             del curation_url
 
         return records

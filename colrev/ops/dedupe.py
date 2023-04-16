@@ -109,6 +109,7 @@ class Dedupe(colrev.operation.Operation):
 
         records_df["year"] = records_df["year"].astype(str)
         if "colrev_status" in records_df:
+            # pylint: disable=direct-status-assign
             records_df["colrev_status"] = records_df["colrev_status"].astype(str)
 
         records_df["author"] = records_df["author"].str[:60]
@@ -587,10 +588,16 @@ class Dedupe(colrev.operation.Operation):
         if complete_dedupe:
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
-            for record in records.values():
-                if record["colrev_status"] == colrev.record.RecordState.md_prepared:
-                    record["colrev_status"] = colrev.record.RecordState.md_processed
-                    set_to_md_processed.append(record["ID"])
+            for record_dict in records.values():
+                if (
+                    record_dict["colrev_status"]
+                    == colrev.record.RecordState.md_prepared
+                ):
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_processed
+                    )
+                    set_to_md_processed.append(record.data["ID"])
 
         self.__print_merge_stats(
             records=records,
@@ -714,9 +721,10 @@ class Dedupe(colrev.operation.Operation):
 
                             # The followin may need to be set to the previous state of the
                             # record that was erroneously merged (could be md_prepared)
-                            record_dict[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_processed
+                            record = colrev.record.Record(data=record_dict)
+                            record.set_status(
+                                target_state=colrev.record.RecordState.md_processed
+                            )
                             records[record_dict["ID"]] = record_dict
                             self.review_manager.logger.info(
                                 f'Restored {record_dict["ID"]}'
@@ -1006,11 +1014,15 @@ class Dedupe(colrev.operation.Operation):
         if not self.review_manager.settings.prescreen.prescreen_package_endpoints:
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
-            for record in records.values():
-                if colrev.record.RecordState.md_processed == record["colrev_status"]:
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.rev_prescreen_included
+            for record_dict in records.values():
+                record = colrev.record.Record(data=record_dict)
+                if (
+                    colrev.record.RecordState.md_processed
+                    == record.data["colrev_status"]
+                ):
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_prescreen_included
+                    )
 
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()

@@ -288,6 +288,7 @@ class Record:
                 target_state = RecordState.md_needs_manual_preparation
             if self.has_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
+        # pylint: disable=direct-status-assign
         self.data["colrev_status"] = target_state
 
     def shares_origins(self, *, other_record: Record) -> bool:
@@ -629,9 +630,9 @@ class Record:
         if "colrev_status" in merging_record.data:
             # Set both status to the latter in the state model
             if self.data["colrev_status"] < merging_record.data["colrev_status"]:
-                self.data["colrev_status"] = merging_record.data["colrev_status"]
+                self.set_status(target_state=merging_record.data["colrev_status"])
             else:
-                merging_record.data["colrev_status"] = self.data["colrev_status"]
+                merging_record.set_status(target_state=self.data["colrev_status"])
 
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
@@ -1671,7 +1672,7 @@ class Record:
                 f"remove from synthesis: {self.data['ID']}{colors.END}\n"
             )
 
-        self.data["colrev_status"] = RecordState.rev_prescreen_excluded
+        self.set_status(target_state=RecordState.rev_prescreen_excluded)
 
         if (
             "retracted" not in self.data.get("prescreen_exclusion", "")
@@ -1937,27 +1938,27 @@ class Record:
                 self.data["ENTRYTYPE"] = restrictions["ENTRYTYPE"]
 
         if "author" not in self.data:
-            self.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.md_needs_manual_preparation
+            self.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
             colrev.record.Record(data=self.data).add_masterdata_provenance(
                 key="author",
                 source="colrev_curation.masterdata_restrictions",
                 note="missing",
             )
         if "title" not in self.data:
-            self.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.md_needs_manual_preparation
+            self.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
             colrev.record.Record(data=self.data).add_masterdata_provenance(
                 key="title",
                 source="colrev_curation.masterdata_restrictions",
                 note="missing",
             )
         if "year" not in self.data:
-            self.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.md_needs_manual_preparation
+            self.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
             colrev.record.Record(data=self.data).add_masterdata_provenance(
                 key="year",
                 source="colrev_curation.masterdata_restrictions",
@@ -1975,9 +1976,9 @@ class Record:
         if "volume" in restrictions:
             if restrictions["volume"]:
                 if "volume" not in self.data:
-                    self.data[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
+                    self.set_status(
+                        target_state=colrev.record.RecordState.md_needs_manual_preparation
+                    )
                     colrev.record.Record(data=self.data).add_masterdata_provenance(
                         key="volume",
                         source="colrev_curation.masterdata_restrictions",
@@ -1987,9 +1988,9 @@ class Record:
         if "number" in restrictions:
             if restrictions["number"]:
                 if "number" not in self.data:
-                    self.data[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.md_needs_manual_preparation
+                    self.set_status(
+                        target_state=colrev.record.RecordState.md_needs_manual_preparation
+                    )
                     colrev.record.Record(data=self.data).add_masterdata_provenance(
                         key="number",
                         source="colrev_curation.masterdata_restrictions",

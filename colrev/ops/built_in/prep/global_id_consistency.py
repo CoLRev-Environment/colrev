@@ -92,9 +92,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                     if record.masterdata_is_curated():
                         record.remove_field(key="doi")
                     else:
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_needs_manual_preparation
+                        )
                         record.add_masterdata_provenance_note(
                             key=key, note="disagreement with doi metadata"
                         )
@@ -131,9 +131,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                         if record.masterdata_is_curated():
                             record.remove_field(key="url")
                         else:
-                            record.data[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_needs_manual_preparation
+                            record.set_status(
+                                target_state=colrev.record.RecordState.md_needs_manual_preparation
+                            )
                             record.add_masterdata_provenance_note(
                                 key=key,
                                 note=f"disagreement with website metadata ({value})",
