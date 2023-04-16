@@ -55,7 +55,7 @@ class Trace(colrev.operation.Operation):
                 )
 
             for diff in diffs:
-                if "add" == diff[0]:
+                if diff[0] == "add":
                     print(
                         colors.GREEN
                         + self.__lpad_multiline(
@@ -64,7 +64,7 @@ class Trace(colrev.operation.Operation):
                         )
                         + colors.END
                     )
-                if "change" == diff[0]:
+                if diff[0] == "change":
                     print(
                         colors.ORANGE
                         + self.__lpad_multiline(
@@ -73,7 +73,7 @@ class Trace(colrev.operation.Operation):
                         )
                         + colors.END
                     )
-                if "delete" == diff[0]:
+                if diff[0] == "delete":
                     print(
                         colors.RED
                         + self.__lpad_multiline(

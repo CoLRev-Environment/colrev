@@ -304,7 +304,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             self.__get_nr_duplicates(result_list=results) == 0
             and self.__get_nr_non_duplicates(result_list=results) > 100
         ):
-            if "y" == input("Set remaining records to md_processed (no duplicates)?"):
+            if input("Set remaining records to md_processed (no duplicates)?") == "y":
                 dedupe_operation.apply_merges(results=results, complete_dedupe=True)
                 dedupe_operation.review_manager.create_commit(
                     msg="Set remaining records to non-duplicated",

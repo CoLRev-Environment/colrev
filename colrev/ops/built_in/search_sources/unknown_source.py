@@ -132,8 +132,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not record.has_inconsistent_fields() or record.masterdata_is_curated():
             return record
 
-        if "colrev.md_to_bib" == source.load_conversion_package_endpoint["endpoint"]:
-            if "misc" == record.data["ENTRYTYPE"] and "publisher" in record.data:
+        if source.load_conversion_package_endpoint["endpoint"] == "colrev.md_to_bib":
+            if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
                 record.update_field(
                     key="ENTRYTYPE", value="book", source="unkown_source_prep"
                 )
@@ -146,7 +146,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             ):
                 record.rename_field(key="title", new_key="chapter")
 
-        if "UNKNOWN" != record.data.get("author", "UNKNOWN"):
+        if record.data.get("author", "UNKNOWN") != "UNKNOWN":
             # fix name format
             if (1 == len(record.data["author"].split(" ")[0])) or (
                 ", " not in record.data["author"]
@@ -160,7 +160,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     keep_source_if_equal=True,
                 )
 
-        if "UNKNOWN" != record.data.get("title", "UNKNOWN"):
+        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
             record.format_if_mostly_upper(key="title")
 
         if "date" in record.data and "year" not in record.data:
@@ -173,7 +173,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     keep_source_if_equal=True,
                 )
 
-        if "UNKNOWN" != record.data.get("journal", "UNKNOWN"):
+        if record.data.get("journal", "UNKNOWN") != "UNKNOWN":
             if len(record.data["journal"]) > 10 and "UNKNOWN" != record.data["journal"]:
                 record.format_if_mostly_upper(key="journal", case="title")
 
@@ -223,7 +223,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
 
         # Journal articles should not have booktitles/series set.
-        if "article" == record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] == "article":
             if "booktitle" in record.data:
                 if "journal" not in record.data:
                     record.update_field(
@@ -241,7 +241,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     )
                     record.remove_field(key="series")
 
-        if "article" == record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] == "article":
             if "journal" not in record.data:
                 if "series" in record.data:
                     journal_string = record.data["series"]
@@ -250,7 +250,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     )
                     record.remove_field(key="series")
 
-        if "UNKNOWN" != record.data.get("booktitle", "UNKNOWN"):
+        if record.data.get("booktitle", "UNKNOWN") != "UNKNOWN":
             if (
                 "UNKNOWN" != record.data["booktitle"]
                 and "inbook" != record.data["ENTRYTYPE"]
@@ -286,7 +286,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     + f'Unusual pages: {record.data["pages"]}'
                 )
 
-        if "UNKNOWN" != record.data.get("volume", "UNKNOWN"):
+        if record.data.get("volume", "UNKNOWN") != "UNKNOWN":
             record.update_field(
                 key="volume",
                 value=record.data["volume"].replace("Volume ", ""),
@@ -322,7 +322,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.data[field] = re.sub(r"\s+", " ", record.data[field])
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 
-        if "article" == record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] == "article":
             if "journal" in record.data and "booktitle" in record.data:
                 if (
                     fuzz.partial_ratio(
@@ -332,7 +332,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     > 0.9
                 ):
                     record.remove_field(key="booktitle")
-        if "inproceedings" == record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] == "inproceedings":
             if "journal" in record.data and "booktitle" in record.data:
                 if (
                     fuzz.partial_ratio(

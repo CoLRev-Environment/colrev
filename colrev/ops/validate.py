@@ -191,7 +191,7 @@ class Validate(colrev.operation.Operation):
                             f"colrev dedupe -m {ref_rec_dict['ID']},{comp_rec_dict['ID']}\n\n"
                         )
 
-        if "" == merge_candidates_file.read_text(encoding="utf-8"):
+        if merge_candidates_file.read_text(encoding="utf-8") == "":
             merge_candidates_file.unlink()
 
         # sort according to similarity
@@ -437,7 +437,7 @@ class Validate(colrev.operation.Operation):
                         break
                     valid_options.append(str(commit_candidate.tree))
 
-                if "" == commit:
+                if commit == "":
                     # pylint: disable=raise-missing-from
                     raise colrev_exceptions.ParameterError(
                         parameter="validate.scope", value=scope, options=valid_options
@@ -540,11 +540,11 @@ class Validate(colrev.operation.Operation):
             )
             return validation_details
 
-        if "all" == filter_setting:
+        if filter_setting == "all":
             filter_setting = self.__set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
-        if "general" == filter_setting:
+        if filter_setting == "general":
             validation_details["general"] = {
                 "commit": target_commit,
                 "commit_relative": self.__get_relative_commit(

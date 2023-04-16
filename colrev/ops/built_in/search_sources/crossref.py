@@ -403,7 +403,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     # ) -> colrev.record.Record:
     #     """When there is no doi, journal names can be checked against crossref"""
 
-    #     if "article" == record.data["ENTRYTYPE"]:
+    #     if record.data["ENTRYTYPE"] == "article":
     #         # If type article and doi not in record and
     #         # journal name not found in journal-query: notify
     #         journals = Journals(etiquette=self.etiquette)

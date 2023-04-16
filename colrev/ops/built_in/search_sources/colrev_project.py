@@ -107,7 +107,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             return
 
         remote_url = project_review_manager.dataset.get_remote_url()
-        if "NA" != remote_url:
+        if remote_url != "NA":
             project_identifier = remote_url.rstrip(".git")
 
         project_review_manager.get_load_operation(

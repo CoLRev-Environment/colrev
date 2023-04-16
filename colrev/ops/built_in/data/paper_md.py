@@ -204,7 +204,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
             for commit in commits_list:
                 committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
-                if "GitHub" == committer:
+                if committer == "GitHub":
                     continue
                 commits_authors.append(committer)
                 # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
@@ -285,16 +285,16 @@ class PaperMarkdown(JsonSchemaMixin):
 
                     # skip empty lines between to connect lists
                     line = reader.readline()
-                    if "\n" != line:
+                    if line != "\n":
                         writer.write(line)
 
                     appended = True
 
                 elif appended and not completed:
-                    if "- @" == line[:3]:
+                    if line[:3] == "- @":
                         writer.write(line)
                     else:
-                        if "\n" != line:
+                        if line != "\n":
                             writer.write("\n")
                         writer.write(line)
                         completed = True

@@ -211,7 +211,7 @@ class Merge(colrev.operation.Operation):
                     + f": {other_branch_record['colrev_status']}"
                 )
                 resolution_nr = input("Enter resolution: (1 or 2)")
-                if "1" == resolution_nr:
+                if resolution_nr == "1":
                     self.review_manager.report_logger.info(
                         f"Reconciliation for {current_branch_record_id}: "
                         f"{current_branch_record_dict['colrev_status']}"

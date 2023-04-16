@@ -38,19 +38,19 @@ class TableLoadUtility:
             if "type" in record_dict:
                 record_dict["ENTRYTYPE"] = record_dict["type"]
                 del record_dict["type"]
-                if "inproceedings" == record_dict["ENTRYTYPE"]:
+                if record_dict["ENTRYTYPE"] == "inproceedings":
                     if "journal" in record_dict and "booktitle" not in record_dict:
                         record_dict["booktitle"] = record_dict["journal"]
                         del record_dict["journal"]
-                if "article" == record_dict["ENTRYTYPE"]:
+                if record_dict["ENTRYTYPE"] == "article":
                     if "booktitle" in record_dict and "journal" not in record_dict:
                         record_dict["journal"] = record_dict["booktitle"]
                         del record_dict["booktitle"]
 
             if "ENTRYTYPE" not in record_dict:
-                if "" != record_dict.get("journal", ""):
+                if record_dict.get("journal", "") != "":
                     record_dict["ENTRYTYPE"] = "article"
-                if "" != record_dict.get("booktitle", ""):
+                if record_dict.get("booktitle", "") != "":
                     record_dict["ENTRYTYPE"] = "inproceedings"
                 else:
                     record_dict["ENTRYTYPE"] = "misc"
@@ -64,7 +64,7 @@ class TableLoadUtility:
 
             if "issue" in record_dict and "number" not in record_dict:
                 record_dict["number"] = record_dict["issue"]
-                if "no issue" == record_dict["number"]:
+                if record_dict["number"] == "no issue":
                     del record_dict["number"]
                 del record_dict["issue"]
 
@@ -86,7 +86,7 @@ class TableLoadUtility:
                 record_dict["journal"] = record_dict["journal/book"]
                 del record_dict["journal/book"]
 
-            if "no Times-Cited" == record_dict.get("cited_by", ""):
+            if record_dict.get("cited_by", "") == "no Times-Cited":
                 del record_dict["cited_by"]
 
         if all("ID" in r for r in records):
@@ -97,21 +97,21 @@ class TableLoadUtility:
                 records_dict[str(i)] = record
 
         for r_dict in records_dict.values():
-            if "no year" == r_dict.get("year", "NA"):
+            if r_dict.get("year", "NA") == "no year":
                 del r_dict["year"]
-            if "no journal" == r_dict.get("journal", "NA"):
+            if r_dict.get("journal", "NA") == "no journal":
                 del r_dict["journal"]
-            if "no volume" == r_dict.get("volume", "NA"):
+            if r_dict.get("volume", "NA") == "no volume":
                 del r_dict["volume"]
-            if "no pages" == r_dict.get("pages", "NA"):
+            if r_dict.get("pages", "NA") == "no pages":
                 del r_dict["pages"]
-            if "no issue" == r_dict.get("issue", "NA"):
+            if r_dict.get("issue", "NA") == "no issue":
                 del r_dict["issue"]
-            if "no number" == r_dict.get("number", "NA"):
+            if r_dict.get("number", "NA") == "no number":
                 del r_dict["number"]
-            if "no doi" == r_dict.get("doi", "NA"):
+            if r_dict.get("doi", "NA") == "no doi":
                 del r_dict["doi"]
-            if "no type" == r_dict.get("type", "NA"):
+            if r_dict.get("type", "NA") == "no type":
                 del r_dict["type"]
             if "author_count" in r_dict:
                 del r_dict["author_count"]
@@ -121,7 +121,7 @@ class TableLoadUtility:
                 del r_dict["number_of_cited_references"]
             if "no file" in r_dict.get("file_name", "NA"):
                 del r_dict["file_name"]
-            if "times_cited" == r_dict.get("times_cited", "NA"):
+            if r_dict.get("times_cited", "NA") == "times_cited":
                 del r_dict["times_cited"]
 
         return records_dict

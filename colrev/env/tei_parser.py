@@ -197,7 +197,7 @@ class TEIParser:
                         journal_name = (
                             jtitle_node.text if jtitle_node.text is not None else "NA"
                         )
-                        if "NA" != journal_name:
+                        if journal_name != "NA":
                             words = journal_name.split()
                             if sum(word.isupper() for word in words) / len(words) > 0.8:
                                 words = [word.capitalize() for word in words]
@@ -426,7 +426,7 @@ class TEIParser:
         }
 
         for key, value in record.items():
-            if "file" != key:
+            if key != "file":
                 record[key] = value.replace("}", "").replace("{", "").rstrip("\\")
             else:
                 print(f"problem in filename: {key}")
@@ -522,7 +522,7 @@ class TEIParser:
 
         if author_string is None:
             author_string = "NA"
-        if "" == author_string.replace(" ", "").replace(",", "").replace(";", ""):
+        if author_string.replace(" ", "").replace(",", "").replace(";", "") == "":
             author_string = "NA"
         return author_string
 
@@ -668,10 +668,10 @@ class TEIParser:
             if monogr_node is not None:
                 title_node = monogr_node.find(self.ns["tei"] + "title")
                 if title_node is not None:
-                    if "j" == title_node.get("level", "NA"):
-                        entrytype = "article"
-                    else:
+                    if title_node.get("level", "NA") != "j":
                         entrytype = "book"
+                    else:
+                        entrytype = "article"
         return entrytype
 
     def __get_tei_id_count(self, *, tei_id: str) -> int:
@@ -705,7 +705,7 @@ class TEIParser:
                         ):
                             continue
 
-                    if "article" == entrytype:
+                    if entrytype == "article":
                         ref_rec = {
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
@@ -735,7 +735,7 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                    elif "book" == entrytype:
+                    elif entrytype == "book":
                         ref_rec = {
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
@@ -753,7 +753,7 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                    elif "misc" == entrytype:
+                    elif entrytype == "misc":
                         ref_rec = {
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,

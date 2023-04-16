@@ -62,15 +62,15 @@ def json_to_record(*, item: dict) -> dict:
     container_title = container_title.replace("\n", " ")
     container_title = re.sub(r"\s+", " ", container_title)
     if "type" in item:
-        if "journal-article" == item.get("type", "NA"):
+        if item.get("type", "NA") == "journal-article":
             record_dict.update(ENTRYTYPE="article")
             if container_title is not None:
                 record_dict.update(journal=container_title)
-        if "proceedings-article" == item.get("type", "NA"):
+        if item.get("type", "NA") == "proceedings-article":
             record_dict.update(ENTRYTYPE="inproceedings")
             if container_title is not None:
                 record_dict.update(booktitle=container_title)
-        if "book" == item.get("type", "NA"):
+        if item.get("type", "NA") == "book":
             record_dict.update(ENTRYTYPE="book")
             if container_title is not None:
                 record_dict.update(series=container_title)

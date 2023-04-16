@@ -941,7 +941,7 @@ class Prep(colrev.operation.Operation):
             input("\nPress Enter to continue")
             print("\n\n")
 
-        if "NA" != debug_ids:
+        if debug_ids != "NA":
             self.debug_mode = True
 
         prep_commit_id = "HEAD"

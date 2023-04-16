@@ -32,7 +32,7 @@ def print_venv_notes() -> None:
     """Print the virtual environment details on cli"""
 
     current_platform = platform.system()
-    if "Linux" == current_platform:
+    if current_platform == "Linux":
         print("Detected platform: Linux")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")
@@ -43,7 +43,7 @@ def print_venv_notes() -> None:
         print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
         print("To deactivate virtualenv, run")
         print(f"  {colors.ORANGE}deactivate{colors.END}")
-    elif "Darwin" == current_platform:
+    elif current_platform == "Darwin":
         print("Detected platform: MacOS")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")
@@ -54,7 +54,7 @@ def print_venv_notes() -> None:
         print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
         print("To deactivate virtualenv, run")
         print(f"  {colors.ORANGE}deactivate{colors.END}")
-    elif "Windows" == current_platform:
+    elif current_platform == "Windows":
         print("Detected platform: Windows")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")

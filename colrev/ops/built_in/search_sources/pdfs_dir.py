@@ -76,11 +76,11 @@ class PDFSearchSource(JsonSchemaMixin):
             source_operation.review_manager.logger.info(
                 f"Activate subdir_pattern: {self.subdir_pattern}"
             )
-            if "year" == self.subdir_pattern:
+            if self.subdir_pattern == "year":
                 self.r_subdir_pattern = re.compile("([1-3][0-9]{3})")
-            if "volume_number" == self.subdir_pattern:
+            if self.subdir_pattern == "volume_number":
                 self.r_subdir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
-            if "volume" == self.subdir_pattern:
+            if self.subdir_pattern == "volume":
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
         self.crossref_connector = (
             colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
@@ -217,7 +217,7 @@ class PDFSearchSource(JsonSchemaMixin):
             # no absolute paths needed
             partial_path = Path(record_dict["file"]).parents[0]
 
-            if "year" == self.subdir_pattern:
+            if self.subdir_pattern == "year":
                 # Note: for year-patterns, we allow subfolders
                 # (eg., conference tracks)
                 match = self.r_subdir_pattern.search(str(partial_path))
@@ -225,7 +225,7 @@ class PDFSearchSource(JsonSchemaMixin):
                     year = match.group(1)
                     record_dict["year"] = year
 
-            elif "volume_number" == self.subdir_pattern:
+            elif self.subdir_pattern == "volume_number":
                 match = self.r_subdir_pattern.search(str(partial_path))
                 if match is not None:
                     volume = match.group(1)
@@ -240,7 +240,7 @@ class PDFSearchSource(JsonSchemaMixin):
                         volume = match.group(1)
                         record_dict["volume"] = volume
 
-            elif "volume" == self.subdir_pattern:
+            elif self.subdir_pattern == "volume":
                 match = self.r_subdir_pattern.search(str(partial_path))
                 if match is not None:
                     volume = match.group(1)
@@ -662,7 +662,7 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if "pdfs" == query:
+        if query == "pdfs":
             filename = search_operation.get_unique_filename(file_path_string="pdfs")
             # pylint: disable=no-value-for-parameter
             add_source = colrev.settings.SearchSource(

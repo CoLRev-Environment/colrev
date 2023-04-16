@@ -80,8 +80,8 @@ def add_data(
 
         default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
 
-        if "colrev.paper_md" == add:
-            if "y" == input("Select a custom word template (y/n)?"):
+        if add == "colrev.paper_md":
+            if input("Select a custom word template (y/n)?") == "y":
                 template_name = input(
                     'Please copy the word template to " \
                 "the project directory and enter the filename.'
@@ -90,7 +90,7 @@ def add_data(
             else:
                 print("Adding APA as a default")
 
-            if "y" == input("Select a custom citation stlye (y/n)?"):
+            if input("Select a custom citation stlye (y/n)?") == "y":
                 print(
                     "Citation stlyes are available at: \n"
                     "https://github.com/citation-style-language/styles"

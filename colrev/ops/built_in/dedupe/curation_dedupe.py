@@ -126,7 +126,7 @@ class CurationDedupe(JsonSchemaMixin):
         toc_items = []
         for record in records_list:
             toc_item = {}
-            if "article" == record["ENTRYTYPE"]:
+            if record["ENTRYTYPE"] == "article":
                 if "journal" in record:
                     toc_item["journal"] = record["journal"]
                 if "volume" in record:
@@ -134,7 +134,7 @@ class CurationDedupe(JsonSchemaMixin):
                 if "number" in record:
                     toc_item["number"] = record["number"]
 
-            if "inproceedings" == record["ENTRYTYPE"]:
+            if record["ENTRYTYPE"] == "inproceedings":
                 if "booktitle" in record:
                     toc_item["booktitle"] = record["booktitle"]
                     toc_item["year"] = record["year"]
@@ -169,7 +169,7 @@ class CurationDedupe(JsonSchemaMixin):
                     "dedupe.scripts.colrev.curation_full_outlet_dedupe: "
                     f"{','.join(sources_missing_in_dedupe)}{colors.END}"
                 )
-                if "y" == input("Add sources [y,n]?"):
+                if input("Add sources [y,n]?") == "y":
                     for source_missing_in_dedupe in sources_missing_in_dedupe:
                         dedupe_package_endpoints = (
                             dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints

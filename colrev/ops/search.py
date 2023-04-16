@@ -110,7 +110,7 @@ class Search(colrev.operation.Operation):
     ) -> list[colrev.settings.SearchSource]:
         sources_selected = self.sources
         if selection_str:
-            if "all" != selection_str:
+            if selection_str != "all":
                 sources_selected = [
                     f
                     for f in self.sources
@@ -261,7 +261,7 @@ class Search(colrev.operation.Operation):
                         append_edit=False,
                     )
                 else:
-                    if "md_curated.bib" != source.get_origin_prefix():
+                    if source.get_origin_prefix() != "md_curated.bib":
                         if prev_record_dict_version.get(
                             key, "NA"
                         ) != main_record_dict.get(key, "OTHER"):

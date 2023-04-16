@@ -126,19 +126,19 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 del record["item_title"]
 
             if "content_type" in record:
-                if "Article" == record["content_type"]:
+                if record["content_type"] == "Article":
                     if "publication_title" in record:
                         record["journal"] = record["publication_title"]
                         del record["publication_title"]
                     record.change_entrytype(new_entrytype="article")
 
-                if "Book" == record["content_type"]:
+                if record["content_type"] == "Book":
                     if "publication_title" in record:
                         record["series"] = record["publication_title"]
                         del record["publication_title"]
                     record.change_entrytype(new_entrytype="book")
 
-                if "Chapter" == record["content_type"]:
+                if record["content_type"] == "Chapter":
                     record["chapter"] = record["title"]
                     if "publication_title" in record:
                         record["title"] = record["publication_title"]

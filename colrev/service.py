@@ -59,7 +59,7 @@ class Event(LoggingEventHandler):
                 if "priority" in instruction:
                     # Note : colrev load can always be called but we are only interested
                     # in it if data in the search directory changes.
-                    if "colrev load" == cmd and "data/search/" not in event.src_path:
+                    if cmd == "colrev load" and "data/search/" not in event.src_path:
                         return
                     self.service.service_queue.put(
                         {"name": cmd, "cmd": cmd, "priority": "yes"}
@@ -175,7 +175,7 @@ class Service:
         self.previous_command = item["cmd"]
 
         print()
-        if "colrev retrieve" == item["cmd"]:
+        if item["cmd"] == "colrev retrieve":
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(rerun=False)
 
@@ -192,11 +192,11 @@ class Service:
             dedupe_operation = self.review_manager.get_dedupe_operation()
             dedupe_operation.main()
 
-        elif "colrev search" == item["cmd"]:
+        elif item["cmd"] == "colrev search":
             search_operation = self.review_manager.get_search_operation()
             search_operation.main(selection_str=None, rerun=False)
 
-        elif "colrev load" == item["cmd"]:
+        elif item["cmd"] == "colrev load":
             if len(list(self.review_manager.search_dir.glob("*"))) > 0:
                 self.logger.info("Running %s", item["name"])
 
@@ -211,11 +211,11 @@ class Service:
                 self.service_queue.task_done()
                 return
 
-        elif "colrev prep" == item["cmd"]:
+        elif item["cmd"] == "colrev prep":
             self.logger.info("Running %s", item["name"])
             preparation_operation = self.review_manager.get_prep_operation()
             preparation_operation.main()
-        elif "colrev dedupe" == item["cmd"]:
+        elif item["cmd"] == "colrev dedupe":
             self.logger.info("Running %s", item["name"])
 
             # Note : settings should be
@@ -225,17 +225,17 @@ class Service:
             dedupe_operation = self.review_manager.get_dedupe_operation()
             dedupe_operation.main()
 
-        elif "colrev prescreen" == item["cmd"]:
+        elif item["cmd"] == "colrev prescreen":
             self.logger.info("Running %s", item["name"])
             prescreen_operation = self.review_manager.get_prescreen_operation()
             prescreen_operation.include_all_in_prescreen(persist=False)
 
-        elif "colrev pdf-get" == item["cmd"]:
+        elif item["cmd"] == "colrev pdf-get":
             self.logger.info("Running %s", item["name"])
             pdf_get_operation = self.review_manager.get_pdf_get_operation()
             pdf_get_operation.main()
 
-        elif "colrev pdf-prep" == item["cmd"]:
+        elif item["cmd"] == "colrev pdf-prep":
             # this may be solved more elegantly,
             # but we need colrev to link existing pdfs (file field)
 
@@ -246,12 +246,12 @@ class Service:
             pdf_preparation_operation = self.review_manager.get_pdf_prep_operation()
             pdf_preparation_operation.main(batch_size=0)
 
-        elif "colrev screen" == item["cmd"]:
+        elif item["cmd"] == "colrev screen":
             self.logger.info("Running %s", item["name"])
             screen_operation = self.review_manager.get_screen_operation()
             screen_operation.include_all_in_screen(persist=False)
 
-        elif "colrev data" == item["cmd"]:
+        elif item["cmd"] == "colrev data":
             self.logger.info("Running %s", item["name"])
             data_operation = self.review_manager.get_data_operation()
             data_operation.main()

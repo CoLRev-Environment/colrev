@@ -354,7 +354,7 @@ class GithubPages(JsonSchemaMixin):
         data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
-        if "NA" == review_manager.dataset.get_remote_url():
+        if review_manager.dataset.get_remote_url() == "NA":
             advice["msg"] += (
                 "\n    - To make the repository available on Github pages, "
                 + "push it to a Github repository\nhttps://github.com/new"

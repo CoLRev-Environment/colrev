@@ -176,17 +176,17 @@ class Record:
             for selected_tuple in list(
                 dictdiffer.diff(self.get_data(), other_record.get_data())
             ):
-                if "change" == selected_tuple[0]:
+                if selected_tuple[0] == "change":
                     if selected_tuple[1] in self.identifying_field_keys:
                         diff.append(selected_tuple)
-                if "add" == selected_tuple[0]:
+                if selected_tuple[0] == "add":
                     addition_list: typing.Tuple = ("add", "", [])
                     for addition_item in selected_tuple[2]:
                         if addition_item[0] in self.identifying_field_keys:
                             addition_list[2].append(addition_item)
                     if addition_list[2]:
                         diff.append(addition_list)
-                if "remove" == selected_tuple[0]:
+                if selected_tuple[0] == "remove":
                     removal_list: typing.Tuple = ("remove", "", [])
                     for removal_item in selected_tuple[2]:
                         if removal_item[0] in self.identifying_field_keys:
@@ -219,7 +219,7 @@ class Record:
     def __save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
         list_to_return = []
         assert input_key in ["colrev_masterdata_provenance", "colrev_data_provenance"]
-        if "colrev_masterdata_provenance" == input_key:
+        if input_key == "colrev_masterdata_provenance":
             for key, value in input_dict.items():
                 if isinstance(value, dict):
                     formated_node = ",".join(
@@ -227,7 +227,7 @@ class Record:
                     )
                     list_to_return.append(f"{key}:{value['source']};{formated_node};")
 
-        elif "colrev_data_provenance" == input_key:
+        elif input_key == "colrev_data_provenance":
             for key, value in input_dict.items():
                 if isinstance(value, dict):
                     list_to_return.append(f"{key}:{value['source']};{value['note']};")
@@ -249,7 +249,7 @@ class Record:
                         data_copy[key] = sorted(list(set(data_copy[key])))
                     for ind, val in enumerate(data_copy[key]):
                         if len(val) > 0:
-                            if ";" != val[-1]:
+                            if val[-1] != ";":
                                 data_copy[key][ind] = val + ";"
                     data_copy[key] = list_to_str(val=data_copy[key])
 
@@ -396,13 +396,13 @@ class Record:
                 value["note"] = ""
         self.data["ENTRYTYPE"] = new_entrytype
         if new_entrytype in ["inproceedings", "proceedings"]:
-            if "UNKNOWN" == self.data.get("volume", ""):
+            if self.data.get("volume", "") == "UNKNOWN":
                 self.remove_field(key="volume")
-            if "UNKNOWN" == self.data.get("number", ""):
+            if self.data.get("number", "") == "UNKNOWN":
                 self.remove_field(key="number")
             if "journal" in self.data and "booktitle" not in self.data:
                 self.rename_field(key="journal", new_key="booktitle")
-        elif "article" == new_entrytype:
+        elif new_entrytype == "article":
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
         else:
@@ -486,7 +486,7 @@ class Record:
         for identifying_field_key in self.identifying_field_keys:
             if identifying_field_key in ["author", "title", "year"]:
                 continue
-            if "UNKNOWN" == self.data.get(identifying_field_key, "NA"):
+            if self.data.get(identifying_field_key, "NA") == "UNKNOWN":
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
@@ -495,7 +495,7 @@ class Record:
                         "missing", ""
                     )
 
-        if "article" == self.data["ENTRYTYPE"]:
+        if self.data["ENTRYTYPE"] == "article":
             if "volume" not in self.data:
                 if "volume" in self.data["colrev_masterdata_provenance"]:
                     self.data["colrev_masterdata_provenance"]["volume"][
@@ -637,7 +637,7 @@ class Record:
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
 
-        if "" == val:
+        if val == "":
             return ""
         if not val:
             return ""
@@ -723,7 +723,7 @@ class Record:
 
         for key in list(merging_record.data.keys()):
             val = self.__get_merging_val(merging_record=merging_record, key=key)
-            if "" == val:
+            if val == "":
                 continue
 
             field_provenance = merging_record.get_field_provenance(
@@ -888,7 +888,7 @@ class Record:
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 
-        if "author" == key:
+        if key == "author":
             if key in self.data:
                 best_author = self.__select_best_author(
                     record=self,
@@ -902,7 +902,7 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif "pages" == key:
+        elif key == "pages":
             if key in self.data:
                 best_pages = self.__select_best_pages(
                     default=self.data[key], candidate=merging_record.data[key]
@@ -915,7 +915,7 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif "title" == key:
+        elif key == "title":
             if key in self.data:
                 best_title = self.__select_best_title(
                     default=self.data[key], candidate=merging_record.data[key]
@@ -928,7 +928,7 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif "journal" == key:
+        elif key == "journal":
             if key in self.data:
                 best_journal = self.__select_best_container_title(
                     default=self.data[key],
@@ -941,7 +941,7 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source)
 
-        elif "booktitle" == key:
+        elif key == "booktitle":
             if key in self.data:
                 best_booktitle = self.__select_best_container_title(
                     default=self.data[key],
@@ -956,7 +956,7 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif "file" == key:
+        elif key == "file":
             if key in self.data:
                 self.data[key] = self.data[key] + ";" + merging_record.data.get(key, "")
             else:
@@ -979,7 +979,7 @@ class Record:
             else:
                 self.add_data_provenance(key=key, source=source)
 
-        elif "UNKNOWN" == merging_record.data.get(key, "UNKNOWN"):
+        elif merging_record.data.get(key, "UNKNOWN") == "UNKNOWN":
             pass
         # Note : the following is deactivated to avoid frequent changes in merged records
         # else:
@@ -1256,7 +1256,7 @@ class Record:
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
         if key in self.data["colrev_data_provenance"]:
-            if "" == self.data["colrev_data_provenance"][key]["note"]:
+            if self.data["colrev_data_provenance"][key]["note"] == "":
                 self.data["colrev_data_provenance"][key]["note"] = note
             elif note not in self.data["colrev_data_provenance"][key]["note"].split(
                 ","
@@ -1277,7 +1277,7 @@ class Record:
         md_p_dict = self.data["colrev_masterdata_provenance"]
 
         if key in md_p_dict:
-            if "" == md_p_dict[key]["note"] or "" == note:
+            if md_p_dict[key]["note"] == "" or "" == note:
                 md_p_dict[key]["note"] = note
             elif "missing" == note and "not_missing" in md_p_dict[key]["note"].split(
                 ","
@@ -1321,7 +1321,7 @@ class Record:
             self.data["colrev_data_provenance"] = {}
         md_p_dict = self.data["colrev_data_provenance"]
         if key in md_p_dict:
-            if "" != note:
+            if note != "":
                 md_p_dict[key]["note"] += f",{note}"
             else:
                 md_p_dict[key]["note"] = ""
@@ -1362,7 +1362,7 @@ class Record:
                 if self.data[key].endswith("...") or self.data[key].endswith("…"):
                     incomplete_field_keys.add(key)
 
-            if "author" == key:
+            if key == "author":
                 if (
                     self.data[key].endswith("and others")
                     or self.data[key].endswith("et al.")
@@ -1381,9 +1381,9 @@ class Record:
 
         defect_field_keys = []
         for key in self.data.keys():
-            if "UNKNOWN" == self.data[key]:
+            if self.data[key] == "UNKNOWN":
                 continue
-            if "author" == key:
+            if key == "author":
                 sanitized_authors = re.sub(
                     "[^a-zA-Z, ;1]+",
                     "",
@@ -1421,7 +1421,7 @@ class Record:
                 ):
                     defect_field_keys.append(key)
 
-            if "title" == key:
+            if key == "title":
                 # Note : titles that have no space and special characters
                 # like _ . or digits.
                 if " " not in self.data[key] and (
@@ -1465,13 +1465,13 @@ class Record:
         if "ENTRYTYPE" not in self.data:
             container_title = self.data.get("journal", self.data.get("booktitle", "NA"))
         else:
-            if "article" == self.data["ENTRYTYPE"]:
+            if self.data["ENTRYTYPE"] == "article":
                 container_title = self.data.get("journal", "NA")
-            if "inproceedings" == self.data["ENTRYTYPE"]:
+            if self.data["ENTRYTYPE"] == "inproceedings":
                 container_title = self.data.get("booktitle", "NA")
-            if "book" == self.data["ENTRYTYPE"]:
+            if self.data["ENTRYTYPE"] == "book":
                 container_title = self.data.get("title", "NA")
-            if "inbook" == self.data["ENTRYTYPE"]:
+            if self.data["ENTRYTYPE"] == "inbook":
                 container_title = self.data.get("booktitle", "NA")
         return container_title
 
@@ -1497,14 +1497,14 @@ class Record:
             names = input_string.replace("; ", " and ").split(" and ")
             author_list = []
             for name in names:
-                if "," == name.rstrip()[-1:]:
+                if name.rstrip()[-1:] == ",":
                     # if last-names only (eg, "Webster, and Watson, ")
                     if len(name[:-2]) > 1:
                         author_list.append(str(name.rstrip()[:-1]))
                 else:
                     parsed_name = HumanName(name)
 
-                    if "" == parsed_name.last and "" != parsed_name.first:
+                    if parsed_name.last == "" and parsed_name.first != "":
                         author_list.append(parsed_name.first)
                         continue
 
@@ -1530,11 +1530,11 @@ class Record:
             if record_dict["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
                 container_title = record_dict["school"]
             # for technical reports
-            elif "techreport" == record_dict["ENTRYTYPE"]:
+            elif record_dict["ENTRYTYPE"] == "techreport":
                 container_title = record_dict["institution"]
-            elif "inproceedings" == record_dict["ENTRYTYPE"]:
+            elif record_dict["ENTRYTYPE"] == "inproceedings":
                 container_title = record_dict["booktitle"]
-            elif "article" == record_dict["ENTRYTYPE"]:
+            elif record_dict["ENTRYTYPE"] == "article":
                 container_title = record_dict["journal"]
             elif "series" in record_dict:
                 container_title = record_dict["series"]
@@ -1576,7 +1576,7 @@ class Record:
             # Make sure that colrev_ids are not generated when
             # identifying_field_keys are UNKNOWN but possibly required
             for identifying_field_key in self.identifying_field_keys:
-                if "UNKNOWN" == self.data.get(identifying_field_key, ""):
+                if self.data.get(identifying_field_key, "") == "UNKNOWN":
                     raise colrev_exceptions.NotEnoughDataToIdentifyException(
                         msg=f"{identifying_field_key} unknown (maybe required)",
                         missing_fields=[identifying_field_key],
@@ -1608,9 +1608,9 @@ class Record:
             # when updating the identifier function function
             # (this may look like an anomaly and be hard to identify)
             srep = "colrev_id1:"
-            if "article" == record_dict["ENTRYTYPE"].lower():
+            if record_dict["ENTRYTYPE"].lower() == "article":
                 srep = robust_append(input_string=srep, to_append="a")
-            elif "inproceedings" == record_dict["ENTRYTYPE"].lower():
+            elif record_dict["ENTRYTYPE"].lower() == "inproceedings":
                 srep = robust_append(input_string=srep, to_append="p")
             else:
                 srep = robust_append(
@@ -1620,7 +1620,7 @@ class Record:
                 input_string=srep,
                 to_append=get_container_title(record_dict=record_dict),
             )
-            if "article" == record_dict["ENTRYTYPE"]:
+            if record_dict["ENTRYTYPE"] == "article":
                 # Note: volume/number may not be required.
                 srep = robust_append(
                     input_string=srep, to_append=record_dict.get("volume", "-")
@@ -1630,7 +1630,7 @@ class Record:
                 )
             srep = robust_append(input_string=srep, to_append=record_dict["year"])
             author = format_author_field_for_cid(record_dict["author"])
-            if "" == author.replace("-", ""):
+            if author.replace("-", "") == "":
                 raise colrev_exceptions.NotEnoughDataToIdentifyException(
                     msg="Missing field:", missing_fields=["author"]
                 )
@@ -1689,7 +1689,7 @@ class Record:
         # Note: when records are prescreen-excluded during prep:
         to_drop = []
         for key, value in self.data.items():
-            if "UNKNOWN" == value:
+            if value == "UNKNOWN":
                 to_drop.append(key)
         for key in to_drop:
             self.remove_field(key=key)
@@ -1815,7 +1815,7 @@ class Record:
         """Get the record's toc-key"""
 
         try:
-            if "article" == self.data["ENTRYTYPE"]:
+            if self.data["ENTRYTYPE"] == "article":
                 toc_key = (
                     self.data["journal"]
                     .replace(" ", "-")
@@ -1834,7 +1834,7 @@ class Record:
                     else "|-"
                 )
 
-            elif "inproceedings" == self.data["ENTRYTYPE"]:
+            elif self.data["ENTRYTYPE"] == "inproceedings":
                 toc_key = (
                     self.data["booktitle"]
                     .replace(" ", "-")
@@ -2042,7 +2042,7 @@ class Record:
             if masterdata_restrictions:
                 self.apply_restrictions(restrictions=masterdata_restrictions)
 
-            if "forthcoming" == self.data.get("year", ""):
+            if self.data.get("year", "") == "forthcoming":
                 source = "NA"
                 if "year" in self.data["colrev_masterdata_provenance"]:
                     source = self.data["colrev_masterdata_provenance"]["year"]["source"]
@@ -2117,14 +2117,14 @@ class Record:
             f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
             f"\n  {self.data.get('author', 'no-author')}"
         )
-        if "article" == self.data["ENTRYTYPE"]:
+        if self.data["ENTRYTYPE"] == "article":
             ret_str += (
                 f"\n  {self.data.get('journal', 'no-journal')} "
                 f"({self.data.get('year', 'no-year')}) "
                 f"{self.data.get('volume', 'no-volume')}"
                 f"({self.data.get('number', '')})"
             )
-        elif "inproceedings" == self.data["ENTRYTYPE"]:
+        elif self.data["ENTRYTYPE"] == "inproceedings":
             ret_str += f"\n  {self.data.get('booktitle', 'no-booktitle')}"
         if "abstract" in self.data:
             lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
@@ -2165,7 +2165,7 @@ class Record:
                 f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
             )
 
-        if "article" == self.data["ENTRYTYPE"]:
+        if self.data["ENTRYTYPE"] == "article":
             ret_str += (
                 f"{self.data.get('journal', 'no-journal')} "
                 f"({self.data.get('year', 'no-year')}) "
@@ -2179,7 +2179,7 @@ class Record:
                     ret_str += f", pp.{colors.GREEN}{self.data['pages']}{colors.END}\n"
             else:
                 ret_str += "\n"
-        elif "inproceedings" == self.data["ENTRYTYPE"]:
+        elif self.data["ENTRYTYPE"] == "inproceedings":
             ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
         if "abstract" in self.data:
             lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
@@ -2374,9 +2374,9 @@ class PrepRecord(Record):
             retrieved_record.data["pages"] = "nan"
 
         if "year" in record.data and "year" in retrieved_record.data:
-            if "forthcoming" == record.data["year"]:
+            if record.data["year"] == "forthcoming":
                 record.data["year"] = retrieved_record.data["year"]
-            if "forthcoming" == retrieved_record.data["year"]:
+            if retrieved_record.data["year"] == "forthcoming":
                 retrieved_record.data["year"] = record.data["year"]
 
         if "editorial" in record.data.get("title", "NA").lower():
@@ -2397,9 +2397,9 @@ class PrepRecord(Record):
         self.data[key] = self.data[key].replace("\n", " ")
 
         if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
-            if "capitalize" == case:
+            if case == "capitalize":
                 self.data[key] = self.data[key].capitalize()
-            if "title" == case:
+            if case == "title":
                 self.data[key] = (
                     self.data[key]
                     .title()

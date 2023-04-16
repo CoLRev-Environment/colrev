@@ -507,7 +507,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 default_source=default_source,
             )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if "retracted" == retrieved_record.data.get("prescreen_exclusion", "NA"):
+            if retrieved_record.data.get("prescreen_exclusion", "NA") == "retracted":
                 record.prescreen_exclude(reason="retracted")
 
             git_repo = prep_operation.review_manager.dataset.get_repo()
@@ -606,9 +606,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     data=item["original_record"]
                 ).print_citation_format()
                 for change_item in item["changes"]:
-                    if "change" == change_item[0]:
+                    if change_item[0] == "change":
                         edit_type, field, values = change_item
-                        if "colrev_id" == field:
+                        if field == "colrev_id":
                             continue
                         prefix = f"{edit_type} {field}"
                         print(
@@ -625,7 +625,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                             + f"  {print_diff((values[0], values[1]))}"
                         )
 
-                    elif "add" == change_item[0]:
+                    elif change_item[0] == "add":
                         edit_type, field, values = change_item
                         prefix = f"{edit_type} {values[0][0]}"
                         print(
@@ -643,13 +643,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if response in ["y", "n"]:
                     break
 
-            if "y" == response:
+            if response == "y":
                 self.__apply_correction(
                     source_url=local_base_repos[repo_path],
                     change_list=validated_changes,
                 )
-            elif "n" == response:
-                if "y" == input("Discard all corrections (y/n)?"):
+            elif response == "n":
+                if input("Discard all corrections (y/n)?") == "y":
                     for validated_change in validated_changes:
                         Path(validated_change["file"]).unlink()
 

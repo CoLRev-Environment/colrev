@@ -141,7 +141,7 @@ class StatusStats:
         for screening_case in self.screening_criteria:
             for criterion in screening_case.split(";"):
                 criterion_name, decision = criterion.split("=")
-                if "out" == decision:
+                if decision == "out":
                     self.screening_statistics[criterion_name] += 1
 
         self.currently = self.StatusStatsCurrently(status_stats=self)
@@ -273,7 +273,7 @@ class StatusStats:
                             )
                         # Note : load is not a predecessor so we need to
                         # correct for a missing step (same number like prep)
-                        if "prep" == predecessors[0]["trigger"]:
+                        if predecessors[0]["trigger"] == "prep":
                             self.completed_atomic_steps += getattr(
                                 self.overall, str(predecessor["dest"])
                             )

@@ -803,7 +803,7 @@ class PackageManager:
                 package_details["operation_name"]: operation,
                 "settings": package_class["settings"],
             }
-            if "search_source" == package_type:
+            if package_type == "search_source":
                 del params["check_operation"]
 
             if "endpoint" not in package_class:
@@ -822,7 +822,7 @@ class PackageManager:
                             continue
                     verifyObject(endpoint_class, packages_dict[package_identifier])
                 except colrev_exceptions.ServiceNotAvailableException as sna_exc:
-                    if "docker" == sna_exc.dep:
+                    if sna_exc.dep == "docker":
                         print(
                             f"{colors.ORANGE}Docker not available. Deactivate "
                             f"{package_identifier}{colors.END}"

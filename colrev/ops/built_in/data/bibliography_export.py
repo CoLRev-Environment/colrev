@@ -161,7 +161,7 @@ class BibliographyExport(JsonSchemaMixin):
             timeout=30,
         )
         headers = {"Content-type": "application/json"}
-        if "No suitable translators found" == ret.content.decode("utf-8"):
+        if ret.content.decode("utf-8") == "No suitable translators found":
             raise colrev_exceptions.ImportException(
                 "Zotero translators: No suitable translators found"
             )

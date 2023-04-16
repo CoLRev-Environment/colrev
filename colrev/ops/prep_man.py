@@ -144,7 +144,7 @@ class PrepMan(colrev.operation.Operation):
             languages_df = pd.read_csv(lang_prep_csv_path)
             language_records = languages_df.to_dict("records")
             for language_record in language_records:
-                if "" == language_record["most_likely_language"]:
+                if language_record["most_likely_language"] == "":
                     continue
                 if language_record["ID"] not in records:
                     # warn

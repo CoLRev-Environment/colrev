@@ -243,7 +243,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if "forwardsearch" == query.replace("_", "").replace("-", ""):
+        if query.replace("_", "").replace("-", "") == "forwardsearch":
             return cls.get_default_source()
 
         return None

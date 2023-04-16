@@ -44,7 +44,7 @@ class CustomPrep:
         """Update record (metadata)"""
 
         if "journal" in record.data:
-            if "MISQ" == record.data["journal"]:
+            if record.data["journal"] == "MISQ":
                 record.update_field(
                     key="journal", value="MIS Quarterly", source="custom_prep"
                 )

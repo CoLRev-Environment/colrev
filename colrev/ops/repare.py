@@ -266,15 +266,15 @@ class Repare(colrev.operation.Operation):
                                 record.add_data_provenance(
                                     key=key, source=origin, note=""
                                 )
-                    if "language" == key:
+                    if key == "language":
                         record.add_data_provenance(
                             key=key, source="LanguageDetector", note=""
                         )
-                    if "tei_file" == key:
+                    if key == "tei_file":
                         record.add_data_provenance(
                             key=key, source="file|grobid", note=""
                         )
-                    if "colrev_pdf_id" == key:
+                    if key == "colrev_pdf_id":
                         record.add_data_provenance(
                             key=key, source="file|pdf_hash", note=""
                         )
