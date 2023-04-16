@@ -187,24 +187,24 @@ class Merge(colrev.operation.Operation):
         i = 0
         for (
             current_branch_record_id,
-            current_branch_record,
+            current_branch_record_dict,
         ) in current_branch_records.items():
             other_branch_record = other_branch_records[current_branch_record_id]
 
             if (
-                current_branch_record["colrev_status"]
+                current_branch_record_dict["colrev_status"]
                 != other_branch_record["colrev_status"]
             ):
                 i += 1
                 print(f"{i}/{nr_to_reconcile}")
-                copied_rec = current_branch_record.copy()
+                copied_rec = current_branch_record_dict.copy()
                 copied_rec.pop("colrev_status")
                 print(colrev.record.Record(data=copied_rec).format_bib_style())
                 print(
                     f"1 - {current_branch_author} coded on {current_branch}".ljust(
                         40, " "
                     )
-                    + f": {current_branch_record['colrev_status']}"
+                    + f": {current_branch_record_dict['colrev_status']}"
                 )
                 print(
                     f"2 - {merging_branch_author} coded on {branch}".ljust(40, " ")
@@ -214,17 +214,19 @@ class Merge(colrev.operation.Operation):
                 if resolution_nr == "1":
                     self.review_manager.report_logger.info(
                         f"Reconciliation for {current_branch_record_id}: "
-                        f"{current_branch_record['colrev_status']}"
+                        f"{current_branch_record_dict['colrev_status']}"
                     )
-                    resolution = current_branch_record["colrev_status"]
+                    resolution = current_branch_record_dict["colrev_status"]
                 else:
                     self.review_manager.report_logger.info(
                         f"Reconciliation for {current_branch_record_id}: "
                         f"{other_branch_record['colrev_status']}"
                     )
                     resolution = other_branch_record["colrev_status"]
-
-                current_branch_record["colrev_status"] = resolution
+                current_branch_record = colrev.record.Record(
+                    data=current_branch_record_dict
+                )
+                current_branch_record.set_status(target_state=resolution)
                 print("\n\n\n")
 
         self.review_manager.dataset.save_records_dict(records=current_branch_records)

@@ -181,12 +181,17 @@ class TableScreen(JsonSchemaMixin):
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:
-                record = records[screened_record.get("ID", "")]
+                record_dict = records[screened_record.get("ID", "")]
+                record = colrev.record.Record(data=record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
-                        record["colrev_status"] = colrev.record.RecordState.rev_included
+                        record.set_status(
+                            target_state=colrev.record.RecordState.rev_included
+                        )
                     elif screened_record["screen_inclusion"] == "out":
-                        record["colrev_status"] = colrev.record.RecordState.rev_excluded
+                        record.set_status(
+                            target_state=colrev.record.RecordState.rev_excluded
+                        )
                     else:
                         print(
                             f"Invalid choice: {screened_record['screen_inclusion']} "
@@ -203,11 +208,15 @@ class TableScreen(JsonSchemaMixin):
                         + ";"
                     )
                 screening_criteria_field = screening_criteria_field.rstrip(";")
-                record["screening_criteria"] = screening_criteria_field
+                record.data["screening_criteria"] = screening_criteria_field
                 if "=out" in screening_criteria_field:
-                    record["colrev_status"] = colrev.record.RecordState.rev_excluded
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_excluded
+                    )
                 else:
-                    record["colrev_status"] = colrev.record.RecordState.rev_included
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_included
+                    )
 
         screen_operation.review_manager.dataset.save_records_dict(records=records)
         screen_operation.review_manager.dataset.add_record_changes()

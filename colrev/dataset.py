@@ -885,14 +885,16 @@ class Dataset:
 
             temp_stat = record_dict["colrev_status"]
             if selected_ids:
-                record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
             new_id = self.__generate_id(
                 local_index=local_index,
                 record_dict=record_dict,
                 existing_ids=[x for x in id_list if x != record_id],
             )
             if selected_ids:
-                record_dict["colrev_status"] = temp_stat
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(target_state=temp_stat)
 
             id_list.append(new_id)
             if old_id != new_id:

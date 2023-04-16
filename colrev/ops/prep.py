@@ -370,7 +370,7 @@ class Prep(colrev.operation.Operation):
                 record.update_masterdata_provenance()
 
         if self.polish:
-            record.data["colrev_status"] = prior_state
+            record.set_status(target_state=prior_state)
 
         return record.get_data()
 
@@ -698,12 +698,17 @@ class Prep(colrev.operation.Operation):
                     load_str=target_db.read()
                 )
 
-            for record in records_dict.values():
-                if colrev.record.RecordState.md_imported != record.get("state", ""):
+            for record_dict in records_dict.values():
+                if colrev.record.RecordState.md_imported != record_dict.get(
+                    "state", ""
+                ):
                     self.review_manager.logger.info(
-                        f"Setting colrev_status to md_imported {record['ID']}"
+                        f"Setting colrev_status to md_imported {record_dict['ID']}"
                     )
-                    record["colrev_status"] = colrev.record.RecordState.md_imported
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_imported
+                    )
             debug_ids_list = list(records_dict.keys())
             debug_ids = ",".join(debug_ids_list)
             self.review_manager.logger.info("Imported record (retrieved from file)")
@@ -883,9 +888,10 @@ class Prep(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        for record in records.values():
-            if colrev.record.RecordState.md_imported == record["colrev_status"]:
-                record["colrev_status"] = colrev.record.RecordState.md_prepared
+        for record_dict in records.values():
+            if colrev.record.RecordState.md_imported == record_dict["colrev_status"]:
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Skip prep")

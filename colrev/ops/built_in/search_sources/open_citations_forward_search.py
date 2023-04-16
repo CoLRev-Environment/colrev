@@ -121,7 +121,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
 
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=300)
         try:
             items = json.loads(ret.text)
 

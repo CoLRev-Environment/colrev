@@ -255,9 +255,12 @@ class CurationDedupe(JsonSchemaMixin):
                             source_record_dict.get(k, "NA") == v
                             for k, v in toc_item.items()
                         ):
-                            source_record_dict[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_processed
+                            source_record = colrev.record.Record(
+                                data=source_record_dict
+                            )
+                            source_record.set_status(
+                                target_state=colrev.record.RecordState.md_processed
+                            )
             else:
                 print(toc_item)
                 print("Pre-imported records found for this toc_item (skipping)")

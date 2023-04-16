@@ -128,17 +128,18 @@ class Screen(colrev.operation.Operation):
             print(f"Error: criterion {criterion_name} already in settings")
             return
 
-        for record in records.values():
-            if record["colrev_status"] in [
+        for record_dict in records.values():
+            if record_dict["colrev_status"] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
             ]:
-                record["screening_criteria"] += f";{criterion_name}=TODO"
+                record_dict["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : we set the status to pdf_prepared because the screening
                 # decisions have to be updated (resulting in inclusion or exclusion)
-                record["colrev_status"] = colrev.record.RecordState.pdf_prepared
-            if record["colrev_status"] == colrev.record.RecordState.rev_excluded:
-                record["screening_criteria"] += f";{criterion_name}=TODO"
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+            if record_dict["colrev_status"] == colrev.record.RecordState.rev_excluded:
+                record_dict["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : no change in colrev_status
                 # because at least one of the other criteria led to exclusion decision
 
@@ -160,13 +161,13 @@ class Screen(colrev.operation.Operation):
             print(f"Error: criterion {criterion_to_delete} not in settings")
             return
 
-        for record in records.values():
-            if record["colrev_status"] in [
+        for record_dict in records.values():
+            if record_dict["colrev_status"] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
             ]:
-                record["screening_criteria"] = (
-                    record["screening_criteria"]
+                record_dict["screening_criteria"] = (
+                    record_dict["screening_criteria"]
                     .replace(f"{criterion_to_delete}=TODO", "")
                     .replace(f"{criterion_to_delete}=in", "")
                     .replace(f"{criterion_to_delete}=out", "")
@@ -177,9 +178,9 @@ class Screen(colrev.operation.Operation):
                 # Note : colrev_status does not change
                 # because the other screening criteria do not change
 
-            if record["colrev_status"] in [colrev.record.RecordState.rev_excluded]:
-                record["screening_criteria"] = (
-                    record["screening_criteria"]
+            if record_dict["colrev_status"] in [colrev.record.RecordState.rev_excluded]:
+                record_dict["screening_criteria"] = (
+                    record_dict["screening_criteria"]
                     .replace(f"{criterion_to_delete}=TODO", "")
                     .replace(f"{criterion_to_delete}=in", "")
                     .replace(f"{criterion_to_delete}=out", "")
@@ -189,10 +190,13 @@ class Screen(colrev.operation.Operation):
                 )
 
                 if (
-                    "=out" not in record["screening_criteria"]
-                    and "=TODO" not in record["screening_criteria"]
+                    "=out" not in record_dict["screening_criteria"]
+                    and "=TODO" not in record_dict["screening_criteria"]
                 ):
-                    record["colrev_status"] = colrev.record.RecordState.rev_included
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_included
+                    )
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -240,9 +244,10 @@ class Screen(colrev.operation.Operation):
 
     def __screen_include_all(self, *, records: dict) -> None:
         self.review_manager.logger.info("Screen: Include all records")
-        for record in records.values():
-            if record["colrev_status"] == colrev.record.RecordState.pdf_prepared:
-                record["colrev_status"] = colrev.record.RecordState.rev_included
+        for record_dict in records.values():
+            if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(target_state=colrev.record.RecordState.rev_included)
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(

@@ -173,9 +173,9 @@ class PDFPrep(colrev.operation.Operation):
                     f'Error for {record.data["ID"]} '  # type: ignore
                     f"(in {endpoint.settings.endpoint} : {err})"  # type: ignore
                 )
-                record.data[
-                    "colrev_status"
-                ] = colrev.record.RecordState.pdf_needs_manual_preparation
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_needs_manual_preparation
+                )
 
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation

@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
+# pylint: disable=duplicate-code
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
