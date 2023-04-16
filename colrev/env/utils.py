@@ -42,7 +42,9 @@ def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
 
 def get_template(*, template_path: str) -> Template:
     """Load a jinja template"""
-    environment = Environment(loader=FunctionLoader(__load_jinja_template))
+    environment = Environment(
+        loader=FunctionLoader(__load_jinja_template), autoescape=True
+    )
     template = environment.get_template(template_path)
     return template
 

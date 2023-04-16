@@ -41,15 +41,25 @@ class PDFHashService:
             self.logger.error(f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}")
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
-        command = (
-            f'docker run --rm -v "{pdf_dir}:/home/docker" '
-            f'{self.pdf_hash_image} python app.py "{pdf_path.name}" {page_nr} {hash_size}'
-        )
+        command = [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{pdf_dir}:/home/docker",
+            self.pdf_hash_image,
+            "python",
+            "app.py",
+            pdf_path.name,
+            str(page_nr),
+            str(hash_size),
+        ]
 
         try:
-            ret = subprocess.check_output(
-                [command], stderr=subprocess.STDOUT, shell=True
-            )
+            with subprocess.Popen(
+                command, stdout=subprocess.PIPE, shell=False
+            ) as process_pdf_hash:
+                ret = process_pdf_hash.communicate()[0]
         except subprocess.CalledProcessError as exc:
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 

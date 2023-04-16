@@ -60,17 +60,22 @@ class GrobidService:
         logging.info("Running docker container created from %s", self.grobid_image)
 
         logging.info("Starting grobid service...")
-        start_cmd = (
-            f'docker run -t --rm -m "4g" -p 8070:8070 -p 8071:8071 {self.grobid_image}'
-        )
-        subprocess.Popen(
-            [start_cmd],
-            shell=True,
-            stdin=None,
-            stdout=open(os.devnull, "wb"),
-            stderr=None,
-            close_fds=True,
-        )
+        start_cmd = [
+            "docker",
+            "run",
+            "-t",
+            "--rm",
+            "-m",
+            "4g",
+            "-p",
+            "8070:8070",
+            "-p",
+            "8071:8071",
+            self.grobid_image,
+        ]
+        with open(os.devnull, "w", encoding="utf-8") as devnull:
+            subprocess.Popen(start_cmd, shell=False, stdout=devnull)
+
         self.check_grobid_availability()
 
 

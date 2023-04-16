@@ -2,6 +2,7 @@
 """OCR as a PDF preparation operation"""
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -74,31 +75,44 @@ class PDFCheckOCR(JsonSchemaMixin):
             pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
         )
 
-        options = f"--jobs {4}"
+        # options = ""
         # if rotate:
         #     options = options + '--rotate-pages '
         # if deskew:
         #     options = options + '--deskew '
         docker_home_path = Path("/home/docker")
-        command = (
-            'docker run --rm --user "$(id -u):$(id -g)" -v "'
-            + str(orig_path)
-            + f':/home/docker" {self.ocrmypdf_image} --force-ocr '
-            + options
-            + ' -l eng "'
-            + str(docker_home_path / pdf_path.name)
-            + '"  "'
-            + str(docker_home_path / ocred_filename.name)
-            + '"'
-        )
-        subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
+
+        command = [
+            "docker",
+            "run",
+            "--rm",
+            "--user",
+            # "$(id -u):$(id -g)",
+            f"{os.geteuid()}:{os.getegid()}",
+            "-v",
+            f"{orig_path}:/home/docker",
+            self.ocrmypdf_image,
+            "--force-ocr",
+            # options,
+            "--jobs",
+            "4",
+            "-l",
+            "eng",
+            str(docker_home_path / pdf_path.name),
+            str(docker_home_path / ocred_filename.name),
+        ]
+
+        with subprocess.Popen(
+            command, stdout=subprocess.PIPE, shell=False
+        ) as ocr_process:
+            ocr_process.wait()
 
         record = colrev.record.Record(data=record_dict)
         record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")
         record.data["file"] = str(ocred_filename.relative_to(review_manager.path))
         record.set_text_from_pdf(project_path=review_manager.path)
 
-    @timeout_decorator.timeout(120, use_signals=False)
+    @timeout_decorator.timeout(300, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
