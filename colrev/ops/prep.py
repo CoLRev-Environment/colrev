@@ -965,7 +965,7 @@ class Prep(colrev.operation.Operation):
                     print()
                     return
 
-                if self.debug_mode or __unit_testing:
+                if self.debug_mode or __unit_testing or cpu == 1:
                     # Note: preparation_data is not turned into a list of records.
                     prepared_records = []
                     for item in preparation_data:
