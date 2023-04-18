@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import sys
 import tempfile
-
-import fitz, sys
-
 from pathlib import Path
 
+import fitz
 import imagehash
 from PIL import Image
 
