@@ -519,6 +519,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     """Applies trained (active learning) model"""
 
+    settings: ActiveLearningSettings
     ci_supported: bool = False
 
     @dataclass

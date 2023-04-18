@@ -29,6 +29,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
     """Rule-based prescreen (scope)"""
 
+    settings: ScopePrescreenSettings
     ci_supported: bool = True
 
     @dataclass

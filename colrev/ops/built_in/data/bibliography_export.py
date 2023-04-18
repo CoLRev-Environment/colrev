@@ -42,6 +42,8 @@ class BibFormats(Enum):
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
 
+    settings: BibliographyExportSettings
+
     ZOTERO_FORMATS = [
         BibFormats.endnote,
         BibFormats.mendeley,

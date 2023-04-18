@@ -34,6 +34,7 @@ class CurationDedupe(JsonSchemaMixin):
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
+    settings: CurationDedupeSettings
     ci_supported: bool = True
 
     @dataclass

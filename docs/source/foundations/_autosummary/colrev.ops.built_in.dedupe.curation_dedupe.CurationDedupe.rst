@@ -36,3 +36,4 @@ colrev.ops.built\_in.dedupe.curation\_dedupe.CurationDedupe
    .. autosummary::
 
       ~CurationDedupe.ci_supported
+      ~CurationDedupe.settings

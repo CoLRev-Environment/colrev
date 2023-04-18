@@ -26,6 +26,8 @@ if False:  # pylint: disable=using-constant-test
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
 
+    settings: GHPagesSettings
+
     ci_supported: bool = False
 
     @dataclass
