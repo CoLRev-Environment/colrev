@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import tempfile
+
+import fitz, sys
+
 from pathlib import Path
+
+import imagehash
+from PIL import Image
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
@@ -23,10 +30,10 @@ class PDFHashService:
 
     # pylint: disable=too-few-public-methods
     def __init__(self, *, logger: logging.Logger) -> None:
-        self.pdf_hash_image = "colrev/pdf_hash:latest"
-        colrev.env.environment_manager.EnvironmentManager.build_docker_image(
-            imagename=self.pdf_hash_image
-        )
+        # self.pdf_hash_image = "colrev/pdf_hash:latest"
+        # colrev.env.environment_manager.EnvironmentManager.build_docker_image(
+        #     imagename=self.pdf_hash_image
+        # )
         self.logger = logger
 
     def get_pdf_hash(self, *, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
@@ -35,41 +42,30 @@ class PDFHashService:
         assert page_nr > 0
         assert hash_size in [16, 32]
         pdf_path = pdf_path.resolve()
-        pdf_dir = pdf_path.parents[0]
 
         if 0 == os.path.getsize(pdf_path):
             self.logger.error(f"{colors.RED}PDF with size 0: {pdf_path}{colors.END}")
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
-        command = [
-            "docker",
-            "run",
-            "--rm",
-            "-v",
-            f"{pdf_dir}:/home/docker",
-            self.pdf_hash_image,
-            "python",
-            "app.py",
-            pdf_path.name,
-            str(page_nr),
-            str(hash_size),
-        ]
-
-        try:
-            with subprocess.Popen(
-                command, stdout=subprocess.PIPE, shell=False
-            ) as process_pdf_hash:
-                ret = process_pdf_hash.communicate()[0]
-        except subprocess.CalledProcessError as exc:
-            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
-
-        pdf_hash = ret.decode("utf-8").replace("\n", "")
-
-        # when PDFs are not readable, the pdf-hash may consist of 0s
-        if len(pdf_hash) * "0" == pdf_hash:
+        doc: fitz.Document = fitz.open(pdf_path)
+        img = get_image(doc, page_nr)
+        res = imagehash.average_hash(img, hash_size=int(hash_size))
+        as_str = str(res).replace("\n", "")
+        if len(as_str) * "0" == as_str:
             raise colrev_exceptions.PDFHashError(path=pdf_path)
+        return as_str
 
-        return pdf_hash
+
+def get_image(doc, page_nr):
+    file_name = f"page-{page_nr}.png"
+    with tempfile.TemporaryDirectory() as tp:
+        page_no = 0
+        for page in doc:
+            pix = page.get_pixmap(dpi=200)
+            pix.save(file_name)  # store image as a PNG
+            page_no += 1
+            if page_no == page_nr:
+                return Image.open(file_name)
 
 
 if __name__ == "__main__":

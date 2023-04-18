@@ -50,7 +50,7 @@ def pdf_hash_service(tmp_path_factory: Path, request) -> colrev.env.pdf_hash_ser
     [
         (
             Path("WagnerLukyanenkoParEtAl2022.pdf"),
-            "87ffff1fffffff1ff47fff7fe0008307e000071fffffff07f1603f0ffd67fffff7ffffffe0000007e0000007e0000007fc4d59b7e3ffffffe03fffffffffffffe1ff0007e0000007e0000007e00080b7e0008007e0000007e0000007e0000007e0008007e000ffffe0008fffe000000ff00087ffffffffffffffffffffffffff",
+            "87ffff1fffffff1ff47fff7fe0000307e000071fffffff07f1603f0ffd67fffff7ffffffe0000007e0000007e0000007fc6d59b7e3ffffffe03fffffffffffffe1ff0007e0000007e0000007e00080ffe0008007e0000007e0000007e0000007e0008007e000fdffe0008fffe000000ff00087ffffffffffffffffffffffffff",
         ),
         (Path("zero-size-pdf.pdf"), "InvalidPDFException"),
     ],
