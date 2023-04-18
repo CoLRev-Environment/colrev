@@ -334,8 +334,14 @@ class Load(colrev.operation.Operation):
 
                 while True:
                     if skip_query:
-                        # Use the last / unknown_source
-                        selection = str(len(heuristic_result_list))
+                        # Use the last / unknown_source 
+                        max_conf = 0.0
+                        best_candidate_pos = 0
+                        for i, heuristic_candidate in enumerate(heuristic_result_list):
+                            if heuristic_candidate["confidence"] > max_conf:
+                                best_candidate_pos = i+1
+                                max_conf = heuristic_candidate["confidence"]
+                        selection = str(best_candidate_pos)
                     else:
                         selection = input("select nr")
                     if not selection.isdigit():
