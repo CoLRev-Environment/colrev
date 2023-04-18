@@ -5,6 +5,8 @@ from __future__ import annotations
 import html
 import re
 
+# pylint: disable=duplicate-code
+
 
 def __get_year(*, item: dict) -> str:
     try:

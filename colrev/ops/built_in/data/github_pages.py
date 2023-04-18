@@ -14,6 +14,8 @@ import colrev.env.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=duplicate-code
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 

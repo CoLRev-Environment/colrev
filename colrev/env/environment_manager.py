@@ -300,7 +300,6 @@ class EnvironmentManager:
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
-                # TODO : should come from the curation_data endpoint!
                 with open(f"{repo_source_path}/readme.md", encoding="utf-8") as file:
                     first_line = file.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
