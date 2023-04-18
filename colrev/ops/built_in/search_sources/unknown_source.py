@@ -46,6 +46,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     )
 
     HTML_CLEANER = re.compile("<.*?>")
+    __padding = 40
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -121,106 +122,10 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
-        """Source-specific preparation for unknown sources"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
-        if not record.has_inconsistent_fields() or record.masterdata_is_curated():
-            return record
-
-        if source.load_conversion_package_endpoint["endpoint"] == "colrev.md_to_bib":
-            if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
-                record.update_field(
-                    key="ENTRYTYPE", value="book", source="unkown_source_prep"
-                )
-            if record.data.get("year", "year") == record.data.get("date", "date"):
-                record.remove_field(key="date")
-            if (
-                "inbook" == record.data["ENTRYTYPE"]
-                and "chapter" not in record.data
-                and "title" in record.data
-            ):
-                record.rename_field(key="title", new_key="chapter")
-
-        if record.data.get("author", "UNKNOWN") != "UNKNOWN":
-            # fix name format
-            if (1 == len(record.data["author"].split(" ")[0])) or (
-                ", " not in record.data["author"]
-            ):
-                record.update_field(
-                    key="author",
-                    value=colrev.record.PrepRecord.format_author_field(
-                        input_string=record.data["author"]
-                    ),
-                    source="unkown_source_prep",
-                    keep_source_if_equal=True,
-                )
-
-        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
-            record.format_if_mostly_upper(key="title")
-
-        if "date" in record.data and "year" not in record.data:
-            year = re.search(r"\d{4}", record.data["date"])
-            if year:
-                record.update_field(
-                    key="year",
-                    value=year.group(0),
-                    source="unkown_source_prep",
-                    keep_source_if_equal=True,
-                )
-
-        if record.data.get("journal", "UNKNOWN") != "UNKNOWN":
-            if len(record.data["journal"]) > 10 and "UNKNOWN" != record.data["journal"]:
-                record.format_if_mostly_upper(key="journal", case="title")
-
-        # Prepare the record by heuristically correcting erroneous ENTRYTYPEs
-        padding = 40
-
-        if (
-            "dissertation" in record.data.get("fulltext", "NA").lower()
-            and record.data["ENTRYTYPE"] != "phdthesis"
-        ):
-            prior_e_type = record.data["ENTRYTYPE"]
-            record.update_field(
-                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
-            )
-            self.review_manager.report_logger.info(
-                f' {record.data["ID"]}'.ljust(padding, " ")
-                + f"Set from {prior_e_type} to phdthesis "
-                '("dissertation" in fulltext link)'
-            )
-
-        if (
-            "thesis" in record.data.get("fulltext", "NA").lower()
-            and record.data["ENTRYTYPE"] != "phdthesis"
-        ):
-            prior_e_type = record.data["ENTRYTYPE"]
-            record.update_field(
-                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
-            )
-            self.review_manager.report_logger.info(
-                f' {record.data["ID"]}'.ljust(padding, " ")
-                + f"Set from {prior_e_type} to phdthesis "
-                '("thesis" in fulltext link)'
-            )
-
-        if (
-            "This thesis" in record.data.get("abstract", "NA").lower()
-            and record.data["ENTRYTYPE"] != "phdthesis"
-        ):
-            prior_e_type = record.data["ENTRYTYPE"]
-            record.update_field(
-                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
-            )
-            self.review_manager.report_logger.info(
-                f' {record.data["ID"]}'.ljust(padding, " ")
-                + f"Set from {prior_e_type} to phdthesis "
-                '("thesis" in abstract)'
-            )
+    def __heuristically_fix_entrytypes(
+        self, *, record: colrev.record.PrepRecord, source_identifier: str
+    ) -> None:
+        """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
 
         # Journal articles should not have booktitles/series set.
         if record.data["ENTRYTYPE"] == "article":
@@ -241,50 +146,92 @@ class UnknownSearchSource(JsonSchemaMixin):
                     )
                     record.remove_field(key="series")
 
-        if record.data["ENTRYTYPE"] == "article":
-            if "journal" not in record.data:
-                if "series" in record.data:
-                    journal_string = record.data["series"]
-                    record.update_field(
-                        key="journal", value=journal_string, source="unkown_source_prep"
-                    )
-                    record.remove_field(key="series")
-
-        if record.data.get("booktitle", "UNKNOWN") != "UNKNOWN":
-            if (
-                "UNKNOWN" != record.data["booktitle"]
-                and "inbook" != record.data["ENTRYTYPE"]
-            ):
-                record.format_if_mostly_upper(key="booktitle", case="title")
-
-                stripped_btitle = re.sub(r"\d{4}", "", record.data["booktitle"])
-                stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
-                stripped_btitle = re.sub(r"\d{1,2}nd", "", stripped_btitle)
-                stripped_btitle = re.sub(r"\d{1,2}rd", "", stripped_btitle)
-                stripped_btitle = re.sub(r"\d{1,2}st", "", stripped_btitle)
-                stripped_btitle = re.sub(r"\([A-Z]{3,6}\)", "", stripped_btitle)
-                stripped_btitle = stripped_btitle.replace(
-                    "Proceedings of the", ""
-                ).replace("Proceedings", "")
-                stripped_btitle = stripped_btitle.lstrip().rstrip()
+        if source_identifier == "colrev.md_to_bib":
+            if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
                 record.update_field(
-                    key="booktitle",
-                    value=stripped_btitle,
-                    source="unkown_source_prep",
-                    keep_source_if_equal=True,
+                    key="ENTRYTYPE", value="book", source="unkown_source_prep"
                 )
-
-        record.unify_pages_field()
-        if "pages" in record.data:
+            if record.data.get("year", "year") == record.data.get("date", "date"):
+                record.remove_field(key="date")
             if (
-                not re.match(r"^\d*$", record.data["pages"])
-                and not re.match(r"^\d*--\d*$", record.data["pages"])
-                and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data["pages"])
+                "inbook" == record.data["ENTRYTYPE"]
+                and "chapter" not in record.data
+                and "title" in record.data
             ):
-                self.review_manager.report_logger.info(
-                    f' {record.data["ID"]}:'.ljust(padding, " ")
-                    + f'Unusual pages: {record.data["pages"]}'
-                )
+                record.rename_field(key="title", new_key="chapter")
+
+        if (
+            "dissertation" in record.data.get("fulltext", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(self.__padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("dissertation" in fulltext link)'
+            )
+
+        if (
+            "thesis" in record.data.get("fulltext", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(self.__padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("thesis" in fulltext link)'
+            )
+
+        if (
+            "this thesis" in record.data.get("abstract", "NA").lower()
+            and record.data["ENTRYTYPE"] != "phdthesis"
+        ):
+            prior_e_type = record.data["ENTRYTYPE"]
+            record.update_field(
+                key="ENTRYTYPE", value="phdthesis", source="unkown_source_prep"
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(self.__padding, " ")
+                + f"Set from {prior_e_type} to phdthesis "
+                '("thesis" in abstract)'
+            )
+
+    def __format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
+        if record.data.get("booktitle", "UNKNOWN") == "UNKNOWN":
+            return
+        if (
+            "UNKNOWN" != record.data["booktitle"]
+            and "inbook" != record.data["ENTRYTYPE"]
+        ):
+            record.format_if_mostly_upper(key="booktitle", case="title")
+
+            stripped_btitle = re.sub(r"\d{4}", "", record.data["booktitle"])
+            stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
+            stripped_btitle = re.sub(r"\d{1,2}nd", "", stripped_btitle)
+            stripped_btitle = re.sub(r"\d{1,2}rd", "", stripped_btitle)
+            stripped_btitle = re.sub(r"\d{1,2}st", "", stripped_btitle)
+            stripped_btitle = re.sub(r"\([A-Z]{3,6}\)", "", stripped_btitle)
+            stripped_btitle = stripped_btitle.replace("Proceedings of the", "").replace(
+                "Proceedings", ""
+            )
+            stripped_btitle = stripped_btitle.lstrip().rstrip()
+            record.update_field(
+                key="booktitle",
+                value=stripped_btitle,
+                source="unkown_source_prep",
+                keep_source_if_equal=True,
+            )
+
+    def __format_article(self, record: colrev.record.PrepRecord) -> None:
+        if record.data.get("journal", "UNKNOWN") != "UNKNOWN":
+            if len(record.data["journal"]) > 10 and "UNKNOWN" != record.data["journal"]:
+                record.format_if_mostly_upper(key="journal", case="title")
 
         if record.data.get("volume", "UNKNOWN") != "UNKNOWN":
             record.update_field(
@@ -293,6 +240,46 @@ class UnknownSearchSource(JsonSchemaMixin):
                 source="unkown_source_prep",
                 keep_source_if_equal=True,
             )
+
+    def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+        """Format fields"""
+
+        if record.data["entrytype"] == "inproceedings":
+            self.__format_inproceedings(record=record)
+        elif record.data["entrytype"] == "article":
+            self.__format_article(record=record)
+
+        if record.data.get("author", "UNKNOWN") != "UNKNOWN":
+            # fix name format
+            if (1 == len(record.data["author"].split(" ")[0])) or (
+                ", " not in record.data["author"]
+            ):
+                record.update_field(
+                    key="author",
+                    value=colrev.record.PrepRecord.format_author_field(
+                        input_string=record.data["author"]
+                    ),
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+            # Replace nicknames in parentheses
+            record.data["author"] = re.sub(r"\([^)]*\)", "", record.data["author"])
+            record.data["author"] = record.data["author"].replace("  ", " ").rstrip()
+
+        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
+            record.format_if_mostly_upper(key="title")
+
+        if "pages" in record.data:
+            record.unify_pages_field()
+            if (
+                not re.match(r"^\d*$", record.data["pages"])
+                and not re.match(r"^\d*--\d*$", record.data["pages"])
+                and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data["pages"])
+            ):
+                self.review_manager.report_logger.info(
+                    f' {record.data["ID"]}:'.ljust(self.__padding, " ")
+                    + f'Unusual pages: {record.data["pages"]}'
+                )
 
         if "url" in record.data and "fulltext" in record.data:
             if record.data["url"] == record.data["fulltext"]:
@@ -310,8 +297,41 @@ class UnknownSearchSource(JsonSchemaMixin):
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data["language"]
 
+    def __remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
+        if record.data["ENTRYTYPE"] == "article":
+            if "journal" in record.data and "booktitle" in record.data:
+                similarity_journal_booktitle = fuzz.partial_ratio(
+                    record.data["journal"].lower(), record.data["booktitle"].lower()
+                )
+                if similarity_journal_booktitle / 100 > 0.9:
+                    record.remove_field(key="booktitle")
+
+        if record.data.get("publisher", "") in ["researchgate.net"]:
+            record.remove_field(key="publisher")
+
+        if record.data["ENTRYTYPE"] == "inproceedings":
+            if "journal" in record.data and "booktitle" in record.data:
+                similarity_journal_booktitle = fuzz.partial_ratio(
+                    record.data["journal"].lower(), record.data["booktitle"].lower()
+                )
+                if similarity_journal_booktitle / 100 > 0.9:
+                    record.remove_field(key="journal")
+
+    def __impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
+        if "date" in record.data and "year" not in record.data:
+            year = re.search(r"\d{4}", record.data["date"])
+            if year:
+                record.update_field(
+                    key="year",
+                    value=year.group(0),
+                    source="unkown_source_prep",
+                    keep_source_if_equal=True,
+                )
+
+    def __unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
+        # Remove html entities
         for field in list(record.data.keys()):
-            # Note : some dois (and their provenance) contain html entities
+            # Skip dois (and their provenance), which may contain html entities
             if field in [
                 "colrev_masterdata_provenance",
                 "colrev_data_provenance",
@@ -322,34 +342,26 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.data[field] = re.sub(r"\s+", " ", record.data[field])
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 
-        if record.data["ENTRYTYPE"] == "article":
-            if "journal" in record.data and "booktitle" in record.data:
-                if (
-                    fuzz.partial_ratio(
-                        record.data["journal"].lower(), record.data["booktitle"].lower()
-                    )
-                    / 100
-                    > 0.9
-                ):
-                    record.remove_field(key="booktitle")
-        if record.data["ENTRYTYPE"] == "inproceedings":
-            if "journal" in record.data and "booktitle" in record.data:
-                if (
-                    fuzz.partial_ratio(
-                        record.data["journal"].lower(), record.data["booktitle"].lower()
-                    )
-                    / 100
-                    > 0.9
-                ):
-                    record.remove_field(key="journal")
+    def prepare(
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
+        """Source-specific preparation for unknown sources"""
 
-        if record.data.get("publisher", "") in ["researchgate.net"]:
-            record.remove_field(key="publisher")
+        if not record.has_inconsistent_fields() or record.masterdata_is_curated():
+            return record
 
-        # Replace nicknames in parentheses
-        if "author" in record.data:
-            record.data["author"] = re.sub(r"\([^)]*\)", "", record.data["author"])
-            record.data["author"] = record.data["author"].replace("  ", " ").rstrip()
+        self.__heuristically_fix_entrytypes(
+            record=record,
+            source_identifier=source.load_conversion_package_endpoint["endpoint"],
+        )
+
+        self.__impute_missing_fields(record=record)
+
+        self.__format_fields(record=record)
+
+        self.__remove_redundant_fields(record=record)
+
+        self.__unify_special_characters(record=record)
 
         return record
 
