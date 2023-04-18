@@ -7,7 +7,6 @@ import re
 
 
 def __get_year(*, item: dict) -> str:
-    year = ""
     try:
         if "published-print" in item:
             date_parts = item["published-print"]["date-parts"]
@@ -15,6 +14,8 @@ def __get_year(*, item: dict) -> str:
             date_parts = item["published"]["date-parts"]
         elif "published-online" in item:
             date_parts = item["published-online"]["date-parts"]
+        else:
+            return ""
         year = str(date_parts[0][0])
     except KeyError:
         pass
