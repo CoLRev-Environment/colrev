@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-import xml.etree.ElementTree as ET
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
@@ -17,6 +16,7 @@ import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from defusedxml.lxml import fromstring
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -115,7 +115,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
 
             filename = search_operation.get_unique_filename(
-                file_path_string=f"pubmed_{query}"
+                file_path_string=f"pubmed_{query.replace('&sort=', '')}"
             )
             query = (
                 "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
@@ -299,7 +299,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # )
             return []
 
-        root = ET.fromstring(ret.text)
+        root = fromstring(str.encode(ret.text))
         return [
             x.text
             for x_el in root.findall("IdList")
@@ -332,14 +332,14 @@ class PubMedSearchSource(JsonSchemaMixin):
                 # review_manager.logger.debug(
                 #     f"crossref_query failed with status {ret.status_code}"
                 # )
-                return {}
+                return {"pubmed_id": pubmed_id}
 
-            root = ET.fromstring(ret.text)
+            root = fromstring(str.encode(ret.text))
             retrieved_record = self.__pubmed_xml_to_record(root=root)
             if not retrieved_record:
-                return {}
+                return {"pubmed_id": pubmed_id}
         except requests.exceptions.RequestException:
-            return {}
+            return {"pubmed_id": pubmed_id}
         # pylint: disable=duplicate-code
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -478,7 +478,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 yield self.__pubmed_query_id(pubmed_id=pubmed_id)
 
             retstart += 20
-            # input(pubmed_ids)
 
     def __run_parameter_search(
         self,
@@ -503,6 +502,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
                     "title", ""
                 ):
+                    search_operation.review_manager.logger.warning(
+                        f"Skipped record: {record_dict}"
+                    )
                     continue
                 try:
                     pubmed_feed.set_id(record_dict=record_dict)
@@ -692,6 +694,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 del record["create_date"]
             if record.get("journal", "") != "":
                 record["ENTRYTYPE"] = "article"
+            if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
+                del record["pii"]
 
         return records
 

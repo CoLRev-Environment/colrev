@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -17,6 +16,7 @@ import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from defusedxml.lxml import fromstring
 from thefuzz import fuzz
 
 import colrev.env.package_manager
@@ -263,7 +263,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     return []
 
                 most_similar, most_similar_record = 0.0, {}
-                root = ET.fromstring(ret.text)
+                root = fromstring(str.encode(ret.text))
                 result_list = root.findall("resultList")[0]
 
                 for result_item in result_list.findall("result"):

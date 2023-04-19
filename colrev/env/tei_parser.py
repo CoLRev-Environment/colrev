@@ -8,6 +8,7 @@ from typing import Optional
 from xml.etree.ElementTree import Element
 
 import requests
+from defusedxml.lxml import fromstring
 from lxml import etree
 
 import colrev.env.grobid_service
@@ -123,7 +124,7 @@ class TEIParser:
             if b"[TIMEOUT]" in ret.content:
                 raise colrev_exceptions.TEITimeoutException()
 
-            self.root = etree.fromstring(ret.content)
+            self.root = fromstring(ret.content)
 
             if self.tei_path is not None:
                 self.tei_path.parent.mkdir(exist_ok=True, parents=True)
@@ -133,7 +134,7 @@ class TEIParser:
                 # Note : reopen/write to prevent format changes in the enhancement
                 with open(self.tei_path, "rb") as file:
                     xml_fstring = file.read()
-                self.root = etree.fromstring(xml_fstring)
+                self.root = fromstring(xml_fstring)
 
                 tree = etree.ElementTree(self.root)
                 tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
