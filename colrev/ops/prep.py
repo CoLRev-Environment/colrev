@@ -830,12 +830,12 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if record["colrev_status"] == colrev.record.RecordState.md_prepared
+                if "CURATED" in record["colrev_masterdata_provenance"]
             ]
         )
 
         self.review_manager.logger.info(
-            "Overall md_prepared".ljust(29)
+            "Overall curated (✔)".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
             + " records"
         )
@@ -844,14 +844,14 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if "CURATED" in record["colrev_masterdata_provenance"]
+                if record["colrev_status"] == colrev.record.RecordState.md_prepared
             ]
         )
 
         self.review_manager.logger.info(
-            "Overall curated".ljust(29)
+            "Overall md_prepared".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
-            + " records ( ✔ quality-assured by CoLRev community curators)"
+            + " records"
         )
 
         nr_recs = len(
@@ -979,11 +979,15 @@ class Prep(colrev.operation.Operation):
                         self.review_manager.logger.info(
                             "Info: The language detector requires RAM and may take longer"
                         )
+
                         pool = Pool(mp.cpu_count() // 2)
                     else:
                         # Note : if we use too many CPUS,
                         # a "too many open files" exception is thrown
                         pool = Pool(cpu)
+                    self.review_manager.logger.info(
+                        "Info: ✔ = quality-assured by CoLRev community curators"
+                    )
                     prepared_records = pool.map(self.prepare, preparation_data)
                     pool.close()
                     pool.join()
