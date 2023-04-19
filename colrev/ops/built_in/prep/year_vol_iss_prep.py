@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import requests
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -88,7 +87,6 @@ class YearVolIssPrep(JsonSchemaMixin):
 
         self.vol_nr_dict = vol_nr_dict
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:

@@ -110,7 +110,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = requests.get(
                 url,
                 headers=requests_headers,
-                timeout=20,
+                timeout=30,
             )
             if ret.status_code != 200:
                 if not source_operation.force_mode:

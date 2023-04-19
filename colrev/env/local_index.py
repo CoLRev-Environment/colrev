@@ -100,7 +100,7 @@ class LocalIndex:
         if init:
             Path(self.SQLITE_PATH).unlink(missing_ok=True)
 
-        self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH)
+        self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH, timeout=90)
         self.sqlite_connection.row_factory = self.__dict_factory
         return self.sqlite_connection.cursor()
         # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")

@@ -311,7 +311,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         *,
         pubmed_id: str,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> dict:
         """Retrieve records from Pubmed based on a query"""
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -62,7 +61,6 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Crossref API"""
         self.crossref_source.check_availability(source_operation=source_operation)
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:

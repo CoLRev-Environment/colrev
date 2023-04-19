@@ -39,7 +39,7 @@ class Prep(colrev.operation.Operation):
 
     # pylint: disable=too-many-instance-attributes
 
-    timeout = 10
+    timeout = 30
     max_retries_on_error = 3
 
     retrieval_similarity: float

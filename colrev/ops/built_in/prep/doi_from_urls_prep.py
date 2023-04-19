@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from sqlite3 import OperationalError
 
 import requests
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -60,7 +59,6 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             ) from exc
         _, self.email = prep_operation.review_manager.get_committer()
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:

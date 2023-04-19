@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
@@ -141,7 +140,6 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         except AttributeError:
             pass
 
-    @timeout_decorator.timeout(40, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,

@@ -231,7 +231,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         most_similar_only: bool = True,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
 

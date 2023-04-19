@@ -37,7 +37,7 @@ class DOIConnector:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.PrepRecord,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> colrev.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)"""
 
@@ -100,7 +100,7 @@ class DOIConnector:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
-        timeout: int = 10,
+        timeout: int = 30,
     ) -> None:
         """Get the website link from DOI resolution API"""
 
