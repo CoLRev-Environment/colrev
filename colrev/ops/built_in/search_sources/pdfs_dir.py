@@ -450,6 +450,91 @@ class PDFSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def __index_pdf(
+        self,
+        *,
+        pdf_path: Path,
+        search_operation: colrev.ops.search.Search,
+        pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
+        linked_pdf_paths: list,
+        local_index: colrev.env.local_index.LocalIndex,
+    ) -> dict:
+        new_record: dict = {}
+
+        if self.__is_broken_filepath(pdf_path=pdf_path):
+            return new_record
+
+        if search_operation.review_manager.force_mode:
+            # i.e., reindex all
+            pass
+        else:
+            # note: for curations, we want all pdfs indexed/merged separately,
+            # in other projects, it is generally sufficient if the pdf is linked
+            if not self.review_manager.settings.is_curated_masterdata_repo():
+                if pdf_path in linked_pdf_paths:
+                    # Otherwise: skip linked PDFs
+                    return new_record
+
+            if pdf_path in [
+                Path(r["file"])
+                for r in pdfs_dir_feed.feed_records.values()
+                if "file" in r
+            ]:
+                return new_record
+
+        self.review_manager.logger.info(f" extract metadata from {pdf_path}")
+        try:
+            if not self.review_manager.settings.is_curated_masterdata_repo():
+                # retrieve_based_on_colrev_pdf_id
+                pdf_hash_service = self.review_manager.get_pdf_hash_service()
+                colrev_pdf_id = pdf_hash_service.get_pdf_hash(
+                    pdf_path=Path(pdf_path),
+                    page_nr=1,
+                    hash_size=32,
+                )
+                new_record = local_index.retrieve_based_on_colrev_pdf_id(
+                    colrev_pdf_id="cpid1:" + colrev_pdf_id
+                )
+                new_record["file"] = str(pdf_path)
+                # Note : an alternative to replacing all data with the curated version
+                # is to just add the curation_ID
+                # (and retrieve the curated metadata separately/non-redundantly)
+            else:
+                new_record = self.__get_grobid_metadata(
+                    search_operation=search_operation, pdf_path=pdf_path
+                )
+        except (
+            colrev_exceptions.PDFHashError,
+            colrev_exceptions.RecordNotInIndexException,
+        ):
+            # otherwise, get metadata from grobid (indexing)
+            new_record = self.__get_grobid_metadata(
+                search_operation=search_operation, pdf_path=pdf_path
+            )
+
+        new_record = self.__add_md_string(record_dict=new_record)
+
+        # Note: identical md_string as a heuristic for duplicates
+        potential_duplicates = [
+            r
+            for r in pdfs_dir_feed.feed_records.values()
+            if r["md_string"] == new_record["md_string"]
+            and not r["file"] == new_record["file"]
+        ]
+        if potential_duplicates:
+            self.review_manager.logger.warning(
+                f" {colors.RED}skip record (PDF potential duplicate): "
+                f"{new_record['file']} {colors.END} "
+                f"({','.join([r['file'] for r in potential_duplicates])})"
+            )
+            return new_record
+
+        try:
+            pdfs_dir_feed.set_id(record_dict=new_record)
+        except colrev_exceptions.NotFeedIdentifiableException:
+            return new_record
+        return new_record
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
@@ -471,15 +556,15 @@ class PDFSearchSource(JsonSchemaMixin):
                 search_operation=search_operation
             )
 
+        records = search_operation.review_manager.dataset.load_records_dict()
+        grobid_service = search_operation.review_manager.get_grobid_service()
+        grobid_service.start()
+
         pdfs_dir_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-
-        records = search_operation.review_manager.dataset.load_records_dict()
-        grobid_service = search_operation.review_manager.get_grobid_service()
-        grobid_service.start()
 
         local_index = search_operation.review_manager.get_local_index()
 
@@ -504,83 +589,14 @@ class PDFSearchSource(JsonSchemaMixin):
                 record = self.__add_md_string(record_dict=record)
 
             for pdf_path in pdf_batch:
-                if self.__is_broken_filepath(pdf_path=pdf_path):
-                    continue
-
-                if search_operation.review_manager.force_mode:
-                    # i.e., reindex all
-                    pass
-                else:
-                    # note: for curations, we want all pdfs indexed/merged separately,
-                    # in other projects, it is generally sufficient if the pdf is linked
-                    if not self.review_manager.settings.is_curated_masterdata_repo():
-                        if pdf_path in linked_pdf_paths:
-                            # Otherwise: skip linked PDFs
-                            continue
-
-                    if pdf_path in [
-                        Path(r["file"])
-                        for r in pdfs_dir_feed.feed_records.values()
-                        if "file" in r
-                    ]:
-                        continue
-
-                search_operation.review_manager.logger.info(
-                    f" extract metadata from {pdf_path}"
+                new_record = self.__index_pdf(
+                    pdf_path=pdf_path,
+                    search_operation=search_operation,
+                    pdfs_dir_feed=pdfs_dir_feed,
+                    linked_pdf_paths=linked_pdf_paths,
+                    local_index=local_index,
                 )
-                try:
-                    if (
-                        not search_operation.review_manager.settings.is_curated_masterdata_repo()
-                    ):
-                        # retrieve_based_on_colrev_pdf_id
-                        pdf_hash_service = (
-                            search_operation.review_manager.get_pdf_hash_service()
-                        )
-                        colrev_pdf_id = pdf_hash_service.get_pdf_hash(
-                            pdf_path=Path(pdf_path),
-                            page_nr=1,
-                            hash_size=32,
-                        )
-                        new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                            colrev_pdf_id="cpid1:" + colrev_pdf_id
-                        )
-                        new_record["file"] = str(pdf_path)
-                        # Note : an alternative to replacing all data with the curated version
-                        # is to just add the curation_ID
-                        # (and retrieve the curated metadata separately/non-redundantly)
-                    else:
-                        new_record = self.__get_grobid_metadata(
-                            search_operation=search_operation, pdf_path=pdf_path
-                        )
-                except (
-                    colrev_exceptions.PDFHashError,
-                    colrev_exceptions.RecordNotInIndexException,
-                ):
-                    # otherwise, get metadata from grobid (indexing)
-                    new_record = self.__get_grobid_metadata(
-                        search_operation=search_operation, pdf_path=pdf_path
-                    )
-
-                new_record = self.__add_md_string(record_dict=new_record)
-
-                # Note: identical md_string as a heuristic for duplicates
-                potential_duplicates = [
-                    r
-                    for r in pdfs_dir_feed.feed_records.values()
-                    if r["md_string"] == new_record["md_string"]
-                    and not r["file"] == new_record["file"]
-                ]
-                if potential_duplicates:
-                    search_operation.review_manager.logger.warning(
-                        f" {colors.RED}skip record (PDF potential duplicate): "
-                        f"{new_record['file']} {colors.END} "
-                        f"({','.join([r['file'] for r in potential_duplicates])})"
-                    )
-                    continue
-
-                try:
-                    pdfs_dir_feed.set_id(record_dict=new_record)
-                except colrev_exceptions.NotFeedIdentifiableException:
+                if new_record == {}:
                     continue
 
                 prev_record_dict_version = {}
