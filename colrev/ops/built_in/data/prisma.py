@@ -19,7 +19,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-# pylint: disable=duplicate-code
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
@@ -182,7 +182,6 @@ class PRISMA(JsonSchemaMixin):
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
-        # pylint: disable=duplicate-code
         try:
             uid = os.stat(data_operation.review_manager.settings_path).st_uid
             gid = os.stat(data_operation.review_manager.settings_path).st_gid

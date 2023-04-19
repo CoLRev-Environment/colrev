@@ -14,7 +14,6 @@ import colrev.env.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-# pylint: disable=duplicate-code
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -135,7 +134,6 @@ class GithubPages(JsonSchemaMixin):
 
         records = data_operation.review_manager.dataset.load_records_dict()
 
-        # pylint: disable=duplicate-code
         included_records = {
             r["ID"]: r
             for r in records.values()
