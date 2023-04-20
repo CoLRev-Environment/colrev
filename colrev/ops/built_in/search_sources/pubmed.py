@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
+import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
@@ -24,6 +25,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
+
+defusedxml.defuse_stdlib()
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -44,16 +48,16 @@ class PubMedSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PubMed"
     link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/pubmed.md"
+            "https://github.com/CoLRev-Environment/colrev/blob/main/"
+            + "colrev/ops/built_in/search_sources/pubmed.md"
     )
     __pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(
-        self,
-        *,
-        source_operation: colrev.operation.Operation,
-        settings: Optional[dict] = None,
+            self,
+            *,
+            source_operation: colrev.operation.Operation,
+            settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # Pubmed as a search_source
@@ -106,7 +110,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+            cls, search_operation: colrev.ops.search.Search, query: str
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
@@ -119,8 +123,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 file_path_string=f"pubmed_{query.replace('&sort=', '')}"
             )
             query = (
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-                + query
+                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
+                    + query
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.pubmed",
@@ -135,9 +139,9 @@ class PubMedSearchSource(JsonSchemaMixin):
         return None
 
     def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
+            self,
+            search_operation: colrev.ops.search.Search,
+            source: colrev.settings.SearchSource,
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
@@ -159,7 +163,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         )
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+            self, *, source_operation: colrev.operation.Operation
     ) -> None:
         """Check status (availability) of the Pubmed API"""
 
@@ -167,9 +171,9 @@ class PubMedSearchSource(JsonSchemaMixin):
             # pylint: disable=duplicate-code
             test_rec = {
                 "author": "Nazzaro, P and Manzari, M and Merlo, M and Triggiani, R and "
-                "Scarano, A and Ciancio, L and Pirrelli, A",
+                          "Scarano, A and Ciancio, L and Pirrelli, A",
                 "title": "Distinct and combined vascular effects of ACE blockade and "
-                "HMG-CoA reductase inhibition in hypertensive subjects",
+                         "HMG-CoA reductase inhibition in hypertensive subjects",
                 "ENTRYTYPE": "article",
                 "pubmedid": "10024335",
             }
@@ -307,18 +311,18 @@ class PubMedSearchSource(JsonSchemaMixin):
         ]
 
     def __pubmed_query_id(
-        self,
-        *,
-        pubmed_id: str,
-        timeout: int = 60,
+            self,
+            *,
+            pubmed_id: str,
+            timeout: int = 60,
     ) -> dict:
         """Retrieve records from Pubmed based on a query"""
 
         try:
             database = "pubmed"
             url = (
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
-                + f"db={database}&id={pubmed_id}&rettype=xml&retmode=text"
+                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
+                    + f"db={database}&id={pubmed_id}&rettype=xml&retmode=text"
             )
 
             headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
@@ -349,11 +353,11 @@ class PubMedSearchSource(JsonSchemaMixin):
         return retrieved_record
 
     def __get_masterdata_record(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        save_feed: bool,
-        timeout: int,
+            self,
+            prep_operation: colrev.ops.prep.Prep,
+            record: colrev.record.Record,
+            save_feed: bool,
+            timeout: int,
     ) -> colrev.record.Record:
         try:
             retrieved_record_dict = self.__pubmed_query_id(
@@ -363,8 +367,8 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retries = 0
             while (
-                not retrieved_record_dict
-                and retries < prep_operation.max_retries_on_error
+                    not retrieved_record_dict
+                    and retries < prep_operation.max_retries_on_error
             ):
                 retries += 1
 
@@ -418,27 +422,27 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.pubmed_lock.release()
                 return record
             except (
-                colrev_exceptions.InvalidMerge,
-                colrev_exceptions.NotFeedIdentifiableException,
+                    colrev_exceptions.InvalidMerge,
+                    colrev_exceptions.NotFeedIdentifiableException,
             ):
                 self.pubmed_lock.release()
                 return record
 
         except (
-            requests.exceptions.RequestException,
-            OSError,
-            IndexError,
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
+                requests.exceptions.RequestException,
+                OSError,
+                IndexError,
+                colrev_exceptions.RecordNotFoundInPrepSourceException,
         ):
             pass
         return record
 
     def get_masterdata(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        save_feed: bool = True,
-        timeout: int = 10,
+            self,
+            prep_operation: colrev.ops.prep.Prep,
+            record: colrev.record.Record,
+            save_feed: bool = True,
+            timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Pubmed based on similarity with the record provided"""
 
@@ -479,11 +483,11 @@ class PubMedSearchSource(JsonSchemaMixin):
             retstart += 20
 
     def __run_parameter_search(
-        self,
-        *,
-        search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
-        rerun: bool,
+            self,
+            *,
+            search_operation: colrev.ops.search.Search,
+            pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+            rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
 
@@ -499,7 +503,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
+                        "title", ""
                 ):
                     search_operation.review_manager.logger.warning(
                         f"Skipped record: {record_dict}"
@@ -580,10 +584,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
     def __run_md_search_update(
-        self,
-        *,
-        search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+            self,
+            *,
+            search_operation: colrev.ops.search.Search,
+            pubmed_feed: colrev.ops.search.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -601,8 +605,8 @@ class PubMedSearchSource(JsonSchemaMixin):
 
                 pubmed_feed.set_id(record_dict=retrieved_record)
             except (
-                colrev_exceptions.RecordNotFoundInPrepSourceException,
-                colrev_exceptions.NotFeedIdentifiableException,
+                    colrev_exceptions.RecordNotFoundInPrepSourceException,
+                    colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
 
@@ -640,7 +644,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.add_record_changes()
 
     def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
+            self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Pubmed"""
 
@@ -664,10 +668,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
     def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
+            self,
+            load_operation: colrev.ops.load.Load,
+            source: colrev.settings.SearchSource,
+            records: typing.Dict,
     ) -> dict:
         """Load fixes for Pubmed"""
 
@@ -679,9 +683,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                     for i, author_part in enumerate(author_list):
                         author_field_parts = author_part.split(" ")
                         author_list[i] = (
-                            author_field_parts[0]
-                            + ", "
-                            + " ".join(author_field_parts[1:])
+                                author_field_parts[0]
+                                + ", "
+                                + " ".join(author_field_parts[1:])
                         )
 
                     record["author"] = " and ".join(author_list)
@@ -699,7 +703,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         return records
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+            self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Pubmed"""
 
