@@ -60,6 +60,7 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
+
     # AUTHOR_INDEX = "author_index"
     # AUTHOR_RECORD_INDEX = "author_record_index"
     # CITATIONS_INDEX = "citations_index"
@@ -1104,7 +1105,7 @@ class LocalIndex:
             # paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
             selected_row = None
-            cur.execute(f"SELECT * FROM {index_name} WHERE {key}='{value}'")
+            cur.execute(f"SELECT * FROM {index_name} WHERE {key}=?", (value, ))
             for row in cur.fetchall():
                 selected_row = row
                 break
