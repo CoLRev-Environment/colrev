@@ -10,6 +10,7 @@ from random import randint
 from typing import Optional
 
 import requests
+import timeout_decorator
 from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
@@ -363,7 +364,10 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except requests.exceptions.ConnectionError as exc:
+            except (
+                requests.exceptions.ConnectionError,
+                timeout_decorator.timeout_decorator.TimeoutError,
+            ) as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     source.endpoint
                 ) from exc
