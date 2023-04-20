@@ -9,9 +9,8 @@ from xml import etree
 from xml.etree.ElementTree import Element
 
 import defusedxml
-from defusedxml.ElementTree import fromstring
-
 import requests
+from defusedxml.ElementTree import fromstring
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -43,11 +42,11 @@ class TEIParser:
     }
 
     def __init__(
-            self,
-            *,
-            environment_manager: colrev.env.environment_manager.EnvironmentManager,
-            pdf_path: Optional[Path] = None,
-            tei_path: Optional[Path] = None,
+        self,
+        *,
+        environment_manager: colrev.env.environment_manager.EnvironmentManager,
+        pdf_path: Optional[Path] = None,
+        tei_path: Optional[Path] = None,
     ):
         """Creates a TEI file
         modes of operation:
@@ -256,13 +255,13 @@ class TEIParser:
                     )
                     if page_node is not None:
                         if (
-                                page_node.get("from") is not None
-                                and page_node.get("to") is not None
+                            page_node.get("from") is not None
+                            and page_node.get("to") is not None
                         ):
                             pages = (
-                                    page_node.get("from", "")
-                                    + "--"
-                                    + page_node.get("to", "")
+                                page_node.get("from", "")
+                                + "--"
+                                + page_node.get("to", "")
                             )
         return pages
 
@@ -363,7 +362,7 @@ class TEIParser:
                 )
                 if analytic_node is not None:
                     for author_node in analytic_node.iterfind(
-                            self.ns["tei"] + "author"
+                        self.ns["tei"] + "author"
                     ):
                         authorname = self.__get_author_name_from_node(
                             author_node=author_node
@@ -378,7 +377,7 @@ class TEIParser:
                     if author_string is None:
                         author_string = "NA"
                     if "" == author_string.replace(" ", "").replace(",", "").replace(
-                            ";", ""
+                        ";", ""
                     ):
                         author_string = "NA"
         return author_string
@@ -459,7 +458,7 @@ class TEIParser:
                 )
                 if analytic_node is not None:
                     for author_node in analytic_node.iterfind(
-                            self.ns["tei"] + "author"
+                        self.ns["tei"] + "author"
                     ):
                         author_pers_node = author_node.find(self.ns["tei"] + "persName")
                         if author_pers_node is None:
@@ -705,8 +704,8 @@ class TEIParser:
 
                     if min_intext_citations > 0:
                         if (
-                                self.__get_tei_id_count(tei_id=tei_id)
-                                < min_intext_citations
+                            self.__get_tei_id_count(tei_id=tei_id)
+                            < min_intext_citations
                         ):
                             continue
 
