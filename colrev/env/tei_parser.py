@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 from typing import Optional
 from xml import etree
 from xml.etree.ElementTree import Element
@@ -32,11 +33,13 @@ defusedxml.defuse_stdlib()
 
 
 class UnsortedAttributes(HTMLFormatter):
-    def attributes(self, tag):
-        for k, v in tag.attrs.items():
-            if k == "m":
+    """Make sure beautifulsoup pretty formatter doest not mess up attribute ordering"""
+
+    def attributes(self, tag: Any) -> Any:
+        for key, val in tag.attrs.items():
+            if key == "m":
                 continue
-            yield k, v
+            yield key, val
 
 
 class TEIParser:
