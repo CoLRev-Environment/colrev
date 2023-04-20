@@ -60,6 +60,14 @@ class CurationDedupe(JsonSchemaMixin):
     ):
         self.settings = self.settings_class.load_settings(data=settings)
 
+        pdf_prep_operation = dedupe_operation.review_manager.get_pdf_prep_operation()
+        self.pdf_metadata_validation = (
+            colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
+                pdf_prep_operation=pdf_prep_operation,
+                settings={"endpoint": "dedupe_pdf_md_validation"},
+            )
+        )
+
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
@@ -379,13 +387,161 @@ class CurationDedupe(JsonSchemaMixin):
 
         return decision_list
 
+    def __validate_potential_merge(
+        self, *, rec1: dict, rec2: dict, dedupe_operation: colrev.ops.dedupe.Dedupe
+    ) -> dict:
+        if "file" in rec2:
+            updated_record = rec1.copy()
+            updated_record["file"] = rec2["file"]
+        elif "file" in rec1:
+            updated_record = rec2.copy()
+            updated_record["file"] = rec1["file"]
+        else:  # None of the records is curated
+            raise FileNotFoundError
+
+        record = colrev.record.Record(data=updated_record)
+        validation_info = self.pdf_metadata_validation.validates_based_on_metadata(
+            review_manager=dedupe_operation.review_manager,
+            record=record,
+        )
+        return validation_info
+
+    def __process_pdf_tuple(
+        self,
+        *,
+        tuple_to_process: tuple,
+        records: dict,
+        decision_list: list,
+        curated_record_ids: list,
+        pdf_record_ids: list,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+    ) -> None:
+        rec1 = records[tuple_to_process[0]]
+        rec2 = records[tuple_to_process[1]]
+
+        # Note : Focus on merges between
+        # curated_records and pdf_same_toc_records
+        # Note : this should also ensure that pdf groups are not merged
+        # until a corresponding curated record group is available.
+        if (rec1["ID"] in curated_record_ids and rec2["ID"] in curated_record_ids) or (
+            rec1["ID"] in pdf_record_ids and rec2["ID"] in pdf_record_ids
+        ):
+            return
+
+        try:
+            validation_info = self.__validate_potential_merge(
+                rec1=rec1, rec2=rec2, dedupe_operation=dedupe_operation
+            )
+        except FileNotFoundError:
+            return
+
+        overlapping_colrev_ids = colrev.record.Record(
+            data=rec1
+        ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
+        if validation_info["validates"] or overlapping_colrev_ids:
+            # Note : make sure that we merge into the CURATED record
+            if "file" in rec1:
+                if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
+                    return
+                if rec1["colrev_status"] < rec2["colrev_status"]:
+                    decision_list.append(
+                        {
+                            "ID1": tuple_to_process[1],
+                            "ID2": tuple_to_process[0],
+                            "decision": "duplicate",
+                        }
+                    )
+                else:
+                    decision_list.append(
+                        {
+                            "ID1": tuple_to_process[0],
+                            "ID2": tuple_to_process[1],
+                            "decision": "duplicate",
+                        }
+                    )
+            else:
+                if tuple_to_process[1] in [x["ID1"] for x in decision_list]:
+                    return
+                if rec1["colrev_status"] < rec2["colrev_status"]:
+                    decision_list.append(
+                        {
+                            "ID1": tuple_to_process[1],
+                            "ID2": tuple_to_process[0],
+                            "decision": "duplicate",
+                        }
+                    )
+                else:
+                    decision_list.append(
+                        {
+                            "ID1": tuple_to_process[0],
+                            "ID2": tuple_to_process[1],
+                            "decision": "duplicate",
+                        }
+                    )
+
+    def __dedupe_pdf_toc_item(
+        self,
+        *,
+        decision_list: list[dict],
+        toc_item: dict,
+        records: dict,
+        source_records: list,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+    ) -> None:
+        processed_same_toc_records = [
+            r
+            for r in records.values()
+            if all(r.get(k, "NA") == v for k, v in toc_item.items())
+            and r["colrev_status"]
+            not in [
+                colrev.record.RecordState.md_imported,
+                colrev.record.RecordState.md_needs_manual_preparation,
+                colrev.record.RecordState.md_prepared,
+                colrev.record.RecordState.rev_prescreen_excluded,
+            ]
+            and not any(
+                self.settings.selected_source.replace("data/search/", "") in co
+                for co in r["colrev_origin"]
+            )
+        ]
+        pdf_same_toc_records = [
+            r
+            for r in source_records
+            if all(r.get(k, "NA") == v for k, v in toc_item.items())
+        ]
+
+        references = pd.DataFrame.from_records(
+            processed_same_toc_records + pdf_same_toc_records
+        )
+
+        nr_entries = references.shape[0]
+        if nr_entries == 0:
+            return
+        similarity_array = np.zeros([nr_entries, nr_entries])
+
+        # Note : min_similarity only means that the PDF will be considered
+        # for validates_based_on_metadata(...), which is the acutal test!
+        similarity_array, tuples_to_process = self.__calculate_similarities(
+            similarity_array=similarity_array,
+            references=references,
+            min_similarity=0.7,
+        )
+
+        curated_record_ids = [r["ID"] for r in processed_same_toc_records]
+        pdf_record_ids = [r["ID"] for r in pdf_same_toc_records]
+        for tuple_to_process in tuples_to_process:
+            self.__process_pdf_tuple(
+                tuple_to_process=tuple_to_process,
+                records=records,
+                decision_list=decision_list,
+                curated_record_ids=curated_record_ids,
+                pdf_record_ids=pdf_record_ids,
+                dedupe_operation=dedupe_operation,
+            )
+
     def __dedupe_pdf_source(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
     ) -> list[dict]:
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-nested-blocks
-
         dedupe_operation.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [
@@ -398,139 +554,18 @@ class CurationDedupe(JsonSchemaMixin):
             )
         ]
 
-        toc_items = self.__get_toc_items(records_list=source_records)
-
         decision_list: list[dict] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
-        pdf_prep_operation = dedupe_operation.review_manager.get_pdf_prep_operation()
-        pdf_metadata_validation = (
-            colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
-                pdf_prep_operation=pdf_prep_operation,
-                settings={"endpoint": "dedupe_pdf_md_validation"},
-            )
-        )
-
-        for toc_item in tqdm(toc_items):
-            processed_same_toc_records = [
-                r
-                for r in records.values()
-                if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                and r["colrev_status"]
-                not in [
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.rev_prescreen_excluded,
-                ]
-                and not any(
-                    self.settings.selected_source.replace("data/search/", "") in co
-                    for co in r["colrev_origin"]
-                )
-            ]
-            pdf_same_toc_records = [
-                r
-                for r in source_records
-                if all(r.get(k, "NA") == v for k, v in toc_item.items())
-            ]
-
-            references = pd.DataFrame.from_records(
-                processed_same_toc_records + pdf_same_toc_records
+        for toc_item in tqdm(self.__get_toc_items(records_list=source_records)):
+            self.__dedupe_pdf_toc_item(
+                decision_list=decision_list,
+                toc_item=toc_item,
+                records=records,
+                source_records=source_records,
+                dedupe_operation=dedupe_operation,
             )
 
-            nr_entries = references.shape[0]
-            if nr_entries == 0:
-                continue
-            similarity_array = np.zeros([nr_entries, nr_entries])
-
-            # Note : min_similarity only means that the PDF will be considered
-            # for validates_based_on_metadata(...), which is the acutal test!
-            min_similarity = 0.7
-            similarity_array, tuples_to_process = self.__calculate_similarities(
-                similarity_array=similarity_array,
-                references=references,
-                min_similarity=min_similarity,
-            )
-
-            curated_record_ids = [r["ID"] for r in processed_same_toc_records]
-            pdf_record_ids = [r["ID"] for r in pdf_same_toc_records]
-            for tuple_to_process in tuples_to_process:
-                rec1 = records[tuple_to_process[0]]
-                rec2 = records[tuple_to_process[1]]
-
-                # Note : Focus on merges between
-                # curated_records and pdf_same_toc_records
-                # Note : this should also ensure that pdf groups are not merged
-                # until a corresponding curated record group is available.
-                if (
-                    rec1["ID"] in curated_record_ids
-                    and rec2["ID"] in curated_record_ids
-                ):
-                    continue
-                if rec1["ID"] in pdf_record_ids and rec2["ID"] in pdf_record_ids:
-                    continue
-
-                if "file" in rec2:
-                    updated_record = rec1.copy()
-                    updated_record["file"] = rec2["file"]
-                elif "file" in rec1:
-                    updated_record = rec2.copy()
-                    updated_record["file"] = rec1["file"]
-                else:  # None of the records is curated
-                    continue
-
-                record = colrev.record.Record(data=updated_record)
-                try:
-                    validation_info = (
-                        pdf_metadata_validation.validates_based_on_metadata(
-                            review_manager=dedupe_operation.review_manager,
-                            record=record,
-                        )
-                    )
-                except FileNotFoundError:
-                    continue
-
-                overlapping_colrev_ids = colrev.record.Record(
-                    data=rec1
-                ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
-                if validation_info["validates"] or overlapping_colrev_ids:
-                    # Note : make sure that we merge into the CURATED record
-                    if "file" in rec1:
-                        if tuple_to_process[0] not in [x["ID1"] for x in decision_list]:
-                            if rec1["colrev_status"] < rec2["colrev_status"]:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[1],
-                                        "ID2": tuple_to_process[0],
-                                        "decision": "duplicate",
-                                    }
-                                )
-                            else:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[0],
-                                        "ID2": tuple_to_process[1],
-                                        "decision": "duplicate",
-                                    }
-                                )
-                    else:
-                        if tuple_to_process[1] not in [x["ID1"] for x in decision_list]:
-                            if rec1["colrev_status"] < rec2["colrev_status"]:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[1],
-                                        "ID2": tuple_to_process[0],
-                                        "decision": "duplicate",
-                                    }
-                                )
-                            else:
-                                decision_list.append(
-                                    {
-                                        "ID1": tuple_to_process[0],
-                                        "ID2": tuple_to_process[1],
-                                        "decision": "duplicate",
-                                    }
-                                )
         return decision_list
 
     def __pdf_source_selected(
