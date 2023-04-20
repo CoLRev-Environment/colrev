@@ -40,7 +40,7 @@ class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
     global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url", "colrev_id"]
-    max_len_sha256 = 2 ** 256
+    max_len_sha256 = 2**256
     request_timeout = 90
 
     local_environment_path = Path.home().joinpath("colrev")
@@ -87,10 +87,10 @@ class LocalIndex:
     # Note: we need the local_curated_metadata field for is_duplicate()
 
     def __init__(
-            self,
-            *,
-            index_tei: bool = False,
-            verbose_mode: bool = False,
+        self,
+        *,
+        index_tei: bool = False,
+        verbose_mode: bool = False,
     ) -> None:
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
@@ -180,13 +180,13 @@ class LocalIndex:
                 # self.__index_author(tei=tei, record_dict=record_dict)
 
             except (
-                    colrev_exceptions.TEIException,
-                    AttributeError,
+                colrev_exceptions.TEIException,
+                AttributeError,
             ):  # pragma: no cover
                 pass
 
     def __amend_record(
-            self, *, cur: sqlite3.Cursor, item: dict, curated_fields: list
+        self, *, cur: sqlite3.Cursor, item: dict, curated_fields: list
     ) -> None:
         """Adds layered fields to amend existing records"""
 
@@ -194,7 +194,7 @@ class LocalIndex:
 
         layered_fields = []
         cur.execute(
-            f"SELECT layered_fields FROM {self.RECORD_INDEX} WHERE id=?", (item['id'],)
+            f"SELECT layered_fields FROM {self.RECORD_INDEX} WHERE id=?", (item["id"],)
         )
         for row in cur.fetchall():
             if row["layered_fields"]:
@@ -395,7 +395,7 @@ class LocalIndex:
         raise colrev_exceptions.RecordNotInIndexException()
 
     def _retrieve_from_github_curation(
-            self, *, record_dict: dict
+        self, *, record_dict: dict
     ) -> dict:  # pragma: no cover
         ret = {}
         try:
@@ -452,11 +452,11 @@ class LocalIndex:
         return retrieved_record
 
     def __prepare_record_for_return(
-            self,
-            *,
-            record_dict: dict,
-            include_file: bool = False,
-            include_colrev_ids: bool = False,
+        self,
+        *,
+        record_dict: dict,
+        include_file: bool = False,
+        include_colrev_ids: bool = False,
     ) -> dict:
         """Prepare a record for return (from local index)"""
 
@@ -508,9 +508,9 @@ class LocalIndex:
 
         if "CURATED" in record_dict.get("colrev_masterdata_provenance", {}):
             identifier_string = (
-                    record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
-                    + "#"
-                    + record_dict["ID"]
+                record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
+                + "#"
+                + record_dict["ID"]
             )
             record_dict["curation_ID"] = identifier_string
 
@@ -579,15 +579,15 @@ class LocalIndex:
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
         if (
-                record_dict["colrev_status"]
-                in colrev.record.RecordState.get_non_processed_states()
+            record_dict["colrev_status"]
+            in colrev.record.RecordState.get_non_processed_states()
         ):
             raise colrev_exceptions.RecordNotIndexableException()
 
         # Some prescreen_excluded records are not prepared
         if (
-                record_dict["colrev_status"]
-                == colrev.record.RecordState.rev_prescreen_excluded
+            record_dict["colrev_status"]
+            == colrev.record.RecordState.rev_prescreen_excluded
         ):
             raise colrev_exceptions.RecordNotIndexableException()
 
@@ -653,8 +653,8 @@ class LocalIndex:
                         )
                     else:
                         if (
-                                "CURATED"
-                                not in record.data["colrev_data_provenance"][key]["source"]
+                            "CURATED"
+                            not in record.data["colrev_data_provenance"][key]["source"]
                         ):
                             record.add_data_provenance(
                                 key=key,
@@ -701,13 +701,13 @@ class LocalIndex:
         return record_dict
 
     def index_records(
-            self,
-            *,
-            records: dict,
-            repo_source_path: Path,
-            curation_url: str,
-            curated_masterdata: bool,
-            curated_fields: list,
+        self,
+        *,
+        records: dict,
+        repo_source_path: Path,
+        curation_url: str,
+        curated_masterdata: bool,
+        curated_fields: list,
     ) -> None:
         """Index a CoLRev project"""
 
@@ -757,8 +757,8 @@ class LocalIndex:
                         toc_to_index[toc_item] = colrev_id
 
             except (
-                    colrev_exceptions.RecordNotIndexableException,
-                    colrev_exceptions.NotTOCIdentifiableException,
+                colrev_exceptions.RecordNotIndexableException,
+                colrev_exceptions.NotTOCIdentifiableException,
             ) as exc:
                 if self.verbose_mode:
                     print(exc)
@@ -808,7 +808,7 @@ class LocalIndex:
             self.sqlite_connection.commit()
 
     def index_colrev_project(
-            self, *, repo_source_path: Path
+        self, *, repo_source_path: Path
     ) -> None:  # pragma: no cover
         """Index a CoLRev project"""
         try:
@@ -848,7 +848,7 @@ class LocalIndex:
                 # Set masterdata_provenace to CURATED:{url}
                 curation_url = curation_endpoint["curation_url"]
                 if (
-                        not check_operation.review_manager.settings.is_curated_masterdata_repo()
+                    not check_operation.review_manager.settings.is_curated_masterdata_repo()
                 ):
                     # Curated fields/layered_fields only for non-masterdata-curated repos
                     # Add curation_url to curated fields (provenance)
@@ -951,8 +951,8 @@ class LocalIndex:
             return year
 
         except (
-                colrev_exceptions.NotEnoughDataToIdentifyException,
-                colrev_exceptions.NotTOCIdentifiableException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            colrev_exceptions.NotTOCIdentifiableException,
         ) as exc:
             raise colrev_exceptions.TOCNotAvailableException() from exc
 
@@ -973,12 +973,12 @@ class LocalIndex:
         return False
 
     def retrieve_from_toc(
-            self,
-            *,
-            record_dict: dict,
-            similarity_threshold: float,
-            include_file: bool = False,
-            search_across_tocs: bool = False,
+        self,
+        *,
+        record_dict: dict,
+        similarity_threshold: float,
+        include_file: bool = False,
+        search_across_tocs: bool = False,
     ) -> dict:
         """Retrieve a record from the toc (table-of-contents)"""
 
@@ -1012,8 +1012,8 @@ class LocalIndex:
                 toc_items = [item for sublist in toc_items for item in sublist]
 
             except (
-                    colrev_exceptions.NotTOCIdentifiableException,
-                    KeyError,
+                colrev_exceptions.NotTOCIdentifiableException,
+                KeyError,
             ) as exc:
                 raise colrev_exceptions.RecordNotInIndexException() from exc
 
@@ -1069,8 +1069,8 @@ class LocalIndex:
             )
 
         except (
-                colrev_exceptions.NotEnoughDataToIdentifyException,
-                KeyError,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            KeyError,
         ):
             pass
 
@@ -1119,8 +1119,8 @@ class LocalIndex:
 
             if key == "colrev_id":
                 if (
-                        value
-                        != colrev.record.Record(data=retrieved_record).create_colrev_id()
+                    value
+                    != colrev.record.Record(data=retrieved_record).create_colrev_id()
                 ):
                     raise colrev_exceptions.RecordNotInIndexException()
             else:
@@ -1155,11 +1155,11 @@ class LocalIndex:
         return record_to_import
 
     def retrieve(
-            self,
-            *,
-            record_dict: dict,
-            include_file: bool = False,
-            include_colrev_ids: bool = False,
+        self,
+        *,
+        record_dict: dict,
+        include_file: bool = False,
+        include_colrev_ids: bool = False,
     ) -> dict:
         """
         Convenience function to retrieve the indexed record_dict metadata
@@ -1176,8 +1176,8 @@ class LocalIndex:
                 record_dict=record_dict
             )
         except (
-                colrev_exceptions.RecordNotInIndexException,
-                colrev_exceptions.NotEnoughDataToIdentifyException,
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
         ) as exc:
             if self.verbose_mode:
                 print(exc)
@@ -1231,10 +1231,10 @@ class LocalIndex:
 
             # Prevent errors caused by short colrev_ids/empty lists
             if (
-                    any(len(cid) < 20 for cid in record1_colrev_id)
-                    or any(len(cid) < 20 for cid in record2_colrev_id)
-                    or 0 == len(record1_colrev_id)
-                    or 0 == len(record2_colrev_id)
+                any(len(cid) < 20 for cid in record1_colrev_id)
+                or any(len(cid) < 20 for cid in record2_colrev_id)
+                or 0 == len(record1_colrev_id)
+                or 0 == len(record2_colrev_id)
             ):
                 return "unknown"
 
@@ -1297,20 +1297,20 @@ class LocalIndex:
             # see __outlets_duplicated(...)
 
             different_curated_repositories = (
-                    "CURATED" in r1_index.get("colrev_masterdata_provenance", "")
-                    and "CURATED" in r2_index.get("colrev_masterdata_provenance", "")
-                    and (
-                            r1_index.get("colrev_masterdata_provenance", "a")
-                            != r2_index.get("colrev_masterdata_provenance", "b")
-                    )
+                "CURATED" in r1_index.get("colrev_masterdata_provenance", "")
+                and "CURATED" in r2_index.get("colrev_masterdata_provenance", "")
+                and (
+                    r1_index.get("colrev_masterdata_provenance", "a")
+                    != r2_index.get("colrev_masterdata_provenance", "b")
+                )
             )
 
             if different_curated_repositories:
                 return "no"
 
         except (
-                colrev_exceptions.RecordNotInIndexException,
-                colrev_exceptions.NotEnoughDataToIdentifyException,
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
             pass
 
