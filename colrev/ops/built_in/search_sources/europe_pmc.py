@@ -10,6 +10,7 @@ from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
 from urllib.parse import quote
+from xml.etree.ElementTree import Element
 
 import defusedxml
 import requests
@@ -17,7 +18,6 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.ElementTree import fromstring
-from xml.etree.ElementTree import Element
 from thefuzz import fuzz
 
 import colrev.env.package_manager
@@ -50,8 +50,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
     link = (
-            "https://github.com/CoLRev-Environment/colrev/blob/main/"
-            + "colrev/ops/built_in/search_sources/europe_pmc.md"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/europe_pmc.md"
     )
     __europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
 
@@ -71,17 +71,17 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         _details = {
             "search_parameters": {
                 "tooltip": "Currently supports a scope item "
-                           "with venue_key and journal_abbreviated fields."
+                "with venue_key and journal_abbreviated fields."
             },
         }
 
     settings_class = EuropePMCSearchSourceSettings
 
     def __init__(
-            self,
-            *,
-            source_operation: colrev.operation.Operation,
-            settings: Optional[dict] = None,
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: Optional[dict] = None,
     ) -> None:
         if settings:
             # EuropePMC as a search_source
@@ -176,9 +176,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 retrieved_record_dict.update(epmc_id=epmc_id_node.text)
 
         retrieved_record_dict["europe_pmc_id"] = (
-                retrieved_record_dict.get("epmc_source", "NO_SOURCE")
-                + "/"
-                + retrieved_record_dict.get("epmc_id", "NO_ID")
+            retrieved_record_dict.get("epmc_source", "NO_SOURCE")
+            + "/"
+            + retrieved_record_dict.get("epmc_id", "NO_ID")
         )
         retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
         del retrieved_record_dict["epmc_id"]
@@ -197,10 +197,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def __get_similarity(
-            cls,
-            *,
-            record: colrev.record.Record,
-            retrieved_record: colrev.record.Record,
+        cls,
+        *,
+        record: colrev.record.Record,
+        retrieved_record: colrev.record.Record,
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record.data["title"].lower(),
@@ -223,12 +223,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def europe_pcmc_query(
-            cls,
-            *,
-            review_manager: colrev.review_manager.ReviewManager,
-            record_input: colrev.record.Record,
-            most_similar_only: bool = True,
-            timeout: int = 60,
+        cls,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        record_input: colrev.record.Record,
+        most_similar_only: bool = True,
+        timeout: int = 60,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
 
@@ -240,8 +240,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             record = record_input.copy_prep_rec()
 
             url = (
-                    "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
-                    + quote(record.data["title"])
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
+                + quote(record.data["title"])
             )
             _, email = review_manager.get_committer()
 
@@ -309,11 +309,11 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         return record_list
 
     def get_masterdata(
-            self,
-            prep_operation: colrev.ops.prep.Prep,
-            record: colrev.record.Record,
-            save_feed: bool = True,
-            timeout: int = 10,  # pylint: disable=unused-argument
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
@@ -390,9 +390,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         return record
 
     def validate_source(
-            self,
-            search_operation: colrev.ops.search.Search,
-            source: colrev.settings.SearchSource,
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
@@ -410,7 +410,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         )
 
     def run_search(
-            self, search_operation: colrev.ops.search.Search, rerun: bool
+        self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Europe PMC"""
 
@@ -428,11 +428,11 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         try:
             for retrieved_record in self.europe_pcmc_query(
-                    review_manager=search_operation.review_manager,
-                    record_input=colrev.record.Record(
-                        data={"title": self.search_source.search_parameters["query"]}
-                    ),
-                    most_similar_only=False,
+                review_manager=search_operation.review_manager,
+                record_input=colrev.record.Record(
+                    data={"title": self.search_source.search_parameters["query"]}
+                ),
+                most_similar_only=False,
             ):
                 if "colrev_data_provenance" in retrieved_record.data:
                     del retrieved_record.data["colrev_data_provenance"]
@@ -447,9 +447,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         except UnicodeEncodeError:
             print("UnicodeEncodeError - this needs to be fixed at some time")
         except (
-                requests.exceptions.ReadTimeout,
-                requests.exceptions.HTTPError,
-                requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError,
         ):
             pass
 
@@ -465,24 +465,24 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-            cls, search_operation: colrev.ops.search.Search, query: str
+        cls, search_operation: colrev.ops.search.Search, query: str
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         return None
 
     def load_fixes(
-            self,
-            load_operation: colrev.ops.load.Load,
-            source: colrev.settings.SearchSource,
-            records: typing.Dict,
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
     ) -> dict:
         """Load fixes for Europe PMC"""
 
         return records
 
     def prepare(
-            self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data["author"].rstrip(".")
