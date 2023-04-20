@@ -15,6 +15,7 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
 ![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/tests/coverage.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b)](https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
