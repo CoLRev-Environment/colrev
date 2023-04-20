@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
 from typing import Optional
 from xml import etree
 from xml.etree.ElementTree import Element
 
-import bs4
 import defusedxml
 import requests
-from bs4.formatter import HTMLFormatter
 from defusedxml.ElementTree import fromstring
 
 import colrev.env.grobid_service
@@ -30,16 +27,6 @@ import colrev.record
 
 # defuse std xml lib
 defusedxml.defuse_stdlib()
-
-
-class UnsortedAttributes(HTMLFormatter):
-    """Make sure beautifulsoup pretty formatter doest not mess up attribute ordering"""
-
-    def attributes(self, tag: Any) -> Any:
-        for key, val in tag.attrs.items():
-            if key == "m":
-                continue
-            yield key, val
 
 
 class TEIParser:
@@ -153,11 +140,7 @@ class TEIParser:
                 self.root = fromstring(xml_fstring)
 
                 tree = etree.ElementTree.ElementTree(self.root)
-                xml = bs4.BeautifulSoup(tree, "xml").prettify(
-                    formatter=UnsortedAttributes()
-                )
-                with open(str(self.tei_path)) as fp:
-                    fp.write(xml)
+                tree.write(str(self.tei_path), encoding="utf-8")
         except requests.exceptions.ConnectionError as exc:
             print(exc)
             print(str(self.pdf_path))
@@ -165,7 +148,7 @@ class TEIParser:
     def get_tei_str(self) -> str:
         """Get the TEI string"""
         etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
-        return str(etree.ElementTree.tostring(self.root, encoding="utf-8"))
+        return etree.ElementTree.tostring(self.root).decode("utf-8")
 
     def get_grobid_version(self) -> str:
         """Get the GROBID version used for TEI creation"""
