@@ -61,9 +61,9 @@ def __item_to_record(*, item: dict) -> dict:
         item["title"] = str(item["title"][0])
     assert isinstance(item["title"], str)
 
-    if isinstance(item["container-title"], list):
+    if isinstance(item.get("container-title", ""), list):
         item["container-title"] = item["container-title"][0]
-    assert isinstance(item["container-title"], str)
+    assert isinstance(item.get("container-title", ""), str)
 
     item["ENTRYTYPE"] = "misc"
     if item.get("type", "NA") == "journal-article":
