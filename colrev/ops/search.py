@@ -503,7 +503,7 @@ class GeneralOriginFeed:
                     break
                 except (FileExistsError, OSError, json.decoder.JSONDecodeError):
                     search_operation.review_manager.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))
+                    time.sleep(randint(1, 15))  # nosec
 
     def set_id(self, *, record_dict: dict) -> dict:
         """Set incremental record ID

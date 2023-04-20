@@ -127,7 +127,7 @@ class Checker:
     def __get_installed_hooks(self) -> list:
         installed_hooks = []
         with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.SafeLoader)
         for repository in pre_commit_config["repos"]:
             installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
         return installed_hooks
