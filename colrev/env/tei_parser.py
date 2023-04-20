@@ -5,11 +5,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Optional
+from xml import etree
 from xml.etree.ElementTree import Element
 
+import defusedxml
+from defusedxml.ElementTree import fromstring
+
 import requests
-from defusedxml.lxml import fromstring
-from lxml import etree
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -22,6 +24,10 @@ import colrev.record
 # abstract_node =tree.xpath("//tei:profileDesc/tei:abstract",
 # namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
 # etree.tostring(abstract_node[0]).decode("utf-8")
+
+
+# defuse std xml lib
+defusedxml.defuse_stdlib()
 
 
 class TEIParser:
@@ -37,11 +43,11 @@ class TEIParser:
     }
 
     def __init__(
-        self,
-        *,
-        environment_manager: colrev.env.environment_manager.EnvironmentManager,
-        pdf_path: Optional[Path] = None,
-        tei_path: Optional[Path] = None,
+            self,
+            *,
+            environment_manager: colrev.env.environment_manager.EnvironmentManager,
+            pdf_path: Optional[Path] = None,
+            tei_path: Optional[Path] = None,
     ):
         """Creates a TEI file
         modes of operation:
@@ -82,7 +88,7 @@ class TEIParser:
         if b"[BAD_INPUT_DATA]" in xslt_content[:100]:
             raise colrev_exceptions.TEIException()
 
-        return etree.XML(xslt_content)
+        return etree.ElementTree.XML(xslt_content)
 
     def __create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
@@ -92,9 +98,7 @@ class TEIParser:
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
         # if we do it in the colrev process
-        options = {}
-        options["consolidateHeader"] = "0"
-        options["consolidateCitations"] = "0"
+        options = {"consolidateHeader": "0", "consolidateCitations": "0"}
 
         # Note: Grobid offers direct export of Bibtex:
         # r = requests.post(
@@ -145,7 +149,7 @@ class TEIParser:
     def get_tei_str(self) -> str:
         """Get the TEI string"""
 
-        return etree.tostring(self.root).decode("utf-8")
+        return str(etree.ElementTree.tostring(self.root, encoding="utf-8"))
 
     def get_grobid_version(self) -> str:
         """Get the GROBID version used for TEI creation"""
@@ -252,13 +256,13 @@ class TEIParser:
                     )
                     if page_node is not None:
                         if (
-                            page_node.get("from") is not None
-                            and page_node.get("to") is not None
+                                page_node.get("from") is not None
+                                and page_node.get("to") is not None
                         ):
                             pages = (
-                                page_node.get("from", "")
-                                + "--"
-                                + page_node.get("to", "")
+                                    page_node.get("from", "")
+                                    + "--"
+                                    + page_node.get("to", "")
                             )
         return pages
 
@@ -359,7 +363,7 @@ class TEIParser:
                 )
                 if analytic_node is not None:
                     for author_node in analytic_node.iterfind(
-                        self.ns["tei"] + "author"
+                            self.ns["tei"] + "author"
                     ):
                         authorname = self.__get_author_name_from_node(
                             author_node=author_node
@@ -374,7 +378,7 @@ class TEIParser:
                     if author_string is None:
                         author_string = "NA"
                     if "" == author_string.replace(" ", "").replace(",", "").replace(
-                        ";", ""
+                            ";", ""
                     ):
                         author_string = "NA"
         return author_string
@@ -406,7 +410,7 @@ class TEIParser:
             abstract_node = profile_description.find(
                 ".//" + self.ns["tei"] + "abstract"
             )
-            html_str = etree.tostring(abstract_node).decode("utf-8")
+            html_str = etree.ElementTree.tostring(abstract_node).decode("utf-8")
             abstract_text = cleanhtml(html_str)
         abstract_text = abstract_text.lstrip().rstrip()
         return abstract_text
@@ -455,7 +459,7 @@ class TEIParser:
                 )
                 if analytic_node is not None:
                     for author_node in analytic_node.iterfind(
-                        self.ns["tei"] + "author"
+                            self.ns["tei"] + "author"
                     ):
                         author_pers_node = author_node.find(self.ns["tei"] + "persName")
                         if author_pers_node is None:
@@ -701,8 +705,8 @@ class TEIParser:
 
                     if min_intext_citations > 0:
                         if (
-                            self.__get_tei_id_count(tei_id=tei_id)
-                            < min_intext_citations
+                                self.__get_tei_id_count(tei_id=tei_id)
+                                < min_intext_citations
                         ):
                             continue
 
@@ -781,16 +785,18 @@ class TEIParser:
     def get_citations_per_section(self) -> dict:
         """Get a dict of section-names and list-of-citations"""
         section_citations = {}
-        sections = self.root.iter(self.ns["tei"] + "head")
+        parent_map = {c: p for p in self.root.iter() for c in p}
+        sections = self.root.iter(f'{self.ns["tei"]}head')
         for section in sections:
             section_name = section.text
             if section_name is None:
                 continue
-            citation_nodes = section.getparent().iter(self.ns["tei"] + "ref")
+            parent = parent_map[section]
+            citation_nodes = parent.findall(f'.//{self.ns["tei"]}ref')
             citations = [
                 x.get("target", "NA").replace("#", "")
                 for x in citation_nodes
-                if "bibr" == x.get("type", "NA")
+                if x.get("type", "NA") == "bibr"
             ]
             citations = list(filter(lambda a: a != "NA", citations))
             if len(citations) > 0:
@@ -824,13 +830,13 @@ class TEIParser:
                 continue
 
             # Record found: mark in tei
-            bibliography = self.root.find(".//" + self.ns["tei"] + "listBibl")
+            bibliography = self.root.find(f".//{self.ns['tei']}listBibl")
             # mark reference in bibliography
             for ref in bibliography:
-                if ref.get(self.ns["w3"] + "id") == record_dict["tei_id"]:
+                if ref.get(f'{self.ns["w3"]}id') == record_dict["tei_id"]:
                     ref.set("ID", max_sim_record["ID"])
             # mark reference in in-text citations
-            for reference in self.root.iter(self.ns["tei"] + "ref"):
+            for reference in self.root.iter(f'{self.ns["tei"]}ref'):
                 if "target" in reference.keys():
                     if reference.get("target") == f"#{record_dict['tei_id']}":
                         reference.set("ID", max_sim_record["ID"])
@@ -838,8 +844,8 @@ class TEIParser:
             # if settings file available: dedupe_io match agains records
 
         if self.tei_path:
-            tree = etree.ElementTree(self.root)
-            tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
+            tree = etree.ElementTree.ElementTree(self.root)
+            tree.write(str(self.tei_path))
 
         return self.root
 
