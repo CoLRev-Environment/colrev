@@ -324,7 +324,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         jour_vol_iss_list: bool = False,
-        timeout: int = 30,
+        timeout: int = 40,
     ) -> list:
         """Retrieve records from Crossref based on a query"""
 
@@ -556,7 +556,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,
-        timeout: int = 10,
+        timeout: int = 30,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Crossref based on similarity with the record provided"""
 
