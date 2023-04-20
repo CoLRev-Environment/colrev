@@ -25,7 +25,7 @@ For the data extraction, risk-of-bias assessment, and meta-analysis, established
 
 ### Data extraction and synthesis
 
-- For manuscript development see [separate page for Word/Tex/Md, Reference Managers]
+- For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
 ## Software recommendations
 
