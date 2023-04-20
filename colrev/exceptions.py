@@ -377,6 +377,10 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
     """The record was not found in the prep search source."""
 
 
+class PreparationBreak(CoLRevException):
+    """Event interrupting the preparation."""
+
+
 # Dedupe
 
 
