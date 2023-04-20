@@ -148,7 +148,7 @@ class TEIParser:
 
     def get_tei_str(self) -> str:
         """Get the TEI string"""
-
+        etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
         return str(etree.ElementTree.tostring(self.root, encoding="utf-8"))
 
     def get_grobid_version(self) -> str:
