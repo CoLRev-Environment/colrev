@@ -139,7 +139,7 @@ class TEIParser:
                     xml_fstring = file.read()
                 self.root = fromstring(xml_fstring)
 
-                tree = etree.ElementTree(self.root)
+                tree = etree.ElementTree.ElementTree(self.root)
                 tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
         except requests.exceptions.ConnectionError as exc:
             print(exc)
@@ -772,7 +772,7 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                except etree.XMLSyntaxError:
+                except etree.ElementTree.ParseError:
                     continue
 
                 ref_rec = {k: v for k, v in ref_rec.items() if v is not None}
