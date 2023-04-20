@@ -178,13 +178,12 @@ class ScopePrescreen(JsonSchemaMixin):
         self, record: colrev.record.Record
     ) -> None:
         if self.settings.ExcludeComplementaryMaterials:
-            if self.settings.ExcludeComplementaryMaterials:
-                if "title" in record.data:
-                    if (
-                        record.data["title"].lower()
-                        in self.title_complementary_materials_keywords
-                    ):
-                        record.prescreen_exclude(reason="complementary material")
+            if "title" in record.data:
+                if (
+                    record.data["title"].lower()
+                    in self.title_complementary_materials_keywords
+                ):
+                    record.prescreen_exclude(reason="complementary material")
 
     def __conditional_prescreen(
         self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, record_dict: dict

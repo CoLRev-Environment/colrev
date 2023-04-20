@@ -44,6 +44,24 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/aisel.md"
     )
 
+    __conference_abbreviations = {
+        "ICIS": "International Conference on Information Systems",
+        "PACIS": "Pacific-Asia Conference on Information Systems",
+        "ECIS": "European Conference on Information Systems",
+        "AMCIS": "Americas Conference on Information Systems",
+        "HICSS": "Hawaii International Conference on System Sciences",
+        "MCIS": "Mediterranean Conference on Information Systems",
+        "ACIS": "Australasian Conference on Information Systems",
+    }
+
+    __link_confs = {
+        "https://aisel.aisnet.org/hicss": "Hawaii International Conference on System Sciences",
+        "https://aisel.aisnet.org/amcis": "Americas Conference on Information Systems",
+        "https://aisel.aisnet.org/pacis": "Pacific-Asia Conference on Information Systems",
+        "https://aisel.aisnet.org/ecis": "European Conference on Information Systems",
+        "https://aisel.aisnet.org/icis": "International Conference on Information Systems",
+    }
+
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
@@ -391,17 +409,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         return records
 
-    def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
-        """Source-specific preparation for the AIS electronic Library (AISeL)"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
-        ais_mapping: dict = {}
-        record.rename_fields_based_on_mapping(mapping=ais_mapping)
-
+    def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
@@ -418,6 +426,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 "All Sprouts Content",
             ]
         ):
+            # Journal articles
             if (
                 "journal" not in record.data
                 and "title" in record.data
@@ -428,8 +437,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.remove_field(key="publisher")
 
             record.change_entrytype(new_entrytype="article")
-
         else:
+            # Inproceedings
+
             record.remove_field(key="publisher")
 
             if (
@@ -451,92 +461,37 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         key="booktitle", value="ECIS", source="prep_ais_source"
                     )
 
+    def __unify_container_titles(self, *, record: colrev.record.Record) -> None:
         if record.data.get("journal", "") == "Management Information Systems Quarterly":
             record.update_field(
                 key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
 
         if record.data["ENTRYTYPE"] == "inproceedings":
-            if "ICIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="International Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-            if "PACIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="Pacific-Asia Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-            if "ECIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="European Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-            if "AMCIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="Americas Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-            if "HICSS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="Hawaii International Conference on System Sciences",
-                    source="prep_ais_source",
-                )
-            if "MCIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="Mediterranean Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-            if "ACIS" in record.data.get("booktitle", ""):
-                record.update_field(
-                    key="booktitle",
-                    value="Australasian Conference on Information Systems",
-                    source="prep_ais_source",
-                )
-        if "https://aisel.aisnet.org/hicss" in record.data.get("url", ""):
-            record.update_field(
-                key="booktitle",
-                value="Hawaii International Conference on System Sciences",
-                source="prep_ais_source",
-            )
-        elif "https://aisel.aisnet.org/amcis" in record.data.get("url", ""):
-            record.update_field(
-                key="booktitle",
-                value="Americas Conference on Information Systems",
-                source="prep_ais_source",
-            )
+            for conf_abbreviation, conf_name in self.__conference_abbreviations.items():
+                if conf_abbreviation in record.data.get("booktitle", ""):
+                    record.update_field(
+                        key="booktitle",
+                        value=conf_name,
+                        source="prep_ais_source",
+                    )
 
-        elif "https://aisel.aisnet.org/pacis" in record.data.get("url", ""):
-            record.update_field(
-                key="booktitle",
-                value="Pacific-Asia Conference on Information Systems",
-                source="prep_ais_source",
-            )
-        elif "https://aisel.aisnet.org/ecis" in record.data.get("url", ""):
-            record.update_field(
-                key="booktitle",
-                value="European Conference on Information Systems",
-                source="prep_ais_source",
-            )
-        elif "https://aisel.aisnet.org/icis" in record.data.get("url", ""):
-            record.update_field(
-                key="booktitle",
-                value="International Conference on Information Systems",
-                source="prep_ais_source",
-            )
-        elif "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
+        for link_part, conf_name in self.__link_confs.items():
+            if link_part in record.data.get("url", ""):
+                record.update_field(
+                    key="booktitle",
+                    value=conf_name,
+                    source="prep_ais_source",
+                )
+
+        if "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
             record.update_field(
                 key="journal",
                 value="Business & Information Systems Engineering",
                 source="prep_ais_source",
             )
 
+    def __format_fields(self, *, record: colrev.record.Record) -> None:
         if "abstract" in record.data:
             if record.data["abstract"] == "N/A":
                 record.remove_field(key="abstract")
@@ -548,11 +503,22 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
+    def __exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
         if re.match(
             r"MISQ Volume \d{1,2}, Issue \d Table of Contents",
             record.data.get("title", ""),
         ):
             record.prescreen_exclude(reason="complementary material")
+
+    def prepare(
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
+        """Source-specific preparation for the AIS electronic Library (AISeL)"""
+
+        self.__fix_entrytype(record=record)
+        self.__unify_container_titles(record=record)
+        self.__format_fields(record=record)
+        self.__exclude_complementary_material(record=record)
 
         return record
 
