@@ -66,7 +66,7 @@ class LocalIndex:
             layered_fields=?
             WHERE id=?"""
 
-    SELECT_LAYERD_FIELDS_QUERY = f"SELECT layered_fields FROM record_index WHERE id=?"
+    SELECT_LAYERD_FIELDS_QUERY = "SELECT layered_fields FROM record_index WHERE id=?"
 
     SELECT_ALL_QUERIES = {
         TOC_INDEX: "SELECT * FROM toc_index WHERE",
