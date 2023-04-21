@@ -58,7 +58,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
 
     def test_get_year_from_toc(local_index) -> None:  # type: ignore
         with pytest.raises(
-                colrev.exceptions.TOCNotAvailableException,
+            colrev.exceptions.TOCNotAvailableException,
         ):
             record_dict = {"ENTRYTYPE": "article", "volume": "42", "number": "2"}
             local_index.get_year_from_toc(record_dict=record_dict)
@@ -280,7 +280,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
     temp_sqlite = tmp_path / Path("sqlite_index_test.db")
     print(temp_sqlite)
     with mocker.patch.object(
-            colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
     ):
         test_records_dict = load_test_records(script_loc)
         local_index = colrev.env.local_index.LocalIndex(
