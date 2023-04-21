@@ -564,17 +564,9 @@ class LocalIndex:
             return True
         return False
 
-    def _prepare_record_for_indexing(self, *, record_dict: dict) -> dict:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
+    def __apply_status_requirements(self, *, record_dict: dict) -> None:
         if "colrev_status" not in record_dict:
             raise colrev_exceptions.RecordNotIndexableException()
-
-        # Do not cover deprecated fields
-        for deprecated_field in ["pdf_hash"]:
-            if deprecated_field in record_dict:
-                print(f"Removing deprecated field: {deprecated_field}")
-                del record_dict[deprecated_field]
 
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
@@ -591,6 +583,13 @@ class LocalIndex:
         ):
             raise colrev_exceptions.RecordNotIndexableException()
 
+    def __remove_fields(self, record_dict: dict) -> None:
+        # Do not cover deprecated fields
+        for deprecated_field in ["pdf_hash"]:
+            if deprecated_field in record_dict:
+                print(f"Removing deprecated field: {deprecated_field}")
+                del record_dict[deprecated_field]
+
         if "screening_criteria" in record_dict:
             del record_dict["screening_criteria"]
         # Note: if the colrev_pdf_id has not been checked,
@@ -602,28 +601,10 @@ class LocalIndex:
             if "colrev_pdf_id" in record_dict:
                 del record_dict["colrev_pdf_id"]
 
-        # Note : this is the first run, no need to split/list
-        if "colrev/curated_metadata" in record_dict["metadata_source_repository_paths"]:
-            # Note : local_curated_metadata is important to identify non-duplicates
-            # between curated_metadata_repositories
-            record_dict["local_curated_metadata"] = "yes"
-
-        if "colrev_origin" in record_dict:
-            del record_dict["colrev_origin"]
-
         # Note : numbers of citations change regularly.
         # They should be retrieved from sources like crossref/doi.org
         if "cited_by" in record_dict:
             del record_dict["cited_by"]
-
-        # Note : file paths should be absolute when added to the LocalIndex
-        if "file" in record_dict:
-            pdf_path = Path(record_dict["file"])
-            if pdf_path.is_file():
-                record_dict["file"] = str(pdf_path)
-            else:
-                del record_dict["file"]
-
         if record_dict.get("year", "NA").isdigit():
             record_dict["year"] = int(record_dict["year"])
         else:
@@ -634,37 +615,40 @@ class LocalIndex:
                 print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
                 del record_dict["language"]
 
+    def __adjust_provenance_for_indexint(self, *, record_dict: dict) -> None:
         # Provenance should point to the original repository path.
         # If the provenance/source was example.bib (and the record is amended during indexing)
         # we wouldn't know where the example.bib belongs to.
         record = colrev.record.Record(data=record_dict)
         for key in list(record.data.keys()):
-            if key not in colrev.record.Record.identifying_field_keys:
-                if key not in colrev.record.Record.provenance_keys + [
+            if (
+                key
+                not in colrev.record.Record.identifying_field_keys
+                + colrev.record.Record.provenance_keys
+                + [
                     "ID",
                     "ENTRYTYPE",
                     "local_curated_metadata",
                     "metadata_source_repository_paths",
-                ]:
-                    if key not in record.data.get("colrev_data_provenance", {}):
-                        record.add_data_provenance(
-                            key=key,
-                            source=record_dict["metadata_source_repository_paths"],
-                        )
-                    else:
-                        if (
-                            "CURATED"
-                            not in record.data["colrev_data_provenance"][key]["source"]
-                        ):
-                            record.add_data_provenance(
-                                key=key,
-                                source=record_dict["metadata_source_repository_paths"],
-                            )
-            else:
-                if not record.masterdata_is_curated():
-                    record.add_masterdata_provenance(
-                        key=key, source=record_dict["metadata_source_repository_paths"]
+                ]
+            ):
+                if key not in record.data.get("colrev_data_provenance", {}):
+                    record.add_data_provenance(
+                        key=key,
+                        source=record_dict["metadata_source_repository_paths"],
                     )
+                elif (
+                    "CURATED"
+                    not in record.data["colrev_data_provenance"][key]["source"]
+                ):
+                    record.add_data_provenance(
+                        key=key,
+                        source=record_dict["metadata_source_repository_paths"],
+                    )
+            elif not record.masterdata_is_curated():
+                record.add_masterdata_provenance(
+                    key=key, source=record_dict["metadata_source_repository_paths"]
+                )
 
         # Make sure that we don't add provenance information without corresponding fields
         if "colrev_data_provenance" in record.data:
@@ -681,7 +665,34 @@ class LocalIndex:
                     if provenance_key not in record.data:
                         del record.data["colrev_masterdata_provenance"][provenance_key]
 
-        return record.get_data()
+        record_dict = record.get_data()
+
+    def __prep_fields_for_indexing(self, *, record_dict: dict) -> None:
+        # Note : this is the first run, no need to split/list
+        if "colrev/curated_metadata" in record_dict["metadata_source_repository_paths"]:
+            # Note : local_curated_metadata is important to identify non-duplicates
+            # between curated_metadata_repositories
+            record_dict["local_curated_metadata"] = "yes"
+
+        # Note : file paths should be absolute when added to the LocalIndex
+        if "file" in record_dict:
+            pdf_path = Path(record_dict["file"])
+            if pdf_path.is_file():
+                record_dict["file"] = str(pdf_path)
+            else:
+                del record_dict["file"]
+
+        if "colrev_origin" in record_dict:
+            del record_dict["colrev_origin"]
+
+        self.__adjust_provenance_for_indexint(record_dict=record_dict)
+
+    def _prepare_record_for_indexing(self, *, record_dict: dict) -> dict:
+        self.__apply_status_requirements(record_dict=record_dict)
+        self.__remove_fields(record_dict=record_dict)
+        self.__prep_fields_for_indexing(record_dict=record_dict)
+
+        return record_dict
 
     def __get_index_record(self, *, record_dict: dict) -> dict:
         try:
@@ -972,26 +983,11 @@ class LocalIndex:
             return False
         return False
 
-    def retrieve_from_toc(
-        self,
-        *,
-        record_dict: dict,
-        similarity_threshold: float,
-        include_file: bool = False,
-        search_across_tocs: bool = False,
-    ) -> dict:
-        """Retrieve a record from the toc (table-of-contents)"""
+    def __get_toc_items_for_toc_retrieval(
+        self, *, toc_key: str, search_across_tocs: bool
+    ) -> list:
+        toc_items = []
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-
-        # 1. get TOC
-        toc_items, toc_key = [], "NA"
-        try:
-            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-        except colrev_exceptions.NotTOCIdentifiableException as exc:
-            if not search_across_tocs:
-                raise colrev_exceptions.RecordNotInIndexException() from exc
         if self.__toc_exists(toc_item=toc_key):
             res = self.__get_item_from_index(
                 index_name=self.TOC_INDEX, key="toc_key", value=toc_key
@@ -1019,9 +1015,29 @@ class LocalIndex:
 
         if not toc_items:
             raise colrev_exceptions.RecordNotInIndexException()
+        return toc_items
 
-        # 2. get most similar record_dict
+    def retrieve_from_toc(
+        self,
+        *,
+        record_dict: dict,
+        similarity_threshold: float,
+        include_file: bool = False,
+        search_across_tocs: bool = False,
+    ) -> dict:
+        """Retrieve a record from the toc (table-of-contents)"""
+
         try:
+            try:
+                toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+            except colrev_exceptions.NotTOCIdentifiableException as exc:
+                if not search_across_tocs:
+                    raise colrev_exceptions.RecordNotInIndexException() from exc
+
+            toc_items = self.__get_toc_items_for_toc_retrieval(
+                toc_key=toc_key, search_across_tocs=search_across_tocs
+            )
+
             if search_across_tocs:
                 record_colrev_id = colrev.record.Record(
                     data=record_dict
