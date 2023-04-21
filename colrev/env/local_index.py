@@ -61,22 +61,21 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
-    UPDATE_RECORD_INDEX_LAYERD_FIELDS = f"""
+    UPDATE_LAYERD_FIELDS_QUERY = f"""
             UPDATE {RECORD_INDEX} SET
             layered_fields=?
             WHERE id=?"""
 
-    INDEX_QUERIES = {
+    SELECT_LAYERD_FIELDS_QUERY = {
         "record_index_layerd_fields": "SELECT layered_fields FROM record_index WHERE id=?",
-        TOC_INDEX: "SELECT * FROM toc_index WHERE toc_key=?",
     }
 
-    BUILD_QUERIES = {
+    SELECT_ALL_QUERIES = {
         TOC_INDEX: "SELECT * FROM toc_index WHERE",
         RECORD_INDEX: "SELECT * FROM record_index WHERE",
     }
 
-    INDEX_KEY_QUERIES = {
+    SELECT_KEY_QUERIES = {
         (RECORD_INDEX, "id"): "SELECT * FROM record_index WHERE id=?",
         (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
         (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
@@ -221,7 +220,7 @@ class LocalIndex:
 
         layered_fields = []
         cur.execute(
-            self.INDEX_QUERIES[f"{self.RECORD_INDEX}_layerd_fields"], (item["id"],)
+            self.SELECT_LAYERD_FIELDS_QUERY, (item["id"],)
         )
         for row in cur.fetchall():
             if row["layered_fields"]:
@@ -241,7 +240,7 @@ class LocalIndex:
             )
 
         cur.execute(
-            self.UPDATE_RECORD_INDEX_LAYERD_FIELDS,
+            self.UPDATE_LAYERD_FIELDS_QUERY,
             (json.dumps(layered_fields), item["id"]),
         )
 
@@ -997,7 +996,7 @@ class LocalIndex:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            cur.execute(self.INDEX_QUERIES[self.TOC_INDEX], (toc_item,))
+            cur.execute(self.SELECT_KEY_QUERIES[(TOC_INDEX,"toc_key)], (toc_item,))
             selected_row = cur.fetchone()
             self.thread_lock.release()
             if not selected_row:
@@ -1124,8 +1123,8 @@ class LocalIndex:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            build_query = f"{self.BUILD_QUERIES[index_name]} {query[0]}"
-            cur.execute(build_query, query[1])
+            select_all_query = f"{self.SELECT_ALL_QUERIES[index_name]} {query[0]}"
+            cur.execute(select_all_query, query[1])
             results = cur.fetchall()
             self.thread_lock.release()
             return results
@@ -1146,7 +1145,7 @@ class LocalIndex:
             # Collision
             # paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
-            cur.execute(self.INDEX_KEY_QUERIES[(index_name, key)], (value,))
+            cur.execute(self.SELECT_KEY_QUERIES[(index_name, key)], (value,))
 
             selected_row = cur.fetchone()
             self.thread_lock.release()
