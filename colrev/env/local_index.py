@@ -996,7 +996,7 @@ class LocalIndex:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            cur.execute(self.SELECT_KEY_QUERIES[(TOC_INDEX,"toc_key)], (toc_item,))
+            cur.execute(self.SELECT_KEY_QUERIES[(TOC_INDEX,"toc_key")], (toc_item,))
             selected_row = cur.fetchone()
             self.thread_lock.release()
             if not selected_row:
