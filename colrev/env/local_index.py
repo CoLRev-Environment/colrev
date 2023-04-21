@@ -61,6 +61,30 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
+    UPDATE_LAYERD_FIELDS_QUERY = """
+            UPDATE record_index SET
+            layered_fields=?
+            WHERE id=?"""
+
+    SELECT_LAYERD_FIELDS_QUERY = "SELECT layered_fields FROM record_index WHERE id=?"
+
+    SELECT_ALL_QUERIES = {
+        TOC_INDEX: "SELECT * FROM toc_index WHERE",
+        RECORD_INDEX: "SELECT * FROM record_index WHERE",
+    }
+
+    SELECT_KEY_QUERIES = {
+        (RECORD_INDEX, "id"): "SELECT * FROM record_index WHERE id=?",
+        (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
+        (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
+        (RECORD_INDEX, "doi"): "SELECT * FROM record_index where doi=?",
+        (RECORD_INDEX, "dblp_key"): "SELECT * FROM record_index WHERE dblp_key=?",
+        (
+            RECORD_INDEX,
+            "colrev_pdf_id",
+        ): "SELECT * FROM record_index WHERE colrev_pdf_id=?",
+        (RECORD_INDEX, "url"): "SELECT * FROM record_index WHERE url=?",
+    }
 
     # AUTHOR_INDEX = "author_index"
     # AUTHOR_RECORD_INDEX = "author_record_index"
@@ -193,9 +217,7 @@ class LocalIndex:
         record_dict = self.__get_record_from_row(row=item)
 
         layered_fields = []
-        cur.execute(
-            f"SELECT layered_fields FROM {self.RECORD_INDEX} WHERE id=?", (item["id"],)
-        )
+        cur.execute(self.SELECT_LAYERD_FIELDS_QUERY, (item["id"],))
         for row in cur.fetchall():
             if row["layered_fields"]:
                 layered_fields = json.loads(row["layered_fields"])
@@ -214,9 +236,8 @@ class LocalIndex:
             )
 
         cur.execute(
-            f"UPDATE {self.RECORD_INDEX} SET "
-            f"layered_fields='{json.dumps(layered_fields)}'"
-            f" WHERE id='{item['id']}'"
+            self.UPDATE_LAYERD_FIELDS_QUERY,
+            (json.dumps(layered_fields), item["id"]),
         )
 
     def get_fields_to_remove(self, *, record_dict: dict) -> list:
@@ -971,7 +992,9 @@ class LocalIndex:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            cur.execute(f"SELECT * FROM {self.TOC_INDEX} WHERE toc_key=?", (toc_item,))
+            cur.execute(
+                self.SELECT_KEY_QUERIES[(self.TOC_INDEX, "toc_key")], (toc_item,)
+            )
             selected_row = cur.fetchone()
             self.thread_lock.release()
             if not selected_row:
@@ -1002,7 +1025,7 @@ class LocalIndex:
                 partial_toc_key = toc_key.replace("|-", "")
                 retrieved_tocs = self.__get_items_from_index(
                     index_name=self.TOC_INDEX,
-                    query=f"toc_key LIKE '{partial_toc_key}%'",
+                    query=("toc_key LIKE ?", [f"{partial_toc_key}%"]),
                 )
                 toc_items = [x["colrev_ids"].split(";") for x in retrieved_tocs]
                 toc_items = [item for sublist in toc_items for item in sublist]
@@ -1092,11 +1115,14 @@ class LocalIndex:
 
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def __get_items_from_index(self, *, index_name: str, query: str) -> list:
+    def __get_items_from_index(
+        self, *, index_name: str, query: typing.Tuple[str, list[str]]
+    ) -> list:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            cur.execute(f"SELECT * FROM {index_name} WHERE {query}")
+            select_all_query = f"{self.SELECT_ALL_QUERIES[index_name]} {query[0]}"
+            cur.execute(select_all_query, query[1])
             results = cur.fetchall()
             self.thread_lock.release()
             return results
@@ -1117,11 +1143,9 @@ class LocalIndex:
             # Collision
             # paper_hash = self.__increment_hash(paper_hash=paper_hash)
 
-            selected_row = None
-            cur.execute(f"SELECT * FROM {index_name} WHERE {key}=?", (value,))
-            for row in cur.fetchall():
-                selected_row = row
-                break
+            cur.execute(self.SELECT_KEY_QUERIES[(index_name, key)], (value,))
+
+            selected_row = cur.fetchone()
             self.thread_lock.release()
 
             if not selected_row:
