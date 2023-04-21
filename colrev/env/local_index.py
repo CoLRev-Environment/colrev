@@ -61,14 +61,12 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
-    UPDATE_LAYERD_FIELDS_QUERY = f"""
-            UPDATE {RECORD_INDEX} SET
+    UPDATE_LAYERD_FIELDS_QUERY = """
+            UPDATE record_index SET
             layered_fields=?
             WHERE id=?"""
 
-    SELECT_LAYERD_FIELDS_QUERY = {
-        "record_index_layerd_fields": "SELECT layered_fields FROM record_index WHERE id=?",
-    }
+    SELECT_LAYERD_FIELDS_QUERY = f"SELECT layered_fields FROM record_index WHERE id=?"
 
     SELECT_ALL_QUERIES = {
         TOC_INDEX: "SELECT * FROM toc_index WHERE",
@@ -994,7 +992,7 @@ class LocalIndex:
         try:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
-            cur.execute(self.SELECT_KEY_QUERIES[(TOC_INDEX, "toc_key")], (toc_item,))
+            cur.execute(self.SELECT_KEY_QUERIES[(self.TOC_INDEX, "toc_key")], (toc_item,))
             selected_row = cur.fetchone()
             self.thread_lock.release()
             if not selected_row:
