@@ -135,11 +135,19 @@ def test_validate_iso_639_3_language_codes(
 @pytest.mark.parametrize(
     "language_code, expected",
     [
-        ("ENGLISH", "eng"),
         ("en", "eng"),
         ("fr", "fra"),
         ("de", "deu"),
         ("ar", "ara"),
+        ("ENGLISH", "eng"),
+        ("Russian", "rus"),
+        ("English", "eng"),
+        ("Spanish", "spa"),
+        ("Chinese", "zho"),
+        ("Portuguese", "por"),
+        ("German", "deu"),
+        ("Hungarian", "hun"),
+        ("French", "fra"),
     ],
 )
 def test_unify_to_iso_639_3_language_codes(
