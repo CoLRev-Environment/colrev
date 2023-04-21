@@ -833,15 +833,29 @@ class Record:
         return record.data["author"]
 
     @classmethod
-    def __select_best_pages(cls, *, default: str, candidate: str) -> str:
-        best_pages = default
-        if "--" in candidate and "--" not in default:
-            best_pages = candidate
+    def __select_best_pages(
+        cls,
+        *,
+        record: Record,
+        merging_record: Record,
+        preferred_sources: list,  # pylint: disable=unused-argument
+    ) -> str:
+        best_pages = record.data["pages"]
+        if "--" in merging_record.data["pages"] and "--" not in record.data["pages"]:
+            best_pages = merging_record.data["pages"]
         return best_pages
 
     @classmethod
-    def __select_best_title(cls, *, default: str, candidate: str) -> str:
-        best_title = default
+    def __select_best_title(
+        cls,
+        *,
+        record: Record,
+        merging_record: Record,
+        preferred_sources: list,  # pylint: disable=unused-argument
+    ) -> str:
+        default = record.data["title"]
+        candidate = merging_record.data["title"]
+        best_title = record.data["title"]
 
         # Note : avoid switching titles
         if default.replace(" - ", ": ") == candidate.replace(" - ", ": "):
@@ -856,6 +870,30 @@ class Record:
             if default_upper > candidate_upper:
                 best_title = candidate
         return best_title
+
+    @classmethod
+    def __select_best_journal(
+        cls,
+        *,
+        record: Record,
+        merging_record: Record,
+        preferred_sources: list,  # pylint: disable=unused-argument
+    ) -> str:
+        return cls.__select_best_container_title(
+            default=record.data["journal"], candidate=merging_record.data["journal"]
+        )
+
+    @classmethod
+    def __select_best_booktitle(
+        cls,
+        *,
+        record: Record,
+        merging_record: Record,
+        preferred_sources: list,  # pylint: disable=unused-argument
+    ) -> str:
+        return cls.__select_best_container_title(
+            default=record.data["booktitle"], candidate=merging_record.data["booktitle"]
+        )
 
     @classmethod
     def __select_best_container_title(cls, *, default: str, candidate: str) -> str:
@@ -885,74 +923,25 @@ class Record:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
+        custom_field_selectors = {
+            "author": self.__select_best_author,
+            "pages": self.__select_best_pages,
+            "title": self.__select_best_title,
+            "journal": self.__select_best_journal,
+            "booktitle": self.__select_best_booktitle,
+        }
 
-        if key == "author":
+        if key in custom_field_selectors:
             if key in self.data:
-                best_author = self.__select_best_author(
+                best_value = custom_field_selectors[key](
                     record=self,
                     merging_record=merging_record,
                     preferred_sources=self.preferred_sources,
                 )
-                if self.data[key] != best_author:
+                if self.data[key] != best_value:
                     self.update_field(
-                        key=key, value=best_author, source=source, append_edit=False
+                        key=key, value=best_value, source=source, append_edit=False
                     )
-            else:
-                self.update_field(key=key, value=val, source=source, append_edit=False)
-
-        elif key == "pages":
-            if key in self.data:
-                best_pages = self.__select_best_pages(
-                    default=self.data[key], candidate=merging_record.data[key]
-                )
-                if self.data[key] != best_pages:
-                    self.update_field(
-                        key=key, value=best_pages, source=source, append_edit=False
-                    )
-
-            else:
-                self.update_field(key=key, value=val, source=source, append_edit=False)
-
-        elif key == "title":
-            if key in self.data:
-                best_title = self.__select_best_title(
-                    default=self.data[key], candidate=merging_record.data[key]
-                )
-                if self.data[key] != best_title:
-                    self.update_field(
-                        key=key, value=best_title, source=source, append_edit=False
-                    )
-
-            else:
-                self.update_field(key=key, value=val, source=source, append_edit=False)
-
-        elif key == "journal":
-            if key in self.data:
-                best_journal = self.__select_best_container_title(
-                    default=self.data[key],
-                    candidate=merging_record.data[key],
-                )
-                if self.data[key] != best_journal:
-                    self.update_field(
-                        key=key, value=best_journal, source=source, append_edit=False
-                    )
-            else:
-                self.update_field(key=key, value=val, source=source)
-
-        elif key == "booktitle":
-            if key in self.data:
-                best_booktitle = self.__select_best_container_title(
-                    default=self.data[key],
-                    candidate=merging_record.data[key],
-                )
-                if self.data[key] != best_booktitle:
-                    # TBD: custom select_best_booktitle?
-                    self.update_field(
-                        key=key, value=best_booktitle, source=source, append_edit=False
-                    )
-
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
@@ -962,25 +951,24 @@ class Record:
             else:
                 self.data[key] = merging_record.data[key]
         elif key in ["url", "link"]:
-            if key in self.data:
-                if self.data[key].rstrip("/") != merging_record.data[key].rstrip("/"):
-                    if "https" not in self.data[key]:
-                        self.update_field(
-                            key=key, value=val, source=source, append_edit=False
-                        )
+            if (
+                key in self.data
+                and self.data[key].rstrip("/") != merging_record.data[key].rstrip("/")
+                and "https" not in self.data[key]
+            ):
+                self.update_field(key=key, value=val, source=source, append_edit=False)
 
         elif "UNKNOWN" == self.data.get(
             key, ""
         ) and "UNKNOWN" != merging_record.data.get(key, ""):
             self.data[key] = merging_record.data[key]
-
             if key in self.identifying_field_keys:
                 self.add_masterdata_provenance(key=key, source=source)
             else:
                 self.add_data_provenance(key=key, source=source)
 
-        elif merging_record.data.get(key, "UNKNOWN") == "UNKNOWN":
-            pass
+        # elif merging_record.data.get(key, "UNKNOWN") == "UNKNOWN":
+        #     pass
         # Note : the following is deactivated to avoid frequent changes in merged records
         # else:
         #     try:
