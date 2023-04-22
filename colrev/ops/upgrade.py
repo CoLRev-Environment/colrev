@@ -171,7 +171,7 @@ class Upgrade(colrev.operation.Operation):
                     active = True
                     print(f"{colors.ORANGE}Release notes v{selected_version}")
                     continue
-                if "## [" in line:
+                if line.startswith("## "):
                     active = False
                 if active:
                     print(line)
@@ -278,6 +278,8 @@ class Upgrade(colrev.operation.Operation):
             if "colrev_pdf_id" not in record_dict:
                 continue
             if not record_dict["colrev_pdf_id"].startswith("cpid1:"):
+                continue
+            if not Path(record_dict.get("file", "")).is_file():
                 continue
 
             pdf_path = Path(record_dict["file"])
