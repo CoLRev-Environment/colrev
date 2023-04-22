@@ -40,6 +40,12 @@ if False:  # pylint: disable=using-constant-test
 class ActiveLearningDedupeTraining(JsonSchemaMixin):
     """Active learning: training phase (minimum sample size of 50 required)"""
 
+    # pylint: disable=too-many-instance-attributes
+
+    __n_match: int
+    __n_distinct: int
+    __manual: bool
+
     settings_class = colrev.env.package_manager.DefaultSettings
     TRAINING_FILE_RELATIVE = Path(".records_dedupe_training.json")
     SETTINGS_FILE_RELATIVE = Path(".records_learned_settings")
@@ -67,6 +73,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         self.settings_file = (
             dedupe_operation.review_manager.path / self.SETTINGS_FILE_RELATIVE
         )
+
+        self.local_index = dedupe_operation.review_manager.get_local_index()
+        self.review_manager = dedupe_operation.review_manager
 
         if hasattr(dedupe_operation.review_manager, "dataset"):
             dedupe_operation.review_manager.dataset.update_gitignore(
@@ -311,6 +320,214 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                     manual_author=True,
                 )
 
+    def __get_record_pair_for_labeling(
+        self,
+        *,
+        use_previous: bool,
+        examples_buffer: list,
+        uncertain_pairs: list[TrainingExample],
+    ) -> TrainingExample:
+        if use_previous:
+            record_pair, _ = examples_buffer.pop(0)
+        else:
+            # try:
+            if not uncertain_pairs:
+                uncertain_pairs = self.deduper.uncertain_pairs()
+
+            record_pair = uncertain_pairs.pop()
+            # except IndexError:
+            #     break
+        return record_pair
+
+    def __identical_colrev_ids(self, *, record_pair: TrainingExample) -> bool:
+        # if any of the colrev_ids NA,
+        # we don't know whether we have a duplicate.
+        return (
+            record_pair[0]["colrev_id"] == record_pair[1]["colrev_id"]
+            and "NA" != record_pair[0]["colrev_id"]
+            and "NA" != record_pair[1]["colrev_id"]
+        )
+
+    def __active_label_duplicate(
+        self,
+        *,
+        manual_dedupe_decision_list: typing.List[dict],
+        record_pair: TrainingExample,
+        examples_buffer: list[
+            tuple[TrainingExample, typing.Literal["match", "distinct", "uncertain"]]
+        ],
+    ) -> None:
+        manual_dedupe_decision_list.append(
+            {
+                "ID1": record_pair[0]["ID"],
+                "ID2": record_pair[1]["ID"],
+                "decision": "duplicate",
+            }
+        )
+        examples_buffer.insert(0, (record_pair, "match"))
+        msg = (
+            f"Marked as duplicate: {record_pair[0]['ID']} - "
+            + f"{record_pair[1]['ID']}"
+        )
+        self.review_manager.report_logger.info(msg)
+
+    def __active_label_no_duplicate(
+        self,
+        *,
+        manual_dedupe_decision_list: typing.List[dict],
+        record_pair: TrainingExample,
+        examples_buffer: list,
+    ) -> None:
+        if not self.__manual:
+            # Ensure that non-dupes do not exceed 3x dupes
+            # (for balanced training data)
+            if self.__n_distinct > self.__n_match * 3:
+                examples_buffer.insert(0, (record_pair, "uncertain"))
+                # continue
+
+        manual_dedupe_decision_list.append(
+            {
+                "ID1": record_pair[0]["ID"],
+                "ID2": record_pair[1]["ID"],
+                "decision": "no_duplicate",
+            }
+        )
+        examples_buffer.insert(0, (record_pair, "distinct"))
+        msg = (
+            f"Marked as non-duplicate: {record_pair[0]['ID']}"
+            + f" - {record_pair[1]['ID']}"
+        )
+        self.review_manager.report_logger.info(msg)
+
+    def __active_label_uncertain(
+        self, *, examples_buffer: list, record_pair: TrainingExample
+    ) -> None:
+        examples_buffer.insert(0, (record_pair, "uncertain"))
+
+    def __active_label_check_finished(
+        self, *, manual_dedupe_decision_list: list
+    ) -> bool:
+        nr_duplicates = self.__get_nr_duplicates(
+            result_list=manual_dedupe_decision_list
+        )
+        nr_non_duplicates = self.__get_nr_non_duplicates(
+            result_list=manual_dedupe_decision_list
+        )
+        if not nr_duplicates > 30 or not nr_non_duplicates > 30:
+            if "y" != input(
+                "The machine-learning requires "
+                "30 duplicates and 30 non-duplicates. "
+                "Quit anyway [y,n]?"
+            ):
+                return False
+        os.system("cls" if os.name == "nt" else "clear")
+        print("Finished labeling")
+        return True
+
+    def __check_finised_labeling(
+        self, *, examples_buffer: list, max_associations_to_check: int
+    ) -> bool:
+        self.__n_match = len(self.deduper.training_pairs["match"]) + sum(
+            label == "match" for _, label in examples_buffer
+        )
+        self.__n_distinct = len(self.deduper.training_pairs["distinct"]) + sum(
+            label == "distinct" for _, label in examples_buffer
+        )
+        if (self.__n_match + self.__n_distinct) > max_associations_to_check:
+            return True
+        return False
+
+    def __mark_active_labeling_pairs(self, *, examples_buffer: list) -> None:
+        if len(examples_buffer) > 1:  # Max number of previous operations
+            record_pair, label = examples_buffer.pop()
+            if label in {"distinct", "match"}:
+                examples: TrainingData = {"distinct": [], "match": []}
+                examples[label].append(record_pair)
+                self.deduper.mark_pairs(examples)
+
+    def __adapted_console_label_active_label(
+        self,
+        *,
+        manual_dedupe_decision_list: list,
+        max_associations_to_check: int,
+        keys: list,
+        uncertain_pairs: list,
+    ) -> list[tuple[TrainingExample, typing.Literal["match", "distinct", "uncertain"]]]:
+        examples_buffer: list[
+            tuple[TrainingExample, typing.Literal["match", "distinct", "uncertain"]]
+        ] = []
+        finished, use_previous = False, False
+
+        while not finished:
+            record_pair = self.__get_record_pair_for_labeling(
+                use_previous=use_previous,
+                examples_buffer=examples_buffer,
+                uncertain_pairs=uncertain_pairs,
+            )
+            if use_previous:
+                use_previous = False
+
+            finished = self.__check_finised_labeling(
+                examples_buffer=examples_buffer,
+                max_associations_to_check=max_associations_to_check,
+            )
+
+            user_input = "u"
+            if self.__identical_colrev_ids(record_pair=record_pair):
+                user_input = "y"
+            else:
+                # Check local_index for duplicate information
+                curations_dupe_info = self.local_index.is_duplicate(
+                    record1_colrev_id=record_pair[0]["colrev_id"].split(";"),
+                    record2_colrev_id=record_pair[1]["colrev_id"].split(";"),
+                )
+
+                user_input = (
+                    colrev.ops.built_in.dedupe.utils.console_duplicate_instance_label(
+                        record_pair,
+                        keys,
+                        self.__manual,
+                        curations_dupe_info,
+                        self.__n_match,
+                        self.__n_distinct,
+                        examples_buffer,
+                    )
+                )
+
+            if user_input == "y":
+                self.__active_label_duplicate(
+                    manual_dedupe_decision_list=manual_dedupe_decision_list,
+                    record_pair=record_pair,
+                    examples_buffer=examples_buffer,
+                )
+
+            elif user_input == "n":
+                self.__active_label_no_duplicate(
+                    manual_dedupe_decision_list=manual_dedupe_decision_list,
+                    record_pair=record_pair,
+                    examples_buffer=examples_buffer,
+                )
+
+            elif user_input == "u":
+                self.__active_label_uncertain(
+                    examples_buffer=examples_buffer, record_pair=record_pair
+                )
+
+            elif user_input == "f":
+                finished = self.__active_label_check_finished(
+                    manual_dedupe_decision_list=manual_dedupe_decision_list
+                )
+                if not finished:
+                    continue
+
+            elif user_input == "p":
+                use_previous = True
+                uncertain_pairs.append(record_pair)
+
+            self.__mark_active_labeling_pairs(examples_buffer=examples_buffer)
+
+        return examples_buffer
+
     def __adapted_console_label(
         self,
         *,
@@ -329,155 +546,31 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         > dedupe.console_label(deduper)
         """
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-locals
-
         dedupe_operation.review_manager.logger.info(
             "Note: duplicate associations available in the LocalIndex "
             "are applied automatically."
         )
         dedupe_operation.review_manager.logger.info("Press Enter to start.")
         input()
-
-        local_index = dedupe_operation.review_manager.get_local_index()
-        finished, use_previous = False, False
+        self.__manual = manual
 
         keys = unique(
             field.field for field in self.deduper.data_model.primary_variables
         )
 
-        buffer_len = 1  # Max number of previous operations
-        examples_buffer: list[
-            tuple[TrainingExample, typing.Literal["match", "distinct", "uncertain"]]
-        ] = []
         uncertain_pairs: list[TrainingExample] = []
+        manual_dedupe_decision_list: typing.List[dict] = []
 
-        manual_dedupe_decision_list = []
-
-        while not finished:
-            if use_previous:
-                record_pair, _ = examples_buffer.pop(0)
-                use_previous = False
-            else:
-                try:
-                    if not uncertain_pairs:
-                        uncertain_pairs = self.deduper.uncertain_pairs()
-
-                    record_pair = uncertain_pairs.pop()
-                except IndexError:
-                    break
-
-            n_match = len(self.deduper.training_pairs["match"]) + sum(
-                label == "match" for _, label in examples_buffer
-            )
-            n_distinct = len(self.deduper.training_pairs["distinct"]) + sum(
-                label == "distinct" for _, label in examples_buffer
-            )
-            if (n_match + n_distinct) > max_associations_to_check:
-                finished = True
-
-            user_input = "u"
-            if (
-                record_pair[0]["colrev_id"] == record_pair[1]["colrev_id"]
-                # if any of the colrev_ids NA,
-                # we don't know whether we have a duplicate.
-                and "NA" != record_pair[0]["colrev_id"]
-                and "NA" != record_pair[1]["colrev_id"]
-            ):
-                user_input = "y"
-            else:
-                # Check local_index for duplicate information
-                curations_dupe_info = local_index.is_duplicate(
-                    record1_colrev_id=record_pair[0]["colrev_id"].split(";"),
-                    record2_colrev_id=record_pair[1]["colrev_id"].split(";"),
-                )
-
-                user_input = (
-                    colrev.ops.built_in.dedupe.utils.console_duplicate_instance_label(
-                        record_pair,
-                        keys,
-                        manual,
-                        curations_dupe_info,
-                        n_match,
-                        n_distinct,
-                        examples_buffer,
-                    )
-                )
-
-            if user_input == "y":
-                manual_dedupe_decision_list.append(
-                    {
-                        "ID1": record_pair[0]["ID"],
-                        "ID2": record_pair[1]["ID"],
-                        "decision": "duplicate",
-                    }
-                )
-                examples_buffer.insert(0, (record_pair, "match"))
-                msg = (
-                    f"Marked as duplicate: {record_pair[0]['ID']} - "
-                    + f"{record_pair[1]['ID']}"
-                )
-                dedupe_operation.review_manager.report_logger.info(msg)
-
-            elif user_input == "n":
-                if not manual:
-                    # Ensure that non-dupes do not exceed 3x dupes
-                    # (for balanced training data)
-                    if n_distinct > n_match * 3:
-                        examples_buffer.insert(0, (record_pair, "uncertain"))
-                        continue
-
-                manual_dedupe_decision_list.append(
-                    {
-                        "ID1": record_pair[0]["ID"],
-                        "ID2": record_pair[1]["ID"],
-                        "decision": "no_duplicate",
-                    }
-                )
-                examples_buffer.insert(0, (record_pair, "distinct"))
-                msg = (
-                    f"Marked as non-duplicate: {record_pair[0]['ID']}"
-                    + f" - {record_pair[1]['ID']}"
-                )
-                dedupe_operation.review_manager.report_logger.info(msg)
-
-            elif user_input == "u":
-                examples_buffer.insert(0, (record_pair, "uncertain"))
-
-            elif user_input == "f":
-                nr_duplicates = self.__get_nr_duplicates(
-                    result_list=manual_dedupe_decision_list
-                )
-                nr_non_duplicates = self.__get_nr_non_duplicates(
-                    result_list=manual_dedupe_decision_list
-                )
-
-                if not nr_duplicates > 30 or not nr_non_duplicates > 30:
-                    if "y" != input(
-                        "The machine-learning requires "
-                        "30 duplicates and 30 non-duplicates. "
-                        "Quit anyway [y,n]?"
-                    ):
-                        continue
-                os.system("cls" if os.name == "nt" else "clear")
-                print("Finished labeling")
-                finished = True
-
-            elif user_input == "p":
-                use_previous = True
-                uncertain_pairs.append(record_pair)
-
-            if len(examples_buffer) > buffer_len:
-                record_pair, label = examples_buffer.pop()
-                if label in {"distinct", "match"}:
-                    examples: TrainingData = {"distinct": [], "match": []}
-                    examples[label].append(record_pair)
-                    self.deduper.mark_pairs(examples)
+        examples_buffer = self.__adapted_console_label_active_label(
+            manual_dedupe_decision_list=manual_dedupe_decision_list,
+            max_associations_to_check=max_associations_to_check,
+            keys=keys,
+            uncertain_pairs=uncertain_pairs,
+        )
 
         for record_pair, label in examples_buffer:
             if label in ["distinct", "match"]:
-                examples = {"distinct": [], "match": []}
+                examples: typing.Dict[str, list] = {"distinct": [], "match": []}
                 examples[label].append(record_pair)
                 self.deduper.mark_pairs(examples)
 
