@@ -102,16 +102,19 @@ class Upgrade(colrev.operation.Operation):
             # Note : we may add a flag to update to pre-released versions
             {
                 "version": CoLRevVersion("0.8.0"),
+                "target_version": CoLRevVersion("0.8.1"),
                 "script": self.__migrate_0_8_0,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.1"),
+                "target_version": CoLRevVersion("0.8.2"),
                 "script": self.__migrate_0_8_1,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.2"),
+                "target_version": CoLRevVersion("0.8.3"),
                 "script": self.__migrate_0_8_2,
                 "released": True,
             },
@@ -134,13 +137,15 @@ class Upgrade(colrev.operation.Operation):
                 continue
 
             migration_script = migrator["script"]
+            self.review_manager.logger.info(
+                "Upgrade to: %s", migrator["target_version"]
+            )
+            if migrator["released"]:
+                self.__print_release_notes(selected_version=migrator["target_version"])
 
             updated = migration_script()
             if not updated:
                 continue
-            self.review_manager.logger.info("Update to: %s", migrator["version"])
-            if migrator["released"]:
-                self.__print_release_notes(selected_version=migrator["version"])
 
         settings = self.__load_settings_dict()
         settings["project"]["colrev_version"] = str(installed_colrev_version)
