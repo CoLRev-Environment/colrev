@@ -34,6 +34,7 @@ from thefuzz import fuzz
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.qm.colrev_pdf_id
 import colrev.ui_cli.cli_colors as colors
 
 if False:  # pylint: disable=using-constant-test
@@ -1781,17 +1782,11 @@ class Record:
     def get_colrev_pdf_id(
         cls,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         pdf_path: Path,
     ) -> str:  # pragma: no cover
         """Generate the colrev_pdf_id"""
-        pdf_hash_service = review_manager.get_pdf_hash_service()
-        cpid1 = "cpid1:" + pdf_hash_service.get_pdf_hash(
-            pdf_path=pdf_path,
-            page_nr=1,
-            hash_size=32,
-        )
-        return cpid1
+
+        return colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
 
     def apply_fields_keys_requirements(self) -> None:
         """Apply the field key requirements"""

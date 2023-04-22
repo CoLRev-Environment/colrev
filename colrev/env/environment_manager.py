@@ -287,7 +287,7 @@ class EnvironmentManager:
                 ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
-            except colrev_exceptions.CoLRevException:
+            except (colrev_exceptions.CoLRevException, git.exc.InvalidGitRepositoryError):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 

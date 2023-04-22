@@ -9,6 +9,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 import git
+from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -86,6 +87,7 @@ class Upgrade(colrev.operation.Operation):
         if installed_colrev_version == settings_version:
             return
 
+        # version: indicates from which version on the migration should be applied
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
                 "version": CoLRevVersion("0.7.0"),
@@ -108,6 +110,11 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_1,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.8.2"),
+                "script": self.__migrate_0_8_2,
+                "released": True,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -118,11 +125,11 @@ class Upgrade(colrev.operation.Operation):
         run_migration = False
         while migration_scripts:
             migrator = migration_scripts.pop(0)
-
-            # Activate run_migration after the current settings_version
-            if migrator["version"] == settings_version:
+            # Activate run_migration for the current settings_version
+            if (
+                settings_version == migrator["version"]
+            ):  # settings_version == migrator["version"] or
                 run_migration = True
-                continue
             if not run_migration:
                 continue
 
@@ -256,6 +263,24 @@ class Upgrade(colrev.operation.Operation):
         settings = self.__load_settings_dict()
         settings["project"]["auto_upgrade"] = True
         self.__save_settings(settings)
+
+        return self.repo.is_dirty()
+
+    def __migrate_0_8_2(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+
+        for record_dict in tqdm(records.values()):
+            if "colrev_pdf_id" not in record_dict:
+                continue
+            if not record_dict["colrev_pdf_id"].startswith("cpid1:"):
+                continue
+
+            pdf_path = Path(record_dict["file"])
+            colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+            record_dict["colrev_pdf_id"] = colrev_pdf_id
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
         return self.repo.is_dirty()
 

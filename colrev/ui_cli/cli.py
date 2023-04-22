@@ -1324,42 +1324,41 @@ def __extract_coverpage(*, cover: Path) -> None:
     )
 
 
-def __print_pdf_hashes(
-    *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, pdf_hash: Path
-) -> None:
+def __print_pdf_hashes(*, pdf_path: Path) -> None:
     # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
+    import colrev.qm.colrev_pdf_id
 
-    assert Path(pdf_hash).suffix == ".pdf"
+    try:
+        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
+    except ValueError:
+        print("Could not read PDF")
+        return
 
-    pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
+    assert Path(pdf_path).suffix == ".pdf"
 
-    first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=1,
         hash_size=16,
     )
     print(f"first page: {first_page_average_hash_16}")
-    first_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    first_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=1,
         hash_size=32,
     )
     print(f"first page: {first_page_average_hash_32}")
 
-    try:
-        pdf_reader = PdfFileReader(str(pdf_hash), strict=False)
-    except ValueError:
-        return
     last_page_nr = len(pdf_reader.pages)
-    last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=last_page_nr,
         hash_size=16,
     )
     print(f"last page: {last_page_average_hash_16}")
-    last_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    last_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=last_page_nr,
         hash_size=32,
     )
@@ -1448,7 +1447,7 @@ def pdf_prep(
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
         if pdf_hash:
-            __print_pdf_hashes(pdf_prep_operation=pdf_prep_operation, pdf_hash=pdf_hash)
+            __print_pdf_hashes(pdf_path=pdf_hash)
 
         elif update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()

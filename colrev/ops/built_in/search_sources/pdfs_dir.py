@@ -116,7 +116,6 @@ class PDFSearchSource(JsonSchemaMixin):
 
                 for potential_pdf in potential_pdfs:
                     cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
-                        review_manager=search_operation.review_manager,
                         pdf_path=potential_pdf,
                     )
 
@@ -533,16 +532,11 @@ class PDFSearchSource(JsonSchemaMixin):
                         not search_operation.review_manager.settings.is_curated_masterdata_repo()
                     ):
                         # retrieve_based_on_colrev_pdf_id
-                        pdf_hash_service = (
-                            search_operation.review_manager.get_pdf_hash_service()
-                        )
-                        colrev_pdf_id = pdf_hash_service.get_pdf_hash(
-                            pdf_path=Path(pdf_path),
-                            page_nr=1,
-                            hash_size=32,
+                        colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(
+                            pdf_path=Path(pdf_path)
                         )
                         new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                            colrev_pdf_id="cpid1:" + colrev_pdf_id
+                            colrev_pdf_id=colrev_pdf_id
                         )
                         new_record["file"] = str(pdf_path)
                         # Note : an alternative to replacing all data with the curated version

@@ -402,7 +402,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 try:
                     record.data.update(
                         colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
-                            review_manager=prep_operation.review_manager,
                             pdf_path=pdf_path,
                         )
                     )

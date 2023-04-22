@@ -242,9 +242,7 @@ class PDFGet(colrev.operation.Operation):
             pdf_candidates = {
                 pdf_candidate.relative_to(
                     self.review_manager.path
-                ): colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_candidate
-                )
+                ): colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_candidate)
                 for pdf_candidate in list(self.review_manager.pdf_dir.glob("**/*.pdf"))
             }
 
