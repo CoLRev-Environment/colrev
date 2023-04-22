@@ -170,7 +170,7 @@ class Search(colrev.operation.Operation):
 
     def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
         for main_record_dict in records.values():
-            if origin not in main_record_dict["colrev_origin"]:
+            if origin in main_record_dict["colrev_origin"]:
                 return main_record_dict
         return {}
 
@@ -280,7 +280,7 @@ class Search(colrev.operation.Operation):
         )
 
         if main_record_dict == {}:
-            self.review_manager.logger.error(f"Could not update {record_dict['ID']}")
+            self.review_manager.logger.debug(f"Could not update {record_dict['ID']}")
             return False
 
         # TBD: in curated masterdata repositories?

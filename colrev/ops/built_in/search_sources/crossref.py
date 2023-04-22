@@ -148,7 +148,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     "CROSSREF"
                 ) from exc
 
-    @timeout_decorator.timeout(40, use_signals=False)
+    @timeout_decorator.timeout(800, use_signals=False)
     def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         """Get records from Crossref based on a bibliographic query"""
 
@@ -187,7 +187,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
-    @timeout_decorator.timeout(40, use_signals=False)
+    @timeout_decorator.timeout(500, use_signals=False)
     def __query_journal(
         self, *, journal_issn: str, rerun: bool
     ) -> typing.Iterator[dict]:
