@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -43,7 +42,6 @@ class CurationPrep(JsonSchemaMixin):
 
         self.prep_operation = prep_operation
 
-    @timeout_decorator.timeout(20, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument

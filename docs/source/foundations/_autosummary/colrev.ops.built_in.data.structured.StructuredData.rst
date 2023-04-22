@@ -40,3 +40,4 @@ colrev.ops.built\_in.data.structured.StructuredData
    .. autosummary::
 
       ~StructuredData.ci_supported
+      ~StructuredData.settings

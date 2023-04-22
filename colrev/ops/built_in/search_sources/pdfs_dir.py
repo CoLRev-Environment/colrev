@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
+import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -48,6 +49,7 @@ class PDFSearchSource(JsonSchemaMixin):
     )
 
     __doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
+    __batch_size = 20
 
     def __init__(
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
@@ -449,18 +451,205 @@ class PDFSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def __index_pdf(
+        self,
+        *,
+        pdf_path: Path,
+        search_operation: colrev.ops.search.Search,
+        pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
+        linked_pdf_paths: list,
+        local_index: colrev.env.local_index.LocalIndex,
+    ) -> dict:
+        new_record: dict = {}
+
+        if self.__is_broken_filepath(pdf_path=pdf_path):
+            return new_record
+
+        if search_operation.review_manager.force_mode:
+            # i.e., reindex all
+            pass
+        else:
+            # note: for curations, we want all pdfs indexed/merged separately,
+            # in other projects, it is generally sufficient if the pdf is linked
+            if not self.review_manager.settings.is_curated_masterdata_repo():
+                if pdf_path in linked_pdf_paths:
+                    # Otherwise: skip linked PDFs
+                    return new_record
+
+            if pdf_path in [
+                Path(r["file"])
+                for r in pdfs_dir_feed.feed_records.values()
+                if "file" in r
+            ]:
+                return new_record
+
+        self.review_manager.logger.info(f" extract metadata from {pdf_path}")
+        try:
+            if not self.review_manager.settings.is_curated_masterdata_repo():
+                # retrieve_based_on_colrev_pdf_id
+                colrev_pdf_id = colrev.qm.colrev_pdf_id.get_pdf_hash(
+                    pdf_path=Path(pdf_path),
+                    page_nr=1,
+                    hash_size=32,
+                )
+                new_record = local_index.retrieve_based_on_colrev_pdf_id(
+                    colrev_pdf_id="cpid1:" + colrev_pdf_id
+                )
+                new_record["file"] = str(pdf_path)
+                # Note : an alternative to replacing all data with the curated version
+                # is to just add the curation_ID
+                # (and retrieve the curated metadata separately/non-redundantly)
+            else:
+                new_record = self.__get_grobid_metadata(
+                    search_operation=search_operation, pdf_path=pdf_path
+                )
+        except (
+            colrev_exceptions.PDFHashError,
+            colrev_exceptions.RecordNotInIndexException,
+        ):
+            # otherwise, get metadata from grobid (indexing)
+            new_record = self.__get_grobid_metadata(
+                search_operation=search_operation, pdf_path=pdf_path
+            )
+
+        new_record = self.__add_md_string(record_dict=new_record)
+
+        # Note: identical md_string as a heuristic for duplicates
+        potential_duplicates = [
+            r
+            for r in pdfs_dir_feed.feed_records.values()
+            if r["md_string"] == new_record["md_string"]
+            and not r["file"] == new_record["file"]
+        ]
+        if potential_duplicates:
+            self.review_manager.logger.warning(
+                f" {colors.RED}skip record (PDF potential duplicate): "
+                f"{new_record['file']} {colors.END} "
+                f"({','.join([r['file'] for r in potential_duplicates])})"
+            )
+            return new_record
+
+        try:
+            pdfs_dir_feed.set_id(record_dict=new_record)
+        except colrev_exceptions.NotFeedIdentifiableException:
+            return new_record
+        return new_record
+
+    def __print_run_search_stats(
+        self, *, records: dict, nr_added: int, nr_changed: int
+    ) -> None:
+        if nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if self.review_manager.force_mode:
+            if nr_changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                )
+            else:
+                if records:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
+
+    def __get_pdf_batches(self) -> list:
+        pdfs_to_index = [
+            x.relative_to(self.review_manager.path)
+            for x in self.pdfs_path.glob("**/*.pdf")
+        ]
+
+        pdf_batches = [
+            pdfs_to_index[i * self.__batch_size : (i + 1) * self.__batch_size]
+            for i in range(
+                (len(pdfs_to_index) + self.__batch_size - 1) // self.__batch_size
+            )
+        ]
+        return pdf_batches
+
+    def __run_pdfs_dir_search(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        records: dict,
+        pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index: colrev.env.local_index.LocalIndex,
+        linked_pdf_paths: list,
+        rerun: bool,
+    ) -> None:
+        nr_added, nr_changed = 0, 0
+        for pdf_batch in self.__get_pdf_batches():
+            for record in pdfs_dir_feed.feed_records.values():
+                record = self.__add_md_string(record_dict=record)
+
+            for pdf_path in pdf_batch:
+                new_record = self.__index_pdf(
+                    pdf_path=pdf_path,
+                    search_operation=search_operation,
+                    pdfs_dir_feed=pdfs_dir_feed,
+                    linked_pdf_paths=linked_pdf_paths,
+                    local_index=local_index,
+                )
+                if new_record == {}:
+                    continue
+
+                prev_record_dict_version = pdfs_dir_feed.feed_records.get(
+                    new_record["ID"], {}
+                )
+
+                added = pdfs_dir_feed.add_record(
+                    record=colrev.record.Record(data=new_record),
+                )
+                if added:
+                    nr_added += 1
+                    self.__add_doi_from_pdf_if_not_available(record_dict=new_record)
+
+                elif self.review_manager.force_mode:
+                    # Note : only re-index/update
+                    if search_operation.update_existing_record(
+                        records=records,
+                        record_dict=new_record,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=rerun,
+                    ):
+                        nr_changed += 1
+
+            for record in pdfs_dir_feed.feed_records.values():
+                record.pop("md_string")
+
+            pdfs_dir_feed.save_feed_file()
+
+        self.__print_run_search_stats(
+            records=records, nr_added=nr_added, nr_changed=nr_changed
+        )
+
+    def __add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
+        if "doi" in record_dict:
+            return
+        record = colrev.record.Record(data=record_dict)
+        record.set_text_from_pdf(project_path=self.review_manager.path)
+        res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
+        if res:
+            record.data["doi"] = res[0].upper()
+        del record.data["text_from_pdf"]
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
 
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
         # Do not run in continuous-integration environment
         if search_operation.review_manager.in_ci_environment():
             return
+
+        if search_operation.review_manager.force_mode:  # i.e., reindex all
+            search_operation.review_manager.logger.info("Reindex all")
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
@@ -470,171 +659,28 @@ class PDFSearchSource(JsonSchemaMixin):
                 search_operation=search_operation
             )
 
+        grobid_service = self.review_manager.get_grobid_service()
+        grobid_service.start()
+
+        local_index = self.review_manager.get_local_index()
+
+        records = self.review_manager.dataset.load_records_dict()
         pdfs_dir_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
-        grobid_service = search_operation.review_manager.get_grobid_service()
-        grobid_service.start()
-
-        local_index = search_operation.review_manager.get_local_index()
-
-        pdfs_to_index = [
-            x.relative_to(search_operation.review_manager.path)
-            for x in self.pdfs_path.glob("**/*.pdf")
-        ]
-
         linked_pdf_paths = [Path(r["file"]) for r in records.values() if "file" in r]
 
-        if search_operation.review_manager.force_mode:  # i.e., reindex all
-            search_operation.review_manager.logger.info("Reindex all")
-
-        batch_size = 20
-        pdf_batches = [
-            pdfs_to_index[i * batch_size : (i + 1) * batch_size]
-            for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
-        ]
-        nr_added, nr_changed = 0, 0
-        for pdf_batch in pdf_batches:
-            for record in pdfs_dir_feed.feed_records.values():
-                record = self.__add_md_string(record_dict=record)
-
-            for pdf_path in pdf_batch:
-                if self.__is_broken_filepath(pdf_path=pdf_path):
-                    continue
-
-                if search_operation.review_manager.force_mode:
-                    # i.e., reindex all
-                    pass
-                else:
-                    # note: for curations, we want all pdfs indexed/merged separately,
-                    # in other projects, it is generally sufficient if the pdf is linked
-                    if not self.review_manager.settings.is_curated_masterdata_repo():
-                        if pdf_path in linked_pdf_paths:
-                            # Otherwise: skip linked PDFs
-                            continue
-
-                    if pdf_path in [
-                        Path(r["file"])
-                        for r in pdfs_dir_feed.feed_records.values()
-                        if "file" in r
-                    ]:
-                        continue
-
-                search_operation.review_manager.logger.info(
-                    f" extract metadata from {pdf_path}"
-                )
-                try:
-                    if (
-                        not search_operation.review_manager.settings.is_curated_masterdata_repo()
-                    ):
-                        # retrieve_based_on_colrev_pdf_id
-                        colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(
-                            pdf_path=Path(pdf_path)
-                        )
-                        new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                            colrev_pdf_id=colrev_pdf_id
-                        )
-                        new_record["file"] = str(pdf_path)
-                        # Note : an alternative to replacing all data with the curated version
-                        # is to just add the curation_ID
-                        # (and retrieve the curated metadata separately/non-redundantly)
-                    else:
-                        new_record = self.__get_grobid_metadata(
-                            search_operation=search_operation, pdf_path=pdf_path
-                        )
-                except (
-                    colrev_exceptions.PDFHashError,
-                    colrev_exceptions.RecordNotInIndexException,
-                ):
-                    # otherwise, get metadata from grobid (indexing)
-                    new_record = self.__get_grobid_metadata(
-                        search_operation=search_operation, pdf_path=pdf_path
-                    )
-
-                new_record = self.__add_md_string(record_dict=new_record)
-
-                # Note: identical md_string as a heuristic for duplicates
-                potential_duplicates = [
-                    r
-                    for r in pdfs_dir_feed.feed_records.values()
-                    if r["md_string"] == new_record["md_string"]
-                    and not r["file"] == new_record["file"]
-                ]
-                if potential_duplicates:
-                    search_operation.review_manager.logger.warning(
-                        f" {colors.RED}skip record (PDF potential duplicate): "
-                        f"{new_record['file']} {colors.END} "
-                        f"({','.join([r['file'] for r in potential_duplicates])})"
-                    )
-                    continue
-
-                try:
-                    pdfs_dir_feed.set_id(record_dict=new_record)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    continue
-
-                prev_record_dict_version = {}
-                if new_record["ID"] in pdfs_dir_feed.feed_records:
-                    prev_record_dict_version = pdfs_dir_feed.feed_records[
-                        new_record["ID"]
-                    ]
-
-                added = pdfs_dir_feed.add_record(
-                    record=colrev.record.Record(data=new_record),
-                )
-                if added:
-                    nr_added += 1
-
-                    if "doi" not in new_record:
-                        record = colrev.record.Record(data=new_record)
-                        record.set_text_from_pdf(
-                            project_path=search_operation.review_manager.path
-                        )
-                        res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
-                        if res:
-                            record.data["doi"] = res[0].upper()
-                        del record.data["text_from_pdf"]
-
-                elif search_operation.review_manager.force_mode:
-                    # Note : only re-index/update
-                    changed = search_operation.update_existing_record(
-                        records=records,
-                        record_dict=new_record,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        nr_changed += 1
-
-            for record in pdfs_dir_feed.feed_records.values():
-                record.pop("md_string")
-
-            pdfs_dir_feed.save_feed_file()
-
-        if nr_added > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
-            )
-        else:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if search_operation.review_manager.force_mode:
-            if nr_changed > 0:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    search_operation.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
+        self.__run_pdfs_dir_search(
+            search_operation=search_operation,
+            records=records,
+            pdfs_dir_feed=pdfs_dir_feed,
+            linked_pdf_paths=linked_pdf_paths,
+            local_index=local_index,
+            rerun=rerun,
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

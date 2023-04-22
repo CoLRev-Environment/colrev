@@ -41,4 +41,3 @@
    colrev.service
    colrev.settings
    colrev.ui_cli
-   colrev.ui_web

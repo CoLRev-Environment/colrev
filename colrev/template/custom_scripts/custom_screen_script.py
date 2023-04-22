@@ -50,7 +50,7 @@ class CustomScreen:
 
             record = colrev.record.Record(data=record_dict)
 
-            if random.random() < 0.5:
+            if random.random() < 0.5:  # nosec
                 if screening_criteria_available:
                     # record criteria
                     pass

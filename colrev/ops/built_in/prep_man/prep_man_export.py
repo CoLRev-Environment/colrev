@@ -17,13 +17,14 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
+# pylint: disable=duplicate-code
+# pylint: disable=too-few-public-methods
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
         import colrev.ops.prep_man
-
-# pylint: disable=too-few-public-methods
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
@@ -31,6 +32,7 @@ if False:  # pylint: disable=using-constant-test
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
+    settings: ExportManPrepSettings
     ci_supported: bool = False
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")

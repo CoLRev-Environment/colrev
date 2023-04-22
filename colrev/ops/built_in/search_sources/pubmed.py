@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-import xml.etree.ElementTree as ET
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
@@ -11,18 +10,24 @@ from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
 from urllib.parse import urlparse
+from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
+import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from defusedxml.lxml import fromstring
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
+
+defusedxml.defuse_stdlib()
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -115,7 +120,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
 
             filename = search_operation.get_unique_filename(
-                file_path_string=f"pubmed_{query}"
+                file_path_string=f"pubmed_{query.replace('&sort=', '')}"
             )
             query = (
                 "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
@@ -189,98 +194,96 @@ class PubMedSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
 
     @classmethod
-    def __pubmed_xml_to_record(cls, *, root: Element) -> dict:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-nested-blocks
+    def __get_author_string_from_node(cls, *, author_node: Element) -> str:
+        authors_string = ""
+        author_last_name_node = author_node.find("LastName")
+        if author_last_name_node is not None:
+            if author_last_name_node.text is not None:
+                authors_string += author_last_name_node.text
+        author_fore_name_node = author_node.find("ForeName")
+        if author_fore_name_node is not None:
+            if author_fore_name_node.text is not None:
+                authors_string += ", "
+                authors_string += author_fore_name_node.text
+        return authors_string
 
+    @classmethod
+    def __get_author_string(cls, *, root) -> str:  # type: ignore
+        authors_list = []
+        for author_node in root.xpath(
+            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/AuthorList/Author"
+        ):
+            authors_list.append(
+                cls.__get_author_string_from_node(author_node=author_node)
+            )
+        return " and ".join(authors_list)
+
+    @classmethod
+    def __get_title_string(cls, *, root) -> str:  # type: ignore
+        title = root.xpath(
+            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
+        )
+        if title:
+            title = title[0].text.strip().rstrip(".")
+        return title
+
+    @classmethod
+    def __get_abstract_string(cls, *, root) -> str:  # type: ignore
+        abstract = root.xpath(
+            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Abstract"
+        )
+        if abstract:
+            return ElementTree.tostring(abstract[0], encoding="unicode")
+        return ""
+
+    @classmethod
+    def __pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
         retrieved_record_dict: dict = {"ENTRYTYPE": "misc"}
 
         pubmed_article = root.find("PubmedArticle")
-        item = None
-        if pubmed_article is not None:
-            item = pubmed_article.find("MedlineCitation")
-        if item is not None:
-            article_node = item.find("Article")
-        else:
+        if pubmed_article is None:
+            return {}
+        if pubmed_article.find("MedlineCitation") is None:
             return {}
 
-        authors_string = ""
-        if article_node is not None:
-            author_list_node = article_node.find("AuthorList")
-            if author_list_node is not None:
-                author_nodes = author_list_node.findall("Author")
-                if author_nodes is not None:
-                    for author_node in author_nodes:
-                        if author_node is not None:
-                            author_last_name_node = author_node.find("LastName")
-                            if author_last_name_node is not None:
-                                if author_last_name_node.text is not None:
-                                    authors_string += author_last_name_node.text
-                            author_fore_name_node = author_node.find("ForeName")
-                            if author_fore_name_node is not None:
-                                if author_fore_name_node.text is not None:
-                                    authors_string += ", "
-                                    authors_string += author_fore_name_node.text
-                            authors_string += " and "
-        authors_string = authors_string.rstrip(" and ")
-        retrieved_record_dict.update(author=authors_string)
+        retrieved_record_dict.update(title=cls.__get_title_string(root=root))
+        retrieved_record_dict.update(author=cls.__get_author_string(root=root))
 
-        if article_node is not None:
-            title_node = article_node.find("ArticleTitle")
-            if title_node is not None:
-                if title_node.text is not None:
-                    retrieved_record_dict.update(title=title_node.text.rstrip("."))
+        journal_path = "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Journal"
+        journal_name = root.xpath(journal_path + "/ISOAbbreviation")
+        if journal_name:
+            retrieved_record_dict.update(ENTRYTYPE="article")
+            retrieved_record_dict.update(journal=journal_name[0].text)
 
-        if article_node is not None:
-            journal_node = article_node.find("Journal")
-            if journal_node is not None:
-                journal_name_node = journal_node.find("ISOAbbreviation")
-                if journal_name_node is not None:
-                    if journal_name_node.text is not None:
-                        retrieved_record_dict.update(journal=journal_name_node.text)
-                        retrieved_record_dict.update(ENTRYTYPE="article")
-                journal_issue_node = journal_node.find("JournalIssue")
-                if journal_issue_node is not None:
-                    journal_volume_node = journal_issue_node.find("Volume")
-                    if journal_volume_node is not None:
-                        if journal_volume_node.text is not None:
-                            retrieved_record_dict.update(
-                                volume=journal_volume_node.text
-                            )
-                    journal_number_node = journal_issue_node.find("Issue")
-                    if journal_number_node is not None:
-                        if journal_number_node.text is not None:
-                            retrieved_record_dict.update(
-                                number=journal_number_node.text
-                            )
+        volume = root.xpath(journal_path + "/JournalIssue/Volume")
+        if volume:
+            retrieved_record_dict.update(volume=volume[0].text)
 
-                    pubdate_node = journal_issue_node.find("PubDate")
-                    if pubdate_node is not None:
-                        if pubdate_node.text is not None:
-                            retrieved_record_dict.update(year=pubdate_node.text)
+        number = root.xpath(journal_path + "/JournalIssue/Issue")
+        if number:
+            retrieved_record_dict.update(number=number[0].text)
 
-        if article_node is not None:
-            abstract_node = article_node.find("Abstract")
-            if abstract_node is not None:
-                if abstract_node.text is not None:
-                    retrieved_record_dict.update(abstract=abstract_node.text)
+        year = root.xpath(journal_path + "/JournalIssue/PubDate/Year")
+        if year:
+            retrieved_record_dict.update(year=year[0].text)
 
-        if pubmed_article is not None:
-            pubmed_data_node = pubmed_article.find("PubmedData")
-            if pubmed_data_node is not None:
-                article_id_node = pubmed_data_node.find("ArticleIdList")
-                if article_id_node is not None:
-                    for article_id_node_item in article_id_node:
-                        id_type = article_id_node_item.attrib.get("IdType")
-                        id_text = article_id_node_item.text
-                        if id_type is not None and id_text is not None:
-                            if id_type == "pubmed":
-                                id_type = "pubmedid"
-                            if id_type == "doi":
-                                id_text = id_text.upper()
-                            retrieved_record_dict[id_type] = id_text
+        retrieved_record_dict.update(volume=cls.__get_abstract_string(root=root))
+
+        article_id_list = root.xpath(
+            "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
+        )
+        for article_id in article_id_list[0]:
+            id_type = article_id.attrib.get("IdType")
+            if article_id.attrib.get("IdType") == "pubmed":
+                retrieved_record_dict.update(pubmedid=article_id.text.upper())
+            elif article_id.attrib.get("IdType") == "doi":
+                retrieved_record_dict.update(doi=article_id.text.upper())
+            else:
+                retrieved_record_dict[id_type] = article_id.text
+
+        retrieved_record_dict = {
+            k: v for k, v in retrieved_record_dict.items() if v != ""
+        }
 
         return retrieved_record_dict
 
@@ -299,7 +302,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # )
             return []
 
-        root = ET.fromstring(ret.text)
+        root = fromstring(str.encode(ret.text))
         return [
             x.text
             for x_el in root.findall("IdList")
@@ -311,7 +314,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         *,
         pubmed_id: str,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> dict:
         """Retrieve records from Pubmed based on a query"""
 
@@ -332,14 +335,14 @@ class PubMedSearchSource(JsonSchemaMixin):
                 # review_manager.logger.debug(
                 #     f"crossref_query failed with status {ret.status_code}"
                 # )
-                return {}
+                return {"pubmed_id": pubmed_id}
 
-            root = ET.fromstring(ret.text)
+            root = fromstring(str.encode(ret.text))
             retrieved_record = self.__pubmed_xml_to_record(root=root)
             if not retrieved_record:
-                return {}
+                return {"pubmed_id": pubmed_id}
         except requests.exceptions.RequestException:
-            return {}
+            return {"pubmed_id": pubmed_id}
         # pylint: disable=duplicate-code
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -478,7 +481,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 yield self.__pubmed_query_id(pubmed_id=pubmed_id)
 
             retstart += 20
-            # input(pubmed_ids)
 
     def __run_parameter_search(
         self,
@@ -503,6 +505,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
                     "title", ""
                 ):
+                    search_operation.review_manager.logger.warning(
+                        f"Skipped record: {record_dict}"
+                    )
                     continue
                 try:
                     pubmed_feed.set_id(record_dict=record_dict)
@@ -692,6 +697,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 del record["create_date"]
             if record.get("journal", "") != "":
                 record["ENTRYTYPE"] = "article"
+            if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
+                del record["pii"]
 
         return records
 

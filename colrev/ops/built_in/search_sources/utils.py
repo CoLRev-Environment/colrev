@@ -5,9 +5,10 @@ from __future__ import annotations
 import html
 import re
 
+# pylint: disable=duplicate-code
+
 
 def __get_year(*, item: dict) -> str:
-    year = ""
     try:
         if "published-print" in item:
             date_parts = item["published-print"]["date-parts"]
@@ -15,6 +16,8 @@ def __get_year(*, item: dict) -> str:
             date_parts = item["published"]["date-parts"]
         elif "published-online" in item:
             date_parts = item["published-online"]["date-parts"]
+        else:
+            return ""
         year = str(date_parts[0][0])
     except KeyError:
         pass
@@ -58,9 +61,9 @@ def __item_to_record(*, item: dict) -> dict:
         item["title"] = str(item["title"][0])
     assert isinstance(item["title"], str)
 
-    if isinstance(item["container-title"], list):
+    if isinstance(item.get("container-title", ""), list):
         item["container-title"] = item["container-title"][0]
-    assert isinstance(item["container-title"], str)
+    assert isinstance(item.get("container-title", ""), str)
 
     item["ENTRYTYPE"] = "misc"
     if item.get("type", "NA") == "journal-article":

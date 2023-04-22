@@ -44,7 +44,7 @@ class CustomPrescreen:
         """Prescreen the record"""
 
         for record in records.values():
-            if random.random() < 0.5:
+            if random.random() < 0.5:  # nosec
                 prescreen_operation.prescreen(
                     record=colrev.record.Record(data=record), prescreen_inclusion=True
                 )

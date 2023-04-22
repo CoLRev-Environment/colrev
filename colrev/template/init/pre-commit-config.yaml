@@ -31,8 +31,3 @@ repos:
         language: python
         stages: [push]
         pass_filenames: false
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
-    hooks:
-    -   id: check-yaml
-        stages: [commit]

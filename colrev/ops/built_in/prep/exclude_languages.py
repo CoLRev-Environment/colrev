@@ -6,7 +6,6 @@ import re
 import statistics
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -73,7 +72,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return True
         return False
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument

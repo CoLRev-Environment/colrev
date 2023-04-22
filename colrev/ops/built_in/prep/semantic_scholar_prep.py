@@ -6,7 +6,6 @@ import json
 from dataclasses import dataclass
 
 import requests
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -132,7 +131,6 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
         return record
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:

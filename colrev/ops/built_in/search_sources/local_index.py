@@ -373,31 +373,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def get_masterdata(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        save_feed: bool = True,
-        timeout: int = 10,
-    ) -> colrev.record.Record:
-        """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-return-statements
-
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
-            # Already linked to a local-index record
-            return record
-
-        retrieved_record_dict = {}
-        added_colrev_pdf_id = False
+    def __add_cpid(self, *, record: colrev.record.Record) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
         if "file" in record.data and "colrev_pdf_id" not in record.data:
-            pdf_path = Path(
-                prep_operation.review_manager.path / Path(record.data["file"])
-            )
+            pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
             if pdf_path.is_file():
                 try:
                     record.data.update(
@@ -405,10 +384,34 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                             pdf_path=pdf_path,
                         )
                     )
-                    added_colrev_pdf_id = True
+                    return True
                 except colrev_exceptions.PDFHashError:
                     pass
+        return False
 
+    def __set_not_in_toc_info(
+        self, *, record: colrev.record.Record, toc_key: str
+    ) -> None:
+        record.set_status(
+            target_state=colrev.record.RecordState.md_needs_manual_preparation
+        )
+        if "journal" in record.data:
+            record.add_masterdata_provenance_note(
+                key="journal", note=f"record_not_in_toc {toc_key}"
+            )
+        elif "booktitle" in record.data:
+            record.add_masterdata_provenance_note(
+                key="booktitle", note=f"record_not_in_toc {toc_key}"
+            )
+
+    def __retrieve_record_from_local_index(
+        self,
+        *,
+        record: colrev.record.Record,
+        added_colrev_pdf_id: bool,
+        retrieval_similarity: float,
+    ) -> colrev.record.Record:
+        retrieved_record_dict = {}
         try:
             retrieved_record_dict = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
@@ -421,21 +424,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
                     record_dict=record.data,
-                    similarity_threshold=prep_operation.retrieval_similarity,
+                    similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
             except colrev_exceptions.RecordNotInTOCException as exc:
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                if "journal" in record.data:
-                    record.add_masterdata_provenance_note(
-                        key="journal", note=f"record_not_in_toc {exc.toc_key}"
-                    )
-                elif "booktitle" in record.data:
-                    record.add_masterdata_provenance_note(
-                        key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
-                    )
+                self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
                 return record
 
             except colrev_exceptions.RecordNotInIndexException:
@@ -443,22 +436,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     # Search across table-of-contents in local_index
                     retrieved_record_dict = self.local_index.retrieve_from_toc(
                         record_dict=record.data,
-                        similarity_threshold=prep_operation.retrieval_similarity,
+                        similarity_threshold=retrieval_similarity,
                         include_file=False,
                         search_across_tocs=True,
                     )
                 except colrev_exceptions.RecordNotInTOCException as exc:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_needs_manual_preparation
-                    )
-                    if "journal" in record.data:
-                        record.add_masterdata_provenance_note(
-                            key="journal", note=f"record_not_in_toc {exc.toc_key}"
-                        )
-                    elif "booktitle" in record.data:
-                        record.add_masterdata_provenance_note(
-                            key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
-                        )
+                    self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
                     return record
                 except (colrev_exceptions.RecordNotInIndexException,):
                     return record
@@ -468,9 +451,89 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if added_colrev_pdf_id:
                 del record.data["colrev_pdf_id"]
 
-        retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
-        if "colrev_status" in retrieved_record.data:
-            del retrieved_record.data["colrev_status"]
+        if "colrev_status" in retrieved_record_dict:
+            del retrieved_record_dict["colrev_status"]
+
+        return colrev.record.PrepRecord(data=retrieved_record_dict)
+
+    def __store_retrieved_record_in_feed(
+        self,
+        *,
+        record: colrev.record.Record,
+        default_source: str,
+        prep_operation: colrev.ops.prep.Prep,
+    ) -> None:
+        try:
+            # lock: to prevent different records from having the same origin
+            self.local_index_lock.acquire(timeout=60)
+
+            # Note : need to reload file because the object is not shared between processes
+            local_index_feed = self.search_source.get_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=False,
+            )
+
+            local_index_feed.set_id(record_dict=record.data)
+            local_index_feed.add_record(record=record)
+
+            record.remove_field(key="curation_ID")
+            record.merge(
+                merging_record=record,
+                default_source=default_source,
+            )
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            if record.data.get("prescreen_exclusion", "NA") == "retracted":
+                record.prescreen_exclude(reason="retracted")
+
+            git_repo = self.review_manager.dataset.get_repo()
+            cur_project_source_paths = [str(self.review_manager.path)]
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+                    shared_url = shared_url.rstrip(".git")
+                    cur_project_source_paths.append(shared_url)
+                    break
+
+            try:
+                local_index_feed.save_feed_file()
+                # extend fields_to_keep (to retrieve all fields from the index)
+                for key in record.data.keys():
+                    if key not in prep_operation.fields_to_keep:
+                        prep_operation.fields_to_keep.append(key)
+
+            except OSError:
+                pass
+
+            self.local_index_lock.release()
+
+        except (
+            colrev_exceptions.InvalidMerge,
+            colrev_exceptions.NotFeedIdentifiableException,
+        ):
+            self.local_index_lock.release()
+
+    def get_masterdata(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
+
+        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+            # Already linked to a local-index record
+            return record
+
+        # add colrev_pdf_id
+        added_colrev_pdf_id = self.__add_cpid(record=record)
+
+        retrieved_record = self.__retrieve_record_from_local_index(
+            record=record,
+            added_colrev_pdf_id=added_colrev_pdf_id,
+            retrieval_similarity=prep_operation.retrieval_similarity,
+        )
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
@@ -486,55 +549,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     "CURATED"
                 ]["source"]
 
-        try:
-            # lock: to prevent different records from having the same origin
-            self.local_index_lock.acquire(timeout=60)
-
-            # Note : need to reload file because the object is not shared between processes
-            local_index_feed = self.search_source.get_feed(
-                review_manager=prep_operation.review_manager,
-                source_identifier=self.source_identifier,
-                update_only=False,
-            )
-
-            local_index_feed.set_id(record_dict=retrieved_record.data)
-            local_index_feed.add_record(record=retrieved_record)
-
-            retrieved_record.remove_field(key="curation_ID")
-            record.merge(
-                merging_record=retrieved_record,
-                default_source=default_source,
-            )
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if retrieved_record.data.get("prescreen_exclusion", "NA") == "retracted":
-                record.prescreen_exclude(reason="retracted")
-
-            git_repo = prep_operation.review_manager.dataset.get_repo()
-            cur_project_source_paths = [str(prep_operation.review_manager.path)]
-            for remote in git_repo.remotes:
-                if remote.url:
-                    shared_url = remote.url
-                    shared_url = shared_url.rstrip(".git")
-                    cur_project_source_paths.append(shared_url)
-                    break
-
-            try:
-                local_index_feed.save_feed_file()
-                # extend fields_to_keep (to retrieve all fields from the index)
-                for key in retrieved_record.data.keys():
-                    if key not in prep_operation.fields_to_keep:
-                        prep_operation.fields_to_keep.append(key)
-
-            except OSError:
-                pass
-
-            self.local_index_lock.release()
-
-        except (
-            colrev_exceptions.InvalidMerge,
-            colrev_exceptions.NotFeedIdentifiableException,
-        ):
-            self.local_index_lock.release()
+        self.__store_retrieved_record_in_feed(
+            record=retrieved_record,
+            default_source=default_source,
+            prep_operation=prep_operation,
+        )
 
         return record
 

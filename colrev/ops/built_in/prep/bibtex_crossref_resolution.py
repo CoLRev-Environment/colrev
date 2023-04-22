@@ -11,15 +11,15 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
+# pylint: disable=duplicate-code
+# pylint: disable=too-few-public-methods
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
         import colrev.ops.prep
         import colrev.env.local_index
-
-# pylint: disable=too-few-public-methods
-# pylint: disable=duplicate-code
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)

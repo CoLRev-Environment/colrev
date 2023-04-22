@@ -36,3 +36,4 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeAuto
    .. autosummary::
 
       ~ActiveLearningDedupeAutomated.ci_supported
+      ~ActiveLearningDedupeAutomated.settings

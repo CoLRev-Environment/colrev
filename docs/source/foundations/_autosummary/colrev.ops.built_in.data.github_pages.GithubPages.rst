@@ -40,3 +40,4 @@ colrev.ops.built\_in.data.github\_pages.GithubPages
 
       ~GithubPages.GH_PAGES_BRANCH_NAME
       ~GithubPages.ci_supported
+      ~GithubPages.settings

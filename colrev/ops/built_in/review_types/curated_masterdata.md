@@ -37,7 +37,7 @@ colrev search -a "crossref:jissn=123456"
 
 ### Data extraction and synthesis
 
-- For manuscript development see [separate page for Word/Tex/Md, Reference Managers]
+- For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
 ## Software recommendations
 

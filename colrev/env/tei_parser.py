@@ -5,10 +5,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Optional
+from xml import etree
 from xml.etree.ElementTree import Element
 
+import defusedxml
 import requests
-from lxml import etree
+from defusedxml.ElementTree import fromstring
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -21,6 +23,10 @@ import colrev.record
 # abstract_node =tree.xpath("//tei:profileDesc/tei:abstract",
 # namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
 # etree.tostring(abstract_node[0]).decode("utf-8")
+
+
+# defuse std xml lib
+defusedxml.defuse_stdlib()
 
 
 class TEIParser:
@@ -81,7 +87,7 @@ class TEIParser:
         if b"[BAD_INPUT_DATA]" in xslt_content[:100]:
             raise colrev_exceptions.TEIException()
 
-        return etree.XML(xslt_content)
+        return etree.ElementTree.XML(xslt_content)
 
     def __create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
@@ -91,9 +97,7 @@ class TEIParser:
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
         # if we do it in the colrev process
-        options = {}
-        options["consolidateHeader"] = "0"
-        options["consolidateCitations"] = "0"
+        options = {"consolidateHeader": "0", "consolidateCitations": "0"}
 
         # Note: Grobid offers direct export of Bibtex:
         # r = requests.post(
@@ -123,7 +127,7 @@ class TEIParser:
             if b"[TIMEOUT]" in ret.content:
                 raise colrev_exceptions.TEITimeoutException()
 
-            self.root = etree.fromstring(ret.content)
+            self.root = fromstring(ret.content)
 
             if self.tei_path is not None:
                 self.tei_path.parent.mkdir(exist_ok=True, parents=True)
@@ -133,18 +137,18 @@ class TEIParser:
                 # Note : reopen/write to prevent format changes in the enhancement
                 with open(self.tei_path, "rb") as file:
                     xml_fstring = file.read()
-                self.root = etree.fromstring(xml_fstring)
+                self.root = fromstring(xml_fstring)
 
-                tree = etree.ElementTree(self.root)
-                tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
+                tree = etree.ElementTree.ElementTree(self.root)
+                tree.write(str(self.tei_path), encoding="utf-8")
         except requests.exceptions.ConnectionError as exc:
             print(exc)
             print(str(self.pdf_path))
 
     def get_tei_str(self) -> str:
         """Get the TEI string"""
-
-        return etree.tostring(self.root).decode("utf-8")
+        etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
+        return etree.ElementTree.tostring(self.root).decode("utf-8")
 
     def get_grobid_version(self) -> str:
         """Get the GROBID version used for TEI creation"""
@@ -405,7 +409,7 @@ class TEIParser:
             abstract_node = profile_description.find(
                 ".//" + self.ns["tei"] + "abstract"
             )
-            html_str = etree.tostring(abstract_node).decode("utf-8")
+            html_str = etree.ElementTree.tostring(abstract_node).decode("utf-8")
             abstract_text = cleanhtml(html_str)
         abstract_text = abstract_text.lstrip().rstrip()
         return abstract_text
@@ -768,7 +772,7 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                except etree.XMLSyntaxError:
+                except etree.ElementTree.ParseError:
                     continue
 
                 ref_rec = {k: v for k, v in ref_rec.items() if v is not None}
@@ -780,16 +784,18 @@ class TEIParser:
     def get_citations_per_section(self) -> dict:
         """Get a dict of section-names and list-of-citations"""
         section_citations = {}
-        sections = self.root.iter(self.ns["tei"] + "head")
+        parent_map = {c: p for p in self.root.iter() for c in p}
+        sections = self.root.iter(f'{self.ns["tei"]}head')
         for section in sections:
             section_name = section.text
             if section_name is None:
                 continue
-            citation_nodes = section.getparent().iter(self.ns["tei"] + "ref")
+            parent = parent_map[section]
+            citation_nodes = parent.findall(f'.//{self.ns["tei"]}ref')
             citations = [
                 x.get("target", "NA").replace("#", "")
                 for x in citation_nodes
-                if "bibr" == x.get("type", "NA")
+                if x.get("type", "NA") == "bibr"
             ]
             citations = list(filter(lambda a: a != "NA", citations))
             if len(citations) > 0:
@@ -823,13 +829,13 @@ class TEIParser:
                 continue
 
             # Record found: mark in tei
-            bibliography = self.root.find(".//" + self.ns["tei"] + "listBibl")
+            bibliography = self.root.find(f".//{self.ns['tei']}listBibl")
             # mark reference in bibliography
             for ref in bibliography:
-                if ref.get(self.ns["w3"] + "id") == record_dict["tei_id"]:
+                if ref.get(f'{self.ns["w3"]}id') == record_dict["tei_id"]:
                     ref.set("ID", max_sim_record["ID"])
             # mark reference in in-text citations
-            for reference in self.root.iter(self.ns["tei"] + "ref"):
+            for reference in self.root.iter(f'{self.ns["tei"]}ref'):
                 if "target" in reference.keys():
                     if reference.get("target") == f"#{record_dict['tei_id']}":
                         reference.set("ID", max_sim_record["ID"])
@@ -837,8 +843,8 @@ class TEIParser:
             # if settings file available: dedupe_io match agains records
 
         if self.tei_path:
-            tree = etree.ElementTree(self.root)
-            tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
+            tree = etree.ElementTree.ElementTree(self.root)
+            tree.write(str(self.tei_path))
 
         return self.root
 

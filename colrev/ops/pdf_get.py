@@ -401,10 +401,54 @@ class PDFGet(colrev.operation.Operation):
 
         return records
 
+    def __rename_pdf(
+        self,
+        *,
+        record_dict: dict,
+        file: Path,
+        new_filename: Path,
+        pdfs_search_file: Path,
+    ) -> None:
+        record_dict["file"] = new_filename
+
+        if "colrev_masterdata_provenance" in record_dict:
+            for value in record_dict["colrev_masterdata_provenance"].values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
+
+        if "data_provenance" in record_dict:
+            for value in record_dict["data_provenance"].values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
+
+        if pdfs_search_file.is_file():
+            colrev.env.utils.inplace_change(
+                filename=pdfs_search_file,
+                old_string="{" + str(file) + "}",
+                new_string="{" + str(new_filename) + "}",
+            )
+
+        if not file.is_file():
+            corrected_path = Path(str(file).replace("  ", " "))
+            if corrected_path.is_file():
+                file = corrected_path
+
+        if file.is_file():
+            file.rename(new_filename)
+        elif file.is_symlink():
+            os.rename(str(file), str(new_filename))
+
+        record_dict["file"] = str(new_filename)
+        self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
+        if (
+            colrev.record.RecordState.rev_prescreen_included
+            == record_dict["colrev_status"]
+        ):
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+
     def rename_pdfs(self) -> None:
         """Rename the PDFs"""
-
-        # pylint: disable=too-many-branches
 
         self.review_manager.logger.info("Rename PDFs")
 
@@ -433,43 +477,12 @@ class PDFGet(colrev.operation.Operation):
             if str(file) == str(new_filename):
                 continue
 
-            record_dict["file"] = new_filename
-
-            if "colrev_masterdata_provenance" in record_dict:
-                for value in record_dict["colrev_masterdata_provenance"].values():
-                    if str(file) == value.get("source", ""):
-                        value["source"] = str(new_filename)
-
-            if "data_provenance" in record_dict:
-                for value in record_dict["data_provenance"].values():
-                    if str(file) == value.get("source", ""):
-                        value["source"] = str(new_filename)
-
-            if pdfs_search_file.is_file():
-                colrev.env.utils.inplace_change(
-                    filename=pdfs_search_file,
-                    old_string="{" + str(file) + "}",
-                    new_string="{" + str(new_filename) + "}",
-                )
-
-            if not file.is_file():
-                corrected_path = Path(str(file).replace("  ", " "))
-                if corrected_path.is_file():
-                    file = corrected_path
-
-            if file.is_file():
-                file.rename(new_filename)
-            elif file.is_symlink():
-                os.rename(str(file), str(new_filename))
-
-            record_dict["file"] = str(new_filename)
-            self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
-            if (
-                colrev.record.RecordState.rev_prescreen_included
-                == record_dict["colrev_status"]
-            ):
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+            self.__rename_pdf(
+                record_dict=record_dict,
+                file=file,
+                new_filename=new_filename,
+                pdfs_search_file=pdfs_search_file,
+            )
 
         self.review_manager.dataset.save_records_dict(records=records)
 

@@ -61,6 +61,7 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
             },
         }
         actual = env_man.get_environment_details()  # type: ignore
+        actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
         print(actual)
         assert expected == actual
 

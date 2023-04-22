@@ -10,6 +10,7 @@ from random import randint
 from typing import Optional
 
 import requests
+import timeout_decorator
 from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
@@ -167,6 +168,101 @@ class Search(colrev.operation.Operation):
                 return True
         return changed
 
+    def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
+        for main_record_dict in records.values():
+            if origin in main_record_dict["colrev_origin"]:
+                return main_record_dict
+        return {}
+
+    def __update_existing_record_retract(
+        self, *, record: colrev.record.Record, main_record_dict: dict
+    ) -> bool:
+        if record.check_potential_retracts():
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Found paper retract: "
+                f"{main_record_dict['ID']}{colors.END}"
+            )
+            main_record = colrev.record.Record(data=main_record_dict)
+            main_record.prescreen_exclude(reason="retracted", print_warning=True)
+            main_record.remove_field(key="warning")
+            return True
+        return False
+
+    def __update_existing_record_forthcoming(
+        self, *, record: colrev.record.Record, main_record_dict: dict
+    ) -> None:
+        if "forthcoming" == main_record_dict.get(
+            "year", ""
+        ) and "forthcoming" != record.data.get("year", ""):
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Update published forthcoming paper: "
+                f"{record.data['ID']}{colors.END}"
+            )
+            # prepared_record = crossref_prep.prepare(prep_operation, record)
+            main_record_dict["year"] = record.data["year"]
+            record = colrev.record.PrepRecord(data=main_record_dict)
+
+    def __update_existing_record_fields(
+        self,
+        *,
+        record_dict: dict,
+        main_record_dict: dict,
+        prev_record_dict_version: dict,
+        update_time_variant_fields: bool,
+        origin: str,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        for key, value in record_dict.items():
+            if (
+                not update_time_variant_fields
+                and key in colrev.record.Record.time_variant_fields
+            ):
+                continue
+
+            if key in ["curation_ID"]:
+                continue
+
+            if key in colrev.record.Record.provenance_keys + ["ID"]:
+                continue
+
+            if key not in main_record_dict:
+                if key in main_record_dict.get("colrev_masterdata_provenance", {}):
+                    if (
+                        main_record_dict["colrev_masterdata_provenance"][key]["source"]
+                        == "colrev_curation.masterdata_restrictions"
+                        and main_record_dict["colrev_masterdata_provenance"][key][
+                            "note"
+                        ]
+                        == "not_missing"
+                    ):
+                        continue
+                main_record = colrev.record.Record(data=main_record_dict)
+                main_record.update_field(
+                    key=key,
+                    value=value,
+                    source=origin,
+                    keep_source_if_equal=True,
+                    append_edit=False,
+                )
+            else:
+                if source.get_origin_prefix() != "md_curated.bib":
+                    if prev_record_dict_version.get(key, "NA") != main_record_dict.get(
+                        key, "OTHER"
+                    ):
+                        continue
+                main_record = colrev.record.Record(data=main_record_dict)
+                if value.replace(" - ", ": ") == main_record.data[key].replace(
+                    " - ", ": "
+                ):
+                    continue
+                main_record.update_field(
+                    key=key,
+                    value=value,
+                    source=origin,
+                    keep_source_if_equal=True,
+                    append_edit=False,
+                )
+
     def update_existing_record(
         self,
         *,
@@ -178,129 +274,64 @@ class Search(colrev.operation.Operation):
     ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-
-        changed = False
-
         origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
-        for main_record_dict in records.values():
-            if origin not in main_record_dict["colrev_origin"]:
-                continue
+        main_record_dict = self.__get_record_based_on_origin(
+            origin=origin, records=records
+        )
 
-            # TBD: in curated masterdata repositories?
+        if main_record_dict == {}:
+            self.review_manager.logger.debug(f"Could not update {record_dict['ID']}")
+            return False
 
-            record = colrev.record.Record(data=record_dict)
-            if record.check_potential_retracts():
+        # TBD: in curated masterdata repositories?
+
+        record = colrev.record.Record(data=record_dict)
+        changed = self.__update_existing_record_retract(
+            record=record, main_record_dict=main_record_dict
+        )
+        self.__update_existing_record_forthcoming(
+            record=record, main_record_dict=main_record_dict
+        )
+
+        if (
+            "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
+            and "md_curated.bib" != source.get_origin_prefix()
+        ):
+            return False
+
+        similarity_score = colrev.record.Record.get_record_similarity(
+            record_a=colrev.record.Record(data=record_dict),
+            record_b=colrev.record.Record(data=prev_record_dict_version),
+        )
+        dict_diff = colrev.record.Record(data=record_dict).get_diff(
+            other_record=colrev.record.Record(data=prev_record_dict_version)
+        )
+
+        self.__update_existing_record_fields(
+            record_dict=record_dict,
+            main_record_dict=main_record_dict,
+            prev_record_dict_version=prev_record_dict_version,
+            update_time_variant_fields=update_time_variant_fields,
+            origin=origin,
+            source=source,
+        )
+
+        if self.__have_changed(
+            record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
+        ) or self.__have_changed(  # Note : not (yet) in the main records but changed
+            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
+        ):
+            changed = True
+            if similarity_score > 0.98:
+                self.review_manager.logger.info(f" check/update {origin}")
+            else:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Found paper retract: "
-                    f"{main_record_dict['ID']}{colors.END}"
+                    f" {colors.RED} check/update {origin} leads to substantial changes "
+                    f"({similarity_score}) in {main_record_dict['ID']}:{colors.END}"
                 )
-                main_record = colrev.record.Record(data=main_record_dict)
-                main_record.prescreen_exclude(reason="retracted", print_warning=True)
-                main_record.remove_field(key="warning")
-                changed = True
-
-            if "forthcoming" == main_record_dict.get(
-                "year", ""
-            ) and "forthcoming" != record_dict.get("year", ""):
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Update published forthcoming paper: "
-                    f"{record.data['ID']}{colors.END}"
+                self.review_manager.p_printer.pprint(
+                    [x for x in dict_diff if "change" == x[0]]
                 )
-                # prepared_record = crossref_prep.prepare(prep_operation, record)
-                main_record_dict["year"] = record_dict["year"]
-                record = colrev.record.PrepRecord(data=main_record_dict)
-
-            if (
-                "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
-                and "md_curated.bib" != source.get_origin_prefix()
-            ):
-                continue
-
-            similarity_score = colrev.record.Record.get_record_similarity(
-                record_a=colrev.record.Record(data=record_dict),
-                record_b=colrev.record.Record(data=prev_record_dict_version),
-            )
-            dict_diff = colrev.record.Record(data=record_dict).get_diff(
-                other_record=colrev.record.Record(data=prev_record_dict_version)
-            )
-
-            for key, value in record_dict.items():
-                if (
-                    not update_time_variant_fields
-                    and key in colrev.record.Record.time_variant_fields
-                ):
-                    continue
-
-                if key in ["curation_ID"]:
-                    continue
-
-                if key in colrev.record.Record.provenance_keys + ["ID"]:
-                    continue
-
-                if key not in main_record_dict:
-                    if key in main_record_dict.get("colrev_masterdata_provenance", {}):
-                        if (
-                            main_record_dict["colrev_masterdata_provenance"][key][
-                                "source"
-                            ]
-                            == "colrev_curation.masterdata_restrictions"
-                            and main_record_dict["colrev_masterdata_provenance"][key][
-                                "note"
-                            ]
-                            == "not_missing"
-                        ):
-                            continue
-                    main_record = colrev.record.Record(data=main_record_dict)
-                    main_record.update_field(
-                        key=key,
-                        value=value,
-                        source=origin,
-                        keep_source_if_equal=True,
-                        append_edit=False,
-                    )
-                else:
-                    if source.get_origin_prefix() != "md_curated.bib":
-                        if prev_record_dict_version.get(
-                            key, "NA"
-                        ) != main_record_dict.get(key, "OTHER"):
-                            continue
-                    main_record = colrev.record.Record(data=main_record_dict)
-                    if value.replace(" - ", ": ") == main_record.data[key].replace(
-                        " - ", ": "
-                    ):
-                        continue
-                    main_record.update_field(
-                        key=key,
-                        value=value,
-                        source=origin,
-                        keep_source_if_equal=True,
-                        append_edit=False,
-                    )
-            if self.__have_changed(
-                record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
-            ):
-                changed = True
-
-            if self.__have_changed(
-                record_a_orig=record_dict, record_b_orig=prev_record_dict_version
-            ):
-                # Note : not (yet) in the main records but changed
-                changed = True
-            if changed:
-                if similarity_score > 0.98:
-                    self.review_manager.logger.info(f" check/update {origin}")
-                else:
-                    self.review_manager.logger.info(
-                        f" {colors.RED} check/update {origin} leads to substantial changes "
-                        f"({similarity_score}) in {main_record_dict['ID']}:{colors.END}"
-                    )
-                    self.review_manager.p_printer.pprint(
-                        [x for x in dict_diff if "change" == x[0]]
-                    )
-
-            break
 
         return changed
 
@@ -363,7 +394,10 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except requests.exceptions.ConnectionError as exc:
+            except (
+                requests.exceptions.ConnectionError,
+                timeout_decorator.timeout_decorator.TimeoutError,
+            ) as exc:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     source.endpoint
                 ) from exc
@@ -503,7 +537,7 @@ class GeneralOriginFeed:
                     break
                 except (FileExistsError, OSError, json.decoder.JSONDecodeError):
                     search_operation.review_manager.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))
+                    time.sleep(randint(1, 15))  # nosec
 
     def set_id(self, *, record_dict: dict) -> dict:
         """Set incremental record ID

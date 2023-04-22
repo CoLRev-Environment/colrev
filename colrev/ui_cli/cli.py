@@ -159,7 +159,6 @@ def init(
     """Initialize (define review objectives and type)"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
-    import colrev.ui_web.settings_editor
 
     try:
         colrev.review_manager.get_init_operation(
@@ -2186,15 +2185,15 @@ def settings(
         review_manager.create_commit(msg="Change settings", manual_author=True)
         return
 
-    import colrev.ui_web.settings_editor
+    # import colrev_ui.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
-    )
-    settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
-        review_manager=review_manager
-    )
-    settings_operation.open_settings_editor()
+    # review_manager = colrev.review_manager.ReviewManager(
+    #     force_mode=True, verbose_mode=verbose
+    # )
+    # settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
+    #     review_manager=review_manager
+    # )
+    # settings_operation.open_settings_editor()
 
 
 @main.command(help_priority=22)
@@ -2521,39 +2520,39 @@ def show(  # type: ignore
             )
 
 
-@main.command(help_priority=28)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
-@click.pass_context
-def web(
-    ctx: click.core.Context,
-    verbose: bool,
-    force: bool,
-) -> None:
-    """CoLRev web interface."""
+# @main.command(help_priority=28)
+# @click.option(
+#     "-v",
+#     "--verbose",
+#     is_flag=True,
+#     default=False,
+#     help="Verbose: printing more infos",
+# )
+# @click.option(
+#     "-f",
+#     "--force",
+#     is_flag=True,
+#     default=False,
+#     help="Force mode",
+# )
+# @click.pass_context
+# def web(
+#     ctx: click.core.Context,
+#     verbose: bool,
+#     force: bool,
+# ) -> None:
+#     """CoLRev web interface."""
 
-    # pylint: disable=import-outside-toplevel
-    import colrev.ui_web.settings_editor
+#     # pylint: disable=import-outside-toplevel
+#     import colrev.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
-    )
-    se_instance = colrev.ui_web.settings_editor.SettingsEditor(
-        review_manager=review_manager
-    )
-    se_instance.open_settings_editor()
+#     review_manager = colrev.review_manager.ReviewManager(
+#         force_mode=force, verbose_mode=verbose
+#     )
+#     se_instance = colrev.ui_web.settings_editor.SettingsEditor(
+#         review_manager=review_manager
+#     )
+#     se_instance.open_settings_editor()
 
 
 @main.command(hidden=True, help_priority=29)

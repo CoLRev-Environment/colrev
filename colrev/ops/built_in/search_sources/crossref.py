@@ -15,6 +15,7 @@ from sqlite3 import OperationalError
 from typing import Optional
 
 import requests
+import timeout_decorator
 import zope.interface
 from crossref.restful import Etiquette
 from crossref.restful import Journals
@@ -147,6 +148,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     "CROSSREF"
                 ) from exc
 
+    @timeout_decorator.timeout(800, use_signals=False)
     def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         """Get records from Crossref based on a bibliographic query"""
 
@@ -161,6 +163,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for item in crossref_query_return:
             yield connector_utils.json_to_record(item=item)
 
+    @timeout_decorator.timeout(40, use_signals=False)
     def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
@@ -184,6 +187,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
+    @timeout_decorator.timeout(500, use_signals=False)
     def __query_journal(
         self, *, journal_issn: str, rerun: bool
     ) -> typing.Iterator[dict]:
@@ -320,7 +324,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         jour_vol_iss_list: bool = False,
-        timeout: int = 10,
+        timeout: int = 40,
     ) -> list:
         """Retrieve records from Crossref based on a query"""
 
@@ -552,7 +556,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,
-        timeout: int = 10,
+        timeout: int = 30,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Crossref based on similarity with the record provided"""
 

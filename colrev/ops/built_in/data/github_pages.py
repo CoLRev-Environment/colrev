@@ -14,6 +14,7 @@ import colrev.env.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
@@ -25,6 +26,8 @@ if False:  # pylint: disable=using-constant-test
 @dataclass
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
+
+    settings: GHPagesSettings
 
     ci_supported: bool = False
 
@@ -131,7 +134,6 @@ class GithubPages(JsonSchemaMixin):
 
         records = data_operation.review_manager.dataset.load_records_dict()
 
-        # pylint: disable=duplicate-code
         included_records = {
             r["ID"]: r
             for r in records.values()

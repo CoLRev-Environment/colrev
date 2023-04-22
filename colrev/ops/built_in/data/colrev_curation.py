@@ -17,6 +17,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
@@ -29,6 +30,7 @@ if False:  # pylint: disable=using-constant-test
 class ColrevCuration(JsonSchemaMixin):
     """CoLRev Curation"""
 
+    settings: ColrevCurationSettings
     ci_supported: bool = True
 
     @dataclass
@@ -188,7 +190,6 @@ class ColrevCuration(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         markdown_output: str,
     ) -> None:
-        # pylint: disable=duplicate-code
         table_summary_tag = "<!-- TABLE_SUMMARY -->"
         readme_path = review_manager.readme
         with open(readme_path, "r+b") as file:
