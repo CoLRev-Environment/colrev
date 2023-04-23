@@ -14,6 +14,7 @@ from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
 import colrev.env.utils
+import colrev.qm.colrev_pdf_id
 import colrev.record
 
 # pylint: disable=duplicate-code
@@ -44,10 +45,6 @@ class PDFCoverPage(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = pdf_prep_operation.review_manager
-
-        if not pdf_prep_operation.review_manager.in_ci_environment():
-            # Note : to pull image if not available
-            pdf_prep_operation.review_manager.get_pdf_hash_service()
 
     def __check_scholarworks_first_page(self, *, page0: str, coverpages: list) -> None:
         if "followthisandadditionalworksat:https://scholarworks" in page0:
@@ -132,9 +129,7 @@ class PDFCoverPage(JsonSchemaMixin):
         if len(pdf_reader.pages) == 1:
             return coverpages
 
-        pdf_hash_service = self.review_manager.get_pdf_hash_service()
-
-        first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+        first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
             pdf_path=Path(pdf),
             page_nr=1,
             hash_size=16,

@@ -311,11 +311,7 @@ class PDFPrepMan(colrev.operation.Operation):
 
         pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
         prev_cpid = record.data.get("colrev_pdf_id", "NA")
-        record.data.update(
-            colrev_pdf_id=record.get_colrev_pdf_id(
-                review_manager=self.review_manager, pdf_path=pdf_path
-            )
-        )
+        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path))
         if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
             record.add_data_provenance(key="file", source="manual")
 

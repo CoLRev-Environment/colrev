@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
+import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
@@ -117,7 +118,6 @@ class PDFSearchSource(JsonSchemaMixin):
 
                 for potential_pdf in potential_pdfs:
                     cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
-                        review_manager=search_operation.review_manager,
                         pdf_path=potential_pdf,
                     )
 
@@ -487,8 +487,7 @@ class PDFSearchSource(JsonSchemaMixin):
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
-                pdf_hash_service = self.review_manager.get_pdf_hash_service()
-                colrev_pdf_id = pdf_hash_service.get_pdf_hash(
+                colrev_pdf_id = colrev.qm.colrev_pdf_id.get_pdf_hash(
                     pdf_path=Path(pdf_path),
                     page_nr=1,
                     hash_size=32,

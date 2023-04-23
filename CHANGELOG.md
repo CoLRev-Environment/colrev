@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.8.3 - 2023-04-22
+
+### Changed
+
+- CoLRev pdf IDs are now based on the mupdf library
 
 ## 0.8.2 - 2023-04-05
 

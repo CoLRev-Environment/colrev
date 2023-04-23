@@ -14,6 +14,7 @@ import git
 import pandas as pd
 import yaml
 from docker.errors import DockerException
+from git.exc import InvalidGitRepositoryError
 from yaml import safe_load
 
 import colrev.env.local_index
@@ -287,7 +288,10 @@ class EnvironmentManager:
                 ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
-            except colrev_exceptions.CoLRevException:
+            except (
+                colrev_exceptions.CoLRevException,
+                InvalidGitRepositoryError,
+            ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 
