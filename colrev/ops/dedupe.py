@@ -403,7 +403,7 @@ class Dedupe(colrev.operation.Operation):
     ) -> bool:
         gid_conflict = False
 
-        if main_record.data.get("doi", "doi-a") != dupe_record.data.get("doi", "doi-b"):
+        if main_record.data.get("doi", "doi") != dupe_record.data.get("doi", "doi"):
             gid_conflict = True
 
         return gid_conflict
