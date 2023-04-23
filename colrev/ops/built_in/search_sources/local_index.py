@@ -578,13 +578,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         }
         return local_base_repos
 
-    def apply_correction(self, *, change_itemsets: list) -> None:
-        """Apply a correction by opening a pull request in the original repository"""
-
-        # pylint: disable=too-many-branches
-
-        local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
-
+    def __print_changes(self, *, local_base_repo: str, change_itemsets: list) -> list:
         def print_diff(change: tuple) -> str:
             diff = difflib.Differ()
             letters = list(diff.compare(change[1], change[0]))
@@ -598,59 +592,67 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             res = "".join(letters).replace("\n", " ")
             return res
 
+        selected_changes = []
+        print()
+        self.review_manager.logger.info(f"Base repository: {local_base_repo}")
+        for item in change_itemsets:
+            repo_path = "NA"
+            if "CURATED" in item["original_record"].get(
+                "colrev_masterdata_provenance", {}
+            ):
+                repo_path = item["original_record"]["colrev_masterdata_provenance"][
+                    "CURATED"
+                ]["source"]
+                assert "#" not in repo_path
+                # otherwise: strip the ID at the end if we add an ID...
+
+            if repo_path != local_base_repo:
+                continue
+
+            # self.review_manager.p_printer.pprint(item["original_record"])
+            colrev.record.Record(data=item["original_record"]).print_citation_format()
+            for change_item in item["changes"]:
+                if change_item[0] == "change":
+                    edit_type, field, values = change_item
+                    if field == "colrev_id":
+                        continue
+                    prefix = f"{edit_type} {field}"
+                    print(
+                        f"{prefix}"
+                        + " " * max(len(prefix), 30 - len(prefix))
+                        + f": {values[0]}"
+                    )
+                    print(
+                        " " * max(len(prefix), 30)
+                        + f"  {colors.ORANGE}{values[1]}{colors.END}"
+                    )
+                    print(
+                        " " * max(len(prefix), 30)
+                        + f"  {print_diff((values[0], values[1]))}"
+                    )
+
+                elif change_item[0] == "add":
+                    edit_type, field, values = change_item
+                    prefix = f"{edit_type} {values[0][0]}"
+                    print(
+                        prefix
+                        + " " * max(len(prefix), 30 - len(prefix))
+                        + f": {colors.GREEN}{values[0][1]}{colors.END}"
+                    )
+                else:
+                    self.review_manager.p_printer.pprint(change_item)
+            selected_changes.append(item)
+        return selected_changes
+
+    def apply_correction(self, *, change_itemsets: list) -> None:
+        """Apply a correction by opening a pull request in the original repository"""
+
+        local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
+
         for local_base_repo in local_base_repos:
-            validated_changes = []
-            print()
-            self.review_manager.logger.info(f"Base repository: {local_base_repo}")
-            for item in change_itemsets:
-                repo_path = "NA"
-                if "CURATED" in item["original_record"].get(
-                    "colrev_masterdata_provenance", {}
-                ):
-                    repo_path = item["original_record"]["colrev_masterdata_provenance"][
-                        "CURATED"
-                    ]["source"]
-                    assert "#" not in repo_path
-                    # otherwise: strip the ID at the end if we add an ID...
-
-                if repo_path != local_base_repo:
-                    continue
-
-                # self.review_manager.p_printer.pprint(item["original_record"])
-                colrev.record.Record(
-                    data=item["original_record"]
-                ).print_citation_format()
-                for change_item in item["changes"]:
-                    if change_item[0] == "change":
-                        edit_type, field, values = change_item
-                        if field == "colrev_id":
-                            continue
-                        prefix = f"{edit_type} {field}"
-                        print(
-                            f"{prefix}"
-                            + " " * max(len(prefix), 30 - len(prefix))
-                            + f": {values[0]}"
-                        )
-                        print(
-                            " " * max(len(prefix), 30)
-                            + f"  {colors.ORANGE}{values[1]}{colors.END}"
-                        )
-                        print(
-                            " " * max(len(prefix), 30)
-                            + f"  {print_diff((values[0], values[1]))}"
-                        )
-
-                    elif change_item[0] == "add":
-                        edit_type, field, values = change_item
-                        prefix = f"{edit_type} {values[0][0]}"
-                        print(
-                            prefix
-                            + " " * max(len(prefix), 30 - len(prefix))
-                            + f": {colors.GREEN}{values[0][1]}{colors.END}"
-                        )
-                    else:
-                        self.review_manager.p_printer.pprint(change_item)
-                validated_changes.append(item)
+            selected_changes = self.__print_changes(
+                local_base_repo=local_base_repo, change_itemsets=change_itemsets
+            )
 
             response = ""
             while True:
@@ -660,13 +662,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             if response == "y":
                 self.__apply_correction(
-                    source_url=local_base_repos[repo_path],
-                    change_list=validated_changes,
+                    source_url=local_base_repo,
+                    change_list=selected_changes,
                 )
             elif response == "n":
                 if input("Discard all corrections (y/n)?") == "y":
-                    for validated_change in validated_changes:
-                        Path(validated_change["file"]).unlink()
+                    for selected_change in selected_changes:
+                        Path(selected_change["file"]).unlink()
 
     def __apply_corrections_precondition(
         self, *, check_operation: colrev.operation.Operation, source_url: str
