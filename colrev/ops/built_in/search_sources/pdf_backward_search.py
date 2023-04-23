@@ -128,6 +128,34 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return True
 
+    def __print_post_run_search_infos(
+        self,
+        *,
+        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        records: dict,
+        rerun: bool,
+    ) -> None:
+        if pdf_backward_search_feed.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {pdf_backward_search_feed.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if rerun:
+            if pdf_backward_search_feed.nr_changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {pdf_backward_search_feed.nr_changed} "
+                    f"records{colors.END}"
+                )
+            else:
+                if records:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
@@ -221,26 +249,11 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         pdf_backward_search_feed.save_feed_file()
 
-        if pdf_backward_search_feed.nr_added > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pdf_backward_search_feed.nr_added} records{colors.END}"
-            )
-        else:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if rerun:
-            if pdf_backward_search_feed.nr_changed > 0:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {pdf_backward_search_feed.nr_changed} "
-                    f"records{colors.END}"
-                )
-            else:
-                if records:
-                    search_operation.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
+        self.__print_post_run_search_infos(
+            pdf_backward_search_feed=pdf_backward_search_feed,
+            records=records,
+            rerun=rerun,
+        )
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(

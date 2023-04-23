@@ -729,7 +729,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         *,
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
         records: dict,
-        rerun: bool,
     ) -> None:
         if crossref_feed.nr_added > 0:
             self.review_manager.logger.info(
@@ -811,7 +810,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     break
 
             self.__print_post_run_search_infos(
-                crossref_feed=crossref_feed, records=records, rerun=rerun
+                crossref_feed=crossref_feed, records=records
             )
 
             crossref_feed.save_feed_file()
