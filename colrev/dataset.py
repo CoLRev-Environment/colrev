@@ -351,39 +351,35 @@ class Dataset:
 
         return records_dict
 
+    def __parse_k_v(self, item_string: str) -> tuple:
+        try:
+            if " = " in item_string:
+                key, value = item_string.split(" = ", 1)
+            else:
+                key = "ID"
+                value = item_string.split("{")[1]
+
+            key = key.lstrip().rstrip()
+            value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+            if key == "colrev_origin":
+                value_list = value.replace("\n", "").split(";")
+                value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
+                return key, value_list
+            if key == "colrev_status":
+                return key, colrev.record.RecordState[value]
+            if key == "colrev_masterdata_provenance":
+                return key, self.__load_field_dict(value=value, field=key)
+            if key == "file":
+                return key, Path(value)
+        except IndexError as exc:
+            raise colrev_exceptions.BrokenFilesError(msg="parsing records.bib") from exc
+
+        return key, value
+
     def __read_record_header_items(
         self, *, file_object: Optional[typing.TextIO] = None
     ) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
-
-        # pylint: disable=too-many-statements
-
-        def parse_k_v(current_key_value_pair_str: str) -> tuple:
-            try:
-                if " = " in current_key_value_pair_str:
-                    key, value = current_key_value_pair_str.split(" = ", 1)
-                else:
-                    key = "ID"
-                    value = current_key_value_pair_str.split("{")[1]
-
-                key = key.lstrip().rstrip()
-                value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-                if key == "colrev_origin":
-                    value_list = value.replace("\n", "").split(";")
-                    value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
-                    return key, value_list
-                if key == "colrev_status":
-                    return key, colrev.record.RecordState[value]
-                if key == "colrev_masterdata_provenance":
-                    return key, self.__load_field_dict(value=value, field=key)
-                if key == "file":
-                    return key, Path(value)
-            except IndexError as exc:
-                raise colrev_exceptions.BrokenFilesError(
-                    msg="parsing records.bib"
-                ) from exc
-
-            return key, value
 
         # pylint: disable=consider-using-with
         if file_object is None:
@@ -401,7 +397,7 @@ class Dataset:
         number_required_header_items = len(default)
 
         record_header_item = default.copy()
-        current_header_item_count, current_key_value_pair_str, record_header_items = (
+        item_count, item_string, record_header_items = (
             0,
             "",
             [],
@@ -410,35 +406,38 @@ class Dataset:
             line = file_object.readline()
             if not line:
                 break
+
             if line[:1] == "%" or line == "\n":
                 continue
 
-            if current_header_item_count > number_required_header_items or "}" == line:
+            if item_count > number_required_header_items or "}" == line:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
-                current_header_item_count = 0
+                item_count = 0
                 continue
 
             if "@" in line[:2] and record_header_item["ID"] != "NA":
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
-                current_header_item_count = 0
+                item_count = 0
 
-            current_key_value_pair_str += line
+            item_string += line
             if "}," in line or "@" in line[:2]:
-                key, value = parse_k_v(current_key_value_pair_str)
+                key, value = self.__parse_k_v(item_string)
                 if key == "colrev_masterdata_provenance":
                     if value == "NA":
                         value = {}
                 if value == "NA":
-                    current_key_value_pair_str = ""
+                    item_string = ""
                     continue
-                current_key_value_pair_str = ""
+                item_string = ""
                 if key in record_header_item:
-                    current_header_item_count += 1
+                    item_count += 1
                     record_header_item[key] = value
+
         if record_header_item["colrev_origin"] != "NA":
             record_header_items.append(record_header_item)
+
         return [
             {k: v for k, v in record_header_item.items() if "NA" != v}
             for record_header_item in record_header_items
