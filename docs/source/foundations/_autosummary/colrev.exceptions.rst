@@ -54,6 +54,7 @@ colrev.exceptions
       PDFHashError
       ParameterError
       PortAlreadyRegisteredException
+      PreparationBreak
       ProcessOrderViolation
       PropagatedIDChange
       RecordNotFoundInPrepSourceException

@@ -38,7 +38,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_package_manager
       ~ReviewManager.get_pdf_get_man_operation
       ~ReviewManager.get_pdf_get_operation
-      ~ReviewManager.get_pdf_hash_service
       ~ReviewManager.get_pdf_prep_man_operation
       ~ReviewManager.get_pdf_prep_operation
       ~ReviewManager.get_prep_man_operation
