@@ -157,8 +157,6 @@ class BackwardSearchSource(JsonSchemaMixin):
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-
-        nr_added, nr_changed = 0, 0
         for record in records.values():
             try:
                 if not self.__bw_search_condition(record=record):
@@ -205,7 +203,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                     )
 
                     if added:
-                        nr_added += 1
+                        pdf_backward_search_feed.nr_added += 1
                     elif rerun:
                         # Note : only re-index/update
                         changed = search_operation.update_existing_record(
@@ -216,16 +214,16 @@ class BackwardSearchSource(JsonSchemaMixin):
                             update_time_variant_fields=rerun,
                         )
                         if changed:
-                            nr_changed += 1
+                            pdf_backward_search_feed.nr_changed += 1
 
             except colrev_exceptions.TEIException:
                 search_operation.review_manager.logger.info("Eror accessing TEI")
 
         pdf_backward_search_feed.save_feed_file()
 
-        if nr_added > 0:
+        if pdf_backward_search_feed.nr_added > 0:
             search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+                f"{colors.GREEN}Retrieved {pdf_backward_search_feed.nr_added} records{colors.END}"
             )
         else:
             search_operation.review_manager.logger.info(
@@ -233,9 +231,10 @@ class BackwardSearchSource(JsonSchemaMixin):
             )
 
         if rerun:
-            if nr_changed > 0:
+            if pdf_backward_search_feed.nr_changed > 0:
                 search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                    f"{colors.GREEN}Updated {pdf_backward_search_feed.nr_changed} "
+                    f"records{colors.END}"
                 )
             else:
                 if records:

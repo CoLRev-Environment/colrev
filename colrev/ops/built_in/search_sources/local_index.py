@@ -170,7 +170,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        nr_changed = 0
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
             feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -207,11 +206,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # Note : changed refers to the data/records.bib.
             # Records that are not yet imported do not count.
             if changed:
-                nr_changed += 1
+                local_index_feed.nr_changed += 1
 
-        if nr_changed > 0:
+        if local_index_feed.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {nr_changed} "
+                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
                 f"records based on LocalIndex{colors.END}"
             )
         else:
@@ -234,8 +233,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        nr_retrieved, nr_changed = 0, 0
-
         for retrieved_record_dict in self.__retrieve_from_index():
             try:
                 local_index_feed.set_id(record_dict=retrieved_record_dict)
@@ -252,7 +249,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
             if added:
-                nr_retrieved += 1
+                local_index_feed.nr_added += 1
 
             else:
                 changed = search_operation.update_existing_record(
@@ -263,18 +260,18 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     update_time_variant_fields=rerun,
                 )
                 if changed:
-                    nr_changed += 1
+                    local_index_feed.nr_changed += 1
 
         local_index_feed.save_feed_file()
 
-        if nr_retrieved > 0:
+        if local_index_feed.nr_added > 0:
             search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_retrieved} records {colors.END}"
+                f"{colors.GREEN}Retrieved {local_index_feed.nr_added} records {colors.END}"
             )
 
-        if nr_changed > 0:
+        if local_index_feed.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {nr_changed} "
+                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
                 f"records based on LocalIndex{colors.END}"
             )
         else:

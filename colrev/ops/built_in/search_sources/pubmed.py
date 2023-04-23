@@ -497,8 +497,6 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
         records = search_operation.review_manager.dataset.load_records_dict()
-        nr_retrieved, nr_changed = 0, 0
-
         try:
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
@@ -531,7 +529,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     search_operation.review_manager.logger.info(
                         " retrieve pubmed-id=" + prep_record.data["pubmedid"]
                     )
-                    nr_retrieved += 1
+                    pubmed_feed.nr_added += 1
                 else:
                     changed = search_operation.update_existing_record(
                         records=records,
@@ -541,7 +539,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                         update_time_variant_fields=rerun,
                     )
                     if changed:
-                        nr_changed += 1
+                        pubmed_feed.nr_changed += 1
 
                 # Note : only retrieve/update the latest deposits (unless in rerun mode)
                 if not added and not rerun:
@@ -549,18 +547,18 @@ class PubMedSearchSource(JsonSchemaMixin):
                     # deposit papers chronologically
                     break
 
-            if nr_retrieved > 0:
+            if pubmed_feed.nr_added > 0:
                 search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+                    f"{colors.GREEN}Retrieved {pubmed_feed.nr_added} records{colors.END}"
                 )
             else:
                 search_operation.review_manager.logger.info(
                     f"{colors.GREEN}No additional records retrieved{colors.END}"
                 )
 
-            if nr_changed > 0:
+            if pubmed_feed.nr_changed > 0:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                    f"{colors.GREEN}Updated {pubmed_feed.nr_changed} records{colors.END}"
                 )
             else:
                 if records:
@@ -591,7 +589,6 @@ class PubMedSearchSource(JsonSchemaMixin):
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        nr_changed = 0
         for feed_record_dict in pubmed_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
 
@@ -626,11 +623,11 @@ class PubMedSearchSource(JsonSchemaMixin):
                 update_time_variant_fields=True,
             )
             if changed:
-                nr_changed += 1
+                pubmed_feed.nr_changed += 1
 
-        if nr_changed > 0:
+        if pubmed_feed.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {nr_changed} "
+                f"{colors.GREEN}Updated {pubmed_feed.nr_changed} "
                 f"records based on Pubmed{colors.END}"
             )
         else:

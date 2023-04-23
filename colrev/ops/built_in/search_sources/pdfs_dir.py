@@ -536,11 +536,11 @@ class PDFSearchSource(JsonSchemaMixin):
         return new_record
 
     def __print_run_search_stats(
-        self, *, records: dict, nr_added: int, nr_changed: int
+        self, *, records: dict, pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed
     ) -> None:
-        if nr_added > 0:
+        if pdfs_dir_feed.nr_added > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+                f"{colors.GREEN}Retrieved {pdfs_dir_feed.nr_added} records{colors.END}"
             )
         else:
             self.review_manager.logger.info(
@@ -548,9 +548,9 @@ class PDFSearchSource(JsonSchemaMixin):
             )
 
         if self.review_manager.force_mode:
-            if nr_changed > 0:
+            if pdfs_dir_feed.nr_changed > 0:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                    f"{colors.GREEN}Updated {pdfs_dir_feed.nr_changed} records{colors.END}"
                 )
             else:
                 if records:
@@ -582,7 +582,6 @@ class PDFSearchSource(JsonSchemaMixin):
         linked_pdf_paths: list,
         rerun: bool,
     ) -> None:
-        nr_added, nr_changed = 0, 0
         for pdf_batch in self.__get_pdf_batches():
             for record in pdfs_dir_feed.feed_records.values():
                 record = self.__add_md_string(record_dict=record)
@@ -606,7 +605,7 @@ class PDFSearchSource(JsonSchemaMixin):
                     record=colrev.record.Record(data=new_record),
                 )
                 if added:
-                    nr_added += 1
+                    pdfs_dir_feed.nr_added += 1
                     self.__add_doi_from_pdf_if_not_available(record_dict=new_record)
 
                 elif self.review_manager.force_mode:
@@ -618,16 +617,14 @@ class PDFSearchSource(JsonSchemaMixin):
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     ):
-                        nr_changed += 1
+                        pdfs_dir_feed.nr_changed += 1
 
             for record in pdfs_dir_feed.feed_records.values():
                 record.pop("md_string")
 
             pdfs_dir_feed.save_feed_file()
 
-        self.__print_run_search_stats(
-            records=records, nr_added=nr_added, nr_changed=nr_changed
-        )
+        self.__print_run_search_stats(records=records, pdfs_dir_feed=pdfs_dir_feed)
 
     def __add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
         if "doi" in record_dict:

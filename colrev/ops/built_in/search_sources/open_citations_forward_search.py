@@ -157,7 +157,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        nr_added, nr_changed = 0, 0
         for record in records.values():
             if not self.__fw_search_condition(record=record):
                 continue
@@ -190,7 +189,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
 
                 if added:
-                    nr_added += 1
+                    forward_search_feed.nr_added += 1
                 elif rerun:
                     # Note : only re-index/update
                     changed = search_operation.update_existing_record(
@@ -201,12 +200,12 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                         update_time_variant_fields=rerun,
                     )
                     if changed:
-                        nr_changed += 1
+                        forward_search_feed.nr_changed += 1
         forward_search_feed.save_feed_file()
 
-        if nr_added > 0:
+        if forward_search_feed.nr_added > 0:
             search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
+                f"{colors.GREEN}Retrieved {forward_search_feed.nr_added} records{colors.END}"
             )
         else:
             search_operation.review_manager.logger.info(
@@ -214,9 +213,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             )
 
         if rerun:
-            if nr_changed > 0:
+            if forward_search_feed.nr_changed > 0:
                 search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                    f"{colors.GREEN}Updated {forward_search_feed.nr_changed} records{colors.END}"
                 )
             else:
                 if records:

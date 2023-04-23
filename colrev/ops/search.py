@@ -455,6 +455,9 @@ class GeneralOriginFeed:
 
     # pylint: disable=too-many-instance-attributes
 
+    nr_added: int = 0
+    nr_changed: int = 0
+
     def __init__(
         self,
         *,

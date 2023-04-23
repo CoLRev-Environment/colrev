@@ -292,8 +292,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
 
         records = search_operation.review_manager.dataset.load_records_dict()
-        nr_retrieved, nr_changed = 0, 0
-
         try:
             for record_dict in self.__get_ais_query_return():
                 # Note : discard "empty" records
@@ -321,10 +319,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 added = ais_feed.add_record(record=prep_record)
 
                 if added:
-                    search_operation.review_manager.logger.info(
+                    self.review_manager.logger.info(
                         " retrieve " + prep_record.data["url"]
                     )
-                    nr_retrieved += 1
+                    ais_feed.nr_added += 1
                 # else:
                 #     changed = search_operation.update_existing_record(
                 #         records=records,
@@ -334,20 +332,20 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 #         update_time_variant_fields=rerun,
                 #     )
                 #     if changed:
-                #         nr_changed += 1
+                #         ais_feed.nr_changed += 1
 
-            if nr_retrieved > 0:
+            if ais_feed.nr_added > 0:
                 search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Retrieved {nr_retrieved} records{colors.END}"
+                    f"{colors.GREEN}Retrieved {ais_feed.nr_added} records{colors.END}"
                 )
             else:
                 search_operation.review_manager.logger.info(
                     f"{colors.GREEN}No additional records retrieved{colors.END}"
                 )
 
-            if nr_changed > 0:
+            if ais_feed.nr_changed > 0:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
+                    f"{colors.GREEN}Updated {ais_feed.nr_changed} records{colors.END}"
                 )
             else:
                 if records:

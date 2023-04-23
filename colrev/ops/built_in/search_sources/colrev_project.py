@@ -48,6 +48,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     def validate_source(
         self,
@@ -129,7 +130,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         search_operation.review_manager.logger.info("Importing selected records")
-        nr_added = 0
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -174,13 +174,14 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                     record=colrev.record.Record(data=record_to_import),
                 )
                 if added:
-                    nr_added += 1
+                    colrev_project_search_feed.nr_added += 1
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
 
         colrev_project_search_feed.save_feed_file()
-        search_operation.review_manager.logger.info(
-            f"{colors.GREEN}Retrieved {nr_added} new records {colors.END}"
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Retrieved {colrev_project_search_feed.nr_added} "
+            f"new records {colors.END}"
         )
 
     def get_masterdata(
