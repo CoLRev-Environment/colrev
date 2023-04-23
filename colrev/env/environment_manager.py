@@ -125,8 +125,8 @@ class EnvironmentManager:
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
         try:
-            username = check_output(["git", "config", "user.name"])
-            email = check_output(["git", "config", "user.email"])
+            username = check_output(["git", "config", "user.name"], shell=False)
+            email = check_output(["git", "config", "user.email"], shell=False)
             global_conf_details = (
                 username.decode("utf-8").replace("\n", ""),
                 email.decode("utf-8").replace("\n", ""),
