@@ -527,80 +527,9 @@ class PackageManager:
                     orig_dict[key] = value
         return orig_dict
 
-    def get_package_details(
-        self, *, package_type: PackageEndpointType, package_identifier: str
-    ) -> dict:
-        """Get the package details"""
-        # pylint: disable=too-many-branches
-
-        package_identifier = package_identifier.lower()
-        # package_details = {"endpoint": package_identifier}
-        package_class = self.load_package_endpoint(
-            package_type=package_type, package_identifier=package_identifier
-        )
-
-        settings_class = getattr(package_class, "settings_class", None)
-        package_details = dict(settings_class.json_schema())  # type: ignore
-
-        # To address cases of inheritance, see:
-        # https://stackoverflow.com/questions/22689900/
-        # json-schema-allof-with-additionalproperties
-        if "allOf" in package_details:
-            selection = {}
-            for candidate in package_details["allOf"]:
-                selection = candidate
-                # prefer the one with properties
-                if "properties" in candidate:
-                    break
-            package_details = selection
-
-        if settings_class is None:
-            msg = f"{package_identifier} could not be loaded"
-            raise colrev_exceptions.ServiceNotAvailableException(msg)
-
-        for parameter in [
-            i for i in settings_class.__annotations__.keys() if i[:1] != "_"
-        ]:
-            # # default value: determined from class.__dict__
-            # # merging_non_dup_threshold: float= 0.7
-            # if parameter in settings_class.__dict__:
-            #     if parameter not in package_details["parameters"]:
-            #         package_details["parameters"][parameter] = {}
-            #     package_details["parameters"][parameter][
-            #         "default"
-            #     ] = settings_class.__dict__[parameter]
-
-            # # not required: determined from typing annotation
-            # # variable_name: typing.Optional[str]
-            # package_details["parameters"][parameter] = {"required": True}
-
-            # tooltip, min, max, options: determined from settings_class._details dict
-            # Note : tooltips are not in docstrings because
-            # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
-            # pylint: disable=protected-access
-
-            if hasattr(settings_class, "_details"):
-                if parameter in settings_class._details:
-                    if "tooltip" in settings_class._details[parameter]:
-                        package_details["properties"][parameter][
-                            "tooltip"
-                        ] = settings_class._details[parameter]["tooltip"]
-
-                    if "min" in settings_class._details[parameter]:
-                        package_details["properties"][parameter][
-                            "min"
-                        ] = settings_class._details[parameter]["min"]
-
-                    if "max" in settings_class._details[parameter]:
-                        package_details["properties"][parameter][
-                            "max"
-                        ] = settings_class._details[parameter]["max"]
-
-                    if "options" in settings_class._details[parameter]:
-                        package_details["properties"][parameter][
-                            "options"
-                        ] = settings_class._details[parameter]["options"]
-
+    def __apply_package_details_fixes(
+        self, *, package_type: PackageEndpointType, package_details: dict
+    ) -> None:
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/66
         # apply validation when parsing settings during package init (based on _details)
         # later : package version?
@@ -621,6 +550,68 @@ class PackageManager:
             }
 
         package_details = self.__replace_path_by_str(orig_dict=package_details)  # type: ignore
+
+    def get_package_details(
+        self, *, package_type: PackageEndpointType, package_identifier: str
+    ) -> dict:
+        """Get the package details"""
+
+        package_class = self.load_package_endpoint(
+            package_type=package_type, package_identifier=package_identifier.lower()
+        )
+        settings_class = getattr(package_class, "settings_class", None)
+        if settings_class is None:
+            msg = f"{package_identifier} could not be loaded"
+            raise colrev_exceptions.ServiceNotAvailableException(msg)
+        package_details = dict(settings_class.json_schema())  # type: ignore
+
+        # To address cases of inheritance, see:
+        # https://stackoverflow.com/questions/22689900/
+        # json-schema-allof-with-additionalproperties
+        if "allOf" in package_details:
+            selection = {}
+            for candidate in package_details["allOf"]:
+                selection = candidate
+                # prefer the one with properties
+                if "properties" in candidate:
+                    break
+            package_details = selection
+
+        for parameter in [
+            i for i in settings_class.__annotations__.keys() if i[:1] != "_"
+        ]:
+            # tooltip, min, max, options: determined from settings_class._details dict
+            # Note : tooltips are not in docstrings because
+            # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
+            # pylint: disable=protected-access
+
+            if not hasattr(settings_class, "_details"):
+                continue
+            if parameter not in settings_class._details:
+                continue
+            if "tooltip" in settings_class._details[parameter]:
+                package_details["properties"][parameter][
+                    "tooltip"
+                ] = settings_class._details[parameter]["tooltip"]
+
+            if "min" in settings_class._details[parameter]:
+                package_details["properties"][parameter][
+                    "min"
+                ] = settings_class._details[parameter]["min"]
+
+            if "max" in settings_class._details[parameter]:
+                package_details["properties"][parameter][
+                    "max"
+                ] = settings_class._details[parameter]["max"]
+
+            if "options" in settings_class._details[parameter]:
+                package_details["properties"][parameter][
+                    "options"
+                ] = settings_class._details[parameter]["options"]
+
+        self.__apply_package_details_fixes(
+            package_type=package_type, package_details=package_details
+        )
 
         return package_details
 
