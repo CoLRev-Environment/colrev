@@ -1364,64 +1364,66 @@ class Record:
 
         return incomplete_field_keys
 
+    def __get_author_quality_defects(self, *, defect_field_keys: list) -> None:
+        sanitized_authors = re.sub(
+            "[^a-zA-Z, ;1]+",
+            "",
+            colrev.env.utils.remove_accents(input_str=self.data["author"]),
+        ).split(" and ")
+        if not all(
+            re.findall(
+                r"^[\w .'’-]*, [\w .'’-]*$",
+                sanitized_author,
+                re.UNICODE,
+            )
+            for sanitized_author in sanitized_authors
+        ):
+            defect_field_keys.append("author")
+        # At least two capital letters per name
+        elif not all(
+            re.findall(
+                r"[A-Z]+",
+                author_part,
+                re.UNICODE,
+            )
+            for sanitized_author in sanitized_authors
+            for author_part in sanitized_author.split(",")
+        ):
+            defect_field_keys.append("author")
+
+        # Note : patterns like "I N T R O D U C T I O N"
+        # that may result from grobid imports
+        elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data["author"]):
+            defect_field_keys.append("author")
+        elif len(self.data["author"]) < 5:
+            defect_field_keys.append("author")
+        elif any(
+            x in str(self.data["author"]) for x in ["�", "http", "University", "™"]
+        ):
+            defect_field_keys.append("author")
+
+    def __get_title_quality_defects(self, *, defect_field_keys: list) -> None:
+        # Note : titles that have no space and special characters
+        # like _ . or digits.
+        if " " not in self.data["title"] and (
+            any(x in self.data["title"] for x in ["_", "."])
+            or any(char.isdigit() for char in self.data["title"])
+        ):
+            defect_field_keys.append("title")
+        if "�" in str(self.data["title"]):
+            defect_field_keys.append("title")
+
+    def __get_general_quality_defects(
+        self, *, key: str, defect_field_keys: list
+    ) -> None:
+        if key in ["title", "author", "journal", "booktitle"]:
+            if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
+                defect_field_keys.append(key)
+            if "�" in str(self.data[key]):
+                defect_field_keys.append(key)
+
     def get_quality_defects(self) -> list:
         """Get the fields (keys) with quality defects"""
-
-        def get_author_quality_defects(*, defect_field_keys: list) -> None:
-            sanitized_authors = re.sub(
-                "[^a-zA-Z, ;1]+",
-                "",
-                colrev.env.utils.remove_accents(input_str=self.data["author"]),
-            ).split(" and ")
-            if not all(
-                re.findall(
-                    r"^[\w .'’-]*, [\w .'’-]*$",
-                    sanitized_author,
-                    re.UNICODE,
-                )
-                for sanitized_author in sanitized_authors
-            ):
-                defect_field_keys.append("author")
-            # At least two capital letters per name
-            elif not all(
-                re.findall(
-                    r"[A-Z]+",
-                    author_part,
-                    re.UNICODE,
-                )
-                for sanitized_author in sanitized_authors
-                for author_part in sanitized_author.split(",")
-            ):
-                defect_field_keys.append("author")
-
-            # Note : patterns like "I N T R O D U C T I O N"
-            # that may result from grobid imports
-            elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data["author"]):
-                defect_field_keys.append("author")
-            elif len(self.data["author"]) < 5:
-                defect_field_keys.append("author")
-            elif any(
-                x in str(self.data["author"]) for x in ["�", "http", "University", "™"]
-            ):
-                defect_field_keys.append("author")
-
-        def get_title_quality_defects(*, defect_field_keys: list) -> None:
-            # Note : titles that have no space and special characters
-            # like _ . or digits.
-            if " " not in self.data["title"] and (
-                any(x in self.data["title"] for x in ["_", "."])
-                or any(char.isdigit() for char in self.data["title"])
-            ):
-                defect_field_keys.append("title")
-            if "�" in str(self.data["title"]):
-                defect_field_keys.append("title")
-
-        def get_general_quality_defects(*, key: str, defect_field_keys: list) -> None:
-            if key in ["title", "author", "journal", "booktitle"]:
-                if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
-                    defect_field_keys.append(key)
-                if "�" in str(self.data[key]):
-                    defect_field_keys.append(key)
 
         defect_field_keys: typing.List[str] = []
         for key in self.data.keys():
@@ -1429,12 +1431,14 @@ class Record:
                 continue
 
             if key == "author":
-                get_author_quality_defects(defect_field_keys=defect_field_keys)
+                self.__get_author_quality_defects(defect_field_keys=defect_field_keys)
 
             if key == "title":
-                get_title_quality_defects(defect_field_keys=defect_field_keys)
+                self.__get_title_quality_defects(defect_field_keys=defect_field_keys)
 
-            get_general_quality_defects(key=key, defect_field_keys=defect_field_keys)
+            self.__get_general_quality_defects(
+                key=key, defect_field_keys=defect_field_keys
+            )
 
         if "colrev_masterdata_provenance" in self.data:
             for field, provenance in self.data["colrev_masterdata_provenance"].items():
@@ -1805,97 +1809,115 @@ class Record:
                     source="colrev_curation.masterdata_restrictions",
                 )
 
+    def __check_missing_fiels(self) -> set:
+        missing_fields: Set[str] = set()
+        try:
+            missing_fields = self.get_missing_fields()
+            not_missing_fields = []
+            for missing_field in missing_fields:
+                if missing_field in self.data["colrev_masterdata_provenance"]:
+                    if (
+                        "not_missing"
+                        in self.data["colrev_masterdata_provenance"][missing_field][
+                            "note"
+                        ]
+                    ):
+                        not_missing_fields.append(missing_field)
+                        continue
+                self.add_masterdata_provenance_note(key=missing_field, note="missing")
+
+            for not_missing_field in not_missing_fields:
+                missing_fields.remove(not_missing_field)
+        except colrev_exceptions.MissingRecordQualityRuleSpecification:
+            pass
+        return missing_fields
+
+    def __check_forthcoming(self, *, missing_fields: set) -> None:
+        if self.data.get("year", "") != "forthcoming":
+            return
+        source = "NA"
+        if "year" in self.data["colrev_masterdata_provenance"]:
+            source = self.data["colrev_masterdata_provenance"]["year"]["source"]
+        if "volume" in missing_fields:
+            missing_fields.remove("volume")
+            self.data["colrev_masterdata_provenance"]["volume"] = {
+                "source": source,
+                "note": "not_missing",
+            }
+        if "number" in missing_fields:
+            missing_fields.remove("number")
+            self.data["colrev_masterdata_provenance"]["number"] = {
+                "source": source,
+                "note": "not_missing",
+            }
+
+    def __check_inconsistencies(self) -> set:
+        inconsistencies = self.get_inconsistencies()
+        if inconsistencies:
+            for inconsistency in inconsistencies:
+                self.add_masterdata_provenance_note(
+                    key=inconsistency,
+                    note="inconsistent with ENTRYTYPE",
+                )
+        else:
+            self.set_masterdata_consistent()
+        return inconsistencies
+
+    def __check_defect_fields(self) -> list:
+        defect_fields = self.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
+                self.add_masterdata_provenance_note(
+                    key=defect_field, note="quality_defect"
+                )
+        else:
+            self.remove_quality_defect_notes()
+        return defect_fields
+
+    def __check_incomplete_fields(self) -> set:
+        incomplete_fields = self.get_incomplete_fields()
+        if incomplete_fields:
+            for incomplete_field in incomplete_fields:
+                self.add_masterdata_provenance_note(
+                    key=incomplete_field, note="incomplete"
+                )
+        else:
+            self.set_fields_complete()
+        return incomplete_fields
+
     def update_masterdata_provenance(
         self, *, masterdata_restrictions: Optional[dict] = None
     ) -> None:
         """Update the masterdata provenance"""
-        # pylint: disable=too-many-branches
 
         if masterdata_restrictions is None:
             masterdata_restrictions = {}
 
-        if not self.masterdata_is_curated():
-            if "colrev_masterdata_provenance" not in self.data:
-                self.data["colrev_masterdata_provenance"] = {}
-            missing_fields: Set[str] = set()
-            try:
-                missing_fields = self.get_missing_fields()
-                not_missing_fields = []
-                for missing_field in missing_fields:
-                    if missing_field in self.data["colrev_masterdata_provenance"]:
-                        if (
-                            "not_missing"
-                            in self.data["colrev_masterdata_provenance"][missing_field][
-                                "note"
-                            ]
-                        ):
-                            not_missing_fields.append(missing_field)
-                            continue
-                    self.add_masterdata_provenance_note(
-                        key=missing_field, note="missing"
-                    )
+        if self.masterdata_is_curated():
+            return
 
-                for not_missing_field in not_missing_fields:
-                    missing_fields.remove(not_missing_field)
-            except colrev_exceptions.MissingRecordQualityRuleSpecification:
-                pass
+        if "colrev_masterdata_provenance" not in self.data:
+            self.data["colrev_masterdata_provenance"] = {}
 
-            if masterdata_restrictions:
-                self.apply_restrictions(restrictions=masterdata_restrictions)
+        missing_fields = self.__check_missing_fiels()
 
-            if self.data.get("year", "") == "forthcoming":
-                source = "NA"
-                if "year" in self.data["colrev_masterdata_provenance"]:
-                    source = self.data["colrev_masterdata_provenance"]["year"]["source"]
-                if "volume" in missing_fields:
-                    missing_fields.remove("volume")
-                    self.data["colrev_masterdata_provenance"]["volume"] = {
-                        "source": source,
-                        "note": "not_missing",
-                    }
-                if "number" in missing_fields:
-                    missing_fields.remove("number")
-                    self.data["colrev_masterdata_provenance"]["number"] = {
-                        "source": source,
-                        "note": "not_missing",
-                    }
+        if masterdata_restrictions:
+            self.apply_restrictions(restrictions=masterdata_restrictions)
 
-            if not missing_fields:
-                self.set_masterdata_complete(
-                    source="update_masterdata_provenance",
-                    replace_source=False,
-                )
+        self.__check_forthcoming(missing_fields=missing_fields)
 
-            inconsistencies = self.get_inconsistencies()
-            if inconsistencies:
-                for inconsistency in inconsistencies:
-                    self.add_masterdata_provenance_note(
-                        key=inconsistency,
-                        note="inconsistent with ENTRYTYPE",
-                    )
-            else:
-                self.set_masterdata_consistent()
+        if not missing_fields:
+            self.set_masterdata_complete(
+                source="update_masterdata_provenance",
+                replace_source=False,
+            )
 
-            incomplete_fields = self.get_incomplete_fields()
-            if incomplete_fields:
-                for incomplete_field in incomplete_fields:
-                    self.add_masterdata_provenance_note(
-                        key=incomplete_field, note="incomplete"
-                    )
-            else:
-                self.set_fields_complete()
+        inconsistencies = self.__check_inconsistencies()
+        incomplete_fields = self.__check_incomplete_fields()
+        defect_fields = self.__check_defect_fields()
 
-            defect_fields = self.get_quality_defects()
-            if defect_fields:
-                for defect_field in defect_fields:
-                    self.add_masterdata_provenance_note(
-                        key=defect_field, note="quality_defect"
-                    )
-            else:
-                self.remove_quality_defect_notes()
-
-            if missing_fields or inconsistencies or incomplete_fields or defect_fields:
-                self.set_status(target_state=RecordState.md_needs_manual_preparation)
+        if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+            self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
     def check_potential_retracts(self) -> bool:
         """Check for potential retracts"""
