@@ -302,6 +302,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record=record,
         )
 
+        if (
+            self.review_manager.settings.is_curated_masterdata_repo()
+        ) and "cited_by" in record.data:
+            del record.data["cited_by"]
+
         if not prep_main_record:
             # Skip steps for feed records
             return record
@@ -719,6 +724,32 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
+    def __print_post_run_search_infos(
+        self,
+        *,
+        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        records: dict,
+        rerun: bool,
+    ) -> None:
+        if crossref_feed.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {crossref_feed.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if crossref_feed.nr_changed > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {crossref_feed.nr_changed} records{colors.END}"
+            )
+        else:
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                )
+
     def __run_parameter_search(
         self,
         *,
@@ -726,8 +757,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-        # pylint: disable=too-many-branches
-
         if rerun:
             search_operation.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
@@ -735,10 +764,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         records = search_operation.review_manager.dataset.load_records_dict()
         try:
-            # for record_dict in tqdm(
-            #     self.__get_crossref_query_return(),
-            #     total=len(crossref_feed.feed_records),
-            # ):
             for record_dict in self.__get_crossref_query_return(rerun=rerun):
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
@@ -760,15 +785,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 prep_record = self.__prep_crossref_record(
                     record=prep_record, prep_main_record=False
                 )
-
-                if "colrev_data_provenance" in prep_record.data:
-                    del prep_record.data["colrev_data_provenance"]
-
-                if (
-                    search_operation.review_manager.settings.is_curated_masterdata_repo()
-                ):
-                    if "cited_by" in prep_record.data:
-                        del prep_record.data["cited_by"]
 
                 added = crossref_feed.add_record(record=prep_record)
 
@@ -794,24 +810,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # deposit papers chronologically
                     break
 
-            if crossref_feed.nr_added > 0:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Retrieved {crossref_feed.nr_added} records{colors.END}"
-                )
-            else:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}No additional records retrieved{colors.END}"
-                )
-
-            if crossref_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {crossref_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
+            self.__print_post_run_search_infos(
+                crossref_feed=crossref_feed, records=records, rerun=rerun
+            )
 
             crossref_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
