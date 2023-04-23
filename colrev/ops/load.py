@@ -104,35 +104,28 @@ class Load(colrev.operation.Operation):
         ]
         return imported_origins
 
-    def __apply_source_heuristics(
+    def __get_load_conversion_package_endpoint(
+        self, *, filepath: Path, load_conversion: dict
+    ) -> dict:
+        filetype = filepath.suffix.replace(".", "")
+
+        for (
+            package_identifier,
+            selected_package,
+        ) in load_conversion.items():
+            if filetype in selected_package.supported_extensions:  # type: ignore
+                return {"endpoint": package_identifier}
+
+        raise colrev_exceptions.UnsupportedImportFormatError(filepath)
+
+    def __get_heuristics_results_list(
         self,
         *,
         filepath: Path,
         search_sources: dict,
         load_conversion: dict,
-    ) -> list[typing.Dict]:
-        """Apply heuristics to identify source"""
-
-        # pylint: disable=too-many-statements
-
-        def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
-            filetype = filepath.suffix.replace(".", "")
-
-            for (
-                package_identifier,
-                selected_package,
-            ) in load_conversion.items():
-                if filetype in selected_package.supported_extensions:  # type: ignore
-                    return {"endpoint": package_identifier}
-
-            raise colrev_exceptions.UnsupportedImportFormatError(filepath)
-
-        data = ""
-        try:
-            data = filepath.read_text()
-        except UnicodeDecodeError:
-            pass
-
+        data: str,
+    ) -> list:
         results_list = []
         for (
             endpoint,
@@ -193,7 +186,9 @@ class Load(colrev.operation.Operation):
                     if "load_conversion_package_endpoint" not in res:
                         res[
                             "load_conversion_package_endpoint"
-                        ] = get_load_conversion_package_endpoint(filepath=filepath)
+                        ] = self.__get_load_conversion_package_endpoint(
+                            filepath=filepath, load_conversion=load_conversion
+                        )
 
                     source_candidate = colrev.settings.SearchSource(
                         endpoint=endpoint,
@@ -212,6 +207,29 @@ class Load(colrev.operation.Operation):
                     results_list.append(result_item)
             except colrev_exceptions.UnsupportedImportFormatError:
                 continue
+        return results_list
+
+    def __apply_source_heuristics(
+        self,
+        *,
+        filepath: Path,
+        search_sources: dict,
+        load_conversion: dict,
+    ) -> list[typing.Dict]:
+        """Apply heuristics to identify source"""
+
+        data = ""
+        try:
+            data = filepath.read_text()
+        except UnicodeDecodeError:
+            pass
+
+        results_list = self.__get_heuristics_results_list(
+            filepath=filepath,
+            search_sources=search_sources,
+            load_conversion=load_conversion,
+            data=data,
+        )
 
         # Reduce the results_list when there are results with very high confidence
         if [r for r in results_list if r["confidence"] > 0.95]:
@@ -226,8 +244,8 @@ class Load(colrev.operation.Operation):
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
                 search_parameters={},
-                load_conversion_package_endpoint=get_load_conversion_package_endpoint(
-                    filepath=filepath
+                load_conversion_package_endpoint=self.__get_load_conversion_package_endpoint(
+                    filepath=filepath, load_conversion=load_conversion
                 ),
                 comment="",
             )
