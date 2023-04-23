@@ -57,35 +57,26 @@ def print_review_instructions(review_instructions: dict) -> None:
         print()
 
 
-def print_collaboration_instructions(
-    *, status_operation: colrev.ops.status.Status, collaboration_instructions: dict
+def __print_collaboration_instructions_status(
+    *, collaboration_instructions: dict
 ) -> None:
-    """Print the collaboration instructions on cli"""
+    if "status" not in collaboration_instructions:
+        return
+    if "title" in collaboration_instructions["status"]:
+        title = collaboration_instructions["status"]["title"]
+        if collaboration_instructions["status"].get("level", "NA") == "WARNING":
+            print(f"  {colors.RED}{title}{colors.END}")
+        elif collaboration_instructions["status"].get("level", "NA") == "SUCCESS":
+            print(f"  {colors.GREEN}{title}{colors.END}")
+        else:
+            print("  " + title)
+    if "msg" in collaboration_instructions["status"]:
+        print(f'  {collaboration_instructions["status"]["msg"]}')
 
-    # pylint: disable=too-many-branches
 
-    if not status_operation.review_manager.verbose_mode:
-        if collaboration_instructions["items"]:
-            if collaboration_instructions["items"][0]["title"] in [
-                "Project not yet shared",
-                "Up-to-date",
-            ]:
-                return
-
-    print("Versioning and collaboration")
-
-    if "status" in collaboration_instructions:
-        if "title" in collaboration_instructions["status"]:
-            title = collaboration_instructions["status"]["title"]
-            if collaboration_instructions["status"].get("level", "NA") == "WARNING":
-                print(f"  {colors.RED}{title}{colors.END}")
-            elif collaboration_instructions["status"].get("level", "NA") == "SUCCESS":
-                print(f"  {colors.GREEN}{title}{colors.END}")
-            else:
-                print("  " + title)
-        if "msg" in collaboration_instructions["status"]:
-            print(f'  {collaboration_instructions["status"]["msg"]}')
-
+def __print_collaboration_instructions_items(
+    *, collaboration_instructions: dict
+) -> None:
     for item in collaboration_instructions["items"]:
         if "title" in item:
             if "level" in item:
@@ -101,6 +92,30 @@ def print_collaboration_instructions(
         if "cmd_after" in item:
             print(f'  {item["cmd_after"]}')
         print()
+
+
+def print_collaboration_instructions(
+    *, status_operation: colrev.ops.status.Status, collaboration_instructions: dict
+) -> None:
+    """Print the collaboration instructions on cli"""
+
+    if (
+        not status_operation.review_manager.verbose_mode
+        and collaboration_instructions["items"]
+    ):
+        if collaboration_instructions["items"][0]["title"] in [
+            "Project not yet shared",
+            "Up-to-date",
+        ]:
+            return
+
+    print("Versioning and collaboration")
+    __print_collaboration_instructions_status(
+        collaboration_instructions=collaboration_instructions
+    )
+    __print_collaboration_instructions_items(
+        collaboration_instructions=collaboration_instructions
+    )
 
 
 def print_environment_instructions(environment_instructions: dict) -> None:
