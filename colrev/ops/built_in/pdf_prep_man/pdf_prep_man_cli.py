@@ -37,13 +37,16 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
 
+    __to_skip: int = 0
+
     def __init__(
         self,
         *,
-        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,  # pylint: disable=unused-argument
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_prep_man_operation.review_manager
 
     def __update_metadata(
         self, *, record: colrev.record.Record
@@ -99,135 +102,153 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         return record
 
+    def __open_pdf(self, *, filepath: Path) -> None:
+        # pylint: disable=no-member
+        current_platform = platform.system()
+        if current_platform == "Linux":
+            subprocess.call(["xdg-open", filepath])
+        else:
+            os.startfile(filepath)  # type: ignore
+
+    def __remove_page(
+        self,
+        *,
+        user_selection: str,
+        filepath: Path,
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
+    ) -> None:
+        if user_selection == "c":
+            try:
+                pdf_prep_man_operation.extract_coverpage(filepath=filepath)
+            except colrev_exceptions.InvalidPDFException:
+                pass
+        elif user_selection == "l":
+            try:
+                pdf_prep_man_operation.extract_lastpage(filepath=filepath)
+            except colrev_exceptions.InvalidPDFException:
+                pass
+        elif user_selection == "r":
+            range_str = ""
+            while not re.match(r"(\d)+-(\d)+", range_str):
+                range_str = input('Page range to remove (e.g., "0-10"):')
+
+            pages_to_exclude = list(
+                range(
+                    int(range_str[: range_str.find("-")]),
+                    int(range_str[range_str.find("-") + 1 :]),
+                )
+            )
+            try:
+                pdf_prep_man_operation.extract_pages(
+                    filepath=filepath, pages_to_remove=pages_to_exclude
+                )
+            except colrev_exceptions.InvalidPDFException:
+                pass
+
+    def __man_pdf_prep_item(
+        self,
+        *,
+        filepath: Path,
+        record: colrev.record.Record,
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
+    ) -> None:
+        self.__open_pdf(filepath=filepath)
+
+        # if PDF > 100 pages, we may check on which page we find the title & print
+        intro_paragraph = (
+            "Prepared?\n"
+            "       (y)es, \n"
+            "       (n)o/delete file,\n"
+            "       (s)kip, (s10) to skip 10 records, or (q)uit,\n"
+            "       (c)overpage remove, (l)ast page remove, (r)emove page range, "
+            "(m)etadata needs to be updated\n"
+        )
+        print(intro_paragraph)
+        user_selection = ""
+        valid_selections = ["y", "n", "s", "q"]
+        while user_selection not in valid_selections:
+            user_selection = input("Selection: ")
+            if user_selection.startswith("s"):
+                if user_selection[1:].isdigit():
+                    self.__to_skip = int(user_selection[1:])
+                return
+            if user_selection in ["c", "l", "r"]:
+                self.__remove_page(
+                    user_selection=user_selection,
+                    filepath=filepath,
+                    pdf_prep_man_operation=pdf_prep_man_operation,
+                )
+            elif user_selection == "y":
+                pdf_prep_man_operation.set_pdf_man_prepared(record=record)
+            elif user_selection == "n":
+                record.remove_field(key="file")
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
+                )
+                if filepath.is_file():
+                    filepath.unlink()
+            elif user_selection == "m":
+                self.__update_metadata(record=record)
+                print(intro_paragraph)
+            elif user_selection == "q":
+                raise QuitPressedException()
+            else:
+                print("Invalid selection.")
+
+    def __man_pdf_prep_item_init(
+        self,
+        *,
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
+        records: dict,
+        item: dict,
+        stat: str,
+    ) -> dict:
+        current_platform = platform.system()
+        if current_platform in ["Linux", "Darwin"]:
+            os.system("clear")
+        else:
+            os.system("cls")
+
+        print(stat)
+        record = colrev.record.Record(data=item)
+        record.print_pdf_prep_man()
+
+        record_dict = records[item["ID"]]
+        record = colrev.record.Record(data=record_dict)
+        if (
+            colrev.record.RecordState.pdf_needs_manual_preparation
+            != record_dict["colrev_status"]
+        ):
+            return record_dict
+
+        file_provenance = record.get_field_provenance(key="file")
+        print(
+            "Manual preparation needed:"
+            f" {colors.RED}{file_provenance['note']}{colors.END}"
+        )
+
+        filepath = self.review_manager.path / Path(record_dict["file"])
+        if not filepath.is_file():
+            filepath = self.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
+        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath))
+        if filepath.is_file():
+            self.__man_pdf_prep_item(
+                filepath=filepath,
+                record=record,
+                pdf_prep_man_operation=pdf_prep_man_operation,
+            )
+
+        else:
+            print(f'File does not exist ({record.data["ID"]})')
+
+        self.review_manager.dataset.save_records_dict(records=records)
+
+        return records
+
     def pdf_prep_man(
         self, pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, records: dict
     ) -> dict:
         """Prepare PDF manually based on a cli"""
-
-        # pylint: disable=too-many-statements
-        to_skip = 0
-
-        def man_pdf_prep(
-            pdf_prep_man: colrev.ops.pdf_prep_man.PDFPrepMan,
-            records: dict,
-            item: dict,
-            stat: str,
-        ) -> dict:
-            # pylint: disable=no-member
-            # pylint: disable=too-many-branches
-            # pylint: disable=too-many-locals
-
-            current_platform = platform.system()
-            if current_platform in ["Linux", "Darwin"]:
-                os.system("clear")
-            else:
-                os.system("cls")
-
-            print(stat)
-            record = colrev.record.Record(data=item)
-            record.print_pdf_prep_man()
-
-            record_dict = records[item["ID"]]
-            record = colrev.record.Record(data=record_dict)
-            if (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict["colrev_status"]
-            ):
-                return record_dict
-
-            file_provenance = record.get_field_provenance(key="file")
-            print(
-                "Manual preparation needed:"
-                f" {colors.RED}{file_provenance['note']}{colors.END}"
-            )
-
-            filepath = pdf_prep_man.review_manager.path / Path(record_dict["file"])
-            if not filepath.is_file():
-                filepath = (
-                    pdf_prep_man.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
-                )
-            record.data.update(
-                colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath)
-            )
-            if filepath.is_file():
-                current_platform = platform.system()
-                if current_platform == "Linux":
-                    subprocess.call(["xdg-open", filepath])
-                else:
-                    os.startfile(filepath)  # type: ignore
-
-                # if PDF > 100 pages, we may check on which page we find the title & print
-
-                intro_paragraph = (
-                    "Prepared?\n"
-                    "       (y)es, \n"
-                    "       (n)o/delete file,\n"
-                    "       (s)kip, (s10) to skip 10 records, or (q)uit,\n"
-                    "       (c)overpage remove, (l)ast page remove, (r)emove page range, "
-                    "(m)etadata needs to be updated\n"
-                )
-                print(intro_paragraph)
-                user_selection = ""
-                valid_selections = ["y", "n", "s", "q"]
-                while user_selection not in valid_selections:
-                    user_selection = input("Selection: ")
-                    if user_selection.startswith("s"):
-                        if user_selection[1:].isdigit():
-                            nonlocal to_skip
-                            to_skip = int(user_selection[1:])
-                        return records
-                    if user_selection == "q":
-                        raise QuitPressedException()
-
-                    if user_selection == "m":
-                        self.__update_metadata(record=record)
-                        print(intro_paragraph)
-                    elif user_selection == "c":
-                        try:
-                            pdf_prep_man_operation.extract_coverpage(filepath=filepath)
-                        except colrev_exceptions.InvalidPDFException:
-                            pass
-                    elif user_selection == "l":
-                        try:
-                            pdf_prep_man_operation.extract_lastpage(filepath=filepath)
-                        except colrev_exceptions.InvalidPDFException:
-                            pass
-                    elif user_selection == "r":
-                        range_str = ""
-                        while not re.match(r"(\d)+-(\d)+", range_str):
-                            range_str = input('Page range to remove (e.g., "0-10"):')
-
-                        pages_to_exclude = list(
-                            range(
-                                int(range_str[: range_str.find("-")]),
-                                int(range_str[range_str.find("-") + 1 :]),
-                            )
-                        )
-                        try:
-                            pdf_prep_man_operation.extract_pages(
-                                filepath=filepath, pages_to_remove=pages_to_exclude
-                            )
-                        except colrev_exceptions.InvalidPDFException:
-                            pass
-
-                    elif user_selection == "y":
-                        pdf_prep_man_operation.set_pdf_man_prepared(record=record)
-                    elif user_selection == "n":
-                        record.remove_field(key="file")
-                        record.set_status(
-                            target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
-                        )
-                        if filepath.is_file():
-                            filepath.unlink()
-                    else:
-                        print("Invalid selection.")
-
-            else:
-                print(f'File does not exist ({record.data["ID"]})')
-
-            pdf_prep_man.review_manager.dataset.save_records_dict(records=records)
-
-            return records
 
         pdf_prep_man_operation.review_manager.logger.info(
             "Loading data for pdf_prep_man"
@@ -236,12 +257,17 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
 
         for i, item in enumerate(pdf_prep_man_data["items"]):
-            if to_skip > 0:
-                to_skip -= 1
+            if self.__to_skip > 0:
+                self.__to_skip -= 1
                 continue
             try:
                 stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
-                records = man_pdf_prep(pdf_prep_man_operation, records, item, stat)
+                records = self.__man_pdf_prep_item_init(
+                    pdf_prep_man_operation=pdf_prep_man_operation,
+                    records=records,
+                    item=item,
+                    stat=stat,
+                )
             except QuitPressedException:
                 break
 
