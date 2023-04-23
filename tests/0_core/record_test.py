@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
@@ -167,6 +168,7 @@ Email: guy.pare@hec.ca"""
 
 
 def test_eq() -> None:
+    # pylint: disable=comparison-with-itself
     assert R1 == R1
     assert R1 != R2
 
@@ -412,7 +414,7 @@ def test_get_inconsistencies() -> None:
 
 
 def test_change_entrytype_article() -> None:
-    input = {
+    input_value = {
         "ID": "R1",
         "ENTRYTYPE": "inproceedings",
         "colrev_masterdata_provenance": {
@@ -464,7 +466,7 @@ def test_change_entrytype_article() -> None:
         "volume": "UNKNOWN",
         "number": "UNKNOWN",
     }
-    REC = colrev.record.Record(data=input)
+    REC = colrev.record.Record(data=input_value)
     REC.change_entrytype(new_entrytype="article")
     actual = REC.data
     assert expected == actual
@@ -1111,9 +1113,6 @@ def test_merge_except_errata() -> None:
 
 
 def test_merge_local_index(mocker) -> None:  # type: ignore
-    import colrev.record
-    import colrev.env.local_index
-
     mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
@@ -1386,16 +1385,16 @@ def test_get_toc_key() -> None:
     actual = R1.get_toc_key()
     assert expected == actual
 
-    input = {
+    input_value = {
         "ENTRYTYPE": "inproceedings",
         "booktitle": "International Conference on Information Systems",
         "year": "2012",
     }
     expected = "international-conference-on-information-systems|2012"
-    actual = colrev.record.Record(data=input).get_toc_key()
+    actual = colrev.record.Record(data=input_value).get_toc_key()
     assert expected == actual
 
-    input = {
+    input_value = {
         "ENTRYTYPE": "phdthesis",
         "ID": "test",
         "title": "Thesis on asteroids",
@@ -1405,7 +1404,7 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        colrev.record.Record(data=input).get_toc_key()
+        colrev.record.Record(data=input_value).get_toc_key()
 
 
 def test_print_citation_format() -> None:

@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from pathlib import Path
-
 import pytest
 
 import colrev.env.language_service

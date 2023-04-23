@@ -180,9 +180,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             + "/"
             + retrieved_record_dict.get("epmc_id", "NO_ID")
         )
+
         retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
-        del retrieved_record_dict["epmc_id"]
-        del retrieved_record_dict["epmc_source"]
+        retrieved_record_dict = {
+            k: v
+            for k, v in retrieved_record_dict.items()
+            if k not in ["epmc_id", "epmc_source"]
+        }
 
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
 

@@ -545,8 +545,7 @@ class LocalIndex:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
             selected_row = None
-
-            cur.execute(f"SELECT * FROM {self.RECORD_INDEX} WHERE {query}")
+            cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             for row in cur.fetchall():
                 selected_row = row
 

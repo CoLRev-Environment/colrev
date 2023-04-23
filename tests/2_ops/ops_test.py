@@ -51,7 +51,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
-        for path in test_records_dict.keys():
+        for path in test_records_dict:
             with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(file.read())

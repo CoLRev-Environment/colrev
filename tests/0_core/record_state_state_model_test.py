@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from pathlib import Path
-
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -280,7 +278,8 @@ def test_leq() -> None:
     with pytest.raises(
         NotImplementedError,
     ):
-        colrev.record.RecordState.md_retrieved < "string"
+        if colrev.record.RecordState.md_retrieved < "string":
+            print("Error")
 
     # TODO : create ordered list, remove left element and assert that it is smaller than all remaining elements
     assert (

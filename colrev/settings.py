@@ -569,6 +569,7 @@ class Settings(JsonSchemaMixin):
         class PathField(FieldEncoder):
             """JsonSchemaMixin encoder for Path fields"""
 
+            # pylint: disable=too-few-public-methods
             @property
             def json_schema(self) -> dict:
                 return {"type": "path"}

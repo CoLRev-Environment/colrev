@@ -25,14 +25,12 @@ def review_manager(mocker, tmp_path: Path) -> colrev.review_manager.ReviewManage
         return_value=("Tester Name", "tester@email.de"),
     )
 
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(tmp_path), force_mode=True
-    )
-    review_manager.settings = colrev.settings.load_settings(
+    r_man = colrev.review_manager.ReviewManager(path_str=str(tmp_path), force_mode=True)
+    r_man.settings = colrev.settings.load_settings(
         settings_path=Path(colrev.__file__).parents[0]
         / Path("template/init/settings.json")
     )
-    return review_manager
+    return r_man
 
 
 def test_review_type_interfaces(

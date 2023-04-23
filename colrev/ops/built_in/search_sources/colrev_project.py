@@ -140,9 +140,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                     stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
                     # pylint: disable=possibly-unused-variable
                     rec_df = pd.DataFrame.from_records([stringified_copy])
+                    query_select = "SELECT * FROM rec_df WHERE"
                     query = (
-                        "SELECT * FROM rec_df WHERE "
-                        f"{self.search_source.search_parameters['scope']['condition']}"
+                        f"{query_select} "
+                        + f"{self.search_source.search_parameters['scope']['condition']}"
                     )
                     res = ps.sqldf(query, locals())
                 except PandaSQLException:

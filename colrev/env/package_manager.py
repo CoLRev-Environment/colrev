@@ -72,6 +72,7 @@ class ReviewTypePackageEndpointInterface(
     """The PackageEndpoint interface for ReviewTypes"""
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def initialize(settings: dict) -> dict:  # type: ignore
         """Initialize the review type"""
         return settings  # pragma: no cover
@@ -164,6 +165,7 @@ class LoadConversionPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
+    # pylint: disable=too-few-public-methods
     # pylint: disable=no-self-argument
     def load(  # type: ignore
         load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -186,6 +188,7 @@ class PrepPackageEndpointInterface(
         (even if the colrev_status does not transition to md_prepared)"""
     )
 
+    # pylint: disable=too-few-public-methods
     # pylint: disable=no-self-argument
     def prepare(prep_operation: colrev.ops.prep.Prep, prep_record: dict) -> dict:  # type: ignore
         """Run the prep operation"""
@@ -199,6 +202,7 @@ class PrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def prepare_manual(  # type: ignore
         prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
@@ -213,6 +217,7 @@ class DedupePackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def run_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:  # type: ignore
         """Run the dedupe operation"""
 
@@ -225,6 +230,7 @@ class PrescreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def run_prescreen(  # type: ignore
         prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict, split: list
     ) -> dict:
@@ -239,6 +245,7 @@ class PDFGetPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def get_pdf(pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: dict) -> dict:  # type: ignore
         """Run the pdf-get operation"""
         return record  # pragma: no cover
@@ -252,6 +259,7 @@ class PDFGetManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def pdf_get_man(  # type: ignore
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
     ) -> dict:
@@ -268,6 +276,7 @@ class PDFPrepPackageEndpointInterface(
 
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def prep_pdf(  # type: ignore
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.PrepRecord,
@@ -285,6 +294,7 @@ class PDFPrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def pdf_prep_man(  # type: ignore
         pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
@@ -300,6 +310,7 @@ class ScreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
+    # pylint: disable=too-few-public-methods
     def run_screen(  # type: ignore
         screen_operation: colrev.ops.screen.Screen, records: dict, split: list
     ) -> dict:
