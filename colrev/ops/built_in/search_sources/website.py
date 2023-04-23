@@ -46,15 +46,54 @@ class WebsiteConnector:
         self.zotero_lock = Lock()
 
     @classmethod
-    def __update_record(
+    def __set_url(
         cls,
-        prep_operation: colrev.ops.prep.Prep,
+        *,
         record: colrev.record.Record,
         item: dict,
+        review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
-        # pylint: disable=too-many-branches
+        if "url" not in item:
+            return
+        host = urlparse(item["url"]).hostname
+        if host and host.endswith("doi.org"):
+            record.data["doi"] = item["url"].replace("https://doi.org/", "")
+            dummy_record = colrev.record.PrepRecord(data={"doi": record.data["doi"]})
+            doi_connector.DOIConnector.get_link_from_doi(
+                record=dummy_record,
+                review_manager=review_manager,
+            )
+            if "https://doi.org/" not in dummy_record.data["url"]:
+                record.data["url"] = dummy_record.data["url"]
+        else:
+            record.data["url"] = item["url"]
 
-        record.data["ID"] = item["key"]
+    @classmethod
+    def __set_keywords(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "tags" not in item:
+            return
+        if len(item["tags"]) == 0:
+            return
+        keywords = ", ".join([k["tag"] for k in item["tags"]])
+        record.data["keywords"] = keywords
+
+    @classmethod
+    def __set_author(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "creators" not in item:
+            return
+        author_str = ""
+        for creator in item["creators"]:
+            author_str += (
+                " and "
+                + creator.get("lastName", "")
+                + ", "
+                + creator.get("firstName", "")
+            )
+        author_str = author_str[5:]  # drop the first " and "
+        record.data["author"] = author_str
+
+    @classmethod
+    def __set_entrytype(cls, *, record: colrev.record.Record, item: dict) -> None:
         record.data["ENTRYTYPE"] = "article"  # default
         if item.get("itemType", "") == "journalArticle":
             record.data["ENTRYTYPE"] = "article"
@@ -68,47 +107,51 @@ class WebsiteConnector:
             record.data["ENTRYTYPE"] = "inproceedings"
             if "proceedingsTitle" in item:
                 record.data["booktitle"] = item["proceedingsTitle"]
-        if "creators" in item:
-            author_str = ""
-            for creator in item["creators"]:
-                author_str += (
-                    " and "
-                    + creator.get("lastName", "")
-                    + ", "
-                    + creator.get("firstName", "")
-                )
-            author_str = author_str[5:]  # drop the first " and "
-            record.data["author"] = author_str
-        if "title" in item:
-            record.data["title"] = item["title"]
-        if "doi" in item:
-            record.data["doi"] = item["doi"]
-        if "date" in item:
-            year = re.search(r"\d{4}", item["date"])
-            if year:
-                record.data["year"] = year.group(0)
-        if "pages" in item:
-            record.data["pages"] = item["pages"]
-        if "url" in item:
-            host = urlparse(item["url"]).hostname
-            if host and host.endswith("doi.org"):
-                record.data["doi"] = item["url"].replace("https://doi.org/", "")
-                dummy_record = colrev.record.PrepRecord(
-                    data={"doi": record.data["doi"]}
-                )
-                doi_connector.DOIConnector.get_link_from_doi(
-                    record=dummy_record,
-                    review_manager=prep_operation.review_manager,
-                )
-                if "https://doi.org/" not in dummy_record.data["url"]:
-                    record.data["url"] = dummy_record.data["url"]
-            else:
-                record.data["url"] = item["url"]
 
-        if "tags" in item:
-            if len(item["tags"]) > 0:
-                keywords = ", ".join([k["tag"] for k in item["tags"]])
-                record.data["keywords"] = keywords
+    @classmethod
+    def __set_title(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "title" not in item:
+            return
+        record.data["title"] = item["title"]
+
+    @classmethod
+    def __set_doi(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "doi" not in item:
+            return
+        record.data["doi"] = item["doi"].upper()
+
+    @classmethod
+    def __set_date(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "date" not in item:
+            return
+        year = re.search(r"\d{4}", item["date"])
+        if year:
+            record.data["year"] = year.group(0)
+
+    @classmethod
+    def __set_pages(cls, *, record: colrev.record.Record, item: dict) -> None:
+        if "pages" not in item:
+            return
+        record.data["pages"] = item["pages"]
+
+    @classmethod
+    def __update_record(
+        cls,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        item: dict,
+    ) -> None:
+        record.data["ID"] = item["key"]
+        cls.__set_entrytype(record=record, item=item)
+        cls.__set_author(record=record, item=item)
+        cls.__set_title(record=record, item=item)
+        cls.__set_doi(record=record, item=item)
+        cls.__set_date(record=record, item=item)
+        cls.__set_pages(record=record, item=item)
+        cls.__set_url(
+            record=record, item=item, review_manager=prep_operation.review_manager
+        )
+        cls.__set_keywords(record=record, item=item)
 
     def retrieve_md_from_website(
         self, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
