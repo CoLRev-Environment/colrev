@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
-from subprocess import CalledProcessError
-from subprocess import check_output
 from typing import Optional
 
 import docker
@@ -125,20 +123,13 @@ class EnvironmentManager:
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
         try:
-            username = check_output(["git", "config", "user.name"], shell=False)
-            email = check_output(["git", "config", "user.email"], shell=False)
-            global_conf_details = (
-                username.decode("utf-8").replace("\n", ""),
-                email.decode("utf-8").replace("\n", ""),
-            )
-        except CalledProcessError as exc:
+            username = git.config.GitConfigParser().get_value("user", "name")
+            email = git.config.GitConfigParser().get_value("user", "email")
+            global_conf_details = (username, email)
+        except (git.config.cp.NoSectionError, git.config.cp.NoOptionError) as exc:
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."
             ) from exc
-        if ("NA", "NA") == global_conf_details:
-            raise colrev_exceptions.CoLRevException(
-                "Global git variables (user name and email) not available."
-            )
         return global_conf_details
 
     @classmethod
