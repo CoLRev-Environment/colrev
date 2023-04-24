@@ -67,6 +67,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     short_name = "Crossref"
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 
+    __availability_exception_message = (
+        f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
+    )
+
     def __init__(
         self,
         *,
@@ -140,12 +144,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 assert returned_record.data["author"] == test_rec["author"]
             else:
                 if not source_operation.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        self.__availability_exception_message
+                    )
         except (requests.exceptions.RequestException, IndexError) as exc:
             print(exc)
             if not source_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    "CROSSREF"
+                    self.__availability_exception_message
                 ) from exc
 
     @timeout_decorator.timeout(800, use_signals=False)
@@ -192,8 +198,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, *, journal_issn: str, rerun: bool
     ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
-
-        # pylint: disable=import-outside-toplevel
 
         assert re.match(self.__issn_regex, journal_issn)
 
@@ -825,10 +829,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
+                    self.__availability_exception_message
                 )
             raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
+                self.__availability_exception_message
             )
 
     def run_search(
