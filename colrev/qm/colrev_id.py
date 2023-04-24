@@ -48,23 +48,23 @@ def __format_author_field_for_cid(input_string: str) -> str:
     return " ".join(author_list)
 
 
-def __get_container_title(*, record_dict: dict) -> str:
+def __get_container_title(*, record: colrev.record.Record) -> str:
     # Note: custom __get_container_title for the colrev_id
 
     # school as the container title for theses
-    if record_dict["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
-        container_title = record_dict["school"]
+    if record.data["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
+        container_title = record.data["school"]
     # for technical reports
-    elif record_dict["ENTRYTYPE"] == "techreport":
-        container_title = record_dict["institution"]
-    elif record_dict["ENTRYTYPE"] == "inproceedings":
-        container_title = record_dict["booktitle"]
-    elif record_dict["ENTRYTYPE"] == "article":
-        container_title = record_dict["journal"]
-    elif "series" in record_dict:
-        container_title = record_dict["series"]
-    elif "url" in record_dict:
-        container_title = record_dict["url"]
+    elif record.data["ENTRYTYPE"] == "techreport":
+        container_title = record.data["institution"]
+    elif record.data["ENTRYTYPE"] == "inproceedings":
+        container_title = record.data["booktitle"]
+    elif record.data["ENTRYTYPE"] == "article":
+        container_title = record.data["journal"]
+    elif "series" in record.data:
+        container_title = record.data["series"]
+    elif "url" in record.data:
+        container_title = record.data["url"]
     else:
         raise KeyError
 
@@ -90,7 +90,9 @@ def __robust_append(*, input_string: str, to_append: str) -> str:
 
 
 def __check_colrev_id_preconditions(
-    *, record: colrev.record.Record, assume_complete: bool, also_known_as_record: dict
+    *,
+    record: colrev.record.Record,
+    assume_complete: bool,
 ) -> None:
     if assume_complete:
         return
@@ -98,12 +100,11 @@ def __check_colrev_id_preconditions(
         colrev.record.RecordState.md_imported,
         colrev.record.RecordState.md_needs_manual_preparation,
     ]:
-        if len(also_known_as_record) != 0:
-            raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                msg="cannot determine field requirements "
-                "(e.g., volume/number for journal articles)",
-                missing_fields=["colrev_status/field_requirements"],
-            )
+        raise colrev_exceptions.NotEnoughDataToIdentifyException(
+            msg="cannot determine field requirements "
+            "(e.g., volume/number for journal articles)",
+            missing_fields=["colrev_status/field_requirements"],
+        )
     # Make sure that colrev_ids are not generated when
     # identifying_field_keys are UNKNOWN but possibly required
     for identifying_field_key in colrev.record.Record.identifying_field_keys:
@@ -114,7 +115,7 @@ def __check_colrev_id_preconditions(
             )
 
 
-def __get_colrev_id_from_record(*, record_dict: dict) -> str:
+def __get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
     try:
         # Including the version of the identifier prevents cases
         # in which almost all identifiers are identical
@@ -122,34 +123,34 @@ def __get_colrev_id_from_record(*, record_dict: dict) -> str:
         # when updating the identifier function function
         # (this may look like an anomaly and be hard to identify)
         srep = "colrev_id1:"
-        if record_dict["ENTRYTYPE"].lower() == "article":
+        if record.data["ENTRYTYPE"].lower() == "article":
             srep = __robust_append(input_string=srep, to_append="a")
-        elif record_dict["ENTRYTYPE"].lower() == "inproceedings":
+        elif record.data["ENTRYTYPE"].lower() == "inproceedings":
             srep = __robust_append(input_string=srep, to_append="p")
         else:
             srep = __robust_append(
-                input_string=srep, to_append=record_dict["ENTRYTYPE"].lower()
+                input_string=srep, to_append=record.data["ENTRYTYPE"].lower()
             )
         srep = __robust_append(
             input_string=srep,
-            to_append=__get_container_title(record_dict=record_dict),
+            to_append=__get_container_title(record=record),
         )
-        if record_dict["ENTRYTYPE"] == "article":
+        if record.data["ENTRYTYPE"] == "article":
             # Note: volume/number may not be required.
             srep = __robust_append(
-                input_string=srep, to_append=record_dict.get("volume", "-")
+                input_string=srep, to_append=record.data.get("volume", "-")
             )
             srep = __robust_append(
-                input_string=srep, to_append=record_dict.get("number", "-")
+                input_string=srep, to_append=record.data.get("number", "-")
             )
-        srep = __robust_append(input_string=srep, to_append=record_dict["year"])
-        author = __format_author_field_for_cid(record_dict["author"])
+        srep = __robust_append(input_string=srep, to_append=record.data["year"])
+        author = __format_author_field_for_cid(record.data["author"])
         if author.replace("-", "") == "":
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
                 msg="Missing field:", missing_fields=["author"]
             )
         srep = __robust_append(input_string=srep, to_append=author)
-        srep = __robust_append(input_string=srep, to_append=record_dict["title"])
+        srep = __robust_append(input_string=srep, to_append=record.data["title"])
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
         # Note : pages not needed.
@@ -157,51 +158,21 @@ def __get_colrev_id_from_record(*, record_dict: dict) -> str:
         # srep = __robust_append(srep, pages)
     except KeyError as exc:
         if "ENTRYTYPE" in str(exc):
-            print(f"Missing ENTRYTYPE in {record_dict['ID']}")
+            print(f"Missing ENTRYTYPE in {record.data['ID']}")
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="Missing field:" + str(exc), missing_fields=["ENTRYTYPE"]
         )
     return srep
 
 
-def __get_rec_dict_for_srep(
-    *, record: colrev.record.Record, also_known_as_record: dict
-) -> dict:
-    if len(also_known_as_record) == 0:
-        record_dict = record.data
-    else:
-        required_fields_keys = colrev.record.Record.record_field_requirements["other"]
-        if record.data["ENTRYTYPE"] in colrev.record.Record.record_field_requirements:
-            required_fields_keys = colrev.record.Record.record_field_requirements[
-                record.data["ENTRYTYPE"]
-            ]
-
-        missing_field_keys = [
-            f for f in required_fields_keys if f not in also_known_as_record
-        ]
-        if len(missing_field_keys) > 0:
-            raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                msg="Missing fields:" + ",".join(missing_field_keys),
-                missing_fields=missing_field_keys,
-            )
-        record_dict = also_known_as_record
-    return record_dict
-
-
-def create_colrev_id(
-    *, record: colrev.record.Record, also_known_as_record: dict, assume_complete: bool
-) -> str:
+def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> str:
     """Create the colrev_id"""
     __check_colrev_id_preconditions(
         record=record,
         assume_complete=assume_complete,
-        also_known_as_record=also_known_as_record,
     )
 
-    record_dict = __get_rec_dict_for_srep(
-        record=record, also_known_as_record=also_known_as_record
-    )
-    srep = __get_colrev_id_from_record(record_dict=record_dict)
+    srep = __get_colrev_id_from_record(record=record)
 
     # Safeguard against titles that are rarely distinct
     if any(x in srep for x in ["|minitrack-introduction|"]):

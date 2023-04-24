@@ -1480,19 +1480,12 @@ class Record:
     def create_colrev_id(
         self,
         *,
-        also_known_as_record: Optional[dict] = None,
         assume_complete: bool = False,
     ) -> str:
-        """Returns the colrev_id of the Record.
-        If a also_known_as_record is provided, it returns the colrev_id of the
-        also_known_as_record (using the Record as the reference to decide whether
-        required fields are missing)"""
-        if also_known_as_record is None:
-            also_known_as_record = {}
+        """Returns the colrev_id of the Record."""
 
         return colrev.qm.colrev_id.create_colrev_id(
             record=self,
-            also_known_as_record=also_known_as_record,
             assume_complete=assume_complete,
         )
 
