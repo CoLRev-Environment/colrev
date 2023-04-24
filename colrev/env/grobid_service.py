@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
-import subprocess
 import time
 
+import docker
 import requests
 
 import colrev.env.environment_manager
@@ -57,24 +56,17 @@ class GrobidService:
         except requests.exceptions.ConnectionError:
             pass
 
+        client = docker.from_env()
         logging.info("Running docker container created from %s", self.grobid_image)
-
         logging.info("Starting grobid service...")
-        start_cmd = [
-            "docker",
-            "run",
-            "-t",
-            "--rm",
-            "-m",
-            "4g",
-            "-p",
-            "8070:8070",
-            "-p",
-            "8071:8071",
+        client.containers.run(
             self.grobid_image,
-        ]
-        with open(os.devnull, "w", encoding="utf-8") as devnull:
-            subprocess.Popen(start_cmd, shell=False, stdout=devnull)
+            auto_remove=True,
+            tty=True,
+            mem_limit="4g",
+            ports={8070: 8070, 8071: 8071},
+            detach=True,
+        )
 
         self.check_grobid_availability()
 
