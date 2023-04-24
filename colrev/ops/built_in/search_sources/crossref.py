@@ -218,6 +218,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool
     ) -> str:
         if jour_vol_iss_list:
+            if not all(x in record.data for x in ["journal", "volume", "number"]):
+                raise colrev_exceptions.NotEnoughDataToIdentifyException
             params = {"rows": "50"}
             container_title = re.sub(r"[\W]+", " ", record.data["journal"])
             params["query.container-title"] = container_title.replace("_", " ")
