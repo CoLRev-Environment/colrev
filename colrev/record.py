@@ -384,6 +384,8 @@ class Record:
                 value_provenance["source"] += f"|rename-from:{key}"
             self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
+            if "colrev_data_provenance" not in self.data:
+                self.data["colrev_data_provenance"] = {}
             if key in self.data["colrev_data_provenance"]:
                 value_provenance = self.data["colrev_data_provenance"][key]
                 if "source" in value_provenance:
