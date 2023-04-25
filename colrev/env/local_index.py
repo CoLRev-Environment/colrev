@@ -1050,11 +1050,13 @@ class LocalIndex:
         """Retrieve a record from the toc (table-of-contents)"""
 
         try:
-            try:
-                toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-            except colrev_exceptions.NotTOCIdentifiableException as exc:
-                if not search_across_tocs:
-                    raise colrev_exceptions.RecordNotInIndexException() from exc
+            # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
+            # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
+            # try:
+            toc_key = colrev.record.Record(data=record_dict).get_toc_key()
+            # except colrev_exceptions.NotTOCIdentifiableException as exc:
+            #     if not search_across_tocs:
+            #         raise colrev_exceptions.RecordNotInIndexException() from exc
 
             toc_items = self.__get_toc_items_for_toc_retrieval(
                 toc_key=toc_key, search_across_tocs=search_across_tocs
