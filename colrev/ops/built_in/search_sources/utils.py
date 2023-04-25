@@ -110,7 +110,6 @@ def __format_fields(*, record_dict: dict) -> dict:
         value = value.replace("</scp>", "}")
         value = html.unescape(str(value))
         value = value.replace("\n", " ")
-        value = re.sub(r"<\/?[^>]*>", " ", value)
         value = re.sub(r"<\/?jats\:[^>]*>", " ", value)
         value = re.sub(r"\s+", " ", value).rstrip().lstrip()
         record_dict[key] = value
