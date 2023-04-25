@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+import docker
 import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -82,30 +82,43 @@ class PDFCheckOCR(JsonSchemaMixin):
         #     options = options + '--deskew '
         docker_home_path = Path("/home/docker")
 
-        command = [
-            "docker",
-            "run",
-            "--rm",
-            "--user",
-            # "$(id -u):$(id -g)",
-            f"{os.geteuid()}:{os.getegid()}",
-            "-v",
-            f"{orig_path}:/home/docker",
-            self.ocrmypdf_image,
-            "--force-ocr",
-            # options,
-            "--jobs",
-            "4",
-            "-l",
-            "eng",
-            str(docker_home_path / pdf_path.name),
-            str(docker_home_path / ocred_filename.name),
-        ]
+        args = (
+            f"--force-ocr --jobs 4 -l eng {str(docker_home_path / pdf_path.name)}, "
+            f"{str(docker_home_path / ocred_filename.name)}"
+        )
 
-        with subprocess.Popen(
-            command, stdout=subprocess.PIPE, shell=False
-        ) as ocr_process:
-            ocr_process.wait()
+        client = docker.from_env()
+        client.containers.run(
+            image=self.ocrmypdf_image,
+            command=args,
+            auto_remove=True,
+            user=f"{os.geteuid()}:{os.getegid()}",
+            volume=f"{orig_path}:/home/docker",
+        )
+        # command = [
+        #     "docker",
+        #     "run",
+        #     "--rm",
+        #     "--user",
+        #     # "$(id -u):$(id -g)",
+        #     f"{os.geteuid()}:{os.getegid()}",
+        #     "-v",
+        #     f"{orig_path}:/home/docker",
+        #     self.ocrmypdf_image,
+        #     "--force-ocr",
+        #     # options,
+        #     "--jobs",
+        #     "4",
+        #     "-l",
+        #     "eng",
+        #     str(docker_home_path / pdf_path.name),
+        #     str(docker_home_path / ocred_filename.name),
+        # ]
+
+        # with subprocess.Popen(
+        #     command, stdout=subprocess.PIPE, shell=False
+        # ) as ocr_process:
+        #     ocr_process.wait()
 
         record = colrev.record.Record(data=record_dict)
         record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")

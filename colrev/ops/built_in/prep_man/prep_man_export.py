@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import typing
+import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -119,7 +119,7 @@ class ExportManPrep(JsonSchemaMixin):
             self.__copy_files_for_man_prep(records=man_prep_recs)
         if "pytest" not in os.getcwd():
             # os.system('%s %s' % (os.getenv('EDITOR'), self.prep_man_bib_path))
-            subprocess.call(["xdg-open", str(self.prep_man_bib_path)])
+            webbrowser.open(str(self.prep_man_bib_path))
 
     def __update_provenance(
         self, *, record: colrev.record.Record, records: dict
