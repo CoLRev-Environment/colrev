@@ -25,7 +25,7 @@ def get_pdf_hash(*, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
 
     doc: fitz.Document = fitz.open(pdf_path)
     img = None
-    file_name = f"page-{page_nr}.png"
+    file_name = f".{pdf_path.stem}-{page_nr}.png"
     page_no = 0
     for page in doc:
         pix = page.get_pixmap(dpi=200)
