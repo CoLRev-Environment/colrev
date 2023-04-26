@@ -405,9 +405,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         record: colrev.record.Record,
-        added_colrev_pdf_id: bool,
         retrieval_similarity: float,
     ) -> colrev.record.Record:
+        # add colrev_pdf_id
+        added_colrev_pdf_id = self.__add_cpid(record=record)
+
         retrieved_record_dict = {}
         try:
             retrieved_record_dict = self.local_index.retrieve(
@@ -457,6 +459,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         record: colrev.record.Record,
+        retrieved_record: colrev.record.Record,
         default_source: str,
         prep_operation: colrev.ops.prep.Prep,
     ) -> None:
@@ -471,12 +474,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 update_only=False,
             )
 
-            local_index_feed.set_id(record_dict=record.data)
-            local_index_feed.add_record(record=record)
+            local_index_feed.set_id(record_dict=retrieved_record.data)
+            local_index_feed.add_record(record=retrieved_record)
 
-            record.remove_field(key="curation_ID")
+            retrieved_record.remove_field(key="curation_ID")
             record.merge(
-                merging_record=record,
+                merging_record=retrieved_record,
                 default_source=default_source,
             )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
@@ -502,12 +505,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             except OSError:
                 pass
 
-            self.local_index_lock.release()
-
-        except (
-            colrev_exceptions.InvalidMerge,
-            colrev_exceptions.NotFeedIdentifiableException,
-        ):
+        except (colrev_exceptions.InvalidMerge,):
+            print("invalid-merge")
+        except colrev_exceptions.NotFeedIdentifiableException:
+            print("not-feed-identifiable")
+        finally:
             self.local_index_lock.release()
 
     def get_masterdata(
@@ -523,12 +525,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # Already linked to a local-index record
             return record
 
-        # add colrev_pdf_id
-        added_colrev_pdf_id = self.__add_cpid(record=record)
-
         retrieved_record = self.__retrieve_record_from_local_index(
             record=record,
-            added_colrev_pdf_id=added_colrev_pdf_id,
             retrieval_similarity=prep_operation.retrieval_similarity,
         )
 
@@ -547,7 +545,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 ]["source"]
 
         self.__store_retrieved_record_in_feed(
-            record=retrieved_record,
+            record=record,
+            retrieved_record=retrieved_record,
             default_source=default_source,
             prep_operation=prep_operation,
         )
