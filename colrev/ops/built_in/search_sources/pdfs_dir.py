@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import timeout_decorator
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -714,6 +715,28 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return None
 
+    def __update_based_on_doi(self, *, record_dict: dict) -> None:
+        if "doi" not in record_dict:
+            return
+        try:
+            retrieved_record = self.crossref_connector.query_doi(doi=record_dict["doi"])
+
+            for key in [
+                "journal",
+                "booktitle",
+                "volume",
+                "number",
+                "year",
+                "pages",
+            ]:
+                if key in retrieved_record.data:
+                    record_dict[key] = retrieved_record.data[key]
+        except (
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+            timeout_decorator.timeout_decorator.TimeoutError,
+        ):
+            pass
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
@@ -722,28 +745,11 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for PDF directories (GROBID)"""
 
-        for record in records.values():
-            if "grobid-version" in record:
-                del record["grobid-version"]
+        for record_dict in records.values():
+            if "grobid-version" in record_dict:
+                del record_dict["grobid-version"]
 
-            if "doi" in record:
-                try:
-                    retrieved_record = self.crossref_connector.query_doi(
-                        doi=record["doi"]
-                    )
-
-                    for key in [
-                        "journal",
-                        "booktitle",
-                        "volume",
-                        "number",
-                        "year",
-                        "pages",
-                    ]:
-                        if key in retrieved_record.data:
-                            record[key] = retrieved_record.data[key]
-                except colrev_exceptions.RecordNotFoundInPrepSourceException:
-                    pass
+            self.__update_based_on_doi(record_dict=record_dict)
 
         return records
 
