@@ -1583,7 +1583,7 @@ class Record:
         try:
             self.set_pages_in_pdf(project_path=project_path)
             text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
-            self.data["text_from_pdf"] = text
+            self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key="file", note="pdf_reader_error")

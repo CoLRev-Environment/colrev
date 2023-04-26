@@ -50,27 +50,19 @@ class PDFCheckOCR(JsonSchemaMixin):
         self.language_service = colrev.env.language_service.LanguageService()
 
     def __text_is_english(self, *, text: str) -> bool:
-        # Format: ENGLISH
-        confidence_values = self.language_service.compute_language_confidence_values(
-            text=text
-        )
-        lang, conf = confidence_values.pop(0)
-        if lang == "eng":
-            if conf > 0.1:
-                return True
+        return "eng" == self.language_service.compute_language(text=text)
 
-        return False
-
+    @timeout_decorator.timeout(300, use_signals=False)
     def __apply_ocr(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        record_dict: dict,
+        record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
-    ) -> None:
-        pdf_path = review_manager.path / Path(record_dict["file"])
-        ocred_filename = Path(str(pdf_path).replace(".pdf", "_ocr.pdf"))
-
+    ) -> colrev.record.Record:
+        pdf_path = review_manager.path / Path(record.data["file"])
+        non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
+        pdf_path.rename(non_ocred_filename)
         orig_path = (
             pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
         )
@@ -83,8 +75,8 @@ class PDFCheckOCR(JsonSchemaMixin):
         docker_home_path = Path("/home/docker")
 
         args = (
-            f"--force-ocr --jobs 4 -l eng {str(docker_home_path / pdf_path.name)}, "
-            f"{str(docker_home_path / ocred_filename.name)}"
+            f"--force-ocr --jobs 4 -l eng {str(docker_home_path / non_ocred_filename.name)} "
+            f"{str(docker_home_path / pdf_path.name)}"
         )
 
         client = docker.from_env()
@@ -93,39 +85,13 @@ class PDFCheckOCR(JsonSchemaMixin):
             command=args,
             auto_remove=True,
             user=f"{os.geteuid()}:{os.getegid()}",
-            volume=f"{orig_path}:/home/docker",
+            volumes=[f"{orig_path}:/home/docker"],
         )
-        # command = [
-        #     "docker",
-        #     "run",
-        #     "--rm",
-        #     "--user",
-        #     # "$(id -u):$(id -g)",
-        #     f"{os.geteuid()}:{os.getegid()}",
-        #     "-v",
-        #     f"{orig_path}:/home/docker",
-        #     self.ocrmypdf_image,
-        #     "--force-ocr",
-        #     # options,
-        #     "--jobs",
-        #     "4",
-        #     "-l",
-        #     "eng",
-        #     str(docker_home_path / pdf_path.name),
-        #     str(docker_home_path / ocred_filename.name),
-        # ]
 
-        # with subprocess.Popen(
-        #     command, stdout=subprocess.PIPE, shell=False
-        # ) as ocr_process:
-        #     ocr_process.wait()
-
-        record = colrev.record.Record(data=record_dict)
         record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")
-        record.data["file"] = str(ocred_filename.relative_to(review_manager.path))
         record.set_text_from_pdf(project_path=review_manager.path)
+        return record
 
-    @timeout_decorator.timeout(300, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -147,23 +113,16 @@ class PDFCheckOCR(JsonSchemaMixin):
             pdf_prep_operation.review_manager.report_logger.info(
                 f'apply_ocr({record.data["ID"]})'
             )
-            self.__apply_ocr(
+            record = self.__apply_ocr(
                 review_manager=pdf_prep_operation.review_manager,
-                record_dict=record.data,
+                record=record,
                 pad=pad,
             )
 
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             msg = (
                 f'{record.data["ID"]}'.ljust(pad, " ")
-                + "Validation error (OCR problems)"
-            )
-            pdf_prep_operation.review_manager.report_logger.error(msg)
-
-        if not self.__text_is_english(text=record.data["text_from_pdf"]):
-            msg = (
-                f'{record.data["ID"]}'.ljust(pad, " ")
-                + "Validation error (Language not English)"
+                + "Validation error (Language not English or OCR problems)"
             )
             pdf_prep_operation.review_manager.report_logger.error(msg)
             record.add_data_provenance_note(key="file", note="pdf_language_not_english")

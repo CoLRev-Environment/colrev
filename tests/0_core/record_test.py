@@ -1537,7 +1537,7 @@ def test_set_text_from_pdf(
     script_loc: Path, record_with_pdf: colrev.record.Record
 ) -> None:
     record_with_pdf
-    expected = WagnerLukyanenkoParEtAl2022_pdf_content
+    expected = WagnerLukyanenkoParEtAl2022_pdf_content.replace("\n", " ")
     record_with_pdf.set_text_from_pdf(project_path=script_loc.parent)
     actual = record_with_pdf.data["text_from_pdf"]
     actual = actual[0:4234]
