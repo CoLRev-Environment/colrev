@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import typing
+import webbrowser
 from pathlib import Path
 
 import click
@@ -1095,15 +1096,9 @@ def pdfs(
             # pylint: disable=import-outside-toplevel
             # pylint: disable=consider-using-with
             # pylint: disable=no-member
-            import platform
 
             path = review_manager.path / Path("data/pdfs")
-            if platform.system() == "Windows":
-                os.startfile(path)  # type: ignore
-            elif platform.system() == "Darwin":
-                subprocess.Popen(["open", path])
-            else:
-                subprocess.Popen(["xdg-open", path])
+            webbrowser.open(str(path))
             return
 
         if discard:
@@ -2692,9 +2687,6 @@ def docs(
     force: bool,
 ) -> None:
     """Show the CoLRev documentation."""
-
-    # pylint: disable=import-outside-toplevel
-    import webbrowser
 
     webbrowser.open("https://colrev.readthedocs.io/en/latest/")
 

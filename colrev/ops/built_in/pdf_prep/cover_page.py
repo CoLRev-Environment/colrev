@@ -7,7 +7,6 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
@@ -171,7 +170,6 @@ class PDFCoverPage(JsonSchemaMixin):
 
         return list(set(coverpages))
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,

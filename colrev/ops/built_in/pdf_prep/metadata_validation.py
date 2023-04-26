@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -120,7 +119,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
 
         return validation_info
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,

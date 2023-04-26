@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import platform
 import re
-import subprocess
+import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -104,11 +104,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
     def __open_pdf(self, *, filepath: Path) -> None:
         # pylint: disable=no-member
-        current_platform = platform.system()
-        if current_platform == "Linux":
-            subprocess.call(["xdg-open", filepath])
-        else:
-            os.startfile(filepath)  # type: ignore
+        webbrowser.open(str(filepath))
 
     def __remove_page(
         self,
