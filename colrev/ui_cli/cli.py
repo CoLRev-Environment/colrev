@@ -2681,18 +2681,14 @@ def remove(
     help="Force mode",
 )
 @click.pass_context
-def man(
+def docs(
     ctx: click.core.Context,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Show the CoLRev manual."""
+    """Show the CoLRev documentation."""
 
-    webbrowser.open(
-        str(Path(colrev.__file__).resolve()).replace(
-            "colrev/__init__.py", "docs/build/html/index.html"
-        )
-    )
+    webbrowser.open("https://colrev.readthedocs.io/en/latest/")
 
 
 @main.command(help_priority=33)

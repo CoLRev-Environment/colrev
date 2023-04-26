@@ -244,9 +244,9 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         """Format fields"""
 
-        if record.data["entrytype"] == "inproceedings":
+        if record.data.get("entrytype", "") == "inproceedings":
             self.__format_inproceedings(record=record)
-        elif record.data["entrytype"] == "article":
+        elif record.data.get("entrytype", "") == "article":
             self.__format_article(record=record)
 
         if record.data.get("author", "UNKNOWN") != "UNKNOWN":

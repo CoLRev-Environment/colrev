@@ -19,6 +19,7 @@ import timeout_decorator
 import zope.interface
 from crossref.restful import Etiquette
 from crossref.restful import Journals
+from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
@@ -158,9 +159,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         """Get records from Crossref based on a bibliographic query"""
 
-        # pylint: disable=import-outside-toplevel
-        from crossref.restful import Works
-
         works = Works(etiquette=self.etiquette)
         # use facets:
         # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
@@ -172,9 +170,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     @timeout_decorator.timeout(40, use_signals=False)
     def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
-
-        # pylint: disable=import-outside-toplevel
-        from crossref.restful import Works
 
         works = Works(etiquette=self.etiquette)
         try:
