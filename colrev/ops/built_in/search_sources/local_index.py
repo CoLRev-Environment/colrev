@@ -407,7 +407,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         record: colrev.record.Record,
         retrieval_similarity: float,
     ) -> colrev.record.Record:
-
         # add colrev_pdf_id
         added_colrev_pdf_id = self.__add_cpid(record=record)
 
@@ -506,12 +505,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             except OSError:
                 pass
 
-        except (
-            colrev_exceptions.InvalidMerge,
-        ):
+        except (colrev_exceptions.InvalidMerge,):
             print("invalid-merge")
         except colrev_exceptions.NotFeedIdentifiableException:
-            print('not-feed-identifiable')
+            print("not-feed-identifiable")
         finally:
             self.local_index_lock.release()
 
