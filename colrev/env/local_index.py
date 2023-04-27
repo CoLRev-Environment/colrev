@@ -206,6 +206,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
+                colrev_exceptions.ServiceNotAvailableException,
             ):  # pragma: no cover
                 pass
 
