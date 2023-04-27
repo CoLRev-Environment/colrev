@@ -265,7 +265,7 @@ class Initializer:
                 + f": A {r_type_suffix} protocol",
             )
 
-        if self.light:
+        if self.light or colrev.review_manager.ReviewManager.in_ci_environment():
             settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
