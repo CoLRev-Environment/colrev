@@ -42,6 +42,8 @@ class BibFormats(Enum):
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
 
+    settings: BibliographyExportSettings
+
     ZOTERO_FORMATS = [
         BibFormats.endnote,
         BibFormats.mendeley,
@@ -161,7 +163,7 @@ class BibliographyExport(JsonSchemaMixin):
             timeout=30,
         )
         headers = {"Content-type": "application/json"}
-        if "No suitable translators found" == ret.content.decode("utf-8"):
+        if ret.content.decode("utf-8") == "No suitable translators found":
             raise colrev_exceptions.ImportException(
                 "Zotero translators: No suitable translators found"
             )

@@ -63,7 +63,7 @@ class Commit:
         self.git_version = stream.read().replace("git ", "").replace("\n", "")
         stream = os.popen("docker --version")
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
-        if "" == self.docker_version:
+        if self.docker_version == "":
             self.docker_version = "Not installed"
 
         self.ext_script_name = ""
@@ -95,7 +95,7 @@ class Commit:
         return saved_args_str
 
     def __parse_script_name(self, *, script_name: str) -> str:
-        if "MANUAL" == script_name:
+        if script_name == "MANUAL":
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
             script_name = script_name.replace("colrev cli", "colrev").replace(
@@ -140,7 +140,7 @@ class Commit:
                 dir=self.__temp_path, mode="r+b", delete=False
             ) as temp:
                 with open(self.review_manager.report_path, "r+b") as file:
-                    shutil.copyfileobj(file, temp)
+                    shutil.copyfileobj(file, temp)  # type: ignore
             # self.report_path.rename(temp.name)
             with open(temp.name, encoding="utf8") as reader, open(
                 self.review_manager.report_path, "w", encoding="utf8"
@@ -191,15 +191,16 @@ class Commit:
 
         return report
 
-    def create(self) -> bool:
+    def create(self, *, skip_status_yaml: bool = False) -> bool:
         """Create a commit (including the commit message and details)"""
 
         if self.review_manager.dataset.has_changes():
             self.review_manager.logger.debug("Prepare commit: checks and updates")
-            self.review_manager.update_status_yaml()
-            self.review_manager.dataset.add_changes(
-                path=self.review_manager.STATUS_RELATIVE
-            )
+            if not skip_status_yaml:
+                self.review_manager.update_status_yaml()
+                self.review_manager.dataset.add_changes(
+                    path=self.review_manager.STATUS_RELATIVE
+                )
 
             committer, email = self.review_manager.get_committer()
 

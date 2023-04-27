@@ -121,7 +121,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
 
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=300)
         try:
             items = json.loads(ret.text)
 
@@ -137,6 +137,33 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             )
 
         return forward_citations
+
+    def __print_post_run_search_infos(
+        self,
+        *,
+        forward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        records: dict,
+        rerun: bool,
+    ) -> None:
+        if forward_search_feed.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {forward_search_feed.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if rerun:
+            if forward_search_feed.nr_changed > 0:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Updated {forward_search_feed.nr_changed} records{colors.END}"
+                )
+            else:
+                if records:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    )
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -157,7 +184,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        nr_added, nr_changed = 0, 0
         for record in records.values():
             if not self.__fw_search_condition(record=record):
                 continue
@@ -190,7 +216,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
 
                 if added:
-                    nr_added += 1
+                    forward_search_feed.nr_added += 1
                 elif rerun:
                     # Note : only re-index/update
                     changed = search_operation.update_existing_record(
@@ -201,28 +227,12 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                         update_time_variant_fields=rerun,
                     )
                     if changed:
-                        nr_changed += 1
+                        forward_search_feed.nr_changed += 1
         forward_search_feed.save_feed_file()
 
-        if nr_added > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_added} records{colors.END}"
-            )
-        else:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if rerun:
-            if nr_changed > 0:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    search_operation.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
+        self.__print_post_run_search_infos(
+            forward_search_feed=forward_search_feed, records=records, rerun=rerun
+        )
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(
@@ -243,7 +253,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if "forwardsearch" == query.replace("_", "").replace("-", ""):
+        if query.replace("_", "").replace("-", "") == "forwardsearch":
             return cls.get_default_source()
 
         return None

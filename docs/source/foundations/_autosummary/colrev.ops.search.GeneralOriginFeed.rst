@@ -19,3 +19,14 @@ colrev.ops.search.GeneralOriginFeed
       ~GeneralOriginFeed.add_record
       ~GeneralOriginFeed.save_feed_file
       ~GeneralOriginFeed.set_id
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~GeneralOriginFeed.nr_added
+      ~GeneralOriginFeed.nr_changed

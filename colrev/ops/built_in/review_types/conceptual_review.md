@@ -1,4 +1,4 @@
-# ReviewType: Enter review type
+# ReviewType: Conceptual review
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -23,7 +23,7 @@ Note: This document is currently under development. It will contain the followin
 
 ### Data extraction and synthesis
 
-- For manuscript development see [separate page for Word/Tex/Md, Reference Managers]
+- For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
 ## Software recommendations
 

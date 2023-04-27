@@ -26,3 +26,13 @@ colrev.checker.Checker
       ~Checker.check_status_transitions
       ~Checker.get_colrev_versions
       ~Checker.in_virtualenv
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Checker.records

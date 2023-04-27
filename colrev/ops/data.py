@@ -31,6 +31,8 @@ class Data(colrev.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
+        self.package_manager = self.review_manager.get_package_manager()
+
     def get_record_ids_for_synthesis(self, records: dict) -> list:
         """Get the IDs of records for the synthesis"""
         return [
@@ -225,21 +227,7 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def main(
-        self,
-        *,
-        selection_list: Optional[list] = None,
-        records: Optional[dict] = None,
-        silent_mode: bool = False,
-    ) -> dict:
-        """Data operation (main entrypoint)
-
-        silent_mode: for review_manager checks
-        """
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-
+    def __pre_data(self, *, records: dict, silent_mode: bool) -> None:
         if not silent_mode:
             self.review_manager.logger.info("Data")
             self.review_manager.logger.info(
@@ -249,16 +237,9 @@ class Data(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "See https://colrev.readthedocs.io/en/latest/manual/data/data.html"
             )
-
-        no_endpoints_registered = 0 == len(
-            self.review_manager.settings.data.data_package_endpoints
-        )
-
-        if not records:
-            records = self.review_manager.dataset.load_records_dict()
-
         self.__pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
+    def __get_synthesized_record_status_matrix(self, *, records: dict) -> dict:
         included = self.get_record_ids_for_synthesis(records)
 
         # TBD: do we assume that records are not changed by the processes?
@@ -277,53 +258,11 @@ class Data(colrev.operation.Operation):
 
         # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
+        return synthesized_record_status_matrix
 
-        package_manager = self.review_manager.get_package_manager()
-
-        for (
-            data_package_endpoint
-        ) in self.review_manager.settings.data.data_package_endpoints:
-            if selection_list:
-                if not any(
-                    x in data_package_endpoint["endpoint"] for x in selection_list
-                ):
-                    continue
-
-            if not silent_mode:
-                print()
-                self.review_manager.logger.info(
-                    f"Data: {data_package_endpoint['endpoint'].replace('colrev.', '')}"
-                )
-
-            endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.data,
-                selected_packages=[data_package_endpoint],
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
-            )
-
-            if data_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {data_package_endpoint["endpoint"]} (not available)'
-                )
-                continue
-
-            endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
-
-            endpoint.update_data(  # type: ignore
-                self, records, synthesized_record_status_matrix, silent_mode=silent_mode
-            )
-
-            endpoint.update_record_status_matrix(  # type: ignore
-                self,
-                synthesized_record_status_matrix,
-                data_package_endpoint["endpoint"],
-            )
-
-            if self.review_manager.verbose_mode and not silent_mode:
-                msg = f"Updated {endpoint.settings.endpoint}"  # type: ignore
-                self.review_manager.logger.info(msg)
-
+    def __update_record_status_matrix(
+        self, *, records: dict, synthesized_record_status_matrix: dict
+    ) -> bool:
         records_changed = False
         for (
             record_id,
@@ -361,16 +300,14 @@ class Data(colrev.operation.Operation):
                         colrev_status=colrev.record.RecordState.rev_included
                     )
                     records_changed = True
+        return records_changed
 
+    def __post_data(self, *, silent_mode: bool) -> None:
         # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
         if self.review_manager.verbose_mode and not silent_mode:
             print()
-
-        if records_changed:
-            self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
 
         if not silent_mode:
             self.review_manager.logger.info(
@@ -379,8 +316,87 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    def main(
+        self,
+        *,
+        selection_list: Optional[list] = None,
+        records: Optional[dict] = None,
+        silent_mode: bool = False,
+    ) -> dict:
+        """Data operation (main entrypoint)
+
+        silent_mode: for review_manager checks
+        """
+
+        if not records:
+            records = self.review_manager.dataset.load_records_dict()
+
+        self.__pre_data(records=records, silent_mode=silent_mode)
+
+        synthesized_record_status_matrix = self.__get_synthesized_record_status_matrix(
+            records=records
+        )
+
+        for (
+            data_package_endpoint
+        ) in self.review_manager.settings.data.data_package_endpoints:
+            if selection_list:
+                if not any(
+                    x in data_package_endpoint["endpoint"] for x in selection_list
+                ):
+                    continue
+
+            if not silent_mode:
+                print()
+                self.review_manager.logger.info(
+                    f"Data: {data_package_endpoint['endpoint'].replace('colrev.', '')}"
+                )
+
+            endpoint_dict = self.package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.data,
+                selected_packages=[data_package_endpoint],
+                operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
+            )
+
+            if data_package_endpoint["endpoint"] not in endpoint_dict:
+                self.review_manager.logger.info(
+                    f'Skip {data_package_endpoint["endpoint"]} (not available)'
+                )
+                continue
+
+            endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
+
+            endpoint.update_data(  # type: ignore
+                self, records, synthesized_record_status_matrix, silent_mode=silent_mode
+            )
+
+            endpoint.update_record_status_matrix(  # type: ignore
+                self,
+                synthesized_record_status_matrix,
+                data_package_endpoint["endpoint"],
+            )
+
+            if self.review_manager.verbose_mode and not silent_mode:
+                msg = f"Updated {endpoint.settings.endpoint}"  # type: ignore
+                self.review_manager.logger.info(msg)
+
+        records_status_changed = self.__update_record_status_matrix(
+            records=records,
+            synthesized_record_status_matrix=synthesized_record_status_matrix,
+        )
+        if records_status_changed:
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
+
+        self.__post_data(silent_mode=silent_mode)
+
+        no_endpoints_registered = 0 == len(
+            self.review_manager.settings.data.data_package_endpoints
+        )
+
         return {
-            "ask_to_commit": True,
+            "ask_to_commit": self.review_manager.dataset.has_changes(),
             "no_endpoints_registered": no_endpoints_registered,
         }
 

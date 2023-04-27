@@ -94,7 +94,6 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
                     "language": "eng",
                     "number": "2",
                     "pages": "427--464",
-                    "curation_ID": "gh...#AbbasZhouDengEtAl2018",
                     "title": "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
                     "url": "https://misq.umn.edu/skin/frontend/default/misq/pdf/appendices/2018/V42I2Appendices/04_13239_RA_AbbasiZhou.pdf",
                     "volume": "42",
@@ -203,7 +202,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         assert expected == actual
 
     def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
-        colrev_pdf_id = "cpid1:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
+        colrev_pdf_id = "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
         expected = {
             "ID": "AbbasiAlbrechtVanceEtAl2012",
             "ENTRYTYPE": "article",
@@ -217,7 +216,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
                 "dblp_key": {"source": "DBLP.bib/000869", "note": ""},
                 "url": {"source": "DBLP.bib/000869", "note": ""},
             },
-            "colrev_pdf_id": "cpid1:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
+            "colrev_pdf_id": "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
             "dblp_key": "https://dblp.org/rec/journals/misq/AbbasiAVH12",
             "journal": "MIS Quarterly",
             "title": "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
@@ -242,7 +241,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
-        for path in test_records_dict.keys():
+        for path in test_records_dict:
             with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(file.read())

@@ -47,14 +47,14 @@ def __validate_dedupe(
 
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
-        if "n" == user_selection:
+        if user_selection == "n":
             dedupe_operation.unmerge_records(
                 current_record_ids=validation_item["record"]["ID"]
             )
 
-        if "q" == user_selection:
+        if user_selection == "q":
             break
-        if "y" == user_selection:
+        if user_selection == "y":
             continue
 
 
@@ -77,9 +77,6 @@ def __validate_prep(
         colrev.record.Record(
             data=validation_detail["record_dict"]
         ).print_citation_format()
-
-    # TODO : print all, allow users to undo (-> needs_manual_preparation)
-    # by selecting number of record
 
     displayed = False
     for validation_element in validation_details:
@@ -113,7 +110,7 @@ def __validate_prep(
 
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
-        if "n" == user_selection:
+        if user_selection == "n":
             validate_operation.review_manager.dataset.save_records_dict(
                 records={
                     validation_element["prior_record_dict"]["ID"]: validation_element[
@@ -123,9 +120,9 @@ def __validate_prep(
                 partial=True,
             )
 
-        if "q" == user_selection:
+        if user_selection == "q":
             break
-        if "y" == user_selection:
+        if user_selection == "y":
             continue
 
     if not displayed:
@@ -143,19 +140,19 @@ def validate(
     """Validate details in the cli"""
 
     for key, details in validation_details.items():
-        if "prep" == key:
+        if key == "prep":
             __validate_prep(
                 validate_operation=validate_operation,
                 validation_details=details,
                 threshold=threshold,
             )
-        elif "dedupe" == key:
+        elif key == "dedupe":
             __validate_dedupe(
                 validate_operation=validate_operation,
                 validation_details=details,
                 threshold=threshold,
             )
-        elif "properties" == key:
+        elif key == "properties":
             validate_operation.review_manager.logger.info(
                 " Traceability of records".ljust(32, " ")
                 + str(details["record_traceability"])
@@ -168,7 +165,7 @@ def validate(
                 " Completeness of iteration".ljust(32, " ")
                 + str(details["completeness"])
             )
-        elif "contributor_commits" == key:
+        elif key == "contributor_commits":
             validate_operation.review_manager.logger.info(
                 "Showing commits in which the contributor was involved as the author or committer."
             )
@@ -189,7 +186,7 @@ def validate(
                     print(f"  {colors.ORANGE}{item_values['validate']}{colors.END}")
 
             print()
-        elif "general" == key:
+        elif key == "general":
             validate_operation.review_manager.logger.info("Start general validation")
             validate_operation.review_manager.logger.info(
                 "Next, an interface will open and "

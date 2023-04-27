@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from thefuzz import fuzz
@@ -78,7 +77,7 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
             if not isinstance(value, str):
                 continue
             if key in record.data:
-                if "UNKNOWN" == record.data[key]:
+                if record.data[key] == "UNKNOWN":
                     continue
                 if key in ["author", "title", "journal"]:
                     if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
@@ -92,9 +91,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                     if record.masterdata_is_curated():
                         record.remove_field(key="doi")
                     else:
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_needs_manual_preparation
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_needs_manual_preparation
+                        )
                         record.add_masterdata_provenance_note(
                             key=key, note="disagreement with doi metadata"
                         )
@@ -131,9 +130,9 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
                         if record.masterdata_is_curated():
                             record.remove_field(key="url")
                         else:
-                            record.data[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_needs_manual_preparation
+                            record.set_status(
+                                target_state=colrev.record.RecordState.md_needs_manual_preparation
+                            )
                             record.add_masterdata_provenance_note(
                                 key=key,
                                 note=f"disagreement with website metadata ({value})",
@@ -141,7 +140,6 @@ class GlobalIDConsistencyPrep(JsonSchemaMixin):
         except AttributeError:
             pass
 
-    @timeout_decorator.timeout(40, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,

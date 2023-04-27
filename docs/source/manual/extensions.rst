@@ -29,6 +29,11 @@ To register a new extension, create a pull request briefly describing the extens
 When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
 The development status is automatically added to the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
 
+**Recommendations**:
+
+- Get paths from ``review_manager``
+- Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
+- `Add <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics>`_ the ```colrev-extension``` `topic tag on GitHub <https://github.com/topics/colrev-extension>`_ to allow others to find and use your work.
 
 ..
     Mention scripts and non-public python projects
@@ -43,4 +48,3 @@ The development status is automatically added to the `package_status.json <https
    extensions/python
    extensions/r
    extensions/custom_extensions
-   extensions/example

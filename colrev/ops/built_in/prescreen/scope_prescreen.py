@@ -29,6 +29,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
     """Rule-based prescreen (scope)"""
 
+    settings: ScopePrescreenSettings
     ci_supported: bool = True
 
     @dataclass
@@ -118,90 +119,94 @@ class ScopePrescreen(JsonSchemaMixin):
 
         return predatory_journals
 
-    def __conditional_prescreen(
-        self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, record_dict: dict
-    ) -> None:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-nested-blocks
-
-        if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
-            return
-
-        pad = 50
-
-        # Note : LanguageScope is covered in prep
-        # because dedupe cannot handle merges between languages
-
+    def __conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
         if self.settings.ENTRYTYPEScope:
-            if record_dict["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
-                colrev.record.Record(data=record_dict).prescreen_exclude(
-                    reason="not in ENTRYTYPEScope"
-                )
+            if record.data["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
+                record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
+    def __conditional_prescreen_outlets_exclusion(
+        self, record: colrev.record.Record
+    ) -> None:
         if self.settings.OutletExclusionScope:
             if "values" in self.settings.OutletExclusionScope:
                 for resource in self.settings.OutletExclusionScope["values"]:
                     for key, value in resource.items():
-                        if key in record_dict and record_dict.get(key, "") == value:
-                            colrev.record.Record(data=record_dict).prescreen_exclude(
-                                reason="in OutletExclusionScope"
-                            )
+                        if key in record.data and record.data.get(key, "") == value:
+                            record.prescreen_exclude(reason="in OutletExclusionScope")
             if "list" in self.settings.OutletExclusionScope:
                 for resource in self.settings.OutletExclusionScope["list"]:
                     for key, value in resource.items():
-                        if "resource" == key and "predatory_journals_beal" == value:
-                            if "journal" in record_dict:
-                                if (
-                                    record_dict["journal"].lower()
-                                    in self.predatory_journals_beal
-                                ):
-                                    colrev.record.Record(
-                                        data=record_dict
-                                    ).prescreen_exclude(
-                                        reason="predatory_journals_beal"
-                                    )
+                        if not (
+                            key == "resource" and value == "predatory_journals_beal"
+                        ):
+                            continue
+                        if "journal" not in record.data:
+                            continue
+                        if (
+                            record.data["journal"].lower()
+                            in self.predatory_journals_beal
+                        ):
+                            record.prescreen_exclude(reason="predatory_journals_beal")
 
-        if self.settings.TimeScopeFrom:
-            if int(record_dict.get("year", 0)) < self.settings.TimeScopeFrom:
-                colrev.record.Record(data=record_dict).prescreen_exclude(
-                    reason="not in TimeScopeFrom " f"(>{self.settings.TimeScopeFrom})"
-                )
-
-        if self.settings.TimeScopeTo:
-            if int(record_dict.get("year", 5000)) > self.settings.TimeScopeTo:
-                colrev.record.Record(data=record_dict).prescreen_exclude(
-                    reason="not in TimeScopeTo " f"(<{self.settings.TimeScopeTo})"
-                )
-
+    def __conditional_prescreen_outlets_inclusion(
+        self, record: colrev.record.Record
+    ) -> None:
         if self.settings.OutletInclusionScope:
             in_outlet_scope = False
             if "values" in self.settings.OutletInclusionScope:
                 for outlet in self.settings.OutletInclusionScope["values"]:
                     for key, value in outlet.items():
-                        if key in record_dict and record_dict.get(key, "") == value:
+                        if key in record.data and record.data.get(key, "") == value:
                             in_outlet_scope = True
             if not in_outlet_scope:
-                colrev.record.Record(data=record_dict).prescreen_exclude(
-                    reason="not in OutletInclusionScope"
+                record.prescreen_exclude(reason="not in OutletInclusionScope")
+
+    def __conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
+        if self.settings.TimeScopeFrom:
+            if int(record.data.get("year", 0)) < self.settings.TimeScopeFrom:
+                record.prescreen_exclude(
+                    reason="not in TimeScopeFrom " f"(>{self.settings.TimeScopeFrom})"
                 )
 
+        if self.settings.TimeScopeTo:
+            if int(record.data.get("year", 5000)) > self.settings.TimeScopeTo:
+                record.prescreen_exclude(
+                    reason="not in TimeScopeTo " f"(<{self.settings.TimeScopeTo})"
+                )
+
+    def __conditional_prescreen_complementary_materials(
+        self, record: colrev.record.Record
+    ) -> None:
         if self.settings.ExcludeComplementaryMaterials:
-            if self.settings.ExcludeComplementaryMaterials:
-                if "title" in record_dict:
-                    if (
-                        record_dict["title"].lower()
-                        in self.title_complementary_materials_keywords
-                    ):
-                        colrev.record.Record(data=record_dict).prescreen_exclude(
-                            reason="complementary material"
-                        )
+            if "title" in record.data:
+                if (
+                    record.data["title"].lower()
+                    in self.title_complementary_materials_keywords
+                ):
+                    record.prescreen_exclude(reason="complementary material")
+
+    def __conditional_prescreen(
+        self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, record_dict: dict
+    ) -> None:
+        if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
+            return
+
+        # Note : LanguageScope is covered in prep
+        # because dedupe cannot handle merges between languages
+        record = colrev.record.Record(data=record_dict)
+
+        self.__conditional_prescreen_entrytypes(record=record)
+        self.__conditional_prescreen_outlets_inclusion(record=record)
+        self.__conditional_prescreen_outlets_exclusion(record=record)
+        self.__conditional_prescreen_timescope(record=record)
+        self.__conditional_prescreen_complementary_materials(record=record)
 
         if (
-            record_dict["colrev_status"]
+            record.data["colrev_status"]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             prescreen_operation.review_manager.report_logger.info(
-                f' {record_dict["ID"]}'.ljust(pad, " ")
+                f' {record.data["ID"]}'.ljust(50, " ")
                 + "Prescreen excluded (automatically)"
             )
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -27,6 +28,7 @@ if False:  # pylint: disable=using-constant-test
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=unused-argument
 
 
 @zope.interface.implementer(
@@ -108,7 +110,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = requests.get(
                 url,
                 headers=requests_headers,
-                timeout=20,
+                timeout=30,
             )
             if ret.status_code != 200:
                 if not source_operation.force_mode:
@@ -184,7 +186,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                     + "&author="
                     + record.data.get("author", "NA").split(",")[0]
                 )
-            if "inbook" == record.data["ENTRYTYPE"] and "editor" in record.data:
+            if record.data["ENTRYTYPE"] == "inbook" and "editor" in record.data:
                 if record.data.get("editor", "NA").split(",")[0]:
                     url = (
                         base_url
@@ -223,12 +225,38 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for OpenLibrary"""
+
+        result = {"confidence": 0.0}
+
+        return result
+
+    @classmethod
+    def add_endpoint(
+        cls, search_operation: colrev.ops.search.Search, query: str
+    ) -> typing.Optional[colrev.settings.SearchSource]:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+    def validate_source(
+        self,
+        search_operation: colrev.ops.search.Search,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Validate the OpenLibrary (parameters etc.)"""
+
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, rerun: bool
+    ) -> None:
+        """Run a search of OpenLibrary"""
+
     def get_masterdata(
         self,
-        *,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
-        timeout: int = 10,  # pylint: disable=unused-argument
+        save_feed: bool = True,
+        timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
 
@@ -269,6 +297,23 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             colrev_exceptions.NotFeedIdentifiableException,
         ):
             self.open_library_lock.release()
+
+        return record
+
+    def load_fixes(
+        self,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        records: typing.Dict,
+    ) -> dict:
+        """Load fixes for OpenLibrary"""
+
+        return records
+
+    def prepare(
+        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.Record:
+        """Source-specific preparation for OpenLibrary"""
 
         return record
 

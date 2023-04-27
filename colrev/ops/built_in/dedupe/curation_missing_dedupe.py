@@ -37,10 +37,15 @@ class CurationMissingDedupe(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
     ):
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = dedupe_operation.review_manager
+
+        self.__post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
+            state=colrev.record.RecordState.md_processed
+        )
 
     def __create_dedupe_source_stats(
         self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
@@ -111,31 +116,88 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 records_df.sort_values(by=keys, inplace=True)
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
 
-    def __process_missing_duplicates(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> dict:
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
+    def __get_same_toc_recs(
+        self, *, record: colrev.record.Record, records: dict
+    ) -> list:
+        if self.review_manager.force_mode:
+            if record.data["colrev_status"] in self.__post_md_prepared_states:
+                return []
+        else:
+            # only dedupe md_prepared records
+            if record.data["colrev_status"] not in [
+                colrev.record.RecordState.md_prepared
+            ]:
+                return []
+        if record.data.get("title", "") == "":
+            return []
 
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
+        try:
+            toc_key = record.get_toc_key()
+        except colrev_exceptions.NotTOCIdentifiableException:
+            return []
 
-        post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.md_processed
+        same_toc_recs = []
+        for record_candidate in records.values():
+            try:
+                candidate_toc_key = colrev.record.Record(
+                    data=record_candidate
+                ).get_toc_key()
+            except colrev_exceptions.NotTOCIdentifiableException:
+                continue
+            if toc_key != candidate_toc_key:
+                continue
+            if record_candidate["ID"] == record.data["ID"]:
+                continue
+            if record_candidate["colrev_status"] in [
+                colrev.record.RecordState.md_prepared,
+                colrev.record.RecordState.md_needs_manual_preparation,
+                colrev.record.RecordState.md_imported,
+            ]:
+                continue
+            same_toc_recs.append(record_candidate)
+        return same_toc_recs
+
+    def __print_same_toc_recs(
+        self, *, same_toc_recs: list, record: colrev.record.Record
+    ) -> None:
+        for same_toc_rec in same_toc_recs:
+            same_toc_rec["similarity"] = colrev.record.PrepRecord.get_record_similarity(
+                record_a=colrev.record.Record(data=same_toc_rec), record_b=record
+            )
+
+        same_toc_recs = sorted(
+            same_toc_recs, key=lambda d: d["similarity"], reverse=True
         )
-        if dedupe_operation.review_manager.force_mode:
-            dedupe_operation.review_manager.logger.info(
+        if len(same_toc_recs) > 20:
+            same_toc_recs = same_toc_recs[0:20]
+
+        i = 0
+        for i, same_toc_rec in enumerate(same_toc_recs):
+            author_title_string = (
+                f"{same_toc_rec.get('author', 'NO_AUTHOR')} : "
+                + f"{same_toc_rec.get('title', 'NO_TITLE')}"
+            )
+
+            if same_toc_rec["similarity"] > 0.8:
+                print(f"{i + 1} - {colors.ORANGE}{author_title_string}{colors.END}")
+
+            else:
+                print(f"{i + 1} - {author_title_string}")
+
+    def __get_nr_recs_to_merge(self, *, records: dict) -> int:
+        if self.review_manager.force_mode:
+            self.review_manager.logger.info(
                 "Scope: md_prepared, md_needs_manual_preparation, md_imported"
             )
             nr_recs_to_merge = len(
                 [
                     x
                     for x in records.values()
-                    if x["colrev_status"] not in post_md_prepared_states
+                    if x["colrev_status"] not in self.__post_md_prepared_states
                 ]
             )
         else:
-            dedupe_operation.review_manager.logger.info("Scope: md_prepared")
+            self.review_manager.logger.info("Scope: md_prepared")
             nr_recs_to_merge = len(
                 [
                     x
@@ -143,6 +205,14 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     if x["colrev_status"] in [colrev.record.RecordState.md_prepared]
                 ]
             )
+        return nr_recs_to_merge
+
+    def __process_missing_duplicates(
+        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
+    ) -> dict:
+        records = dedupe_operation.review_manager.dataset.load_records_dict()
+
+        nr_recs_to_merge = self.__get_nr_recs_to_merge(records=records)
 
         nr_recs_checked = 0
         results: typing.Dict[str, list] = {
@@ -152,44 +222,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
         }
 
         for record_dict in records.values():
-            if dedupe_operation.review_manager.force_mode:
-                if record_dict["colrev_status"] in post_md_prepared_states:
-                    continue
-            else:
-                # only dedupe md_prepared records
-                if record_dict["colrev_status"] not in [
-                    colrev.record.RecordState.md_prepared
-                ]:
-                    continue
-            if "" == record_dict.get("title", ""):
-                continue
-
             record = colrev.record.Record(data=record_dict)
 
-            try:
-                toc_key = record.get_toc_key()
-            except colrev_exceptions.NotTOCIdentifiableException:
-                continue
-
-            same_toc_recs = []
-            for record_candidate in records.values():
-                try:
-                    candidate_toc_key = colrev.record.Record(
-                        data=record_candidate
-                    ).get_toc_key()
-                except colrev_exceptions.NotTOCIdentifiableException:
-                    continue
-                if toc_key != candidate_toc_key:
-                    continue
-                if record_candidate["ID"] == record.data["ID"]:
-                    continue
-                if record_candidate["colrev_status"] in [
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_imported,
-                ]:
-                    continue
-                same_toc_recs.append(record_candidate)
+            same_toc_recs = self.__get_same_toc_recs(record=record, records=records)
 
             if len(same_toc_recs) == 0:
                 print("no same toc records")
@@ -200,32 +235,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
             record.print_citation_format()
             print(colors.END)
 
-            for same_toc_rec in same_toc_recs:
-                same_toc_rec[
-                    "similarity"
-                ] = colrev.record.PrepRecord.get_record_similarity(
-                    record_a=colrev.record.Record(data=same_toc_rec), record_b=record
-                )
-
-            same_toc_recs = sorted(
-                same_toc_recs, key=lambda d: d["similarity"], reverse=True
-            )
-            if len(same_toc_recs) > 20:
-                same_toc_recs = same_toc_recs[0:20]
-
-            i = 0
-            for i, same_toc_rec in enumerate(same_toc_recs):
-                author_title_string = (
-                    f"{same_toc_rec.get('author', 'NO_AUTHOR')} : "
-                    + f"{same_toc_rec.get('title', 'NO_TITLE')}"
-                )
-
-                if same_toc_rec["similarity"] > 0.8:
-                    print(f"{i + 1} - {colors.ORANGE}{author_title_string}{colors.END}")
-
-                else:
-                    print(f"{i + 1} - {author_title_string}")
-
+            self.__print_same_toc_recs(same_toc_recs=same_toc_recs, record=record)
+            i = len(same_toc_recs)
             valid_selection = False
             quit_pressed = False
             while not valid_selection:
@@ -233,17 +244,17 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     f"({nr_recs_checked}/{nr_recs_to_merge}) "
                     f"Merge with record [{1}...{i+1} / s / a / p / q]?   "
                 )
-                if "s" == ret:
+                if ret == "s":
                     valid_selection = True
-                elif "q" == ret:
+                elif ret == "q":
                     quit_pressed = True
                     valid_selection = True
-                elif "a" == ret:
+                elif ret == "a":
                     results["add_records_to_md_processed_list"].append(
                         record.data["ID"]
                     )
                     valid_selection = True
-                elif "p" == ret:
+                elif ret == "p":
                     results["records_to_prepare"].append(record.data["ID"])
                     valid_selection = True
                 elif ret.isdigit():

@@ -7,7 +7,6 @@ from dacite import from_dict
 
 import colrev.operation
 
-# import timeout_decorator
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -34,8 +33,6 @@ class CustomPrep:
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    # Use timeout decorator to limit the execution time of functions
-    # @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
@@ -44,7 +41,7 @@ class CustomPrep:
         """Update record (metadata)"""
 
         if "journal" in record.data:
-            if "MISQ" == record.data["journal"]:
+            if record.data["journal"] == "MISQ":
                 record.update_field(
                     key="journal", value="MIS Quarterly", source="custom_prep"
                 )

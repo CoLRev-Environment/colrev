@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -43,7 +42,6 @@ class CurationPrep(JsonSchemaMixin):
 
         self.prep_operation = prep_operation
 
-    @timeout_decorator.timeout(20, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
@@ -60,9 +58,9 @@ class CurationPrep(JsonSchemaMixin):
             return record
 
         if record.data.get("year", "UNKNOWN") == "UNKNOWN":
-            record.data[
-                "colrev_status"
-            ] = colrev.record.RecordState.md_needs_manual_preparation
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            )
             colrev.record.Record(data=record.data).add_masterdata_provenance(
                 key="year",
                 source="colrev_curation.masterdata_restrictions",

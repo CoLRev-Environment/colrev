@@ -4,6 +4,16 @@
 colrev init
 -------------------------------
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+
 
 ``colrev init`` initializes a new CoLRev project. It requires an empty directory.
 With this operation, the directories and files, including the git history, are set up.
@@ -15,17 +25,15 @@ Ideally, the selected review type is passed as a parameter:
 
 With this parameter, the ``settings.json`` file is created with reasonable defaults for the selected review type. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
 
-
-
-
 The specific setup of the available review types is available in the following table:
 
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Review type", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status_linked")],
         data['review_type'],
         title='',
+        columns=[25,55,20]
         ) }}
 
 

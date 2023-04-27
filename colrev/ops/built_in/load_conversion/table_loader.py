@@ -27,67 +27,76 @@ class TableLoadUtility:
     """Utility for tables loading"""
 
     @classmethod
-    def preprocess_records(cls, *, records: list) -> dict:
-        """Preprocess records imported from a table"""
+    def __rename_fields(cls, *, record_dict: dict) -> dict:
+        if "issue" in record_dict and "number" not in record_dict:
+            record_dict["number"] = record_dict["issue"]
+            if record_dict["number"] == "no issue":
+                del record_dict["number"]
+            del record_dict["issue"]
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
+        if "authors" in record_dict and "author" not in record_dict:
+            record_dict["author"] = record_dict["authors"]
+            del record_dict["authors"]
 
+        if "publication_year" in record_dict and "year" not in record_dict:
+            record_dict["year"] = record_dict["publication_year"]
+            del record_dict["publication_year"]
+
+        # Note: this is a simple heuristic:
+        if (
+            "journal/book" in record_dict
+            and "journal" not in record_dict
+            and "doi" in record_dict
+        ):
+            record_dict["journal"] = record_dict["journal/book"]
+            del record_dict["journal/book"]
+
+        return record_dict
+
+    @classmethod
+    def __set_entrytype(cls, *, record_dict: dict) -> dict:
+        record_dict["ENTRYTYPE"] = "misc"
+        if "type" in record_dict:
+            record_dict["ENTRYTYPE"] = record_dict["type"]
+            del record_dict["type"]
+            if record_dict["ENTRYTYPE"] == "inproceedings":
+                if "journal" in record_dict and "booktitle" not in record_dict:
+                    record_dict["booktitle"] = record_dict["journal"]
+                    del record_dict["journal"]
+            if record_dict["ENTRYTYPE"] == "article":
+                if "booktitle" in record_dict and "journal" not in record_dict:
+                    record_dict["journal"] = record_dict["booktitle"]
+                    del record_dict["booktitle"]
+
+        if "ENTRYTYPE" not in record_dict:
+            if record_dict.get("journal", "") != "":
+                record_dict["ENTRYTYPE"] = "article"
+            if record_dict.get("booktitle", "") != "":
+                record_dict["ENTRYTYPE"] = "inproceedings"
+        return record_dict
+
+    @classmethod
+    def __parse_record_dict(cls, *, record_dict: dict) -> dict:
+        record_dict = cls.__set_entrytype(record_dict=record_dict)
+
+        for key, value in record_dict.items():
+            record_dict[key] = str(value)
+
+        record_dict = cls.__rename_fields(record_dict=record_dict)
+
+        return record_dict
+
+    @classmethod
+    def __get_records_dict(cls, *, records: list) -> dict:
         next_id = 1
         for record_dict in records:
-            if "type" in record_dict:
-                record_dict["ENTRYTYPE"] = record_dict["type"]
-                del record_dict["type"]
-                if "inproceedings" == record_dict["ENTRYTYPE"]:
-                    if "journal" in record_dict and "booktitle" not in record_dict:
-                        record_dict["booktitle"] = record_dict["journal"]
-                        del record_dict["journal"]
-                if "article" == record_dict["ENTRYTYPE"]:
-                    if "booktitle" in record_dict and "journal" not in record_dict:
-                        record_dict["journal"] = record_dict["booktitle"]
-                        del record_dict["booktitle"]
-
-            if "ENTRYTYPE" not in record_dict:
-                if "" != record_dict.get("journal", ""):
-                    record_dict["ENTRYTYPE"] = "article"
-                if "" != record_dict.get("booktitle", ""):
-                    record_dict["ENTRYTYPE"] = "inproceedings"
-                else:
-                    record_dict["ENTRYTYPE"] = "misc"
-
             if "ID" not in record_dict:
                 if "citation_key" in record_dict:
                     record_dict["ID"] = record_dict["citation_key"]
                 else:
                     record_dict["ID"] = next_id
                     next_id += 1
-
-            if "issue" in record_dict and "number" not in record_dict:
-                record_dict["number"] = record_dict["issue"]
-                if "no issue" == record_dict["number"]:
-                    del record_dict["number"]
-                del record_dict["issue"]
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-            if "authors" in record_dict and "author" not in record_dict:
-                record_dict["author"] = record_dict["authors"]
-                del record_dict["authors"]
-            if "publication_year" in record_dict and "year" not in record_dict:
-                record_dict["year"] = record_dict["publication_year"]
-                del record_dict["publication_year"]
-            # Note: this is a simple heuristic:
-            if (
-                "journal/book" in record_dict
-                and "journal" not in record_dict
-                and "doi" in record_dict
-            ):
-                record_dict["journal"] = record_dict["journal/book"]
-                del record_dict["journal/book"]
-
-            if "no Times-Cited" == record_dict.get("cited_by", ""):
-                del record_dict["cited_by"]
+            record_dict = cls.__parse_record_dict(record_dict=record_dict)
 
         if all("ID" in r for r in records):
             records_dict = {r["ID"]: r for r in records}
@@ -96,33 +105,42 @@ class TableLoadUtility:
             for i, record in enumerate(records):
                 records_dict[str(i)] = record
 
+        return records_dict
+
+    @classmethod
+    def __drop_fields(cls, *, records_dict: dict) -> dict:
         for r_dict in records_dict.values():
-            if "no year" == r_dict.get("year", "NA"):
-                del r_dict["year"]
-            if "no journal" == r_dict.get("journal", "NA"):
-                del r_dict["journal"]
-            if "no volume" == r_dict.get("volume", "NA"):
-                del r_dict["volume"]
-            if "no pages" == r_dict.get("pages", "NA"):
-                del r_dict["pages"]
-            if "no issue" == r_dict.get("issue", "NA"):
-                del r_dict["issue"]
-            if "no number" == r_dict.get("number", "NA"):
-                del r_dict["number"]
-            if "no doi" == r_dict.get("doi", "NA"):
-                del r_dict["doi"]
-            if "no type" == r_dict.get("type", "NA"):
-                del r_dict["type"]
-            if "author_count" in r_dict:
-                del r_dict["author_count"]
-            if "no Number-of-Cited-References" == r_dict.get(
-                "number_of_cited_references", "NA"
+            for key in list(r_dict.keys()):
+                if r_dict[key] == f"no {key}":
+                    del r_dict[key]
+            if (
+                r_dict.get("number_of_cited_references", "NA")
+                == "no Number-of-Cited-References"
             ):
                 del r_dict["number_of_cited_references"]
             if "no file" in r_dict.get("file_name", "NA"):
                 del r_dict["file_name"]
-            if "times_cited" == r_dict.get("times_cited", "NA"):
-                del r_dict["times_cited"]
+
+            if r_dict.get("cited_by", "NA") in [
+                "no Times-Cited",
+            ]:
+                del r_dict["cited_by"]
+
+            if "author_count" in r_dict:
+                del r_dict["author_count"]
+            if "entrytype" in r_dict:
+                del r_dict["entrytype"]
+            if "citation_key" in r_dict:
+                del r_dict["citation_key"]
+
+        return records_dict
+
+    @classmethod
+    def preprocess_records(cls, *, records: list) -> dict:
+        """Preprocess records imported from a table"""
+
+        records_dict = cls.__get_records_dict(records=records)
+        records_dict = cls.__drop_fields(records_dict=records_dict)
 
         return records_dict
 

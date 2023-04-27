@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -13,10 +12,12 @@ from typing import Optional
 from urllib.parse import quote
 from xml.etree.ElementTree import Element
 
+import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from defusedxml.ElementTree import fromstring
 from thefuzz import fuzz
 
 import colrev.env.package_manager
@@ -25,15 +26,11 @@ import colrev.ops.search
 import colrev.record
 import colrev.settings
 
+# defuse std xml lib
+defusedxml.defuse_stdlib()
+
+
 # pylint: disable=duplicate-code
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING  # pylint: disable=ungrouped-imports
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
-
-
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
@@ -183,9 +180,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             + "/"
             + retrieved_record_dict.get("epmc_id", "NO_ID")
         )
+
         retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
-        del retrieved_record_dict["epmc_id"]
-        del retrieved_record_dict["epmc_source"]
+        retrieved_record_dict = {
+            k: v
+            for k, v in retrieved_record_dict.items()
+            if k not in ["epmc_id", "epmc_source"]
+        }
 
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
@@ -231,7 +232,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         most_similar_only: bool = True,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
 
@@ -263,7 +264,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     return []
 
                 most_similar, most_similar_record = 0.0, {}
-                root = ET.fromstring(ret.text)
+                root = fromstring(str.encode(ret.text))
                 result_list = root.findall("resultList")[0]
 
                 for result_item in result_list.findall("result"):

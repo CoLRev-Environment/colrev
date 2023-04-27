@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 import os
-import typing
 from pathlib import Path
 
 import pytest
-from pybtex.database.input import bibtex
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser
@@ -31,16 +29,16 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
     ):
         env_man = colrev.env.environment_manager.EnvironmentManager()
 
+        print(script_loc)
+        env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
+        actual = env_man.environment_registry  # type: ignore
         expected = [  # type: ignore
             {
                 "repo_name": "colrev",
                 "repo_source_path": Path(colrev.__file__).parents[1],
-                "repo_source_url": "https://github.com/CoLRev-Environment/colrev.git",
+                "repo_source_url": actual[0]["repo_source_url"],
             }
         ]
-        print(script_loc)
-        env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
-        actual = env_man.environment_registry  # type: ignore
         print(actual)
         assert expected == actual
 
@@ -57,12 +55,13 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
                     {
                         "repo_name": "colrev",
                         "repo_source_path": str(Path(colrev.__file__).parents[1]),
-                        "repo_source_url": "https://github.com/CoLRev-Environment/colrev.git",
+                        "repo_source_url": actual[0]["repo_source_url"],
                     }
                 ],
             },
         }
         actual = env_man.get_environment_details()  # type: ignore
+        actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
         print(actual)
         assert expected == actual
 

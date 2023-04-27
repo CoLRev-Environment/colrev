@@ -23,7 +23,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-# pylint: disable=duplicate-code
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
@@ -204,7 +204,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
             for commit in commits_list:
                 committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
-                if "GitHub" == committer:
+                if committer == "GitHub":
                     continue
                 commits_authors.append(committer)
                 # author = git_repo.git.show("-s", "--format=%an", commit.hexsha)
@@ -224,6 +224,90 @@ class PaperMarkdown(JsonSchemaMixin):
 
         return list(set(record_id_list) - set(available))
 
+    def __create_new_records_source_section(
+        self,
+        *,
+        writer: typing.IO,
+        missing_records: list,
+        paper_path: Path,
+        silent_mode: bool,
+        line: str,
+    ) -> None:
+        msg = (
+            f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
+            + f"{paper_path.name}. Add records at the end of "
+            + "the document."
+        )
+        self.data_operation.review_manager.report_logger.warning(msg)
+        self.data_operation.review_manager.logger.warning(msg)
+        if line != "\n":
+            writer.write("\n")
+        marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
+        writer.write(marker)
+        for missing_record in missing_records:
+            writer.write(missing_record)
+            self.data_operation.review_manager.report_logger.info(
+                # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                f" {missing_record} added"
+            )
+            if not silent_mode:
+                self.data_operation.review_manager.logger.info(
+                    # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                    f" {missing_record} added"
+                )
+
+    def __update_new_records_source_section(
+        self,
+        *,
+        writer: typing.IO,
+        missing_records: list,
+        paper_path: Path,
+        silent_mode: bool,
+        reader: typing.IO,
+        line: str,
+    ) -> None:
+        if "_Records to synthesize" not in line:
+            line = "_Records to synthesize_:" + line + "\n"
+            writer.write(line)
+        else:
+            writer.write(line)
+            writer.write("\n")
+
+        paper_ids_added = []
+        for missing_record in missing_records:
+            writer.write("\n- @" + missing_record + "\n")
+            paper_ids_added.append(missing_record)
+
+        for paper_id in paper_ids_added:
+            self.data_operation.review_manager.report_logger.info(
+                # f" {missing_record}".ljust(self.__PAD, " ")
+                f" {paper_id}"
+                + f" added to {paper_path.name}"
+            )
+        nr_records_added = len(missing_records)
+        self.data_operation.review_manager.report_logger.info(
+            f"{nr_records_added} records added to {self.settings.paper_path.name}"
+        )
+
+        for paper_id_added in paper_ids_added:
+            if not silent_mode:
+                self.data_operation.review_manager.logger.info(
+                    f" {colors.GREEN}{paper_id_added}".ljust(45)
+                    + f"add to paper{colors.END}"
+                )
+
+        if not silent_mode:
+            self.data_operation.review_manager.logger.info(
+                f"Added to {paper_path.name}".ljust(24)
+                + f"{nr_records_added}".rjust(15, " ")
+                + " records"
+            )
+
+        # skip empty lines between to connect lists
+        line = reader.readline()
+        if line != "\n":
+            writer.write(line)
+
     def __add_missing_records_to_paper(
         self,
         *,
@@ -231,9 +315,6 @@ class PaperMarkdown(JsonSchemaMixin):
         silent_mode: bool,
     ) -> None:
         # pylint: disable=consider-using-with
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-locals
 
         temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
         paper_path = self.settings.paper_path
@@ -246,55 +327,21 @@ class PaperMarkdown(JsonSchemaMixin):
             line = reader.readline()
             while line:
                 if self.NEW_RECORD_SOURCE_TAG in line:
-                    if "_Records to synthesize" not in line:
-                        line = "_Records to synthesize_:" + line + "\n"
-                        writer.write(line)
-                    else:
-                        writer.write(line)
-                        writer.write("\n")
-
-                    paper_ids_added = []
-                    for missing_record in missing_records:
-                        writer.write("\n- @" + missing_record + "\n")
-                        paper_ids_added.append(missing_record)
-
-                    for paper_id in paper_ids_added:
-                        self.data_operation.review_manager.report_logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ")
-                            f" {paper_id}"
-                            + f" added to {paper_path.name}"
-                        )
-                    nr_records_added = len(missing_records)
-                    self.data_operation.review_manager.report_logger.info(
-                        f"{nr_records_added} records added to {self.settings.paper_path.name}"
+                    self.__update_new_records_source_section(
+                        writer=writer,
+                        missing_records=missing_records,
+                        paper_path=paper_path,
+                        silent_mode=silent_mode,
+                        reader=reader,
+                        line=line,
                     )
-
-                    for paper_id_added in paper_ids_added:
-                        if not silent_mode:
-                            self.data_operation.review_manager.logger.info(
-                                f" {colors.GREEN}{paper_id_added}".ljust(45)
-                                + f"add to paper{colors.END}"
-                            )
-
-                    if not silent_mode:
-                        self.data_operation.review_manager.logger.info(
-                            f"Added to {paper_path.name}".ljust(24)
-                            + f"{nr_records_added}".rjust(15, " ")
-                            + " records"
-                        )
-
-                    # skip empty lines between to connect lists
-                    line = reader.readline()
-                    if "\n" != line:
-                        writer.write(line)
-
                     appended = True
 
                 elif appended and not completed:
-                    if "- @" == line[:3]:
+                    if line[:3] == "- @":
                         writer.write(line)
                     else:
-                        if "\n" != line:
+                        if line != "\n":
                             writer.write("\n")
                         writer.write(line)
                         completed = True
@@ -303,28 +350,13 @@ class PaperMarkdown(JsonSchemaMixin):
                 line = reader.readline()
 
             if not appended:
-                msg = (
-                    f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
-                    + f"{paper_path.name}. Add records at the end of "
-                    + "the document."
+                self.__create_new_records_source_section(
+                    writer=writer,
+                    missing_records=missing_records,
+                    paper_path=paper_path,
+                    silent_mode=silent_mode,
+                    line=line,
                 )
-                self.data_operation.review_manager.report_logger.warning(msg)
-                self.data_operation.review_manager.logger.warning(msg)
-                if line != "\n":
-                    writer.write("\n")
-                marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
-                writer.write(marker)
-                for missing_record in missing_records:
-                    writer.write(missing_record)
-                    self.data_operation.review_manager.report_logger.info(
-                        # f" {missing_record}".ljust(self.__PAD, " ") + " added"
-                        f" {missing_record} added"
-                    )
-                    if not silent_mode:
-                        self.data_operation.review_manager.logger.info(
-                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
-                            f" {missing_record} added"
-                        )
 
     def __create_paper(self, silent_mode: bool) -> None:
         if not silent_mode:
@@ -620,7 +652,6 @@ class PaperMarkdown(JsonSchemaMixin):
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
-        # pylint: disable=duplicate-code
         try:
             uid = os.stat(data_operation.review_manager.dataset.records_file).st_uid
             gid = os.stat(data_operation.review_manager.dataset.records_file).st_gid
@@ -799,9 +830,9 @@ class PaperMarkdown(JsonSchemaMixin):
 
         advice = {
             "msg": f"{data_endpoint}"
-            + "\n    1. Edit the paper (data/paper.md)"
+            + "\n    1. Edit the paper (data/data/paper.md)"
             + "\n    2. To build the paper (output/paper.docx), run: colrev data"
-            + "\n    3. To create a version, run: git add data/paper.md && "
+            + "\n    3. To create a version, run: git add data/data/paper.md && "
             + "git commit -m 'update paper'",
             "detailed_msg": "... with a link to the docs etc.",
         }

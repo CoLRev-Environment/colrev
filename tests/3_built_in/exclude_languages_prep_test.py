@@ -9,8 +9,7 @@ import colrev.ops.prep
 def prep_operation(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> colrev.ops.prep.Prep:
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    return prep_operation
+    return base_repo_review_manager.get_prep_operation()
 
 
 @pytest.fixture(scope="package")
@@ -18,14 +17,14 @@ def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep:
     settings = {"endpoint": "colrev.exclude_languages"}
-    elp = colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep(
+    elp_instance = colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep(
         prep_operation=prep_operation, settings=settings
     )
-    return elp
+    return elp_instance
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_value, expected",
     [
         (
             {
@@ -33,6 +32,18 @@ def elp(
             },
             {
                 "title": "An Integrated Framework for Understanding Digital Work in Organizations",
+                "language": "eng",
+                "colrev_data_provenance": {
+                    "language": {"note": "", "source": "LanguageDetector"}
+                },
+            },
+        ),
+        (
+            {
+                "title": 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
+            },
+            {
+                "title": 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
                 "language": "eng",
                 "colrev_data_provenance": {
                     "language": {"note": "", "source": "LanguageDetector"}
@@ -79,10 +90,10 @@ def elp(
 )
 def test_prep_exclude_languages(
     elp: colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep,
-    input: dict,
+    input_value: dict,
     expected: dict,
 ) -> None:
-    record = colrev.record.Record(data=input)
+    record = colrev.record.PrepRecord(data=input_value)
     returned_record = elp.prepare(prep_operation=elp, record=record)
     actual = returned_record.data
     assert expected == actual

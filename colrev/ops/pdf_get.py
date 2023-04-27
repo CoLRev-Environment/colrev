@@ -95,12 +95,12 @@ class PDFGet(colrev.operation.Operation):
     def get_target_filepath(self, *, record: colrev.record.Record) -> Path:
         """Get the target filepath for a PDF"""
 
-        if "year" == self.filepath_directory_pattern:
+        if self.filepath_directory_pattern == "year":
             target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
                 f"{record.data.get('year', 'no_year')}/{record.data['ID']}.pdf"
             )
 
-        elif "volume_number" == self.filepath_directory_pattern:
+        elif self.filepath_directory_pattern == "volume_number":
             if "volume" in record.data and "number" in record.data:
                 target_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
                     f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
@@ -225,7 +225,7 @@ class PDFGet(colrev.operation.Operation):
         corresponding_origin: str
         source_records: typing.List[typing.Dict] = []
         for source in self.review_manager.settings.sources:
-            if "colrev.pdfs_dir" != source.endpoint:
+            if source.endpoint != "colrev.pdfs_dir":
                 continue
 
             if not source.filename.is_file():
@@ -242,9 +242,7 @@ class PDFGet(colrev.operation.Operation):
             pdf_candidates = {
                 pdf_candidate.relative_to(
                     self.review_manager.path
-                ): colrev.record.Record.get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_candidate
-                )
+                ): colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_candidate)
                 for pdf_candidate in list(self.review_manager.pdf_dir.glob("**/*.pdf"))
             }
 
@@ -403,10 +401,54 @@ class PDFGet(colrev.operation.Operation):
 
         return records
 
+    def __rename_pdf(
+        self,
+        *,
+        record_dict: dict,
+        file: Path,
+        new_filename: Path,
+        pdfs_search_file: Path,
+    ) -> None:
+        record_dict["file"] = new_filename
+
+        if "colrev_masterdata_provenance" in record_dict:
+            for value in record_dict["colrev_masterdata_provenance"].values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
+
+        if "data_provenance" in record_dict:
+            for value in record_dict["data_provenance"].values():
+                if str(file) == value.get("source", ""):
+                    value["source"] = str(new_filename)
+
+        if pdfs_search_file.is_file():
+            colrev.env.utils.inplace_change(
+                filename=pdfs_search_file,
+                old_string="{" + str(file) + "}",
+                new_string="{" + str(new_filename) + "}",
+            )
+
+        if not file.is_file():
+            corrected_path = Path(str(file).replace("  ", " "))
+            if corrected_path.is_file():
+                file = corrected_path
+
+        if file.is_file():
+            file.rename(new_filename)
+        elif file.is_symlink():
+            os.rename(str(file), str(new_filename))
+
+        record_dict["file"] = str(new_filename)
+        self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
+        if (
+            colrev.record.RecordState.rev_prescreen_included
+            == record_dict["colrev_status"]
+        ):
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+
     def rename_pdfs(self) -> None:
         """Rename the PDFs"""
-
-        # pylint: disable=too-many-branches
 
         self.review_manager.logger.info("Rename PDFs")
 
@@ -416,18 +458,18 @@ class PDFGet(colrev.operation.Operation):
         # review_manager.settings.sources
         pdfs_search_file = Path("data/search/pdfs.bib")
 
-        for record in records.values():
-            if "file" not in record:
+        for record_dict in records.values():
+            if "file" not in record_dict:
                 continue
-            if record[
+            if record_dict[
                 "colrev_status"
             ] not in colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
             ):
                 continue
 
-            file = Path(record["file"])
-            new_filename = file.parents[0] / Path(f"{record['ID']}{file.suffix}")
+            file = Path(record_dict["file"])
+            new_filename = file.parents[0] / Path(f"{record_dict['ID']}{file.suffix}")
             # Possible option: move to top (pdfs) directory:
             # new_filename = self.review_manager.PDF_DIR_RELATIVE / Path(
             #     f"{record['ID']}.pdf"
@@ -435,42 +477,12 @@ class PDFGet(colrev.operation.Operation):
             if str(file) == str(new_filename):
                 continue
 
-            record["file"] = new_filename
-
-            if "colrev_masterdata_provenance" in record:
-                for value in record["colrev_masterdata_provenance"].values():
-                    if str(file) == value.get("source", ""):
-                        value["source"] = str(new_filename)
-
-            if "data_provenance" in record:
-                for value in record["data_provenance"].values():
-                    if str(file) == value.get("source", ""):
-                        value["source"] = str(new_filename)
-
-            if pdfs_search_file.is_file():
-                colrev.env.utils.inplace_change(
-                    filename=pdfs_search_file,
-                    old_string="{" + str(file) + "}",
-                    new_string="{" + str(new_filename) + "}",
-                )
-
-            if not file.is_file():
-                corrected_path = Path(str(file).replace("  ", " "))
-                if corrected_path.is_file():
-                    file = corrected_path
-
-            if file.is_file():
-                file.rename(new_filename)
-            elif file.is_symlink():
-                os.rename(str(file), str(new_filename))
-
-            record["file"] = str(new_filename)
-            self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
-            if (
-                colrev.record.RecordState.rev_prescreen_included
-                == record["colrev_status"]
-            ):
-                record["colrev_status"] = colrev.record.RecordState.pdf_imported
+            self.__rename_pdf(
+                record_dict=record_dict,
+                file=file,
+                new_filename=new_filename,
+                pdfs_search_file=pdfs_search_file,
+            )
 
         self.review_manager.dataset.save_records_dict(records=records)
 
@@ -545,28 +557,30 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(not_retrieved_string)
 
     def __set_status_if_file_linked(self, *, records: dict) -> dict:
-        for record in records.values():
-            if record["colrev_status"] in [
+        for record_dict in records.values():
+            if record_dict["colrev_status"] in [
                 colrev.record.RecordState.rev_prescreen_included,
                 colrev.record.RecordState.pdf_needs_manual_retrieval,
             ]:
-                if "file" in record:
+                record = colrev.record.Record(data=record_dict)
+                if "file" in record_dict:
                     if any(
-                        Path(fpath).is_file() for fpath in record["file"].split(";")
+                        Path(fpath).is_file()
+                        for fpath in record.data["file"].split(";")
                     ):
                         if (
                             colrev.record.RecordState.rev_prescreen_included
-                            == record["colrev_status"]
+                            == record.data["colrev_status"]
                         ):
-                            record[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.pdf_imported
+                            record.set_status(
+                                target_state=colrev.record.RecordState.pdf_imported
+                            )
                     else:
                         self.review_manager.logger.warning(
                             "Remove non-existent file link "
-                            f'({record["ID"]}: {record["file"]}'
+                            f'({record_dict["ID"]}: {record_dict["file"]}'
                         )
-                        colrev.record.Record(data=record).remove_field(key="file")
+                        record.remove_field(key="file")
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 

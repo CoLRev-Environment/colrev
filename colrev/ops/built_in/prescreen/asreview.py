@@ -181,12 +181,12 @@ class ASReviewPrescreen(JsonSchemaMixin):
             to_import = pd.read_csv(asreview_project_file)
             for _, row in to_import.iterrows():
                 prescreen_record = colrev.record.Record(data=records[row["ID"]])
-                if "1" == str(row["included"]):
+                if str(row["included"]) == "1":
                     prescreen_operation.prescreen(
                         record=prescreen_record,
                         prescreen_inclusion=True,
                     )
-                elif "0" == str(row["included"]):
+                elif str(row["included"]) == "0":
                     prescreen_operation.prescreen(
                         record=prescreen_record,
                         prescreen_inclusion=False,
@@ -248,11 +248,11 @@ class ASReviewPrescreen(JsonSchemaMixin):
             except KeyboardInterrupt:
                 print("\n\n\nCompleted prescreen. ")
 
-        if "y" == input("Import prescreen from asreview [y,n]?"):
+        if input("Import prescreen from asreview [y,n]?") == "y":
             self.__import_from_asreview(prescreen_operation, records)
 
             if prescreen_operation.review_manager.dataset.has_changes():
-                if "y" == input("create commit [y,n]?"):
+                if input("create commit [y,n]?") == "y":
                     prescreen_operation.review_manager.create_commit(
                         msg="Pre-screen (asreview)",
                         manual_author=True,

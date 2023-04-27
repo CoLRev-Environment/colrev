@@ -62,7 +62,7 @@ def get_screening_criteria_from_user_input(
             )
         ):
             short_name = input("Provide a short name: ")
-            if "i" == input("Inclusion or exclusion criterion [i,e]?: "):
+            if input("Inclusion or exclusion criterion [i,e]?: ") == "i":
                 criterion_type = colrev.settings.ScreenCriterionType.inclusion_criterion
             else:
                 criterion_type = colrev.settings.ScreenCriterionType.exclusion_criterion

@@ -34,10 +34,7 @@ def base_repo_review_manager(session_mocker, tmp_path_factory):  # type: ignore
     )
     test_repo_dir = tmp_path_factory.mktemp("base_repo")  # type: ignore
     os.chdir(test_repo_dir)
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(test_repo_dir), force_mode=True
-    )
-    review_manager.get_init_operation(
+    colrev.review_manager.get_init_operation(
         review_type="literature_review",
         target_path=test_repo_dir,
     )

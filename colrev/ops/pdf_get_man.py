@@ -82,12 +82,15 @@ class PDFGetMan(colrev.operation.Operation):
         """Discard missing PDFs (set to pdf_not_available)"""
 
         records = self.review_manager.dataset.load_records_dict()
-        for record in records.values():
+        for record_dict in records.values():
+            record = colrev.record.Record(data=record_dict)
             if (
-                record["colrev_status"]
+                record.data["colrev_status"]
                 == colrev.record.RecordState.pdf_needs_manual_retrieval
             ):
-                record["colrev_status"] = colrev.record.RecordState.pdf_not_available
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_not_available
+                )
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(

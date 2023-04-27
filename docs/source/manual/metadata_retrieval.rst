@@ -29,7 +29,7 @@ Metadata retrieval is a high-level operation consisting of the following operati
 
 - The ``dedupe`` operation, which links records pointing to the same paper to create a dataset without duplicates. Specifically, duplicate records are merged in a way that preserves their links to the respective origin records and allows users to undo merges at any time (no simple removing of duplicates).
 
-To start the retrieval operation, add search results to the ``data/search`` directory and run
+To start the retrieval operation, add search results to the ``data/search`` directory and run:
 
 .. code:: bash
 

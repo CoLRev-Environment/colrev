@@ -17,13 +17,14 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
+# pylint: disable=duplicate-code
+# pylint: disable=too-few-public-methods
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
         import colrev.ops.prep_man
-
-# pylint: disable=too-few-public-methods
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
@@ -31,6 +32,7 @@ if False:  # pylint: disable=using-constant-test
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
+    settings: ExportManPrepSettings
     ci_supported: bool = False
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
@@ -83,10 +85,10 @@ class ExportManPrep(JsonSchemaMixin):
                 target_path = self.review_manager.prep_dir / Path(record["file"])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
-                if "symlink" == self.settings.pdf_handling_mode:
+                if self.settings.pdf_handling_mode == "symlink":
                     target_path.symlink_to(Path(record["file"]).resolve())
 
-                if "copy_first_page" == self.settings.pdf_handling_mode:
+                if self.settings.pdf_handling_mode == "copy_first_page":
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if len(pdf_reader.pages) >= 1:
                         writer = PdfFileWriter()
@@ -119,12 +121,74 @@ class ExportManPrep(JsonSchemaMixin):
             # os.system('%s %s' % (os.getenv('EDITOR'), self.prep_man_bib_path))
             subprocess.call(["xdg-open", str(self.prep_man_bib_path)])
 
+    def __update_provenance(
+        self, *, record: colrev.record.Record, records: dict
+    ) -> None:
+        record_id = record.data["ID"]
+        for k in list(record.data.keys()):
+            if k in [
+                "colrev_status",
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_id",
+            ]:
+                continue
+            if k in records[record_id]:
+                if record.data[k] != records[record_id][k]:
+                    if k in record.data.get("colrev_masterdata_provenance", {}):
+                        record.add_masterdata_provenance(key=k, source="man_prep")
+                    else:
+                        record.add_data_provenance(key=k, source="man_prep")
+            else:
+                if k in records[record_id]:
+                    del records[record_id][k]
+                if k in record.data.get("colrev_masterdata_provenance", {}):
+                    record.add_masterdata_provenance(
+                        key=k, source="man_prep", note="not_missing"
+                    )
+                else:
+                    record.add_data_provenance(
+                        key=k, source="man_prep", note="not_missing"
+                    )
+
+    def __drop_unnecessary_provenance_fiels(
+        self, *, record: colrev.record.Record
+    ) -> None:
+        colrev_data_provenance_keys_to_drop = []
+        for key, items in record.data.get("colrev_data_provenance", {}).items():
+            if key not in record.data and "not_missing" not in items["note"]:
+                colrev_data_provenance_keys_to_drop.append(key)
+        for colrev_data_provenance_key_to_drop in colrev_data_provenance_keys_to_drop:
+            del record.data["colrev_data_provenance"][
+                colrev_data_provenance_key_to_drop
+            ]
+
+        colrev_masterdata_provenance_keys_to_drop = []
+        for key, items in record.data.get("colrev_masterdata_provenance", {}).items():
+            if key not in record.data and "not_missing" not in items["note"]:
+                colrev_masterdata_provenance_keys_to_drop.append(key)
+        for (
+            colrev_masterdata_provenance_key_to_drop
+        ) in colrev_masterdata_provenance_keys_to_drop:
+            del record.data["colrev_masterdata_provenance"][
+                colrev_masterdata_provenance_key_to_drop
+            ]
+
+    def __import_record(
+        self, *, record_dict: dict, records: dict, imported_records: list
+    ) -> None:
+        record = colrev.record.PrepRecord(data=record_dict)
+        record.update_masterdata_provenance()
+        record.set_status(target_state=colrev.record.RecordState.md_prepared)
+        if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
+            imported_records.append(record.data["ID"])
+        self.__update_provenance(record=record, records=records)
+        self.__drop_unnecessary_provenance_fiels(record=record)
+        records[record_dict["ID"]] = record.get_data()
+
     def __import_prep_man(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
     ) -> None:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-
         prep_man_operation.review_manager.logger.info(
             "Load import changes from "
             f"{self.prep_man_bib_path.relative_to(prep_man_operation.review_manager.path)}"
@@ -135,67 +199,17 @@ class ExportManPrep(JsonSchemaMixin):
                 load_str=target_bib.read()
             )
 
-        imported_records = []
+        imported_records: typing.List[dict] = []
         records = prep_man_operation.review_manager.dataset.load_records_dict()
         for record_id, record_dict in man_prep_recs.items():
             if record_id not in records:
                 print(f"ID no longer in records: {record_id}")
                 continue
-            record = colrev.record.PrepRecord(data=record_dict)
-            record.update_masterdata_provenance()
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
-                imported_records.append(record.data["ID"])
-            for k in list(record.data.keys()):
-                if k in [
-                    "colrev_status",
-                    "colrev_masterdata_provenance",
-                    "colrev_data_provenance",
-                    "colrev_id",
-                ]:
-                    continue
-                if k in records[record_id]:
-                    if record.data[k] != records[record_id][k]:
-                        if k in record.data.get("colrev_masterdata_provenance", {}):
-                            record.add_masterdata_provenance(key=k, source="man_prep")
-                        else:
-                            record.add_data_provenance(key=k, source="man_prep")
-                else:
-                    if k in records[record_id]:
-                        del records[record_id][k]
-                    if k in record.data.get("colrev_masterdata_provenance", {}):
-                        record.add_masterdata_provenance(
-                            key=k, source="man_prep", note="not_missing"
-                        )
-                    else:
-                        record.add_data_provenance(
-                            key=k, source="man_prep", note="not_missing"
-                        )
-            colrev_data_provenance_keys_to_drop = []
-            for key, items in record.data.get("colrev_data_provenance", {}).items():
-                if key not in record.data and "not_missing" not in items["note"]:
-                    colrev_data_provenance_keys_to_drop.append(key)
-            for (
-                colrev_data_provenance_key_to_drop
-            ) in colrev_data_provenance_keys_to_drop:
-                del record.data["colrev_data_provenance"][
-                    colrev_data_provenance_key_to_drop
-                ]
-
-            colrev_masterdata_provenance_keys_to_drop = []
-            for key, items in record.data.get(
-                "colrev_masterdata_provenance", {}
-            ).items():
-                if key not in record.data and "not_missing" not in items["note"]:
-                    colrev_masterdata_provenance_keys_to_drop.append(key)
-            for (
-                colrev_masterdata_provenance_key_to_drop
-            ) in colrev_masterdata_provenance_keys_to_drop:
-                del record.data["colrev_masterdata_provenance"][
-                    colrev_masterdata_provenance_key_to_drop
-                ]
-
-            records[record_id] = record.get_data()
+            self.__import_record(
+                record_dict=record_dict,
+                records=records,
+                imported_records=imported_records,
+            )
 
         prep_man_operation.review_manager.dataset.save_records_dict(records=records)
         prep_man_operation.review_manager.dataset.add_record_changes()
@@ -217,7 +231,7 @@ class ExportManPrep(JsonSchemaMixin):
             selected_path = self.prep_man_bib_path.relative_to(
                 prep_man_operation.review_manager.path
             )
-            if "y" == input(f"Import changes from {selected_path} [y,n]?"):
+            if input(f"Import changes from {selected_path} [y,n]?") == "y":
                 self.__import_prep_man(prep_man_operation=prep_man_operation)
 
         return records

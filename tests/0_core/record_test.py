@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
@@ -167,6 +168,7 @@ Email: guy.pare@hec.ca"""
 
 
 def test_eq() -> None:
+    # pylint: disable=comparison-with-itself
     assert R1 == R1
     assert R1 != R2
 
@@ -412,7 +414,7 @@ def test_get_inconsistencies() -> None:
 
 
 def test_change_entrytype_article() -> None:
-    input = {
+    input_value = {
         "ID": "R1",
         "ENTRYTYPE": "inproceedings",
         "colrev_masterdata_provenance": {
@@ -464,7 +466,7 @@ def test_change_entrytype_article() -> None:
         "volume": "UNKNOWN",
         "number": "UNKNOWN",
     }
-    REC = colrev.record.Record(data=input)
+    REC = colrev.record.Record(data=input_value)
     REC.change_entrytype(new_entrytype="article")
     actual = REC.data
     assert expected == actual
@@ -1111,9 +1113,6 @@ def test_merge_except_errata() -> None:
 
 
 def test_merge_local_index(mocker) -> None:  # type: ignore
-    import colrev.record
-    import colrev.env.local_index
-
     mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
@@ -1166,7 +1165,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     #     "colrev_origin": "lr_db.bib/Standing2010",
     #     "colrev_status": RecordState.rev_synthesized,
     #     "colrev_id": "colrev_id1:|a|decision-support-systems|49|1|2010|standing-standing-love|a-review-of-research-on-e-marketplaces-1997-2008;",
-    #     "colrev_pdf_id": "cpid1:ffffffffffffffffc3f00fffc2000023c2000023c0000003ffffdfffc0005fffc007ffffffffffffffffffffc1e00003c1e00003cfe00003ffe00003ffe00003ffffffffe7ffffffe3dd8003c0008003c0008003c0008003c0008003c0008003c0008003c0008003c0018003ffff8003e7ff8003e1ffffffffffffffffffffff",
+    #     "colrev_pdf_id": "cpid2:ffffffffffffffffc3f00fffc2000023c2000023c0000003ffffdfffc0005fffc007ffffffffffffffffffffc1e00003c1e00003cfe00003ffe00003ffe00003ffffffffe7ffffffe3dd8003c0008003c0008003c0008003c0008003c0008003c0008003c0008003c0018003ffff8003e7ff8003e1ffffffffffffffffffffff",
     #     "exclusion_criteria": "NA",
     #     "file": "/home/gerit/ownCloud/data/journals/DSS/49_1/A-review-of-research-on-e-marketplaces-1997-2008_2010.pdf",
     #     "doi": "10.1016/J.DSS.2009.12.008",
@@ -1386,16 +1385,16 @@ def test_get_toc_key() -> None:
     actual = R1.get_toc_key()
     assert expected == actual
 
-    input = {
+    input_value = {
         "ENTRYTYPE": "inproceedings",
         "booktitle": "International Conference on Information Systems",
         "year": "2012",
     }
     expected = "international-conference-on-information-systems|2012"
-    actual = colrev.record.Record(data=input).get_toc_key()
+    actual = colrev.record.Record(data=input_value).get_toc_key()
     assert expected == actual
 
-    input = {
+    input_value = {
         "ENTRYTYPE": "phdthesis",
         "ID": "test",
         "title": "Thesis on asteroids",
@@ -1405,7 +1404,7 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        colrev.record.Record(data=input).get_toc_key()
+        colrev.record.Record(data=input_value).get_toc_key()
 
 
 def test_print_citation_format() -> None:
@@ -1688,6 +1687,7 @@ def test_update_metadata_status() -> None:
     R1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": "http...", "note": ""}
     }
+    R1_mod.data["title"] = "Editorial"
     R1_mod.update_metadata_status()
     expected = {
         "ID": "R1",
@@ -1699,7 +1699,7 @@ def test_update_metadata_status() -> None:
         "colrev_status": colrev.record.RecordState.md_prepared,
         "colrev_origin": ["import.bib/id_0001"],
         "year": "2020",
-        "title": "EDITORIAL",
+        "title": "Editorial",
         "author": "Rai, Arun",
         "journal": "MIS Quarterly",
         "volume": "45",

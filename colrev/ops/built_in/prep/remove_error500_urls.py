@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import requests
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -42,7 +41,6 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
@@ -56,7 +54,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                     "GET",
                     record.data["url"],
                     headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
+                    timeout=60,
                 )
                 if ret.status_code >= 500:
                     record.remove_field(key="url")

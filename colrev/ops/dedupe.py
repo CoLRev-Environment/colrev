@@ -23,6 +23,8 @@ if False:  # pylint: disable=using-constant-test
     if TYPE_CHECKING:
         import colrev.review_manager
 
+# pylint: disable=too-many-lines
+
 
 class Dedupe(colrev.operation.Operation):
     """Deduplicate records (entity resolution)"""
@@ -107,6 +109,7 @@ class Dedupe(colrev.operation.Operation):
 
         records_df["year"] = records_df["year"].astype(str)
         if "colrev_status" in records_df:
+            # pylint: disable=direct-status-assign
             records_df["colrev_status"] = records_df["colrev_status"].astype(str)
 
         records_df["author"] = records_df["author"].str[:60]
@@ -400,7 +403,7 @@ class Dedupe(colrev.operation.Operation):
     ) -> bool:
         gid_conflict = False
 
-        if main_record.data.get("doi", "doi-a") != dupe_record.data.get("doi", "doi-b"):
+        if main_record.data.get("doi", "doi") != dupe_record.data.get("doi", "doi"):
             gid_conflict = True
 
         return gid_conflict
@@ -415,6 +418,8 @@ class Dedupe(colrev.operation.Operation):
         set_to_md_processed: list,
     ) -> None:
         for record_id, duplicate_ids in duplicate_id_mappings.items():
+            if record_id not in records:
+                continue
             if (
                 colrev.record.RecordState.md_prepared
                 == records[record_id]["colrev_status"]
@@ -443,6 +448,35 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.logger.info(
             "Merged duplicates: ".ljust(39) + f"{len(removed_duplicates)} records"
         )
+
+    def __apply_records_merges(
+        self, *, records: dict, removed_duplicates: list, complete_dedupe: bool
+    ) -> list:
+        for record in records.values():
+            if "MOVED_DUPE_ID" in record:
+                del record["MOVED_DUPE_ID"]
+        for removed_duplicate in removed_duplicates:
+            if removed_duplicate in records:
+                del records[removed_duplicate]
+
+        set_to_md_processed = []
+        if complete_dedupe:
+            # Set remaining records to md_processed (not duplicate) because all records
+            # have been considered by dedupe
+            for record_dict in records.values():
+                if (
+                    record_dict["colrev_status"]
+                    == colrev.record.RecordState.md_prepared
+                ):
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_processed
+                    )
+                    set_to_md_processed.append(record.data["ID"])
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        return set_to_md_processed
 
     def apply_merges(
         self,
@@ -473,9 +507,6 @@ class Dedupe(colrev.operation.Operation):
         # Completeness of comparisons should be ensured by the
         # dedupe clustering routine
 
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-
         if not results:
             return
 
@@ -489,13 +520,13 @@ class Dedupe(colrev.operation.Operation):
 
         removed_duplicates = []
         duplicate_id_mappings = {}
-        record_to_merge = self.__get_records_to_merge(records=records, results=results)
-        for main_record, dupe_record, dupe in record_to_merge:
+        records_to_merge = self.__get_records_to_merge(records=records, results=results)
+        for main_record, dupe_record, dupe in records_to_merge:
             try:
                 if self.__is_cross_level_merge(
                     main_record=main_record, dupe_record=dupe_record
                 ):
-                    self.review_manager.logger.debug(
+                    self.review_manager.logger.info(
                         "Prevented cross-level merge: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
@@ -504,7 +535,7 @@ class Dedupe(colrev.operation.Operation):
                 if self.__gids_conflict(
                     main_record=main_record, dupe_record=dupe_record
                 ):
-                    self.review_manager.logger.debug(
+                    self.review_manager.logger.info(
                         "Prevented merge with conflicting global IDs: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
@@ -522,7 +553,7 @@ class Dedupe(colrev.operation.Operation):
                         colrev.settings.SameSourceMergePolicy.prevent
                         == self.review_manager.settings.dedupe.same_source_merges
                     ):
-                        self.review_manager.logger.debug(
+                        self.review_manager.logger.info(
                             "Prevented same-source merge: "
                             f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                         )
@@ -533,12 +564,12 @@ class Dedupe(colrev.operation.Operation):
 
                         continue  # with next pair
 
-                    self.review_manager.logger.debug(
+                    self.review_manager.logger.info(
                         "Applying same-source merge: "
                         f"{main_record.data['ID']} - {dupe_record.data['ID']}"
                     )
 
-                self.review_manager.logger.debug(
+                self.review_manager.logger.info(
                     f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
                 )
                 if main_record.data["ID"] not in duplicate_id_mappings:
@@ -565,28 +596,19 @@ class Dedupe(colrev.operation.Operation):
                         else ""
                     )
 
-                    self.review_manager.logger.debug(
+                    self.review_manager.logger.info(
                         f"Removed duplicate{conf_details}: "
                         + f'{main_record.data["ID"]} <- {dupe_record.data["ID"]}'
                     )
-            except colrev_exceptions.InvalidMerge:
+            except colrev_exceptions.InvalidMerge as exc:
+                print(exc)
                 continue
 
-        for record in records.values():
-            if "MOVED_DUPE_ID" in record:
-                del record["MOVED_DUPE_ID"]
-        for removed_duplicate in removed_duplicates:
-            if removed_duplicate in records:
-                del records[removed_duplicate]
-
-        set_to_md_processed = []
-        if complete_dedupe:
-            # Set remaining records to md_processed (not duplicate) because all records
-            # have been considered by dedupe
-            for record in records.values():
-                if record["colrev_status"] == colrev.record.RecordState.md_prepared:
-                    record["colrev_status"] = colrev.record.RecordState.md_processed
-                    set_to_md_processed.append(record["ID"])
+        set_to_md_processed = self.__apply_records_merges(
+            records=records,
+            removed_duplicates=removed_duplicates,
+            complete_dedupe=complete_dedupe,
+        )
 
         self.__print_merge_stats(
             records=records,
@@ -595,9 +617,6 @@ class Dedupe(colrev.operation.Operation):
             complete_dedupe=complete_dedupe,
             set_to_md_processed=set_to_md_processed,
         )
-
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __get_records_to_merge(
         self, *, records: dict, results: list
@@ -710,9 +729,10 @@ class Dedupe(colrev.operation.Operation):
 
                             # The followin may need to be set to the previous state of the
                             # record that was erroneously merged (could be md_prepared)
-                            record_dict[
-                                "colrev_status"
-                            ] = colrev.record.RecordState.md_processed
+                            record = colrev.record.Record(data=record_dict)
+                            record.set_status(
+                                target_state=colrev.record.RecordState.md_processed
+                            )
                             records[record_dict["ID"]] = record_dict
                             self.review_manager.logger.info(
                                 f'Restored {record_dict["ID"]}'
@@ -1002,11 +1022,15 @@ class Dedupe(colrev.operation.Operation):
         if not self.review_manager.settings.prescreen.prescreen_package_endpoints:
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
-            for record in records.values():
-                if colrev.record.RecordState.md_processed == record["colrev_status"]:
-                    record[
-                        "colrev_status"
-                    ] = colrev.record.RecordState.rev_prescreen_included
+            for record_dict in records.values():
+                record = colrev.record.Record(data=record_dict)
+                if (
+                    colrev.record.RecordState.md_processed
+                    == record.data["colrev_status"]
+                ):
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_prescreen_included
+                    )
 
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()

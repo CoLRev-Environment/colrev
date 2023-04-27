@@ -35,12 +35,15 @@ class PDFPrepMan(colrev.operation.Operation):
         """Discard records whose PDFs need manual preparation (set to pdf_not_available)"""
 
         records = self.review_manager.dataset.load_records_dict()
-        for record in records.values():
+        for record_dict in records.values():
             if (
-                record["colrev_status"]
+                record_dict["colrev_status"]
                 == colrev.record.RecordState.pdf_needs_manual_preparation
             ):
-                record["colrev_status"] = colrev.record.RecordState.pdf_not_available
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_not_available
+                )
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
@@ -308,11 +311,7 @@ class PDFPrepMan(colrev.operation.Operation):
 
         pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
         prev_cpid = record.data.get("colrev_pdf_id", "NA")
-        record.data.update(
-            colrev_pdf_id=record.get_colrev_pdf_id(
-                review_manager=self.review_manager, pdf_path=pdf_path
-            )
-        )
+        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path))
         if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
             record.add_data_provenance(key="file", source="manual")
 

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
-## [Unreleased]
+## Unreleased
 
 ### Added
 
@@ -15,7 +15,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
-## [0.8.0] - 2023-03-26
+## 0.8.3 - 2023-04-22
+
+### Changed
+
+- CoLRev pdf IDs are now based on the mupdf library
+
+## 0.8.2 - 2023-04-05
+
+### Fixed
+
+- Fix InvalidGitRepositoryError (raised upon status in empty directories)
+
+## 0.8.1 - 2023-04-04
+
+### Changed
+
+- Update the Github action workflows in CoLRev repositories
+- Add auto-upgrade flag to settings
+
+## 0.8.0 - 2023-03-26
 
 ### Added
 
@@ -47,13 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 - Several bugfixes
 
-### [0.7.1] - 2023-03-25
+### 0.7.1 - 2023-03-25
 
 ### Changed
 
 - Changed package prefix from ``colrev_built_in`` to ``colrev``
 
-### [0.7.0] - 2023-01-16
+### 0.7.0 - 2023-01-16
 
 ### Added
 
@@ -96,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Indexing of non-curated records
 - Address special cases in dedupe (active learning)
 
-### [0.6.0] - 2022-10-12
+### 0.6.0 - 2022-10-12
 
 ### Added
 
@@ -121,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Concurrent request session handling
 - StatusStats calculations
 
-### [0.5.0] - 2022-06-28
+### 0.5.0 - 2022-06-28
 
 ### Added
 
@@ -142,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Testing and refactoring (e.g., for Windows, prefer keyword arguments in functions, python package type information)
 
 
-### [0.4.0] - 2022-04-06
+### 0.4.0 - 2022-04-06
 
 ### Added
 
@@ -165,7 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Loggers
 - Performance issues in prep and status
 
-### [0.3.0] - 2022-02-05
+### 0.3.0 - 2022-02-05
 
 ### Added
 
@@ -195,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Backward search adds two entries to search_details
 - Logging (reinitialize after batches/commits)
 
-### [0.2.0] - 2021-09-12
+### 0.2.0 - 2021-09-12
 
 ### Added
 
@@ -230,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Exception in `anaylsis/screen_2.py` (IndexError)
 - Global constant conflict with `analysis/entry_hash_function.py` (nameparser.config/CONSTANTS)
 
-### [0.1.0] - 2021-05-08
+### 0.1.0 - 2021-05-08
 
 ### Added
 

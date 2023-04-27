@@ -138,7 +138,7 @@ class Push(colrev.operation.Operation):
             + f"{corrections}\n\nBest regards\n\n"
         )
 
-        if "colrev.dblp" == source.endpoint:
+        if source.endpoint == "colrev.dblp":
             file_path = Path("dblp-corrections-mail.txt")
             dblp_header = (
                 "Send to: dblp@dagstuhl.de\n\n"

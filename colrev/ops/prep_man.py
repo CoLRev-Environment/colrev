@@ -144,7 +144,7 @@ class PrepMan(colrev.operation.Operation):
             languages_df = pd.read_csv(lang_prep_csv_path)
             language_records = languages_df.to_dict("records")
             for language_record in language_records:
-                if "" == language_record["most_likely_language"]:
+                if language_record["most_likely_language"] == "":
                     continue
                 if language_record["ID"] not in records:
                     # warn
@@ -171,9 +171,9 @@ class PrepMan(colrev.operation.Operation):
                     ):
                         # by resetting to md_imported,
                         # the prescreen-exclusion based on languages will be reapplied.
-                        record.data[
-                            "colrev_status"
-                        ] = colrev.record.RecordState.md_imported
+                        record.set_status(
+                            target_state=colrev.record.RecordState.md_imported
+                        )
 
             self.review_manager.dataset.save_records_dict(records=records)
 

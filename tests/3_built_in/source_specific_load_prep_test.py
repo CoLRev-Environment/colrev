@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import shutil
-from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -45,16 +44,16 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
     os.chdir(test_repo_dir)
     print(test_repo_dir)
 
-    review_manager = colrev.review_manager.ReviewManager(
+    rev_man = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
-    review_manager.settings = colrev.settings.load_settings(
+    rev_man.settings = colrev.settings.load_settings(
         settings_path=test_data_path.parents[1]
         / Path("colrev/template/init/settings.json")
     )
 
-    review_manager.settings.project.title = "topic a - a review"
-    review_manager.get_init_operation(
+    rev_man.settings.project.title = "topic a - a review"
+    colrev.review_manager.get_init_operation(
         review_type="literature_review",
         example=False,
         target_path=test_repo_dir,
@@ -63,18 +62,16 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
 
     # Note: the strategy is to test the workflow and the endpoints separately
     # We therefore deactivate the (most time consuming endpoints) in the following
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(review_manager.path)
-    )
+    rev_man = colrev.review_manager.ReviewManager(path_str=str(rev_man.path))
 
     # review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
-    review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
+    rev_man.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
     ]
-    review_manager.settings.sources = []
+    rev_man.settings.sources = []
 
-    review_manager.save_settings()
-    return review_manager
+    rev_man.save_settings()
+    return rev_man
 
 
 # To create new test datasets, it is sufficient to
@@ -111,7 +108,7 @@ def test_source(
     prep_operation.main()
 
     # Test whether the load(fixes) and source-specific prep work as expected
-    actual = Path("data/records.bib").read_text()
+    actual = Path("data/records.bib").read_text(encoding="utf-8")
     expected = (
         test_data_path / Path("built_in_search_sources/") / expected_file
     ).read_text()

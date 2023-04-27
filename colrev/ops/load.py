@@ -9,6 +9,7 @@ import string
 import typing
 from pathlib import Path
 
+import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
@@ -54,6 +55,7 @@ class Load(colrev.operation.Operation):
         )
 
         self.package_manager = self.review_manager.get_package_manager()
+        self.language_service = colrev.env.language_service.LanguageService()
 
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
@@ -102,35 +104,28 @@ class Load(colrev.operation.Operation):
         ]
         return imported_origins
 
-    def __apply_source_heuristics(
+    def __get_load_conversion_package_endpoint(
+        self, *, filepath: Path, load_conversion: dict
+    ) -> dict:
+        filetype = filepath.suffix.replace(".", "")
+
+        for (
+            package_identifier,
+            selected_package,
+        ) in load_conversion.items():
+            if filetype in selected_package.supported_extensions:  # type: ignore
+                return {"endpoint": package_identifier}
+
+        raise colrev_exceptions.UnsupportedImportFormatError(filepath)
+
+    def __get_heuristics_results_list(
         self,
         *,
         filepath: Path,
         search_sources: dict,
         load_conversion: dict,
-    ) -> list[typing.Dict]:
-        """Apply heuristics to identify source"""
-
-        # pylint: disable=too-many-statements
-
-        def get_load_conversion_package_endpoint(*, filepath: Path) -> dict:
-            filetype = filepath.suffix.replace(".", "")
-
-            for (
-                package_identifier,
-                selected_package,
-            ) in load_conversion.items():
-                if filetype in selected_package.supported_extensions:  # type: ignore
-                    return {"endpoint": package_identifier}
-
-            raise colrev_exceptions.UnsupportedImportFormatError(filepath)
-
-        data = ""
-        try:
-            data = filepath.read_text()
-        except UnicodeDecodeError:
-            pass
-
+        data: str,
+    ) -> list:
         results_list = []
         for (
             endpoint,
@@ -191,7 +186,9 @@ class Load(colrev.operation.Operation):
                     if "load_conversion_package_endpoint" not in res:
                         res[
                             "load_conversion_package_endpoint"
-                        ] = get_load_conversion_package_endpoint(filepath=filepath)
+                        ] = self.__get_load_conversion_package_endpoint(
+                            filepath=filepath, load_conversion=load_conversion
+                        )
 
                     source_candidate = colrev.settings.SearchSource(
                         endpoint=endpoint,
@@ -210,6 +207,29 @@ class Load(colrev.operation.Operation):
                     results_list.append(result_item)
             except colrev_exceptions.UnsupportedImportFormatError:
                 continue
+        return results_list
+
+    def __apply_source_heuristics(
+        self,
+        *,
+        filepath: Path,
+        search_sources: dict,
+        load_conversion: dict,
+    ) -> list[typing.Dict]:
+        """Apply heuristics to identify source"""
+
+        data = ""
+        try:
+            data = filepath.read_text()
+        except UnicodeDecodeError:
+            pass
+
+        results_list = self.__get_heuristics_results_list(
+            filepath=filepath,
+            search_sources=search_sources,
+            load_conversion=load_conversion,
+            data=data,
+        )
 
         # Reduce the results_list when there are results with very high confidence
         if [r for r in results_list if r["confidence"] > 0.95]:
@@ -224,8 +244,8 @@ class Load(colrev.operation.Operation):
                 filename=Path(filepath),
                 search_type=colrev.settings.SearchType("DB"),
                 search_parameters={},
-                load_conversion_package_endpoint=get_load_conversion_package_endpoint(
-                    filepath=filepath
+                load_conversion_package_endpoint=self.__get_load_conversion_package_endpoint(
+                    filepath=filepath, load_conversion=load_conversion
                 ),
                 comment="",
             )
@@ -344,7 +364,7 @@ class Load(colrev.operation.Operation):
                         heuristic_source = heuristic_result_list[int(selection) - 1]
                         break
 
-            if "colrev.unknown_source" == heuristic_source["source_candidate"].endpoint:
+            if heuristic_source["source_candidate"].endpoint == "colrev.unknown_source":
                 cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
                 query_input = ""
                 if not skip_query:
@@ -369,7 +389,7 @@ class Load(colrev.operation.Operation):
                 custom_load_conversion_package_endpoint = input(
                     "provide custom load_conversion_package_endpoint [or NA]:"
                 )
-                if "NA" == custom_load_conversion_package_endpoint:
+                if custom_load_conversion_package_endpoint == "NA":
                     heuristic_source[
                         "source_candidate"
                     ].load_conversion_package_endpoint = {}
@@ -589,110 +609,95 @@ class Load(colrev.operation.Operation):
             set_initial_import_provenance(record=record)
             set_initial_non_curated_import_provenance(record=record)
 
-    def __import_record(self, *, record_dict: dict) -> dict:
-        # pylint: disable=too-many-branches
+    def __import_format_fields(self, *, record: colrev.record.Record) -> None:
+        # pylint: disable=duplicate-code
+        # For better readability of the git diff:
+        fields_to_process = [
+            "author",
+            "year",
+            "title",
+            "journal",
+            "booktitle",
+            "series",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+            "abstract",
+        ]
 
+        for field in fields_to_process:
+            if field in record.data:
+                if "\\" in record.data[field]:
+                    record.data[field] = self.__unescape_latex(
+                        input_str=record.data[field]
+                    )
+
+                if "<" in record.data[field]:
+                    record.data[field] = self.__unescape_html(
+                        input_str=record.data[field]
+                    )
+
+                record.data[field] = (
+                    record.data[field]
+                    .replace("\n", " ")
+                    .rstrip()
+                    .lstrip()
+                    .replace("{", "")
+                    .replace("}", "")
+                )
+        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
+            record.data["title"] = re.sub(r"\s+", " ", record.data["title"]).rstrip(".")
+
+        if "year" in record.data:
+            if str(record.data["year"]).endswith(".0"):
+                record.data["year"] = str(record.data["year"])[:-2]
+
+        if "pages" in record.data:
+            record.data["pages"] = record.data["pages"].replace("–", "--")
+            if record.data["pages"].count("-") == 1:
+                record.data["pages"] = record.data["pages"].replace("-", "--")
+            if record.data["pages"].lower() == "n.pag":
+                del record.data["pages"]
+
+    def __import_process_fields(self, *, record: colrev.record.Record) -> None:
+        # Consistently set keys to lower case
+        lower_keys = [k.lower() for k in list(record.data.keys())]
+        for key, n_key in zip(list(record.data.keys()), lower_keys):
+            if key not in ["ID", "ENTRYTYPE"]:
+                record.data[n_key] = record.data.pop(key)
+
+        self.__import_format_fields(record=record)
+
+        if "number" not in record.data and "issue" in record.data:
+            record.data.update(number=record.data["issue"])
+            del record.data["issue"]
+
+        if record.data.get("volume", "") == "ahead-of-print":
+            del record.data["volume"]
+        if record.data.get("number", "") == "ahead-of-print":
+            del record.data["number"]
+
+        if "language" in record.data:
+            if len(record.data["language"]) != 3:
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+
+        if "url" in record.data:
+            if "login?url=https" in record.data["url"]:
+                record.data["url"] = record.data["url"][
+                    record.data["url"].find("login?url=https") + 10 :
+                ]
+
+    def __import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
         )
 
-        if colrev.record.RecordState.md_retrieved == record_dict["colrev_status"]:
-            # Consistently set keys to lower case
-            lower_keys = [k.lower() for k in list(record_dict.keys())]
-            for key, n_key in zip(list(record_dict.keys()), lower_keys):
-                if key in ["ID", "ENTRYTYPE"]:
-                    continue
-                record_dict[n_key] = record_dict.pop(key)
-
-            # pylint: disable=duplicate-code
-            # For better readability of the git diff:
-            fields_to_process = [
-                "author",
-                "year",
-                "title",
-                "journal",
-                "booktitle",
-                "series",
-                "volume",
-                "number",
-                "pages",
-                "doi",
-                "abstract",
-            ]
-
-            for field in fields_to_process:
-                if field in record_dict:
-                    if "\\" in record_dict[field]:
-                        record_dict[field] = self.__unescape_latex(
-                            input_str=record_dict[field]
-                        )
-
-                    if "<" in record_dict[field]:
-                        record_dict[field] = self.__unescape_html(
-                            input_str=record_dict[field]
-                        )
-
-                    record_dict[field] = (
-                        record_dict[field]
-                        .replace("\n", " ")
-                        .rstrip()
-                        .lstrip()
-                        .replace("{", "")
-                        .replace("}", "")
-                    )
-
-            if "UNKNOWN" != record_dict.get("title", "UNKNOWN"):
-                record_dict["title"] = (
-                    re.sub(r"\s+", " ", record_dict["title"])
-                    .lstrip()
-                    .rstrip()
-                    .rstrip(".")
-                )
-
-            if "year" in record_dict:
-                if str(record_dict["year"]).endswith(".0"):
-                    record_dict["year"] = str(record_dict["year"])[:-2]
-
-            if "pages" in record_dict:
-                record_dict["pages"] = record_dict["pages"].replace("–", "--")
-                if record_dict["pages"].count("-") == 1:
-                    record_dict["pages"] = record_dict["pages"].replace("-", "--")
-                if "n.pag" == record_dict["pages"].lower():
-                    del record_dict["pages"]
-
-            if "number" not in record_dict and "issue" in record_dict:
-                record_dict.update(number=record_dict["issue"])
-                del record_dict["issue"]
-
-            if record_dict.get("volume", "") == "ahead-of-print":
-                del record_dict["volume"]
-            if record_dict.get("number", "") == "ahead-of-print":
-                del record_dict["number"]
-
-            if "language" in record_dict:
-                if len(record_dict["language"]) > 3:
-                    for long, short in [
-                        ("English", "eng"),
-                        ("Spanish", "esp"),
-                        ("Chinese", "zho"),
-                        ("Portuguese", "por"),
-                        ("German", "deu"),
-                        ("Hungarian", "hun"),
-                        ("French", "fra"),
-                        ("Russian", "rus"),
-                    ]:
-                        record_dict["language"] = record_dict["language"].replace(
-                            long, short
-                        )
-
-            if "url" in record_dict:
-                if "login?url=https" in record_dict["url"]:
-                    record_dict["url"] = record_dict["url"][
-                        record_dict["url"].find("login?url=https") + 10 :
-                    ]
-
         record = colrev.record.Record(data=record_dict)
+        if record.data["colrev_status"] == colrev.record.RecordState.md_retrieved:
+            self.__import_process_fields(record=record)
+
         if "doi" in record.data:
             record.data.update(
                 doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
@@ -720,7 +725,7 @@ class Load(colrev.operation.Operation):
             for key in colrev.record.Record.provenance_keys + [
                 "screening_criteria",
             ]:
-                if "colrev_status" == key:
+                if key == "colrev_status":
                     continue
                 if key in record:
                     del record[key]

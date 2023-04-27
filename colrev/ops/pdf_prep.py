@@ -55,9 +55,7 @@ class PDFPrep(colrev.operation.Operation):
         if pdf_path.suffix == ".pdf":
             try:
                 record.data.update(
-                    colrev_pdf_id=record.get_colrev_pdf_id(
-                        review_manager=self.review_manager, pdf_path=pdf_path
-                    )
+                    colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path)
                 )
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.error(
@@ -173,9 +171,9 @@ class PDFPrep(colrev.operation.Operation):
                     f'Error for {record.data["ID"]} '  # type: ignore
                     f"(in {endpoint.settings.endpoint} : {err})"  # type: ignore
                 )
-                record.data[
-                    "colrev_status"
-                ] = colrev.record.RecordState.pdf_needs_manual_preparation
+                record.set_status(
+                    target_state=colrev.record.RecordState.pdf_needs_manual_preparation
+                )
 
             failed = (
                 colrev.record.RecordState.pdf_needs_manual_preparation
@@ -274,9 +272,7 @@ class PDFPrep(colrev.operation.Operation):
         if "file" in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict["file"])
             record_dict.update(
-                colrev_pdf_id=colrev.record.Record(data=record_dict).get_colrev_pdf_id(
-                    review_manager=self.review_manager, pdf_path=pdf_path
-                )
+                colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
             )
         return record_dict
 

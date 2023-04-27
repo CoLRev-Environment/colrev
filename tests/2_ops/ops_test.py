@@ -51,7 +51,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
-        for path in test_records_dict.keys():
+        for path in test_records_dict:
             with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(file.read())
@@ -97,6 +97,12 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         "test", encoding="utf-8"
     )
 
+    # colrev status/etc. should print the RepoSetupError in non-colrev repositories
+    with pytest.raises(colrev_exceptions.RepoSetupError):
+        review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(test_repo_dir), force_mode=False
+        )
+
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
@@ -104,20 +110,21 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         settings_path=test_data_path.parents[1]
         / Path("colrev/template/init/settings.json")
     )
+
     with pytest.raises(colrev_exceptions.RepoInitError):
-        review_manager.get_init_operation(
+        colrev.review_manager.get_init_operation(
             review_type="literature_review",
             example=True,
             local_pdf_collection=True,
             target_path=test_repo_dir,
         )
+
     with pytest.raises(colrev_exceptions.ParameterError):
-        review_manager.get_init_operation(
+        colrev.review_manager.get_init_operation(
             review_type="misspelled_review", target_path=test_repo_dir
         )
 
-    review_manager.settings.project.title = "topic a - a review"
-    review_manager.get_init_operation(
+    colrev.review_manager.get_init_operation(
         review_type="literature_review",
         example=True,
         target_path=test_repo_dir,
@@ -134,7 +141,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
         / Path("colrev/template/init/settings.json")
     )
 
-    review_manager.get_init_operation(
+    colrev.review_manager.get_init_operation(
         review_type="curated_masterdata",
         example=False,
         local_pdf_collection=True,
@@ -156,12 +163,12 @@ def review_manager(session_mocker, tmp_path_factory: Path, request) -> colrev.re
     )
     Path("test.txt").write_text("test", encoding="utf-8")
     with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
-        review_manager.get_init_operation(
+        colrev.review_manager.get_init_operation(
             review_type="literature_review", example=False, target_path=test_repo_dir
         )
     Path("test.txt").unlink()
 
-    review_manager.get_init_operation(
+    colrev.review_manager.get_init_operation(
         review_type="literature_review", example=False, target_path=test_repo_dir
     )
 
@@ -367,7 +374,7 @@ def test_data(review_manager: colrev.review_manager.ReviewManager) -> None:
 def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     checker = colrev.checker.Checker(review_manager=review_manager)
 
-    expected = ["0.8.0", "0.8.0"]
+    expected = ["0.8.3", "0.8.3"]
     actual = checker.get_colrev_versions()
     assert expected == actual
 

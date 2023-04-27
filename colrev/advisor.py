@@ -76,7 +76,7 @@ class Advisor:
         non_staged = [
             item.a_path
             for item in git_repo.index.diff(None)
-            if ".bib" == item.a_path[-4:]
+            if item.a_path[-4:] == ".bib"
         ]
         if len(non_staged) > 0:
             item = {
@@ -280,7 +280,7 @@ class Advisor:
             )
 
             for transitioned_record in transitioned_records:
-                if "no_source_state" == transitioned_record["dest"]:
+                if transitioned_record["dest"] == "no_source_state":
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
@@ -289,7 +289,7 @@ class Advisor:
                             "priority": "yes",
                         }
                     )
-                if "invalid_transition" == transitioned_record["operations_type"]:
+                if transitioned_record["operations_type"] == "invalid_transition":
                     msg = (
                         f"Resolve invalid transition ({transitioned_record['ID']}): "
                         + f"{transitioned_record['source']} to "
@@ -327,29 +327,25 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-    def __append_next_operation_instructions(
-        self,
-        *,
-        review_instructions: list,
-        status_stats: colrev.ops.status.StatusStats,
-        current_origin_states_dict: dict,
-    ) -> None:
-        # pylint: disable=too-many-branches
+    def __append_initial_operations(
+        self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
+    ) -> bool:
+        if not Path(self.review_manager.search_dir).iterdir():
+            instruction = {
+                "msg": "Add search results to data/search",
+                "priority": "yes",
+            }
+            review_instructions.append(instruction)
+            return True
 
         if status_stats.overall.md_retrieved == 0:
-            if not Path(self.review_manager.search_dir).iterdir():
-                instruction = {
-                    "msg": "Add search results to data/search",
-                    "priority": "yes",
-                }
-                review_instructions.append(instruction)
-            else:
-                instruction = {
-                    "msg": self._next_step_description["retrieve"],
-                    "cmd": "colrev retrieve",
-                    "priority": "yes",
-                }
-                review_instructions.append(instruction)
+            instruction = {
+                "msg": self._next_step_description["retrieve"],
+                "cmd": "colrev retrieve",
+                "priority": "yes",
+            }
+            review_instructions.append(instruction)
+            return True
 
         if status_stats.currently.md_retrieved > 0:
             instruction = {
@@ -360,33 +356,41 @@ class Advisor:
             review_instructions.append(instruction)
 
             if not self.review_manager.verbose_mode:
-                return
+                return True
+        return False
 
-        active_processing_functions = status_stats.get_active_operations(
+    def __append_active_operations(
+        self,
+        *,
+        status_stats: colrev.ops.status.StatusStats,
+        current_origin_states_dict: dict,
+        review_instructions: list,
+    ) -> None:
+        active_operations = status_stats.get_active_operations(
             current_origin_states_dict=current_origin_states_dict
         )
 
-        priority_processing_functions = status_stats.get_priority_operations(
+        priority_processing_operations = status_stats.get_priority_operations(
             current_origin_states_dict=current_origin_states_dict
         )
 
-        for active_processing_function in active_processing_functions:
-            if active_processing_function in ["load", "prep", "dedupe"]:
+        for active_operation in active_operations:
+            if active_operation in ["load", "prep", "dedupe"]:
                 instruction = {
                     "msg": self._next_step_description["retrieve"],
                     "cmd": "colrev retrieve",
                 }
-            if active_processing_function in ["pdf_get", "pdf_prep"]:
+            if active_operation in ["pdf_get", "pdf_prep"]:
                 instruction = {
                     "msg": self._next_step_description["pdfs"],
                     "cmd": "colrev pdfs",
                 }
             else:
                 instruction = {
-                    "msg": self._next_step_description[active_processing_function],
-                    "cmd": f"colrev {active_processing_function.replace('_', '-')}",
+                    "msg": self._next_step_description[active_operation],
+                    "cmd": f"colrev {active_operation.replace('_', '-')}",
                 }
-            if active_processing_function in priority_processing_functions:
+            if active_operation in priority_processing_operations:
                 # keylist = [list(x.keys()) for x in review_instructions]
                 # keys = [item for sublist in keylist for item in sublist]
                 # if "priority" not in keys:
@@ -402,6 +406,7 @@ class Advisor:
             ]:
                 review_instructions.append(instruction)
 
+    def __append_data_operation_advice(self, *, review_instructions: list) -> None:
         if (
             len(review_instructions) == 1
             or self.review_manager.verbose_mode
@@ -435,6 +440,26 @@ class Advisor:
                     advice = endpoint.get_advice(self.review_manager)  # type: ignore
                     if advice:
                         review_instructions.append(advice)
+
+    def __append_next_operation_instructions(
+        self,
+        *,
+        review_instructions: list,
+        status_stats: colrev.ops.status.StatusStats,
+        current_origin_states_dict: dict,
+    ) -> None:
+        if self.__append_initial_operations(
+            review_instructions=review_instructions, status_stats=status_stats
+        ):
+            return
+
+        self.__append_active_operations(
+            status_stats=status_stats,
+            current_origin_states_dict=current_origin_states_dict,
+            review_instructions=review_instructions,
+        )
+
+        self.__append_data_operation_advice(review_instructions=review_instructions)
 
     def __get_missing_files(
         self, *, status_stats: colrev.ops.status.StatusStats
@@ -630,10 +655,10 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-                if "journal" == line.lstrip()[:7]:
+                if line.lstrip()[:7] == "journal":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
-                if "booktitle" == line.lstrip()[:9]:
+                if line.lstrip()[:9] == "booktitle":
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 

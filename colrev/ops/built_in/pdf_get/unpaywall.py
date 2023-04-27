@@ -102,7 +102,7 @@ class Unpaywall(JsonSchemaMixin):
         url = self.__unpaywall(
             review_manager=pdf_get_operation.review_manager, doi=record.data["doi"]
         )
-        if "NA" == url:
+        if url == "NA":
             return record
         if "Invalid/unknown DOI" in url:
             return record

@@ -88,9 +88,9 @@ class Prescreen(colrev.operation.Operation):
             if record_id not in records:
                 self.review_manager.logger.info(f" not found: {record_id}")
                 continue
-            record = records[record_id]
+            record = colrev.record.Record(data=records[record_id])
             if (
-                record["colrev_status"] != colrev.record.RecordState.md_processed
+                record.data["colrev_status"] != colrev.record.RecordState.md_processed
                 and not self.review_manager.force_mode
             ):
                 self.review_manager.logger.info(
@@ -98,13 +98,13 @@ class Prescreen(colrev.operation.Operation):
                 )
                 continue
             if include:
-                record[
-                    "colrev_status"
-                ] = colrev.record.RecordState.rev_prescreen_included
+                record.set_status(
+                    target_state=colrev.record.RecordState.rev_prescreen_included
+                )
             else:
-                record[
-                    "colrev_status"
-                ] = colrev.record.RecordState.rev_prescreen_excluded
+                record.set_status(
+                    target_state=colrev.record.RecordState.rev_prescreen_excluded
+                )
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -183,11 +183,12 @@ class Prescreen(colrev.operation.Operation):
     def __prescreen_include_all(self, *, records: dict) -> None:
         # pylint: disable=duplicate-code
         self.review_manager.logger.info("Prescreen-including all records")
-        for record in records.values():
-            if record["colrev_status"] == colrev.record.RecordState.md_processed:
-                record[
-                    "colrev_status"
-                ] = colrev.record.RecordState.rev_prescreen_included
+        for record_dict in records.values():
+            if record_dict["colrev_status"] == colrev.record.RecordState.md_processed:
+                record = colrev.record.Record(data=record_dict)
+                record.set_status(
+                    target_state=colrev.record.RecordState.rev_prescreen_included
+                )
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(

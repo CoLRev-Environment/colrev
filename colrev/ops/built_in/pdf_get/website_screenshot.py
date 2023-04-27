@@ -24,7 +24,7 @@ if False:  # pylint: disable=using-constant-test
 @zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
 @dataclass
 class WebsiteScreenshot(JsonSchemaMixin):
-    """Get PDFs from webisite screenshot (for "online" ENTRYTYPES)"""
+    """Get PDFs from website screenshot (for "online" ENTRYTYPES)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
@@ -42,7 +42,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Get a PDF of the website (screenshot)"""
 
-        if "online" != record.data["ENTRYTYPE"]:
+        if record.data["ENTRYTYPE"] != "online":
             return record
 
         screenshot_service = pdf_get_operation.review_manager.get_screenshot_service()

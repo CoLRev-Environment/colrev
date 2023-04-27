@@ -4,6 +4,16 @@
 colrev prescreen
 ---------------------------------------------
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+
 In the ``colrev prescreen`` operation, the records transition from ``md_processed`` to ``rev_prescreen_included`` or ``rev_prescreen_excluded``.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).
@@ -37,9 +47,10 @@ The following options for ``prescreen`` are available:
 .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Prescreen packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Link", "link"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Prescreen packages", "short_description"), ("Status", "status_linked")],
         data['prescreen'],
         title='',
+        columns=[25,55,20]
         ) }}
 
 
