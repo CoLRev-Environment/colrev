@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 import logging
 import multiprocessing as mp
+import random
 import time
 import typing
 from copy import deepcopy
@@ -645,6 +646,8 @@ class Prep(colrev.operation.Operation):
                 conditions=[{"colrev_status": s} for s in r_states_to_prepare]
             )
         )
+        if polish and self.review_manager.in_ci_environment() and len(items) > 2000:
+            items = random.choices(items, k=2000)  # nosec
 
         prep_data = {
             "nr_tasks": len(items),
