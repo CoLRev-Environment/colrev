@@ -709,8 +709,9 @@ class ReviewManager:
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
 
+    @classmethod
     def in_ci_environment(
-        self,
+        cls,
         *,
         identifier: Optional[str] = None,
     ) -> bool:
