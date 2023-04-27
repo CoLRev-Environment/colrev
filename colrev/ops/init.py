@@ -12,7 +12,7 @@ from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
 from typing import Optional
-
+import platform
 import git
 
 import colrev.dataset
@@ -47,6 +47,9 @@ class Initializer:
             raise colrev_exceptions.RepoInitError(
                 msg="Cannot initialize local_pdf_collection repository with example data."
             )
+        current_platform = platform.system()
+        if current_platform != "Linux":
+            light = True
         self.light = light
 
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
