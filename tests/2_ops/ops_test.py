@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import platform
 import shutil
 import typing
 from dataclasses import asdict
@@ -383,13 +384,23 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     # Note: no assertion (yet)
     checker.in_virtualenv()
 
-    expected = []
     actual = checker.check_repo_extended()
-    assert expected == actual
+    current_platform = platform.system()
+    if current_platform in ["Linux"]:
+        expected = []
+        assert expected == actual
+    elif current_platform in ["Darwin"]:
+        expected = ["MissingDependencyError: Docker"]
+        assert expected == actual
 
-    expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
     actual = checker.check_repo()  # type: ignore
-    assert expected == actual
+
+    if current_platform in ["Linux"]:
+        expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
+        assert expected == actual
+    elif current_platform in ["Darwin"]:
+        expected = {"status": 1, "msg": "  MissingDependencyError: Docker"}  # type: ignore
+        assert expected == actual
 
     expected = []
     actual = checker.check_repo_basics()
@@ -404,24 +415,38 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     assert expected == actual
 
     review_manager.get_search_sources()
-    expected = [  # type: ignore
-        {  # type: ignore
-            "endpoint": "colrev.pdfs_dir",
-            "filename": Path("data/search/pdfs.bib"),
-            "search_type": colrev.settings.SearchType.PDFS,
-            "search_parameters": {"scope": {"path": "data/pdfs"}},
-            "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-            "comment": "",
-        },
-        {  # type: ignore
-            "endpoint": "colrev.unknown_source",
-            "filename": Path("data/search/test_records.bib"),
-            "search_type": colrev.settings.SearchType.DB,
-            "search_parameters": {},
-            "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-            "comment": None,
-        },
-    ]
     search_sources = review_manager.settings.sources
     actual = [asdict(s) for s in search_sources]  # type: ignore
-    assert expected == actual
+
+    if current_platform in ["Linux"]:
+        expected = [  # type: ignore
+            {  # type: ignore
+                "endpoint": "colrev.pdfs_dir",
+                "filename": Path("data/search/pdfs.bib"),
+                "search_type": colrev.settings.SearchType.PDFS,
+                "search_parameters": {"scope": {"path": "data/pdfs"}},
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
+                "comment": "",
+            },
+            {  # type: ignore
+                "endpoint": "colrev.unknown_source",
+                "filename": Path("data/search/test_records.bib"),
+                "search_type": colrev.settings.SearchType.DB,
+                "search_parameters": {},
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
+                "comment": None,
+            },
+        ]
+        assert expected == actual
+    elif current_platform in ["Darwin"]:
+        expected = [  # type: ignore
+            {  # type: ignore
+                "endpoint": "colrev.unknown_source",
+                "filename": Path("data/search/test_records.bib"),
+                "search_type": colrev.settings.SearchType.DB,
+                "search_parameters": {},
+                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
+                "comment": None,
+            },
+        ]
+        assert expected == actual

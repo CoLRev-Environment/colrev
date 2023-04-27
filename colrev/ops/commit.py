@@ -81,6 +81,8 @@ class Commit:
                 except importlib.metadata.PackageNotFoundError:
                     pass
                 except ValueError:
+                    # Note : macos error in importlib.metadata.version
+                    # ValueError: A distribution name is required
                     self.ext_script_name = "unknown"
                     self.ext_script_version = "unknown"
 
