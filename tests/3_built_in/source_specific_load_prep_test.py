@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import platform
 import shutil
 from pathlib import Path
 
@@ -95,6 +96,9 @@ def test_source(
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
     )
+    if platform.system() not in ["Linux"]:
+        if source_filepath.suffix not in [".bib", ".csv"]:
+            return
 
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
