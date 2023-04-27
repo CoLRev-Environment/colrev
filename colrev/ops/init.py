@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import platform
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -12,7 +13,7 @@ from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
 from typing import Optional
-import platform
+
 import git
 
 import colrev.dataset
