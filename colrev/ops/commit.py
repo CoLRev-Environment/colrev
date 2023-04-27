@@ -70,6 +70,8 @@ class Commit:
         self.ext_script_version = ""
 
         if script_name != "":
+            # Note : the script_name / ext_script seems to be different on macos during init!?
+            print(script_name)
             ext_script = script_name.split(" ")[0]
             if ext_script != "colrev":
                 try:
