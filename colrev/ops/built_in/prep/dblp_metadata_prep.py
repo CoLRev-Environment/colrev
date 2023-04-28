@@ -69,7 +69,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             for dblp_prefix in self.dblp_prefixes
             for o in record.data["colrev_origin"]
         ):
-            # Already linked to a crossref record
+            # Already linked to a dblp record
             return record
 
         self.dblp_source.get_masterdata(prep_operation=prep_operation, record=record)

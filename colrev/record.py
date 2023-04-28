@@ -1800,7 +1800,7 @@ class Record:
                     source="colrev_curation.masterdata_restrictions",
                     note="missing",
                 )
-            elif "number" in self.data:
+            elif not restrictions["number"] and "number" in self.data:
                 self.remove_field(
                     key="number",
                     not_missing_note=True,
