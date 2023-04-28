@@ -609,7 +609,11 @@ class Dataset:
                         current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                         current_id_str = current_id.decode("utf-8")
                     if current_id_str in [x["ID"] for x in record_list]:
-                        replacement = [x["record"] for x in record_list][0]
+                        replacement = [
+                            x["record"]
+                            for x in record_list
+                            if x["ID"] == current_id_str
+                        ][0]
                         record_list = [
                             x for x in record_list if x["ID"] != current_id_str
                         ]
