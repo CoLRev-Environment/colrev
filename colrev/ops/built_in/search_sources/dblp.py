@@ -250,14 +250,11 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         if "doi" in item:
             item["doi"] = item["doi"].upper()
-        if "ee" in item:
-            if "https://doi.org" not in item["ee"]:
-                item["url"] = item["ee"]
 
         item = {
             k: v
             for k, v in item.items()
-            if k not in ["venue", "type", "access", "key", "ee", "authors"]
+            if k not in ["venue", "type", "access", "key", "ee", "authors", "url"]
         }
         for key, value in item.items():
             item[key] = html.unescape(value).replace("{", "").replace("}", "")
