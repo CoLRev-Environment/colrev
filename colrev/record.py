@@ -1447,9 +1447,12 @@ class Record:
 
         if "colrev_masterdata_provenance" in self.data:
             for field, provenance in self.data["colrev_masterdata_provenance"].items():
-                if any(x in provenance["note"] for x in ["disagreement", "missing"]):
+                if any(
+                    n.lstrip().startswith(x)
+                    for n in provenance["note"].split(",")
+                    for x in ["disagreement", "missing"]
+                ):
                     defect_field_keys.append(field)
-
         return list(set(defect_field_keys))
 
     def has_quality_defects(self) -> bool:
