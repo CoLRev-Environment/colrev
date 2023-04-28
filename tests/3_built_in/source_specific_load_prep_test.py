@@ -13,23 +13,10 @@ import colrev.settings
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
 
-test_data_path = Path()
-
-
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
-
 
 # @pytest.fixture(scope="module")
 @pytest.fixture
-def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_manager.ReviewManager:  # type: ignore
-    global test_data_path
-    test_data_path = Path(request.fspath).parents[1] / Path("data")
-
+def review_manager(session_mocker, tmp_path: Path, helpers) -> colrev.review_manager.ReviewManager:  # type: ignore
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
@@ -49,7 +36,7 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
         path_str=str(test_repo_dir), force_mode=True
     )
     rev_man.settings = colrev.settings.load_settings(
-        settings_path=test_data_path.parents[1]
+        settings_path=helpers.test_data_path.parents[1]
         / Path("colrev/template/init/settings.json")
     )
 
@@ -86,13 +73,14 @@ def review_manager(session_mocker, tmp_path: Path, request) -> colrev.review_man
         (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
     ],
 )
-def test_source(
+def test_source(  # type: ignore
     source_filepath: Path,
     expected_source_identifier: str,
     expected_file: Path,
     review_manager: colrev.review_manager.ReviewManager,
+    helpers,
 ) -> None:
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
     )
@@ -114,7 +102,7 @@ def test_source(
     # Test whether the load(fixes) and source-specific prep work as expected
     actual = Path("data/records.bib").read_text(encoding="utf-8")
     expected = (
-        test_data_path / Path("built_in_search_sources/") / expected_file
+        helpers.test_data_path / Path("built_in_search_sources/") / expected_file
     ).read_text()
 
     # If mismatch: copy the actual file to replace the expected file (facilitating updates)
@@ -122,7 +110,7 @@ def test_source(
         print(Path.cwd())
         shutil.copy(
             Path("data/records.bib"),
-            test_data_path / Path("built_in_search_sources/") / expected_file,
+            helpers.test_data_path / Path("built_in_search_sources/") / expected_file,
         )
 
     assert expected == actual

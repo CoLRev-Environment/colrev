@@ -10,12 +10,21 @@ import colrev.review_manager
 test_data_path = Path()
 
 
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
+class Helpers:
+    test_data_path = Path(__file__).parent / Path("data")
+
+    @staticmethod
+    def retrieve_test_file(*, source: Path, target: Path) -> None:
+        target.parent.mkdir(exist_ok=True, parents=True)
+        shutil.copy(
+            Helpers.test_data_path / source,
+            target,
+        )
+
+
+@pytest.fixture(scope="session")
+def helpers():  # type: ignore
+    return Helpers
 
 
 @pytest.fixture(scope="session")

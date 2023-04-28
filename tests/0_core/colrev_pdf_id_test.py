@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-import os
-import shutil
+"""Test the colrev_pdf_id"""
 from pathlib import Path
 
 import pytest
@@ -8,35 +7,6 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.colrev_pdf_id
 import colrev.review_manager
-
-test_data_path = Path()
-
-
-@pytest.fixture(scope="module")
-def env_dir(tmp_path_factory: Path, request) -> Path:  # type: ignore
-    """Initialize the environment directory"""
-    global test_data_path
-
-    test_data_path = Path(request.fspath).parents[1] / Path("data")
-    env_directory = tmp_path_factory.mktemp("test_repo")  # type: ignore
-
-    os.chdir(env_directory)
-    return env_directory
-
-
-@pytest.fixture(scope="module")
-def script_loc(request) -> Path:  # type: ignore
-    """Return the directory of the currently running test script"""
-
-    return Path(request.fspath).parent
-
-
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
 
 
 @pytest.mark.parametrize(
@@ -52,9 +22,15 @@ def retrieve_test_file(*, source: Path, target: Path) -> None:
         (Path("zero-size-pdf.pdf"), "InvalidPDFException"),
     ],
 )
-def test_pdf_hash_service(pdf_path, expected_result, env_dir) -> None:  # type: ignore
-    target_path = env_dir / Path("data/pdfs/") / pdf_path
-    retrieve_test_file(
+def test_pdf_hash(  # type: ignore
+    pdf_path: Path,
+    expected_result: str,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    helpers,
+) -> None:
+    """Test the pdf hash generation"""
+    target_path = base_repo_review_manager.path / Path("data/pdfs/") / pdf_path
+    helpers.retrieve_test_file(
         source=pdf_path,
         target=target_path,
     )
@@ -74,3 +50,5 @@ def test_pdf_hash_service(pdf_path, expected_result, env_dir) -> None:  # type: 
             pdf_path=target_path, page_nr=1, hash_size=32
         )
         assert expected_result == actual
+
+    target_path.unlink()

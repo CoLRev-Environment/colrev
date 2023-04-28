@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import shutil
 import typing
 from pathlib import Path
 
@@ -11,25 +10,8 @@ import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.review_manager
 
-test_data_path = Path()
 
-
-@pytest.fixture(scope="module")
-def script_loc(request) -> Path:  # type: ignore
-    """Return the directory of the currently running test script"""
-
-    return Path(request.fspath).parent
-
-
-def retrieve_test_file(*, source: Path, target: Path) -> None:
-    target.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(
-        test_data_path / source,
-        target,
-    )
-
-
-def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
+def test_local_index(mocker, tmp_path, helpers) -> None:  # type: ignore
     def test_is_duplicate(local_index, test_records_dict) -> None:  # type: ignore
         record1_colrev_id = colrev.record.Record(
             data=test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
@@ -233,11 +215,9 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
         )
         assert expected == actual
 
-    def load_test_records(script_loc) -> dict:  # type: ignore
-        # local_index_bib_path = script_loc.joinpath("local_index.bib")
-
+    def load_test_records() -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = Path(script_loc.parent) / Path("data/local_index")
+        bib_files_to_index = helpers.test_data_path / Path("local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
@@ -264,13 +244,11 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
 
         return test_records_dict
 
-    global test_data_path
-    test_data_path = script_loc.parent / Path("data")
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
         target=tmp_path / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
-    retrieve_test_file(
+    helpers.retrieve_test_file(
         source=Path("WagnerLukyanenkoParEtAl2022.tei.xml"),
         target=tmp_path / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
     )
@@ -281,7 +259,7 @@ def test_local_index(mocker, tmp_path, script_loc) -> None:  # type: ignore
     with mocker.patch.object(
         colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
     ):
-        test_records_dict = load_test_records(script_loc)
+        test_records_dict = load_test_records()
         local_index = colrev.env.local_index.LocalIndex(
             index_tei=True, verbose_mode=True
         )
