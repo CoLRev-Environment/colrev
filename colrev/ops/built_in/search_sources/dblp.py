@@ -250,6 +250,11 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         if "doi" in item:
             item["doi"] = item["doi"].upper()
+        if "ee" in item:
+            if not any(
+                x in item["ee"] for x in ["https://doi.org", "https://dblp.org"]
+            ):
+                item["url"] = item["ee"]
 
         item = {
             k: v
