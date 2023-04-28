@@ -47,6 +47,12 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             source_operation=prep_operation
         )
 
+        self.dblp_prefixes = [
+            s.get_origin_prefix()
+            for s in prep_operation.review_manager.settings.sources
+            if s.endpoint == "colrev.dblp"
+        ]
+
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
@@ -57,6 +63,14 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
+
+        if any(
+            dblp_prefix in o
+            for dblp_prefix in self.dblp_prefixes
+            for o in record.data["colrev_origin"]
+        ):
+            # Already linked to a crossref record
+            return record
 
         self.dblp_source.get_masterdata(prep_operation=prep_operation, record=record)
 
