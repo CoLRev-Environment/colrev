@@ -2,18 +2,14 @@
 """CoLRev run operation: A simple tutorial version."""
 from __future__ import annotations
 
+import bibtexparser
+
 
 def main() -> None:
     print("Start simple colrev run")
 
-    record = {
-        "ID": "Pare2023",
-        "title": "On writing literature reviews",
-        "journal": "MIS Quarterly",
-        "year": "2023",
-        "author": "Pare, Guy",
-    }
+    with open("records.bib", encoding="utf-8") as bibtex_file:
+        bib_database = bibtexparser.load(bibtex_file)
 
-    record["colrev_status"] = "md_imported"
-
-    print(record)
+    for record in bib_database.entries:
+        print(record["title"])
