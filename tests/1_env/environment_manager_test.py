@@ -29,9 +29,9 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
     ):
         env_man = colrev.env.environment_manager.EnvironmentManager()
 
-        print(script_loc)
         env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
         actual = env_man.environment_registry  # type: ignore
+
         expected = [  # type: ignore
             {
                 "repo_name": "colrev",

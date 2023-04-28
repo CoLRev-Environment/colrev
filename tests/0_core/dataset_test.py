@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-import os
-import shutil
+"""Tests for the dataset"""
 from copy import deepcopy
-from pathlib import Path
-
-import pytest
 
 import colrev.env.utils
 import colrev.review_manager
@@ -14,6 +10,7 @@ import colrev.settings
 def test_get_applicable_restrictions(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Get the applicable masterdata restrictions"""
     pe_before = deepcopy(base_repo_review_manager.settings.data.data_package_endpoints)
     base_repo_review_manager.settings.data.data_package_endpoints.append(
         {
