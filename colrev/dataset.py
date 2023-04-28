@@ -942,12 +942,10 @@ class Dataset:
     def get_applicable_restrictions(self, *, record_dict: dict) -> dict:
         """Get the applicable masterdata restrictions"""
 
-        applicable_restrictions = {}
-
-        start_year_values = list(self.masterdata_restrictions.keys())
-
         if not str(record_dict.get("year", "NA")).isdigit():
             return {}
+
+        start_year_values = list(self.masterdata_restrictions.keys())
 
         year_index_diffs = [
             int(record_dict["year"]) - int(x) for x in start_year_values
