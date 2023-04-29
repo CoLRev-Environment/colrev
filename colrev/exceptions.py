@@ -28,7 +28,10 @@ class RepoSetupError(CoLRevException):
     lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
     def __init__(self, msg: Optional[str] = None) -> None:
-        Path(".report.log").unlink(missing_ok=True)
+        try:
+            Path(".report.log").unlink(missing_ok=True)
+        except PermissionError:
+            pass
         if msg:
             self.message = f" {msg}"
         elif any(Path(Path.cwd()).iterdir()):
