@@ -5,6 +5,8 @@ from __future__ import annotations
 import html
 import re
 
+import colrev.exceptions as colrev_exceptions
+
 # pylint: disable=duplicate-code
 
 
@@ -158,11 +160,14 @@ def __remove_fields(*, record_dict: dict) -> dict:
 def json_to_record(*, item: dict) -> dict:
     """Convert a crossref item to a record dict"""
 
-    record_dict = __item_to_record(item=item)
-    record_dict = __set_forthcoming(record_dict=record_dict)
-    record_dict = __flag_retracts(record_dict=record_dict)
-    record_dict = __format_fields(record_dict=record_dict)
-    record_dict = __remove_fields(record_dict=record_dict)
+    try:
+        record_dict = __item_to_record(item=item)
+        record_dict = __set_forthcoming(record_dict=record_dict)
+        record_dict = __flag_retracts(record_dict=record_dict)
+        record_dict = __format_fields(record_dict=record_dict)
+        record_dict = __remove_fields(record_dict=record_dict)
+    except (IndexError, KeyError) as exc:
+        raise colrev_exceptions.RecordNotParsableException(str(exc)) from exc
 
     return record_dict
 

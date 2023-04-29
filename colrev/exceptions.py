@@ -333,6 +333,14 @@ class InvalidQueryException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotParsableException(CoLRevException):
+    """The record could not be parsed."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class NoSearchFeedRegistered(CoLRevException):
     """No search feed endpoints registered in settings.json"""
 

@@ -112,7 +112,11 @@ class DOIFromURLsPrep(JsonSchemaMixin):
 
             record.merge(merging_record=retrieved_record, default_source=url)
 
-        except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
+        except (
+            requests.exceptions.RequestException,
+            colrev_exceptions.InvalidMerge,
+            colrev_exceptions.RecordNotParsableException,
+        ):
             pass
         return record
 
