@@ -91,11 +91,13 @@ class Upgrade(colrev.operation.Operation):
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
                 "version": CoLRevVersion("0.7.0"),
+                "target_version": CoLRevVersion("0.7.1"),
                 "script": self.__migrate_0_7_0,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.7.1"),
+                "target_version": CoLRevVersion("0.8.0"),
                 "script": self.__migrate_0_7_1,
                 "released": True,
             },

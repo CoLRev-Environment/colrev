@@ -560,7 +560,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 save_path=self.non_sample_references,
             )
             self.data_operation.review_manager.dataset.add_changes(
-                path=self.NON_SAMPLE_REFERENCES_RELATIVE
+                path=(Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE)
             )
 
     def __add_prisma_if_available(self, *, silent_mode: bool) -> None:

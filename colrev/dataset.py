@@ -574,7 +574,7 @@ class Dataset:
         return bibtex_str
 
     def save_records_dict_to_file(self, *, records: dict, save_path: Path) -> None:
-        """Save the records dict to specifified file"""
+        """Save the records dict to specified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
