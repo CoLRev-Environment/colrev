@@ -103,7 +103,7 @@ def test_source(  # type: ignore
     actual = Path("data/records.bib").read_text(encoding="utf-8")
     expected = (
         helpers.test_data_path / Path("built_in_search_sources/") / expected_file
-    ).read_text()
+    ).read_text(encoding="utf-8")
 
     # If mismatch: copy the actual file to replace the expected file (facilitating updates)
     if expected != actual:

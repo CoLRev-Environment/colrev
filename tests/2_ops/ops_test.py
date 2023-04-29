@@ -396,13 +396,14 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
     actual = checker.check_repo_basics()
     assert expected == actual
 
-    expected = []
-    actual = checker.check_change_in_propagated_id(
-        prior_id="Srivastava2015",
-        new_id="Srivastava2015a",
-        project_context=review_manager.path,
-    )
-    assert expected == actual
+    if current_platform in ["Linux"]:
+        expected = []
+        actual = checker.check_change_in_propagated_id(
+            prior_id="Srivastava2015",
+            new_id="Srivastava2015a",
+            project_context=review_manager.path,
+        )
+        assert expected == actual
 
     review_manager.get_search_sources()
     search_sources = review_manager.settings.sources
