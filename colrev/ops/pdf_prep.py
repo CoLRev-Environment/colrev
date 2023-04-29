@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import multiprocessing as mp
 import os
-import subprocess
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
@@ -161,7 +160,6 @@ class PDFPrep(colrev.operation.Operation):
                 record.add_data_provenance_note(key="file", note="pdf-hash-error")
 
             except (
-                subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
                 colrev_exceptions.InvalidPDFException,
                 colrev_exceptions.TEIException,

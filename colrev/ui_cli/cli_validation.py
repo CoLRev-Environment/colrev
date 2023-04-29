@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-import subprocess
+import subprocess  # nosec
 
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -203,12 +203,12 @@ def validate(
             )
             input("Enter to continue")
             if "commit_relative" in details:
-                subprocess.run(
+                subprocess.run(  # nosec
                     ["gitk", f"--select-commit={details['commit_relative']}"],
                     check=False,
                 )
             else:
-                subprocess.run(["gitk"], check=False)
+                subprocess.run(["gitk"], check=False)  # nosec
 
         else:
             print("Not yet implemented")

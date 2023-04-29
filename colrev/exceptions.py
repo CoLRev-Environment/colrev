@@ -419,7 +419,7 @@ class InvalidMerge(DedupeError):
 
 
 class DataException(CoLRevException):
-    """Exception in the dat aoperation"""
+    """Exception in the data operation"""
 
     def __init__(self, *, msg: str) -> None:
         self.message = msg

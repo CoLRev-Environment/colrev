@@ -6,11 +6,12 @@ import re
 from pathlib import Path
 from typing import Optional
 from xml import etree
-from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml
 import requests
 from defusedxml.ElementTree import fromstring
+from lxml.etree import XMLSyntaxError  # nosec
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -147,8 +148,11 @@ class TEIParser:
 
     def get_tei_str(self) -> str:
         """Get the TEI string"""
-        etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
-        return etree.ElementTree.tostring(self.root).decode("utf-8")
+        try:
+            etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
+            return etree.ElementTree.tostring(self.root).decode("utf-8")
+        except XMLSyntaxError as exc:
+            raise colrev_exceptions.TEIException from exc
 
     def get_grobid_version(self) -> str:
         """Get the GROBID version used for TEI creation"""

@@ -62,6 +62,7 @@ colrev.exceptions
       RecordNotInRepoException
       RecordNotInTOCException
       RecordNotIndexableException
+      RecordNotParsableException
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError

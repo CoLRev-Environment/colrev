@@ -7,7 +7,6 @@ from pathlib import Path
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -211,7 +210,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                     tei_path=record.get_tei_filename(),
                 )
                 record.data["abstract"] = tei.get_abstract()
-            except (colrev_exceptions.ServiceNotAvailableException, XMLSyntaxError):
+            except colrev_exceptions.TEIException:
                 pass
 
         self.__i += 1

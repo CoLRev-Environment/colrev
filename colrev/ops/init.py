@@ -8,10 +8,10 @@ import os
 import platform
 from importlib.metadata import version
 from pathlib import Path
-from subprocess import CalledProcessError
-from subprocess import check_call
-from subprocess import DEVNULL
-from subprocess import STDOUT
+from subprocess import CalledProcessError  # nosec
+from subprocess import check_call  # nosec
+from subprocess import DEVNULL  # nosec
+from subprocess import STDOUT  # nosec
 from typing import Optional
 
 import git
@@ -389,7 +389,9 @@ class Initializer:
             try:
                 if script_to_call["description"]:
                     self.logger.debug("%s...", script_to_call["description"])
-                check_call(script_to_call["command"], stdout=DEVNULL, stderr=STDOUT)
+                check_call(
+                    script_to_call["command"], stdout=DEVNULL, stderr=STDOUT
+                )  # nosec
             except CalledProcessError:
                 if " ".join(script_to_call["command"]) == "pre-commit autoupdate":
                     pass

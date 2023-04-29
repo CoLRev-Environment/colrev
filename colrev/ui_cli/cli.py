@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-import subprocess
+import subprocess  # nosec
 import sys
 import time
 import typing
@@ -30,7 +30,7 @@ import colrev.ui_cli.cli_validation
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
-EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])
+EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -2121,9 +2121,9 @@ def settings(
     # pylint: disable=reimported
     # pylint: disable=too-many-locals
 
-    from subprocess import check_call
-    from subprocess import DEVNULL
-    from subprocess import STDOUT
+    from subprocess import check_call  # nosec
+    from subprocess import DEVNULL  # nosec
+    from subprocess import STDOUT  # nosec
     import json
     import ast
     import glom
@@ -2148,7 +2148,7 @@ def settings(
             ],
         ]
         for script_to_call in scripts_to_call:
-            check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
+            check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
         review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
         review_manager.create_commit(msg="Update pre-commit hooks")
@@ -2821,7 +2821,7 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         if case_insensitive
         else {}
     )
-    shell, path = click_completion.core.install(
+    shell, path = click_completion.core.install(  # nosec
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
