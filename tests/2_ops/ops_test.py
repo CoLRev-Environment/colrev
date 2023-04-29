@@ -197,6 +197,7 @@ def review_manager(session_mocker, tmp_path_factory: Path, request, helpers) -> 
     review_manager.settings.pdf_prep.pdf_prep_package_endpoints = []
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
+    review_manager.create_commit(msg="add test_records.bib", manual_author=True)
     return review_manager
 
 
