@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tests of the CoLRev operations"""
 import os
 import platform
 import shutil
@@ -15,12 +16,14 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 
-# Note : the following produces different relative paths locally/on github.
-# Path(colrev.__file__).parents[1]
+# pylint: disable=line-too-long
 
 
-@pytest.fixture(scope="module")
-def review_manager(session_mocker, tmp_path_factory: Path, request, helpers) -> colrev.review_manager.ReviewManager:  # type: ignore
+@pytest.fixture(scope="module", name="ops_test_review_manager")
+def fixture_ops_test_review_manager(  # type: ignore
+    session_mocker, tmp_path_factory: Path, helpers
+) -> colrev.review_manager.ReviewManager:
+    """Fixture setting up the review_manager"""
     env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
 
     session_mocker.patch(
@@ -166,7 +169,6 @@ def review_manager(session_mocker, tmp_path_factory: Path, request, helpers) -> 
         path_str=str(review_manager.path)
     )
 
-    # def test_check_operation_precondition(review_manager: colrev.review_manager.ReviewManager) -> None:
     dedupe_operation = review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.NoRecordsError):
@@ -201,16 +203,18 @@ def review_manager(session_mocker, tmp_path_factory: Path, request, helpers) -> 
     return review_manager
 
 
-def test_load(review_manager: colrev.review_manager.ReviewManager) -> None:
-    load_operation = review_manager.get_load_operation()
+def test_load(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the load operation"""
+    load_operation = ops_test_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
 
 
 def test_check_operation_precondition(
-    review_manager: colrev.review_manager.ReviewManager,
+    ops_test_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    dedupe_operation = review_manager.get_dedupe_operation()
+    """Test the check operation preconditions"""
+    dedupe_operation = ops_test_review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.ProcessOrderViolation):
         colrev.record.RecordStateModel.check_operation_precondition(
@@ -220,15 +224,18 @@ def test_check_operation_precondition(
 
 
 def test_load_pubmed(  # type: ignore
-    review_manager: colrev.review_manager.ReviewManager, helpers
+    ops_test_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
-    current_commit = review_manager.dataset.get_last_commit_sha()
+    """Test loading a pubmed file"""
+
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
 
     pubmed_file = helpers.test_data_path / Path("search_files/pubmed-chatbot.csv")
     shutil.copy(
-        pubmed_file, review_manager.path / Path("data/search/pubmed-chatbot.csv")
+        pubmed_file,
+        ops_test_review_manager.path / Path("data/search/pubmed-chatbot.csv"),
     )
-    load_operation = review_manager.get_load_operation()
+    load_operation = ops_test_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     new_sources[0].endpoint = "colrev.pubmed"
     load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
@@ -236,134 +243,167 @@ def test_load_pubmed(  # type: ignore
     expected = (
         helpers.test_data_path / Path("search_files/pubmed-chatbot-expected.bib")
     ).read_text()
-    actual = (review_manager.path / Path("data/search/pubmed-chatbot.bib")).read_text()
+    actual = (
+        ops_test_review_manager.path / Path("data/search/pubmed-chatbot.bib")
+    ).read_text()
     assert expected == actual
 
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
-    review_manager.load_settings()
+    ops_test_review_manager.load_settings()
 
 
-def test_prep(review_manager: colrev.review_manager.ReviewManager) -> None:
-    prep_operation = review_manager.get_prep_operation()
-    current_commit = review_manager.dataset.get_last_commit_sha()
+def test_prep(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the prep operation"""
+
+    prep_operation = ops_test_review_manager.get_prep_operation()
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
     prep_operation.skip_prep()
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
     prep_operation.main(keep_ids=False)
 
-    current_commit = review_manager.dataset.get_last_commit_sha()
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
 
     prep_operation.set_ids()
     # TODO : difference set_ids - reset_ids?
     prep_operation.setup_custom_script()
     prep_operation.reset_ids()
 
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
 
-def test_prep_manp(review_manager: colrev.review_manager.ReviewManager) -> None:
-    prep_man_operation = review_manager.get_prep_man_operation()
+def test_prep_man(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the prep-man operation"""
+
+    prep_man_operation = ops_test_review_manager.get_prep_man_operation()
     prep_man_operation.prep_man_stats()
     prep_man_operation.main()
 
 
-def test_search(review_manager: colrev.review_manager.ReviewManager) -> None:
-    search_operation = review_manager.get_search_operation()
+def test_search(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the search operation"""
+
+    search_operation = ops_test_review_manager.get_search_operation()
     search_operation.main(rerun=True)
 
     search_operation.view_sources()
 
 
 def test_search_get_unique_filename(
-    review_manager: colrev.review_manager.ReviewManager,
+    ops_test_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    search_operation = review_manager.get_search_operation()
+    """Test the search.get_unique_filename()"""
+
+    search_operation = ops_test_review_manager.get_search_operation()
     expected = Path("data/search/test_records_1.bib")
     actual = search_operation.get_unique_filename(file_path_string="test_records.bib")
     print(actual)
     assert expected == actual
 
 
-def test_dedupe(review_manager: colrev.review_manager.ReviewManager) -> None:
-    dedupe_operation = review_manager.get_dedupe_operation(
+def test_dedupe(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the dedupe operation"""
+    dedupe_operation = ops_test_review_manager.get_dedupe_operation(
         notify_state_transition_operation=True
     )
     dedupe_operation.main()
 
 
-def test_prescreen(review_manager: colrev.review_manager.ReviewManager) -> None:
-    prescreen_operation = review_manager.get_prescreen_operation()
+def test_prescreen(
+    ops_test_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the prescreen operation"""
+
+    prescreen_operation = ops_test_review_manager.get_prescreen_operation()
     prescreen_operation.create_prescreen_split(create_split=2)
-    review_manager.settings.prescreen.prescreen_package_endpoints = [
+    ops_test_review_manager.settings.prescreen.prescreen_package_endpoints = [
         {"endpoint": "colrev.conditional_prescreen"}
     ]
     prescreen_operation.main(split_str="NA")
     prescreen_operation.include_all_in_prescreen(persist=False)
 
-    current_commit = review_manager.dataset.get_last_commit_sha()
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
     prescreen_operation.setup_custom_script()
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
 
-def test_pdf_get(review_manager: colrev.review_manager.ReviewManager) -> None:
-    pdf_get_operation = review_manager.get_pdf_get_operation(
+def test_pdf_get(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the pdf-get operation"""
+
+    pdf_get_operation = ops_test_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
     )
     pdf_get_operation.main()
 
 
-def test_pdf_prep(review_manager: colrev.review_manager.ReviewManager) -> None:
-    pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=False)
+def test_pdf_prep(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the pdf-prep operation"""
+
+    pdf_prep_operation = ops_test_review_manager.get_pdf_prep_operation(reprocess=False)
     pdf_prep_operation.main(batch_size=0)
 
 
-def test_pdf_discard(review_manager: colrev.review_manager.ReviewManager) -> None:
-    pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
+def test_pdf_discard(
+    ops_test_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the pdfs --discard"""
+
+    pdf_get_man_operation = ops_test_review_manager.get_pdf_get_man_operation()
     pdf_get_man_operation.discard()
 
 
-def test_pdf_prep_man(review_manager: colrev.review_manager.ReviewManager) -> None:
-    pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
+def test_pdf_prep_man(
+    ops_test_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the pdf-prep-man operation"""
+
+    pdf_prep_man_operation = ops_test_review_manager.get_pdf_prep_man_operation()
     pdf_prep_man_operation.main()
     pdf_prep_man_operation.pdf_prep_man_stats()
     pdf_prep_man_operation.extract_needs_pdf_prep_man()
     pdf_prep_man_operation.discard()
 
 
-def test_screen(review_manager: colrev.review_manager.ReviewManager) -> None:
-    screen_operation = review_manager.get_screen_operation()
-    review_manager.settings.screen.screen_package_endpoints = []
+def test_screen(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the screen operation"""
+
+    screen_operation = ops_test_review_manager.get_screen_operation()
+    ops_test_review_manager.settings.screen.screen_package_endpoints = []
     screen_operation.main(split_str="NA")
     screen_operation.include_all_in_screen(persist=False)
     screen_operation.create_screen_split(create_split=2)
 
-    current_commit = review_manager.dataset.get_last_commit_sha()
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
     screen_operation.setup_custom_script()
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
 
-def test_data(review_manager: colrev.review_manager.ReviewManager) -> None:
-    data_operation = review_manager.get_data_operation()
+def test_data(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the date operation"""
+
+    data_operation = ops_test_review_manager.get_data_operation()
     data_operation.main()
-    review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+    ops_test_review_manager.create_commit(msg="Data and synthesis", manual_author=True)
     data_operation.profile()
 
-    current_commit = review_manager.dataset.get_last_commit_sha()
+    current_commit = ops_test_review_manager.dataset.get_last_commit_sha()
     data_operation.setup_custom_script()
-    repo = git.Repo(review_manager.path)
+    repo = git.Repo(ops_test_review_manager.path)
     repo.head.reset(current_commit, index=True, working_tree=True)
 
-    review_manager.load_settings()
+    ops_test_review_manager.load_settings()
 
 
-def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
-    checker = colrev.checker.Checker(review_manager=review_manager)
+def test_checks(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Test the checks"""
+
+    checker = colrev.checker.Checker(review_manager=ops_test_review_manager)
 
     expected = ["0.8.3", "0.8.3"]
     actual = checker.get_colrev_versions()
@@ -401,12 +441,12 @@ def test_checks(review_manager: colrev.review_manager.ReviewManager) -> None:
         actual = checker.check_change_in_propagated_id(
             prior_id="Srivastava2015",
             new_id="Srivastava2015a",
-            project_context=review_manager.path,
+            project_context=ops_test_review_manager.path,
         )
         assert expected == actual
 
-    review_manager.get_search_sources()
-    search_sources = review_manager.settings.sources
+    ops_test_review_manager.get_search_sources()
+    search_sources = ops_test_review_manager.settings.sources
     actual = [asdict(s) for s in search_sources]  # type: ignore
 
     if current_platform in ["Linux"]:

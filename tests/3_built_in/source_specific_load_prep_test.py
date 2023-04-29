@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Test the source_specific prep package"""
 import os
 import platform
 import shutil
@@ -10,13 +11,12 @@ import colrev.env.utils
 import colrev.review_manager
 import colrev.settings
 
-# Note : the following produces different relative paths locally/on github.
-# Path(colrev.__file__).parents[1]
 
-
-# @pytest.fixture(scope="module")
-@pytest.fixture
-def review_manager(session_mocker, tmp_path: Path, helpers) -> colrev.review_manager.ReviewManager:  # type: ignore
+@pytest.fixture(name="ssp_review_manager")
+def fixture_ssp_review_manager(  # type: ignore
+    session_mocker, tmp_path: Path, helpers
+) -> colrev.review_manager.ReviewManager:
+    """Fixture returning a review_manager"""
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
@@ -77,9 +77,11 @@ def test_source(  # type: ignore
     source_filepath: Path,
     expected_source_identifier: str,
     expected_file: Path,
-    review_manager: colrev.review_manager.ReviewManager,
+    ssp_review_manager: colrev.review_manager.ReviewManager,
     helpers,
 ) -> None:
+    """Test the source_specific prep"""
+
     helpers.retrieve_test_file(
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
@@ -88,15 +90,15 @@ def test_source(  # type: ignore
         if source_filepath.suffix not in [".bib", ".csv"]:
             return
 
-    load_operation = review_manager.get_load_operation()
+    load_operation = ssp_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation.main(new_sources=new_sources)
-    actual_source_identifier = review_manager.settings.sources[0].endpoint
+    actual_source_identifier = ssp_review_manager.settings.sources[0].endpoint
 
     # This tests the heuristics
     assert expected_source_identifier == actual_source_identifier
 
-    prep_operation = review_manager.get_prep_operation()
+    prep_operation = ssp_review_manager.get_prep_operation()
     prep_operation.main()
 
     # Test whether the load(fixes) and source-specific prep work as expected

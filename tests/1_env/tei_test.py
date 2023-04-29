@@ -1,10 +1,14 @@
 #!/usr/bin/env python
+"""Test the tei parser"""
 from pathlib import Path
 
 import pytest
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser
+
+# pylint: disable=line-too-long
+# pylint: disable=too-many-lines
 
 
 @pytest.fixture(scope="module")
@@ -15,6 +19,7 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 def test_tei(script_loc, tmp_path) -> None:  # type: ignore
+    """Test the tei"""
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
     environment_manager = colrev.env.environment_manager.EnvironmentManager()

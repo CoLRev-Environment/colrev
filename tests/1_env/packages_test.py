@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+"""Tests for the colrev package manager"""
 from pathlib import Path
 
 import pytest
@@ -11,33 +11,20 @@ import colrev.settings
 
 @pytest.fixture
 def settings() -> colrev.settings.Settings:
+    """Fixture returning a settings object"""
     return colrev.settings.load_settings(
         settings_path=Path(colrev.__file__).parents[0]
         / Path("template/init/settings.json")
     )
 
 
-@pytest.fixture
-def review_manager(mocker, tmp_path: Path) -> colrev.review_manager.ReviewManager:  # type: ignore
-    os.chdir(tmp_path)
-    mocker.patch(
-        "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
-        return_value=("Tester Name", "tester@email.de"),
-    )
-
-    r_man = colrev.review_manager.ReviewManager(path_str=str(tmp_path), force_mode=True)
-    r_man.settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
-    )
-    return r_man
-
-
 def test_review_type_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    load_operation = review_manager.get_load_operation()
+    """Test the review_type_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    load_operation = base_repo_review_manager.get_load_operation()
 
     review_type_identifiers = package_manager.discover_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.review_type,
@@ -57,10 +44,12 @@ def test_review_type_interfaces(
 
 
 def test_search_source_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    load_operation = review_manager.get_load_operation(
+    """Test the search_source_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    load_operation = base_repo_review_manager.get_load_operation(
         notify_state_transition_operation=False
     )
 
@@ -88,10 +77,12 @@ def test_search_source_interfaces(
 
 
 def test_load_conversion_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    load_operation = review_manager.get_load_operation(
+    """Test the load_conversion_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    load_operation = base_repo_review_manager.get_load_operation(
         notify_state_transition_operation=False
     )
 
@@ -113,10 +104,12 @@ def test_load_conversion_package_interfaces(
 
 
 def test_prep_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    prep_operation = review_manager.get_prep_operation(
+    """Test the prep_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    prep_operation = base_repo_review_manager.get_prep_operation(
         notify_state_transition_operation=False
     )
 
@@ -138,10 +131,12 @@ def test_prep_package_interfaces(
 
 
 def test_prep_man_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    prep_man_operation = review_manager.get_prep_man_operation(
+    """Test the prep_man_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    prep_man_operation = base_repo_review_manager.get_prep_man_operation(
         notify_state_transition_operation=False
     )
 
@@ -163,10 +158,12 @@ def test_prep_man_package_interfaces(
 
 
 def test_dedupe_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    dedupe_operation = review_manager.get_dedupe_operation(
+    """Test the dedupe_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    dedupe_operation = base_repo_review_manager.get_dedupe_operation(
         notify_state_transition_operation=False
     )
 
@@ -193,10 +190,12 @@ def test_dedupe_package_interfaces(
 
 
 def test_prescreen_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    prescreen_operation = review_manager.get_prescreen_operation(
+    """Test the prescreen_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    prescreen_operation = base_repo_review_manager.get_prescreen_operation(
         notify_state_transition_operation=False
     )
 
@@ -220,10 +219,12 @@ def test_prescreen_package_interfaces(
 
 
 def test_pdf_get_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    pdf_get_operation = review_manager.get_pdf_get_operation(
+    """Test the pdf_get_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=False
     )
 
@@ -245,10 +246,12 @@ def test_pdf_get_package_interfaces(
 
 
 def test_pdf_get_man_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    pdf_get_man_operation = review_manager.get_pdf_get_man_operation(
+    """Test the pdf_get_man_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    pdf_get_man_operation = base_repo_review_manager.get_pdf_get_man_operation(
         notify_state_transition_operation=False
     )
 
@@ -270,10 +273,11 @@ def test_pdf_get_man_package_interfaces(
 
 
 def test_pdf_prep_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    pdf_prep_operation = review_manager.get_pdf_prep_operation(
+    """Test the pdf_prep_package_interfaces"""
+    package_manager = base_repo_review_manager.get_package_manager()
+    pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(
         notify_state_transition_operation=False
     )
 
@@ -295,10 +299,11 @@ def test_pdf_prep_package_interfaces(
 
 
 def test_pdf_prep_man_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation(
+    """Test the pdf_prep_man_package_interfaces"""
+    package_manager = base_repo_review_manager.get_package_manager()
+    pdf_prep_man_operation = base_repo_review_manager.get_pdf_prep_man_operation(
         notify_state_transition_operation=False
     )
 
@@ -320,10 +325,12 @@ def test_pdf_prep_man_package_interfaces(
 
 
 def test_screen_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    screen_operation = review_manager.get_screen_operation(
+    """Test the screen_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    screen_operation = base_repo_review_manager.get_screen_operation(
         notify_state_transition_operation=False
     )
 
@@ -345,10 +352,12 @@ def test_screen_package_interfaces(
 
 
 def test_data_package_interfaces(
-    review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    package_manager = review_manager.get_package_manager()
-    data_operation = review_manager.get_data_operation(
+    """Test the data_package_interfaces"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    data_operation = base_repo_review_manager.get_data_operation(
         notify_state_transition_operation=False
     )
 

@@ -1,0 +1,89 @@
+Debates and Perspectives Paper
+
+Artiﬁcial intelligence and the conduct of
+literature reviews
+
+Gerit Wagner, Roman Lukyanenko and Guy Par ´e 
+
+Journal of Information Technology
+2022, Vol. 37(2) 209–226
+© Association for Information
+Technology Trust 2021
+
+Article reuse guidelines:
+sagepub.com/journals-permissions
+DOI: 10.1177/02683962211048201
+Journals.sagepub.com/jinf
+
+Abstract
+Artiﬁcial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature
+reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured
+(meta)data, and pervade almost every type of paper published in information systems research or related social science
+disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual
+steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we
+propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our ﬁeld. With this agenda, we would
+like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research.
+
+Keywords
+Artiﬁcial
+automation, literature review
+
+intelligence, machine learning, natural
+
+language processing, research data management, data infrastructure,
+
+Introduction
+The potential of artiﬁcial intelligence (AI) to augment and
+partially automate research has sparked vivid debates in
+many scientiﬁc disciplines, including the health sciences
+(Adams et al., 2013; Tsafnat et al., 2014), biology (King
+et al., 2009), and management (Johnson et al., 2019). In
+particular, the concept of automated science is raising in-
+triguing questions related to the future of research in dis-
+ciplines that require “high-level abstract thinking, intricate
+knowledge of methodologies and epistemology, and per-
+suasive writing capabilities” (Johnson et al., 2019: 292).
+These debates resonate with scholars in Information Sys-
+tems (IS), who ponder which role AI and automation can
+play in theory development (Tremblay et al., 2018) and in
+combining data-driven and theory-driven research (Maass
+et al., 2018). With this commentary, we join the discussion
+which has been resumed recently by Johnson et al. (2019) in
+the business disciplines. The authors observe that across this
+multi-disciplinary discourse, two dominant narratives have
+emerged. The ﬁrst narrative adopts a provocative and vi-
+sionary perspective to present its audience with a choice
+between accepting or rejecting future research practices in
+which AI plays a dominant role. The second narrative
+acknowledges that a gradual adoption of AI-based research
+tools has already begun and aims at engaging its readers in a
+constructive debate on how to leverage AI-based tools for
+
+the beneﬁt of the research ﬁeld and its stakeholders. In this
+paper, our position resonates more with the latter per-
+spective, which is focused on the mid-term instead of the
+long-term, and well-positioned to advance the discourse
+with less speculative and more actionable discussions of the
+speciﬁc research processes that are more amenable appli-
+cations of AI and those processes that rely more on the
+human ingenuity of researchers.
+
+In this essay, we focus on the use of AI-based tools in the
+conduct of literature reviews. Advancing knowledge in this
+area is particularly promising since (1) standalone review
+projects require substantial efforts over months and years
+(Larsen et al., 2019), (2) the volume of reviews published in
+IS journals has been rising steadily (Schryen et al., 2020),
+and (3) literature reviews involve tasks that fall on a
+spectrum between the mechanical and the creative . At the
+same time, the process of reviewing literature is mostly
+conducted manually with sample sizes threatening to exceed
+the cognitive limits of human processing capacities. This
+
+Department of Information Technologies, HEC Montr´eal, Montr´eal,
+Qu´ebec, Canada
+
+Corresponding author:
+Guy Par´e, Research Chair in Digital Health, HEC Montr´eal, 3000, chemin
+de la C ˆote-Sainte-Catherin Montr´eal, Qu´ebec H3T 2A7, Canada.
+Email: guy.pare@hec.ca

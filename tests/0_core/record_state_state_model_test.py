@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tests for the RecordState model"""
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -6,6 +7,7 @@ import colrev.record
 
 
 def test_record_state_model() -> None:
+    """Test the RecordState model"""
     expected = {
         colrev.record.RecordState.md_retrieved,
     }
@@ -151,6 +153,8 @@ def test_record_state_model() -> None:
 
 
 def test_get_valid_transitions() -> None:
+    """Test get_valid_transitions"""
+
     expected = {"load"}
     actual = colrev.record.RecordStateModel.get_valid_transitions(
         state=colrev.record.RecordState.md_retrieved
@@ -225,6 +229,8 @@ def test_get_valid_transitions() -> None:
 
 
 def test_get_post_x_states() -> None:
+    """Test get_post_x_states"""
+
     # Go backwards: rev_included > md_prepared (iteratively extending the expected set)
     expected = {
         colrev.record.RecordState.rev_excluded,
@@ -275,13 +281,16 @@ def test_get_post_x_states() -> None:
 
 
 def test_leq() -> None:
+    """Test leq"""
+
     with pytest.raises(
         NotImplementedError,
     ):
         if colrev.record.RecordState.md_retrieved < "string":
             print("Error")
 
-    # TODO : create ordered list, remove left element and assert that it is smaller than all remaining elements
+    # TODO : create ordered list, remove left element and
+    # assert that it is smaller than all remaining elements
     assert (
         colrev.record.RecordState.md_retrieved < colrev.record.RecordState.md_imported
     )

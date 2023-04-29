@@ -31,6 +31,7 @@ class Event(LoggingEventHandler):
         self.logger: logging.Logger = logging.getLogger()
 
     def on_modified(self, event: FileSystemEvent) -> None:
+        """Method triggered on file/dir modified event"""
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", ".report.log", ".goutputstream"]):

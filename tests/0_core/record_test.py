@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tests of the Record class"""
 from pathlib import Path
 
 import pytest
@@ -7,27 +8,11 @@ import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-
-@pytest.fixture(scope="module")
-def script_loc(request) -> Path:  # type: ignore
-    """Return the directory of the currently running test script"""
-
-    return Path(request.fspath).parent
-
-
-@pytest.fixture
-def record_with_pdf() -> colrev.record.Record:
-    return colrev.record.Record(
-        data={
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        }
-    )
-
+# pylint: disable=too-many-lines
+# pylint: disable=line-too-long
 
 v1 = {
-    "ID": "R1",
+    "ID": "r1",
     "ENTRYTYPE": "article",
     "colrev_masterdata_provenance": {
         "year": {"source": "import.bib/id_0001", "note": ""},
@@ -50,7 +35,7 @@ v1 = {
     "pages": "1--3",
 }
 v2 = {
-    "ID": "R1",
+    "ID": "r1",
     "ENTRYTYPE": "article",
     "colrev_masterdata_provenance": {
         "year": {"source": "import.bib/id_0001", "note": ""},
@@ -73,179 +58,96 @@ v2 = {
     "pages": "1--3",
 }
 
-R1 = colrev.record.Record(data=v1)
-R2 = colrev.record.Record(data=v2)
-
-WagnerLukyanenkoParEtAl2022_pdf_content = """Debates and Perspectives Paper
-
-Artiﬁcial intelligence and the conduct of
-literature reviews
-
-Gerit Wagner, Roman Lukyanenko and Guy Par ´e 
-
-Journal of Information Technology
-2022, Vol. 37(2) 209–226
-© Association for Information
-Technology Trust 2021
-
-Article reuse guidelines:
-sagepub.com/journals-permissions
-DOI: 10.1177/02683962211048201
-Journals.sagepub.com/jinf
-
-Abstract
-Artiﬁcial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature
-reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured
-(meta)data, and pervade almost every type of paper published in information systems research or related social science
-disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual
-steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we
-propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our ﬁeld. With this agenda, we would
-like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research.
-
-Keywords
-Artiﬁcial
-automation, literature review
-
-intelligence, machine learning, natural
-
-language processing, research data management, data infrastructure,
-
-Introduction
-The potential of artiﬁcial intelligence (AI) to augment and
-partially automate research has sparked vivid debates in
-many scientiﬁc disciplines, including the health sciences
-(Adams et al., 2013; Tsafnat et al., 2014), biology (King
-et al., 2009), and management (Johnson et al., 2019). In
-particular, the concept of automated science is raising in-
-triguing questions related to the future of research in dis-
-ciplines that require “high-level abstract thinking, intricate
-knowledge of methodologies and epistemology, and per-
-suasive writing capabilities” (Johnson et al., 2019: 292).
-These debates resonate with scholars in Information Sys-
-tems (IS), who ponder which role AI and automation can
-play in theory development (Tremblay et al., 2018) and in
-combining data-driven and theory-driven research (Maass
-et al., 2018). With this commentary, we join the discussion
-which has been resumed recently by Johnson et al. (2019) in
-the business disciplines. The authors observe that across this
-multi-disciplinary discourse, two dominant narratives have
-emerged. The ﬁrst narrative adopts a provocative and vi-
-sionary perspective to present its audience with a choice
-between accepting or rejecting future research practices in
-which AI plays a dominant role. The second narrative
-acknowledges that a gradual adoption of AI-based research
-tools has already begun and aims at engaging its readers in a
-constructive debate on how to leverage AI-based tools for
-
-the beneﬁt of the research ﬁeld and its stakeholders. In this
-paper, our position resonates more with the latter per-
-spective, which is focused on the mid-term instead of the
-long-term, and well-positioned to advance the discourse
-with less speculative and more actionable discussions of the
-speciﬁc research processes that are more amenable appli-
-cations of AI and those processes that rely more on the
-human ingenuity of researchers.
-
-In this essay, we focus on the use of AI-based tools in the
-conduct of literature reviews. Advancing knowledge in this
-area is particularly promising since (1) standalone review
-projects require substantial efforts over months and years
-(Larsen et al., 2019), (2) the volume of reviews published in
-IS journals has been rising steadily (Schryen et al., 2020),
-and (3) literature reviews involve tasks that fall on a
-spectrum between the mechanical and the creative . At the
-same time, the process of reviewing literature is mostly
-conducted manually with sample sizes threatening to exceed
-the cognitive limits of human processing capacities. This
-
-Department of Information Technologies, HEC Montr´eal, Montr´eal,
-Qu´ebec, Canada
-
-Corresponding author:
-Guy Par´e, Research Chair in Digital Health, HEC Montr´eal, 3000, chemin
-de la C ˆote-Sainte-Catherin Montr´eal, Qu´ebec H3T 2A7, Canada.
-Email: guy.pare@hec.ca"""
+r1 = colrev.record.Record(data=v1)
+r2 = colrev.record.Record(data=v2)
 
 
 def test_eq() -> None:
+    """Test equality of records"""
     # pylint: disable=comparison-with-itself
-    assert R1 == R1
-    assert R1 != R2
+    assert r1 == r1
+    assert r1 != r2
 
 
 def test_copy() -> None:
-    R1_cop = R1.copy()
-    assert R1 == R1_cop
+    """Test record copies"""
+    r1_cop = r1.copy()
+    assert r1 == r1_cop
 
 
 def test_update_field() -> None:
-    R2_mod = R2.copy()
+    """Test record.update_field()"""
+    r2_mod = r2.copy()
 
     # Test append_edit=True / identifying_field
-    R2_mod.update_field(
+    r2_mod.update_field(
         key="journal", value="Mis Quarterly", source="test", append_edit=True
     )
     expected = "import.bib/id_0001|test"
-    actual = R2_mod.data["colrev_masterdata_provenance"]["journal"]["source"]
+    actual = r2_mod.data["colrev_masterdata_provenance"]["journal"]["source"]
     assert expected == actual
 
     # Test append_edit=True / non-identifying_field
-    R2_mod.update_field(
+    r2_mod.update_field(
         key="non_identifying_field", value="nfi_value", source="import.bib/id_0001"
     )
-    R2_mod.update_field(
+    r2_mod.update_field(
         key="non_identifying_field", value="changed", source="test", append_edit=True
     )
     expected = "import.bib/id_0001|test"
-    actual = R2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
+    actual = r2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
     assert expected == actual
 
     # Test append_edit=True (without key in *provenance) / identifying field
-    del R2_mod.data["colrev_masterdata_provenance"]["journal"]
-    R2_mod.update_field(
+    del r2_mod.data["colrev_masterdata_provenance"]["journal"]
+    r2_mod.update_field(
         key="journal", value="Mis Quarterly", source="test", append_edit=True
     )
     expected = "original|test"
-    actual = R2_mod.data["colrev_masterdata_provenance"]["journal"]["source"]
+    actual = r2_mod.data["colrev_masterdata_provenance"]["journal"]["source"]
     assert expected == actual
 
     # Test append_edit=True (without key in *provenance) / non-identifying field
-    del R2_mod.data["colrev_data_provenance"]["non_identifying_field"]
-    R2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
+    del r2_mod.data["colrev_data_provenance"]["non_identifying_field"]
+    r2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
     expected = "original|test"
-    actual = R2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
+    actual = r2_mod.data["colrev_data_provenance"]["non_identifying_field"]["source"]
     assert expected == actual
 
 
 def test_rename_field() -> None:
-    R2_mod = R2.copy()
+    """Test record.rename_field()"""
+
+    r2_mod = r2.copy()
 
     # Identifying field
-    R2_mod.rename_field(key="journal", new_key="booktitle")
+    r2_mod.rename_field(key="journal", new_key="booktitle")
     expected = "import.bib/id_0001|rename-from:journal"
-    actual = R2_mod.data["colrev_masterdata_provenance"]["booktitle"]["source"]
+    actual = r2_mod.data["colrev_masterdata_provenance"]["booktitle"]["source"]
     assert expected == actual
-    assert "journal" not in R2_mod.data
-    assert "journal" not in R2_mod.data["colrev_masterdata_provenance"]
+    assert "journal" not in r2_mod.data
+    assert "journal" not in r2_mod.data["colrev_masterdata_provenance"]
 
     # Non-identifying field
-    R2_mod.update_field(
+    r2_mod.update_field(
         key="link", value="https://www.test.org", source="import.bib/id_0001"
     )
-    R2_mod.rename_field(key="link", new_key="url")
+    r2_mod.rename_field(key="link", new_key="url")
     expected = "import.bib/id_0001|rename-from:link"
-    actual = R2_mod.data["colrev_data_provenance"]["url"]["source"]
+    actual = r2_mod.data["colrev_data_provenance"]["url"]["source"]
     assert expected == actual
-    assert "link" not in R2_mod.data
-    assert "link" not in R2_mod.data["colrev_data_provenance"]
+    assert "link" not in r2_mod.data
+    assert "link" not in r2_mod.data["colrev_data_provenance"]
 
 
 def test_remove_field() -> None:
-    R2_mod = R2.copy()
-    del R2_mod.data["colrev_masterdata_provenance"]["number"]
-    R2_mod.remove_field(key="number", not_missing_note=True, source="test")
+    """Test record.remove_field()"""
+
+    r2_mod = r2.copy()
+    del r2_mod.data["colrev_masterdata_provenance"]["number"]
+    r2_mod.remove_field(key="number", not_missing_note=True, source="test")
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -267,38 +169,42 @@ def test_remove_field() -> None:
         "pages": "1--3",
     }
 
-    actual = R2_mod.data
+    actual = r2_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_masterdata_is_complete() -> None:
-    R1_mod = R1.copy()
+    """Test record.masterdata_is_complete()"""
 
-    R1_mod.remove_field(key="number", not_missing_note=True, source="test")
-    assert R1_mod.masterdata_is_complete()
+    r1_mod = r1.copy()
 
-    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
-    assert not R1_mod.masterdata_is_complete()
+    r1_mod.remove_field(key="number", not_missing_note=True, source="test")
+    assert r1_mod.masterdata_is_complete()
 
-    R1_mod.data["colrev_masterdata_provenance"] = {
+    r1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
+    assert not r1_mod.masterdata_is_complete()
+
+    r1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": ":https...", "note": ""}
     }
-    assert R1_mod.masterdata_is_complete()
+    assert r1_mod.masterdata_is_complete()
 
 
 def test_diff() -> None:
-    R2_mod = R2.copy()
-    R2_mod.remove_field(key="pages")
+    """Test record.diff()"""
+
+    r2_mod = r2.copy()
+    r2_mod.remove_field(key="pages")
     # keep_source_if_equal
-    R2_mod.update_field(
+    r2_mod.update_field(
         key="journal", value="MISQ", source="test", keep_source_if_equal=True
     )
 
-    R2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
-    R2_mod.update_field(key="booktitle", value="ICIS", source="test")
-    R2_mod.update_field(key="publisher", value="Elsevier", source="test")
-    print(R1.get_diff(other_record=R2_mod))
+    r2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
+    r2_mod.update_field(key="booktitle", value="ICIS", source="test")
+    r2_mod.update_field(key="publisher", value="Elsevier", source="test")
+    print(r1.get_diff(other_record=r2_mod))
     expected = [
         (
             "add",
@@ -314,10 +220,10 @@ def test_diff() -> None:
         ("add", "", [("booktitle", "ICIS"), ("publisher", "Elsevier")]),
         ("remove", "", [("pages", "1--3")]),
     ]
-    actual = R1.get_diff(other_record=R2_mod)
+    actual = r1.get_diff(other_record=r2_mod)
     assert expected == actual
 
-    print(R1.get_diff(other_record=R2_mod, identifying_fields_only=False))
+    print(r1.get_diff(other_record=r2_mod, identifying_fields_only=False))
     expected = [
         (
             "add",
@@ -350,25 +256,27 @@ def test_diff() -> None:
         ),
         ("remove", "", [("pages", "1--3")]),
     ]
-    actual = R1.get_diff(other_record=R2_mod, identifying_fields_only=False)
+    actual = r1.get_diff(other_record=r2_mod, identifying_fields_only=False)
     assert expected == actual
 
 
 def test_change_entrytype_inproceedings() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["volume"] = "UNKNOWN"
-    R1_mod.data["number"] = "UNKNOWN"
-    R1_mod.data["title"] = "Editorial"
-    R1_mod.update_field(
+    """Test record.change_entrytype(new_entrytype="inproceedings")"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["volume"] = "UNKNOWN"
+    r1_mod.data["number"] = "UNKNOWN"
+    r1_mod.data["title"] = "Editorial"
+    r1_mod.update_field(
         key="publisher",
         value="Elsevier",
         source="import.bib/id_0001",
         note="inconsistent with entrytype",
     )
-    R1_mod.change_entrytype(new_entrytype="inproceedings")
-    print(R1_mod.data)
+    r1_mod.change_entrytype(new_entrytype="inproceedings")
+    print(r1_mod.data)
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "inproceedings",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -391,31 +299,21 @@ def test_change_entrytype_inproceedings() -> None:
         "pages": "1--3",
         "publisher": "Elsevier",
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual
 
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        R1_mod.change_entrytype(new_entrytype="dialoge")
+        r1_mod.change_entrytype(new_entrytype="dialoge")
 
-    # assert "" == R1_mod.data
-
-
-def test_get_inconsistencies() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "phdthesis"
-    R1_mod.data["author"] = "Author, Name and Other, Author"
-    expected = {"volume", "number", "journal", "author"}
-    actual = R1_mod.get_inconsistencies()
-    assert expected == actual
-
-    assert R1_mod.has_inconsistent_fields()
+    # assert "" == r1_mod.data
 
 
 def test_change_entrytype_article() -> None:
+    """Test record.change_entrytype(new_entrytype="article")"""
     input_value = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "inproceedings",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -439,7 +337,7 @@ def test_change_entrytype_article() -> None:
         "publisher": "Elsevier",
     }
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -466,19 +364,33 @@ def test_change_entrytype_article() -> None:
         "volume": "UNKNOWN",
         "number": "UNKNOWN",
     }
-    REC = colrev.record.Record(data=input_value)
-    REC.change_entrytype(new_entrytype="article")
-    actual = REC.data
+    rec = colrev.record.Record(data=input_value)
+    rec.change_entrytype(new_entrytype="article")
+    actual = rec.data
     assert expected == actual
 
 
+def test_get_inconsistencies() -> None:
+    """Test record.get_inconsistencies()"""
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "phdthesis"
+    r1_mod.data["author"] = "Author, Name and Other, Author"
+    expected = {"volume", "number", "journal", "author"}
+    actual = r1_mod.get_inconsistencies()
+    assert expected == actual
+
+    assert r1_mod.has_inconsistent_fields()
+
+
 def test_add_provenance_all() -> None:
-    R1_mod = R1.copy()
-    del R1_mod.data["colrev_masterdata_provenance"]
-    R1_mod.add_provenance_all(source="import.bib/id_0001")
-    print(R1_mod.data)
+    """Test record.add_provenance_all()"""
+
+    r1_mod = r1.copy()
+    del r1_mod.data["colrev_masterdata_provenance"]
+    r1_mod.add_provenance_all(source="import.bib/id_0001")
+    print(r1_mod.data)
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_data_provenance": {
             "ID": {"source": "import.bib/id_0001", "note": ""},
@@ -503,177 +415,189 @@ def test_add_provenance_all() -> None:
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual
 
 
 def test_format_bib_style() -> None:
+    """Test record.format_bib_style()"""
+
     expected = "Rai, Arun (2020) EDITORIAL. MIS Quarterly, (45) 1"
-    actual = R1.format_bib_style()
+    actual = r1.format_bib_style()
     assert expected == actual
 
 
+def test_print_citation_format() -> None:
+    """Test record.print_citation_format()"""
+
+    r1.print_citation_format()
+
+
 def test_shares_origins() -> None:
-    assert R1.shares_origins(other_record=R2)
+    """Test record.shares_origins()"""
+    assert r1.shares_origins(other_record=r2)
 
 
 def test_set_status() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["author"] = "UNKNOWN"
-    R1_mod.set_status(target_state=colrev.record.RecordState.md_prepared)
+    """Test record.set_status()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["author"] = "UNKNOWN"
+    r1_mod.set_status(target_state=colrev.record.RecordState.md_prepared)
     expected = colrev.record.RecordState.md_needs_manual_preparation
-    actual = R1_mod.data["colrev_status"]
+    actual = r1_mod.data["colrev_status"]
     assert expected == actual
 
 
 def test_get_value() -> None:
+    """Test record.get_value()"""
     expected = "Rai, Arun"
-    actual = R1.get_value(key="author")
+    actual = r1.get_value(key="author")
     assert expected == actual
 
     expected = "Rai, Arun"
-    actual = R1.get_value(key="author", default="custom_file")
+    actual = r1.get_value(key="author", default="custom_file")
     assert expected == actual
 
     expected = "custom_file"
-    actual = R1.get_value(key="file", default="custom_file")
+    actual = r1.get_value(key="file", default="custom_file")
     assert expected == actual
 
 
 def test_create_colrev_id() -> None:
+    """Test record.create_colrev_id()"""
+
     # Test type: phdthesis
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "phdthesis"
-    R1_mod.data["school"] = "University of Minnesota"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "phdthesis"
+    r1_mod.data["school"] = "University of Minnesota"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = ["colrev_id1:|phdthesis|university-of-minnesota|2020|rai|editorial"]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test type: techreport
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "techreport"
-    R1_mod.data["institution"] = "University of Minnesota"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "techreport"
+    r1_mod.data["institution"] = "University of Minnesota"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = ["colrev_id1:|techreport|university-of-minnesota|2020|rai|editorial"]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test type: inproceedings
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "inproceedings"
-    R1_mod.data["booktitle"] = "International Conference on Information Systems"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "inproceedings"
+    r1_mod.data["booktitle"] = "International Conference on Information Systems"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = [
         "colrev_id1:|p|international-conference-on-information-systems|2020|rai|editorial"
     ]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test type: article
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "article"
-    R1_mod.data["journal"] = "Journal of Management Information Systems"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "article"
+    r1_mod.data["journal"] = "Journal of Management Information Systems"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = [
         "colrev_id1:|a|journal-of-management-information-systems|45|1|2020|rai|editorial"
     ]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test type: article
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "monogr"
-    R1_mod.data["series"] = "Lecture notes in cs"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "monogr"
+    r1_mod.data["series"] = "Lecture notes in cs"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = ["colrev_id1:|monogr|lecture-notes-in-cs|2020|rai|editorial"]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test type: article
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "online"
-    R1_mod.data["url"] = "www.loc.de/subpage.html"
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "online"
+    r1_mod.data["url"] = "www.loc.de/subpage.html"
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = ["colrev_id1:|online|wwwlocde-subpagehtml|2020|rai|editorial"]
-    actual = R1_mod.get_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
 
 def test_get_colrev_id() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    """Test record.get_colrev_id()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
     expected = ["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"]
-    actual = R1_mod.get_colrev_id()
-    assert expected == actual
-
-
-def test_add_colrev_ids() -> None:
-    expected = "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"
-    actual = R1.create_colrev_id()
-    assert expected == actual
-
-    expected = "colrev_id1:|a|misq|45|1|2020|rai|editorial"
-    actual = R2.create_colrev_id()
+    actual = r1_mod.get_colrev_id()
     assert expected == actual
 
 
 def test_has_overlapping_colrev_id() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_id"] = R1_mod.create_colrev_id()
+    """Test record.has_overlapping_colrev_id()"""
 
-    R2_mod = R1.copy()
-    R2_mod.data["colrev_id"] = R2_mod.create_colrev_id()
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_id"] = r1_mod.create_colrev_id()
 
-    assert R2_mod.has_overlapping_colrev_id(record=R1_mod)
+    r2_mod = r1.copy()
+    r2_mod.data["colrev_id"] = r2_mod.create_colrev_id()
 
-    R2_mod.data["colrev_id"] = []
-    assert not R2_mod.has_overlapping_colrev_id(record=R1_mod)
+    assert r2_mod.has_overlapping_colrev_id(record=r1_mod)
+
+    r2_mod.data["colrev_id"] = []
+    assert not r2_mod.has_overlapping_colrev_id(record=r1_mod)
 
 
 def test_provenance() -> None:
-    R1_mod = R1.copy()
+    """Test record provenance"""
 
-    R1_mod.add_data_provenance(key="url", source="manual", note="test")
+    r1_mod = r1.copy()
+
+    r1_mod.add_data_provenance(key="url", source="manual", note="test")
     expected = "manual"
-    actual = R1_mod.data["colrev_data_provenance"]["url"]["source"]
+    actual = r1_mod.data["colrev_data_provenance"]["url"]["source"]
     assert expected == actual
 
     expected = "test"
-    actual = R1_mod.data["colrev_data_provenance"]["url"]["note"]
+    actual = r1_mod.data["colrev_data_provenance"]["url"]["note"]
     assert expected == actual
 
-    R1_mod.add_data_provenance_note(key="url", note="1")
+    r1_mod.add_data_provenance_note(key="url", note="1")
     expected = "test,1"
-    actual = R1_mod.data["colrev_data_provenance"]["url"]["note"]
+    actual = r1_mod.data["colrev_data_provenance"]["url"]["note"]
     assert expected == actual
 
     expected = {"source": "manual", "note": "test,1"}  # type: ignore
-    actual = R1_mod.get_field_provenance(key="url")
+    actual = r1_mod.get_field_provenance(key="url")
     assert expected == actual
 
-    R1_mod.add_masterdata_provenance(key="author", source="manual", note="test")
+    r1_mod.add_masterdata_provenance(key="author", source="manual", note="test")
     expected = "test"
-    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
+    actual = r1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
     assert expected == actual
 
-    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["source"]
+    actual = r1_mod.data["colrev_masterdata_provenance"]["author"]["source"]
     expected = "manual"
     assert expected == actual
 
-    R1_mod.add_masterdata_provenance_note(key="author", note="check")
+    r1_mod.add_masterdata_provenance_note(key="author", note="check")
     expected = "test,check"
-    actual = R1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
+    actual = r1_mod.data["colrev_masterdata_provenance"]["author"]["note"]
     assert expected == actual
 
 
 def test_set_masterdata_complete() -> None:
+    """Test record.set_masterdata_complete()"""
+
     # field=UNKNOWN and no not_missing note
-    R1_mod = R1.copy()
-    R1_mod.data["number"] = "UNKNOWN"
-    R1_mod.data["volume"] = "UNKNOWN"
+    r1_mod = r1.copy()
+    r1_mod.data["number"] = "UNKNOWN"
+    r1_mod.data["volume"] = "UNKNOWN"
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -693,19 +617,19 @@ def test_set_masterdata_complete() -> None:
         "journal": "MIS Quarterly",
         "pages": "1--3",
     }
-    R1_mod.set_masterdata_complete(source="test")
-    actual = R1_mod.data
-    print(R1_mod.data)
+    r1_mod.set_masterdata_complete(source="test")
+    actual = r1_mod.data
+    print(r1_mod.data)
     assert expected == actual
 
     # missing fields and no colrev_masterdata_provenance
-    R1_mod = R1.copy()
-    del R1_mod.data["volume"]
-    del R1_mod.data["number"]
-    del R1_mod.data["colrev_masterdata_provenance"]["number"]
-    del R1_mod.data["colrev_masterdata_provenance"]["volume"]
+    r1_mod = r1.copy()
+    del r1_mod.data["volume"]
+    del r1_mod.data["number"]
+    del r1_mod.data["colrev_masterdata_provenance"]["number"]
+    del r1_mod.data["colrev_masterdata_provenance"]["volume"]
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -725,17 +649,17 @@ def test_set_masterdata_complete() -> None:
         "journal": "MIS Quarterly",
         "pages": "1--3",
     }
-    R1_mod.set_masterdata_complete(source="test")
-    actual = R1_mod.data
-    print(R1_mod.data)
+    r1_mod.set_masterdata_complete(source="test")
+    actual = r1_mod.data
+    print(r1_mod.data)
     assert expected == actual
 
     # misleading "missing" note
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_masterdata_provenance"]["volume"]["note"] = "missing"
-    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_masterdata_provenance"]["volume"]["note"] = "missing"
+    r1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -758,26 +682,28 @@ def test_set_masterdata_complete() -> None:
         "pages": "1--3",
     }
 
-    R1_mod.set_masterdata_complete(source="test")
-    actual = R1_mod.data
-    print(R1_mod.data)
+    r1_mod.set_masterdata_complete(source="test")
+    actual = r1_mod.data
+    print(r1_mod.data)
     assert expected == actual
 
-    R1_mod.data["colrev_masterdata_provenance"] = {
+    r1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": ":https...", "note": ""}
     }
-    R1_mod.set_masterdata_complete(source="test")
-    del R1_mod.data["colrev_masterdata_provenance"]
-    R1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test")
+    del r1_mod.data["colrev_masterdata_provenance"]
+    r1_mod.set_masterdata_complete(source="test")
 
 
 def test_set_masterdata_consistent() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_masterdata_provenance"]["journal"][
+    """Test record.set_masterdata_consistent()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_masterdata_provenance"]["journal"][
         "note"
     ] = "inconsistent with ENTRYTYPE"
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -799,15 +725,15 @@ def test_set_masterdata_consistent() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.set_masterdata_consistent()
-    actual = R1_mod.data
+    r1_mod.set_masterdata_consistent()
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
-    R1_mod = R1.copy()
-    del R1_mod.data["colrev_masterdata_provenance"]
+    r1_mod = r1.copy()
+    del r1_mod.data["colrev_masterdata_provenance"]
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {},
         "colrev_data_provenance": {},
@@ -821,17 +747,19 @@ def test_set_masterdata_consistent() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.set_masterdata_consistent()
-    actual = R1_mod.data
+    r1_mod.set_masterdata_consistent()
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_set_fields_complete() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "incomplete"
+    """Test record.set_fields_complete()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "incomplete"
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -854,31 +782,35 @@ def test_set_fields_complete() -> None:
         "pages": "1--3",
     }
 
-    R1_mod.set_fields_complete()
-    actual = R1_mod.data
+    r1_mod.set_fields_complete()
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_get_missing_fields() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["ENTRYTYPE"] = "dialogue"
+    """Test record.get_missing_fields()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["ENTRYTYPE"] = "dialogue"
 
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        R1_mod.get_missing_fields()
+        r1_mod.get_missing_fields()
 
 
 def test_reset_pdf_provenance_notes() -> None:
+    """Test record.reset_pdf_provenance_notes()"""
+
     # defects
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_data_provenance"]["file"] = {
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_data_provenance"]["file"] = {
         "source": "test",
         "note": "defects",
     }
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -902,15 +834,15 @@ def test_reset_pdf_provenance_notes() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.reset_pdf_provenance_notes()
-    actual = R1_mod.data
+    r1_mod.reset_pdf_provenance_notes()
+    actual = r1_mod.data
     assert expected == actual
 
     # missing provenance
-    R1_mod = R1.copy()
-    del R1_mod.data["colrev_data_provenance"]
+    r1_mod = r1.copy()
+    del r1_mod.data["colrev_data_provenance"]
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -932,15 +864,15 @@ def test_reset_pdf_provenance_notes() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.reset_pdf_provenance_notes()
-    actual = R1_mod.data
+    r1_mod.reset_pdf_provenance_notes()
+    actual = r1_mod.data
     assert expected == actual
 
     # file missing in missing provenance
-    R1_mod = R1.copy()
-    # del R1_mod.data["colrev_data_provenance"]["file"]
+    r1_mod = r1.copy()
+    # del r1_mod.data["colrev_data_provenance"]["file"]
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -964,19 +896,21 @@ def test_reset_pdf_provenance_notes() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.reset_pdf_provenance_notes()
-    actual = R1_mod.data
+    r1_mod.reset_pdf_provenance_notes()
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_cleanup_pdf_processing_fields() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
-    R1_mod.data["pages_in_file"] = "12"
+    """Test record.cleanup_pdf_processing_fields()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
+    r1_mod.data["pages_in_file"] = "12"
 
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -998,54 +932,59 @@ def test_cleanup_pdf_processing_fields() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    R1_mod.cleanup_pdf_processing_fields()
-    actual = R1_mod.data
+    r1_mod.cleanup_pdf_processing_fields()
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_get_tei_filename() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["file"] = "data/pdfs/Rai2020.pdf"
+    """Test record.get_tei_filename()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["file"] = "data/pdfs/Rai2020.pdf"
     expected = Path("data/.tei/Rai2020.tei.xml")
-    actual = R1_mod.get_tei_filename()
+    actual = r1_mod.get_tei_filename()
     assert expected == actual
 
 
 def test_get_record_similarity() -> None:
+    """Test record.get_record_similarity()"""
+
     expected = 0.854
-    actual = colrev.record.Record.get_record_similarity(record_a=R1, record_b=R2)
+    actual = colrev.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     assert expected == actual
 
 
 def test_get_incomplete_fields() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["title"] = "Editoria…"
+    """Test record.get_incomplete_fields()"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["title"] = "Editoria…"
     expected = {"title"}
-    actual = R1_mod.get_incomplete_fields()
+    actual = r1_mod.get_incomplete_fields()
     assert expected == actual
 
-    R1_mod.data["author"] = "Rai, Arun et al."
+    r1_mod.data["author"] = "Rai, Arun et al."
     expected = {"title", "author"}
-    actual = R1_mod.get_incomplete_fields()
+    actual = r1_mod.get_incomplete_fields()
     assert expected == actual
 
-    assert R1_mod.has_incomplete_fields()
+    assert r1_mod.has_incomplete_fields()
 
 
 def test_merge_select_non_all_caps() -> None:
+    """Test record.merge() - all-caps cases"""
     # Select title-case (not all-caps title) and full author name
-    R1 = colrev.record.Record(data=v1)
-    R2 = colrev.record.Record(data=v2)
 
-    R1_mod = R1.copy()
-    R2_mod = R2.copy()
-    print(R1_mod)
-    print(R2_mod)
-    R1_mod.data["title"] = "Editorial"
-    R2_mod.data["colrev_origin"] = ["import.bib/id_0002"]
+    r1_mod = colrev.record.Record(data=v1).copy()
+    r2_mod = colrev.record.Record(data=v2).copy()
+    print(r1_mod)
+    print(r2_mod)
+    r1_mod.data["title"] = "Editorial"
+    r2_mod.data["colrev_origin"] = ["import.bib/id_0002"]
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -1068,59 +1007,63 @@ def test_merge_select_non_all_caps() -> None:
         "pages": "1--3",
     }
 
-    R1_mod.merge(merging_record=R2_mod, default_source="test")
-    actual = R1_mod.data
+    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    actual = r1_mod.data
     assert expected == actual
 
 
 def test_merge_except_errata() -> None:
+    """Test record.merge() - errata cases"""
+
     # Mismatching part suffixes
-    R1_mod = R1.copy()
-    R2_mod = R2.copy()
-    R1_mod.data["title"] = "Editorial - Part 1"
-    R2_mod.data["title"] = "Editorial - Part 2"
+    r1_mod = r1.copy()
+    r2_mod = r2.copy()
+    r1_mod.data["title"] = "Editorial - Part 1"
+    r2_mod.data["title"] = "Editorial - Part 2"
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        R2_mod.merge(merging_record=R1_mod, default_source="test")
+        r2_mod.merge(merging_record=r1_mod, default_source="test")
 
     # Mismatching erratum (a-b)
-    R1_mod = R1.copy()
-    R2_mod = R2.copy()
-    R2_mod.data["title"] = "Erratum - Editorial"
+    r1_mod = r1.copy()
+    r2_mod = r2.copy()
+    r2_mod.data["title"] = "Erratum - Editorial"
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        R1_mod.merge(merging_record=R2_mod, default_source="test")
+        r1_mod.merge(merging_record=r2_mod, default_source="test")
 
     # Mismatching erratum (b-a)
-    R1_mod = R1.copy()
-    R2_mod = R2.copy()
-    R1_mod.data["title"] = "Erratum - Editorial"
+    r1_mod = r1.copy()
+    r2_mod = r2.copy()
+    r1_mod.data["title"] = "Erratum - Editorial"
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        R2_mod.merge(merging_record=R1_mod, default_source="test")
+        r2_mod.merge(merging_record=r1_mod, default_source="test")
 
     # Mismatching commentary
-    R1_mod = R1.copy()
-    R2_mod = R2.copy()
-    R1_mod.data["title"] = "Editorial - a commentary to the other paper"
+    r1_mod = r1.copy()
+    r2_mod = r2.copy()
+    r1_mod.data["title"] = "Editorial - a commentary to the other paper"
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        R2_mod.merge(merging_record=R1_mod, default_source="test")
+        r2_mod.merge(merging_record=r1_mod, default_source="test")
 
 
 def test_merge_local_index(mocker) -> None:  # type: ignore
+    """Test record.merge() - local-index"""
+
     mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
     )
 
-    R1_mod = colrev.record.Record(
+    r1_mod = colrev.record.Record(
         data={
-            "ID": "R1",
+            "ID": "r1",
             "colrev_data_provenance": {},
             "colrev_masterdata_provenance": {
                 "volume": {"source": "source-1", "note": ""}
@@ -1134,9 +1077,9 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
             "pages": "1--3",
         }
     )
-    R2_mod = colrev.record.Record(
+    r2_mod = colrev.record.Record(
         data={
-            "ID": "R2",
+            "ID": "r2",
             "colrev_data_provenance": {},
             "colrev_masterdata_provenance": {
                 "volume": {"source": "source-1", "note": ""},
@@ -1153,8 +1096,8 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
         }
     )
 
-    R1_mod.merge(merging_record=R2, default_source="test")
-    print(R1_mod)
+    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    print(r1_mod)
 
     # from colrev.env import LocalIndex
 
@@ -1184,21 +1127,21 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
 
     # DEDUPE test:
 
-    LOCAL_INDEX = colrev.env.local_index.LocalIndex()
+    local_index_instance = colrev.env.local_index.LocalIndex()
     mocker.patch(
         "colrev.env.local_index.LocalIndex.is_duplicate", return_value="unknown"
     )
 
     # short cids / empty lists
-    assert "unknown" == LOCAL_INDEX.is_duplicate(
+    assert "unknown" == local_index_instance.is_duplicate(
         record1_colrev_id=[], record2_colrev_id=[]
     )
-    assert "unknown" == LOCAL_INDEX.is_duplicate(
+    assert "unknown" == local_index_instance.is_duplicate(
         record1_colrev_id=["short"], record2_colrev_id=["short"]
     )
 
     # Same repo and overlapping colrev_ids -> duplicate
-    # assert "yes" == LOCAL_INDEX.is_duplicate(
+    # assert "yes" == local_index_instance.is_duplicate(
     #     record1_colrev_id=[
     #         "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
     #     ],
@@ -1210,7 +1153,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     mocker.patch("colrev.env.local_index.LocalIndex.is_duplicate", return_value="no")
 
     # Different curated repos -> no duplicate
-    assert "no" == LOCAL_INDEX.is_duplicate(
+    assert "no" == local_index_instance.is_duplicate(
         record1_colrev_id=[
             "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
         ],
@@ -1221,8 +1164,10 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
 
 
 def test_get_quality_defects() -> None:
+    """Test record.get_quality_defects()"""
+
     v_t = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_data_provenance": {},
         "colrev_masterdata_provenance": {},
@@ -1248,36 +1193,38 @@ def test_get_quality_defects() -> None:
     ]
     for author_defect in author_defects:
         v_t["author"] = author_defect
-        R1_mod = colrev.record.Record(data=v_t)
+        r1_mod = colrev.record.Record(data=v_t)
         expected = {"author"}
-        actual = set(R1_mod.get_quality_defects())
+        actual = set(r1_mod.get_quality_defects())
         assert expected == actual
-        assert R1_mod.has_quality_defects()
+        assert r1_mod.has_quality_defects()
 
     non_author_defects = ["Mourato, Inês and Dias, Álvaro and Pereira, Leandro"]
     for non_author_defect in non_author_defects:
         v_t["author"] = non_author_defect
-        R1_mod = colrev.record.Record(data=v_t)
+        r1_mod = colrev.record.Record(data=v_t)
         expected = set()
-        actual = set(R1_mod.get_quality_defects())
+        actual = set(r1_mod.get_quality_defects())
         assert expected == actual
-        assert not R1_mod.has_quality_defects()
+        assert not r1_mod.has_quality_defects()
 
     v_t["author"] = "Rai, Arun"
 
     title_defects = ["EDITORIAL"]  # all-caps
     for title_defect in title_defects:
         v_t["title"] = title_defect
-        R1_mod = colrev.record.Record(data=v_t)
+        r1_mod = colrev.record.Record(data=v_t)
         expected = {"title"}
-        actual = set(R1_mod.get_quality_defects())
+        actual = set(r1_mod.get_quality_defects())
         assert expected == actual
-        assert R1_mod.has_quality_defects()
+        assert r1_mod.has_quality_defects()
 
 
 def test_apply_restrictions() -> None:
-    input = {"ENTRYTYPE": "phdthesis"}
-    R_test = colrev.record.Record(data=input)
+    """Test record.apply_restrictions()"""
+
+    input_dict = {"ENTRYTYPE": "phdthesis"}
+    r_test = colrev.record.Record(data=input_dict)
     restrictions = {
         "ENTRYTYPE": "article",
         "journal": "MISQ",
@@ -1285,7 +1232,7 @@ def test_apply_restrictions() -> None:
         "volume": True,
         "number": True,
     }
-    R_test.apply_restrictions(restrictions=restrictions)
+    r_test.apply_restrictions(restrictions=restrictions)
     expected = {
         "ENTRYTYPE": "article",
         "colrev_status": colrev.record.RecordState.md_needs_manual_preparation,
@@ -1314,46 +1261,50 @@ def test_apply_restrictions() -> None:
         "journal": "MISQ",
         "booktitle": "ICIS",
     }
-    actual = R_test.data
+    actual = r_test.data
     assert expected == actual
 
 
 def test_get_container_title() -> None:
-    R1_mod = R1.copy()
+    """Test record.get_container_title()"""
+
+    r1_mod = r1.copy()
 
     # article
     expected = "MIS Quarterly"
-    actual = R1_mod.get_container_title()
+    actual = r1_mod.get_container_title()
     assert expected == actual
 
-    R1_mod.data["ENTRYTYPE"] = "inproceedings"
-    R1_mod.data["booktitle"] = "ICIS"
+    r1_mod.data["ENTRYTYPE"] = "inproceedings"
+    r1_mod.data["booktitle"] = "ICIS"
     expected = "ICIS"
-    actual = R1_mod.get_container_title()
+    actual = r1_mod.get_container_title()
     assert expected == actual
 
-    R1_mod.data["ENTRYTYPE"] = "book"
-    R1_mod.data["title"] = "Momo"
+    r1_mod.data["ENTRYTYPE"] = "book"
+    r1_mod.data["title"] = "Momo"
     expected = "Momo"
-    actual = R1_mod.get_container_title()
+    actual = r1_mod.get_container_title()
     assert expected == actual
 
-    R1_mod.data["ENTRYTYPE"] = "inbook"
-    R1_mod.data["booktitle"] = "Book title a"
+    r1_mod.data["ENTRYTYPE"] = "inbook"
+    r1_mod.data["booktitle"] = "Book title a"
     expected = "Book title a"
-    actual = R1_mod.get_container_title()
+    actual = r1_mod.get_container_title()
     assert expected == actual
 
 
 def test_complete_provenance() -> None:
-    R1_mod = R1.copy()
-    del R1_mod.data["colrev_masterdata_provenance"]
-    del R1_mod.data["colrev_data_provenance"]
-    R1_mod.update_field(key="url", value="www.test.eu", source="asdf")
+    """Test record.complete_provenance()"""
 
-    R1_mod.complete_provenance(source_info="test")
+    r1_mod = r1.copy()
+    del r1_mod.data["colrev_masterdata_provenance"]
+    del r1_mod.data["colrev_data_provenance"]
+    r1_mod.update_field(key="url", value="www.test.eu", source="asdf")
+
+    r1_mod.complete_provenance(source_info="test")
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_data_provenance": {"url": {"source": "test", "note": ""}},
         "colrev_status": colrev.record.RecordState.md_prepared,
@@ -1376,13 +1327,15 @@ def test_complete_provenance() -> None:
             "pages": {"source": "test", "note": ""},
         },
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual
 
 
 def test_get_toc_key() -> None:
+    """Test record.get_toc_key()"""
+
     expected = "mis-quarterly|45|1"
-    actual = R1.get_toc_key()
+    actual = r1.get_toc_key()
     assert expected == actual
 
     input_value = {
@@ -1407,25 +1360,25 @@ def test_get_toc_key() -> None:
         colrev.record.Record(data=input_value).get_toc_key()
 
 
-def test_print_citation_format() -> None:
-    R1.print_citation_format()
-
-
 def test_print_diff_pair() -> None:
+    """Test record.print_diff_pair()"""
+
     colrev.record.Record.print_diff_pair(
-        record_pair=[R1.data, R2.data], keys=["title", "journal", "booktitle"]
+        record_pair=[r1.data, r2.data], keys=["title", "journal", "booktitle"]
     )
 
 
 def test_prescreen_exclude() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_status"] = colrev.record.RecordState.rev_synthesized
-    R1_mod.data["number"] = "UNKNOWN"
-    R1_mod.data["volume"] = "UNKNOWN"
+    """Test record.prescreen_exclude()"""
 
-    R1_mod.prescreen_exclude(reason="retracted", print_warning=True)
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_status"] = colrev.record.RecordState.rev_synthesized
+    r1_mod.data["number"] = "UNKNOWN"
+    r1_mod.data["volume"] = "UNKNOWN"
+
+    r1_mod.prescreen_exclude(reason="retracted", print_warning=True)
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -1445,16 +1398,18 @@ def test_prescreen_exclude() -> None:
         "prescreen_exclusion": "retracted",
     }
 
-    actual = R1_mod.data
+    actual = r1_mod.data
     print(actual)
     assert expected == actual
 
 
 def test_parse_bib() -> None:
-    R1_mod = R1.copy()
-    R1_mod.data["colrev_origin"] = "import.bib/id_0001;md_crossref.bib/01;"
+    """Test parse_bib"""
+
+    r1_mod = r1.copy()
+    r1_mod.data["colrev_origin"] = "import.bib/id_0001;md_crossref.bib/01;"
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:import.bib/id_0001;;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
         "colrev_data_provenance": "",
@@ -1468,37 +1423,41 @@ def test_parse_bib() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    print(type(R1_mod.data["colrev_origin"]))
-    actual = R1_mod.get_data(stringify=True)
+    print(type(r1_mod.data["colrev_origin"]))
+    actual = r1_mod.get_data(stringify=True)
     assert expected == actual
 
 
 def test_print_prescreen_record(capfd) -> None:  # type: ignore
-    R1_mod = R1.copy()
-    expected = "  ID: R1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
+    """Test record.print_prescreen_record()"""
 
-    R1_mod.print_prescreen_record()
-    actual, err = capfd.readouterr()
+    r1_mod = r1.copy()
+    expected = "  ID: r1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
+
+    r1_mod.print_prescreen_record()
+    actual, _ = capfd.readouterr()
     assert expected == actual
 
 
 def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
-    R2_mod = R2.copy()
-    R2_mod.data["abstract"] = "This paper focuses on ..."
-    R2_mod.data["url"] = "www.gs.eu"
-    R2_mod.data["colrev_data_provenance"]["file"] = {
+    """Test record.print_pdf_prep_man()"""
+    r2_mod = r2.copy()
+
+    r2_mod.data["abstract"] = "This paper focuses on ..."
+    r2_mod.data["url"] = "www.gs.eu"
+    r2_mod.data["colrev_data_provenance"]["file"] = {
         "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
     }
 
     expected = """\x1b[91mRai, A\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMISQ (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
 
-    R2_mod.print_pdf_prep_man()
-    actual, err = capfd.readouterr()
+    r2_mod.print_pdf_prep_man()
+    actual, _ = capfd.readouterr()
     assert expected == actual
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_string, expected",
     [
         ("Tom Smith", "Smith, Tom"),
         (
@@ -1507,53 +1466,64 @@ def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
         ),
     ],
 )
-def test_format_author_field(input: str, expected: str) -> None:
-    actual = colrev.record.PrepRecord.format_author_field(input_string=input)
+def test_format_author_field(input_string: str, expected: str) -> None:
+    """Test record.format_author_field()"""
+
+    actual = colrev.record.PrepRecord.format_author_field(input_string=input_string)
     assert expected == actual
 
 
-def test_extract_text_by_page(
-    script_loc: Path, record_with_pdf: colrev.record.Record
+def test_extract_text_by_page(  # type: ignore
+    helpers, record_with_pdf: colrev.record.Record
 ) -> None:
-    record_with_pdf
-    expected = WagnerLukyanenkoParEtAl2022_pdf_content
+    """Test record.extract_text_by_page()"""
+    expected = (
+        helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt")
+    ).read_text(encoding="utf-8")
     actual = record_with_pdf.extract_text_by_page(
-        pages=[0], project_path=script_loc.parent
+        pages=[0], project_path=helpers.test_data_path
     )
     actual = actual.rstrip()
     assert expected == actual
 
 
-def test_set_pages_in_pdf(
-    script_loc: Path, record_with_pdf: colrev.record.Record
-) -> None:
+def test_set_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
+    """Test record.set_pages_in_pdf()"""
+
     expected = 18
-    record_with_pdf.set_pages_in_pdf(project_path=script_loc.parent)
+    record_with_pdf.set_pages_in_pdf(project_path=helpers.test_data_path)
     actual = record_with_pdf.data["pages_in_file"]
     assert expected == actual
 
 
-def test_set_text_from_pdf(
-    script_loc: Path, record_with_pdf: colrev.record.Record
-) -> None:
-    record_with_pdf
-    expected = WagnerLukyanenkoParEtAl2022_pdf_content.replace("\n", " ")
-    record_with_pdf.set_text_from_pdf(project_path=script_loc.parent)
+def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
+    """Test record.set_text_from_pdf()"""
+
+    expected = (
+        (helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt"))
+        .read_text(encoding="utf-8")
+        .replace("\n", " ")
+    )
+    record_with_pdf.set_text_from_pdf(project_path=helpers.test_data_path)
     actual = record_with_pdf.data["text_from_pdf"]
     actual = actual[0:4234]
     assert expected == actual
 
 
 def test_get_retrieval_similarity() -> None:
+    """Test record.get_retrieval_similarity()"""
+
     expected = 0.934
     actual = colrev.record.PrepRecord.get_retrieval_similarity(
-        record_original=R1, retrieved_record_original=R2
+        record_original=r1, retrieved_record_original=r2
     )
     assert expected == actual
 
 
 def test_format_if_mostly_upper() -> None:
-    prep_rec = R1.copy_prep_rec()
+    """Test record.format_if_mostly_upper()"""
+
+    prep_rec = r1.copy_prep_rec()
 
     prep_rec.format_if_mostly_upper(key="year")
 
@@ -1572,11 +1542,13 @@ def test_format_if_mostly_upper() -> None:
 
 
 def test_rename_fields_based_on_mapping() -> None:
-    prep_rec = R1.copy_prep_rec()
+    """Test record.rename_fields_based_on_mapping()"""
+
+    prep_rec = r1.copy_prep_rec()
 
     prep_rec.rename_fields_based_on_mapping(mapping={"Number": "issue"})
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -1604,7 +1576,9 @@ def test_rename_fields_based_on_mapping() -> None:
 
 
 def test_unify_pages_field() -> None:
-    prep_rec = R1.copy_prep_rec()
+    """Test record.unify_pages_field()"""
+
+    prep_rec = r1.copy_prep_rec()
     prep_rec.data["pages"] = "1-2"
     prep_rec.unify_pages_field()
     expected = "1--2"
@@ -1619,7 +1593,9 @@ def test_unify_pages_field() -> None:
 
 
 def test_preparation_save_condition() -> None:
-    prep_rec = R1.copy_prep_rec()
+    """Test record.preparation_save_condition()"""
+
+    prep_rec = r1.copy_prep_rec()
     prep_rec.data["colrev_status"] = colrev.record.RecordState.md_imported
     prep_rec.data["colrev_masterdata_provenance"]["title"][
         "note"
@@ -1635,7 +1611,9 @@ def test_preparation_save_condition() -> None:
 
 
 def test_preparation_break_condition() -> None:
-    prep_rec = R1.copy_prep_rec()
+    """Test record.preparation_break_condition()"""
+
+    prep_rec = r1.copy_prep_rec()
     prep_rec.data["colrev_masterdata_provenance"]["title"][
         "note"
     ] = "disagreement with website"
@@ -1643,7 +1621,7 @@ def test_preparation_break_condition() -> None:
     actual = prep_rec.preparation_break_condition()
     assert expected == actual
 
-    prep_rec = R1.copy_prep_rec()
+    prep_rec = r1.copy_prep_rec()
     prep_rec.data["colrev_status"] = colrev.record.RecordState.rev_prescreen_excluded
     expected = True
     actual = prep_rec.preparation_break_condition()
@@ -1651,12 +1629,14 @@ def test_preparation_break_condition() -> None:
 
 
 def test_update_metadata_status() -> None:
+    """Test record.update_metadata_status()"""
+
     # Retracted (crossmark)
-    R1_mod = R1.copy_prep_rec()
-    R1_mod.data["crossmark"] = "True"
-    R1_mod.update_metadata_status()
+    r1_mod = r1.copy_prep_rec()
+    r1_mod.data["crossmark"] = "True"
+    r1_mod.update_metadata_status()
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -1679,18 +1659,18 @@ def test_update_metadata_status() -> None:
         "pages": "1--3",
         "prescreen_exclusion": "retracted",
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual
 
     # Curated
-    R1_mod = R1.copy_prep_rec()
-    R1_mod.data["colrev_masterdata_provenance"] = {
+    r1_mod = r1.copy_prep_rec()
+    r1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": "http...", "note": ""}
     }
-    R1_mod.data["title"] = "Editorial"
-    R1_mod.update_metadata_status()
+    r1_mod.data["title"] = "Editorial"
+    r1_mod.update_metadata_status()
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "CURATED": {"source": "http...", "note": ""},
@@ -1706,15 +1686,15 @@ def test_update_metadata_status() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual
 
     # Quality defect
-    R1_mod = R1.copy_prep_rec()
-    R1_mod.data["author"] = "Rai, Arun, ARUN"
-    R1_mod.update_metadata_status()
+    r1_mod = r1.copy_prep_rec()
+    r1_mod.data["author"] = "Rai, Arun, ARUN"
+    r1_mod.update_metadata_status()
     expected = {
-        "ID": "R1",
+        "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
@@ -1736,5 +1716,5 @@ def test_update_metadata_status() -> None:
         "number": "1",
         "pages": "1--3",
     }
-    actual = R1_mod.data
+    actual = r1_mod.data
     assert expected == actual

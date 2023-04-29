@@ -572,6 +572,7 @@ class Settings(JsonSchemaMixin):
             # pylint: disable=too-few-public-methods
             @property
             def json_schema(self) -> dict:
+                """Return the json schema"""
                 return {"type": "path"}
 
         JsonSchemaMixin.register_field_encoders({Path: PathField()})

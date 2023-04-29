@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Test the local_index"""
 import os
 import typing
 from pathlib import Path
@@ -12,6 +13,8 @@ import colrev.review_manager
 
 
 def test_local_index(mocker, tmp_path, helpers) -> None:  # type: ignore
+    """Test the local_index"""
+
     def test_is_duplicate(local_index, test_records_dict) -> None:  # type: ignore
         record1_colrev_id = colrev.record.Record(
             data=test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
