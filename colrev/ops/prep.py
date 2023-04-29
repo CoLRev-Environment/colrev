@@ -589,22 +589,25 @@ class Prep(colrev.operation.Operation):
         # Note: entrypoint for CLI
 
         records = self.review_manager.dataset.load_records_dict()
+        try:
+            prior_records_dict = next(
+                self.review_manager.dataset.load_records_from_history()
+            )
 
-        prior_records_dict = next(
-            self.review_manager.dataset.load_records_from_history()
-        )
-        for record in records.values():
-            prior_record_l = [
-                x
-                for x in prior_records_dict.values()
-                if x["colrev_origin"] == record["colrev_origin"]
-            ]
-            if len(prior_record_l) != 1:
-                continue
-            prior_record = prior_record_l[0]
-            record["ID"] = prior_record["ID"]
+            for record in records.values():
+                prior_record_l = [
+                    x
+                    for x in prior_records_dict.values()
+                    if x["colrev_origin"] == record["colrev_origin"]
+                ]
+                if len(prior_record_l) != 1:
+                    continue
+                prior_record = prior_record_l[0]
+                record["ID"] = prior_record["ID"]
 
-        self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records=records)
+        except StopIteration:
+            self.review_manager.logger.info("No prior records")
 
     def setup_custom_script(self) -> None:
         """Setup a custom prep script"""
