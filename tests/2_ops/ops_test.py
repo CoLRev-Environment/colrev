@@ -3,13 +3,11 @@
 import os
 import platform
 import shutil
-import typing
 from dataclasses import asdict
 from pathlib import Path
 
 import git
 import pytest
-from pybtex.database.input import bibtex
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -24,7 +22,6 @@ def fixture_ops_test_review_manager(  # type: ignore
     session_mocker, tmp_path_factory: Path, helpers
 ) -> colrev.review_manager.ReviewManager:
     """Fixture setting up the review_manager"""
-    env_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
 
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
@@ -36,108 +33,6 @@ def fixture_ops_test_review_manager(  # type: ignore
         return_value=(),
     )
 
-    def load_test_records() -> dict:  # type: ignore
-        test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = helpers.test_data_path / Path("local_index")
-        for file_path in bib_files_to_index.glob("**/*"):
-            test_records_dict[Path(file_path.name)] = {}
-
-        for path in test_records_dict:
-            with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
-                parser = bibtex.Parser()
-                bib_data = parser.parse_string(file.read())
-                test_records_dict[path] = colrev.dataset.Dataset.parse_records_dict(
-                    records_dict=bib_data.entries
-                )
-        return test_records_dict
-
-    temp_sqlite = env_dir / Path("sqlite_index_test.db")
-    with session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
-    ):
-        test_records_dict = load_test_records()
-        local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
-        local_index.reinitialize_sqlite_db()
-
-        for path, records in test_records_dict.items():
-            if "cura" in str(path):
-                continue
-            local_index.index_records(
-                records=records,
-                repo_source_path=path,
-                curated_fields=[],
-                curation_url="gh...",
-                curated_masterdata=True,
-            )
-
-        for path, records in test_records_dict.items():
-            if "cura" not in str(path):
-                continue
-            local_index.index_records(
-                records=records,
-                repo_source_path=path,
-                curated_fields=["literature_review"],
-                curation_url="gh...",
-                curated_masterdata=False,
-            )
-
-    test_repo_dir = tmp_path_factory.mktemp("test_review_example")  # type: ignore
-    os.chdir(test_repo_dir)
-
-    colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
-        "test", encoding="utf-8"
-    )
-
-    # colrev status/etc. should print the RepoSetupError in non-colrev repositories
-    with pytest.raises(colrev_exceptions.RepoSetupError):
-        review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(test_repo_dir), force_mode=False
-        )
-
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(test_repo_dir), force_mode=True
-    )
-    review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
-        / Path("colrev/template/init/settings.json")
-    )
-
-    with pytest.raises(colrev_exceptions.RepoInitError):
-        colrev.review_manager.get_init_operation(
-            review_type="literature_review",
-            example=True,
-            local_pdf_collection=True,
-            target_path=test_repo_dir,
-        )
-
-    with pytest.raises(colrev_exceptions.ParameterError):
-        colrev.review_manager.get_init_operation(
-            review_type="misspelled_review", target_path=test_repo_dir
-        )
-
-    colrev.review_manager.get_init_operation(
-        review_type="literature_review",
-        example=True,
-        target_path=test_repo_dir,
-        light=True,
-    )
-
-    test_repo_dir = tmp_path_factory.mktemp("test_repo_local_pdf_collection")  # type: ignore
-    os.chdir(test_repo_dir)
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(test_repo_dir), force_mode=True
-    )
-    review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
-        / Path("colrev/template/init/settings.json")
-    )
-
-    colrev.review_manager.get_init_operation(
-        review_type="curated_masterdata",
-        example=False,
-        local_pdf_collection=True,
-    )
-
     test_repo_dir = tmp_path_factory.mktemp("test_repo")  # type: ignore
     os.chdir(test_repo_dir)
     review_manager = colrev.review_manager.ReviewManager(
@@ -147,17 +42,6 @@ def fixture_ops_test_review_manager(  # type: ignore
         settings_path=helpers.test_data_path.parents[1]
         / Path("colrev/template/init/settings.json")
     )
-
-    # A .report.log file that should be removed
-    (test_repo_dir / colrev.review_manager.ReviewManager.REPORT_RELATIVE).write_text(
-        "test", encoding="utf-8"
-    )
-    Path("test.txt").write_text("test", encoding="utf-8")
-    with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
-        colrev.review_manager.get_init_operation(
-            review_type="literature_review", example=False, target_path=test_repo_dir
-        )
-    Path("test.txt").unlink()
 
     colrev.review_manager.get_init_operation(
         review_type="literature_review", example=False, target_path=test_repo_dir
@@ -201,6 +85,81 @@ def fixture_ops_test_review_manager(  # type: ignore
     review_manager.save_settings()
     review_manager.create_commit(msg="add test_records.bib", manual_author=True)
     return review_manager
+
+
+def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
+    """Test the local_pdf_collection setup"""
+    test_repo_dir = tmp_path_factory.mktemp("test_repo_local_pdf_collection")  # type: ignore
+    os.chdir(test_repo_dir)
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=str(test_repo_dir), force_mode=True
+    )
+    review_manager.settings = colrev.settings.load_settings(
+        settings_path=helpers.test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
+    )
+
+    review_manager = colrev.review_manager.get_init_operation(
+        review_type="curated_masterdata",
+        example=False,
+        local_pdf_collection=True,
+    )
+
+
+def test_repo_init_error(tmp_path) -> None:  # type: ignore
+    """Test repo init error (non-empty dir)"""
+    colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
+        "test", encoding="utf-8"
+    )
+    # colrev status/etc. should print the RepoSetupError in non-colrev repositories
+    with pytest.raises(colrev_exceptions.RepoSetupError):
+        colrev.review_manager.ReviewManager(path_str=str(tmp_path), force_mode=False)
+
+
+def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
+    """Test repo init error (non-empty dir)"""
+
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=str(tmp_path), force_mode=True
+    )
+    review_manager.settings = colrev.settings.load_settings(
+        settings_path=helpers.test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
+    )
+
+    with pytest.raises(colrev_exceptions.RepoInitError):
+        colrev.review_manager.get_init_operation(
+            review_type="literature_review",
+            example=True,
+            local_pdf_collection=True,
+            target_path=tmp_path,
+        )
+
+    with pytest.raises(colrev_exceptions.ParameterError):
+        colrev.review_manager.get_init_operation(
+            review_type="misspelled_review", target_path=tmp_path
+        )
+
+    colrev.review_manager.get_init_operation(
+        review_type="literature_review",
+        example=True,
+        target_path=tmp_path,
+        light=True,
+    )
+
+
+def test_non_empty_dir_error_init(tmp_path) -> None:  # type: ignore
+    """Test repo init error (non-empty dir)"""
+    # A .report.log file that should be removed
+    (tmp_path / colrev.review_manager.ReviewManager.REPORT_RELATIVE).write_text(
+        "test", encoding="utf-8"
+    )
+    (tmp_path / Path("test.txt")).write_text("test", encoding="utf-8")
+    with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
+        colrev.review_manager.get_init_operation(
+            review_type="literature_review", example=False, target_path=tmp_path
+        )
+    Path("test.txt").unlink()
 
 
 def test_load(ops_test_review_manager: colrev.review_manager.ReviewManager) -> None:
