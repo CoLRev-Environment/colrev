@@ -10,8 +10,8 @@ from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
 from urllib.parse import urlparse
-from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
+from xml.etree import ElementTree  # nosec
+from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml
 import requests

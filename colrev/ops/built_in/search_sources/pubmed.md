@@ -13,7 +13,7 @@ Note: This document is currently under development. It will contain the followin
 To add a pubmed API search, enter the query in the [Pubmed web interface](https://pubmed.ncbi.nlm.nih.gov/), run the search, copy the url and run:
 
 ```
-corlev search -a colrev.pubmed:"https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
+colrev search -a colrev.pubmed:"https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 ```
 
 ## Links
