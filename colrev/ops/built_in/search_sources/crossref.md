@@ -10,8 +10,10 @@ Note: This document is currently under development. It will contain the followin
 
 ## Add the search source
 
+It is possible to copy the url from the [search.crossref.org](https://search.crossref.org/?q=microsourcing&from_ui=yes) UI and add it as follows:
+
 ```
-colrev search -a XXX
+colrev search -a colrev.crossref:"https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 ```
 
 ## Links
