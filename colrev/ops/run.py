@@ -38,6 +38,10 @@ class JIFLabeler:
             if "journal_impact_factor" in record.data:
                 self.review_manager.logger.info(record.data["ID"])
 
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(msg="Add JIF")
+
 
 def main() -> None:
     jif_labeler = JIFLabeler()
