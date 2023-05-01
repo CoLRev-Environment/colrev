@@ -155,7 +155,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     self.__availability_exception_message
                 ) from exc
 
-    @timeout_decorator.timeout(800, use_signals=False)
     def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         """Get records from Crossref based on a bibliographic query"""
 
@@ -167,7 +166,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         for item in crossref_query_return:
             yield connector_utils.json_to_record(item=item)
 
-    @timeout_decorator.timeout(40, use_signals=False)
     def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
@@ -188,7 +186,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return retrieved_record
 
-    @timeout_decorator.timeout(500, use_signals=False)
     def __query_journal(
         self, *, journal_issn: str, rerun: bool
     ) -> typing.Iterator[dict]:
@@ -750,6 +747,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
                 )
 
+    @timeout_decorator.timeout(500, use_signals=False)
     def __run_parameter_search(
         self,
         *,
