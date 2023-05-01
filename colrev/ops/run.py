@@ -2,14 +2,14 @@
 """CoLRev run operation: A simple tutorial version."""
 from __future__ import annotations
 
-import bibtexparser
+import colrev.review_manager
 
 
 class JIFLabeler:
     """Object handling the JIF labeling"""
 
     def __init__(self) -> None:
-        pass
+        self.review_manager = colrev.review_manager.ReviewManager()
 
     def add_jif(self, *, record: dict) -> None:
         """Add the journal impact factor"""
@@ -24,10 +24,10 @@ class JIFLabeler:
     def run(self) -> None:
         print("Start simple colrev run")
 
-        with open("data/records.bib", encoding="utf-8") as bibtex_file:
-            bib_database = bibtexparser.load(bibtex_file)
+        self.review_manager.get_prep_operation()
+        records = self.review_manager.dataset.load_records_dict()
 
-        for record in bib_database.entries:
+        for record in records.values():
             self.add_jif(record=record)
             print(record)
 
