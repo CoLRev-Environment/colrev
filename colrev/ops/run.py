@@ -2,6 +2,7 @@
 """CoLRev run operation: A simple tutorial version."""
 from __future__ import annotations
 
+import colrev.record
 import colrev.review_manager
 
 
@@ -11,25 +12,32 @@ class JIFLabeler:
     def __init__(self) -> None:
         self.review_manager = colrev.review_manager.ReviewManager()
 
-    def add_jif(self, *, record: dict) -> None:
+    def add_jif(self, *, record: colrev.record.Record) -> None:
         """Add the journal impact factor"""
-        if "journal" not in record:
+        if "journal" not in record.data:
             return
 
-        if record["journal"] == "MIS Quarterly":
-            record["journal_impact_factor"] = 8.3
-        if record["journal"] == "Information & Management":
-            record["journal_impact_factor"] = 10.3
+        if record.data["journal"] == "MIS Quarterly":
+            record.update_field(
+                key="journal_impact_factor", value="8.3", source="jif-labeler"
+            )
+        if record.data["journal"] == "Information & Management":
+            record.update_field(
+                key="journal_impact_factor", value="10.3", source="jif-labeler"
+            )
 
     def run(self) -> None:
-        print("Start simple colrev run")
+        self.review_manager.logger.info("Start simple colrev run")
 
         self.review_manager.get_prep_operation()
         records = self.review_manager.dataset.load_records_dict()
 
-        for record in records.values():
+        for record_dict in records.values():
+            record = colrev.record.Record(data=record_dict)
             self.add_jif(record=record)
-            print(record)
+            if "journal_impact_factor" in record.data:
+                self.review_manager.logger.info(record.data["ID"])
+
 
 def main() -> None:
     jif_labeler = JIFLabeler()
