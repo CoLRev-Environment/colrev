@@ -90,7 +90,7 @@ Ready to contribute? Here's how to set up `colrev` for local development.
 
 7. Submit a pull request through the GitHub website.
 
-## TroubleshootingI
+## Troubleshooting
 
 ### If you get error regarding mock being not available
 
