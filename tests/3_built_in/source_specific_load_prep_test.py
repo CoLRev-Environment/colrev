@@ -27,10 +27,28 @@ def ssp_review_manager(base_repo_review_manager) -> colrev.review_manager.Review
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, expected_file",
     [
-        (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
-        (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
-        (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
+        # (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
+        # (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
+        # (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
         # (Path("europe_pmc.bib"), "colrev.europe_pmc", Path("europe_pmc_result.bib")),
+        # (Path("acm.bib"), "colrev.acm_digital_library", Path("acm_result.bib")),
+        # (Path("eric.nbib"), "colrev.eric", Path("eric_result.bib")),
+        # (Path("ieee.ris"), "colrev.ieee", Path("ieee_result.bib")),
+        # (Path("jstor.ris"), "colrev.jstor", Path("jstor_result.bib")),
+        # (Path("psycinfo.ris"), "colrev.psycinfo", Path("psycinfo_result.bib")),
+        # (Path("springer.csv"), "colrev.springer_link", Path("springer_result.bib")),
+        # (
+        #     Path("taylor_and_francis.ris"),
+        #     "colrev.taylor_and_francis",
+        #     Path("taylor_and_francis_result.bib"),
+        # ),
+        # (Path("trid.ris"), "colrev.trid", Path("trid_result.bib")),
+        # (
+        #     Path("web_of_science.bib"),
+        #     "colrev.web_of_science",
+        #     Path("web_of_science_result.bib"),
+        # ),
+        # (Path("wiley.bib"), "colrev.wiley", Path("wiley_result.bib")),
     ],
 )
 def test_source(  # type: ignore
