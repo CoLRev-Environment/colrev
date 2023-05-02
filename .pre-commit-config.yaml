@@ -37,7 +37,7 @@ repos:
         additional_dependencies: [flake8-typing-imports==1.12.0]
         args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
 - repo: https://github.com/AliYmn/pre-commit-keyword-checker
-  rev: master
+  rev: V1.5.0
   hooks:
   - id: check-keywords
     args: ["--keywords", "corlev"]
