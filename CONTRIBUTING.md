@@ -102,7 +102,7 @@ pip install pytest-mock
 
 ### If you get invalid cross-device link error
 
-It is because the `/tmp` folder is not in same drive as your home drive. Use 'pytest --basetemp=<a path inside your home folder>'
+It is because the `/tmp` folder is not in same drive as your home drive. Use 'pytest --basetemp=&lt;a_path_inside_your_home_folder&gt;'
 
 Beware, everything inside the folder will be deleted, so make sure you use the folder only for test.
 
