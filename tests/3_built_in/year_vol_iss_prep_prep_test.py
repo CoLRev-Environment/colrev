@@ -1,22 +1,16 @@
 #!/usr/bin/env python
+"""Test the year_vol_iss prep"""
 import pytest
 
 import colrev.ops.built_in.prep.year_vol_iss_prep
 import colrev.ops.prep
 
 
-@pytest.fixture
-def prep_operation(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.ops.prep.Prep:
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    return prep_operation
-
-
-@pytest.fixture
-def yvip(
+@pytest.fixture(name="yvip")
+def get_yvip(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep:
+    """Get the YearVolIssPrep fixture"""
     settings = {"endpoint": "colrev.exclude_languages"}
     yvip = colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep(
         prep_operation=prep_operation, settings=settings
@@ -25,7 +19,7 @@ def yvip(
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_rec, expected",
     [
         # Note : the first case is indexed in local_index
         (
@@ -67,11 +61,12 @@ def yvip(
 )
 def test_prep_year_vol_iss(
     yvip: colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep,
-    input: dict,
+    input_rec: dict,
     expected: dict,
     prep_operation: colrev.ops.prep.Prep,
 ) -> None:
-    record = colrev.record.PrepRecord(data=input)
+    """Test year_vol_iss_prep()"""
+    record = colrev.record.PrepRecord(data=input_rec)
     returned_record = yvip.prepare(prep_operation=prep_operation, record=record)
     actual = returned_record.data
     assert expected == actual

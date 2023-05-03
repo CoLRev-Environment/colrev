@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Test the bibtex crossref resolution prep"""
 from pathlib import Path
 
 import pytest
@@ -7,18 +8,11 @@ import colrev.ops.built_in.prep.bibtex_crossref_resolution
 import colrev.ops.prep
 
 
-@pytest.fixture
-def prep_operation(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.ops.prep.Prep:
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    return prep_operation
-
-
-@pytest.fixture
-def bcr(
+@pytest.fixture(name="bcr")
+def get_bcr(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep:
+    """Get the BibTexCrossrefResolutionPrep fixture"""
     settings = {"endpoint": "colrev.resolve_crossrefs"}
     elp = colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep(
         prep_operation=prep_operation, settings=settings
@@ -27,7 +21,7 @@ def bcr(
 
 
 @pytest.mark.parametrize(
-    "input, crossref_rec, expected",
+    "input_rec, crossref_rec, expected",
     [
         (
             {
@@ -61,11 +55,12 @@ def bcr(
 def test_prep_exclude_languages(
     bcr: colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep,
     prep_operation: colrev.ops.prep.Prep,
-    input: dict,
+    input_rec: dict,
     crossref_rec: dict,
     expected: dict,
 ) -> None:
-    record = colrev.record.PrepRecord(data=input)
+    """Test the prep_exclude_languages()"""
+    record = colrev.record.PrepRecord(data=input_rec)
     # Save the crossref_rec as data/records.bib
     prep_operation.review_manager.dataset.save_records_dict_to_file(
         records=crossref_rec,

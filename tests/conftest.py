@@ -78,7 +78,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
-        for path in test_records_dict.keys():
+        for path in test_records_dict:
             with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(file.read())
@@ -148,7 +148,10 @@ def record_with_pdf() -> colrev.record.Record:
 
 
 @pytest.fixture(scope="session", name="local_index_test_records_dict")
-def get_local_index_test_records_dict(helpers, test_local_index_dir) -> dict:  # type: ignore
+def get_local_index_test_records_dict(  # type: ignore
+    helpers,
+    test_local_index_dir,
+) -> dict:
     """Test records dict for local_index"""
     local_index_test_records_dict: typing.Dict[Path, dict] = {}
     bib_files_to_index = helpers.test_data_path / Path("local_index")
@@ -179,8 +182,10 @@ def get_local_index_test_records_dict(helpers, test_local_index_dir) -> dict:  #
     return local_index_test_records_dict
 
 
-@pytest.fixture(scope="session")
-def local_index(session_mocker, helpers, local_index_test_records_dict, test_local_index_dir):  # type: ignore
+@pytest.fixture(scope="session", name="local_index")
+def get_local_index(  # type: ignore
+    session_mocker, helpers, local_index_test_records_dict, test_local_index_dir
+):
     """Test the local_index"""
     helpers.retrieve_test_file(
         source=Path("WagnerLukyanenkoParEtAl2022.pdf"),

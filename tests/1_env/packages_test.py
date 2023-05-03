@@ -399,6 +399,8 @@ def test_data_package_interfaces(
 def test_get_package_details(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test get_package_details()"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     expected = {
         "type": "object",
@@ -418,6 +420,7 @@ def test_get_package_details(
 def test_update_package_list(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test update_package_list()"""
     package_manager = base_repo_review_manager.get_package_manager()
     colrev_spec = importlib.util.find_spec("colrev")
 
