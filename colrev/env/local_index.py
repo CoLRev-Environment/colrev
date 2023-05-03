@@ -219,11 +219,9 @@ class LocalIndex:
 
         layered_fields = []
         cur.execute(self.SELECT_LAYERD_FIELDS_QUERY, (item["id"],))
-        for row in cur.fetchall():
-            if row["layered_fields"]:
-                layered_fields = json.loads(row["layered_fields"])
-
-            break
+        row = cur.fetchone()
+        if row["layered_fields"]:
+            layered_fields = json.loads(row["layered_fields"])
         for curated_field in curated_fields:
             if curated_field not in record_dict:
                 continue
@@ -504,13 +502,15 @@ class LocalIndex:
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
-        if "file" in record_dict:
-            if not Path(record_dict["file"]).is_file():
-                del record_dict["file"]
+        if "file" in record_dict and not Path(record_dict["file"]).is_file():
+            del record_dict["file"]
 
-        if not include_colrev_ids and "colrev_id" in record_dict:
-            if "colrev_id" in record_dict:
-                del record_dict["colrev_id"]
+        if (
+            not include_colrev_ids
+            and "colrev_id" in record_dict
+            and "colrev_id" in record_dict
+        ):
+            del record_dict["colrev_id"]
 
         if include_file:
             if fulltext_backup != "NA":
@@ -631,10 +631,9 @@ class LocalIndex:
         else:
             raise colrev_exceptions.RecordNotIndexableException()
 
-        if "language" in record_dict:
-            if len(record_dict["language"]) != 3:
-                print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
-                del record_dict["language"]
+        if "language" in record_dict and len(record_dict["language"]) != 3:
+            print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
+            del record_dict["language"]
 
     def __adjust_provenance_for_indexint(self, *, record_dict: dict) -> None:
         # Provenance should point to the original repository path.

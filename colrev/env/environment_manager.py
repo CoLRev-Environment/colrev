@@ -100,7 +100,7 @@ class EnvironmentManager:
         self.environment_registry = self.load_environment_registry()
         registered_paths = [x["repo_source_path"] for x in self.environment_registry]
 
-        if registered_paths != []:
+        if registered_paths:
             if str(path_to_register) in registered_paths:
                 # print(f"Warning: Path already registered: {path_to_register}")
                 return
@@ -112,9 +112,8 @@ class EnvironmentManager:
             "repo_source_path": path_to_register,
         }
         git_repo = git.Repo(path_to_register)
-        for remote in git_repo.remotes:
-            if remote.url:
-                new_record["repo_source_url"] = remote.url
+        remotes = [x["repo"] for x in git_repo.remotes if "repo" in x and x["repo"]]
+        new_record["repo_source_url"] = remotes and remotes.pop() or None
         self.environment_registry.append(new_record)
         self.save_environment_registry(updated_registry=self.environment_registry)
         print(f"Registered path ({path_to_register})")
@@ -269,11 +268,10 @@ class EnvironmentManager:
                 else:
                     repo["progress"] = -1
 
-                repo["remote"] = False
                 git_repo = check_operation.review_manager.dataset.get_repo()
-                for remote in git_repo.remotes:
-                    if remote.url:
-                        repo["remote"] = True
+                repo["remote"] = any(
+                    "remote" in x and x["remote"] for x in git_repo.remotes
+                )
                 repo[
                     "behind_remote"
                 ] = check_operation.review_manager.dataset.behind_remote()
