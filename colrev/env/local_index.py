@@ -508,7 +508,6 @@ class LocalIndex:
         if (
             not include_colrev_ids
             and "colrev_id" in record_dict
-            and "colrev_id" in record_dict
         ):
             del record_dict["colrev_id"]
 
