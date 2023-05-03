@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
-from subprocess import CalledProcessError
-from subprocess import check_output
 from typing import Optional
 
 import docker
@@ -14,6 +12,7 @@ import git
 import pandas as pd
 import yaml
 from docker.errors import DockerException
+from git.exc import InvalidGitRepositoryError
 from yaml import safe_load
 
 import colrev.env.local_index
@@ -124,20 +123,13 @@ class EnvironmentManager:
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
         try:
-            username = check_output(["git", "config", "user.name"])
-            email = check_output(["git", "config", "user.email"])
-            global_conf_details = (
-                username.decode("utf-8").replace("\n", ""),
-                email.decode("utf-8").replace("\n", ""),
-            )
-        except CalledProcessError as exc:
+            username = git.config.GitConfigParser().get_value("user", "name")
+            email = git.config.GitConfigParser().get_value("user", "email")
+            global_conf_details = (username, email)
+        except (git.config.cp.NoSectionError, git.config.cp.NoOptionError) as exc:
             raise colrev_exceptions.CoLRevException(
                 "Global git variables (user name and email) not available."
             ) from exc
-        if ("NA", "NA") == global_conf_details:
-            raise colrev_exceptions.CoLRevException(
-                "Global git variables (user name and email) not available."
-            )
         return global_conf_details
 
     @classmethod
@@ -287,7 +279,10 @@ class EnvironmentManager:
                 ] = check_operation.review_manager.dataset.behind_remote()
 
                 repos.append(repo)
-            except colrev_exceptions.CoLRevException:
+            except (
+                colrev_exceptions.CoLRevException,
+                InvalidGitRepositoryError,
+            ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 
@@ -300,7 +295,6 @@ class EnvironmentManager:
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
-                # TODO : should come from the curation_data endpoint!
                 with open(f"{repo_source_path}/readme.md", encoding="utf-8") as file:
                     first_line = file.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
@@ -317,14 +311,14 @@ class EnvironmentManager:
                             and "journal:" != line.lstrip()[:8]
                         ):
                             journal = line[line.find("{") + 1 : line.rfind("}")]
-                            if "UNKNOWN" != journal:
+                            if journal != "UNKNOWN":
                                 outlets.append(journal)
                         if (
-                            "booktitle" == line.lstrip()[:9]
-                            and "booktitle:" != line.lstrip()[:10]
+                            line.lstrip()[:9] == "booktitle"
+                            and line.lstrip()[:10] != "booktitle:"
                         ):
                             booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                            if "UNKNOWN" != booktitle:
+                            if booktitle != "UNKNOWN":
                                 outlets.append(booktitle)
 
                     if len(set(outlets)) > 1:

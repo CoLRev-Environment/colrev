@@ -233,8 +233,8 @@ class Dataset:
         # pylint: disable=too-many-branches
 
         return_dict = {}
-        if "colrev_masterdata_provenance" == field:
-            if "CURATED" == value[:7]:
+        if field == "colrev_masterdata_provenance":
+            if value[:7] == "CURATED":
                 if value.count(";") == 0:
                     value += ";;"  # Note : temporary fix (old format)
                 if value.count(";") == 1:
@@ -249,7 +249,7 @@ class Dataset:
                     "note": "",
                 }
 
-            elif "" != value:
+            elif value != "":
                 # Pybtex automatically replaces \n in fields.
                 # For consistency, we also do that for header_only mode:
                 if "\n" in value:
@@ -269,11 +269,11 @@ class Dataset:
                     else:
                         print(f"problem with masterdata_provenance_item {item}")
 
-        elif "colrev_data_provenance" == field:
-            if "" != value:
+        elif field == "colrev_data_provenance":
+            if value != "":
                 # Note : pybtex replaces \n upon load
                 for item in (value + " ").split("; "):
-                    if "" == item:
+                    if item == "":
                         continue
                     item += ";"  # removed by split
                     key_source = item[: item[:-1].rfind(";")]
@@ -351,39 +351,35 @@ class Dataset:
 
         return records_dict
 
+    def __parse_k_v(self, item_string: str) -> tuple:
+        try:
+            if " = " in item_string:
+                key, value = item_string.split(" = ", 1)
+            else:
+                key = "ID"
+                value = item_string.split("{")[1]
+
+            key = key.lstrip().rstrip()
+            value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+            if key == "colrev_origin":
+                value_list = value.replace("\n", "").split(";")
+                value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
+                return key, value_list
+            if key == "colrev_status":
+                return key, colrev.record.RecordState[value]
+            if key == "colrev_masterdata_provenance":
+                return key, self.__load_field_dict(value=value, field=key)
+            if key == "file":
+                return key, Path(value)
+        except IndexError as exc:
+            raise colrev_exceptions.BrokenFilesError(msg="parsing records.bib") from exc
+
+        return key, value
+
     def __read_record_header_items(
         self, *, file_object: Optional[typing.TextIO] = None
     ) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
-
-        # pylint: disable=too-many-statements
-
-        def parse_k_v(current_key_value_pair_str: str) -> tuple:
-            try:
-                if " = " in current_key_value_pair_str:
-                    key, value = current_key_value_pair_str.split(" = ", 1)
-                else:
-                    key = "ID"
-                    value = current_key_value_pair_str.split("{")[1]
-
-                key = key.lstrip().rstrip()
-                value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-                if "colrev_origin" == key:
-                    value_list = value.replace("\n", "").split(";")
-                    value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
-                    return key, value_list
-                if "colrev_status" == key:
-                    return key, colrev.record.RecordState[value]
-                if "colrev_masterdata_provenance" == key:
-                    return key, self.__load_field_dict(value=value, field=key)
-                if "file" == key:
-                    return key, Path(value)
-            except IndexError as exc:
-                raise colrev_exceptions.BrokenFilesError(
-                    msg="parsing records.bib"
-                ) from exc
-
-            return key, value
 
         # pylint: disable=consider-using-with
         if file_object is None:
@@ -401,7 +397,7 @@ class Dataset:
         number_required_header_items = len(default)
 
         record_header_item = default.copy()
-        current_header_item_count, current_key_value_pair_str, record_header_items = (
+        item_count, item_string, record_header_items = (
             0,
             "",
             [],
@@ -410,35 +406,38 @@ class Dataset:
             line = file_object.readline()
             if not line:
                 break
+
             if line[:1] == "%" or line == "\n":
                 continue
 
-            if current_header_item_count > number_required_header_items or "}" == line:
+            if item_count > number_required_header_items or "}" == line:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
-                current_header_item_count = 0
+                item_count = 0
                 continue
 
-            if "@" in line[:2] and "NA" != record_header_item["ID"]:
+            if "@" in line[:2] and record_header_item["ID"] != "NA":
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
-                current_header_item_count = 0
+                item_count = 0
 
-            current_key_value_pair_str += line
+            item_string += line
             if "}," in line or "@" in line[:2]:
-                key, value = parse_k_v(current_key_value_pair_str)
-                if "colrev_masterdata_provenance" == key:
-                    if "NA" == value:
+                key, value = self.__parse_k_v(item_string)
+                if key == "colrev_masterdata_provenance":
+                    if value == "NA":
                         value = {}
-                if "NA" == value:
-                    current_key_value_pair_str = ""
+                if value == "NA":
+                    item_string = ""
                     continue
-                current_key_value_pair_str = ""
+                item_string = ""
                 if key in record_header_item:
-                    current_header_item_count += 1
+                    item_count += 1
                     record_header_item[key] = value
-        if "NA" != record_header_item["colrev_origin"]:
+
+        if record_header_item["colrev_origin"] != "NA":
             record_header_items.append(record_header_item)
+
         return [
             {k: v for k, v in record_header_item.items() if "NA" != v}
             for record_header_item in record_header_items
@@ -558,7 +557,7 @@ class Dataset:
 
             for ordered_field in field_order:
                 if ordered_field in record_dict:
-                    if "" == record_dict[ordered_field]:
+                    if record_dict[ordered_field] == "":
                         continue
                     bibtex_str += format_field(
                         ordered_field, record_dict[ordered_field]
@@ -575,7 +574,7 @@ class Dataset:
         return bibtex_str
 
     def save_records_dict_to_file(self, *, records: dict, save_path: Path) -> None:
-        """Save the records dict to specifified file"""
+        """Save the records dict to specified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
@@ -610,7 +609,11 @@ class Dataset:
                         current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                         current_id_str = current_id.decode("utf-8")
                     if current_id_str in [x["ID"] for x in record_list]:
-                        replacement = [x["record"] for x in record_list][0]
+                        replacement = [
+                            x["record"]
+                            for x in record_list
+                            if x["ID"] == current_id_str
+                        ][0]
                         record_list = [
                             x for x in record_list if x["ID"] != current_id_str
                         ]
@@ -706,7 +709,7 @@ class Dataset:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
 
         saved_args = locals()
-        if "all" == paper_ids:
+        if paper_ids == "all":
             # self.review_manager.logger.info("Removing/reprocessing all records")
             os.remove(self.records_file)
             self.__git_repo.index.remove(
@@ -742,7 +745,7 @@ class Dataset:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-            if "" != record_dict.get("author", record_dict.get("editor", "")):
+            if record_dict.get("author", record_dict.get("editor", "")) != "":
                 authors_string = record_dict.get(
                     "author", record_dict.get("editor", "Anonymous")
                 )
@@ -886,14 +889,18 @@ class Dataset:
 
                 temp_stat = record_dict["colrev_status"]
                 if selected_ids:
-                    record_dict["colrev_status"] = colrev.record.RecordState.md_prepared
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
                 new_id = self.__generate_id(
                     local_index=local_index,
                     record_dict=record_dict,
                     existing_ids=[x for x in id_list if x != record_id],
                 )
                 if selected_ids:
-                    record_dict["colrev_status"] = temp_stat
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(target_state=temp_stat)
 
                 id_list.append(new_id)
                 if old_id != new_id:
@@ -946,12 +953,10 @@ class Dataset:
     def get_applicable_restrictions(self, *, record_dict: dict) -> dict:
         """Get the applicable masterdata restrictions"""
 
-        applicable_restrictions = {}
-
-        start_year_values = list(self.masterdata_restrictions.keys())
-
         if not str(record_dict.get("year", "NA")).isdigit():
             return {}
+
+        start_year_values = list(self.masterdata_restrictions.keys())
 
         year_index_diffs = [
             int(record_dict["year"]) - int(x) for x in start_year_values
@@ -985,16 +990,16 @@ class Dataset:
         if relative_path:
             main_recs_changed = False
             try:
-                if "all" == change_type:
+                if change_type == "all":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.index.diff(None)
                     ] + [item.a_path for item in self.__git_repo.head.commit.diff()]
-                elif "staged" == change_type:
+                elif change_type == "staged":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.head.commit.diff()
                     ]
 
-                elif "unstaged" == change_type:
+                elif change_type == "unstaged":
                     main_recs_changed = str(relative_path) in [
                         item.a_path for item in self.__git_repo.index.diff(None)
                     ]
@@ -1178,7 +1183,7 @@ class Dataset:
         """Get the remote url"""
         remote_url = "NA"
         for remote in self.__git_repo.remotes:
-            if "origin" == remote.name:
+            if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
 

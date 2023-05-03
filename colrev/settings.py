@@ -362,7 +362,7 @@ class PrescreenSettings(JsonSchemaMixin):
     prescreen_package_endpoints: list
 
     def __str__(self) -> str:
-        return "Prescreen package endoints: " + ",".join(
+        return "- " + ",".join(
             [s["endpoint"] for s in self.prescreen_package_endpoints]
         )
 
@@ -406,7 +406,7 @@ class PDFGetSettings(JsonSchemaMixin):
     def __str__(self) -> str:
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
-            + " - "
+            + "\n - "
             + ",".join([s["endpoint"] for s in self.pdf_get_package_endpoints])
         )
 
@@ -425,7 +425,7 @@ class PDFPrepSettings(JsonSchemaMixin):
     pdf_prep_man_package_endpoints: list
 
     def __str__(self) -> str:
-        return " - " + ",".join(
+        return "- " + "\n- ".join(
             [s["endpoint"] for s in self.pdf_prep_package_endpoints]
         )
 
@@ -542,7 +542,7 @@ class Settings(JsonSchemaMixin):
             str(self.project)
             + "\nSearch\n"
             + str(self.search)
-            + "\nSources\n"
+            + "\nSources\n- "
             + "\n- ".join([str(s) for s in self.sources])
             + "\nLoad\n"
             + str(self.load)
@@ -569,8 +569,10 @@ class Settings(JsonSchemaMixin):
         class PathField(FieldEncoder):
             """JsonSchemaMixin encoder for Path fields"""
 
+            # pylint: disable=too-few-public-methods
             @property
             def json_schema(self) -> dict:
+                """Return the json schema"""
                 return {"type": "path"}
 
         JsonSchemaMixin.register_field_encoders({Path: PathField()})

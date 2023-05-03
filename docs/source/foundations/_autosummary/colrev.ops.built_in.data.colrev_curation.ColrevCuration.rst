@@ -39,3 +39,4 @@ colrev.ops.built\_in.data.colrev\_curation.ColrevCuration
    .. autosummary::
 
       ~ColrevCuration.ci_supported
+      ~ColrevCuration.settings

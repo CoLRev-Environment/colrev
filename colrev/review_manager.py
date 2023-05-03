@@ -142,7 +142,7 @@ class ReviewManager:
 
         except Exception as exc:  # pylint: disable=broad-except
             if (self.path / Path(".git")).is_dir():
-                if "gh-pages" == git.Repo().active_branch.name:
+                if git.Repo().active_branch.name == "gh-pages":
                     raise colrev_exceptions.RepoSetupError(
                         msg="Currently on gh-pages branch. Switch to main: "
                         + f"{colors.ORANGE}git switch main{colors.END}"
@@ -471,12 +471,6 @@ class ReviewManager:
 
         return colrev.env.screenshot_service.ScreenshotService(review_manager=self)
 
-    def get_pdf_hash_service(self) -> colrev.env.pdf_hash_service.PDFHashService:
-        """Get the pdf-hash-service object"""
-        import colrev.env.pdf_hash_service
-
-        return colrev.env.pdf_hash_service.PDFHashService(logger=self.logger)
-
     @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:
         """Get a resources object"""
@@ -715,8 +709,9 @@ class ReviewManager:
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
 
+    @classmethod
     def in_ci_environment(
-        self,
+        cls,
         *,
         identifier: Optional[str] = None,
     ) -> bool:

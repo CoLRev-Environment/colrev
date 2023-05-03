@@ -231,7 +231,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             # )
             record = retrieval_script(pdf_get_man_operation, record)
 
-            if "y" == input("Retrieved (y/n)?"):
+            if input("Retrieved (y/n)?") == "y":
                 if self.__get_from_downloads_folder:
                     self.__retrieve_record_from_downloads_folder(
                         pdf_get_man_operation=pdf_get_man_operation, record=record
@@ -252,7 +252,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                     break
 
         if not filepath.is_file():
-            if "n" == input("Is the PDF available (y/n)?"):
+            if input("Is the PDF available (y/n)?") == "n":
                 pdf_get_man_operation.pdf_get_man_record(
                     record=record,
                     filepath=None,
@@ -270,10 +270,10 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_dir = pdf_get_man_operation.review_manager.pdf_dir
 
         records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
-        if "y" == input("Check existing unlinked PDFs (y/n)?"):
+        if input("Check existing unlinked PDFs (y/n)?") == "y":
             records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
 
-        if "y" == input("Get PDF from Downloads folder (y/n)?"):
+        if input("Get PDF from Downloads folder (y/n)?") == "y":
             self.__get_from_downloads_folder = True
 
         for record_dict in records.values():
@@ -301,7 +301,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
 
         if pdf_get_man_operation.review_manager.dataset.has_changes():
-            if "y" == input("Create commit (y/n)?"):
+            if input("Create commit (y/n)?") == "y":
                 pdf_get_man_operation.review_manager.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,

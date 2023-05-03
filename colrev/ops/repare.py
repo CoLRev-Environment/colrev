@@ -32,14 +32,48 @@ class Repare(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.check,
             notify_state_transition_operation=False,
         )
+        # fix file no longer available
+        self.local_index = self.review_manager.get_local_index()
+        self.pdf_get_operation = self.review_manager.get_pdf_get_operation()
+
+    def __fix_broken_symlink_based_on_local_index(
+        self, *, record: colrev.record.Record, full_path: Path
+    ) -> None:
+        """Fix broken symlinks based on local_index"""
+
+        if os.path.islink(full_path) and not os.path.exists(full_path):
+            self.review_manager.logger.debug(f" remove broken symlink: {full_path}")
+            full_path.unlink()
+
+        try:
+            retrieved_record = self.local_index.retrieve(
+                record_dict=record.data, include_file=True
+            )
+
+            if "file" in retrieved_record:
+                record.update_field(
+                    key="file",
+                    value=str(retrieved_record["file"]),
+                    source="local_index",
+                    append_edit=False,
+                )
+                self.pdf_get_operation.import_file(record=record)
+                if "fulltext" in retrieved_record:
+                    del retrieved_record["fulltext"]
+                self.review_manager.logger.info(
+                    f" fix broken symlink: {record.data['ID']}"
+                )
+            else:
+                self.review_manager.logger.debug(
+                    f" file not linked in retrieved record: {record.data['ID']}"
+                )
+
+        except colrev_exceptions.RecordNotInIndexException:
+            self.review_manager.logger.debug(
+                f" record not in index: {record.data['ID']}"
+            )
 
     def __fix_files(self, *, records: dict) -> None:
-        # pylint: disable=too-many-branches
-
-        # fix file no longer available
-        local_index = self.review_manager.get_local_index()
-        pdf_get_operation = self.review_manager.get_pdf_get_operation()
-
         for record_dict in records.values():
             if "file" not in record_dict:
                 continue
@@ -52,6 +86,7 @@ class Repare(colrev.operation.Operation):
             if full_path.is_file():
                 continue
 
+            # Add .pdf extension if missing
             if Path(str(full_path) + ".pdf").is_file():
                 Path(str(full_path) + ".pdf").rename(full_path)
 
@@ -74,58 +109,22 @@ class Repare(colrev.operation.Operation):
             full_path = self.review_manager.path / Path(record_dict["file"])
 
             if not full_path.is_file():
-                # Fix broken symlinks based on local_index
-
-                if os.path.islink(full_path) and not os.path.exists(full_path):
-                    self.review_manager.logger.debug(
-                        f" remove broken symlink: {full_path}"
-                    )
-                    full_path.unlink()
-
-                try:
-                    record = colrev.record.Record(data=record_dict)
-                    retrieved_record = local_index.retrieve(
-                        record_dict=record.data, include_file=True
-                    )
-
-                    if "file" in retrieved_record:
-                        record.update_field(
-                            key="file",
-                            value=str(retrieved_record["file"]),
-                            source="local_index",
-                            append_edit=False,
-                        )
-                        pdf_get_operation.import_file(record=record)
-                        if "fulltext" in retrieved_record:
-                            del retrieved_record["fulltext"]
-                        self.review_manager.logger.info(
-                            f" fix broken symlink: {record_dict['ID']}"
-                        )
-                    else:
-                        self.review_manager.logger.debug(
-                            f" file not linked in retrieved record: {record_dict['ID']}"
-                        )
-
-                except colrev_exceptions.RecordNotInIndexException:
-                    self.review_manager.logger.debug(
-                        f" record not in index: {record_dict['ID']}"
-                    )
+                record = colrev.record.Record(data=record_dict)
+                self.__fix_broken_symlink_based_on_local_index(
+                    record=record, full_path=full_path
+                )
 
             if full_path.is_file():
                 continue
 
             record_dict["colrev_status_backup"] = record_dict["colrev_status"]
             del record_dict["file"]
-            record_dict[
-                "colrev_status"
-            ] = colrev.record.RecordState.rev_prescreen_included
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_included
+            )
 
-    def __fix_provenance(self, *, records: dict) -> None:
-        # pylint: disable=too-many-nested-blocks
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
-
+    def __get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
             source_feeds[
@@ -135,161 +134,172 @@ class Repare(colrev.operation.Operation):
                 source_identifier="NA",
                 update_only=False,
             ).feed_records
+        return source_feeds
 
+    def __remove_fields(self, *, record: colrev.record.Record) -> None:
+        if "pdf_hash" in record.data:
+            record.data["colrev_pdf_id"] = record.data["pdf_hash"]
+            del record.data["pdf_hash"]
+        if "pdf_prep_hints" in record.data:
+            del record.data["pdf_prep_hints"]
+        if "grobid-version" in record.data:
+            del record.data["grobid-version"]
+
+        mk_to_remove = []
+        for key in record.data["colrev_data_provenance"]:
+            if key not in record.data:
+                mk_to_remove += [key]
+        for key in mk_to_remove:
+            del record.data["colrev_data_provenance"][key]
+
+        mdk_to_remove = []
+        for key in record.data["colrev_masterdata_provenance"]:
+            if (
+                key not in record.data
+                and "CURATED" != key
+                and "not_missing"
+                not in record.data["colrev_masterdata_provenance"][key]["note"]
+            ):
+                mdk_to_remove += [key]
+        for key in mdk_to_remove:
+            del record.data["colrev_masterdata_provenance"][key]
+
+        if self.review_manager.settings.is_curated_masterdata_repo():
+            if "CURATED" in record.data["colrev_masterdata_provenance"]:
+                del record.data["colrev_masterdata_provenance"]["CURATED"]
+
+    def __set_data_provenance_field(
+        self, *, record: colrev.record.Record, key: str, source_feeds: dict
+    ) -> None:
+        if key in record.data["colrev_data_provenance"]:
+            if not any(
+                record.data["colrev_data_provenance"][key]["source"].startswith(sf)
+                for sf in list(source_feeds.keys())
+            ):
+                del record.data["colrev_data_provenance"][key]
+        if key not in record.data["colrev_data_provenance"]:
+            for origin in record.data["colrev_origin"]:
+                origin_source, origin_id = origin.split("/")
+                if key in source_feeds[origin_source][origin_id]:
+                    record.add_data_provenance(key=key, source=origin, note="")
+        if key == "language":
+            record.add_data_provenance(key=key, source="LanguageDetector", note="")
+        if key == "tei_file":
+            record.add_data_provenance(key=key, source="file|grobid", note="")
+        if key == "colrev_pdf_id":
+            record.add_data_provenance(key=key, source="file|pdf_hash", note="")
+
+        if key not in record.data["colrev_data_provenance"]:
+            record.add_data_provenance(key=key, source="manual", note="")
+
+        for _, prov_details in record.data["colrev_data_provenance"].items():
+            if prov_details["source"] in record.data["colrev_origin"] + ["manual"]:
+                continue
+            # Note : simple heuristic
+            prov_details["source"] = record.data["colrev_origin"][0]
+
+    def __add_missing_masterdata_provenance(
+        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+    ) -> None:
+        options = {}
+        for origin in record.data["colrev_origin"]:
+            origin_source, origin_id = origin.split("/")
+            if key in source_feeds[origin_source][origin_id]:
+                options[origin_source] = source_feeds[origin_source][origin_id][key]
+
+        source_value = "manual"
+
+        # Note : simple heuristics:
+        if value in options.values():
+            if "md_curated.bib" in options:
+                source_origin = "md_curated.bib"
+            elif "md_crossref.bib" in options:
+                source_origin = "md_crossref.bib"
+            elif "CROSSREF.bib" in options:
+                source_origin = "CROSSREF.bib"
+            elif "md_dblp.bib" in options:
+                source_origin = "md_dblp.bib"
+            elif "DBLP.bib" in options:
+                source_origin = "DBLP.bib"
+            else:
+                source_origin = [k for k, v in options.items() if v == value][0]
+
+            for origin in record.data["colrev_origin"]:
+                origin_source, origin_id = origin.split("/")
+                if source_origin == origin_source:
+                    source_value = origin
+
+        record.add_masterdata_provenance(key=key, source=source_value, note="")
+
+    def __set_non_curated_masterdata_provenance_field(
+        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+    ) -> None:
+        if key in record.data["colrev_masterdata_provenance"]:
+            if not any(
+                record.data["colrev_masterdata_provenance"][key]["source"].startswith(
+                    sf
+                )
+                for sf in list(source_feeds.keys())
+            ):
+                del record.data["colrev_masterdata_provenance"][key]
+        if key not in record.data["colrev_masterdata_provenance"]:
+            self.__add_missing_masterdata_provenance(
+                record=record, key=key, value=value, source_feeds=source_feeds
+            )
+
+        for prov_details in record.data["colrev_masterdata_provenance"].values():
+            if prov_details["source"] in record.data["colrev_origin"] + ["manual"]:
+                continue
+            # Note : simple heuristic
+            prov_details["source"] = record.data["colrev_origin"][0]
+
+    def __set_provenance_field(
+        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+    ) -> None:
+        if key in colrev.record.Record.identifying_field_keys:
+            if "CURATED" in record.data["colrev_masterdata_provenance"]:
+                return
+            self.__set_non_curated_masterdata_provenance_field(
+                record=record, key=key, value=value, source_feeds=source_feeds
+            )
+
+        else:
+            self.__set_data_provenance_field(
+                record=record, key=key, source_feeds=source_feeds
+            )
+
+    def __set_provenance(
+        self, *, record: colrev.record.Record, source_feeds: dict
+    ) -> None:
+        if "colrev_data_provenance" not in record.data:
+            record.data["colrev_data_provenance"] = {}
+        if "colrev_masterdata_provenance" not in record.data:
+            record.data["colrev_masterdata_provenance"] = {}
+
+        for key, value in record.data.items():
+            if key in [
+                "colrev_status",
+                "colrev_origin",
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_pdfid",
+                "colrev_pdf_id",
+                "colrev_id",
+                "ID",
+                "ENTRYTYPE",
+                "screening_criteria",
+            ]:
+                continue
+            self.__set_provenance_field(
+                record=record, key=key, value=value, source_feeds=source_feeds
+            )
+
+    def __fix_provenance(self, *, records: dict) -> None:
+        source_feeds = self.__get_source_feeds()
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
-            if "colrev_data_provenance" not in record.data:
-                record.data["colrev_data_provenance"] = {}
-            if "colrev_masterdata_provenance" not in record.data:
-                record.data["colrev_masterdata_provenance"] = {}
-            if "pdf_hash" in record.data:
-                record.data["colrev_pdf_id"] = record.data["pdf_hash"]
-                del record.data["pdf_hash"]
-            if "pdf_prep_hints" in record.data:
-                del record.data["pdf_prep_hints"]
-            if "grobid-version" in record.data:
-                del record.data["grobid-version"]
-
-            mk_to_remove = []
-            for key in record.data["colrev_data_provenance"]:
-                if key not in record.data:
-                    mk_to_remove += [key]
-            for key in mk_to_remove:
-                del record.data["colrev_data_provenance"][key]
-
-            mdk_to_remove = []
-            for key in record.data["colrev_masterdata_provenance"]:
-                if (
-                    key not in record.data
-                    and "CURATED" != key
-                    and "not_missing"
-                    not in record.data["colrev_masterdata_provenance"][key]["note"]
-                ):
-                    mdk_to_remove += [key]
-            for key in mdk_to_remove:
-                del record.data["colrev_masterdata_provenance"][key]
-
-            if self.review_manager.settings.is_curated_masterdata_repo():
-                if "CURATED" in record.data["colrev_masterdata_provenance"]:
-                    del record.data["colrev_masterdata_provenance"]["CURATED"]
-
-            for key, value in record.data.items():
-                if key in [
-                    "colrev_status",
-                    "colrev_origin",
-                    "colrev_masterdata_provenance",
-                    "colrev_data_provenance",
-                    "colrev_pdfid",
-                    "colrev_pdf_id",
-                    "colrev_id",
-                    "ID",
-                    "ENTRYTYPE",
-                    "screening_criteria",
-                ]:
-                    continue
-                if key in colrev.record.Record.identifying_field_keys:
-                    if "CURATED" not in record.data["colrev_masterdata_provenance"]:
-                        if key in record.data["colrev_masterdata_provenance"]:
-                            if not any(
-                                record.data["colrev_masterdata_provenance"][key][
-                                    "source"
-                                ].startswith(sf)
-                                for sf in list(source_feeds.keys())
-                            ):
-                                del record.data["colrev_masterdata_provenance"][key]
-                        if key not in record.data["colrev_masterdata_provenance"]:
-                            options = {}
-                            for origin in record.data["colrev_origin"]:
-                                origin_source, origin_id = origin.split("/")
-                                if key in source_feeds[origin_source][origin_id]:
-                                    options[origin_source] = source_feeds[
-                                        origin_source
-                                    ][origin_id][key]
-
-                            source_value = "manual"
-
-                            # Note : simple heuristics:
-                            if value in options.values():
-                                if "md_curated.bib" in options:
-                                    source_origin = "md_curated.bib"
-                                elif "md_crossref.bib" in options:
-                                    source_origin = "md_crossref.bib"
-                                elif "CROSSREF.bib" in options:
-                                    source_origin = "CROSSREF.bib"
-                                elif "md_dblp.bib" in options:
-                                    source_origin = "md_dblp.bib"
-                                elif "DBLP.bib" in options:
-                                    source_origin = "DBLP.bib"
-                                else:
-                                    source_origin = [
-                                        k for k, v in options.items() if v == value
-                                    ][0]
-
-                                for origin in record.data["colrev_origin"]:
-                                    origin_source, origin_id = origin.split("/")
-                                    if source_origin == origin_source:
-                                        source_value = origin
-
-                            record.add_masterdata_provenance(
-                                key=key, source=source_value, note=""
-                            )
-
-                        if key not in record.data["colrev_masterdata_provenance"]:
-                            record.add_masterdata_provenance(
-                                key=key, source="manual", note=""
-                            )
-
-                        for _, prov_details in record.data[
-                            "colrev_masterdata_provenance"
-                        ].items():
-                            if prov_details["source"] in record.data[
-                                "colrev_origin"
-                            ] + ["manual"]:
-                                continue
-                            # Note : simple heuristic
-                            prov_details["source"] = record.data["colrev_origin"][0]
-
-                else:
-                    if key in record.data["colrev_data_provenance"]:
-                        if not any(
-                            record.data["colrev_data_provenance"][key][
-                                "source"
-                            ].startswith(sf)
-                            for sf in list(source_feeds.keys())
-                        ):
-                            del record.data["colrev_data_provenance"][key]
-                    if key not in record.data["colrev_data_provenance"]:
-                        for origin in record.data["colrev_origin"]:
-                            origin_source, origin_id = origin.split("/")
-                            if key in source_feeds[origin_source][origin_id]:
-                                record.add_data_provenance(
-                                    key=key, source=origin, note=""
-                                )
-                    if "language" == key:
-                        record.add_data_provenance(
-                            key=key, source="LanguageDetector", note=""
-                        )
-                    if "tei_file" == key:
-                        record.add_data_provenance(
-                            key=key, source="file|grobid", note=""
-                        )
-                    if "colrev_pdf_id" == key:
-                        record.add_data_provenance(
-                            key=key, source="file|pdf_hash", note=""
-                        )
-
-                    if key not in record.data["colrev_data_provenance"]:
-                        record.add_data_provenance(key=key, source="manual", note="")
-
-                    for _, prov_details in record.data[
-                        "colrev_data_provenance"
-                    ].items():
-                        if prov_details["source"] in record.data["colrev_origin"] + [
-                            "manual"
-                        ]:
-                            continue
-                        # Note : simple heuristic
-                        prov_details["source"] = record.data["colrev_origin"][0]
+            self.__remove_fields(record=record)
+            self.__set_provenance(record=record, source_feeds=source_feeds)
 
     def __fix_curated_sources(self, *, records: dict) -> None:
         local_index = self.review_manager.get_local_index()
@@ -334,10 +344,6 @@ class Repare(colrev.operation.Operation):
 
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
-
-        # pylint: disable=too-many-nested-blocks
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
 
         # Try: open settings, except: notify & start repare
 

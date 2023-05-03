@@ -1,0 +1,25 @@
+Review (literature_review):
+Search
+ - retrieve_forthcoming: True
+Sources
+colrev.pdfs_dir (type: PDFS, filename: data/search/pdfs.bib)
+   search parameters:   {'scope': {'path': 'data/pdfs'}}
+Load
+ - TODO
+Preparation
+ - prep_rounds:
+   - prep (colrev.resolve_crossrefs,colrev.source_specific_prep,colrev.exclude_non_latin_alphabets,...)
+ - fields_to_keep: []
+Dedupe
+ - same_source_merges: SameSourceMergePolicy.prevent
+ - colrev.active_learning_training,colrev.active_learning_automated
+Prescreen
+Prescreen package endoints: colrev.scope_prescreen,colrev.colrev_cli_prescreen
+PDF get
+ - pdf_path_type: PDFPathType.symlink - colrev.local_index,colrev.unpaywall,colrev.website_screenshot
+PDF prep
+ - colrev.pdf_check_ocr,colrev.remove_coverpage,colrev.remove_last_page,colrev.validate_pdf_metadata,colrev.validate_completeness,colrev.create_tei
+Screen
+ -
+Data
+ - 

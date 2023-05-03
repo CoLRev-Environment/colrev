@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -120,7 +119,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
 
         return validation_info
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -145,9 +143,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
             pdf_path = pdf_prep_operation.review_manager.path / Path(
                 record.data["file"]
             )
-            current_cpid = record.get_colrev_pdf_id(
-                review_manager=pdf_prep_operation.review_manager, pdf_path=pdf_path
-            )
+            current_cpid = record.get_colrev_pdf_id(pdf_path=pdf_path)
 
             if "colrev_pdf_id" in retrieved_record:
                 if retrieved_record["colrev_pdf_id"] == str(current_cpid):

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 import os
-import subprocess
+import subprocess  # nosec
 import sys
 import time
 import typing
+import webbrowser
 from pathlib import Path
 
 import click
@@ -29,7 +30,7 @@ import colrev.ui_cli.cli_validation
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
-EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])
+EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -159,7 +160,6 @@ def init(
     """Initialize (define review objectives and type)"""
     # pylint: disable=import-outside-toplevel
     import colrev.ops.init
-    import colrev.ui_web.settings_editor
 
     try:
         colrev.review_manager.get_init_operation(
@@ -1096,15 +1096,9 @@ def pdfs(
             # pylint: disable=import-outside-toplevel
             # pylint: disable=consider-using-with
             # pylint: disable=no-member
-            import platform
 
             path = review_manager.path / Path("data/pdfs")
-            if platform.system() == "Windows":
-                os.startfile(path)  # type: ignore
-            elif platform.system() == "Darwin":
-                subprocess.Popen(["open", path])
-            else:
-                subprocess.Popen(["xdg-open", path])
+            webbrowser.open(str(path))
             return
 
         if discard:
@@ -1324,42 +1318,41 @@ def __extract_coverpage(*, cover: Path) -> None:
     )
 
 
-def __print_pdf_hashes(
-    *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, pdf_hash: Path
-) -> None:
+def __print_pdf_hashes(*, pdf_path: Path) -> None:
     # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
+    import colrev.qm.colrev_pdf_id
 
-    assert Path(pdf_hash).suffix == ".pdf"
+    try:
+        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
+    except ValueError:
+        print("Could not read PDF")
+        return
 
-    pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
+    assert Path(pdf_path).suffix == ".pdf"
 
-    first_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=1,
         hash_size=16,
     )
     print(f"first page: {first_page_average_hash_16}")
-    first_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    first_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=1,
         hash_size=32,
     )
     print(f"first page: {first_page_average_hash_32}")
 
-    try:
-        pdf_reader = PdfFileReader(str(pdf_hash), strict=False)
-    except ValueError:
-        return
     last_page_nr = len(pdf_reader.pages)
-    last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=last_page_nr,
         hash_size=16,
     )
     print(f"last page: {last_page_average_hash_16}")
-    last_page_average_hash_32 = pdf_hash_service.get_pdf_hash(
-        pdf_path=Path(pdf_hash),
+    last_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
+        pdf_path=Path(pdf_path),
         page_nr=last_page_nr,
         hash_size=32,
     )
@@ -1448,7 +1441,7 @@ def pdf_prep(
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
         if pdf_hash:
-            __print_pdf_hashes(pdf_prep_operation=pdf_prep_operation, pdf_hash=pdf_hash)
+            __print_pdf_hashes(pdf_path=pdf_hash)
 
         elif update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
@@ -1487,7 +1480,7 @@ def __delete_first_pages_cli(
                 )
             else:
                 print("no file in record")
-        if "n" == input("Extract coverpage from another PDF? (y/n)"):
+        if input("Extract coverpage from another PDF? (y/n)") == "n":
             break
         record_id = input("ID of next PDF for coverpage extraction:")
 
@@ -1669,7 +1662,7 @@ def data(
                 )
         else:
             if ret["ask_to_commit"]:
-                if "y" == input("Create commit (y/n)?"):
+                if input("Create commit (y/n)?") == "y":
                     review_manager.create_commit(
                         msg="Data and synthesis", manual_author=True
                     )
@@ -1882,7 +1875,7 @@ def __print_environment_status(
 
     print("\nCoLRev environment status\n")
     print("Index\n")
-    if "up" == environment_details["index"]["status"]:
+    if environment_details["index"]["status"] == "up":
         print(f" - Status: {colors.GREEN}up{colors.END}")
         print(f' - Path          : {environment_details["index"]["path"]}')
         print(f' - Size          : {environment_details["index"]["size"]} records')
@@ -2128,9 +2121,9 @@ def settings(
     # pylint: disable=reimported
     # pylint: disable=too-many-locals
 
-    from subprocess import check_call
-    from subprocess import DEVNULL
-    from subprocess import STDOUT
+    from subprocess import check_call  # nosec
+    from subprocess import DEVNULL  # nosec
+    from subprocess import STDOUT  # nosec
     import json
     import ast
     import glom
@@ -2155,7 +2148,7 @@ def settings(
             ],
         ]
         for script_to_call in scripts_to_call:
-            check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
+            check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
         review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
         review_manager.create_commit(msg="Update pre-commit hooks")
@@ -2187,15 +2180,15 @@ def settings(
         review_manager.create_commit(msg="Change settings", manual_author=True)
         return
 
-    import colrev.ui_web.settings_editor
+    # import colrev_ui.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
-    )
-    settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
-        review_manager=review_manager
-    )
-    settings_operation.open_settings_editor()
+    # review_manager = colrev.review_manager.ReviewManager(
+    #     force_mode=True, verbose_mode=verbose
+    # )
+    # settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
+    #     review_manager=review_manager
+    # )
+    # settings_operation.open_settings_editor()
 
 
 @main.command(help_priority=22)
@@ -2243,10 +2236,10 @@ def sync(
                 print(f"2: {v_2}")
                 print("      " + val[1].data.get("source_url", ""))
                 user_selection = input("Import version 1 or 2 (or skip)?")
-                if "1" == user_selection:
+                if user_selection == "1":
                     sync_operation.add_to_records_to_import(record=val[0])
                     continue
-                if "2" == user_selection:
+                if user_selection == "2":
                     sync_operation.add_to_records_to_import(record=val[1])
                     continue
 
@@ -2417,7 +2410,7 @@ def service(
         print("\nPressed ctrl-c. Shutting down service")
 
     if review_manager.dataset.has_changes():
-        if "y" == input("Commit current changes (y/n)?"):
+        if input("Commit current changes (y/n)?") == "y":
             review_manager.create_commit(msg="Update (using CoLRev service)")
     else:
         print("No changes to commit")
@@ -2459,7 +2452,7 @@ def show(  # type: ignore
     import colrev.operation
     import colrev.ui_cli.show_printer
 
-    if "venv" == keyword:
+    if keyword == "venv":
         colrev.ui_cli.show_printer.print_venv_notes()
         return
 
@@ -2467,18 +2460,18 @@ def show(  # type: ignore
         force_mode=force, verbose_mode=verbose
     )
 
-    if "sample" == keyword:
+    if keyword == "sample":
         colrev.ui_cli.show_printer.print_sample(review_manager=review_manager)
 
-    elif "settings" == keyword:
+    elif keyword == "settings":
         print(f"Settings:\n{review_manager.settings}")
 
-    elif "prisma" == keyword:
+    elif keyword == "prisma":
         status_operation = review_manager.get_status_operation()
         stats_report = status_operation.get_review_status_report()
         print(stats_report)
 
-    elif "cmd_history" == keyword:
+    elif keyword == "cmd_history":
         cmds = []
         colrev.operation.CheckOperation(review_manager=review_manager)
         revlist = review_manager.dataset.get_repo().iter_commits()
@@ -2522,39 +2515,39 @@ def show(  # type: ignore
             )
 
 
-@main.command(help_priority=28)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
-@click.pass_context
-def web(
-    ctx: click.core.Context,
-    verbose: bool,
-    force: bool,
-) -> None:
-    """CoLRev web interface."""
+# @main.command(help_priority=28)
+# @click.option(
+#     "-v",
+#     "--verbose",
+#     is_flag=True,
+#     default=False,
+#     help="Verbose: printing more infos",
+# )
+# @click.option(
+#     "-f",
+#     "--force",
+#     is_flag=True,
+#     default=False,
+#     help="Force mode",
+# )
+# @click.pass_context
+# def web(
+#     ctx: click.core.Context,
+#     verbose: bool,
+#     force: bool,
+# ) -> None:
+#     """CoLRev web interface."""
 
-    # pylint: disable=import-outside-toplevel
-    import colrev.ui_web.settings_editor
+#     # pylint: disable=import-outside-toplevel
+#     import colrev.ui_web.settings_editor
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
-    )
-    se_instance = colrev.ui_web.settings_editor.SettingsEditor(
-        review_manager=review_manager
-    )
-    se_instance.open_settings_editor()
+#     review_manager = colrev.review_manager.ReviewManager(
+#         force_mode=force, verbose_mode=verbose
+#     )
+#     se_instance = colrev.ui_web.settings_editor.SettingsEditor(
+#         review_manager=review_manager
+#     )
+#     se_instance.open_settings_editor()
 
 
 @main.command(hidden=True, help_priority=29)
@@ -2688,21 +2681,14 @@ def remove(
     help="Force mode",
 )
 @click.pass_context
-def man(
+def docs(
     ctx: click.core.Context,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Show the CoLRev manual."""
+    """Show the CoLRev documentation."""
 
-    # pylint: disable=import-outside-toplevel
-    import webbrowser
-
-    webbrowser.open(
-        str(Path(colrev.__file__).resolve()).replace(
-            "colrev/__init__.py", "docs/build/html/index.html"
-        )
-    )
+    webbrowser.open("https://colrev.readthedocs.io/en/latest/")
 
 
 @main.command(help_priority=33)
@@ -2777,7 +2763,7 @@ def undo(
         force_mode=force, verbose_mode=verbose
     )
 
-    if "commit" == selection:
+    if selection == "commit":
         colrev.operation.CheckOperation(review_manager=review_manager)
         git_repo = review_manager.dataset.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")
@@ -2835,7 +2821,7 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         if case_insensitive
         else {}
     )
-    shell, path = click_completion.core.install(
+    shell, path = click_completion.core.install(  # nosec
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")

@@ -41,7 +41,7 @@ class CustomPDFPrep:
     ) -> colrev.record.Record:
         """Prepare the PDF"""
 
-        if random.random() < 0.8:
+        if random.random() < 0.8:  # nosec
             record.add_data_provenance_note(key="file", note="custom_issue_detected")
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation

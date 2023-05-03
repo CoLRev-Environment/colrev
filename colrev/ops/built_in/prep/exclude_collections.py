@@ -47,7 +47,7 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare records by excluding collections (proceedings)"""
 
-        if "proceedings" == record.data["ENTRYTYPE"].lower():
+        if record.data["ENTRYTYPE"].lower() == "proceedings":
             record.prescreen_exclude(reason="collection/proceedings")
 
         return record

@@ -29,7 +29,7 @@ The outcomes of the last step can involve various elements, such as:
 The available data endpoints, which can be registered in the ``settings.json``, are provided in the data operation page.
 Advice on the active data endpoints is provided through ``colrev status``.
 
-Data endpoints also signal the completed records to ``colrev status`` (or ``corlev data``), which update the status in the main records.bib accordingly.
+Data endpoints also signal the completed records to ``colrev status`` (or ``colrev data``), which update the status in the main records.bib accordingly.
 The status of a record is only set to ``rev_synthesized`` when all data endpoints signal completion.
 This allows users to efficiently keep track of the records' status and it informs the completion condition, which is displayed in the colrev status and reports (displayed in each commit).
 

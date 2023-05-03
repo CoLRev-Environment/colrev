@@ -120,48 +120,51 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
 
-        for record in records.values():
-            if "item_title" in record:
-                record["title"] = record["item_title"]
-                del record["item_title"]
+        for record_dict in records.values():
+            if "item_title" in record_dict:
+                record_dict["title"] = record_dict["item_title"]
+                del record_dict["item_title"]
 
-            if "content_type" in record:
-                if "Article" == record["content_type"]:
-                    if "publication_title" in record:
-                        record["journal"] = record["publication_title"]
-                        del record["publication_title"]
+            if "content_type" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                if record_dict["content_type"] == "Article":
+                    if "publication_title" in record_dict:
+                        record_dict["journal"] = record_dict["publication_title"]
+                        del record_dict["publication_title"]
                     record.change_entrytype(new_entrytype="article")
 
-                if "Book" == record["content_type"]:
-                    if "publication_title" in record:
-                        record["series"] = record["publication_title"]
-                        del record["publication_title"]
+                if record_dict["content_type"] == "Book":
+                    if "publication_title" in record_dict:
+                        record_dict["series"] = record_dict["publication_title"]
+                        del record_dict["publication_title"]
                     record.change_entrytype(new_entrytype="book")
 
-                if "Chapter" == record["content_type"]:
-                    record["chapter"] = record["title"]
-                    if "publication_title" in record:
-                        record["title"] = record["publication_title"]
-                        del record["publication_title"]
+                if record_dict["content_type"] == "Chapter":
+                    record_dict["chapter"] = record_dict["title"]
+                    if "publication_title" in record_dict:
+                        record_dict["title"] = record_dict["publication_title"]
+                        del record_dict["publication_title"]
                     record.change_entrytype(new_entrytype="inbook")
 
-                del record["content_type"]
+                del record_dict["content_type"]
 
-            if "item_doi" in record:
-                record["doi"] = record["item_doi"]
-                del record["item_doi"]
-            if "journal_volume" in record:
-                record["volume"] = record["journal_volume"]
-                del record["journal_volume"]
-            if "journal_issue" in record:
-                record["number"] = record["journal_issue"]
-                del record["journal_issue"]
+            if "item_doi" in record_dict:
+                record_dict["doi"] = record_dict["item_doi"]
+                del record_dict["item_doi"]
+            if "journal_volume" in record_dict:
+                record_dict["volume"] = record_dict["journal_volume"]
+                del record_dict["journal_volume"]
+            if "journal_issue" in record_dict:
+                record_dict["number"] = record_dict["journal_issue"]
+                del record_dict["journal_issue"]
 
             # Fix authors
-            if "author" in record:
+            if "author" in record_dict:
                 # a-bd-z: do not match McDonald
-                record["author"] = re.sub(
-                    r"([a-bd-z]{1})([A-Z]{1})", r"\g<1> and \g<2>", record["author"]
+                record_dict["author"] = re.sub(
+                    r"([a-bd-z]{1})([A-Z]{1})",
+                    r"\g<1> and \g<2>",
+                    record_dict["author"],
                 )
 
         return records

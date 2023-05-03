@@ -60,7 +60,7 @@ class BibutilsLoader(JsonSchemaMixin):
         """Load records from the source"""
 
         def bibutils_convert(script: str, data: str) -> str:
-            if "xml2bib" == script:
+            if script == "xml2bib":
                 script = script + " -b -w -sk "
             else:
                 script = script + " -i unicode "

@@ -170,7 +170,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        nr_changed = 0
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
             feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -207,11 +206,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # Note : changed refers to the data/records.bib.
             # Records that are not yet imported do not count.
             if changed:
-                nr_changed += 1
+                local_index_feed.nr_changed += 1
 
-        if nr_changed > 0:
+        if local_index_feed.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {nr_changed} "
+                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
                 f"records based on LocalIndex{colors.END}"
             )
         else:
@@ -234,8 +233,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        nr_retrieved, nr_changed = 0, 0
-
         for retrieved_record_dict in self.__retrieve_from_index():
             try:
                 local_index_feed.set_id(record_dict=retrieved_record_dict)
@@ -252,7 +249,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
             if added:
-                nr_retrieved += 1
+                local_index_feed.nr_added += 1
 
             else:
                 changed = search_operation.update_existing_record(
@@ -263,18 +260,18 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     update_time_variant_fields=rerun,
                 )
                 if changed:
-                    nr_changed += 1
+                    local_index_feed.nr_changed += 1
 
         local_index_feed.save_feed_file()
 
-        if nr_retrieved > 0:
+        if local_index_feed.nr_added > 0:
             search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {nr_retrieved} records {colors.END}"
+                f"{colors.GREEN}Retrieved {local_index_feed.nr_added} records {colors.END}"
             )
 
-        if nr_changed > 0:
+        if local_index_feed.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {nr_changed} "
+                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
                 f"records based on LocalIndex{colors.END}"
             )
         else:
@@ -355,12 +352,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # Note : to avoid modifying the feed-records
         records = deepcopy(records)
 
-        for record in records.values():
-            curation_url = record["curation_ID"].split("#")[0]
-            record["colrev_masterdata_provenance"] = {
+        for record_dict in records.values():
+            curation_url = record_dict["curation_ID"].split("#")[0]
+            record_dict["colrev_masterdata_provenance"] = {
                 "CURATED": {"source": curation_url, "note": ""}
             }
-            record["colrev_status"] = colrev.record.RecordState.md_prepared
+            record = colrev.record.Record(data=record_dict)
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
             del curation_url
 
         return records
@@ -372,43 +370,47 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def get_masterdata(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        save_feed: bool = True,
-        timeout: int = 10,
-    ) -> colrev.record.Record:
-        """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-return-statements
-
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
-            # Already linked to a local-index record
-            return record
-
-        retrieved_record_dict = {}
-        added_colrev_pdf_id = False
+    def __add_cpid(self, *, record: colrev.record.Record) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
         if "file" in record.data and "colrev_pdf_id" not in record.data:
-            pdf_path = Path(
-                prep_operation.review_manager.path / Path(record.data["file"])
-            )
+            pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
             if pdf_path.is_file():
                 try:
                     record.data.update(
                         colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
-                            review_manager=prep_operation.review_manager,
                             pdf_path=pdf_path,
                         )
                     )
-                    added_colrev_pdf_id = True
+                    return True
                 except colrev_exceptions.PDFHashError:
                     pass
+        return False
 
+    def __set_not_in_toc_info(
+        self, *, record: colrev.record.Record, toc_key: str
+    ) -> None:
+        record.set_status(
+            target_state=colrev.record.RecordState.md_needs_manual_preparation
+        )
+        if "journal" in record.data:
+            record.add_masterdata_provenance_note(
+                key="journal", note=f"record_not_in_toc {toc_key}"
+            )
+        elif "booktitle" in record.data:
+            record.add_masterdata_provenance_note(
+                key="booktitle", note=f"record_not_in_toc {toc_key}"
+            )
+
+    def __retrieve_record_from_local_index(
+        self,
+        *,
+        record: colrev.record.Record,
+        retrieval_similarity: float,
+    ) -> colrev.record.Record:
+        # add colrev_pdf_id
+        added_colrev_pdf_id = self.__add_cpid(record=record)
+
+        retrieved_record_dict = {}
         try:
             retrieved_record_dict = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
@@ -421,21 +423,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 # Search within the table-of-content in local_index
                 retrieved_record_dict = self.local_index.retrieve_from_toc(
                     record_dict=record.data,
-                    similarity_threshold=prep_operation.retrieval_similarity,
+                    similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
             except colrev_exceptions.RecordNotInTOCException as exc:
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                if "journal" in record.data:
-                    record.add_masterdata_provenance_note(
-                        key="journal", note=f"record_not_in_toc {exc.toc_key}"
-                    )
-                elif "booktitle" in record.data:
-                    record.add_masterdata_provenance_note(
-                        key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
-                    )
+                self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
                 return record
 
             except colrev_exceptions.RecordNotInIndexException:
@@ -443,22 +435,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     # Search across table-of-contents in local_index
                     retrieved_record_dict = self.local_index.retrieve_from_toc(
                         record_dict=record.data,
-                        similarity_threshold=prep_operation.retrieval_similarity,
+                        similarity_threshold=retrieval_similarity,
                         include_file=False,
                         search_across_tocs=True,
                     )
                 except colrev_exceptions.RecordNotInTOCException as exc:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_needs_manual_preparation
-                    )
-                    if "journal" in record.data:
-                        record.add_masterdata_provenance_note(
-                            key="journal", note=f"record_not_in_toc {exc.toc_key}"
-                        )
-                    elif "booktitle" in record.data:
-                        record.add_masterdata_provenance_note(
-                            key="booktitle", note=f"record_not_in_toc {exc.toc_key}"
-                        )
+                    self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
                     return record
                 except (colrev_exceptions.RecordNotInIndexException,):
                     return record
@@ -468,9 +450,85 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if added_colrev_pdf_id:
                 del record.data["colrev_pdf_id"]
 
-        retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
-        if "colrev_status" in retrieved_record.data:
-            del retrieved_record.data["colrev_status"]
+        if "colrev_status" in retrieved_record_dict:
+            del retrieved_record_dict["colrev_status"]
+
+        return colrev.record.PrepRecord(data=retrieved_record_dict)
+
+    def __store_retrieved_record_in_feed(
+        self,
+        *,
+        record: colrev.record.Record,
+        retrieved_record: colrev.record.Record,
+        default_source: str,
+        prep_operation: colrev.ops.prep.Prep,
+    ) -> None:
+        try:
+            # lock: to prevent different records from having the same origin
+            self.local_index_lock.acquire(timeout=60)
+
+            # Note : need to reload file because the object is not shared between processes
+            local_index_feed = self.search_source.get_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=False,
+            )
+
+            local_index_feed.set_id(record_dict=retrieved_record.data)
+            local_index_feed.add_record(record=retrieved_record)
+
+            retrieved_record.remove_field(key="curation_ID")
+            record.merge(
+                merging_record=retrieved_record,
+                default_source=default_source,
+            )
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            if record.data.get("prescreen_exclusion", "NA") == "retracted":
+                record.prescreen_exclude(reason="retracted")
+
+            git_repo = self.review_manager.dataset.get_repo()
+            cur_project_source_paths = [str(self.review_manager.path)]
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+                    shared_url = shared_url.rstrip(".git")
+                    cur_project_source_paths.append(shared_url)
+                    break
+
+            try:
+                local_index_feed.save_feed_file()
+                # extend fields_to_keep (to retrieve all fields from the index)
+                for key in record.data.keys():
+                    if key not in prep_operation.fields_to_keep:
+                        prep_operation.fields_to_keep.append(key)
+
+            except OSError:
+                pass
+
+        except (colrev_exceptions.InvalidMerge,):
+            print("invalid-merge")
+        except colrev_exceptions.NotFeedIdentifiableException:
+            print("not-feed-identifiable")
+        finally:
+            self.local_index_lock.release()
+
+    def get_masterdata(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
+
+        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+            # Already linked to a local-index record
+            return record
+
+        retrieved_record = self.__retrieve_record_from_local_index(
+            record=record,
+            retrieval_similarity=prep_operation.retrieval_similarity,
+        )
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
@@ -486,55 +544,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     "CURATED"
                 ]["source"]
 
-        try:
-            # lock: to prevent different records from having the same origin
-            self.local_index_lock.acquire(timeout=60)
-
-            # Note : need to reload file because the object is not shared between processes
-            local_index_feed = self.search_source.get_feed(
-                review_manager=prep_operation.review_manager,
-                source_identifier=self.source_identifier,
-                update_only=False,
-            )
-
-            local_index_feed.set_id(record_dict=retrieved_record.data)
-            local_index_feed.add_record(record=retrieved_record)
-
-            retrieved_record.remove_field(key="curation_ID")
-            record.merge(
-                merging_record=retrieved_record,
-                default_source=default_source,
-            )
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if "retracted" == retrieved_record.data.get("prescreen_exclusion", "NA"):
-                record.prescreen_exclude(reason="retracted")
-
-            git_repo = prep_operation.review_manager.dataset.get_repo()
-            cur_project_source_paths = [str(prep_operation.review_manager.path)]
-            for remote in git_repo.remotes:
-                if remote.url:
-                    shared_url = remote.url
-                    shared_url = shared_url.rstrip(".git")
-                    cur_project_source_paths.append(shared_url)
-                    break
-
-            try:
-                local_index_feed.save_feed_file()
-                # extend fields_to_keep (to retrieve all fields from the index)
-                for key in retrieved_record.data.keys():
-                    if key not in prep_operation.fields_to_keep:
-                        prep_operation.fields_to_keep.append(key)
-
-            except OSError:
-                pass
-
-            self.local_index_lock.release()
-
-        except (
-            colrev_exceptions.InvalidMerge,
-            colrev_exceptions.NotFeedIdentifiableException,
-        ):
-            self.local_index_lock.release()
+        self.__store_retrieved_record_in_feed(
+            record=record,
+            retrieved_record=retrieved_record,
+            default_source=default_source,
+            prep_operation=prep_operation,
+        )
 
         return record
 
@@ -562,13 +577,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         }
         return local_base_repos
 
-    def apply_correction(self, *, change_itemsets: list) -> None:
-        """Apply a correction by opening a pull request in the original repository"""
-
-        # pylint: disable=too-many-branches
-
-        local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
-
+    def __print_changes(self, *, local_base_repo: str, change_itemsets: list) -> list:
         def print_diff(change: tuple) -> str:
             diff = difflib.Differ()
             letters = list(diff.compare(change[1], change[0]))
@@ -582,59 +591,67 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             res = "".join(letters).replace("\n", " ")
             return res
 
+        selected_changes = []
+        print()
+        self.review_manager.logger.info(f"Base repository: {local_base_repo}")
+        for item in change_itemsets:
+            repo_path = "NA"
+            if "CURATED" in item["original_record"].get(
+                "colrev_masterdata_provenance", {}
+            ):
+                repo_path = item["original_record"]["colrev_masterdata_provenance"][
+                    "CURATED"
+                ]["source"]
+                assert "#" not in repo_path
+                # otherwise: strip the ID at the end if we add an ID...
+
+            if repo_path != local_base_repo:
+                continue
+
+            # self.review_manager.p_printer.pprint(item["original_record"])
+            colrev.record.Record(data=item["original_record"]).print_citation_format()
+            for change_item in item["changes"]:
+                if change_item[0] == "change":
+                    edit_type, field, values = change_item
+                    if field == "colrev_id":
+                        continue
+                    prefix = f"{edit_type} {field}"
+                    print(
+                        f"{prefix}"
+                        + " " * max(len(prefix), 30 - len(prefix))
+                        + f": {values[0]}"
+                    )
+                    print(
+                        " " * max(len(prefix), 30)
+                        + f"  {colors.ORANGE}{values[1]}{colors.END}"
+                    )
+                    print(
+                        " " * max(len(prefix), 30)
+                        + f"  {print_diff((values[0], values[1]))}"
+                    )
+
+                elif change_item[0] == "add":
+                    edit_type, field, values = change_item
+                    prefix = f"{edit_type} {values[0][0]}"
+                    print(
+                        prefix
+                        + " " * max(len(prefix), 30 - len(prefix))
+                        + f": {colors.GREEN}{values[0][1]}{colors.END}"
+                    )
+                else:
+                    self.review_manager.p_printer.pprint(change_item)
+            selected_changes.append(item)
+        return selected_changes
+
+    def apply_correction(self, *, change_itemsets: list) -> None:
+        """Apply a correction by opening a pull request in the original repository"""
+
+        local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
+
         for local_base_repo in local_base_repos:
-            validated_changes = []
-            print()
-            self.review_manager.logger.info(f"Base repository: {local_base_repo}")
-            for item in change_itemsets:
-                repo_path = "NA"
-                if "CURATED" in item["original_record"].get(
-                    "colrev_masterdata_provenance", {}
-                ):
-                    repo_path = item["original_record"]["colrev_masterdata_provenance"][
-                        "CURATED"
-                    ]["source"]
-                    assert "#" not in repo_path
-                    # otherwise: strip the ID at the end if we add an ID...
-
-                if repo_path != local_base_repo:
-                    continue
-
-                # self.review_manager.p_printer.pprint(item["original_record"])
-                colrev.record.Record(
-                    data=item["original_record"]
-                ).print_citation_format()
-                for change_item in item["changes"]:
-                    if "change" == change_item[0]:
-                        edit_type, field, values = change_item
-                        if "colrev_id" == field:
-                            continue
-                        prefix = f"{edit_type} {field}"
-                        print(
-                            f"{prefix}"
-                            + " " * max(len(prefix), 30 - len(prefix))
-                            + f": {values[0]}"
-                        )
-                        print(
-                            " " * max(len(prefix), 30)
-                            + f"  {colors.ORANGE}{values[1]}{colors.END}"
-                        )
-                        print(
-                            " " * max(len(prefix), 30)
-                            + f"  {print_diff((values[0], values[1]))}"
-                        )
-
-                    elif "add" == change_item[0]:
-                        edit_type, field, values = change_item
-                        prefix = f"{edit_type} {values[0][0]}"
-                        print(
-                            prefix
-                            + " " * max(len(prefix), 30 - len(prefix))
-                            + f": {colors.GREEN}{values[0][1]}{colors.END}"
-                        )
-                    else:
-                        self.review_manager.p_printer.pprint(change_item)
-                validated_changes.append(item)
+            selected_changes = self.__print_changes(
+                local_base_repo=local_base_repo, change_itemsets=change_itemsets
+            )
 
             response = ""
             while True:
@@ -642,15 +659,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if response in ["y", "n"]:
                     break
 
-            if "y" == response:
+            if response == "y":
                 self.__apply_correction(
-                    source_url=local_base_repos[repo_path],
-                    change_list=validated_changes,
+                    source_url=local_base_repo,
+                    change_list=selected_changes,
                 )
-            elif "n" == response:
-                if "y" == input("Discard all corrections (y/n)?"):
-                    for validated_change in validated_changes:
-                        Path(validated_change["file"]).unlink()
+            elif response == "n":
+                if input("Discard all corrections (y/n)?") == "y":
+                    for selected_change in selected_changes:
+                        Path(selected_change["file"]).unlink()
 
     def __apply_corrections_precondition(
         self, *, check_operation: colrev.operation.Operation, source_url: str

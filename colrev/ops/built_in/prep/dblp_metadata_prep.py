@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -48,17 +47,30 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             source_operation=prep_operation
         )
 
+        self.dblp_prefixes = [
+            s.get_origin_prefix()
+            for s in prep_operation.review_manager.settings.sources
+            if s.endpoint == "colrev.dblp"
+        ]
+
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
         """Check status (availability) of the Crossref API"""
         self.dblp_source.check_availability(source_operation=source_operation)
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
+
+        if any(
+            dblp_prefix in o
+            for dblp_prefix in self.dblp_prefixes
+            for o in record.data["colrev_origin"]
+        ):
+            # Already linked to a dblp record
+            return record
 
         self.dblp_source.get_masterdata(prep_operation=prep_operation, record=record)
 

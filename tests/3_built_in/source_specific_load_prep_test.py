@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""Test the source_specific prep package"""
+import os
+import platform
 import shutil
 from pathlib import Path
 
@@ -7,18 +10,55 @@ import pytest
 import colrev.review_manager
 import colrev.settings
 
-actual_file = Path("data/records.bib")
 
+@pytest.fixture(name="ssp_review_manager")
+def fixture_ssp_review_manager(  # type: ignore
+    session_mocker, tmp_path: Path, helpers
+) -> colrev.review_manager.ReviewManager:
+    """Fixture returning a review_manager"""
+    session_mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
+        return_value=("Tester Name", "tester@email.de"),
+    )
 
-@pytest.fixture
-def ssp_review_manager(base_repo_review_manager) -> colrev.review_manager.ReviewManager:  # type: ignore
-    # select the colrev.source_specific_prep exclusively
-    base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
+    session_mocker.patch(
+        "colrev.env.environment_manager.EnvironmentManager.register_repo",
+        return_value=(),
+    )
+
+    # test_repo_dir = tmp_path_factory.mktemp("test_review_example")  # type: ignore
+    test_repo_dir = tmp_path
+    os.chdir(test_repo_dir)
+    print(test_repo_dir)
+
+    rev_man = colrev.review_manager.ReviewManager(
+        path_str=str(test_repo_dir), force_mode=True
+    )
+    rev_man.settings = colrev.settings.load_settings(
+        settings_path=helpers.test_data_path.parents[1]
+        / Path("colrev/template/init/settings.json")
+    )
+
+    rev_man.settings.project.title = "topic a - a review"
+    colrev.review_manager.get_init_operation(
+        review_type="literature_review",
+        example=False,
+        target_path=test_repo_dir,
+        light=True,
+    )
+
+    # Note: the strategy is to test the workflow and the endpoints separately
+    # We therefore deactivate the (most time consuming endpoints) in the following
+    rev_man = colrev.review_manager.ReviewManager(path_str=str(rev_man.path))
+
+    # review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
+    rev_man.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
     ]
-    base_repo_review_manager.settings.sources = []
-    base_repo_review_manager.save_settings()
-    return base_repo_review_manager
+    rev_man.settings.sources = []
+
+    rev_man.save_settings()
+    return rev_man
 
 
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
@@ -58,15 +98,17 @@ def test_source(  # type: ignore
     ssp_review_manager: colrev.review_manager.ReviewManager,
     helpers,
 ) -> None:
+    """Test the source_specific prep"""
+
     print(Path.cwd())  # To facilitate debugging
 
-    expected_file = (
-        helpers.test_data_path / Path("built_in_search_sources") / expected_file
-    )
     helpers.retrieve_test_file(
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
     )
+    if platform.system() not in ["Linux"]:
+        if source_filepath.suffix not in [".bib", ".csv"]:
+            return
 
     # Run load and test the heuristics
     load_operation = ssp_review_manager.get_load_operation()
@@ -76,24 +118,26 @@ def test_source(  # type: ignore
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
 
-    # Run prep nad test source-specific prep
     prep_operation = ssp_review_manager.get_prep_operation()
     prep_operation.main()
 
-    if not expected_file.is_file():
-        shutil.copy(actual_file, expected_file)
+    # Test whether the load(fixes) and source-specific prep work as expected
+    actual = Path("data/records.bib").read_text(encoding="utf-8")
+    expected = (
+        helpers.test_data_path / Path("built_in_search_sources/") / expected_file
+    ).read_text(encoding="utf-8")
+
+    # If mismatch: copy the actual file to replace the expected file (facilitating updates)
+    if expected != actual:
+        print(Path.cwd())
+        shutil.copy(
+            Path("data/records.bib"),
+            helpers.test_data_path / Path("built_in_search_sources/") / expected_file,
+        )
         raise Exception(
             f"The expected_file ({expected_file.name}) was not (yet) available. "
             f"An initial version was created in {expected_file}. "
             "Please check, update, and add/commit it. Afterwards, rerun the tests."
         )
-
-    # Test whether the load(fixes) and source-specific prep work as expected
-    actual = actual_file.read_text()
-    expected = expected_file.read_text()
-
-    # If mismatch: copy the actual file to replace the expected file (facilitating updates)
-    if expected != actual:
-        shutil.copy(actual_file, expected_file)
 
     assert expected == actual

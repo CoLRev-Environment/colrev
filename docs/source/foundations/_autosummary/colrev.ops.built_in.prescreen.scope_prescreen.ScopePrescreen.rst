@@ -36,3 +36,4 @@ colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
    .. autosummary::
 
       ~ScopePrescreen.ci_supported
+      ~ScopePrescreen.settings

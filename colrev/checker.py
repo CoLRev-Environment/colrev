@@ -127,7 +127,7 @@ class Checker:
     def __get_installed_hooks(self) -> list:
         installed_hooks = []
         with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
-            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+            pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.SafeLoader)
         for repository in pre_commit_config["repos"]:
             installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
         return installed_hooks
@@ -311,7 +311,7 @@ class Checker:
 
                 elif str(colrev.record.RecordState.rev_excluded) == status:
                     if ["NA"] == criteria:
-                        if "NA" == screen_crit:
+                        if screen_crit == "NA":
                             continue
                         field_errors.append(f"screen_crit field not NA: {screen_crit}")
 
@@ -347,6 +347,50 @@ class Checker:
                 "\n    " + "\n    ".join(field_errors)
             )
 
+    def __check_change_in_propagated_id_in_file(
+        self,
+        *,
+        notifications: list,
+        root: str,
+        filename: str,
+        prior_id: str,
+        new_id: str,
+    ) -> None:
+        if prior_id == str(Path(filename).name):
+            msg = (
+                f"Old ID ({prior_id}, changed to {new_id} in the "
+                + f"RECORDS_FILE) found in filepath: {filename}"
+            )
+            if msg not in notifications:
+                notifications.append(msg)
+
+        # self.review_manager.logger.debug("Checking %s", name)
+        if filename.endswith(".bib"):
+            retrieved_ids = self.__retrieve_ids_from_bib(
+                file_path=Path(os.path.join(root, filename))
+            )
+            if prior_id in retrieved_ids:
+                msg = (
+                    f"Old ID ({prior_id}, changed to {new_id} in "
+                    + f"the RECORDS_FILE) found in file: {filename}"
+                )
+                if msg not in notifications:
+                    notifications.append(msg)
+        else:
+            with open(os.path.join(root, filename), encoding="utf8") as file:
+                line = file.readline()
+                while line:
+                    if filename.endswith(".bib") and "@" in line[:5]:
+                        line = file.readline()
+                    if prior_id in line:
+                        msg = (
+                            f"Old ID ({prior_id}, to {new_id} in "
+                            + f"the RECORDS_FILE) found in file: {filename}"
+                        )
+                        if msg not in notifications:
+                            notifications.append(msg)
+                    line = file.readline()
+
     def check_change_in_propagated_id(
         self, *, prior_id: str, new_id: str = "TBD", project_context: Path
     ) -> list:
@@ -356,7 +400,6 @@ class Checker:
         Propagated IDs should not be changed in the records.bib
         because this would break the link between the propagated ID and its metadata.
         """
-        # pylint: disable=too-many-branches
 
         ignore_patterns = [
             ".git",
@@ -366,55 +409,29 @@ class Checker:
         ]
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]
-        notifications = []
+        notifications: typing.List[str] = []
         for root, dirs, files in os.walk(project_context, topdown=False):
-            for name in files:
-                if any((x in name) or (x in root) for x in ignore_patterns):
-                    continue
-                if prior_id == str(Path(name).name):
-                    msg = (
-                        f"Old ID ({prior_id}, changed to {new_id} in the "
-                        + f"RECORDS_FILE) found in filepath: {name}"
-                    )
-                    if msg not in notifications:
-                        notifications.append(msg)
-
-                if not any(name.endswith(x) for x in text_formats):
+            for filename in files:
+                if any(
+                    (x in filename) or (x in root) for x in ignore_patterns
+                ) or not any(filename.endswith(x) for x in text_formats):
                     # self.review_manager.logger.debug("Skipping %s", name)
                     continue
-                # self.review_manager.logger.debug("Checking %s", name)
-                if name.endswith(".bib"):
-                    retrieved_ids = self.__retrieve_ids_from_bib(
-                        file_path=Path(os.path.join(root, name))
-                    )
-                    if prior_id in retrieved_ids:
-                        msg = (
-                            f"Old ID ({prior_id}, changed to {new_id} in "
-                            + f"the RECORDS_FILE) found in file: {name}"
-                        )
-                        if msg not in notifications:
-                            notifications.append(msg)
-                else:
-                    with open(os.path.join(root, name), encoding="utf8") as file:
-                        line = file.readline()
-                        while line:
-                            if name.endswith(".bib") and "@" in line[:5]:
-                                line = file.readline()
-                            if prior_id in line:
-                                msg = (
-                                    f"Old ID ({prior_id}, to {new_id} in "
-                                    + f"the RECORDS_FILE) found in file: {name}"
-                                )
-                                if msg not in notifications:
-                                    notifications.append(msg)
-                            line = file.readline()
-            for name in dirs:
-                if any((x in name) or (x in root) for x in ignore_patterns):
+                self.__check_change_in_propagated_id_in_file(
+                    notifications=notifications,
+                    root=root,
+                    filename=filename,
+                    prior_id=prior_id,
+                    new_id=new_id,
+                )
+
+            for dir_name in dirs:
+                if any((x in dir_name) or (x in root) for x in ignore_patterns):
                     continue
-                if prior_id in name:
+                if prior_id in dir_name:
                     notifications.append(
                         f"Old ID ({prior_id}, changed to {new_id} in the "
-                        f"RECORDS_FILE) found in filepath: {name}"
+                        f"RECORDS_FILE) found in filepath: {dir_name}"
                     )
         return notifications
 

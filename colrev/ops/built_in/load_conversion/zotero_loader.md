@@ -1,4 +1,4 @@
-# LoadConversion: Enter LoadConversion
+# LoadConversion: Zotero import translators
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -6,3 +6,5 @@ Note: This document is currently under development. It will contain the followin
 - example
 
 ## Links
+
+- [List of bibliographic formats supported by Zotero translators](https://www.zotero.org/support/kb/importing_standardized_formats)

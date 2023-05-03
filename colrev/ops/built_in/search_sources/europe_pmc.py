@@ -4,19 +4,22 @@ from __future__ import annotations
 
 import json
 import typing
-import xml.etree.ElementTree as ET
+from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
 from urllib.parse import quote
-from xml.etree.ElementTree import Element
+from urllib.parse import urlparse
+from xml.etree.ElementTree import Element  # nosec
 
+import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from defusedxml.ElementTree import fromstring
 from thefuzz import fuzz
 
 import colrev.env.package_manager
@@ -24,18 +27,14 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.settings
+import colrev.ui_cli.cli_colors as colors
+
+# defuse std xml lib
+defusedxml.defuse_stdlib()
+
 
 # pylint: disable=duplicate-code
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING  # pylint: disable=ungrouped-imports
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
-
-
 # pylint: disable=unused-argument
-# pylint: disable=duplicate-code
 
 
 @zope.interface.implementer(
@@ -62,7 +61,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
         """Settings for EuropePMCSearchSource"""
 
-        # pylint: disable=duplicate-code
         # pylint: disable=too-many-instance-attributes
         endpoint: str
         filename: Path
@@ -86,6 +84,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # EuropePMC as a search_source
             self.search_source = from_dict(
@@ -117,75 +116,64 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     # ...
 
     @classmethod
+    def __get_string_from_item(cls, *, item, key: str) -> str:  # type: ignore
+        return_string = ""
+        for selected_node in item.findall(key):
+            return_string = selected_node.text
+        return return_string
+
+    @classmethod
     def __europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
+        retrieved_record_dict: dict = {"ENTRYTYPE": "article"}
 
-        retrieved_record_dict: dict = {"ENTRYTYPE": "misc"}
+        retrieved_record_dict.update(
+            author=cls.__get_string_from_item(item=item, key="authorString")
+        )
+        retrieved_record_dict.update(
+            journal=cls.__get_string_from_item(item=item, key="journalTitle")
+        )
+        retrieved_record_dict.update(
+            doi=cls.__get_string_from_item(item=item, key="doi")
+        )
+        retrieved_record_dict.update(
+            title=cls.__get_string_from_item(item=item, key="title")
+        )
+        retrieved_record_dict.update(
+            title=cls.__get_string_from_item(item=item, key="title")
+        )
+        retrieved_record_dict.update(
+            year=cls.__get_string_from_item(item=item, key="pubYear")
+        )
+        retrieved_record_dict.update(
+            volume=cls.__get_string_from_item(item=item, key="journalVolume")
+        )
 
-        author_node = item.find("authorString")
-        if author_node is not None:
-            if author_node.text is not None:
-                authors_string = colrev.record.PrepRecord.format_author_field(
-                    input_string=author_node.text
-                )
-                retrieved_record_dict.update(author=authors_string)
+        retrieved_record_dict.update(
+            number=cls.__get_string_from_item(item=item, key="issue")
+        )
+        retrieved_record_dict.update(
+            pmid=cls.__get_string_from_item(item=item, key="pmid")
+        )
+        retrieved_record_dict.update(
+            epmc_source=cls.__get_string_from_item(item=item, key="source")
+        )
 
-        journal_node = item.find("journalTitle")
-        if journal_node is not None:
-            if journal_node.text is not None:
-                retrieved_record_dict.update(journal=journal_node.text)
-                retrieved_record_dict.update(ENTRYTYPE="article")
-
-        doi_node = item.find("doi")
-        if doi_node is not None:
-            if doi_node.text is not None:
-                retrieved_record_dict.update(doi=doi_node.text)
-
-        title_node = item.find("title")
-        if title_node is not None:
-            if title_node.text is not None:
-                retrieved_record_dict.update(title=title_node.text)
-
-        year_node = item.find("pubYear")
-        if year_node is not None:
-            if year_node.text is not None:
-                retrieved_record_dict.update(year=year_node.text)
-
-        volume_node = item.find("journalVolume")
-        if volume_node is not None:
-            if volume_node.text is not None:
-                retrieved_record_dict.update(volume=volume_node.text)
-
-        number_node = item.find("issue")
-        if number_node is not None:
-            if number_node.text is not None:
-                retrieved_record_dict.update(number=number_node.text)
-
-        pmid_node = item.find("pmid")
-        if pmid_node is not None:
-            if pmid_node.text is not None:
-                retrieved_record_dict.update(pmid=pmid_node.text)
-
-        source_node = item.find("source")
-        if source_node is not None:
-            if source_node.text is not None:
-                retrieved_record_dict.update(epmc_source=source_node.text)
-
-        epmc_id_node = item.find("id")
-        if epmc_id_node is not None:
-            if epmc_id_node.text is not None:
-                retrieved_record_dict.update(epmc_id=epmc_id_node.text)
+        retrieved_record_dict.update(
+            epmc_id=cls.__get_string_from_item(item=item, key="id")
+        )
 
         retrieved_record_dict["europe_pmc_id"] = (
             retrieved_record_dict.get("epmc_source", "NO_SOURCE")
             + "/"
             + retrieved_record_dict.get("epmc_id", "NO_ID")
         )
+
         retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
-        del retrieved_record_dict["epmc_id"]
-        del retrieved_record_dict["epmc_source"]
+        retrieved_record_dict = {
+            k: v
+            for k, v in retrieved_record_dict.items()
+            if k not in ["epmc_id", "epmc_source"] and v != ""
+        }
 
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
@@ -225,19 +213,17 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         return similarity
 
     @classmethod
-    def europe_pcmc_query(
+    def europe_pmc_query(
         cls,
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         most_similar_only: bool = True,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
 
         try:
             record = record_input.copy_prep_rec()
@@ -263,7 +249,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     return []
 
                 most_similar, most_similar_record = 0.0, {}
-                root = ET.fromstring(ret.text)
+                root = fromstring(str.encode(ret.text))
                 result_list = root.findall("resultList")[0]
 
                 for result_item in result_list.findall("result"):
@@ -330,7 +316,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 while retries < prep_operation.max_retries_on_error:
                     retries += 1
 
-                    retrieved_records = self.europe_pcmc_query(
+                    retrieved_records = self.europe_pmc_query(
                         review_manager=prep_operation.review_manager,
                         record_input=record,
                         timeout=timeout,
@@ -429,32 +415,137 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
+        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
+            print("Not yet implemented")
+            # self.__run_md_search_update(
+            #     search_operation=search_operation,
+            #     europe_pmc_feed=europe_pmc_feed,
+            # )
+
+        else:
+            self.__run_parameter_search(
+                search_operation=search_operation,
+                europe_pmc_feed=europe_pmc_feed,
+                rerun=rerun,
+            )
+
+    def __run_parameter_search(
+        self,
+        *,
+        search_operation: colrev.ops.search.Search,
+        europe_pmc_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
+    ) -> None:
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-nested-blocks
+
         try:
-            for retrieved_record in self.europe_pcmc_query(
-                review_manager=search_operation.review_manager,
-                record_input=colrev.record.Record(
-                    data={"title": self.search_source.search_parameters["query"]}
-                ),
-                most_similar_only=False,
-            ):
-                if "colrev_data_provenance" in retrieved_record.data:
-                    del retrieved_record.data["colrev_data_provenance"]
-                if "colrev_masterdata_provenance" in retrieved_record.data:
-                    del retrieved_record.data["colrev_masterdata_provenance"]
+            params = self.search_source.search_parameters
+            url = params["query"]
 
-                europe_pmc_feed.set_id(record_dict=retrieved_record.data)
-                europe_pmc_feed.add_record(record=retrieved_record)
+            _, email = self.review_manager.get_committer()
 
+            headers = {"user-agent": f"{__name__} (mailto:{email})"}
+            session = self.review_manager.get_cached_session()
+
+            records = search_operation.review_manager.dataset.load_records_dict()
+
+            while url != "END":
+                self.review_manager.logger.debug(url)
+                ret = session.request("GET", url, headers=headers, timeout=60)
+                ret.raise_for_status()
+                if ret.status_code != 200:
+                    # review_manager.logger.debug(
+                    #     f"europe_pmc failed with status {ret.status_code}"
+                    # )
+                    return
+
+                root = fromstring(str.encode(ret.text))
+                result_list = root.findall("resultList")[0]
+
+                for result_item in result_list.findall("result"):
+                    retrieved_record = self.__europe_pmc_xml_to_record(item=result_item)
+
+                    prev_record_dict_version = {}
+                    if retrieved_record.data["ID"] in europe_pmc_feed.feed_records:
+                        prev_record_dict_version = deepcopy(
+                            europe_pmc_feed.feed_records[retrieved_record.data["ID"]]
+                        )
+                    if "title" not in retrieved_record.data:
+                        search_operation.review_manager.logger.warning(
+                            f"Skipped record: {retrieved_record.data}"
+                        )
+                        continue
+
+                    source = (
+                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+                        f"{retrieved_record.data['europe_pmc_id']}"
+                    )
+                    retrieved_record.set_masterdata_complete(source=source)
+
+                    europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                    added = europe_pmc_feed.add_record(record=retrieved_record)
+
+                    if added:
+                        search_operation.review_manager.logger.info(
+                            " retrieve europe_pmc_id="
+                            + retrieved_record.data["europe_pmc_id"]
+                        )
+                        europe_pmc_feed.nr_added += 1
+                    else:
+                        changed = search_operation.update_existing_record(
+                            records=records,
+                            record_dict=retrieved_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
+                        if changed:
+                            europe_pmc_feed.nr_changed += 1
+
+                url = "END"
+                next_page_url_node = root.find("nextPageUrl")
+                if next_page_url_node is not None:
+                    if next_page_url_node.text is not None:
+                        url = next_page_url_node.text
+
+            self.__print_post_run_search_infos(
+                europe_pmc_feed=europe_pmc_feed, records=records
+            )
+        except json.decoder.JSONDecodeError:
+            pass
+        except requests.exceptions.RequestException:
+            pass
+        except OperationalError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            ) from exc
+        finally:
             europe_pmc_feed.save_feed_file()
 
-        except UnicodeEncodeError:
-            print("UnicodeEncodeError - this needs to be fixed at some time")
-        except (
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.HTTPError,
-            requests.exceptions.ConnectionError,
-        ):
-            pass
+    def __print_post_run_search_infos(
+        self, *, europe_pmc_feed: colrev.ops.search.GeneralOriginFeed, records: dict
+    ) -> None:
+        if europe_pmc_feed.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {europe_pmc_feed.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if europe_pmc_feed.nr_changed > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {europe_pmc_feed.nr_changed} records{colors.END}"
+            )
+        else:
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -471,6 +562,27 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> typing.Optional[colrev.settings.SearchSource]:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        host = urlparse(query).hostname
+
+        if host and host.endswith("europepmc.org"):
+            query = query.replace("https://europepmc.org/search?query=", "")
+
+            filename = search_operation.get_unique_filename(
+                file_path_string="europepmc"
+            )
+            query = (
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=" + query
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.europe_pmc",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
 
         return None
 

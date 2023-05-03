@@ -41,6 +41,7 @@ class Field(JsonSchemaMixin):
 class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a table)"""
 
+    settings: StructuredDataSettings
     ci_supported: bool = False
 
     @dataclass
@@ -155,7 +156,13 @@ Example 2:
             data_type = input("Provide the data type (str, int, double):")
 
             self.settings.fields.append(
-                {"name": short_name, "explanation": explanation, "data_type": data_type}
+                Field(
+                    **{
+                        "name": short_name,
+                        "explanation": explanation,
+                        "data_type": data_type,
+                    }
+                )
             )
 
             print()

@@ -7,7 +7,6 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
@@ -43,11 +42,6 @@ class PDFLastPage(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        if not pdf_prep_operation.review_manager.in_ci_environment():
-            # Note : to pull image if not available
-            pdf_prep_operation.review_manager.get_pdf_hash_service()
-
-    @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -72,9 +66,7 @@ class PDFLastPage(JsonSchemaMixin):
 
             last_page_nr = len(pdf_reader.pages) - 1
 
-            pdf_hash_service = pdf_prep_operation.review_manager.get_pdf_hash_service()
-
-            last_page_average_hash_16 = pdf_hash_service.get_pdf_hash(
+            last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
                 pdf_path=Path(pdf),
                 page_nr=last_page_nr + 1,
                 hash_size=16,

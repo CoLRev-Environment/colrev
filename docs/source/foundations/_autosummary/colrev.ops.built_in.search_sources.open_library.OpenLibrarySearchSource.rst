@@ -16,6 +16,7 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
    .. autosummary::
       :nosignatures:
 
+      ~OpenLibrarySearchSource.add_endpoint
       ~OpenLibrarySearchSource.all_json_schemas
       ~OpenLibrarySearchSource.check_availability
       ~OpenLibrarySearchSource.field_mapping
@@ -23,10 +24,15 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.from_json
       ~OpenLibrarySearchSource.from_object
       ~OpenLibrarySearchSource.get_masterdata
+      ~OpenLibrarySearchSource.heuristic
       ~OpenLibrarySearchSource.json_schema
+      ~OpenLibrarySearchSource.load_fixes
+      ~OpenLibrarySearchSource.prepare
       ~OpenLibrarySearchSource.register_field_encoders
+      ~OpenLibrarySearchSource.run_search
       ~OpenLibrarySearchSource.to_dict
       ~OpenLibrarySearchSource.to_json
+      ~OpenLibrarySearchSource.validate_source
 
 
 

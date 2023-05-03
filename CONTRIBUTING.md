@@ -60,7 +60,8 @@ Ready to contribute? Here's how to set up `colrev` for local development.
     ```
     mkvirtualenv colrev
     cd colrev/
-    pip3 install -e .
+    pip3 install poetry
+    poetry install
     ```
 
 4. Create a branch for local development:
@@ -88,6 +89,22 @@ Ready to contribute? Here's how to set up `colrev` for local development.
     ```
 
 7. Submit a pull request through the GitHub website.
+
+## Troubleshooting
+
+### If you get error regarding mock being not available
+
+Install `pytest-mock`
+
+```
+pip install pytest-mock
+```
+
+### If you get invalid cross-device link error
+
+It is because the `/tmp` folder is not in same drive as your home drive. Use 'pytest --basetemp=<a path inside your home folder>'
+
+Beware, everything inside the folder will be deleted, so make sure you use the folder only for test.
 
 ## Pull Request Guidelines
 

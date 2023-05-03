@@ -20,8 +20,6 @@ if False:  # pylint: disable=using-constant-test
     if TYPE_CHECKING:
         import colrev.ops.data
 
-# pylint: disable=duplicate-code
-
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass

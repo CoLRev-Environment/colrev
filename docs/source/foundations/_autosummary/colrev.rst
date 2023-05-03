@@ -36,9 +36,9 @@
    colrev.logger
    colrev.operation
    colrev.ops
+   colrev.qm
    colrev.record
    colrev.review_manager
    colrev.service
    colrev.settings
    colrev.ui_cli
-   colrev.ui_web

@@ -63,13 +63,14 @@ class Commit:
         self.git_version = stream.read().replace("git ", "").replace("\n", "")
         stream = os.popen("docker --version")
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
-        if "" == self.docker_version:
+        if self.docker_version == "":
             self.docker_version = "Not installed"
 
         self.ext_script_name = ""
         self.ext_script_version = ""
 
         if script_name != "":
+            # Note : the script_name / ext_script seems to be different on macos during init!?
             ext_script = script_name.split(" ")[0]
             if ext_script != "colrev":
                 try:
@@ -78,6 +79,12 @@ class Commit:
                     self.ext_script_version = f"version {script_version}"
                 except importlib.metadata.PackageNotFoundError:
                     pass
+                except ValueError:
+                    # Note : macos error in importlib.metadata.version
+                    # ValueError: A distribution name is required
+                    self.ext_script_name = "unknown"
+                    self.ext_script_version = "unknown"
+
         self.__temp_path.mkdir(exist_ok=True, parents=True)
 
     def __parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
@@ -95,7 +102,7 @@ class Commit:
         return saved_args_str
 
     def __parse_script_name(self, *, script_name: str) -> str:
-        if "MANUAL" == script_name:
+        if script_name == "MANUAL":
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
             script_name = script_name.replace("colrev cli", "colrev").replace(

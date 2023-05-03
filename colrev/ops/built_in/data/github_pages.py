@@ -14,6 +14,7 @@ import colrev.env.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
+
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
@@ -25,6 +26,8 @@ if False:  # pylint: disable=using-constant-test
 @dataclass
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
+
+    settings: GHPagesSettings
 
     ci_supported: bool = False
 
@@ -131,7 +134,6 @@ class GithubPages(JsonSchemaMixin):
 
         records = data_operation.review_manager.dataset.load_records_dict()
 
-        # pylint: disable=duplicate-code
         included_records = {
             r["ID"]: r
             for r in records.values()
@@ -354,7 +356,7 @@ class GithubPages(JsonSchemaMixin):
         data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
-        if "NA" == review_manager.dataset.get_remote_url():
+        if review_manager.dataset.get_remote_url() == "NA":
             advice["msg"] += (
                 "\n    - To make the repository available on Github pages, "
                 + "push it to a Github repository\nhttps://github.com/new"

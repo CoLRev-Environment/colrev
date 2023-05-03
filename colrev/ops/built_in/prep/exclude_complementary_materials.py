@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from alphabet_detector import AlphabetDetector
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -53,7 +52,6 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             colrev.env.utils.load_complementary_material_strings()
         )
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument

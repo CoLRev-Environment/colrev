@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from pathlib import Path
-
+"""Test the language service"""
 import pytest
 
 import colrev.env.language_service
@@ -36,13 +35,6 @@ v1 = {
 R1 = colrev.record.Record(data=v1)
 
 
-@pytest.fixture(scope="module")
-def language_service() -> colrev.env.language_service.LanguageService:  # type: ignore
-    """Return a language service object"""
-
-    return colrev.env.language_service.LanguageService()
-
-
 @pytest.mark.parametrize(
     "text, expected",
     [
@@ -69,6 +61,7 @@ def test_compute_language_confidence_values(
     expected: bool,
     language_service: colrev.env.language_service.LanguageService,
 ) -> None:
+    """Test the compute_language_confidence_values"""
     confidence_values = language_service.compute_language_confidence_values(text=text)
 
     # test the first/most likely result
@@ -105,6 +98,7 @@ def test_compute_language(
     expected_lang: str,
     language_service: colrev.env.language_service.LanguageService,
 ) -> None:
+    """Test the compute_language"""
     predicted_lang = language_service.compute_language(text=text)
     assert expected_lang == predicted_lang
 
@@ -121,6 +115,7 @@ def test_validate_iso_639_3_language_codes(
     expected: bool,
     language_service: colrev.env.language_service.LanguageService,
 ) -> None:
+    """Test the validate_iso_639_3_language_codes"""
     if VALID == expected:
         language_service.validate_iso_639_3_language_codes(
             lang_code_list=[language_code]
@@ -135,11 +130,19 @@ def test_validate_iso_639_3_language_codes(
 @pytest.mark.parametrize(
     "language_code, expected",
     [
-        ("ENGLISH", "eng"),
         ("en", "eng"),
         ("fr", "fra"),
         ("de", "deu"),
         ("ar", "ara"),
+        ("ENGLISH", "eng"),
+        ("Russian", "rus"),
+        ("English", "eng"),
+        ("Spanish", "spa"),
+        ("Chinese", "zho"),
+        ("Portuguese", "por"),
+        ("German", "deu"),
+        ("Hungarian", "hun"),
+        ("French", "fra"),
     ],
 )
 def test_unify_to_iso_639_3_language_codes(
@@ -147,6 +150,7 @@ def test_unify_to_iso_639_3_language_codes(
     expected: bool,
     language_service: colrev.env.language_service.LanguageService,
 ) -> None:
+    """Test the unify_to_iso_639_3_language_codes"""
     R1.data["language"] = language_code
     language_service.unify_to_iso_639_3_language_codes(record=R1)
     actual = R1.data["language"]

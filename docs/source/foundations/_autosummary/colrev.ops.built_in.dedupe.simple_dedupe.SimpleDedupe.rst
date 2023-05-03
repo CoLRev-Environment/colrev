@@ -36,3 +36,4 @@ colrev.ops.built\_in.dedupe.simple\_dedupe.SimpleDedupe
    .. autosummary::
 
       ~SimpleDedupe.ci_supported
+      ~SimpleDedupe.settings

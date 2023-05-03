@@ -74,3 +74,4 @@ def test_prep_exclude_languages(
     returned_record = bcr.prepare(prep_operation=prep_operation, record=record)
     actual = returned_record.data
     assert expected == actual
+    (prep_operation.review_manager.path / Path("data/records.bib")).unlink()

@@ -41,3 +41,4 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.PYBTEX_FORMATS
       ~BibliographyExport.ZOTERO_FORMATS
       ~BibliographyExport.ci_supported
+      ~BibliographyExport.settings

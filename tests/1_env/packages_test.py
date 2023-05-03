@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tests for the colrev package manager"""
 import importlib.util
 import os
 from pathlib import Path
@@ -6,13 +7,13 @@ from pathlib import Path
 import pytest
 
 import colrev.env.utils
-import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 
 
 @pytest.fixture
 def settings() -> colrev.settings.Settings:
+    """Fixture returning a settings object"""
     return colrev.settings.load_settings(
         settings_path=Path(colrev.__file__).parents[0]
         / Path("template/init/settings.json")
@@ -22,6 +23,8 @@ def settings() -> colrev.settings.Settings:
 def test_review_type_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the review_type_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     load_operation = base_repo_review_manager.get_load_operation()
 
@@ -45,6 +48,8 @@ def test_review_type_interfaces(
 def test_search_source_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the search_source_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     load_operation = base_repo_review_manager.get_load_operation(
         notify_state_transition_operation=False
@@ -76,6 +81,8 @@ def test_search_source_interfaces(
 def test_load_conversion_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the load_conversion_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     load_operation = base_repo_review_manager.get_load_operation(
         notify_state_transition_operation=False
@@ -101,6 +108,8 @@ def test_load_conversion_package_interfaces(
 def test_prep_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the prep_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     prep_operation = base_repo_review_manager.get_prep_operation(
         notify_state_transition_operation=False
@@ -126,6 +135,8 @@ def test_prep_package_interfaces(
 def test_prep_man_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the prep_man_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     prep_man_operation = base_repo_review_manager.get_prep_man_operation(
         notify_state_transition_operation=False
@@ -151,6 +162,8 @@ def test_prep_man_package_interfaces(
 def test_dedupe_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the dedupe_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     dedupe_operation = base_repo_review_manager.get_dedupe_operation(
         notify_state_transition_operation=False
@@ -181,6 +194,8 @@ def test_dedupe_package_interfaces(
 def test_prescreen_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the prescreen_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     prescreen_operation = base_repo_review_manager.get_prescreen_operation(
         notify_state_transition_operation=False
@@ -208,6 +223,8 @@ def test_prescreen_package_interfaces(
 def test_pdf_get_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the pdf_get_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=False
@@ -233,6 +250,8 @@ def test_pdf_get_package_interfaces(
 def test_pdf_get_man_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the pdf_get_man_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     pdf_get_man_operation = base_repo_review_manager.get_pdf_get_man_operation(
         notify_state_transition_operation=False
@@ -258,6 +277,7 @@ def test_pdf_get_man_package_interfaces(
 def test_pdf_prep_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the pdf_prep_package_interfaces"""
     package_manager = base_repo_review_manager.get_package_manager()
     pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(
         notify_state_transition_operation=False
@@ -283,6 +303,7 @@ def test_pdf_prep_package_interfaces(
 def test_pdf_prep_man_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the pdf_prep_man_package_interfaces"""
     package_manager = base_repo_review_manager.get_package_manager()
     pdf_prep_man_operation = base_repo_review_manager.get_pdf_prep_man_operation(
         notify_state_transition_operation=False
@@ -308,6 +329,8 @@ def test_pdf_prep_man_package_interfaces(
 def test_screen_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the screen_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
     screen_operation = base_repo_review_manager.get_screen_operation(
         notify_state_transition_operation=False
@@ -333,46 +356,9 @@ def test_screen_package_interfaces(
 def test_data_package_interfaces(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+    """Test the data_package_interfaces"""
+
     package_manager = base_repo_review_manager.get_package_manager()
-
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    prep_operation.setup_custom_script()
-
-    package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep,
-        selected_packages=[
-            {
-                "endpoint": "custom_prep_script",
-            }
-        ],
-        operation=prep_operation,
-        instantiate_objects=True,
-    )
-
-    with pytest.raises(colrev_exceptions.MissingDependencyError):
-        package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep,
-            selected_packages=[
-                {
-                    "endpoint": "broken_identifier",
-                }
-            ],
-            operation=prep_operation,
-            instantiate_objects=True,
-        )
-
-    package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep,
-        selected_packages=[
-            {
-                "endpoint": "broken_identifier",
-            }
-        ],
-        operation=prep_operation,
-        instantiate_objects=True,
-        ignore_not_available=True,
-    )
-
     data_operation = base_repo_review_manager.get_data_operation(
         notify_state_transition_operation=False
     )

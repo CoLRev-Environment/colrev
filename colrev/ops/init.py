@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import platform
 from importlib.metadata import version
 from pathlib import Path
-from subprocess import CalledProcessError
-from subprocess import check_call
-from subprocess import DEVNULL
-from subprocess import STDOUT
+from subprocess import CalledProcessError  # nosec
+from subprocess import check_call  # nosec
+from subprocess import DEVNULL  # nosec
+from subprocess import STDOUT  # nosec
 from typing import Optional
 
 import git
@@ -47,6 +48,9 @@ class Initializer:
             raise colrev_exceptions.RepoInitError(
                 msg="Cannot initialize local_pdf_collection repository with example data."
             )
+        current_platform = platform.system()
+        if current_platform != "Linux":
+            light = True
         self.light = light
 
         self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
@@ -265,7 +269,7 @@ class Initializer:
                 + f": A {r_type_suffix} protocol",
             )
 
-        if self.light:
+        if self.light or platform.system() == "Darwin":
             settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
@@ -315,7 +319,7 @@ class Initializer:
         git_repo.git.add(all=True)
 
     def __post_commit_edits(self) -> None:
-        if "colrev.curated_masterdata" == self.review_type:
+        if self.review_type == "colrev.curated_masterdata":
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
             self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
@@ -385,9 +389,11 @@ class Initializer:
             try:
                 if script_to_call["description"]:
                     self.logger.debug("%s...", script_to_call["description"])
-                check_call(script_to_call["command"], stdout=DEVNULL, stderr=STDOUT)
+                check_call(
+                    script_to_call["command"], stdout=DEVNULL, stderr=STDOUT
+                )  # nosec
             except CalledProcessError:
-                if "pre-commit autoupdate" == " ".join(script_to_call["command"]):
+                if " ".join(script_to_call["command"]) == "pre-commit autoupdate":
                     pass
                 else:
                     self.logger.error(

@@ -1,31 +1,25 @@
 #!/usr/bin/env python
+"""Test the exclude_languages prep package"""
 import pytest
 
 import colrev.ops.built_in.prep.exclude_languages
 import colrev.ops.prep
 
 
-@pytest.fixture
-def prep_operation(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.ops.prep.Prep:
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    return prep_operation
-
-
-@pytest.fixture
+@pytest.fixture(scope="package")
 def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep:
+    """Fixture returning an ExcludeLanguagesPrep instance"""
     settings = {"endpoint": "colrev.exclude_languages"}
-    elp = colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep(
+    elp_instance = colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep(
         prep_operation=prep_operation, settings=settings
     )
-    return elp
+    return elp_instance
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_value, expected",
     [
         (
             {
@@ -91,10 +85,11 @@ def elp(
 )
 def test_prep_exclude_languages(
     elp: colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep,
-    input: dict,
+    input_value: dict,
     expected: dict,
 ) -> None:
-    record = colrev.record.PrepRecord(data=input)
+    """Test the prep_exclude_languages"""
+    record = colrev.record.PrepRecord(data=input_value)
     returned_record = elp.prepare(prep_operation=elp, record=record)
     actual = returned_record.data
     assert expected == actual

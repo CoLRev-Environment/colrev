@@ -135,14 +135,14 @@ class TableScreen(JsonSchemaMixin):
 
         self.screen_table_path.parents[0].mkdir(parents=True, exist_ok=True)
 
-        if "csv" == export_table_format.lower():
+        if export_table_format.lower() == "csv":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv(self.screen_table_path, index=False, quoting=csv.QUOTE_ALL)
             screen_operation.review_manager.logger.info(
                 f"Created {self.screen_table_path}"
             )
 
-        if "xlsx" == export_table_format.lower():
+        if export_table_format.lower() == "xlsx":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel(
                 self.screen_table_path.with_suffix(".xlsx"),
@@ -181,12 +181,17 @@ class TableScreen(JsonSchemaMixin):
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:
-                record = records[screened_record.get("ID", "")]
+                record_dict = records[screened_record.get("ID", "")]
+                record = colrev.record.Record(data=record_dict)
                 if "screen_inclusion" in screened_record:
-                    if "in" == screened_record["screen_inclusion"]:
-                        record["colrev_status"] = colrev.record.RecordState.rev_included
-                    elif "out" == screened_record["screen_inclusion"]:
-                        record["colrev_status"] = colrev.record.RecordState.rev_excluded
+                    if screened_record["screen_inclusion"] == "in":
+                        record.set_status(
+                            target_state=colrev.record.RecordState.rev_included
+                        )
+                    elif screened_record["screen_inclusion"] == "out":
+                        record.set_status(
+                            target_state=colrev.record.RecordState.rev_excluded
+                        )
                     else:
                         print(
                             f"Invalid choice: {screened_record['screen_inclusion']} "
@@ -203,11 +208,15 @@ class TableScreen(JsonSchemaMixin):
                         + ";"
                     )
                 screening_criteria_field = screening_criteria_field.rstrip(";")
-                record["screening_criteria"] = screening_criteria_field
+                record.data["screening_criteria"] = screening_criteria_field
                 if "=out" in screening_criteria_field:
-                    record["colrev_status"] = colrev.record.RecordState.rev_excluded
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_excluded
+                    )
                 else:
-                    record["colrev_status"] = colrev.record.RecordState.rev_included
+                    record.set_status(
+                        target_state=colrev.record.RecordState.rev_included
+                    )
 
         screen_operation.review_manager.dataset.save_records_dict(records=records)
         screen_operation.review_manager.dataset.add_record_changes()
@@ -217,14 +226,14 @@ class TableScreen(JsonSchemaMixin):
     ) -> dict:
         """Screen records based on screening tables"""
 
-        if "y" == input("create screen table [y,n]?"):
+        if input("create screen table [y,n]?") == "y":
             self.export_table(screen_operation, records, split)
 
-        if "y" == input("import screen table [y,n]?"):
+        if input("import screen table [y,n]?") == "y":
             self.import_table(screen_operation, records)
 
         if screen_operation.review_manager.dataset.has_changes():
-            if "y" == input("create commit [y,n]?"):
+            if input("create commit [y,n]?") == "y":
                 screen_operation.review_manager.create_commit(
                     msg="Screen", manual_author=True
                 )

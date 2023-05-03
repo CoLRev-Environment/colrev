@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -68,7 +67,6 @@ class PDFCompletenessValidation(JsonSchemaMixin):
                 return True
         return False
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -154,7 +152,7 @@ class PDFCompletenessValidation(JsonSchemaMixin):
             page = roman_page_matched.group()
             pages_metadata = f"{__roman_to_int(s=page)}"
 
-        if "NA" == pages_metadata or not re.match(r"^\d+--\d+|\d+$", pages_metadata):
+        if pages_metadata == "NA" or not re.match(r"^\d+--\d+|\d+$", pages_metadata):
             msg = (
                 f'{record.data["ID"]}'.ljust(pad - 1, " ")
                 + "Could not validate completeness: no pages in metadata"

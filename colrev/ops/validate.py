@@ -103,13 +103,39 @@ class Validate(colrev.operation.Operation):
 
         return change_diff
 
+    def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
+        merge_candidates_file = Path("merge_candidates_file.txt")
+
+        with open(merge_candidates_file, "w", encoding="utf-8") as file:
+            for ref_rec_dict in tqdm(records):
+                ref_rec = colrev.record.Record(data=ref_rec_dict)
+                for comp_rec_dict in reversed(records):
+                    # Note : due to symmetry, we only need one part of the matrix
+                    if ref_rec_dict["ID"] == comp_rec_dict["ID"]:
+                        break
+                    comp_rec = colrev.record.Record(data=comp_rec_dict)
+                    similarity = colrev.record.Record.get_record_similarity(
+                        record_a=ref_rec, record_b=comp_rec
+                    )
+
+                    if similarity > 0.95:
+                        print(f"{ref_rec_dict['ID']}-{comp_rec_dict['ID']}")
+
+                        file.write(ref_rec.format_bib_style())
+                        file.write("\n")
+                        file.write(comp_rec.format_bib_style())
+                        file.write("\n")
+                        file.write(
+                            f"colrev dedupe -m {ref_rec_dict['ID']},{comp_rec_dict['ID']}\n\n"
+                        )
+
+        if merge_candidates_file.read_text(encoding="utf-8") == "":
+            merge_candidates_file.unlink()
+
     def validate_dedupe_changes(
         self, *, records: list[dict], target_commit: str
     ) -> list:
         """Validate dedupe changes"""
-
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
 
         # at some point, we may allow users to validate
         # all duplicates/non-duplicates (across commits)
@@ -166,33 +192,7 @@ class Validate(colrev.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        merge_candidates_file = Path("merge_candidates_file.txt")
-
-        with open(merge_candidates_file, "w", encoding="utf-8") as file:
-            for ref_rec_dict in tqdm(records):
-                ref_rec = colrev.record.Record(data=ref_rec_dict)
-                for comp_rec_dict in reversed(records):
-                    # Note : due to symmetry, we only need one part of the matrix
-                    if ref_rec_dict["ID"] == comp_rec_dict["ID"]:
-                        break
-                    comp_rec = colrev.record.Record(data=comp_rec_dict)
-                    similarity = colrev.record.Record.get_record_similarity(
-                        record_a=ref_rec, record_b=comp_rec
-                    )
-
-                    if similarity > 0.95:
-                        print(f"{ref_rec_dict['ID']}-{comp_rec_dict['ID']}")
-
-                        file.write(ref_rec.format_bib_style())
-                        file.write("\n")
-                        file.write(comp_rec.format_bib_style())
-                        file.write("\n")
-                        file.write(
-                            f"colrev dedupe -m {ref_rec_dict['ID']},{comp_rec_dict['ID']}\n\n"
-                        )
-
-        if "" == merge_candidates_file.read_text(encoding="utf-8"):
-            merge_candidates_file.unlink()
+        self.__export_merge_candidates_file(records=records)
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -437,7 +437,7 @@ class Validate(colrev.operation.Operation):
                         break
                     valid_options.append(str(commit_candidate.tree))
 
-                if "" == commit:
+                if commit == "":
                     # pylint: disable=raise-missing-from
                     raise colrev_exceptions.ParameterError(
                         parameter="validate.scope", value=scope, options=valid_options
@@ -540,11 +540,11 @@ class Validate(colrev.operation.Operation):
             )
             return validation_details
 
-        if "all" == filter_setting:
+        if filter_setting == "all":
             filter_setting = self.__set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
-        if "general" == filter_setting:
+        if filter_setting == "general":
             validation_details["general"] = {
                 "commit": target_commit,
                 "commit_relative": self.__get_relative_commit(

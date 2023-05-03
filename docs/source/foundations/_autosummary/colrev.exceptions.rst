@@ -54,6 +54,7 @@ colrev.exceptions
       PDFHashError
       ParameterError
       PortAlreadyRegisteredException
+      PreparationBreak
       ProcessOrderViolation
       PropagatedIDChange
       RecordNotFoundInPrepSourceException
@@ -61,6 +62,7 @@ colrev.exceptions
       RecordNotInRepoException
       RecordNotInTOCException
       RecordNotIndexableException
+      RecordNotParsableException
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError

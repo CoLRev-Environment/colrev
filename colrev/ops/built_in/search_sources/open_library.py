@@ -110,7 +110,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = requests.get(
                 url,
                 headers=requests_headers,
-                timeout=20,
+                timeout=30,
             )
             if ret.status_code != 200:
                 if not source_operation.force_mode:
@@ -186,7 +186,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                     + "&author="
                     + record.data.get("author", "NA").split(",")[0]
                 )
-            if "inbook" == record.data["ENTRYTYPE"] and "editor" in record.data:
+            if record.data["ENTRYTYPE"] == "inbook" and "editor" in record.data:
                 if record.data.get("editor", "NA").split(",")[0]:
                     url = (
                         base_url

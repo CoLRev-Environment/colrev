@@ -28,7 +28,10 @@ class RepoSetupError(CoLRevException):
     lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
     def __init__(self, msg: Optional[str] = None) -> None:
-        Path(".report.log").unlink(missing_ok=True)
+        try:
+            Path(".report.log").unlink(missing_ok=True)
+        except PermissionError:
+            pass
         if msg:
             self.message = f" {msg}"
         elif any(Path(Path.cwd()).iterdir()):
@@ -333,6 +336,14 @@ class InvalidQueryException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotParsableException(CoLRevException):
+    """The record could not be parsed."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class NoSearchFeedRegistered(CoLRevException):
     """No search feed endpoints registered in settings.json"""
 
@@ -377,6 +388,10 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
     """The record was not found in the prep search source."""
 
 
+class PreparationBreak(CoLRevException):
+    """Event interrupting the preparation."""
+
+
 # Dedupe
 
 
@@ -404,7 +419,7 @@ class InvalidMerge(DedupeError):
 
 
 class DataException(CoLRevException):
-    """Exception in the dat aoperation"""
+    """Exception in the data operation"""
 
     def __init__(self, *, msg: str) -> None:
         self.message = msg

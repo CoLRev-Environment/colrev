@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import requests
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -47,60 +46,49 @@ class YearVolIssPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-
+        self.review_manager = prep_operation.review_manager
         self.local_index = prep_operation.review_manager.get_local_index()
+        self.vol_nr_dict = self.__get_vol_nr_dict()
 
+    def __get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
-        if hasattr(prep_operation.review_manager, "dataset"):
-            records = prep_operation.review_manager.dataset.load_records_dict()
-            for record in records.values():
-                # pylint: disable=duplicate-code
-                if record[
-                    "colrev_status"
-                ] not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_processed
-                ):
-                    continue
-                if not record.get("year", "NA").isdigit():
-                    continue
+        if not hasattr(self.review_manager, "dataset"):
+            return vol_nr_dict
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            # pylint: disable=duplicate-code
+            if record[
+                "colrev_status"
+            ] not in colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_processed
+            ):
+                continue
+            if not record.get("year", "NA").isdigit():
+                continue
 
-                if "journal" not in record or "volume" not in record:
-                    continue
+            if "journal" not in record or "volume" not in record:
+                continue
 
-                if record["journal"] not in vol_nr_dict:
-                    vol_nr_dict[record["journal"]] = {}
+            if record["journal"] not in vol_nr_dict:
+                vol_nr_dict[record["journal"]] = {}
 
-                if record["volume"] not in vol_nr_dict[record["journal"]]:
-                    vol_nr_dict[record["journal"]][record["volume"]] = {}
+            if record["volume"] not in vol_nr_dict[record["journal"]]:
+                vol_nr_dict[record["journal"]][record["volume"]] = {}
 
-                if "number" not in record:
-                    vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
+            if "number" not in record:
+                vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
+            else:
+                if isinstance(vol_nr_dict[record["journal"]][record["volume"]], dict):
+                    vol_nr_dict[record["journal"]][record["volume"]][
+                        record["number"]
+                    ] = record["year"]
                 else:
-                    if isinstance(
-                        vol_nr_dict[record["journal"]][record["volume"]], dict
-                    ):
-                        vol_nr_dict[record["journal"]][record["volume"]][
-                            record["number"]
-                        ] = record["year"]
-                    else:
-                        # do not use inconsistent data (has/has no number)
-                        del vol_nr_dict[record["journal"]][record["volume"]]
+                    # do not use inconsistent data (has/has no number)
+                    del vol_nr_dict[record["journal"]][record["volume"]]
 
-        self.vol_nr_dict = vol_nr_dict
+        return vol_nr_dict
 
-    @timeout_decorator.timeout(60, use_signals=False)
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
-        """Prepare a record based on year-volume-issue dependency"""
-
-        # pylint: disable=too-many-nested-blocks
-        # pylint: disable=too-many-return-statements
-        # pylint: disable=too-many-branches
-
-        if record.data.get("year", "NA").isdigit() or record.masterdata_is_curated():
-            return record
-
+    def __get_year_from_toc(self, *, record: colrev.record.Record) -> None:
         # TBD: maybe extract the following three lines as a separate script...
         try:
             year = self.local_index.get_year_from_toc(record_dict=record.get_data())
@@ -111,66 +99,55 @@ class YearVolIssPrep(JsonSchemaMixin):
                 note="",
                 keep_source_if_equal=True,
             )
-            return record
         except colrev_exceptions.TOCNotAvailableException:
             pass
 
-        if "journal" in record.data:
-            if record.data["journal"] in self.vol_nr_dict:
-                if "volume" in record.data:
-                    if (
+    def __get_year_from_vol_nr_dict(self, *, record: colrev.record.Record) -> None:
+        if "journal" not in record.data or "volume" not in record.data:
+            return
+
+        if record.data["journal"] not in self.vol_nr_dict:
+            return
+
+        if record.data["volume"] not in self.vol_nr_dict[record.data["journal"]]:
+            return
+
+        if "number" in record.data:
+            if (
+                record.data["number"]
+                in self.vol_nr_dict[record.data["journal"]][record.data["volume"]]
+            ):
+                record.update_field(
+                    key="year",
+                    value=self.vol_nr_dict[record.data["journal"]][
                         record.data["volume"]
-                        in self.vol_nr_dict[record.data["journal"]]
-                    ):
-                        if "number" in record.data:
-                            if (
-                                record.data["number"]
-                                in self.vol_nr_dict[record.data["journal"]][
-                                    record.data["volume"]
-                                ]
-                            ):
-                                record.update_field(
-                                    key="year",
-                                    value=self.vol_nr_dict[record.data["journal"]][
-                                        record.data["volume"]
-                                    ][record.data["number"]],
-                                    source="year_vol_iss_prep",
-                                    note="",
-                                )
-                                record.update_masterdata_provenance()
-                                return record
-                        else:
-                            if isinstance(
-                                self.vol_nr_dict[record.data["journal"]][
-                                    record.data["volume"]
-                                ],
-                                (str, int),
-                            ):
-                                record.update_field(
-                                    key="year",
-                                    value=self.vol_nr_dict[record.data["journal"]][
-                                        record.data["volume"]
-                                    ],
-                                    source="year_vol_iss_prep",
-                                    note="",
-                                )
-                                record.update_masterdata_provenance()
-                                return record
-
-        # The year depends on journal x volume x issue
-        if (
-            "journal" in record.data
-            and "volume" in record.data
-            and "number" in record.data
-        ) and "UNKNOWN" == record.data.get("year", "UNKNOWN"):
-            pass
+                    ][record.data["number"]],
+                    source="year_vol_iss_prep",
+                    note="",
+                )
+                record.update_masterdata_provenance()
         else:
-            return record
+            if isinstance(
+                self.vol_nr_dict[record.data["journal"]][record.data["volume"]],
+                (str, int),
+            ):
+                record.update_field(
+                    key="year",
+                    value=self.vol_nr_dict[record.data["journal"]][
+                        record.data["volume"]
+                    ],
+                    source="year_vol_iss_prep",
+                    note="",
+                )
+                record.update_masterdata_provenance()
 
-        crossref_source = crossref_connector.CrossrefSearchSource(
-            source_operation=prep_operation
-        )
+    def __get_year_from_crossref(
+        self, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
+    ) -> None:
         try:
+            crossref_source = crossref_connector.CrossrefSearchSource(
+                source_operation=prep_operation
+            )
             retrieved_records = crossref_source.crossref_query(
                 review_manager=prep_operation.review_manager,
                 record_input=record,
@@ -189,7 +166,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                     timeout=prep_operation.timeout,
                 )
             if 0 == len(retrieved_records):
-                return record
+                return
 
             retrieved_records = [
                 retrieved_record
@@ -204,7 +181,7 @@ class YearVolIssPrep(JsonSchemaMixin):
 
             years = [r.data["year"] for r in retrieved_records]
             if len(years) == 0:
-                return record
+                return
             most_common = max(years, key=years.count)
             if years.count(most_common) > 3:
                 record.update_field(
@@ -212,6 +189,26 @@ class YearVolIssPrep(JsonSchemaMixin):
                 )
         except requests.exceptions.RequestException:
             pass
+
+    def prepare(
+        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+    ) -> colrev.record.Record:
+        """Prepare a record based on year-volume-issue dependency"""
+
+        if record.data.get("year", "NA").isdigit() or record.masterdata_is_curated():
+            return record
+
+        self.__get_year_from_toc(record=record)
+
+        if "year" in record.data:
+            return record
+
+        self.__get_year_from_vol_nr_dict(record=record)
+
+        if "year" in record.data:
+            return record
+
+        self.__get_year_from_crossref(record=record, prep_operation=prep_operation)
 
         return record
 

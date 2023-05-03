@@ -48,6 +48,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.CheckOperation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     def validate_source(
         self,
@@ -107,7 +108,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             return
 
         remote_url = project_review_manager.dataset.get_remote_url()
-        if "NA" != remote_url:
+        if remote_url != "NA":
             project_identifier = remote_url.rstrip(".git")
 
         project_review_manager.get_load_operation(
@@ -129,7 +130,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         search_operation.review_manager.logger.info("Importing selected records")
-        nr_added = 0
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -140,9 +140,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                     stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
                     # pylint: disable=possibly-unused-variable
                     rec_df = pd.DataFrame.from_records([stringified_copy])
+                    query_select = "SELECT * FROM rec_df WHERE"
                     query = (
-                        "SELECT * FROM rec_df WHERE "
-                        f"{self.search_source.search_parameters['scope']['condition']}"
+                        f"{query_select} "
+                        + f"{self.search_source.search_parameters['scope']['condition']}"
                     )
                     res = ps.sqldf(query, locals())
                 except PandaSQLException:
@@ -174,13 +175,14 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                     record=colrev.record.Record(data=record_to_import),
                 )
                 if added:
-                    nr_added += 1
+                    colrev_project_search_feed.nr_added += 1
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
 
         colrev_project_search_feed.save_feed_file()
-        search_operation.review_manager.logger.info(
-            f"{colors.GREEN}Retrieved {nr_added} new records {colors.END}"
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Retrieved {colrev_project_search_feed.nr_added} "
+            f"new records {colors.END}"
         )
 
     def get_masterdata(
