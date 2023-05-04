@@ -259,7 +259,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         item = {
             k: v
             for k, v in item.items()
-            if k not in ["venue", "type", "access", "key", "ee", "authors", "url"]
+            if k not in ["venue", "type", "access", "key", "ee", "authors"]
         }
         for key, value in item.items():
             item[key] = html.unescape(value).replace("{", "").replace("}", "")
