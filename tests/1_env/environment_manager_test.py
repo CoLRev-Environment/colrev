@@ -22,9 +22,9 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
 
     temp_env = tmp_path
     with mocker.patch.object(
-            colrev.env.environment_manager.EnvironmentManager,
-            "registry",
-            temp_env / Path("reg.yml"),
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry",
+        temp_env / Path("reg.yml"),
     ):
         env_man = colrev.env.environment_manager.EnvironmentManager()
 
@@ -65,4 +65,3 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
         # env_man.stop_docker_services()
         # env_man.build_docker_image()
         # env_man.save_environment_registry(updated_registry=env_man.environment_registry)
-
