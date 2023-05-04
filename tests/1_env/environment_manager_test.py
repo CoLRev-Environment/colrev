@@ -1,59 +1,173 @@
-#!/usr/bin/env python
-# from pathlib import Path
-# import pytest
-# import os
-# import colrev.env.environment_manager
-# import colrev.env.tei_parser
-# import colrev.review_manager
-# @pytest.fixture(scope="module")
-# def script_loc(request) -> Path:  # type: ignore
-#     """Return the directory of the currently running test script"""
-#     return Path(request.fspath).parent
+import json
+import os
+from collections import namedtuple
+from pathlib import Path
+
+import git
+
+import colrev.env.environment_manager
+import colrev.env.tei_parser
+import colrev.review_manager
+
+EnvTestConf = namedtuple(
+    "EnvTestConf",
+    "json_path json_expected yaml_path yaml_expected base_path test_repo backup",
+)
+
+
+def continue_test() -> bool:
+    """Skip test if running inside CI"""
+    return not any(
+        "true" == os.getenv(x)
+        for x in ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
+    )
+
+
+def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
+    """
+    Previous version stores files in yml, upgraded to JSON format,
+    and keep the previous version available, will check for yaml file, if found,
+    load it and save it as a json file. After saved, will rename the old yaml file
+    to a file with bk extension
+
+    """
+
+    test_repo = tmp_path / Path("a_test_repo")
+    dummy_origin = "https://example.com/repo"
+
+    base_path = script_loc.parents[1]
+    r = git.Repo(base_path)
+    origin = [x for x in r.remote("origin").urls]
+
+    expected_yaml = f"""- repo_name: colrev
+  repo_source_path: {base_path}
+  repo_source_url: {origin[0]}
+- repo_name: a_test_repo
+  repo_source_path: {test_repo}
+  repo_source_url: {dummy_origin}
+"""
+    expected_json = json.dumps(
+        [
+            {
+                "repo_name": "colrev",
+                "repo_source_path": str(base_path),
+                "repo_source_url": str(origin[0]),
+            },
+            {
+                "repo_name": "a_test_repo",
+                "repo_source_path": str(test_repo),
+                "repo_source_url": dummy_origin,
+            },
+        ]
+    )
+
+    # create a repo and make a commit
+    r = git.Repo.init(test_repo)
+    r.create_remote(name="origin", url=dummy_origin)
+    with open(test_repo / "test.yaml", "w") as fp:
+        fp.write(expected_yaml)
+    r.index.add(["test.yaml"])
+    r.index.commit("initial commit")
+    #
+    # return base_path, test_json_path, expected_json, test_repo
+    return EnvTestConf(
+        base_path=base_path,
+        json_path=tmp_path / Path("reg.json"),
+        json_expected=expected_json,
+        yaml_path=tmp_path / Path("reg.yaml"),
+        yaml_expected=expected_yaml,
+        test_repo=test_repo,
+        backup=tmp_path / Path("reg.yaml.bk")
+,
+    )
+
+
+def test_loading_config_properly(
+    tmp_path, script_loc, patch_registry
+) -> None:  # type: ignore
+    """
+    Testing if we are loading existing json registry file correctly
+    """
+    if not continue_test():
+        return
+    data = prep_test(tmp_path, script_loc)
+    with open(data.json_path, "w") as fp:
+        fp.write(data.json_expected)
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    assert json.dumps(env_man.environment_registry) == data.json_expected
+    assert not env_man.load_yaml
+
+
+def test_saving_config_file_as_json_from_yaml_correctly(
+    tmp_path, script_loc, patch_registry
+) -> None:  # type: ignore
+    """
+    Testing if we are converting a yaml file to json correctly
+    """
+    if not continue_test():
+        return
+    data = prep_test(tmp_path, script_loc)
+    with open(data.yaml_path, "w") as fp:
+        fp.write(data.yaml_expected)
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    assert env_man.load_yaml
+    assert Path(data.base_path).exists()
+    env_man.register_repo(path_to_register=Path(data.base_path))
+    env_man.register_repo(path_to_register=Path(data.test_repo))
+    with open(data.json_path) as fp:
+        actual_json = json.dumps(json.loads(fp.read()))
+        assert data.json_expected == actual_json
+
+
+#
+# NOTE: This test will fail due to mocking of register_repo in `conftest.py`.
+# Without the mock, several other tests will fail. Thus, it's better to keep
+# this test commented. It will pass if run individually. Fortunately the tests
+# above works and it will also tests environment_manager
+#
+
 # def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore
-#     pass
-# identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
-# if any("true" == os.getenv(x) for x in identifier_list):
-#     return
-# temp_env = tmp_path
-# with mocker.patch.object(
-#     colrev.env.environment_manager.EnvironmentManager,
-#     "registry",
-#     temp_env / Path("reg.yml"),
-# ):
-#     env_man = colrev.env.environment_manager.EnvironmentManager()
-#     env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
-#     actual = env_man.environment_registry  # type: ignore
-#     expected = [  # type: ignore
-#         {
-#             "repo_name": "colrev",
-#             "repo_source_path": Path(colrev.__file__).parents[1],
-#             "repo_source_url": actual[0]["repo_source_url"],
+#
+#     if not continue_test():
+#         return
+#
+#     with mocker.patch.object(
+#             colrev.env.environment_manager.EnvironmentManager,
+#             "registry",
+#             tmp_path / Path("reg.yml"),
+#     ):
+#         env_man = colrev.env.environment_manager.EnvironmentManager()
+#
+#         env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
+#         actual = env_man.environment_registry  # type: ignore
+#
+#         expected = [  # type: ignore
+#             {
+#                 "repo_name": "colrev",
+#                 "repo_source_path": Path(colrev.__file__).parents[1],
+#                 "repo_source_url": actual[0]["repo_source_url"],
+#             }
+#         ]
+#         assert expected == actual
+#
+#         expected = {  # type: ignore
+#             "index": {
+#                 "size": 0,
+#                 "last_modified": "NOT_INITIATED",
+#                 "path": "/home/gerit/colrev",
+#                 "status": "TODO",
+#             },
+#             "local_repos": {
+#                 "repos": [],
+#                 "broken_links": [
+#                     {
+#                         "repo_name": "colrev",
+#                         "repo_source_path": str(Path(colrev.__file__).parents[1]),
+#                         "repo_source_url": str(actual[0]["repo_source_url"]),
+#                     }
+#                 ],
+#             },
 #         }
-#     ]
-#     print(actual)
-#     assert expected == actual
-#     expected = {  # type: ignore
-#         "index": {
-#             "size": 0,
-#             "last_modified": "NOT_INITIATED",
-#             "path": "/home/gerit/colrev",
-#             "status": "TODO",
-#         },
-#         "local_repos": {
-#             "repos": [],
-#             "broken_links": [
-#                 {
-#                     "repo_name": "colrev",
-#                     "repo_source_path": str(Path(colrev.__file__).parents[1]),
-#                     "repo_source_url": actual[0]["repo_source_url"],
-#                 }
-#             ],
-#         },
-#     }
-#     actual = env_man.get_environment_details()  # type: ignore
-#     actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
-#     print(actual)
-#     assert expected == actual
-#     env_man.stop_docker_services()
-# env_man.build_docker_image()
-# env_man.save_environment_registry(updated_registry=env_man.environment_registry)
+#         actual = env_man.get_environment_details()  # type: ignore
+#         actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
+#         assert expected == actual

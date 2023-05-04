@@ -27,8 +27,11 @@ class EnvironmentManager:
 
     colrev_path = Path.home().joinpath("colrev")
     cache_path = colrev_path / Path("prep_requests_cache")
-    REGISTRY_RELATIVE = Path("registry.yaml")
+    REGISTRY_RELATIVE = Path("registry.json")
     registry = colrev_path.joinpath(REGISTRY_RELATIVE)
+    REGISTRY_RELATIVE_YAML = Path("registry.yaml")
+    registry_yaml = colrev_path.joinpath(REGISTRY_RELATIVE_YAML)
+    load_yaml = False
 
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
@@ -65,11 +68,24 @@ class EnvironmentManager:
     def load_environment_registry(self) -> list:
         """Load the local registry"""
         environment_registry_path = self.registry
+        environment_registry_path_yaml = self.registry_yaml
         environment_registry = []
         if environment_registry_path.is_file():
+            self.load_yaml = False
             with open(environment_registry_path, encoding="utf8") as file:
+                environment_registry_df = pd.json_normalize(json.load(file))
+                environment_registry = environment_registry_df.to_dict("records")
+        elif environment_registry_path_yaml.is_file():
+            self.load_yaml = True
+            backup_file = Path(str(environment_registry_path_yaml) + ".bk")
+            print(
+                f"Found a yaml file, converting to json, it will be backed up as {backup_file}"
+            )
+            with open(environment_registry_path_yaml, encoding="utf8") as file:
                 environment_registry_df = pd.json_normalize(safe_load(file))
                 environment_registry = environment_registry_df.to_dict("records")
+                self.save_environment_registry(updated_registry=environment_registry)
+                environment_registry_path_yaml.rename(backup_file)
 
         return environment_registry
 
@@ -86,13 +102,8 @@ class EnvironmentManager:
 
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
-            yaml.dump(
-                json.loads(
-                    updated_registry_df.to_json(orient="records", default_handler=str)
-                ),
-                file,
-                default_flow_style=False,
-                sort_keys=False,
+            file.write(
+                updated_registry_df.to_json(orient="records", default_handler=str)
             )
 
     def register_repo(self, *, path_to_register: Path) -> None:
@@ -112,8 +123,14 @@ class EnvironmentManager:
             "repo_source_path": path_to_register,
         }
         git_repo = git.Repo(path_to_register)
-        remotes = [x["repo"] for x in git_repo.remotes if "repo" in x and x["repo"]]
-        new_record["repo_source_url"] = remotes and remotes.pop() or None
+        try:
+            remote_urls = list(git_repo.remote("origin").urls)
+            new_record["repo_source_url"] = remote_urls[0]
+        except (ValueError, IndexError):
+            for remote in git_repo.remotes:
+                if remote.url:
+                    new_record["repo_source_url"] = remote.url
+                    break
         self.environment_registry.append(new_record)
         self.save_environment_registry(updated_registry=self.environment_registry)
         print(f"Registered path ({path_to_register})")
