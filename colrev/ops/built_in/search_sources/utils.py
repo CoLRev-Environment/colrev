@@ -167,7 +167,9 @@ def json_to_record(*, item: dict) -> dict:
         record_dict = __format_fields(record_dict=record_dict)
         record_dict = __remove_fields(record_dict=record_dict)
     except (IndexError, KeyError) as exc:
-        raise colrev_exceptions.RecordNotParsableException(str(exc)) from exc
+        raise colrev_exceptions.RecordNotParsableException(
+            f"RecordNotParsableException: {exc}"
+        ) from exc
 
     return record_dict
 

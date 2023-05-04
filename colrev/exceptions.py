@@ -365,6 +365,13 @@ class NotFeedIdentifiableException(CoLRevException):
 class ImportException(CoLRevException):
     """An error occured in the import functions."""
 
+    def __init__(
+        self,
+        msg: str,
+    ) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
 
 class UnsupportedImportFormatError(CoLRevException):
     """The file format is not supported."""
