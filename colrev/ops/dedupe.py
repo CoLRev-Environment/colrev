@@ -570,7 +570,7 @@ class Dedupe(colrev.operation.Operation):
                     )
 
                 self.review_manager.logger.info(
-                    f"Merge: {main_record.data['ID']} - {dupe_record.data['ID']}"
+                    f" merge {main_record.data['ID']} - {dupe_record.data['ID']}"
                 )
                 if main_record.data["ID"] not in duplicate_id_mappings:
                     duplicate_id_mappings[main_record.data["ID"]] = [
@@ -903,6 +903,10 @@ class Dedupe(colrev.operation.Operation):
         """Merge records based on global IDs (e.g., doi)"""
 
         # pylint: disable=too-many-branches
+
+        self.review_manager.logger.info(
+            "Dedupe operation [merge based on identical global_ids]"
+        )
 
         records = self.review_manager.dataset.load_records_dict()
 
