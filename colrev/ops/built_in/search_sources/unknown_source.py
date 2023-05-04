@@ -64,7 +64,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for unknown sources"""
 
-        result = {"confidence": 0.0}
+        result = {"confidence": 0.1}
 
         return result
 

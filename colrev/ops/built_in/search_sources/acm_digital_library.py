@@ -50,10 +50,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         """Source heuristic for ACM dDigital Library"""
 
         result = {"confidence": 0.0}
-
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:
             result["confidence"] = 0.7
+            print(data)
             return result
         # We may also check whether the ID=doi=url
         return result
@@ -120,6 +120,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for ACM Digital Library"""
+        record.remove_field(key="url")
 
         return record
 

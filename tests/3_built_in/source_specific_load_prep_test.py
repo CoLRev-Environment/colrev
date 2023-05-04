@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-import colrev.env.utils
 import colrev.review_manager
 import colrev.settings
 
@@ -62,15 +61,34 @@ def fixture_ssp_review_manager(  # type: ignore
     return rev_man
 
 
-# To create new test datasets, it is sufficient to
-# create the source_filepath and an empty expected_file
-# running the test will update the expected_file
+# To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
+# and create the source_filepath in tests/data/built_in_search_sources.
+# The first test run will create the expected_file and fail on the first run.
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, expected_file",
     [
-        (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
-        (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
-        (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
+        # (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
+        # (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
+        # (Path("dblp.bib"), "colrev.dblp", Path("dblp_result.bib")),
+        # (Path("europe_pmc.bib"), "colrev.europe_pmc", Path("europe_pmc_result.bib")),
+        # (Path("acm.bib"), "colrev.acm_digital_library", Path("acm_result.bib")),
+        # (Path("eric.nbib"), "colrev.eric", Path("eric_result.bib")),
+        # (Path("ieee.ris"), "colrev.ieee", Path("ieee_result.bib")),
+        # (Path("jstor.ris"), "colrev.jstor", Path("jstor_result.bib")),
+        # (Path("psycinfo.ris"), "colrev.psycinfo", Path("psycinfo_result.bib")),
+        # (Path("springer.csv"), "colrev.springer_link", Path("springer_result.bib")),
+        # (
+        #     Path("taylor_and_francis.ris"),
+        #     "colrev.taylor_and_francis",
+        #     Path("taylor_and_francis_result.bib"),
+        # ),
+        # (Path("trid.ris"), "colrev.trid", Path("trid_result.bib")),
+        # (
+        #     Path("web_of_science.bib"),
+        #     "colrev.web_of_science",
+        #     Path("web_of_science_result.bib"),
+        # ),
+        # (Path("wiley.bib"), "colrev.wiley", Path("wiley_result.bib")),
     ],
 )
 def test_source(  # type: ignore
@@ -82,6 +100,8 @@ def test_source(  # type: ignore
 ) -> None:
     """Test the source_specific prep"""
 
+    print(Path.cwd())  # To facilitate debugging
+
     helpers.retrieve_test_file(
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
@@ -90,12 +110,12 @@ def test_source(  # type: ignore
         if source_filepath.suffix not in [".bib", ".csv"]:
             return
 
+    # Run load and test the heuristics
     load_operation = ssp_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation.main(new_sources=new_sources)
     actual_source_identifier = ssp_review_manager.settings.sources[0].endpoint
-
-    # This tests the heuristics
+    # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
 
     prep_operation = ssp_review_manager.get_prep_operation()
@@ -113,6 +133,11 @@ def test_source(  # type: ignore
         shutil.copy(
             Path("data/records.bib"),
             helpers.test_data_path / Path("built_in_search_sources/") / expected_file,
+        )
+        raise Exception(
+            f"The expected_file ({expected_file.name}) was not (yet) available. "
+            f"An initial version was created in {expected_file}. "
+            "Please check, update, and add/commit it. Afterwards, rerun the tests."
         )
 
     assert expected == actual

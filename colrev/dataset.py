@@ -871,44 +871,51 @@ class Dataset:
         id_list = list(records.keys())
 
         for record_id in tqdm(list(records.keys())):
-            record_dict = records[record_id]
-            if selected_ids is not None:
-                if record_id not in selected_ids:
+            try:
+                record_dict = records[record_id]
+                if selected_ids is not None:
+                    if record_id not in selected_ids:
+                        continue
+                if (
+                    record_dict["colrev_status"]
+                    not in [
+                        colrev.record.RecordState.md_imported,
+                        colrev.record.RecordState.md_prepared,
+                    ]
+                    and not self.review_manager.force_mode
+                ):
                     continue
-            if (
-                record_dict["colrev_status"]
-                not in [
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.md_prepared,
-                ]
-                and not self.review_manager.force_mode
-            ):
-                continue
-            old_id = record_id
+                old_id = record_id
 
-            temp_stat = record_dict["colrev_status"]
-            if selected_ids:
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            new_id = self.__generate_id(
-                local_index=local_index,
-                record_dict=record_dict,
-                existing_ids=[x for x in id_list if x != record_id],
-            )
-            if selected_ids:
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=temp_stat)
+                temp_stat = record_dict["colrev_status"]
+                if selected_ids:
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                new_id = self.__generate_id(
+                    local_index=local_index,
+                    record_dict=record_dict,
+                    existing_ids=[x for x in id_list if x != record_id],
+                )
+                if selected_ids:
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(target_state=temp_stat)
 
-            id_list.append(new_id)
-            if old_id != new_id:
-                # We need to insert the a new element into records
-                # to make sure that the IDs are actually saved
-                record_dict.update(ID=new_id)
-                records[new_id] = record_dict
-                del records[old_id]
-                self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
-                if old_id in id_list:
-                    id_list.remove(old_id)
+                id_list.append(new_id)
+                if old_id != new_id:
+                    # We need to insert the a new element into records
+                    # to make sure that the IDs are actually saved
+                    record_dict.update(ID=new_id)
+                    records[new_id] = record_dict
+                    del records[old_id]
+                    self.review_manager.report_logger.info(
+                        f"set_ids({old_id}) to {new_id}"
+                    )
+                    if old_id in id_list:
+                        id_list.remove(old_id)
+            except colrev_exceptions.PropagatedIDChange as exc:
+                print(exc)
 
         self.save_records_dict(records=records)
         self.add_record_changes()

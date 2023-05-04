@@ -73,7 +73,7 @@ class ERICSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for ERIC"""
 
-        result = {"confidence": 0.1}
+        result = {"confidence": 0.0}
 
         # Note : no features in bib file for identification
 

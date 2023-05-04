@@ -138,73 +138,70 @@ class Load(colrev.operation.Operation):
                 continue
             res = endpoint_class.heuristic(filepath, data)  # type: ignore
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
+            if res["confidence"] == 0.0:
+                continue
             try:
-                if res["confidence"] > 0:
-                    result_item = {}
+                result_item = {}
 
-                    res["endpoint"] = endpoint
+                res["endpoint"] = endpoint
 
-                    search_type = endpoint_class.search_type
-                    # Note : as the identifier, we use the filename
-                    # (if search results are added by file/not via the API)
+                search_type = endpoint_class.search_type
+                # Note : as the identifier, we use the filename
+                # (if search results are added by file/not via the API)
 
-                    # Correct the file extension if necessary
-                    if re.findall(
-                        r"^%0", data, re.MULTILINE
-                    ) and filepath.suffix not in [".enl"]:
-                        new_filename = filepath.with_suffix(".enl")
-                        self.review_manager.logger.info(
-                            f"{colors.GREEN}Rename to {new_filename} "
-                            f"(because the format is .enl){colors.END}"
-                        )
-                        filepath.rename(new_filename)
-                        self.review_manager.dataset.add_changes(
-                            path=filepath, remove=True
-                        )
-                        filepath = new_filename
-                        res["filename"] = filepath
-                        self.review_manager.dataset.add_changes(path=new_filename)
-                        self.review_manager.create_commit(msg=f"Rename {filepath}")
+                # Correct the file extension if necessary
+                if re.findall(r"^%0", data, re.MULTILINE) and filepath.suffix not in [
+                    ".enl"
+                ]:
+                    new_filename = filepath.with_suffix(".enl")
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Rename to {new_filename} "
+                        f"(because the format is .enl){colors.END}"
+                    )
+                    filepath.rename(new_filename)
+                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
+                    filepath = new_filename
+                    res["filename"] = filepath
+                    self.review_manager.dataset.add_changes(path=new_filename)
+                    self.review_manager.create_commit(msg=f"Rename {filepath}")
 
-                    if re.findall(
-                        r"^TI ", data, re.MULTILINE
-                    ) and filepath.suffix not in [".ris"]:
-                        new_filename = filepath.with_suffix(".ris")
-                        self.review_manager.logger.info(
-                            f"{colors.GREEN}Rename to {new_filename} "
-                            f"(because the format is .ris){colors.END}"
-                        )
-                        filepath.rename(new_filename)
-                        self.review_manager.dataset.add_changes(
-                            path=filepath, remove=True
-                        )
-                        filepath = new_filename
-                        res["filename"] = filepath
-                        self.review_manager.dataset.add_changes(path=new_filename)
-                        self.review_manager.create_commit(msg=f"Rename {filepath}")
+                if re.findall(r"^TI ", data, re.MULTILINE) and filepath.suffix not in [
+                    ".ris"
+                ]:
+                    new_filename = filepath.with_suffix(".ris")
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Rename to {new_filename} "
+                        f"(because the format is .ris){colors.END}"
+                    )
+                    filepath.rename(new_filename)
+                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
+                    filepath = new_filename
+                    res["filename"] = filepath
+                    self.review_manager.dataset.add_changes(path=new_filename)
+                    self.review_manager.create_commit(msg=f"Rename {filepath}")
 
-                    if "load_conversion_package_endpoint" not in res:
-                        res[
-                            "load_conversion_package_endpoint"
-                        ] = self.__get_load_conversion_package_endpoint(
-                            filepath=filepath, load_conversion=load_conversion
-                        )
-
-                    source_candidate = colrev.settings.SearchSource(
-                        endpoint=endpoint,
-                        filename=filepath,
-                        search_type=search_type,
-                        search_parameters={},
-                        load_conversion_package_endpoint=res[
-                            "load_conversion_package_endpoint"
-                        ],
-                        comment="",
+                if "load_conversion_package_endpoint" not in res:
+                    res[
+                        "load_conversion_package_endpoint"
+                    ] = self.__get_load_conversion_package_endpoint(
+                        filepath=filepath, load_conversion=load_conversion
                     )
 
-                    result_item["source_candidate"] = source_candidate
-                    result_item["confidence"] = res["confidence"]
+                source_candidate = colrev.settings.SearchSource(
+                    endpoint=endpoint,
+                    filename=filepath,
+                    search_type=search_type,
+                    search_parameters={},
+                    load_conversion_package_endpoint=res[
+                        "load_conversion_package_endpoint"
+                    ],
+                    comment="",
+                )
 
-                    results_list.append(result_item)
+                result_item["source_candidate"] = source_candidate
+                result_item["confidence"] = res["confidence"]
+
+                results_list.append(result_item)
             except colrev_exceptions.UnsupportedImportFormatError:
                 continue
         return results_list
@@ -235,28 +232,91 @@ class Load(colrev.operation.Operation):
         if [r for r in results_list if r["confidence"] > 0.95]:
             results_list = [r for r in results_list if r["confidence"] > 0.8]
 
-        if (
-            0 == len(results_list)
-            or len([r for r in results_list if r["confidence"] > 0.5]) == 0
-        ):
-            source_candidate = colrev.settings.SearchSource(
-                endpoint="colrev.unknown_source",
-                filename=Path(filepath),
-                search_type=colrev.settings.SearchType("DB"),
-                search_parameters={},
-                load_conversion_package_endpoint=self.__get_load_conversion_package_endpoint(
-                    filepath=filepath, load_conversion=load_conversion
-                ),
-                comment="",
-            )
-            results_list.append(
-                {
-                    "source_candidate": source_candidate,
-                    "confidence": 0.1,  # type: ignore
-                }
+        return results_list
+
+    def __select_source(self, *, heuristic_result_list: list, skip_query: bool) -> dict:
+        if not skip_query:
+            print(f"{colors.ORANGE}Select search source{colors.END}:")
+            for i, heuristic_source in enumerate(heuristic_result_list):
+                highlight_color = ""
+                if heuristic_source["confidence"] >= 0.7:
+                    highlight_color = colors.GREEN
+                elif heuristic_source["confidence"] >= 0.5:
+                    highlight_color = colors.ORANGE
+                print(
+                    f"{highlight_color}{i+1} "
+                    f"(confidence: {round(heuristic_source['confidence'], 2)}):"
+                    f" {heuristic_source['source_candidate'].endpoint}{colors.END}"
+                )
+
+        while True:
+            if skip_query:
+                # Use the last / unknown_source
+                max_conf = 0.0
+                best_candidate_pos = 0
+                for i, heuristic_candidate in enumerate(heuristic_result_list):
+                    if heuristic_candidate["confidence"] > max_conf:
+                        best_candidate_pos = i + 1
+                        max_conf = heuristic_candidate["confidence"]
+                if not any(c["confidence"] > 0.1 for c in heuristic_result_list):
+                    return [
+                        x
+                        for x in heuristic_result_list
+                        if x["source_candidate"].endpoint == "colrev.unknown_source"
+                    ][0]
+                selection = str(best_candidate_pos)
+            else:
+                selection = input("select nr")
+            if not selection.isdigit():
+                continue
+            if int(selection) in range(1, len(heuristic_result_list) + 1):
+                heuristic_source = heuristic_result_list[int(selection) - 1]
+                return heuristic_source
+
+    def __heuristics_check(
+        self, *, heuristic_result_list: list, skip_query: bool
+    ) -> colrev.settings.SearchSource:
+        if 1 == len(heuristic_result_list):
+            heuristic_source = heuristic_result_list[0]
+        else:
+            heuristic_source = self.__select_source(
+                heuristic_result_list=heuristic_result_list, skip_query=skip_query
             )
 
-        return results_list
+        if "colrev.unknown_source" == heuristic_source["source_candidate"].endpoint:
+            cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
+            query_input = ""
+            if not skip_query:
+                query_input = input(cmd)
+            if query_input not in ["", "NA"]:
+                heuristic_source["source_candidate"].search_parameters = {
+                    "query": query_input
+                }
+            else:
+                heuristic_source["source_candidate"].search_parameters = {}
+
+        self.review_manager.logger.info(
+            f"Source name: {heuristic_source['source_candidate'].endpoint}"
+        )
+
+        heuristic_source["source_candidate"].comment = None
+
+        if {} == heuristic_source["source_candidate"].load_conversion_package_endpoint:
+            custom_load_conversion_package_endpoint = input(
+                "provide custom load_conversion_package_endpoint [or NA]:"
+            )
+            if "NA" == custom_load_conversion_package_endpoint:
+                heuristic_source[
+                    "source_candidate"
+                ].load_conversion_package_endpoint = {}
+            else:
+                heuristic_source[
+                    "source_candidate"
+                ].load_conversion_package_endpoint = {
+                    "endpoint": custom_load_conversion_package_endpoint
+                }
+
+        return heuristic_source["source_candidate"]
 
     def get_new_sources(
         self, *, skip_query: bool = False
@@ -264,9 +324,6 @@ class Load(colrev.operation.Operation):
         """Get new SearchSources"""
 
         # pylint: disable=redefined-outer-name
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-locals
 
         new_search_files = self.__get_new_search_files()
         if not new_search_files:
@@ -334,73 +391,16 @@ class Load(colrev.operation.Operation):
                 search_sources=search_sources,
                 load_conversion=load_conversion_packages,
             )
+            # print(heuristic_result_list) #can be deleted mail?
 
-            if 1 == len(heuristic_result_list):
-                heuristic_source = heuristic_result_list[0]
-            else:
-                if not skip_query:
-                    print(f"{colors.ORANGE}Select search source{colors.END}:")
-                    for i, heuristic_source in enumerate(heuristic_result_list):
-                        highlight_color = ""
-                        if heuristic_source["confidence"] >= 0.7:
-                            highlight_color = colors.GREEN
-                        elif heuristic_source["confidence"] >= 0.5:
-                            highlight_color = colors.ORANGE
-                        print(
-                            f"{highlight_color}{i+1} "
-                            f"(confidence: {round(heuristic_source['confidence'], 2)}):"
-                            f" {heuristic_source['source_candidate'].endpoint}{colors.END}"
-                        )
+            # turn following Code into function due to too many nested block warnings
 
-                while True:
-                    if skip_query:
-                        # Use the last / unknown_source
-                        selection = str(len(heuristic_result_list))
-                    else:
-                        selection = input("select nr")
-                    if not selection.isdigit():
-                        continue
-                    if int(selection) in range(1, len(heuristic_result_list) + 1):
-                        heuristic_source = heuristic_result_list[int(selection) - 1]
-                        break
+        # immediatley execute code from function above
+        new_source = self.__heuristics_check(
+            heuristic_result_list=heuristic_result_list, skip_query=skip_query
+        )
 
-            if heuristic_source["source_candidate"].endpoint == "colrev.unknown_source":
-                cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
-                query_input = ""
-                if not skip_query:
-                    query_input = input(cmd)
-                if query_input not in ["", "NA"]:
-                    heuristic_source["source_candidate"].search_parameters = {
-                        "query": query_input
-                    }
-                else:
-                    heuristic_source["source_candidate"].search_parameters = {}
-
-            self.review_manager.logger.info(
-                f"Source name: {heuristic_source['source_candidate'].endpoint}"
-            )
-
-            heuristic_source["source_candidate"].comment = None
-
-            if (
-                {}
-                == heuristic_source["source_candidate"].load_conversion_package_endpoint
-            ):
-                custom_load_conversion_package_endpoint = input(
-                    "provide custom load_conversion_package_endpoint [or NA]:"
-                )
-                if custom_load_conversion_package_endpoint == "NA":
-                    heuristic_source[
-                        "source_candidate"
-                    ].load_conversion_package_endpoint = {}
-                else:
-                    heuristic_source[
-                        "source_candidate"
-                    ].load_conversion_package_endpoint = {
-                        "endpoint": custom_load_conversion_package_endpoint
-                    }
-
-            new_sources.append(heuristic_source["source_candidate"])
+        new_sources.append(new_source)
 
         return new_sources
 

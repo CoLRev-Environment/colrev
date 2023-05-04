@@ -77,7 +77,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Springer Link"""
 
-        result = {"confidence": 0.1}
+        result = {"confidence": 0.0}
 
         if filename.suffix == ".csv":
             if data.count("http://link.springer.com") == data.count("\n"):

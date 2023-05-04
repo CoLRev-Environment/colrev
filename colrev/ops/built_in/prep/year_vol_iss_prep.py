@@ -46,46 +46,47 @@ class YearVolIssPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-
+        self.review_manager = prep_operation.review_manager
         self.local_index = prep_operation.review_manager.get_local_index()
+        self.vol_nr_dict = self.__get_vol_nr_dict()
 
+    def __get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
-        if hasattr(prep_operation.review_manager, "dataset"):
-            records = prep_operation.review_manager.dataset.load_records_dict()
-            for record in records.values():
-                # pylint: disable=duplicate-code
-                if record[
-                    "colrev_status"
-                ] not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_processed
-                ):
-                    continue
-                if not record.get("year", "NA").isdigit():
-                    continue
+        if not hasattr(self.review_manager, "dataset"):
+            return vol_nr_dict
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            # pylint: disable=duplicate-code
+            if record[
+                "colrev_status"
+            ] not in colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_processed
+            ):
+                continue
+            if not record.get("year", "NA").isdigit():
+                continue
 
-                if "journal" not in record or "volume" not in record:
-                    continue
+            if "journal" not in record or "volume" not in record:
+                continue
 
-                if record["journal"] not in vol_nr_dict:
-                    vol_nr_dict[record["journal"]] = {}
+            if record["journal"] not in vol_nr_dict:
+                vol_nr_dict[record["journal"]] = {}
 
-                if record["volume"] not in vol_nr_dict[record["journal"]]:
-                    vol_nr_dict[record["journal"]][record["volume"]] = {}
+            if record["volume"] not in vol_nr_dict[record["journal"]]:
+                vol_nr_dict[record["journal"]][record["volume"]] = {}
 
-                if "number" not in record:
-                    vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
+            if "number" not in record:
+                vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
+            else:
+                if isinstance(vol_nr_dict[record["journal"]][record["volume"]], dict):
+                    vol_nr_dict[record["journal"]][record["volume"]][
+                        record["number"]
+                    ] = record["year"]
                 else:
-                    if isinstance(
-                        vol_nr_dict[record["journal"]][record["volume"]], dict
-                    ):
-                        vol_nr_dict[record["journal"]][record["volume"]][
-                            record["number"]
-                        ] = record["year"]
-                    else:
-                        # do not use inconsistent data (has/has no number)
-                        del vol_nr_dict[record["journal"]][record["volume"]]
+                    # do not use inconsistent data (has/has no number)
+                    del vol_nr_dict[record["journal"]][record["volume"]]
 
-        self.vol_nr_dict = vol_nr_dict
+        return vol_nr_dict
 
     def __get_year_from_toc(self, *, record: colrev.record.Record) -> None:
         # TBD: maybe extract the following three lines as a separate script...
