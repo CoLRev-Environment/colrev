@@ -15,7 +15,6 @@ from sqlite3 import OperationalError
 from typing import Optional
 
 import requests
-import timeout_decorator
 import zope.interface
 from crossref.restful import Etiquette
 from crossref.restful import Journals
@@ -728,7 +727,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
-    @timeout_decorator.timeout(500, use_signals=False)
     def __run_parameter_search(
         self,
         *,

@@ -7,7 +7,6 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -728,10 +727,7 @@ class PDFSearchSource(JsonSchemaMixin):
             ]:
                 if key in retrieved_record.data:
                     record_dict[key] = retrieved_record.data[key]
-        except (
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-            timeout_decorator.timeout_decorator.TimeoutError,
-        ):
+        except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
     def load_fixes(

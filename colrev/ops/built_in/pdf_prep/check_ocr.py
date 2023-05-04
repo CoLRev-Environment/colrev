@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import docker
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -52,7 +51,6 @@ class PDFCheckOCR(JsonSchemaMixin):
     def __text_is_english(self, *, text: str) -> bool:
         return "eng" == self.language_service.compute_language(text=text)
 
-    @timeout_decorator.timeout(300, use_signals=False)
     def __apply_ocr(
         self,
         *,
@@ -86,6 +84,7 @@ class PDFCheckOCR(JsonSchemaMixin):
             auto_remove=True,
             user=f"{os.geteuid()}:{os.getegid()}",
             volumes=[f"{orig_path}:/home/docker"],
+            healthcheck={"timeout": 300},
         )
 
         record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")

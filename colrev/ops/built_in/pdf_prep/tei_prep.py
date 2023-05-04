@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -44,7 +43,6 @@ class TEIPDFPrep(JsonSchemaMixin):
             )
             self.tei_path.mkdir(exist_ok=True, parents=True)
 
-    @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,

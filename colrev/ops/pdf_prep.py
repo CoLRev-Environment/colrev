@@ -9,7 +9,6 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import requests
-import timeout_decorator
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -160,7 +159,6 @@ class PDFPrep(colrev.operation.Operation):
                 record.add_data_provenance_note(key="file", note="pdf-hash-error")
 
             except (
-                timeout_decorator.timeout_decorator.TimeoutError,
                 colrev_exceptions.InvalidPDFException,
                 colrev_exceptions.TEIException,
                 requests.exceptions.ReadTimeout,

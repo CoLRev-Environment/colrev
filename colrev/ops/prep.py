@@ -16,7 +16,6 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 from typing import Optional
 
-import timeout_decorator
 from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
 
@@ -266,7 +265,7 @@ class Prep(colrev.operation.Operation):
             if preparation_record.preparation_break_condition() and not self.polish:
                 record.update_by_record(update_record=preparation_record)
                 raise colrev_exceptions.PreparationBreak
-        except (timeout_decorator.timeout_decorator.TimeoutError, ReadTimeout):
+        except ReadTimeout:
             self.__add_stats(
                 start_time=start_time,
                 prep_round_package_endpoint=prep_round_package_endpoint,
