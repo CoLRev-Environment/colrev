@@ -49,7 +49,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     __padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         converters = {Path: Path, Enum: Enum}
         self.search_source = from_dict(
