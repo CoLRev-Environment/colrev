@@ -92,7 +92,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         # pylint: disable=too-many-branches
@@ -178,7 +178,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add aisel endpoint with query {query}"
+        )
 
     def validate_source(
         self,

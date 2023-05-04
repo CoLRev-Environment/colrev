@@ -871,7 +871,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if "https://search.crossref.org/?q=" in query:
@@ -893,9 +893,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-        if "crossref:jissn=" in query.replace("colrev.", ""):
-            query = query.replace("crossref:jissn=", "").replace("colrev.", "")
 
+        if query.startswith("jissn="):
+            query = query.replace("jissn=", "")
             filename = search_operation.get_unique_filename(
                 file_path_string=f"crossref_jissn_{query}"
             )
@@ -909,7 +909,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add crossref endpoint with query {query}"
+        )
 
     def load_fixes(
         self,

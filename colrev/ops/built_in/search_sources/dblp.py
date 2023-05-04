@@ -623,7 +623,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if (
@@ -649,7 +649,9 @@ class DBLPSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add backward_search endpoint with query {query}"
+        )
 
     def load_fixes(
         self,

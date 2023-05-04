@@ -111,7 +111,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         host = urlparse(query).hostname
@@ -136,7 +136,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
