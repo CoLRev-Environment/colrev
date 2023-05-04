@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Test the environment manager"""
-
 import os
 from pathlib import Path
 
