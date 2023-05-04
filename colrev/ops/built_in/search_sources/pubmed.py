@@ -484,28 +484,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retstart += 20
 
-    def __print_post_run_search_infos(
-        self, *, pubmed_feed: colrev.ops.search.GeneralOriginFeed, records: dict
-    ) -> None:
-        if pubmed_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pubmed_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if pubmed_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {pubmed_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
-
     def __run_parameter_search(
         self,
         *,
@@ -569,7 +547,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     # deposit papers chronologically
                     break
 
-            self.__print_post_run_search_infos(pubmed_feed=pubmed_feed, records=records)
+            pubmed_feed.print_post_run_search_infos(records=records)
 
             pubmed_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)

@@ -18,7 +18,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -137,34 +136,6 @@ class BackwardSearchSource(JsonSchemaMixin):
             return False
 
         return True
-
-    def __print_post_run_search_infos(
-        self,
-        *,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
-        records: dict,
-        rerun: bool,
-    ) -> None:
-        if pdf_backward_search_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pdf_backward_search_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if rerun:
-            if pdf_backward_search_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {pdf_backward_search_feed.nr_changed} "
-                    f"records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
 
     def __get_reference_records(self, *, record_dict: dict) -> list:
         references = []
@@ -358,10 +329,8 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         pdf_backward_search_feed.save_feed_file()
 
-        self.__print_post_run_search_infos(
-            pdf_backward_search_feed=pdf_backward_search_feed,
+        pdf_backward_search_feed.print_post_run_search_infos(
             records=records,
-            rerun=rerun,
         )
 
         if search_operation.review_manager.dataset.has_changes():

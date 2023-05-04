@@ -27,7 +27,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
 
 # defuse std xml lib
 defusedxml.defuse_stdlib()
@@ -510,9 +509,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     if next_page_url_node.text is not None:
                         url = next_page_url_node.text
 
-            self.__print_post_run_search_infos(
-                europe_pmc_feed=europe_pmc_feed, records=records
-            )
+            europe_pmc_feed.print_post_run_search_infos(records=records)
         except json.decoder.JSONDecodeError:
             pass
         except requests.exceptions.RequestException:
@@ -524,28 +521,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             ) from exc
         finally:
             europe_pmc_feed.save_feed_file()
-
-    def __print_post_run_search_infos(
-        self, *, europe_pmc_feed: colrev.ops.search.GeneralOriginFeed, records: dict
-    ) -> None:
-        if europe_pmc_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {europe_pmc_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if europe_pmc_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {europe_pmc_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

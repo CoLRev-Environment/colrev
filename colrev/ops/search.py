@@ -512,36 +512,6 @@ class GeneralOriginFeed:
                 + 1
             )
 
-    def save_feed_file(self) -> None:
-        """Save the feed file"""
-
-        search_operation = self.review_manager.get_search_operation()
-        if len(self.feed_records) > 0:
-            self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=self.feed_records, save_path=self.feed_file
-            )
-
-            while True:
-                try:
-                    search_operation.review_manager.load_settings()
-                    if self.source.filename.name not in [
-                        s.filename.name
-                        for s in search_operation.review_manager.settings.sources
-                    ]:
-                        search_operation.review_manager.settings.sources.append(
-                            self.source
-                        )
-                        search_operation.review_manager.save_settings()
-
-                    search_operation.review_manager.dataset.add_changes(
-                        path=self.feed_file
-                    )
-                    break
-                except (FileExistsError, OSError, json.decoder.JSONDecodeError):
-                    search_operation.review_manager.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))  # nosec
-
     def set_id(self, *, record_dict: dict) -> dict:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
@@ -602,6 +572,57 @@ class GeneralOriginFeed:
         record.add_provenance_all(source=colrev_origin)
 
         return added_new
+
+    def print_post_run_search_infos(self, *, records: dict) -> None:
+        """Print the search infos (after running the search)"""
+        if self.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {self.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if self.nr_changed > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {self.nr_changed} records{colors.END}"
+            )
+        else:
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                )
+
+    def save_feed_file(self) -> None:
+        """Save the feed file"""
+
+        search_operation = self.review_manager.get_search_operation()
+        if len(self.feed_records) > 0:
+            self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=self.feed_records, save_path=self.feed_file
+            )
+
+            while True:
+                try:
+                    search_operation.review_manager.load_settings()
+                    if self.source.filename.name not in [
+                        s.filename.name
+                        for s in search_operation.review_manager.settings.sources
+                    ]:
+                        search_operation.review_manager.settings.sources.append(
+                            self.source
+                        )
+                        search_operation.review_manager.save_settings()
+
+                    search_operation.review_manager.dataset.add_changes(
+                        path=self.feed_file
+                    )
+                    break
+                except (FileExistsError, OSError, json.decoder.JSONDecodeError):
+                    search_operation.review_manager.logger.debug("Wait for git")
+                    time.sleep(randint(1, 15))  # nosec
 
 
 if __name__ == "__main__":

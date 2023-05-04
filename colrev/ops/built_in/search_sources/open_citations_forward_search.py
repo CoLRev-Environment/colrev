@@ -17,7 +17,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -138,33 +137,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return forward_citations
 
-    def __print_post_run_search_infos(
-        self,
-        *,
-        forward_search_feed: colrev.ops.search.GeneralOriginFeed,
-        records: dict,
-        rerun: bool,
-    ) -> None:
-        if forward_search_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {forward_search_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if rerun:
-            if forward_search_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {forward_search_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
-
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
@@ -230,9 +202,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                         forward_search_feed.nr_changed += 1
         forward_search_feed.save_feed_file()
 
-        self.__print_post_run_search_infos(
-            forward_search_feed=forward_search_feed, records=records, rerun=rerun
-        )
+        forward_search_feed.print_post_run_search_infos(records=records)
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(

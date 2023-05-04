@@ -728,31 +728,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
-    def __print_post_run_search_infos(
-        self,
-        *,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
-        records: dict,
-    ) -> None:
-        if crossref_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {crossref_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if crossref_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {crossref_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
-
     @timeout_decorator.timeout(500, use_signals=False)
     def __run_parameter_search(
         self,
@@ -814,9 +789,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # deposit papers chronologically
                     break
 
-            self.__print_post_run_search_infos(
-                crossref_feed=crossref_feed, records=records
-            )
+            crossref_feed.print_post_run_search_infos(records=records)
 
             crossref_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
