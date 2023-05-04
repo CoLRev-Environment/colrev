@@ -194,11 +194,15 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                         + record.data.get("editor", "NA").split(",")[0]
                     )
             if base_url not in url:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: base_url not in url"
+                )
 
             title = record.data.get("title", record.data.get("booktitle", "NA"))
             if len(title) < 10:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: len(title) < 10"
+                )
             if ":" in title:
                 title = title[: title.find(":")]  # To catch sub-titles
             url = url + "&title=" + title.replace(" ", "+")
@@ -213,12 +217,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
             # if we have an exact match, we don't need to check the similarity
             if '"numFoundExact": true,' not in ret.text:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: numFoundExact true missing"
+                )
 
             data = json.loads(ret.text)
             items = data["docs"]
             if not items:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: no items"
+                )
             item = items[0]
 
         retrieved_record = self.__open_library_json_to_record(item=item, url=url)

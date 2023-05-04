@@ -387,6 +387,14 @@ class UnsupportedImportFormatError(CoLRevException):
 class RecordNotFoundInPrepSourceException(CoLRevException):
     """The record was not found in the prep search source."""
 
+    def __init__(
+        self,
+        *,
+        msg: str,
+    ) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
 
 class PreparationBreak(CoLRevException):
     """Event interrupting the preparation."""

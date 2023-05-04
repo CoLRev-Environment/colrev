@@ -378,7 +378,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 )
 
             if not retrieved_record_dict:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Pubmed: no records retrieved"
+                )
 
             retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
