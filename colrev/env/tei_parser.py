@@ -489,11 +489,6 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def __get_reference_bibliography_id(self, *, reference: Element) -> str:
-        if "ID" in reference.attrib:
-            return reference.attrib["ID"]
-        return ""
-
     def __get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
@@ -718,9 +713,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -748,9 +740,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -766,9 +755,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),

@@ -486,6 +486,14 @@ class MissingDependencyError(CoLRevException):
         super().__init__(self.message)
 
 
+class PackageParameterError(CoLRevException):
+    """The parameter for the package are not correct."""
+
+    def __init__(self, dep: str) -> None:
+        self.message = f"{dep}"
+        super().__init__(self.message)
+
+
 class DependencyConfigurationError(CoLRevException):
     """The required dependency is not configured correctly."""
 
