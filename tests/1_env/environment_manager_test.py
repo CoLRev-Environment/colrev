@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+"""Test the environment manager"""
+
 import os
 from pathlib import Path
 
@@ -16,6 +19,9 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore
+    """
+    Environment manager details test
+    """
     identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
     if any("true" == os.getenv(x) for x in identifier_list):
         return
