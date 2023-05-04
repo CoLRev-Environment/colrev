@@ -176,9 +176,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
             requests.exceptions.JSONDecodeError,
             requests.exceptions.ConnectTimeout,
         ) as exc:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException() from exc
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                msg="Record not found in crossref (based on doi)"
+            ) from exc
         if crossref_query_return is None:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                msg="Record not found in crossref (based on doi)"
+            )
         retrieved_record_dict = connector_utils.json_to_record(
             item=crossref_query_return
         )
@@ -463,7 +467,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     retrieved_record = retrieved_records.pop()
 
             if 0 == len(retrieved_record.data) or "doi" not in retrieved_record.data:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Record not found in crossref"
+                )
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
