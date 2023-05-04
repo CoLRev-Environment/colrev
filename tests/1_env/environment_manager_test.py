@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-
-from pathlib import Path
-import pytest
 import os
+from pathlib import Path
+
+import pytest
+
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.review_manager
@@ -20,9 +21,9 @@ def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ign
         return
     temp_env = tmp_path
     with mocker.patch.object(
-            colrev.env.environment_manager.EnvironmentManager,
-            "registry",
-            temp_env / Path("reg.yml"),
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry",
+        temp_env / Path("reg.yml"),
     ):
         env_man = colrev.env.environment_manager.EnvironmentManager()
         env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
