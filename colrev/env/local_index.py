@@ -505,10 +505,7 @@ class LocalIndex:
         if "file" in record_dict and not Path(record_dict["file"]).is_file():
             del record_dict["file"]
 
-        if (
-            not include_colrev_ids
-            and "colrev_id" in record_dict
-        ):
+        if not include_colrev_ids and "colrev_id" in record_dict:
             del record_dict["colrev_id"]
 
         if include_file:
