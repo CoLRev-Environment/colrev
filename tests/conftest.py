@@ -252,8 +252,9 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", name="_patch_registry")
 def patch_registry(mocker, tmp_path) -> None:  # type: ignore
+    """Patch registry path in environment manager"""
     test_json_path = tmp_path / Path("reg.json")
     test_yaml_path = tmp_path / Path("reg.yaml")
 

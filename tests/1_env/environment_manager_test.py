@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+"""Testing environment manager settings"""
 import json
 import os
 from collections import namedtuple
@@ -40,8 +42,8 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     dummy_origin = "https://example.com/repo"
 
     base_path = script_loc.parents[1]
-    r = git.Repo(base_path)
-    origin = [x for x in r.remote("origin").urls]
+    repo = git.Repo(base_path)
+    origin = list(repo.remote("origin").urls)
 
     expected_yaml = f"""- repo_name: colrev
   repo_source_path: {base_path}
@@ -66,12 +68,12 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     )
 
     # create a repo and make a commit
-    r = git.Repo.init(test_repo)
-    r.create_remote(name="origin", url=dummy_origin)
-    with open(test_repo / "test.yaml", "w") as fp:
-        fp.write(expected_yaml)
-    r.index.add(["test.yaml"])
-    r.index.commit("initial commit")
+    repo = git.Repo.init(test_repo)
+    repo.create_remote(name="origin", url=dummy_origin)
+    with open(test_repo / "test.yaml", "w", encoding="utf-8") as file:
+        file.write(expected_yaml)
+    repo.index.add(["test.yaml"])
+    repo.index.commit("initial commit")
     #
     # return base_path, test_json_path, expected_json, test_repo
     return EnvTestConf(
@@ -85,24 +87,26 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     )
 
 
-def test_loading_config_properly(tmp_path, script_loc, patch_registry) -> None:  # type: ignore
+def test_loading_config_properly(  # type: ignore
+    _patch_registry, tmp_path, script_loc
+) -> None:
     """
     Testing if we are loading existing json registry file correctly
     """
     if not continue_test():
         return
     data = prep_test(tmp_path, script_loc)
-    with open(data.json_path, "w") as fp:
-        fp.write(data.json_expected)
+    with open(data.json_path, "w", encoding="utf-8") as file:
+        file.write(data.json_expected)
     env_man = colrev.env.environment_manager.EnvironmentManager()
     assert json.dumps(env_man.environment_registry) == data.json_expected
     assert not env_man.load_yaml
 
 
 def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
+    _patch_registry,
     tmp_path,
     script_loc,
-    patch_registry,
 ) -> None:
     """
     Testing if we are converting a yaml file to json correctly
@@ -110,15 +114,15 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
     if not continue_test():
         return
     data = prep_test(tmp_path, script_loc)
-    with open(data.yaml_path, "w") as fp:
-        fp.write(data.yaml_expected)
+    with open(data.yaml_path, "w") as file:
+        file.write(data.yaml_expected)
     env_man = colrev.env.environment_manager.EnvironmentManager()
     assert env_man.load_yaml
     assert Path(data.base_path).exists()
     env_man.register_repo(path_to_register=Path(data.base_path))
     env_man.register_repo(path_to_register=Path(data.test_repo))
-    with open(data.json_path) as fp:
-        actual_json = json.dumps(json.loads(fp.read()))
+    with open(data.json_path, encoding="utf-8") as file:
+        actual_json = json.dumps(json.loads(file.read()))
         assert data.json_expected == actual_json
 
 
