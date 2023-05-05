@@ -17,6 +17,7 @@ colrev.ops.search.GeneralOriginFeed
       :nosignatures:
 
       ~GeneralOriginFeed.add_record
+      ~GeneralOriginFeed.print_post_run_search_infos
       ~GeneralOriginFeed.save_feed_file
       ~GeneralOriginFeed.set_id
 

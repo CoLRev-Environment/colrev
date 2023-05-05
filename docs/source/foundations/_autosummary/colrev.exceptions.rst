@@ -52,6 +52,7 @@ colrev.exceptions
       NotTOCIdentifiableException
       OriginError
       PDFHashError
+      PackageParameterError
       ParameterError
       PortAlreadyRegisteredException
       PreparationBreak
