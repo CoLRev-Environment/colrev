@@ -103,7 +103,9 @@ class EnvironmentManager:
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
             file.write(
-                updated_registry_df.to_json(orient="records", default_handler=str)
+                updated_registry_df.to_json(
+                    orient="records", default_handler=str, indent=4
+                )
             )
 
     def register_repo(self, *, path_to_register: Path) -> None:
