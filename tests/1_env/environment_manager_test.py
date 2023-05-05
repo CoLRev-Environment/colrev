@@ -31,8 +31,12 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     to a file with bk extension
 
     """
-
-    test_repo = tmp_path / Path("a_test_repo")
+    long_path = tmp_path / Path(
+        "a/really long/path/with some/spaces/should/not/cause/any issues/when writing/"
+    )
+    long_path.mkdir(parents=True)
+    print(long_path)
+    test_repo = long_path / Path("a_test_repo")
     dummy_origin = "https://example.com/repo"
 
     base_path = script_loc.parents[1]
@@ -77,14 +81,11 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
         yaml_path=tmp_path / Path("reg.yaml"),
         yaml_expected=expected_yaml,
         test_repo=test_repo,
-        backup=tmp_path / Path("reg.yaml.bk")
-,
+        backup=tmp_path / Path("reg.yaml.bk"),
     )
 
 
-def test_loading_config_properly(
-    tmp_path, script_loc, patch_registry
-) -> None:  # type: ignore
+def test_loading_config_properly(tmp_path, script_loc, patch_registry) -> None:  # type: ignore
     """
     Testing if we are loading existing json registry file correctly
     """
@@ -98,9 +99,11 @@ def test_loading_config_properly(
     assert not env_man.load_yaml
 
 
-def test_saving_config_file_as_json_from_yaml_correctly(
-    tmp_path, script_loc, patch_registry
-) -> None:  # type: ignore
+def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
+    tmp_path,
+    script_loc,
+    patch_registry,
+) -> None:
     """
     Testing if we are converting a yaml file to json correctly
     """
@@ -118,13 +121,6 @@ def test_saving_config_file_as_json_from_yaml_correctly(
         actual_json = json.dumps(json.loads(fp.read()))
         assert data.json_expected == actual_json
 
-
-#
-# NOTE: This test will fail due to mocking of register_repo in `conftest.py`.
-# Without the mock, several other tests will fail. Thus, it's better to keep
-# this test commented. It will pass if run individually. Fortunately the tests
-# above works and it will also tests environment_manager
-#
 
 # def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore
 #
