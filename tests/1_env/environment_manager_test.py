@@ -114,7 +114,7 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
     if not continue_test():
         return
     data = prep_test(tmp_path, script_loc)
-    with open(data.yaml_path, "w") as file:
+    with open(data.yaml_path, "w", encoding="utf-8") as file:
         file.write(data.yaml_expected)
     env_man = colrev.env.environment_manager.EnvironmentManager()
     assert env_man.load_yaml
