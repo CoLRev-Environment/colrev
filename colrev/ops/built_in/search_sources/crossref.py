@@ -133,7 +133,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 "ENTRYTYPE": "article",
             }
             returned_record = self.crossref_query(
-                review_manager=source_operation.review_manager,
                 record_input=colrev.record.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
                 timeout=20,
@@ -206,8 +205,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 journals.works(journal_issn).query().sort("deposited").order("desc")
             )
 
-        for item in crossref_query_return:
-            yield connector_utils.json_to_record(item=item)
+        yield from crossref_query_return
 
     def __create_query_url(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool
@@ -291,7 +289,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         record: colrev.record.Record,
         prep_main_record: bool = True,
         crossref_source: str = "",
-    ) -> colrev.record.Record:
+    ) -> None:
         if "language" in record.data:
             try:
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
@@ -310,7 +308,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if not prep_main_record:
             # Skip steps for feed records
-            return record
+            return
 
         if "retracted" in record.data.get(
             "warning", ""
@@ -322,34 +320,16 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.set_masterdata_complete(source=crossref_source)
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
-        return record
-
-    def crossref_query(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        record_input: colrev.record.Record,
-        jour_vol_iss_list: bool = False,
-        timeout: int = 40,
+    def __get_crossref_query_items(
+        self, *, record: colrev.record.Record, jour_vol_iss_list: bool, timeout: int
     ) -> list:
-        """Retrieve records from Crossref based on a query"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-locals
-
         # Note : only returning a multiple-item list for jour_vol_iss_list
-
-        record_list = []
-        most_similar, most_similar_record = 0.0, {}
         try:
-            record = record_input.copy_prep_rec()
-
             url = self.__create_query_url(
                 record=record, jour_vol_iss_list=jour_vol_iss_list
             )
             headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-            session = review_manager.get_cached_session()
+            session = self.review_manager.get_cached_session()
 
             # review_manager.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=timeout)
@@ -361,16 +341,41 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 return []
 
             data = json.loads(ret.text)
-            for item in data["message"]["items"]:
-                if "title" not in item:
-                    continue
 
+        # pylint: disable=duplicate-code
+        except OperationalError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            ) from exc
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            json.decoder.JSONDecodeError,
+            requests.exceptions.RequestException,
+        ):
+            return []
+
+        return data["message"]["items"]
+
+    def crossref_query(
+        self,
+        *,
+        record_input: colrev.record.Record,
+        jour_vol_iss_list: bool = False,
+        timeout: int = 40,
+    ) -> list:
+        """Retrieve records from Crossref based on a query"""
+
+        record = record_input.copy_prep_rec()
+        record_list, most_similar, most_similar_record = [], 0.0, {}
+        for item in self.__get_crossref_query_items(
+            record=record, jour_vol_iss_list=jour_vol_iss_list, timeout=timeout
+        ):
+            try:
                 retrieved_record_dict = connector_utils.json_to_record(item=item)
-
                 similarity = self.__get_similarity(
                     record=record, retrieved_record_dict=retrieved_record_dict
                 )
-
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
                 # source = (
@@ -385,18 +390,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 elif most_similar < similarity:
                     most_similar = similarity
                     most_similar_record = retrieved_record.get_data()
-        except (
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-            json.decoder.JSONDecodeError,
-            requests.exceptions.RequestException,
-        ):
-            pass
-        # pylint: disable=duplicate-code
-        except OperationalError as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "sqlite, required for requests CachedSession "
-                "(possibly caused by concurrent operations)"
-            ) from exc
+            except colrev_exceptions.RecordNotParsableException:
+                pass
 
         if not jour_vol_iss_list:
             if most_similar_record:
@@ -443,7 +438,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 retrieved_record = self.query_doi(doi=record.data["doi"])
             else:
                 retrieved_records = self.crossref_query(
-                    review_manager=self.review_manager,
                     record_input=record,
                     jour_vol_iss_list=False,
                     timeout=timeout,
@@ -458,7 +452,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     retries += 1
 
                     retrieved_records = self.crossref_query(
-                        review_manager=self.review_manager,
                         record_input=record,
                         jour_vol_iss_list=False,
                         timeout=timeout,
@@ -503,7 +496,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     default_source=retrieved_record.data["colrev_origin"][0],
                 )
 
-                record = self.__prep_crossref_record(
+                self.__prep_crossref_record(
                     record=record,
                     crossref_source=retrieved_record.data["colrev_origin"][0],
                 )
@@ -740,40 +733,30 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
 
         records = search_operation.review_manager.dataset.load_records_dict()
-        try:
-            for record_dict in self.__get_crossref_query_return(rerun=rerun):
-                # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
-                ):
-                    continue
-                try:
-                    crossref_feed.set_id(record_dict=record_dict)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    continue
-
+        for item in self.__get_crossref_query_return(rerun=rerun):
+            try:
+                record_dict = connector_utils.json_to_record(item=item)
+                crossref_feed.set_id(record_dict=record_dict)
                 prev_record_dict_version = {}
                 if record_dict["ID"] in crossref_feed.feed_records:
                     prev_record_dict_version = deepcopy(
                         crossref_feed.feed_records[record_dict["ID"]]
                     )
 
-                prep_record = colrev.record.Record(data=record_dict)
-                prep_record = self.__prep_crossref_record(
-                    record=prep_record, prep_main_record=False
-                )
+                record = colrev.record.Record(data=record_dict)
+                self.__prep_crossref_record(record=record, prep_main_record=False)
 
-                added = crossref_feed.add_record(record=prep_record)
+                added = crossref_feed.add_record(record=record)
 
                 if added:
                     search_operation.review_manager.logger.info(
-                        " retrieve " + prep_record.data["doi"]
+                        " retrieve " + record.data["doi"]
                     )
                     crossref_feed.nr_added += 1
                 else:
                     changed = search_operation.update_existing_record(
                         records=records,
-                        record_dict=prep_record.data,
+                        record_dict=record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
@@ -786,26 +769,17 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # problem: some publishers don't necessarily
                     # deposit papers chronologically
                     break
+            except (
+                colrev_exceptions.RecordNotParsableException,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
+                pass
 
-            crossref_feed.print_post_run_search_infos(records=records)
+        crossref_feed.print_post_run_search_infos(records=records)
 
-            crossref_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
-
-        except (
-            requests.exceptions.Timeout,
-            requests.exceptions.JSONDecodeError,
-        ) as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self.__availability_exception_message
-                )
-            raise colrev_exceptions.ServiceNotAvailableException(
-                self.__availability_exception_message
-            )
+        crossref_feed.save_feed_file()
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -818,17 +792,34 @@ class CrossrefSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                crossref_feed=crossref_feed,
-            )
+        try:
+            if (
+                self.search_source.is_md_source()
+                or self.search_source.is_quasi_md_source()
+            ):
+                self.__run_md_search_update(
+                    search_operation=search_operation,
+                    crossref_feed=crossref_feed,
+                )
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
-                crossref_feed=crossref_feed,
-                rerun=rerun,
+            else:
+                self.__run_parameter_search(
+                    search_operation=search_operation,
+                    crossref_feed=crossref_feed,
+                    rerun=rerun,
+                )
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.JSONDecodeError,
+        ) as exc:
+            # watch github issue:
+            # https://github.com/fabiobatalha/crossrefapi/issues/46
+            if "504 Gateway Time-out" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self.__availability_exception_message
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self.__availability_exception_message
             )
 
     @classmethod

@@ -149,7 +149,6 @@ class YearVolIssPrep(JsonSchemaMixin):
                 source_operation=prep_operation
             )
             retrieved_records = crossref_source.crossref_query(
-                review_manager=prep_operation.review_manager,
                 record_input=record,
                 jour_vol_iss_list=True,
                 timeout=prep_operation.timeout,
@@ -160,7 +159,6 @@ class YearVolIssPrep(JsonSchemaMixin):
             ):
                 retries += 1
                 retrieved_records = crossref_source.crossref_query(
-                    review_manager=prep_operation.review_manager,
                     record_input=record,
                     jour_vol_iss_list=True,
                     timeout=prep_operation.timeout,
