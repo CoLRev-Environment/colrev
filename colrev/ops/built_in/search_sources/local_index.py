@@ -208,18 +208,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if changed:
                 local_index_feed.nr_changed += 1
 
-        if local_index_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
-                f"records based on LocalIndex{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) "
-                    f"up-to-date with LocalIndex{colors.END}"
-                )
-
+        local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
@@ -262,24 +251,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if changed:
                     local_index_feed.nr_changed += 1
 
+        local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
-
-        if local_index_feed.nr_added > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {local_index_feed.nr_added} records {colors.END}"
-            )
-
-        if local_index_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
-                f"records based on LocalIndex{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) "
-                    f"up-to-date with LocalIndex{colors.END}"
-                )
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool

@@ -24,7 +24,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 defusedxml.defuse_stdlib()
 
@@ -548,7 +547,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                     break
 
             pubmed_feed.print_post_run_search_infos(records=records)
-
             pubmed_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
@@ -608,18 +606,8 @@ class PubMedSearchSource(JsonSchemaMixin):
             if changed:
                 pubmed_feed.nr_changed += 1
 
-        if pubmed_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {pubmed_feed.nr_changed} "
-                f"records based on Pubmed{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date with Pubmed{colors.END}"
-                )
-
         pubmed_feed.save_feed_file()
+        pubmed_feed.print_post_run_search_infos(records=records)
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
@@ -656,19 +644,15 @@ class PubMedSearchSource(JsonSchemaMixin):
         """Load fixes for Pubmed"""
 
         for record in records.values():
-            if "author" in record:
-                if record["author"].count(",") >= 1:
-                    # if 0 == record["author"].count(" and "):
-                    author_list = record["author"].split(", ")
-                    for i, author_part in enumerate(author_list):
-                        author_field_parts = author_part.split(" ")
-                        author_list[i] = (
-                            author_field_parts[0]
-                            + ", "
-                            + " ".join(author_field_parts[1:])
-                        )
+            if "author" in record and record["author"].count(",") >= 1:
+                author_list = record["author"].split(", ")
+                for i, author_part in enumerate(author_list):
+                    author_field_parts = author_part.split(" ")
+                    author_list[i] = (
+                        author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
+                    )
 
-                    record["author"] = " and ".join(author_list)
+                record["author"] = " and ".join(author_list)
             if "first_author" in record:
                 del record["first_author"]
             if "citation" in record:
@@ -707,7 +691,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         # TBD: how to distinguish other types?
         record.change_entrytype(new_entrytype="article")
-        # record.import_provenance(review_manager=self.review_manager)
 
         return record
 

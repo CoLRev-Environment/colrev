@@ -70,9 +70,7 @@ class WebsiteConnector:
 
     @classmethod
     def __set_keywords(cls, *, record: colrev.record.Record, item: dict) -> None:
-        if "tags" not in item:
-            return
-        if len(item["tags"]) == 0:
+        if "tags" not in item or len(item["tags"]) == 0:
             return
         keywords = ", ".join([k["tag"] for k in item["tags"]])
         record.data["keywords"] = keywords
@@ -163,12 +161,7 @@ class WebsiteConnector:
         zotero_translation_service = (
             prep_operation.review_manager.get_zotero_translation_service()
         )
-
-        # Note: retrieve_md_from_url replaces prior data in RECORD
-        # (record.copy() - deepcopy() before if necessary)
-
         zotero_translation_service.start()
-
         try:
             content_type_header = {"Content-type": "text/plain"}
             headers = {**prep_operation.requests_headers, **content_type_header}
