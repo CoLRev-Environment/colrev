@@ -19,7 +19,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -90,84 +89,75 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
+    def __parse_query(cls, *, query: str) -> dict:
+        peer_reviewed = "peer_reviewed=true" in query
+        start_date = ""
+        if "start_date=" in query:
+            start_date = query[query.find("start_date=") + 11 :]
+            start_date = start_date[: start_date.find("&")]
+            start_date = start_date.replace("%2F", "/")
+        end_date = ""
+        if "end_date=" in query:
+            end_date = query[query.find("end_date=") + 9 :]
+            end_date = end_date[: end_date.find("&")]
+            end_date = end_date.replace("%2F", "/")
+
+        query = query[query.find("?q=") + 3 : query.find("&start")]
+        query_parts = urllib.parse.unquote(query).split(" ")
+
+        search_terms = []
+        query_parts_merged = []
+        parenthesis_expression = ""
+        for query_part in query_parts:
+            if query_part not in ["(", ")"] and "" == parenthesis_expression:
+                query_parts_merged.append(query_part)
+            elif query_part == "(":
+                parenthesis_expression += "("
+            elif query_part == ")":
+                parenthesis_expression = parenthesis_expression.rstrip().replace(
+                    "(", ""
+                )
+                query_parts_merged.append(parenthesis_expression)
+                parenthesis_expression = ""
+            else:
+                parenthesis_expression = parenthesis_expression + query_part + " "
+
+        term_no = 1
+        operator = ""
+
+        for query_part in query_parts_merged:
+            if query_part in ["OR", "AND", "NOT"]:
+                operator = query_part
+                continue
+
+            field = "All fields"
+            if "%3A" in query_part:
+                field, query_part = query_part.split("%3A")
+            search_term = {"operator": operator, "term": query_part, "field": field}
+
+            search_terms.append(search_term)
+            term_no += 1
+
+        params = {"search_terms": search_terms, "peer_reviewed": peer_reviewed}
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        return params
+
+    @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-statements
 
         query = query.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
 
         host = urlparse(query).hostname
 
         if host and host.endswith("aisel.aisnet.org"):
-            peer_reviewed = "peer_reviewed=true" in query
-            start_date = ""
-            if "start_date=" in query:
-                start_date = query[query.find("start_date=") + 11 :]
-                start_date = start_date[: start_date.find("&")]
-                start_date = start_date.replace("%2F", "/")
-            end_date = ""
-            if "end_date=" in query:
-                end_date = query[query.find("end_date=") + 9 :]
-                end_date = end_date[: end_date.find("&")]
-                end_date = end_date.replace("%2F", "/")
-
-            query = query[query.find("?q=") + 3 : query.find("&start")]
-            query_parts = urllib.parse.unquote(query).split(" ")
-
-            search_terms = []
-            query_parts_merged = []
-            parenthesis_expression = ""
-            for query_part in query_parts:
-                if query_part not in ["(", ")"] and "" == parenthesis_expression:
-                    query_parts_merged.append(query_part)
-                elif query_part == "(":
-                    parenthesis_expression += "("
-                elif query_part == ")":
-                    parenthesis_expression = parenthesis_expression.rstrip().replace(
-                        "(", ""
-                    )
-                    query_parts_merged.append(parenthesis_expression)
-                    parenthesis_expression = ""
-                else:
-                    parenthesis_expression = parenthesis_expression + query_part + " "
-
-            term_no = 1
-            operator = ""
-
-            file_query = ""
-            for query_part in query_parts_merged:
-                if query_part in ["OR", "AND", "NOT"]:
-                    operator = query_part
-                    file_query += "_" + query_part + "_"
-                    continue
-
-                field = "All fields"
-                if "%3A" in query_part:
-                    field, query_part = query_part.split("%3A")
-                search_term = {"operator": operator, "term": query_part, "field": field}
-                file_query += "_" + query_part + "_"
-
-                search_terms.append(search_term)
-                term_no += 1
-
-            params = {"search_terms": search_terms, "peer_reviewed": peer_reviewed}
-            if start_date:
-                params["start_date"] = start_date
-            if end_date:
-                params["end_date"] = end_date
-
-            file_query = "aisel_" + file_query.lstrip("_").rstrip("_").replace(
-                "__", "_"
-            ).replace("%22", "").replace("*", "")
-
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"ais_{file_query}"
-            )
+            params = cls.__parse_query(query=query)
+            filename = search_operation.get_unique_filename(file_path_string="ais")
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.ais_library",
                 filename=filename,
@@ -294,84 +284,50 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
 
         records = search_operation.review_manager.dataset.load_records_dict()
-        try:
-            for record_dict in self.__get_ais_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
-                ):
-                    continue
+        for record_dict in self.__get_ais_query_return():
+            # Note : discard "empty" records
+            if "" == record_dict.get("author", "") and "" == record_dict.get(
+                "title", ""
+            ):
+                continue
 
-                try:
-                    ais_feed.set_id(record_dict=record_dict)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    continue
+            try:
+                ais_feed.set_id(record_dict=record_dict)
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
 
-                # prev_record_dict_version = {}
-                # if record_dict["ID"] in ais_feed.feed_records:
-                #     prev_record_dict_version = deepcopy(
-                #         ais_feed.feed_records[record_dict["ID"]]
-                #     )
+            # prev_record_dict_version = {}
+            # if record_dict["ID"] in ais_feed.feed_records:
+            #     prev_record_dict_version = deepcopy(
+            #         ais_feed.feed_records[record_dict["ID"]]
+            #     )
 
-                prep_record = colrev.record.PrepRecord(data=record_dict)
+            prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                if "colrev_data_provenance" in prep_record.data:
-                    del prep_record.data["colrev_data_provenance"]
+            if "colrev_data_provenance" in prep_record.data:
+                del prep_record.data["colrev_data_provenance"]
 
-                added = ais_feed.add_record(record=prep_record)
+            added = ais_feed.add_record(record=prep_record)
 
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + prep_record.data["url"]
-                    )
-                    ais_feed.nr_added += 1
-                # else:
-                #     changed = search_operation.update_existing_record(
-                #         records=records,
-                #         record_dict=prep_record.data,
-                #         prev_record_dict_version=prev_record_dict_version,
-                #         source=self.search_source,
-                #         update_time_variant_fields=rerun,
-                #     )
-                #     if changed:
-                #         ais_feed.nr_changed += 1
+            if added:
+                self.review_manager.logger.info(" retrieve " + prep_record.data["url"])
+                ais_feed.nr_added += 1
+            # else:
+            #     changed = search_operation.update_existing_record(
+            #         records=records,
+            #         record_dict=prep_record.data,
+            #         prev_record_dict_version=prev_record_dict_version,
+            #         source=self.search_source,
+            #         update_time_variant_fields=rerun,
+            #     )
+            #     if changed:
+            #         ais_feed.nr_changed += 1
 
-            if ais_feed.nr_added > 0:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Retrieved {ais_feed.nr_added} records{colors.END}"
-                )
-            else:
-                search_operation.review_manager.logger.info(
-                    f"{colors.GREEN}No additional records retrieved{colors.END}"
-                )
+        ais_feed.print_post_run_search_infos(records=records)
 
-            if ais_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {ais_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
-
-            ais_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
-
-        except (
-            requests.exceptions.JSONDecodeError,
-            requests.exceptions.HTTPError,
-        ) as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    "Crossref (check https://status.crossref.org/)"
-                )
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({exc})"
-            )
+        ais_feed.save_feed_file()
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -384,12 +340,26 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        #  Note: not (yet) supported: self.search_source.is_md_source()
-        if "query" in self.search_source.search_parameters:
-            self.__run_parameter_search(
-                search_operation=search_operation,
-                ais_feed=ais_feed,
-                rerun=rerun,
+        try:
+            #  Note: not (yet) supported: self.search_source.is_md_source()
+            if "query" in self.search_source.search_parameters:
+                self.__run_parameter_search(
+                    search_operation=search_operation,
+                    ais_feed=ais_feed,
+                    rerun=rerun,
+                )
+        except (
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.HTTPError,
+        ) as exc:
+            # watch github issue:
+            # https://github.com/fabiobatalha/crossrefapi/issues/46
+            if "504 Gateway Time-out" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Crossref (check https://status.crossref.org/)"
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
     def get_masterdata(

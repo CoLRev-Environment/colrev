@@ -252,16 +252,14 @@ class PDFSearchSource(JsonSchemaMixin):
     # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-    def __get_record_from_pdf_grobid(
-        self, *, search_operation: colrev.ops.search.Search, record_dict: dict
-    ) -> dict:
+    def __get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
         if colrev.record.RecordState.md_prepared == record_dict.get(
             "colrev_status", "NA"
         ):
             return record_dict
 
-        pdf_path = search_operation.review_manager.path / Path(record_dict["file"])
-        tei = search_operation.review_manager.get_tei(
+        pdf_path = self.review_manager.path / Path(record_dict["file"])
+        tei = self.review_manager.get_tei(
             pdf_path=pdf_path,
         )
 
@@ -306,17 +304,13 @@ class PDFSearchSource(JsonSchemaMixin):
 
             return record_dict
 
-    def __get_grobid_metadata(
-        self, *, search_operation: colrev.ops.search.Search, pdf_path: Path
-    ) -> dict:
+    def __get_grobid_metadata(self, *, pdf_path: Path) -> dict:
         record_dict: typing.Dict[str, typing.Any] = {
             "file": str(pdf_path),
             "ENTRYTYPE": "misc",
         }
         try:
-            record_dict = self.__get_record_from_pdf_grobid(
-                search_operation=search_operation, record_dict=record_dict
-            )
+            record_dict = self.__get_record_from_pdf_grobid(record_dict=record_dict)
 
             with open(pdf_path, "rb") as file:
                 parser = PDFParser(file)
@@ -324,9 +318,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_text_from_pdf(
-                        project_path=search_operation.review_manager.path
-                    )
+                    record.set_text_from_pdf(project_path=self.review_manager.path)
                     record_dict = record.get_data()
                     if "text_from_pdf" in record_dict:
                         text: str = record_dict["text_from_pdf"]
@@ -455,7 +447,6 @@ class PDFSearchSource(JsonSchemaMixin):
         self,
         *,
         pdf_path: Path,
-        search_operation: colrev.ops.search.Search,
         pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
         linked_pdf_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
@@ -465,7 +456,7 @@ class PDFSearchSource(JsonSchemaMixin):
         if self.__is_broken_filepath(pdf_path=pdf_path):
             return new_record
 
-        if search_operation.review_manager.force_mode:
+        if self.review_manager.force_mode:
             # i.e., reindex all
             pass
         else:
@@ -500,17 +491,13 @@ class PDFSearchSource(JsonSchemaMixin):
                 # is to just add the curation_ID
                 # (and retrieve the curated metadata separately/non-redundantly)
             else:
-                new_record = self.__get_grobid_metadata(
-                    search_operation=search_operation, pdf_path=pdf_path
-                )
+                new_record = self.__get_grobid_metadata(pdf_path=pdf_path)
         except (
             colrev_exceptions.PDFHashError,
             colrev_exceptions.RecordNotInIndexException,
         ):
             # otherwise, get metadata from grobid (indexing)
-            new_record = self.__get_grobid_metadata(
-                search_operation=search_operation, pdf_path=pdf_path
-            )
+            new_record = self.__get_grobid_metadata(pdf_path=pdf_path)
 
         new_record = self.__add_md_string(record_dict=new_record)
 
@@ -534,29 +521,6 @@ class PDFSearchSource(JsonSchemaMixin):
         except colrev_exceptions.NotFeedIdentifiableException:
             return new_record
         return new_record
-
-    def __print_run_search_stats(
-        self, *, records: dict, pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed
-    ) -> None:
-        if pdfs_dir_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pdfs_dir_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if self.review_manager.force_mode:
-            if pdfs_dir_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {pdfs_dir_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
 
     def __get_pdf_batches(self) -> list:
         pdfs_to_index = [
@@ -589,7 +553,6 @@ class PDFSearchSource(JsonSchemaMixin):
             for pdf_path in pdf_batch:
                 new_record = self.__index_pdf(
                     pdf_path=pdf_path,
-                    search_operation=search_operation,
                     pdfs_dir_feed=pdfs_dir_feed,
                     linked_pdf_paths=linked_pdf_paths,
                     local_index=local_index,
@@ -624,7 +587,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
             pdfs_dir_feed.save_feed_file()
 
-        self.__print_run_search_stats(records=records, pdfs_dir_feed=pdfs_dir_feed)
+        pdfs_dir_feed.print_post_run_search_infos(records=records)
 
     def __add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
         if "doi" in record_dict:

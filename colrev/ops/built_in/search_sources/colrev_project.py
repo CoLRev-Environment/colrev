@@ -18,7 +18,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 
 # pylint: disable=unused-argument
@@ -130,6 +129,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         search_operation.review_manager.logger.info("Importing selected records")
+        records = search_operation.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -179,11 +179,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
 
+        colrev_project_search_feed.print_post_run_search_infos(records=records)
         colrev_project_search_feed.save_feed_file()
-        self.review_manager.logger.info(
-            f"{colors.GREEN}Retrieved {colrev_project_search_feed.nr_added} "
-            f"new records {colors.END}"
-        )
 
     def get_masterdata(
         self,

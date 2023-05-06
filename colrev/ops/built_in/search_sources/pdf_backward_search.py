@@ -32,6 +32,8 @@ class BackwardSearchSource(JsonSchemaMixin):
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
+    __api_url = "https://opencitations.net/index/coci/api/v1/references/"
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "bwsearch_ref"
     search_type = colrev.settings.SearchType.BACKWARD_SEARCH
@@ -112,16 +114,18 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
 
     def __bw_search_condition(self, *, record: dict) -> bool:
-        # rev_included/rev_synthesized
-        if "colrev_status" in self.search_source.search_parameters["scope"]:
-            if (
-                self.search_source.search_parameters["scope"]["colrev_status"]
-                == "rev_included|rev_synthesized"
-            ) and record["colrev_status"] not in [
+        # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
+        if (
+            "colrev_status" in self.search_source.search_parameters["scope"]
+            and self.search_source.search_parameters["scope"]["colrev_status"]
+            == "rev_included|rev_synthesized"
+            and record["colrev_status"]
+            not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
-            ]:
-                return False
+            ]
+        ):
+            return False
 
         # Note: this is for peer_reviews
         if "file" in self.search_source.search_parameters["scope"]:
@@ -130,8 +134,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             ) and "data/pdfs/paper.pdf" != record.get("file", ""):
                 return False
 
-        pdf_path = self.review_manager.path / Path(record["file"])
-        if not Path(pdf_path).is_file():
+        if not (self.review_manager.path / Path(record["file"])).is_file():
             self.review_manager.logger.error(f'File not found for {record["ID"]}')
             return False
 
@@ -140,10 +143,9 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __get_reference_records(self, *, record_dict: dict) -> list:
         references = []
 
-        url = f"https://opencitations.net/index/coci/api/v1/references/{record_dict['doi']}"
+        url = f"{self.__api_url}{record_dict['doi']}"
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
-
         ret = requests.get(url, headers=headers, timeout=300)
         try:
             items = json.loads(ret.text)
@@ -184,10 +186,6 @@ class BackwardSearchSource(JsonSchemaMixin):
         similarities = [title_similarity, container_similarity]
 
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
-        # logger.debug(f'record: {pp.pformat(record)}')
-        # logger.debug(f'similarities: {similarities}')
-        # logger.debug(f'similarity: {similarity}')
-        # pp.pprint(retrieved_record_dict)
         return similarity
 
     def __complement_with_open_citations_data(
@@ -327,11 +325,10 @@ class BackwardSearchSource(JsonSchemaMixin):
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
         )
 
-        pdf_backward_search_feed.save_feed_file()
-
         pdf_backward_search_feed.print_post_run_search_infos(
             records=records,
         )
+        pdf_backward_search_feed.save_feed_file()
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(

@@ -161,8 +161,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
 
         crossref_query_return = works.query(**kwargs).sort("deposited").order("desc")
-        for item in crossref_query_return:
-            yield connector_utils.json_to_record(item=item)
+        yield from crossref_query_return
 
     def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
@@ -170,6 +169,17 @@ class CrossrefSearchSource(JsonSchemaMixin):
         works = Works(etiquette=self.etiquette)
         try:
             crossref_query_return = works.doi(doi)
+            if crossref_query_return is None:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Record not found in crossref (based on doi)"
+                )
+
+            retrieved_record_dict = connector_utils.json_to_record(
+                item=crossref_query_return
+            )
+            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+            return retrieved_record
+
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.ConnectTimeout,
@@ -177,16 +187,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
             ) from exc
-        if crossref_query_return is None:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                msg="Record not found in crossref (based on doi)"
-            )
-        retrieved_record_dict = connector_utils.json_to_record(
-            item=crossref_query_return
-        )
-        retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
-
-        return retrieved_record
 
     def __query_journal(
         self, *, journal_issn: str, rerun: bool

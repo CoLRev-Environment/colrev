@@ -100,16 +100,18 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         if "doi" not in record:
             return False
 
-        # rev_included/rev_synthesized
-        if "colrev_status" in self.search_source.search_parameters["scope"]:
-            if (
-                self.search_source.search_parameters["scope"]["colrev_status"]
-                == "rev_included|rev_synthesized"
-            ) and record["colrev_status"] not in [
+        # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
+        if (
+            "colrev_status" in self.search_source.search_parameters["scope"]
+            and self.search_source.search_parameters["scope"]["colrev_status"]
+            == "rev_included|rev_synthesized"
+            and record["colrev_status"]
+            not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
-            ]:
-                return False
+            ]
+        ):
+            return False
 
         return True
 
@@ -200,8 +202,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                     )
                     if changed:
                         forward_search_feed.nr_changed += 1
-        forward_search_feed.save_feed_file()
 
+        forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)
 
         if search_operation.review_manager.dataset.has_changes():
