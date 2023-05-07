@@ -909,7 +909,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_review_manager = self.review_manager.get_review_manager(
+        check_review_manager = self.review_manager.get_connecting_review_manager(
             path_str=source_url
         )
         check_operation = colrev.operation.CheckOperation(

@@ -18,7 +18,6 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
 
       ~EuropePMCSearchSource.add_endpoint
       ~EuropePMCSearchSource.all_json_schemas
-      ~EuropePMCSearchSource.europe_pmc_query
       ~EuropePMCSearchSource.field_mapping
       ~EuropePMCSearchSource.from_dict
       ~EuropePMCSearchSource.from_json
