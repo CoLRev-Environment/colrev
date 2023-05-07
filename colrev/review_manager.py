@@ -697,14 +697,14 @@ class ReviewManager:
             review_manager=self, review_type=review_type
         )
 
-    def get_review_manager(
+    def get_connecting_review_manager(
         self,
         *,
         path_str: Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
     ) -> ReviewManager:
-        """Get a ReviewManager object"""
+        """Get a (connecting) ReviewManager object for another CoLRev repository"""
         return type(self)(
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )

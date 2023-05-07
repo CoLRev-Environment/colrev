@@ -97,8 +97,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         project_identifier = self.search_source.search_parameters["scope"]["url"]
         try:
-            project_review_manager = search_operation.review_manager.get_review_manager(
-                path_str=project_identifier
+            project_review_manager = (
+                search_operation.review_manager.get_connecting_review_manager(
+                    path_str=project_identifier
+                )
             )
         except colrev_exceptions.RepoSetupError as exc:
             search_operation.review_manager.logger.error(

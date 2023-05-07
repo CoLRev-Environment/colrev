@@ -27,6 +27,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_colrev_versions
       ~ReviewManager.get_committer
       ~ReviewManager.get_completeness_condition
+      ~ReviewManager.get_connecting_review_manager
       ~ReviewManager.get_data_operation
       ~ReviewManager.get_dedupe_operation
       ~ReviewManager.get_distribute_operation
@@ -48,7 +49,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_remove_operation
       ~ReviewManager.get_repare
       ~ReviewManager.get_resources
-      ~ReviewManager.get_review_manager
       ~ReviewManager.get_review_types
       ~ReviewManager.get_screen_operation
       ~ReviewManager.get_screenshot_service
