@@ -82,6 +82,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         if "INPROCEEDINGS" in data:
             if len(re.findall(r"@[A-Z]*\{[0-9]*,\n", data)) >= data.count("\n@"):
                 result["confidence"] = 1.0
+        if all(
+            x in data.splitlines()[0] for x in ["Date Added To Xplore", "IEEE Terms"]
+        ):
+            result["confidence"] = 1.0
 
         return result
 
