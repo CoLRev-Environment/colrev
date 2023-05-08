@@ -538,7 +538,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_base_repos = {
             x["repo_source_url"]: x["repo_source_path"]
-            for x in environment_manager.load_environment_registry()
+            for x in environment_manager.local_repos()
             if x["repo_source_url"] in base_repos
         }
         return local_base_repos

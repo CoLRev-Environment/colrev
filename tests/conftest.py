@@ -13,6 +13,7 @@ from pybtex.database.input import bibtex
 
 import colrev.review_manager
 
+
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
 
@@ -59,7 +60,19 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         "colrev.env.environment_manager.EnvironmentManager.register_repo",
         return_value=(),
     )
+
     test_repo_dir = tmp_path_factory.mktemp("base_repo")  # type: ignore
+
+    session_mocker.patch.object(
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry_yaml",
+        test_repo_dir / "reg.yaml",
+    )
+    session_mocker.patch.object(
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry",
+        test_repo_dir / "reg.json",
+    )
     os.chdir(test_repo_dir)
     colrev.review_manager.get_init_operation(
         review_type="literature_review",
@@ -230,3 +243,28 @@ def get_local_index(  # type: ignore
         )
 
     return local_index_instance
+
+
+@pytest.fixture(scope="module")
+def script_loc(request) -> Path:  # type: ignore
+    """Return the directory of the currently running test script"""
+
+    return Path(request.fspath).parent
+
+
+@pytest.fixture(scope="function", name="_patch_registry")
+def patch_registry(mocker, tmp_path) -> None:  # type: ignore
+    """Patch registry path in environment manager"""
+    test_json_path = tmp_path / Path("reg.json")
+    test_yaml_path = tmp_path / Path("reg.yaml")
+
+    mocker.patch.object(
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry_yaml",
+        test_yaml_path,
+    )
+    mocker.patch.object(
+        colrev.env.environment_manager.EnvironmentManager,
+        "registry",
+        test_json_path,
+    )

@@ -31,10 +31,9 @@ class Distribute(colrev.operation.Operation):
     def get_environment_registry(self) -> list:
         """Get the environment registry (excluding curated_metadata)"""
         environment_manager = self.review_manager.get_environment_manager()
-        environment_registry = environment_manager.load_environment_registry()
         return [
             x
-            for x in environment_registry
+            for x in environment_manager.local_repos()
             if "curated_metadata/" not in x["repo_source_path"]
         ]
 
