@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: CoLRev Project
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -9,7 +9,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a XXX
+colrev search -a colrev.colrev_project:"/path/to/local/file.bib"
 ```
 
 ## Links

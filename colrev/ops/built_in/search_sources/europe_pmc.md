@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: Europe PMC
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -7,6 +7,8 @@ Note: This document is currently under development. It will contain the followin
 - supported (details): search updates, get_masterdata, run_search, load_fixes, prep
 
 [Europe PMC](https://europepmc.org/)
+
+License: [may contain copyrighted material, unless stated otherwise](https://europepmc.org/Copyright)
 
 ## Add the search source
 

@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: Crossref
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -7,6 +7,8 @@ Note: This document is currently under development. It will contain the followin
 - supported (details): search updates, get_masterdata, run_search, load_fixes, prep
 
 [Crossref](https://www.crossref.org/)
+
+[License](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/)
 
 ## Add the search source
 

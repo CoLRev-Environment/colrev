@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: OpenLibrary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -10,8 +10,6 @@ Note: This document is currently under development. It will contain the followin
 
 ## Add the search source
 
-```
-colrev search -a XXX
-```
+Searches of the OpenLibrary are not (yet) supported.
 
 ## Links

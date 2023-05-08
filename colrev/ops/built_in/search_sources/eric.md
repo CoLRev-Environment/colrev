@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: ERIC
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -7,11 +7,10 @@ Note: This document is currently under development. It will contain the followin
 - supported (details): search updates, get_masterdata, run_search, load_fixes, prep
 
 [ERIC](https://eric.ed.gov/)
+[ERIC API](https://eric.ed.gov/?api)
 
 ## Add the search source
 
-```
-colrev search -a XXX
-```
+Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links

@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: ABI/INFORM ProQuest
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -6,12 +6,10 @@ Note: This document is currently under development. It will contain the followin
 - coverage (disciplines, types of work)
 - supported (details): search updates, get_masterdata, run_search, load_fixes, prep
 
-[ABI/INFORM ProQues](https://about.proquest.com/en/products-services/abi_inform_complete/)
+[ABI/INFORM ProQuest](https://about.proquest.com/en/products-services/abi_inform_complete/)
 
 ## Add the search source
 
-```
-colrev search -a XXX
-```
+Download search results and store in `data/search/` directory. No API-access available.
 
 ## Links

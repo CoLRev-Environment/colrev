@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: LocalIndex
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -9,7 +9,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a XXX
+colrev search -a colrev.local_index:"title LIKE '%dark side%'"
 ```
 
 ## Links

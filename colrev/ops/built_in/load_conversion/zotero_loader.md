@@ -7,4 +7,5 @@ Note: This document is currently under development. It will contain the followin
 
 ## Links
 
+- [RIS field names](https://en.wikipedia.org/wiki/RIS_(file_format)#Tags)
 - [List of bibliographic formats supported by Zotero translators](https://www.zotero.org/support/kb/importing_standardized_formats)
