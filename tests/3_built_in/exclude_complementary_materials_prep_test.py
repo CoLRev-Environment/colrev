@@ -16,10 +16,10 @@ def elp(
 ):
     """Fixture returning an ExcludeComplementaryMaterialsPrep instance"""
     settings = {"endpoint": "colrev.exclude_complementary_materials"}
-    Cls = colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep
-    elp_instance = Cls(
-        prep_operation=prep_operation, settings=settings
+    Cls = (
+        colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep
     )
+    elp_instance = Cls(prep_operation=prep_operation, settings=settings)
     return elp_instance
 
 
