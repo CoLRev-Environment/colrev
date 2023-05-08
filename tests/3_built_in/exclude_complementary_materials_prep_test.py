@@ -7,7 +7,7 @@ import pytest
 import colrev.ops.built_in.prep.exclude_complementary_materials
 import colrev.ops.prep
 
-Cls = (
+ECMPrep = (
     colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep
 )
 
@@ -15,10 +15,10 @@ Cls = (
 @pytest.fixture(scope="package", name="elp_ecm")
 def elp(
     prep_operation: colrev.ops.prep.Prep,
-) -> Cls:
+) -> ECMPrep:
     """Fixture returning an ExcludeComplementaryMaterialsPrep instance"""
     settings = {"endpoint": "colrev.exclude_complementary_materials"}
-    elp_instance = Cls(prep_operation=prep_operation, settings=settings)
+    elp_instance = ECMPrep(prep_operation=prep_operation, settings=settings)
     return elp_instance
 
 
@@ -50,7 +50,7 @@ PRESCREEN_INCLUDED = False
     ],
 )
 def test_prep_exclude_complementary_materials(
-    elp_ecm: Cls,
+    elp_ecm: ECMPrep,
     input_value: dict,
     expected_outcome: bool,
 ) -> None:

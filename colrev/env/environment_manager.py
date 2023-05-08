@@ -97,11 +97,24 @@ class EnvironmentManager:
         self.environment_registry = self.load_environment_registry()
         return self.environment_registry["local_index"]["repos"]
 
+    def __cast_values_to_str(self, data) -> dict:  # type: ignore
+        result = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                result[key] = self.__cast_values_to_str(value)
+            elif isinstance(value, list):
+                result[key] = [self.__cast_values_to_str(v) for v in value]  # type: ignore
+            else:
+                result[key] = str(value)  # type: ignore
+        return result
+
     def save_environment_registry(self, *, updated_registry: dict) -> None:
         """Save the local registry"""
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
-            json.dump(dict(updated_registry), indent=4, fp=file)
+            json.dump(
+                dict(self.__cast_values_to_str(updated_registry)), indent=4, fp=file
+            )
 
     def register_repo(self, *, path_to_register: Path) -> None:
         """Register a repository"""
