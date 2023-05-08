@@ -14,12 +14,6 @@ from git.exc import NoSuchPathError
 
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager.ReviewManager
-
 
 class Advisor:
     """The CoLRev advisor guides users through the review process"""
@@ -712,8 +706,8 @@ class Advisor:
                 environment_instructions=environment_instructions,
             )
 
-        environment_registry = environment_manager.load_environment_registry()
-        registered_paths = [Path(x["repo_source_path"]) for x in environment_registry]
+        local_repos = environment_manager.local_repos()
+        registered_paths = [Path(x["repo_source_path"]) for x in local_repos]
         # Note : we can use many parallel processes
         # because __append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity

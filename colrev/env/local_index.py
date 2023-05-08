@@ -922,8 +922,7 @@ class LocalIndex:
         self.reinitialize_sqlite_db()
 
         repo_source_paths = [
-            x["repo_source_path"]
-            for x in self.environment_manager.load_environment_registry()
+            x["repo_source_path"] for x in self.environment_manager.local_repos()
         ]
         if not repo_source_paths:
             env_resources = colrev.env.resources.Resources()
@@ -935,8 +934,7 @@ class LocalIndex:
                 )
 
             repo_source_paths = [
-                x["repo_source_path"]
-                for x in self.environment_manager.load_environment_registry()
+                x["repo_source_path"] for x in self.environment_manager.local_repos()
             ]
 
         for repo_source_path in repo_source_paths:

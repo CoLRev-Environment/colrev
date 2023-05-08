@@ -93,7 +93,12 @@ class EnvironmentManager:
                 environment_registry_path_yaml.rename(backup_file)
         return environment_registry
 
-    def save_environment_registry(self, *, updated_registry: EnvRegistry) -> None:
+    def local_repos(self) -> list:
+        """gets local repos from local index"""
+        self.environment_registry = self.load_environment_registry()
+        return self.environment_registry["local_index"]["repos"]
+
+    def save_environment_registry(self, *, updated_registry: dict) -> None:
         """Save the local registry"""
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
@@ -103,7 +108,8 @@ class EnvironmentManager:
         """Register a repository"""
         self.environment_registry = self.load_environment_registry()
         registered_paths = [
-            x["repo_source_path"] for x in self.environment_registry['local_index']['repos']
+            x["repo_source_path"]
+            for x in self.environment_registry["local_index"]["repos"]
         ]
 
         if registered_paths:
@@ -126,7 +132,7 @@ class EnvironmentManager:
                 if remote.url:
                     new_record["repo_source_url"] = remote.url
                     break
-        self.environment_registry['local_index']['repos'].append(new_record)
+        self.environment_registry["local_index"]["repos"].append(new_record)
         self.save_environment_registry(updated_registry=self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
@@ -145,7 +151,7 @@ class EnvironmentManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, image_path: Optional[Path] = None
+            cls, *, imagename: str, image_path: Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 
@@ -172,7 +178,7 @@ class EnvironmentManager:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="docker",
                 detailed_trace=f"Docker service not available ({exc}). "
-                + "Please install/start Docker.",
+                               + "Please install/start Docker.",
             ) from exc
 
     def check_git_installed(self) -> None:
@@ -201,7 +207,7 @@ class EnvironmentManager:
             raise colrev_exceptions.MissingDependencyError("Docker")
 
     def _get_status(
-        self, *, review_manager: colrev.review_manager.ReviewManager
+            self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> dict:
         status_dict = {}
         with open(review_manager.status, encoding="utf8") as stream:
@@ -259,8 +265,8 @@ class EnvironmentManager:
 
     def get_environment_stats(self) -> dict:
         """Get the environment stats"""
-        # TODO: Seems like this is not being tested. There is a programming error here
-        local_repos = self.load_environment_registry()
+
+        local_repos = self.local_repos()
         repos = []
         broken_links = []
         for repo in local_repos:
@@ -291,8 +297,8 @@ class EnvironmentManager:
 
                 repos.append(repo)
             except (
-                colrev_exceptions.CoLRevException,
-                InvalidGitRepositoryError,
+                    colrev_exceptions.CoLRevException,
+                    InvalidGitRepositoryError,
             ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
@@ -302,7 +308,7 @@ class EnvironmentManager:
         curated_outlets: typing.List[str] = []
         for repo_source_path in [
             x["repo_source_path"]
-            for x in self.load_environment_registry().repos
+            for x in self.local_repos()
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
@@ -311,24 +317,24 @@ class EnvironmentManager:
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
                 with open(
-                    f"{repo_source_path}/data/records.bib", encoding="utf-8"
+                        f"{repo_source_path}/data/records.bib", encoding="utf-8"
                 ) as file:
                     outlets = []
                     for line in file.readlines():
                         # Note : the second part ("journal:"/"booktitle:")
                         # ensures that data provenance fields are skipped
                         if (
-                            "journal" == line.lstrip()[:7]
-                            and "journal:" != line.lstrip()[:8]
+                                "journal" == line.lstrip()[:7]
+                                and "journal:" != line.lstrip()[:8]
                         ):
-                            journal = line[line.find("{") + 1 : line.rfind("}")]
+                            journal = line[line.find("{") + 1: line.rfind("}")]
                             if journal != "UNKNOWN":
                                 outlets.append(journal)
                         if (
-                            line.lstrip()[:9] == "booktitle"
-                            and line.lstrip()[:10] != "booktitle:"
+                                line.lstrip()[:9] == "booktitle"
+                                and line.lstrip()[:10] != "booktitle:"
                         ):
-                            booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                            booktitle = line[line.find("{") + 1: line.rfind("}")]
                             if booktitle != "UNKNOWN":
                                 outlets.append(booktitle)
 

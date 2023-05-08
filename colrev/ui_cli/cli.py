@@ -2010,7 +2010,7 @@ def env(
 
     if pull:
         environment_manager = review_manager.get_environment_manager()
-        for curated_resource in environment_manager.load_environment_registry():
+        for curated_resource in environment_manager.local_repos():
             curated_resource_path = curated_resource["source_url"]
             if "/curated_metadata/" not in curated_resource_path:
                 continue
@@ -2040,15 +2040,18 @@ def env(
     if unregister is not None:
         environment_manager = review_manager.get_environment_manager()
 
-        environment_registry = environment_manager.load_environment_registry()
-        if str(unregister) not in [x["source_url"] for x in environment_registry]:
+        local_repos = environment_manager.local_repos()
+        if str(unregister) not in [x["source_url"] for x in local_repos]:
             print("Not in local registry (cannot remove): %s", unregister)
         else:
-            environment_registry = [
-                x for x in environment_registry if x["source_url"] != str(unregister)
+            updated_local_repos = [
+                x for x in local_repos if x["source_url"] != str(unregister)
             ]
+            environment_manager.environment_registry["local_index"][
+                "repos"
+            ] = updated_local_repos
             environment_manager.save_environment_registry(
-                updated_registry=environment_registry
+                updated_registry=environment_manager.environment_registry
             )
             logging.info("Removed from local registry: %s", unregister)
         return
