@@ -6,7 +6,7 @@ import colrev.ops.built_in.prep.exclude_languages
 import colrev.ops.prep
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="package", name="elp_elp")
 def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep:
@@ -84,12 +84,12 @@ def elp(
     ],
 )
 def test_prep_exclude_languages(
-    elp: colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep,
+    elp_elp: colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep,
     input_value: dict,
     expected: dict,
 ) -> None:
     """Test the prep_exclude_languages"""
     record = colrev.record.PrepRecord(data=input_value)
-    returned_record = elp.prepare(prep_operation=elp, record=record)
+    returned_record = elp_elp.prepare(prep_operation=elp_elp, record=record)
     actual = returned_record.data
     assert expected == actual

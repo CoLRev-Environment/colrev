@@ -15,7 +15,6 @@ from docker.errors import DockerException
 from git.exc import InvalidGitRepositoryError
 from yaml import safe_load
 
-import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
