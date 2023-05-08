@@ -13,7 +13,7 @@ import colrev.review_manager
 
 EnvTestConf = namedtuple(
     "EnvTestConf",
-    "json_path json_expected yaml_path yaml_expected base_path test_repo backup",
+    "json_path expected_json yaml_path expected_yaml base_path test_repo backup",
 )
 
 
@@ -53,18 +53,23 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
   repo_source_url: {dummy_origin}
 """
     expected_json = json.dumps(
-        [
-            {
-                "repo_name": "colrev",
-                "repo_source_path": str(base_path),
-                "repo_source_url": str(origin[0]),
+        {
+            "local_index": {
+                "repos": [
+                    {
+                        "repo_name": "colrev",
+                        "repo_source_path": str(base_path),
+                        "repo_source_url": str(origin[0]),
+                    },
+                    {
+                        "repo_name": "a_test_repo",
+                        "repo_source_path": str(test_repo),
+                        "repo_source_url": dummy_origin,
+                    },
+                ],
             },
-            {
-                "repo_name": "a_test_repo",
-                "repo_source_path": str(test_repo),
-                "repo_source_url": dummy_origin,
-            },
-        ]
+            "packages": {},
+        }
     )
 
     # create a repo and make a commit
@@ -79,9 +84,9 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     return EnvTestConf(
         base_path=base_path,
         json_path=tmp_path / Path("reg.json"),
-        json_expected=expected_json,
+        expected_json=expected_json,
         yaml_path=tmp_path / Path("reg.yaml"),
-        yaml_expected=expected_yaml,
+        expected_yaml=expected_yaml,
         test_repo=test_repo,
         backup=tmp_path / Path("reg.yaml.bk"),
     )
@@ -97,9 +102,9 @@ def test_loading_config_properly(  # type: ignore
         return
     data = prep_test(tmp_path, script_loc)
     with open(data.json_path, "w", encoding="utf-8") as file:
-        file.write(data.json_expected)
+        file.write(data.expected_json)
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    assert json.dumps(env_man.environment_registry) == data.json_expected
+    assert json.dumps(env_man.environment_registry) == data.expected_json
     assert not env_man.load_yaml
 
 
@@ -115,7 +120,7 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
         return
     data = prep_test(tmp_path, script_loc)
     with open(data.yaml_path, "w", encoding="utf-8") as file:
-        file.write(data.yaml_expected)
+        file.write(data.expected_yaml)
     env_man = colrev.env.environment_manager.EnvironmentManager()
     assert env_man.load_yaml
     assert Path(data.base_path).exists()
@@ -123,7 +128,7 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
     env_man.register_repo(path_to_register=Path(data.test_repo))
     with open(data.json_path, encoding="utf-8") as file:
         actual_json = json.dumps(json.loads(file.read()))
-        assert data.json_expected == actual_json
+        assert data.expected_json == actual_json
 
 
 # def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore

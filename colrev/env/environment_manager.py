@@ -65,16 +65,15 @@ class EnvironmentManager:
                 f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
-    def load_environment_registry(self) -> list:
+    def load_environment_registry(self) -> dict:
         """Load the local registry"""
         environment_registry_path = self.registry
         environment_registry_path_yaml = self.registry_yaml
-        environment_registry = []
+        environment_registry = {}
         if environment_registry_path.is_file():
             self.load_yaml = False
             with open(environment_registry_path, encoding="utf8") as file:
-                environment_registry_df = pd.json_normalize(json.load(file))
-                environment_registry = environment_registry_df.to_dict("records")
+                environment_registry = json.load(fp=file)
         elif environment_registry_path_yaml.is_file():
             self.load_yaml = True
             backup_file = Path(str(environment_registry_path_yaml) + ".bk")
@@ -83,35 +82,29 @@ class EnvironmentManager:
             )
             with open(environment_registry_path_yaml, encoding="utf8") as file:
                 environment_registry_df = pd.json_normalize(safe_load(file))
-                environment_registry = environment_registry_df.to_dict("records")
+                repos = environment_registry_df.to_dict("records")
+                environment_registry = {
+                    "local_index": {
+                        "repos": repos,
+                    },
+                    "packages": {},
+                }
                 self.save_environment_registry(updated_registry=environment_registry)
                 environment_registry_path_yaml.rename(backup_file)
-
         return environment_registry
 
-    def save_environment_registry(self, *, updated_registry: list) -> None:
+    def save_environment_registry(self, *, updated_registry: EnvRegistry) -> None:
         """Save the local registry"""
-        updated_registry_df = pd.DataFrame(updated_registry)
-        ordered_cols = [
-            "repo_name",
-            "repo_source_path",
-        ]
-        for entry in [x for x in updated_registry_df.columns if x not in ordered_cols]:
-            ordered_cols.append(entry)
-        updated_registry_df = updated_registry_df.reindex(columns=ordered_cols)
-
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
-            file.write(
-                updated_registry_df.to_json(
-                    orient="records", default_handler=str, indent=4
-                )
-            )
+            json.dump(dict(updated_registry), indent=4, fp=file)
 
     def register_repo(self, *, path_to_register: Path) -> None:
         """Register a repository"""
         self.environment_registry = self.load_environment_registry()
-        registered_paths = [x["repo_source_path"] for x in self.environment_registry]
+        registered_paths = [
+            x["repo_source_path"] for x in self.environment_registry['local_index']['repos']
+        ]
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
@@ -133,7 +126,7 @@ class EnvironmentManager:
                 if remote.url:
                     new_record["repo_source_url"] = remote.url
                     break
-        self.environment_registry.append(new_record)
+        self.environment_registry['local_index']['repos'].append(new_record)
         self.save_environment_registry(updated_registry=self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
@@ -266,6 +259,7 @@ class EnvironmentManager:
 
     def get_environment_stats(self) -> dict:
         """Get the environment stats"""
+        # TODO: Seems like this is not being tested. There is a programming error here
         local_repos = self.load_environment_registry()
         repos = []
         broken_links = []
@@ -308,7 +302,7 @@ class EnvironmentManager:
         curated_outlets: typing.List[str] = []
         for repo_source_path in [
             x["repo_source_path"]
-            for x in self.load_environment_registry()
+            for x in self.load_environment_registry().repos
             if "colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
