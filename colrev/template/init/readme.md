@@ -7,5 +7,5 @@ This repository is based on the [ColRev](https://github.com/CoLRev-Environment/c
 colrev clone URL
 
 # Or to use it as a source in another project, run
-colrev search -a "FROM COLREV_PROJECT SCOPE url='URL'"
+colrev search -a colrev.colrev_project:URL
 ```
