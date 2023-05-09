@@ -85,8 +85,9 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
         review_manager.report_logger.removeHandler(report_handler)
         report_handler.close()
 
-    with open(review_manager.report_path, "r+", encoding="utf8") as file:
-        file.truncate(0)
+    if review_manager.report_path.is_file():
+        with open(review_manager.report_path, "r+", encoding="utf8") as file:
+            file.truncate(0)
 
     file_handler = logging.FileHandler(review_manager.report_path, mode="a")
     file_handler.setLevel(logging.INFO)
