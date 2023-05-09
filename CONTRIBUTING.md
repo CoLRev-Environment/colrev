@@ -102,7 +102,7 @@ pip install pytest-mock
 
 ### If you get invalid cross-device link error
 
-It is because the `/tmp` folder is not in same drive as your home drive. Use 'pytest --basetemp=&lt;a_path_inside_your_home_folder&gt;'
+It is because the `/tmp` folder is not in same drive as your home drive. Use `pytest --basetemp=<a_path_inside_your_home_folder>`
 
 Beware, everything inside the folder will be deleted, so make sure you use the folder only for test.
 
@@ -117,6 +117,17 @@ Before you submit a pull request, check that it meets these guidelines:
 3. The pull request should work for Python 3.5, 3.6, 3.7 and 3.8, and for PyPy. Check
    https://travis-ci.com/CoLRev-Ecosystem/colrev/pull_requests
    and make sure that the tests pass for all supported Python versions.
+
+## Add yourself as Contributor
+
+Colrev uses `@all-contributors` to add contributors. You can add yourself as contributor by commenting on an Issue or
+Pull Request, by asking @all-contributors:
+
+```
+@all-contributors please add @<username> for <contributions>
+```
+
+[Bot usage](https://allcontributors.org/docs/en/bot/usage)
 
 ## Coding standards
 
