@@ -406,6 +406,7 @@ class Checker:
             ".report.log",
             ".pre-commit-config.yaml",
             "data/search",
+            "records.bib",
         ]
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]
