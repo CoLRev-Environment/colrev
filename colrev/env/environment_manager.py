@@ -95,6 +95,10 @@ class EnvironmentManager:
     def local_repos(self) -> list:
         """gets local repos from local index"""
         self.environment_registry = self.load_environment_registry()
+        if "local_index" not in self.environment_registry:
+            return []
+        if "repos" not in self.environment_registry:
+            return []
         return self.environment_registry["local_index"]["repos"]
 
     def __cast_values_to_str(self, data) -> dict:  # type: ignore
@@ -119,6 +123,9 @@ class EnvironmentManager:
     def register_repo(self, *, path_to_register: Path) -> None:
         """Register a repository"""
         self.environment_registry = self.load_environment_registry()
+
+        if "local_index" not in self.environment_registry:
+            self.environment_registry["local_index"] = {"repos": []}
         registered_paths = [
             x["repo_source_path"]
             for x in self.environment_registry["local_index"]["repos"]
