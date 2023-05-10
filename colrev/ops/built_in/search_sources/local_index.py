@@ -5,7 +5,6 @@ from __future__ import annotations
 import difflib
 import typing
 import webbrowser
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -314,18 +313,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records: typing.Dict,
     ) -> dict:
         """Load fixes for local-index"""
-
-        # Note : to avoid modifying the feed-records
-        records = deepcopy(records)
-
-        for record_dict in records.values():
-            curation_url = record_dict["curation_ID"].split("#")[0]
-            record_dict["colrev_masterdata_provenance"] = {
-                "CURATED": {"source": curation_url, "note": ""}
-            }
-            record = colrev.record.Record(data=record_dict)
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            del curation_url
 
         return records
 

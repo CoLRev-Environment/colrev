@@ -702,11 +702,12 @@ class Load(colrev.operation.Operation):
             record.data.update(
                 doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
             )
-
         self.import_provenance(
             record=record,
         )
-        record.set_status(target_state=colrev.record.RecordState.md_imported)
+
+        if "colrev_status" not in record.data:
+            record.set_status(target_state=colrev.record.RecordState.md_imported)
 
         if record.check_potential_retracts():
             self.review_manager.logger.info(
@@ -735,14 +736,19 @@ class Load(colrev.operation.Operation):
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_prepared
-            )
-
-            if record.get("colrev_status", "") in post_md_prepared_states:
+            if source.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
+                if "curation_ID" in record:
+                    record.update(
+                        colrev_masterdata_provenance={
+                            "CURATED": {
+                                "source": record["curation_ID"].split("#")[0],
+                                "note": "",
+                            }
+                        }
+                    )
             else:
                 record.update(colrev_status=colrev.record.RecordState.md_retrieved)
 
@@ -848,7 +854,7 @@ class Load(colrev.operation.Operation):
 
             self.review_manager.logger.info(
                 f" {colors.GREEN}{source_record['ID']}".ljust(46)
-                + f"md_retrieved →  md_imported{colors.END}"
+                + f"md_retrieved →  {source_record['colrev_status']}{colors.END}"
             )
 
         self.__check_bib_file(source=source, records=records)
