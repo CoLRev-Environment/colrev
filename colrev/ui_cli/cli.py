@@ -2196,6 +2196,13 @@ def settings(
 
 @main.command(help_priority=22)
 @click.option(
+    "-a",
+    "--add_hook",
+    is_flag=True,
+    default=False,
+    help="Add a sync pre-commit hook",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2212,10 +2219,41 @@ def settings(
 @click.pass_context
 def sync(
     ctx: click.core.Context,
+    add_hook: bool,
     verbose: bool,
     force: bool,
 ) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
+
+    if add_hook:
+        if not Path(".git").is_dir():
+            print("Not in a git directory.")
+            return
+        if not Path("records.bib").is_file() or not Path("paper.md").is_file():
+            print("Warning: records.bib or paper.md does not exist.")
+            print("Other filenames are not (yet) supported.")
+            return
+
+        if Path(".pre-commit-config.yaml").is_file():
+            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
+                encoding="utf-8"
+            ):
+                print("Hook already registered")
+                return
+
+        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
+            file.write(
+                """\n-   repo: local
+    hooks:
+    -   id: colrev-hooks-update
+        name: "CoLRev ReviewManager: update"
+        entry: colrev-hooks-update
+        language: python
+        stages: [commit]
+        files: 'records.bib|paper.md'"""
+            )
+        print("Added pre-commit hook for colrev sync.")
+        return
 
     sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
     sync_operation.get_cited_papers()
