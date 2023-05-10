@@ -462,7 +462,8 @@ class LocalIndex:
         if "colrev_id" in record.data:
             cid_to_retrieve = record.get_colrev_id()
         else:
-            cid_to_retrieve = [record.create_colrev_id()]
+            assume_complete = not bool(record.get_missing_fields())
+            cid_to_retrieve = [record.create_colrev_id(assume_complete=assume_complete)]
 
         retrieved_record = self.__retrieve_based_on_colrev_id(
             cids_to_retrieve=cid_to_retrieve
