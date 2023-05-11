@@ -162,7 +162,7 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
-def test_setting_value(_patch_registry, tmp_path):  # type: ignore
+def test_setting_value(_patch_registry):  # type: ignore
     """
     Updating the registry
     """
@@ -176,14 +176,11 @@ def test_setting_value(_patch_registry, tmp_path):  # type: ignore
     )
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    from pprint import pprint
-
-    pprint(env_man.environment_registry)
     cfg_username, cfg_email = env_man.get_user_specified_email()
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
-def test_setting_value_with_missing(_patch_registry, tmp_path):  # type: ignore
+def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
     """
     Updating the registry
     """
