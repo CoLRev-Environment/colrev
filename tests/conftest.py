@@ -11,6 +11,7 @@ import git
 import pytest
 from pybtex.database.input import bibtex
 
+import colrev.env.local_index
 import colrev.review_manager
 
 
