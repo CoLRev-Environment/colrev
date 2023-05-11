@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Collection of utility functions"""
+import operator
 import pkgutil
 import typing
 import unicodedata
 from enum import Enum
+from functools import reduce
 from pathlib import Path
 
 from jinja2 import Environment
@@ -153,6 +155,18 @@ def dict_keys_exists(element, *keys):
         except KeyError:
             return False
     return True
+
+
+def get_by_path(root, items):
+    """Access a nested object in root by item sequence."""
+
+    return reduce(operator.getitem, items, root)
+
+
+def set_by_path(root, items, value):
+    """Set a value in a nested object in root by item sequence."""
+
+    get_by_path(root, items[:-1])[items[-1]] = value
 
 
 def dict_set_nested(dic, keys, value):

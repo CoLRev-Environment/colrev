@@ -19,7 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
-from colrev.env.utils import dict_set_nested
+from colrev.env.utils import dict_set_nested, get_by_path, dict_keys_exists
 
 
 class EnvironmentManager:
@@ -176,7 +176,7 @@ class EnvironmentManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, image_path: Optional[Path] = None
+            cls, *, imagename: str, image_path: Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 
@@ -203,7 +203,7 @@ class EnvironmentManager:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="docker",
                 detailed_trace=f"Docker service not available ({exc}). "
-                + "Please install/start Docker.",
+                               + "Please install/start Docker.",
             ) from exc
 
     def check_git_installed(self) -> None:
@@ -232,7 +232,7 @@ class EnvironmentManager:
             raise colrev_exceptions.MissingDependencyError("Docker")
 
     def _get_status(
-        self, *, review_manager: colrev.review_manager.ReviewManager
+            self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> dict:
         status_dict = {}
         with open(review_manager.status, encoding="utf8") as stream:
@@ -322,8 +322,8 @@ class EnvironmentManager:
 
                 repos.append(repo)
             except (
-                colrev_exceptions.CoLRevException,
-                InvalidGitRepositoryError,
+                    colrev_exceptions.CoLRevException,
+                    InvalidGitRepositoryError,
             ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
@@ -342,24 +342,24 @@ class EnvironmentManager:
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
                 with open(
-                    f"{repo_source_path}/data/records.bib", encoding="utf-8"
+                        f"{repo_source_path}/data/records.bib", encoding="utf-8"
                 ) as file:
                     outlets = []
                     for line in file.readlines():
                         # Note : the second part ("journal:"/"booktitle:")
                         # ensures that data provenance fields are skipped
                         if (
-                            "journal" == line.lstrip()[:7]
-                            and "journal:" != line.lstrip()[:8]
+                                "journal" == line.lstrip()[:7]
+                                and "journal:" != line.lstrip()[:8]
                         ):
-                            journal = line[line.find("{") + 1 : line.rfind("}")]
+                            journal = line[line.find("{") + 1: line.rfind("}")]
                             if journal != "UNKNOWN":
                                 outlets.append(journal)
                         if (
-                            line.lstrip()[:9] == "booktitle"
-                            and line.lstrip()[:10] != "booktitle:"
+                                line.lstrip()[:9] == "booktitle"
+                                and line.lstrip()[:10] != "booktitle:"
                         ):
-                            booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                            booktitle = line[line.find("{") + 1: line.rfind("}")]
                             if booktitle != "UNKNOWN":
                                 outlets.append(booktitle)
 
@@ -373,27 +373,35 @@ class EnvironmentManager:
 
         return curated_outlets
 
-    def get_user_specified_email(self, show_warning: bool = False) -> (str, str):
+    def get_settings_by_key(self, key: str) -> str | None:
+        """ Loads setting by the given key"""
+        if key not in self.possible_settings:
+            raise colrev_exceptions.InvalidRegistryKeyException(key)
         environment_registry = self.load_environment_registry()
-        if colrev.env.utils.dict_keys_exists(environment_registry, "packages", "pdf_get", "colrev", "unpaywell"):
-            user_dict = environment_registry["packages"]["pdf_get"]["colrev"]["unpaywell"]
-            return user_dict["username"], user_dict["email"]
+        keys = key.split(".")
+        if dict_keys_exists(environment_registry, *keys):
+            return get_by_path(environment_registry, keys)
         else:
-            username, email = self.get_name_mail_from_git()
-            if show_warning:
-                print(f"""CoLRev is using your user name and email from Git, which is:
-                {username} and {email} 
-                
-                If you would like to use a different email address, use the following command
-                
-                colrev --update-registry packages.pdf_get.colrev.unpaywell="your name",email
-                """)
-            return username, email
+            print("Key not fount")
+            return None
 
-    def update_registry(self, conf_name, value):
-        if conf_name not in self.possible_settings:
-            raise colrev_exceptions.InvalidRegistryKeyException(conf_name)
-        keys = conf_name.split(".")
+    def get_user_specified_email(self) -> (str, str):
+        """ Get user's name and email,
+
+        if user have specified username/email in registry, that will be returned
+        otherwise it will return the username and email used it git
+        """
+        _username = self.get_settings_by_key('packages.pdf_get.colrev.unpaywell.username')
+        _email = self.get_settings_by_key('packages.pdf_get.colrev.unpaywell.email')
+        username, email = self.get_name_mail_from_git()
+        username = _username or username
+        email = _email or email
+        return username, email
+
+    def update_registry(self, key, value):
+        if key not in self.possible_settings:
+            raise colrev_exceptions.InvalidRegistryKeyException(key)
+        keys = key.split(".")
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
         self.save_environment_registry(updated_registry=self.environment_registry)
