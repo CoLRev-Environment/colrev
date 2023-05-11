@@ -1,6 +1,6 @@
 # Quality model
 
-<!-- 
+<!--
 - search sources/provenance
 - identification (reducing manual/error-prone processes)
 - quality rules: fit for purposes: dedupe/reporting/citing the sample
@@ -9,9 +9,9 @@
 
 - Introduce quality defect rules with id s like pylint (and add examples)
 - Use in provenance and allow users to disable or add custom rules.
-- Extract the rules to a separate script 
+- Extract the rules to a separate script
 
-TBD: separately 
+TBD: separately
 - check for compliance with rules
 - apply prep package endpoints to fix defets
 
@@ -54,7 +54,7 @@ Error, Warning, Convention (https://pylint.readthedocs.io/en/latest/user_guide/m
 - pages-format: applies to pages
 - latex-char : applies to title, author, journal, booktitle
 - html-char : applies to title, author, journal, booktitle
-- language-format-error : language fields should match ISO 639-3 
+- language-format-error : language fields should match ISO 639-3
 - doi-not-matching-pattern: dois should match a regex pattern
 - unprotected-terms: applies to title, booktitle, journal (capitalized terms/acronyms should be protected)
 - title-suffix: e.g., *, \textdagger (warning?)
