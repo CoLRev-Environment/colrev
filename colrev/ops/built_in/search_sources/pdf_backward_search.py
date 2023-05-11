@@ -386,9 +386,14 @@ class BackwardSearchSource(JsonSchemaMixin):
         return record
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
+
+        record.format_if_mostly_upper(key="title", case="title")
+        record.format_if_mostly_upper(key="journal", case="title")
+        record.format_if_mostly_upper(key="booktitle", case="title")
+        record.format_if_mostly_upper(key="author", case="title")
 
         if (
             "multimedia appendix"
