@@ -1163,61 +1163,79 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     )
 
 
-def test_get_quality_defects() -> None:
-    """Test record.get_quality_defects()"""
+@pytest.fixture(name="v_t_record")
+def fixture_v_t_record() -> colrev.record.Record:
+    """Record for testing quality defects"""
+    return colrev.record.Record(
+        data={
+            "ID": "WagnerLukyanenkoParEtAl2022",
+            "ENTRYTYPE": "article",
+            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        }
+    )
 
-    v_t = {
-        "ID": "r1",
-        "ENTRYTYPE": "article",
-        "colrev_data_provenance": {},
-        "colrev_masterdata_provenance": {},
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_origin": ["import.bib/id_0001"],
-        "year": "2020",
-        "title": "Editorial",
-        "author": "Rai, Arun",
-        "journal": "MIS Quarterly",
-        "volume": "45",
-        "number": "1",
-        "pages": "1--3",
-        "url": "www.test.com",
-    }
 
-    author_defects = [
-        "RAI",  # all-caps
-        "Rai, Arun and B",  # incomplete part
-        "Rai, Phd, Arun",  # additional title
-        "Rai, Arun; Straub, Detmar",  # incorrect delimiter
-        "Mathiassen, Lars and jonsson, katrin and Holmstrom, Jonny",  # author without capital letters
-        "University, Villanova and Sipior, Janice",  # University in author field
-    ]
-    for author_defect in author_defects:
-        v_t["author"] = author_defect
-        r1_mod = colrev.record.Record(data=v_t)
+@pytest.mark.parametrize(
+    "author_str, defect",
+    [
+        ("RAI", True),  # all-caps
+        ("Rai, Arun and B", True),  # incomplete part
+        ("Rai, Phd, Arun", True),  # additional title
+        ("Rai, Arun; Straub, Detmar", True),  # incorrect delimiter
+        (
+            "Mathiassen, Lars and jonsson, katrin",
+            True,
+        ),  # author without capital letters
+        (
+            "University, Villanova and Sipior, Janice",
+            True,
+        ),  # University in author field
+        (
+            "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
+            False,
+        ),  # Special characters
+        ("DUTTON, JANE E. and ROBERTS, LAURA", True),  # Caps
+    ],
+)
+def test_get_quality_defects_author(
+    author_str: str, defect: bool, v_t_record: colrev.record.Record
+) -> None:
+    """Test record.get_quality_defects() - author field"""
+
+    v_t_record.data["author"] = author_str
+    if defect:
         expected = {"author"}
-        actual = set(r1_mod.get_quality_defects())
-        assert expected == actual
-        assert r1_mod.has_quality_defects()
-
-    non_author_defects = ["Mourato, Inês and Dias, Álvaro and Pereira, Leandro"]
-    for non_author_defect in non_author_defects:
-        v_t["author"] = non_author_defect
-        r1_mod = colrev.record.Record(data=v_t)
+    else:
         expected = set()
-        actual = set(r1_mod.get_quality_defects())
-        assert expected == actual
-        assert not r1_mod.has_quality_defects()
+    actual = set(v_t_record.get_quality_defects())
+    assert expected == actual
+    if defect:
+        assert v_t_record.has_quality_defects()
+    else:
+        assert not v_t_record.has_quality_defects()
 
-    v_t["author"] = "Rai, Arun"
 
-    title_defects = ["EDITORIAL"]  # all-caps
-    for title_defect in title_defects:
-        v_t["title"] = title_defect
-        r1_mod = colrev.record.Record(data=v_t)
+@pytest.mark.parametrize(
+    "title_str, defect",
+    [
+        ("EDITORIAL", True),  # all-caps
+    ],
+)
+def test_get_quality_defects_title(
+    title_str: str, defect: bool, v_t_record: colrev.record.Record
+) -> None:
+    """Test record.get_quality_defects() - title field"""
+    v_t_record.data["title"] = title_str
+    if defect:
         expected = {"title"}
-        actual = set(r1_mod.get_quality_defects())
-        assert expected == actual
-        assert r1_mod.has_quality_defects()
+    else:
+        expected = set()
+    actual = set(v_t_record.get_quality_defects())
+    assert expected == actual
+    if defect:
+        assert v_t_record.has_quality_defects()
+    else:
+        assert not v_t_record.has_quality_defects()
 
 
 def test_apply_restrictions() -> None:

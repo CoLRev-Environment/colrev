@@ -1375,6 +1375,13 @@ class Record:
             "",
             colrev.env.utils.remove_accents(input_str=self.data["author"]),
         ).split(" and ")
+        if (
+            colrev.env.utils.percent_upper_chars(
+                self.data["author"].replace(" and ", "")
+            )
+            > 0.7
+        ):
+            defect_field_keys.append("author")
         if not all(
             re.findall(
                 r"^[\w .'’-]*, [\w .'’-]*$",
