@@ -399,6 +399,14 @@ class EnvironmentManager:
         username, email = self.get_name_mail_from_git()
         username = _username or username
         email = _email or email
+        print(
+            f"""CoLRev is using this email: {email}
+If you would like to use a different email address, use the following commands
+
+#email
+colrev --update-global=packages.pdf_get.colrev.unpaywell.email --value=<email_address>
+"""
+        )
         return username, email
 
     def update_registry(self, key: str, value: str) -> None:
