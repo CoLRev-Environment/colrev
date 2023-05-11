@@ -2238,7 +2238,8 @@ class PrepRecord(Record):
         """Format the field if it is mostly in upper case"""
         # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
         #     return
-
+        if key not in self.data:
+            return
         self.data[key] = self.data[key].replace("\n", " ")
 
         if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:

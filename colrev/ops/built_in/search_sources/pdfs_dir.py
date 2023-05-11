@@ -710,10 +710,14 @@ class PDFSearchSource(JsonSchemaMixin):
         return records
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
 
+        record.format_if_mostly_upper(key="title", case="title")
+        record.format_if_mostly_upper(key="journal", case="title")
+        record.format_if_mostly_upper(key="booktitle", case="title")
+        record.format_if_mostly_upper(key="author", case="title")
         # Typical error in old papers: title fields are equal to journal/booktitle fields
         if record.data.get("title", "no_title").lower() == record.data.get(
             "journal", "no_journal"
