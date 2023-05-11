@@ -17,13 +17,6 @@ import colrev.env.package_manager
 import colrev.record
 
 # pylint: disable=duplicate-code
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_get
-
 # pylint: disable=too-few-public-methods
 
 
@@ -43,7 +36,11 @@ class Unpaywall(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        _, self.email = pdf_get_operation.review_manager.get_committer()
+        print("HERE I AM!")
+
+        _, self.email = pdf_get_operation.review_manager.environment_manager.get_user_specified_email(
+            show_warning=True
+        )
 
     def __unpaywall(
         self,

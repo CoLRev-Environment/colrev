@@ -139,5 +139,27 @@ def load_complementary_material_strings() -> list:
     return complementary_material_keywords
 
 
+def dict_keys_exists(element, *keys):
+    """ Check if *keys (nested) exists in `element` (dict). """
+    if not isinstance(element, dict):
+        raise AttributeError('keys_exists() expects dict as first argument.')
+    if len(keys) == 0:
+        raise AttributeError('keys_exists() expects at least two arguments, one given.')
+
+    _element = element
+    for key in keys:
+        try:
+            _element = _element[key]
+        except KeyError:
+            return False
+    return True
+
+
+def dict_set_nested(dic, keys, value):
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    dic[keys[-1]] = value
+
+
 if __name__ == "__main__":
     pass

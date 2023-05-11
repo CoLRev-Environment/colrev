@@ -2866,3 +2866,43 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
+
+
+@main.command(help_priority=36)
+@click.option(
+    "-u",
+    "--update-global",
+    type=str,
+    required=True,
+    help="Global settings to update",
+)
+@click.option(
+    "-v",
+    "--value",
+    type=str,
+    required=True,
+    help="New value of the settings",
+)
+@click.pass_context
+def registry(
+        ctx: click.core.Context,
+        update_global: str,
+        value: str,
+) -> None:
+    """Settings of the CoLRev project"""
+
+    # pylint: disable=import-outside-toplevel
+    # pylint: disable=reimported
+    # pylint: disable=too-many-locals
+
+    from colrev.env.environment_manager import EnvironmentManager
+    env_man = EnvironmentManager()
+    print(f"Updating registry settings:\n{update_global} = {value}")
+    env_man.update_registry(update_global, value)
+
+
+
+
+
+
+

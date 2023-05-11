@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
+from colrev.env.utils import dict_set_nested
 
 
 class EnvironmentManager:
@@ -31,6 +32,11 @@ class EnvironmentManager:
     REGISTRY_RELATIVE_YAML = Path("registry.yaml")
     registry_yaml = colrev_path.joinpath(REGISTRY_RELATIVE_YAML)
     load_yaml = False
+
+    possible_settings = [
+        'packages.pdf_get.colrev.unpaywell.username',
+        'packages.pdf_get.colrev.unpaywell.email',
+    ]
 
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
@@ -366,6 +372,31 @@ class EnvironmentManager:
                 print(exc)
 
         return curated_outlets
+
+    def get_user_specified_email(self, show_warning: bool = False) -> (str, str):
+        environment_registry = self.load_environment_registry()
+        if colrev.env.utils.dict_keys_exists(environment_registry, "packages", "pdf_get", "colrev", "unpaywell"):
+            user_dict = environment_registry["packages"]["pdf_get"]["colrev"]["unpaywell"]
+            return user_dict["username"], user_dict["email"]
+        else:
+            username, email = self.get_name_mail_from_git()
+            if show_warning:
+                print(f"""CoLRev is using your user name and email from Git, which is:
+                {username} and {email} 
+                
+                If you would like to use a different email address, use the following command
+                
+                colrev --update-registry packages.pdf_get.colrev.unpaywell="your name",email
+                """)
+            return username, email
+
+    def update_registry(self, conf_name, value):
+        if conf_name not in self.possible_settings:
+            raise colrev_exceptions.InvalidRegistryKeyException(conf_name)
+        keys = conf_name.split(".")
+        self.environment_registry = self.load_environment_registry()
+        dict_set_nested(self.environment_registry, keys, value)
+        self.save_environment_registry(updated_registry=self.environment_registry)
 
 
 if __name__ == "__main__":

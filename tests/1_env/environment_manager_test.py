@@ -93,7 +93,7 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
 
 
 def test_loading_config_properly(  # type: ignore
-    _patch_registry, tmp_path, script_loc
+        _patch_registry, tmp_path, script_loc
 ) -> None:
     """
     Testing if we are loading existing json registry file correctly
@@ -109,9 +109,9 @@ def test_loading_config_properly(  # type: ignore
 
 
 def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
-    _patch_registry,
-    tmp_path,
-    script_loc,
+        _patch_registry,
+        tmp_path,
+        script_loc,
 ) -> None:
     """
     Testing if we are converting a yaml file to json correctly
@@ -131,48 +131,61 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
         assert data.expected_json == actual_json
 
 
-# def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore
-#
-#     if not continue_test():
-#         return
-#
-#     with mocker.patch.object(
-#             colrev.env.environment_manager.EnvironmentManager,
-#             "registry",
-#             tmp_path / Path("reg.yml"),
-#     ):
-#         env_man = colrev.env.environment_manager.EnvironmentManager()
-#
-#         env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
-#         actual = env_man.environment_registry  # type: ignore
-#
-#         expected = [  # type: ignore
-#             {
-#                 "repo_name": "colrev",
-#                 "repo_source_path": Path(colrev.__file__).parents[1],
-#                 "repo_source_url": actual[0]["repo_source_url"],
-#             }
-#         ]
-#         assert expected == actual
-#
-#         expected = {  # type: ignore
-#             "index": {
-#                 "size": 0,
-#                 "last_modified": "NOT_INITIATED",
-#                 "path": "/home/gerit/colrev",
-#                 "status": "TODO",
-#             },
-#             "local_repos": {
-#                 "repos": [],
-#                 "broken_links": [
-#                     {
-#                         "repo_name": "colrev",
-#                         "repo_source_path": str(Path(colrev.__file__).parents[1]),
-#                         "repo_source_url": str(actual[0]["repo_source_url"]),
-#                     }
-#                 ],
-#             },
-#         }
-#         actual = env_man.get_environment_details()  # type: ignore
-#         actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
-#         assert expected == actual
+def test_loading_user_specified_email_with_none_set(
+        _patch_registry,
+        tmp_path,
+):
+    """
+    When user have specified username and email, we should use that, instead of
+    Git.
+    """
+    # Test without settings
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    username, email = env_man.get_name_mail_from_git()
+    cfg_username, cfg_email = env_man.get_user_specified_email()
+    assert (username, email) == (cfg_username, cfg_email)
+    # now create a new settings
+    test_user = {
+        "username": "Test User",
+        "email": "test@email.com"
+    }
+    reg = json.dumps(
+        {
+            "local_index": {
+                "repos": [],
+            },
+            "packages": {
+                "pdf_get": {
+                    "colrev": {
+                        "unpaywell": test_user
+                    }
+                }
+            },
+        }
+    )
+    with open(tmp_path / Path("reg.json"), "w", encoding="utf-8") as file:
+        file.write(reg)
+    # Check with new env_man
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    cfg_username, cfg_email = env_man.get_user_specified_email()
+    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
+
+
+def test_setting_value(_patch_registry, tmp_path):
+    """
+    Updating the registry
+    """
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    test_user = {
+        "username": "Test User",
+        "email": "test@email.com"
+    }
+    env_man.update_registry('packages.pdf_get.colrev.unpaywell.username', test_user["username"])
+    env_man.update_registry('packages.pdf_get.colrev.unpaywell.email', test_user["email"])
+    # Check with new env_man
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    from pprint import pprint
+    pprint(env_man.environment_registry)
+    cfg_username, cfg_email = env_man.get_user_specified_email()
+    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
+
