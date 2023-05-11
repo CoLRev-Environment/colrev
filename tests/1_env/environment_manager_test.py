@@ -93,7 +93,7 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
 
 
 def test_loading_config_properly(  # type: ignore
-        _patch_registry, tmp_path, script_loc
+    _patch_registry, tmp_path, script_loc
 ) -> None:
     """
     Testing if we are loading existing json registry file correctly
@@ -109,9 +109,9 @@ def test_loading_config_properly(  # type: ignore
 
 
 def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
-        _patch_registry,
-        tmp_path,
-        script_loc,
+    _patch_registry,
+    tmp_path,
+    script_loc,
 ) -> None:
     """
     Testing if we are converting a yaml file to json correctly
@@ -131,9 +131,9 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
         assert data.expected_json == actual_json
 
 
-def test_loading_user_specified_email_with_none_set(
-        _patch_registry,
-        tmp_path,
+def test_loading_user_specified_email_with_none_set(  # type: ignore
+    _patch_registry,
+    tmp_path,
 ):
     """
     When user have specified username and email, we should use that, instead of
@@ -147,7 +147,12 @@ def test_loading_user_specified_email_with_none_set(
     # now create a new settings
     test_user = {"username": "Test User", "email": "test@email.com"}
     reg = json.dumps(
-        {"local_index": {"repos": [],}, "packages": {"pdf_get": {"colrev": {"unpaywell": test_user}}},}
+        {
+            "local_index": {
+                "repos": [],
+            },
+            "packages": {"pdf_get": {"colrev": {"unpaywell": test_user}}},
+        }
     )
     with open(tmp_path / Path("reg.json"), "w", encoding="utf-8") as file:
         file.write(reg)
@@ -157,39 +162,43 @@ def test_loading_user_specified_email_with_none_set(
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
-def test_setting_value(_patch_registry, tmp_path):
+def test_setting_value(_patch_registry, tmp_path):  # type: ignore
     """
     Updating the registry
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    test_user = {
-        "username": "Test User",
-        "email": "test@email.com"
-    }
-    env_man.update_registry('packages.pdf_get.colrev.unpaywell.username', test_user["username"])
-    env_man.update_registry('packages.pdf_get.colrev.unpaywell.email', test_user["email"])
+    test_user = {"username": "Test User", "email": "test@email.com"}
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywell.username", test_user["username"]
+    )
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywell.email", test_user["email"]
+    )
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
     from pprint import pprint
+
     pprint(env_man.environment_registry)
     cfg_username, cfg_email = env_man.get_user_specified_email()
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
-def test_setting_value_with_missing(_patch_registry, tmp_path):
+def test_setting_value_with_missing(_patch_registry, tmp_path):  # type: ignore
     """
     Updating the registry
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
     test_user = {
         "username": "Tester Name",  # this value is set from mock
-        "email": "test@email.com"
+        "email": "test@email.com",
     }
-    env_man.update_registry('packages.pdf_get.colrev.unpaywell.email', test_user["email"])
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywell.email", test_user["email"]
+    )
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
     from pprint import pprint
+
     pprint(env_man.environment_registry)
     cfg_username, cfg_email = env_man.get_user_specified_email()
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
-

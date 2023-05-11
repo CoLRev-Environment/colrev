@@ -2885,9 +2885,9 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
 )
 @click.pass_context
 def registry(
-        ctx: click.core.Context,
-        update_global: str,
-        value: str,
+    ctx: click.core.Context,
+    update_global: str,
+    value: str,
 ) -> None:
     """Settings of the CoLRev project"""
 
@@ -2896,13 +2896,7 @@ def registry(
     # pylint: disable=too-many-locals
 
     from colrev.env.environment_manager import EnvironmentManager
+
     env_man = EnvironmentManager()
     print(f"Updating registry settings:\n{update_global} = {value}")
     env_man.update_registry(update_global, value)
-
-
-
-
-
-
-

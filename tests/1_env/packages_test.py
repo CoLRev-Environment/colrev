@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Tests for the colrev package manager"""
 import importlib.util
-import json
 import os
 from pathlib import Path
 
@@ -427,5 +426,3 @@ def test_update_package_list(
 
     os.chdir(Path(colrev_spec.origin).parents[1])  # type: ignore
     package_manager.update_package_list()
-
-

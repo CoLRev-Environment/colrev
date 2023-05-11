@@ -141,12 +141,12 @@ def load_complementary_material_strings() -> list:
     return complementary_material_keywords
 
 
-def dict_keys_exists(element, *keys):
-    """ Check if *keys (nested) exists in `element` (dict). """
+def dict_keys_exists(element: typing.Any, *keys: str) -> bool:
+    """Check if *keys (nested) exists in `element` (dict)."""
     if not isinstance(element, dict):
-        raise AttributeError('keys_exists() expects dict as first argument.')
+        raise AttributeError("keys_exists() expects dict as first argument.")
     if len(keys) == 0:
-        raise AttributeError('keys_exists() expects at least two arguments, one given.')
+        raise AttributeError("keys_exists() expects at least two arguments, one given.")
 
     _element = element
     for key in keys:
@@ -157,23 +157,23 @@ def dict_keys_exists(element, *keys):
     return True
 
 
-def get_by_path(root, items):
+def get_by_path(root: dict, items: typing.List[str]) -> typing.Any:
     """Access a nested object in root by item sequence."""
 
     return reduce(operator.getitem, items, root)
 
 
-def set_by_path(root, items, value):
+def set_by_path(root: dict, items: typing.List[str], value: typing.Any) -> None:
     """Set a value in a nested object in root by item sequence."""
 
     get_by_path(root, items[:-1])[items[-1]] = value
 
 
-def dict_set_nested(dic, keys, value):
-    """ Set dict value by nested key, this works on empty dict"""
+def dict_set_nested(root: dict, keys: typing.List[str], value: typing.Any) -> None:
+    """Set dict value by nested key, this works on empty dict"""
     for key in keys[:-1]:
-        dic = dic.setdefault(key, {})
-    dic[keys[-1]] = value
+        root = root.setdefault(key, {})
+    root[keys[-1]] = value
 
 
 if __name__ == "__main__":

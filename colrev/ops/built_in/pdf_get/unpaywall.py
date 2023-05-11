@@ -36,13 +36,20 @@ class Unpaywall(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-        _, self.email = pdf_get_operation.review_manager.environment_manager.get_user_specified_email()
-        print(f"""CoLRev is using this email: {self.email} 
+        (
+            _,
+            self.email,
+        ) = (
+            pdf_get_operation.review_manager.environment_manager.get_user_specified_email()
+        )
+        print(
+            f"""CoLRev is using this email: {self.email}
 If you would like to use a different email address, use the following commands
 
 #email
 colrev --update-global=packages.pdf_get.colrev.unpaywell.email --value=<email_address>
-""")
+"""
+        )
 
     def __unpaywall(
         self,

@@ -76,6 +76,7 @@ pymupdf = "^1.22.0"
 imagehash = "^4.3.1"
 defusedxml = "^0.7.1"
 asreview = "^1.2"
+requests-mock = "^1.10.0"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"
