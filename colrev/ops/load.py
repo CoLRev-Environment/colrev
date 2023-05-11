@@ -706,7 +706,7 @@ class Load(colrev.operation.Operation):
             record=record,
         )
 
-        if "colrev_status" not in record.data:
+        if record.data["colrev_status"] == colrev.record.RecordState.md_retrieved:
             record.set_status(target_state=colrev.record.RecordState.md_imported)
 
         if record.check_potential_retracts():
