@@ -170,6 +170,7 @@ def set_by_path(root, items, value):
 
 
 def dict_set_nested(dic, keys, value):
+    """ Set dict value by nested key, this works on empty dict"""
     for key in keys[:-1]:
         dic = dic.setdefault(key, {})
     dic[keys[-1]] = value

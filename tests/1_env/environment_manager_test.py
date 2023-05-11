@@ -182,7 +182,7 @@ def test_setting_value_with_missing(_patch_registry, tmp_path):
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
     test_user = {
-        "username": "Tester Name", # this value is set from mock
+        "username": "Tester Name",  # this value is set from mock
         "email": "test@email.com"
     }
     env_man.update_registry('packages.pdf_get.colrev.unpaywell.email', test_user["email"])
@@ -190,6 +190,6 @@ def test_setting_value_with_missing(_patch_registry, tmp_path):
     env_man = colrev.env.environment_manager.EnvironmentManager()
     from pprint import pprint
     pprint(env_man.environment_registry)
-    cfg_username, cfg_email = env_man.get_user_specified_email(show_warning=True)
+    cfg_username, cfg_email = env_man.get_user_specified_email()
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 

@@ -382,7 +382,7 @@ class EnvironmentManager:
         if dict_keys_exists(environment_registry, *keys):
             return get_by_path(environment_registry, keys)
         else:
-            print("Key not fount")
+            print("Key not found")
             return None
 
     def get_user_specified_email(self) -> (str, str):

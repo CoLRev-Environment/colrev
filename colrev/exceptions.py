@@ -596,6 +596,6 @@ class InvalidLanguageCodeException(CoLRevException):
 class InvalidRegistryKeyException(CoLRevException):
     """Invalid registry key provided"""
 
-    def __init__(self, invalid_key: list) -> None:
+    def __init__(self, invalid_key: str) -> None:
         self.invalid_key = invalid_key
         super().__init__(f"Invalid Registry Key: {invalid_key}")
