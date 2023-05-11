@@ -8,6 +8,7 @@ import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
 
+import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
@@ -36,6 +37,7 @@ class ExportManPrep(JsonSchemaMixin):
     ci_supported: bool = False
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
+    RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
 
     @dataclass
     class ExportManPrepSettings(
@@ -70,6 +72,10 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.prep_man_bib_path = (
             self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_PATH
+        )
+
+        self.prep_man_csv_path = (
+            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
         )
 
         self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
@@ -120,6 +126,34 @@ class ExportManPrep(JsonSchemaMixin):
         if "pytest" not in os.getcwd():
             # os.system('%s %s' % (os.getenv('EDITOR'), self.prep_man_bib_path))
             webbrowser.open(str(self.prep_man_bib_path))
+
+    def __create_info_dataframe(
+        self,
+        *,
+        prep_man_operation: colrev.ops.prep_man.PrepMan,
+        records: typing.Dict[str, typing.Dict],
+    ) -> None:
+        prep_man_operation.review_manager.logger.info(
+            f"Export info dataframe for man-prep to {self.prep_man_csv_path}"
+        )
+
+        man_prep_recs = [
+            v
+            for _, v in records.items()
+            if colrev.record.RecordState.md_needs_manual_preparation
+            == v["colrev_status"]
+        ]
+
+        man_prep_info = []
+        for record in man_prep_recs:
+            for field, value in record["colrev_masterdata_provenance"].items():
+                if value["note"]:
+                    man_prep_info.append(
+                        {"ID": record["ID"], "field": field, "note": value["note"]}
+                    )
+
+        man_prep_info_df = pd.DataFrame(man_prep_info)
+        man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
     def __update_provenance(
         self, *, record: colrev.record.Record, records: dict
@@ -224,6 +258,9 @@ class ExportManPrep(JsonSchemaMixin):
         """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
 
         if not self.prep_man_bib_path.is_file():
+            self.__create_info_dataframe(
+                prep_man_operation=prep_man_operation, records=records
+            )
             self.__export_prep_man(
                 prep_man_operation=prep_man_operation, records=records
             )
