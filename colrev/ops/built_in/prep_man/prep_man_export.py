@@ -212,12 +212,22 @@ class ExportManPrep(JsonSchemaMixin):
         self, *, record_dict: dict, records: dict, imported_records: list
     ) -> None:
         record = colrev.record.PrepRecord(data=record_dict)
-        record.update_masterdata_provenance()
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
-        if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
-            imported_records.append(record.data["ID"])
-        self.__update_provenance(record=record, records=records)
-        self.__drop_unnecessary_provenance_fiels(record=record)
+        if str(record.data["colrev_status"]) in ["", "md_prepared", "prepared"]:
+            record.update_masterdata_provenance()
+            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
+                imported_records.append(record.data["ID"])
+            self.__update_provenance(record=record, records=records)
+            self.__drop_unnecessary_provenance_fiels(record=record)
+            # TODO : set to prepared
+        elif str(record.data["colrev_status"]) in [
+            "excluded",
+            "rev_prescreen_excluded",
+        ]:
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded
+            )
+
         records[record_dict["ID"]] = record.get_data()
 
     def __import_prep_man(
