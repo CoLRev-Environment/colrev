@@ -479,7 +479,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 return record
 
             try:
-                self.crossref_lock.acquire(timeout=60)
+                self.crossref_lock.acquire(timeout=120)
 
                 # Note : need to reload file because the object is not shared between processes
                 crossref_feed = self.search_source.get_feed(

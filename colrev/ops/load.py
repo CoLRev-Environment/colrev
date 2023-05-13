@@ -54,6 +54,7 @@ class Load(colrev.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
+        self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()
         self.language_service = colrev.env.language_service.LanguageService()
 
@@ -561,53 +562,9 @@ class Load(colrev.operation.Operation):
             record.data["colrev_data_provenance"] = colrev_data_provenance
             record.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
 
-        def set_initial_non_curated_import_provenance(
-            *, record: colrev.record.Record
-        ) -> None:
-            masterdata_restrictions = (
-                self.review_manager.dataset.get_applicable_restrictions(
-                    record_dict=record.get_data()
-                )
-            )
-            if masterdata_restrictions:
-                record.update_masterdata_provenance(
-                    masterdata_restrictions=masterdata_restrictions
-                )
-            else:
-                record.apply_fields_keys_requirements()
-
-            if (
-                record.data["ENTRYTYPE"]
-                in colrev.record.Record.record_field_inconsistencies
-            ):
-                inconsistent_fields = colrev.record.Record.record_field_inconsistencies[
-                    record.data["ENTRYTYPE"]
-                ]
-                for inconsistent_field in inconsistent_fields:
-                    if inconsistent_field in record.data:
-                        inconsistency_note = (
-                            f"inconsistent with entrytype ({record.data['ENTRYTYPE']})"
-                        )
-                        record.add_masterdata_provenance_note(
-                            key=inconsistent_field, note=inconsistency_note
-                        )
-
-            incomplete_fields = record.get_incomplete_fields()
-            for incomplete_field in incomplete_fields:
-                record.add_masterdata_provenance_note(
-                    key=incomplete_field, note="incomplete"
-                )
-
-            defect_fields = record.get_quality_defects()
-            if defect_fields:
-                for defect_field in defect_fields:
-                    record.add_masterdata_provenance_note(
-                        key=defect_field, note="quality_defect"
-                    )
-
         if not record.masterdata_is_curated():
             set_initial_import_provenance(record=record)
-            set_initial_non_curated_import_provenance(record=record)
+            record.update_masterdata_provenance(qm=self.quality_model)
 
     def __import_format_fields(self, *, record: colrev.record.Record) -> None:
         # pylint: disable=duplicate-code
@@ -706,7 +663,10 @@ class Load(colrev.operation.Operation):
             record=record,
         )
 
-        if record.data["colrev_status"] == colrev.record.RecordState.md_retrieved:
+        if record.data["colrev_status"] in [
+            colrev.record.RecordState.md_retrieved,
+            colrev.record.RecordState.md_needs_manual_preparation,
+        ]:
             record.set_status(target_state=colrev.record.RecordState.md_imported)
 
         if record.check_potential_retracts():
@@ -762,13 +722,6 @@ class Load(colrev.operation.Operation):
                     .upper()
                 )
                 record.update(doi=formatted_doi)
-                # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-                doi_match = re.match(r"^10.\d{4,9}\/", record["doi"])
-                if not doi_match:
-                    self.review_manager.logger.info(
-                        f"remove doi (not matching regex): {record['doi']}"
-                    )
-                    del record["doi"]
 
             self.review_manager.logger.debug(
                 f'append record {record["ID"]} '

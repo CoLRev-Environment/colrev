@@ -67,7 +67,7 @@ class ExportManPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.review_manager = prep_man_operation.review_manager
-
+        self.quality_model = self.review_manager.get_qm()
         self.prep_man_bib_path = (
             self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_PATH
         )
@@ -178,7 +178,7 @@ class ExportManPrep(JsonSchemaMixin):
         self, *, record_dict: dict, records: dict, imported_records: list
     ) -> None:
         record = colrev.record.PrepRecord(data=record_dict)
-        record.update_masterdata_provenance()
+        record.update_masterdata_provenance(qm=self.quality_model)
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
         if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
             imported_records.append(record.data["ID"])

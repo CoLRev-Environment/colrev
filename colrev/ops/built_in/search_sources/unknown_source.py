@@ -358,7 +358,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for unknown sources"""
 
-        if not record.has_inconsistent_fields() or record.masterdata_is_curated():
+        if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 
         self.__heuristically_fix_entrytypes(

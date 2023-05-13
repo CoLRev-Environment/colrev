@@ -24,6 +24,7 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.get_environment_stats
       ~EnvironmentManager.get_name_mail_from_git
       ~EnvironmentManager.load_environment_registry
+      ~EnvironmentManager.local_repos
       ~EnvironmentManager.register_docker_service
       ~EnvironmentManager.register_ports
       ~EnvironmentManager.register_repo
@@ -39,6 +40,9 @@ colrev.env.environment\_manager.EnvironmentManager
    .. autosummary::
 
       ~EnvironmentManager.REGISTRY_RELATIVE
+      ~EnvironmentManager.REGISTRY_RELATIVE_YAML
       ~EnvironmentManager.cache_path
       ~EnvironmentManager.colrev_path
+      ~EnvironmentManager.load_yaml
       ~EnvironmentManager.registry
+      ~EnvironmentManager.registry_yaml

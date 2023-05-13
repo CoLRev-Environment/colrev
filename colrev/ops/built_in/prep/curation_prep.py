@@ -39,7 +39,7 @@ class CurationPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-
+        self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
 
     def prepare(
@@ -68,14 +68,8 @@ class CurationPrep(JsonSchemaMixin):
             )
             return record
 
-        applicable_restrictions = (
-            prep_operation.review_manager.dataset.get_applicable_restrictions(
-                record_dict=record.data,
-            )
-        )
-
-        colrev.record.Record(data=record.data).apply_restrictions(
-            restrictions=applicable_restrictions
+        colrev.record.Record(data=record.data).update_masterdata_provenance(
+            qm=self.quality_model
         )
         if any(
             "missing" in note

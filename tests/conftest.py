@@ -134,6 +134,14 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     return review_manager
 
 
+@pytest.fixture(scope="session", name="quality_model")
+def fixture_quality_model(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.qm.quality_model.QualityModel:
+    """Fixture returning the quality model"""
+    return base_repo_review_manager.get_qm()
+
+
 @pytest.fixture(scope="module")
 def language_service() -> colrev.env.language_service.LanguageService:  # type: ignore
     """Return a language service object"""

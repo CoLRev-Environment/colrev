@@ -57,6 +57,7 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
+        self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -131,7 +132,9 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
 
         if "doi" in record.data:
             retrieved_record = self.crossref_connector.query_doi(doi=record.data["doi"])
-            record.change_entrytype(new_entrytype=retrieved_record.data["ENTRYTYPE"])
+            record.change_entrytype(
+                new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
+            )
             for key in [
                 "journal",
                 "booktitle",

@@ -21,8 +21,6 @@ colrev.record.PrepRecord
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_note
       ~PrepRecord.add_provenance_all
-      ~PrepRecord.apply_fields_keys_requirements
-      ~PrepRecord.apply_restrictions
       ~PrepRecord.change_entrytype
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.cleanup_pdf_processing_fields
@@ -42,10 +40,6 @@ colrev.record.PrepRecord
       ~PrepRecord.get_data
       ~PrepRecord.get_diff
       ~PrepRecord.get_field_provenance
-      ~PrepRecord.get_incomplete_fields
-      ~PrepRecord.get_inconsistencies
-      ~PrepRecord.get_missing_fields
-      ~PrepRecord.get_quality_defects
       ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
@@ -54,11 +48,8 @@ colrev.record.PrepRecord
       ~PrepRecord.get_tei_filename
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
-      ~PrepRecord.has_incomplete_fields
-      ~PrepRecord.has_inconsistent_fields
       ~PrepRecord.has_overlapping_colrev_id
       ~PrepRecord.has_quality_defects
-      ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.preparation_break_condition
@@ -69,11 +60,9 @@ colrev.record.PrepRecord
       ~PrepRecord.print_pdf_prep_man
       ~PrepRecord.print_prescreen_record
       ~PrepRecord.remove_field
-      ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
       ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes
-      ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_pages_in_pdf
@@ -101,7 +90,5 @@ colrev.record.PrepRecord
       ~PrepRecord.pp
       ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys
-      ~PrepRecord.record_field_inconsistencies
-      ~PrepRecord.record_field_requirements
       ~PrepRecord.time_variant_fields
       ~PrepRecord.data

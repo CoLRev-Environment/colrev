@@ -66,6 +66,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        self.quality_model = self.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -409,7 +410,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key="chapter", new_key="title")
                 record.remove_field(key="publisher")
 
-            record.change_entrytype(new_entrytype="article")
+            record.change_entrytype(new_entrytype="article", qm=self.quality_model)
         else:
             # Inproceedings
 
@@ -423,7 +424,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key="title", new_key="booktitle")
                 record.rename_field(key="chapter", new_key="title")
 
-            record.change_entrytype(new_entrytype="inproceedings")
+            record.change_entrytype(
+                new_entrytype="inproceedings", qm=self.quality_model
+            )
 
             if record.data.get("booktitle", "") in [
                 "Research-in-Progress Papers",
