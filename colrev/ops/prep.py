@@ -8,6 +8,7 @@ import multiprocessing as mp
 import random
 import time
 import typing
+import bibtexparser
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
@@ -1051,6 +1052,15 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    def __add_journal_ranking_to_metadada(self, record) -> None:
+        with open('/Project/test/data/records.bib', encoding="utf-8") as bibtex_file:
+            bibtex_str = bibtex_file.read()
+            bib_database = bibtexparser.load(bibtex_str)
+
+        journal = record["journal"]
+        print(journal)
+
+
     def main(
         self,
         *,
@@ -1088,6 +1098,10 @@ class Prep(colrev.operation.Operation):
                     prepared_records = []
                     for item in preparation_data:
                         record = self.prepare(item)
+
+                        """add journal rankings to metadata"""
+                        record = self.__add_journal_ranking_to_metadada(record)
+
                         prepared_records.append(record)
                 else:
                     pool = self.__get_prep_pool(prep_round=prep_round)
