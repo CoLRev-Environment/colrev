@@ -2245,7 +2245,7 @@ class PrepRecord(Record):
         """Format the field if it is mostly in upper case"""
         # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
         #     return
-        if key not in self.data:
+        if key not in self.data or self.data[key] == "UNKNOWN":
             return
         self.data[key] = self.data[key].replace("\n", " ")
 

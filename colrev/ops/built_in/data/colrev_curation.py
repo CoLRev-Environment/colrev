@@ -169,11 +169,17 @@ class ColrevCuration(JsonSchemaMixin):
                     if source in row:
                         cell_text = ""
                         if "md_imported" in row[source]:
-                            cell_text += f"*{row[source]['md_imported']}*"
+                            cell_text += f"*{row[source]['md_imported']}*,"
+                        else:
+                            cell_text += "-,"
                         if "md_processed" in row[source]:
                             cell_text += f"{row[source]['md_processed']}"
+                        else:
+                            cell_text += "-"
                         if "pdf_prepared" in row[source]:
-                            cell_text += f"**{row[source]['pdf_prepared']}**"
+                            cell_text += f",**{row[source]['pdf_prepared']}**"
+                        else:
+                            cell_text += ",-"
 
                         output += cell_text.rjust(cell_width, " ") + "|"
                     else:

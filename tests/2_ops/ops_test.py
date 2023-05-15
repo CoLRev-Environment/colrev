@@ -375,21 +375,13 @@ def test_checks(ops_test_review_manager: colrev.review_manager.ReviewManager) ->
 
     actual = checker.check_repo_extended()
     current_platform = platform.system()
-    if current_platform in ["Linux"]:
-        expected = []
-        assert expected == actual
-    elif current_platform in ["Darwin"]:
-        expected = ["MissingDependencyError: Docker"]
-        assert expected == actual
+    expected = []
+    assert expected == actual
 
     actual = checker.check_repo()  # type: ignore
 
-    if current_platform in ["Linux"]:
-        expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
-        assert expected == actual
-    elif current_platform in ["Darwin"]:
-        expected = {"status": 1, "msg": "  MissingDependencyError: Docker"}  # type: ignore
-        assert expected == actual
+    expected = {"status": 0, "msg": "Everything ok."}  # type: ignore
+    assert expected == actual
 
     expected = []
     actual = checker.check_repo_basics()
