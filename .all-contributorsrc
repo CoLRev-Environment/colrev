@@ -25,7 +25,8 @@
         "code",
         "doc",
         "data",
-        "content"
+        "content",
+        "example"
       ]
     }
   ],
