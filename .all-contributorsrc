@@ -15,6 +15,18 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "julianprester",
+      "name": "Julian Prester",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4706870?v=4",
+      "profile": "https://julianprester.com",
+      "contributions": [
+        "code",
+        "doc",
+        "data",
+        "content"
+      ]
     }
   ],
   "contributorsPerLine": 7,
