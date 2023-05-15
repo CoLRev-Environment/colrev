@@ -25,7 +25,9 @@
         "code",
         "doc",
         "data",
-        "content"
+        "content",
+        "bug",
+        "ideas"
       ]
     }
   ],
