@@ -141,10 +141,8 @@ def load_complementary_material_strings() -> list:
     return complementary_material_keywords
 
 
-def dict_keys_exists(element: typing.Any, *keys: str) -> bool:
+def dict_keys_exists(element: dict, *keys: str) -> bool:
     """Check if *keys (nested) exists in `element` (dict)."""
-    if not isinstance(element, dict):
-        raise AttributeError("keys_exists() expects dict as first argument.")
     if len(keys) == 0:
         raise AttributeError("keys_exists() expects at least two arguments, one given.")
 

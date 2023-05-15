@@ -131,37 +131,6 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
         assert data.expected_json == actual_json
 
 
-def test_loading_user_specified_email_with_none_set(  # type: ignore
-    _patch_registry,
-    tmp_path,
-):
-    """
-    When user have specified username and email, we should use that, instead of
-    Git.
-    """
-    # Test without settings
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    username, email = env_man.get_name_mail_from_git()
-    cfg_username, cfg_email = env_man.get_user_specified_email()
-    assert (username, email) == (cfg_username, cfg_email)
-    # now create a new settings
-    test_user = {"username": "Test User", "email": "test@email.com"}
-    reg = json.dumps(
-        {
-            "local_index": {
-                "repos": [],
-            },
-            "packages": {"pdf_get": {"colrev": {"unpaywell": test_user}}},
-        }
-    )
-    with open(tmp_path / Path("reg.json"), "w", encoding="utf-8") as file:
-        file.write(reg)
-    # Check with new env_man
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    cfg_username, cfg_email = env_man.get_user_specified_email()
-    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
-
-
 def test_setting_value(_patch_registry):  # type: ignore
     """
     Updating the registry
@@ -169,14 +138,19 @@ def test_setting_value(_patch_registry):  # type: ignore
     env_man = colrev.env.environment_manager.EnvironmentManager()
     test_user = {"username": "Test User", "email": "test@email.com"}
     env_man.update_registry(
-        "packages.pdf_get.colrev.unpaywell.username", test_user["username"]
+        "packages.pdf_get.colrev.unpaywall.username", test_user["username"]
     )
     env_man.update_registry(
-        "packages.pdf_get.colrev.unpaywell.email", test_user["email"]
+        "packages.pdf_get.colrev.unpaywall.email", test_user["email"]
     )
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    cfg_username, cfg_email = env_man.get_user_specified_email()
+
+    cfg_username = env_man.get_settings_by_key(
+        "packages.pdf_get.colrev.unpaywall.username"
+    )
+    cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
+
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
@@ -190,9 +164,15 @@ def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
         "email": "test@email.com",
     }
     env_man.update_registry(
-        "packages.pdf_get.colrev.unpaywell.email", test_user["email"]
+        "packages.pdf_get.colrev.unpaywall.username", test_user["username"]
+    )
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywall.email", test_user["email"]
     )
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    cfg_username, cfg_email = env_man.get_user_specified_email()
+    cfg_username = env_man.get_settings_by_key(
+        "packages.pdf_get.colrev.unpaywall.username"
+    )
+    cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)

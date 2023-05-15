@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -35,13 +36,38 @@ class Unpaywall(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_get_operation.review_manager
 
-        (
-            _,
-            self.email,
-        ) = (
-            pdf_get_operation.review_manager.environment_manager.get_user_specified_email()
+        _, self.email = self.get_user_specified_email()
+
+    def get_user_specified_email(self) -> typing.Tuple[str, str]:
+        """Get user's name and email,
+
+        if user have specified username/email in registry, that will be returned
+        otherwise it will return the username and email used it git
+        """
+
+        _username = self.review_manager.environment_manager.get_settings_by_key(
+            "packages.pdf_get.colrev.unpaywall.username"
         )
+        _email = self.review_manager.environment_manager.get_settings_by_key(
+            "packages.pdf_get.colrev.unpaywall.email"
+        )
+        (
+            username,
+            email,
+        ) = self.review_manager.environment_manager.get_name_mail_from_git()
+        username = _username or username
+        email = _email or email
+        print(
+            f"""CoLRev is using this email: {email}
+If you would like to use a different email address, use the following commands
+
+#email
+colrev --update-global=packages.pdf_get.colrev.unpaywall.email --value=<email_address>
+"""
+        )
+        return username, email
 
     def __unpaywall(
         self,

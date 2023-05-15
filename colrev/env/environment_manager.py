@@ -36,8 +36,8 @@ class EnvironmentManager:
     load_yaml = False
 
     possible_settings = [
-        "packages.pdf_get.colrev.unpaywell.username",
-        "packages.pdf_get.colrev.unpaywell.email",
+        "packages.pdf_get.colrev.unpaywall.username",
+        "packages.pdf_get.colrev.unpaywall.email",
     ]
 
     def __init__(self) -> None:
@@ -385,29 +385,6 @@ class EnvironmentManager:
             return get_by_path(environment_registry, keys)
         print("Key not found")
         return None
-
-    def get_user_specified_email(self) -> typing.Tuple[str, str]:
-        """Get user's name and email,
-
-        if user have specified username/email in registry, that will be returned
-        otherwise it will return the username and email used it git
-        """
-        _username = self.get_settings_by_key(
-            "packages.pdf_get.colrev.unpaywell.username"
-        )
-        _email = self.get_settings_by_key("packages.pdf_get.colrev.unpaywell.email")
-        username, email = self.get_name_mail_from_git()
-        username = _username or username
-        email = _email or email
-        print(
-            f"""CoLRev is using this email: {email}
-If you would like to use a different email address, use the following commands
-
-#email
-colrev --update-global=packages.pdf_get.colrev.unpaywell.email --value=<email_address>
-"""
-        )
-        return username, email
 
     def update_registry(self, key: str, value: str) -> None:
         """updates given key in the registry with new value"""
