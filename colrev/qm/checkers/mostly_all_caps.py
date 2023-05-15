@@ -28,11 +28,15 @@ class MostlyAllCapsFieldChecker:
                 )
                 < 0.7
             ):
+                record.remove_masterdata_provenance_note(
+                    key=key, note="mostly-all-caps"
+                )
                 continue
 
             # container-title-abbreviated
             if key in ["journal", "booktitle"] and len(record.data[key]) < 6:
                 continue
+
             record.add_masterdata_provenance_note(key=key, note="mostly-all-caps")
 
 

@@ -28,6 +28,10 @@ class NameFormatTitleChecker:
                 record.add_masterdata_provenance_note(
                     key=key, note="name-format-titles"
                 )
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="name-format-titles"
+                )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

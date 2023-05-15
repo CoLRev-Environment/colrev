@@ -27,6 +27,10 @@ class DOIPatternChecker:
             record.add_masterdata_provenance_note(
                 key="doi", note="doi-not-matching-pattern"
             )
+        else:
+            record.remove_masterdata_provenance_note(
+                key="doi", note="doi-not-matching-pattern"
+            )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

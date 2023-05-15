@@ -30,6 +30,10 @@ class LanguageFormatChecker:
             record.add_masterdata_provenance_note(
                 key="language", note="language-format-error"
             )
+        else:
+            record.remove_masterdata_provenance_note(
+                key="language", note="language-format-error"
+            )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

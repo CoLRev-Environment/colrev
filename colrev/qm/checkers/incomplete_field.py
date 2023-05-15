@@ -16,30 +16,31 @@ class IncompleteFieldChecker:
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the missing-field checks"""
-        for incomplete_field in self.__get_incomplete_fields(record=record):
-            record.add_masterdata_provenance_note(
-                key=incomplete_field, note="incomplete-field"
-            )
 
-    def __get_incomplete_fields(self, *, record: colrev.record.Record) -> set:
-        """Get the list of incomplete fields"""
-        incomplete_field_keys = set()
-        for key in record.data.keys():
-            if key in ["title", "journal", "booktitle", "author"]:
-                if record.data[key].endswith("...") or record.data[key].endswith("…"):
-                    incomplete_field_keys.add(key)
+        for key in ["title", "journal", "booktitle", "author"]:
+            if key not in record.data:
+                continue
+            if self.__incomplete_field(record=record, key=key):
+                record.add_masterdata_provenance_note(key=key, note="incomplete-field")
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="incomplete-field"
+                )
 
-            if key == "author":
-                if (
-                    record.data[key].endswith("and others")
-                    or record.data[key].endswith("et al.")
-                    # heuristics for missing first names:
-                    or ", and " in record.data[key]
-                    or record.data[key].rstrip().endswith(",")
-                ):
-                    incomplete_field_keys.add(key)
-
-        return incomplete_field_keys
+    def __incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
+        if key in ["title", "journal", "booktitle", "author"]:
+            if record.data[key].endswith("...") or record.data[key].endswith("…"):
+                return True
+        if key == "author":
+            if (
+                record.data[key].endswith("and others")
+                or record.data[key].endswith("et al.")
+                # heuristics for missing first names:
+                or ", and " in record.data[key]
+                or record.data[key].rstrip().endswith(",")
+            ):
+                return True
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

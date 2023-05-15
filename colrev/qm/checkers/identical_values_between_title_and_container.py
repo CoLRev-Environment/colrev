@@ -17,23 +17,31 @@ class IdenticalValuesChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the identical-values-between-title-and-container checks"""
 
-        if (
-            "journal" in record.data
-            and "title" in record.data
-            and record.data["title"].lower() == record.data["journal"].lower()
-        ):
+        if self.__identical_values_between_title_and_container(record=record):
             record.add_masterdata_provenance_note(
                 key="title", note="identical-values-between-title-and-container"
             )
+        else:
+            record.remove_masterdata_provenance_note(
+                key="title", note="identical-values-between-title-and-container"
+            )
 
+    def __identical_values_between_title_and_container(
+        self, *, record: colrev.record.Record
+    ) -> bool:
         if (
             "booktitle" in record.data
             and "title" in record.data
             and record.data["title"].lower() == record.data["booktitle"].lower()
         ):
-            record.add_masterdata_provenance_note(
-                key="title", note="identical-values-between-title-and-container"
-            )
+            return True
+        if (
+            "journal" in record.data
+            and "title" in record.data
+            and record.data["title"].lower() == record.data["journal"].lower()
+        ):
+            return True
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

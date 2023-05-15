@@ -503,14 +503,19 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                 if save_feed:
                     crossref_feed.save_feed_file()
-                self.crossref_lock.release()
-                return record
+
             except (
                 colrev_exceptions.InvalidMerge,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
-                self.crossref_lock.release()
-                return record
+                pass
+            finally:
+                try:
+                    self.crossref_lock.release()
+                except ValueError:
+                    pass
+
+            return record
 
         except (
             requests.exceptions.RequestException,

@@ -25,48 +25,52 @@ class NameFormatSeparatorsChecker:
             if record.data[key] == "UNKNOWN":
                 continue
 
-            sanitized_names_list = re.sub(
-                "[^a-zA-Z, ;1]+",
-                "",
-                colrev.env.utils.remove_accents(input_str=record.data[key]),
-            ).split(" and ")
-
-            if not all(
-                re.findall(
-                    r"^[\w .'’-]*, [\w .'’-]*$",
-                    sanitized_name,
-                    re.UNICODE,
-                )
-                for sanitized_name in sanitized_names_list
-            ):
+            if self.__name_separator_error(record=record, key=key):
                 record.add_masterdata_provenance_note(
+                    key=key, note="name-format-separators"
+                )
+            else:
+                record.remove_masterdata_provenance_note(
                     key=key, note="name-format-separators"
                 )
 
-            # At least two capital letters per name
-            elif not all(
-                re.findall(
-                    r"[A-Z]+",
-                    name_part,
-                    re.UNICODE,
-                )
-                for sanitized_name in sanitized_names_list
-                for name_part in sanitized_name.split(",")
-            ):
-                record.add_masterdata_provenance_note(
-                    key=key, note="name-format-separators"
-                )
+    def __name_separator_error(self, *, record: colrev.record.Record, key: str) -> bool:
+        sanitized_names_list = re.sub(
+            "[^a-zA-Z, ;1]+",
+            "",
+            colrev.env.utils.remove_accents(input_str=record.data[key]),
+        ).split(" and ")
 
-            # Note : patterns like "I N T R O D U C T I O N"
-            # that may result from grobid imports
-            elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", record.data["author"]):
-                record.add_masterdata_provenance_note(
-                    key=key, note="name-format-separators"
-                )
-            elif len(record.data["author"]) < 5:
-                record.add_masterdata_provenance_note(
-                    key=key, note="name-format-separators"
-                )
+        if not all(
+            re.findall(
+                r"^[\w .'’-]*, [\w .'’-]*$",
+                sanitized_name,
+                re.UNICODE,
+            )
+            for sanitized_name in sanitized_names_list
+        ):
+            return True
+
+        # At least two capital letters per name
+        if not all(
+            re.findall(
+                r"[A-Z]+",
+                name_part,
+                re.UNICODE,
+            )
+            for sanitized_name in sanitized_names_list
+            for name_part in sanitized_name.split(",")
+        ):
+            return True
+
+        # Note : patterns like "I N T R O D U C T I O N"
+        # that may result from grobid imports
+        if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", record.data["author"]):
+            return True
+        if len(record.data["author"]) < 5:
+            return True
+
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

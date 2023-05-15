@@ -144,11 +144,11 @@ class ExportManPrep(JsonSchemaMixin):
                     del records[record_id][k]
                 if k in record.data.get("colrev_masterdata_provenance", {}):
                     record.add_masterdata_provenance(
-                        key=k, source="man_prep", note="not_missing"
+                        key=k, source="man_prep", note="not-missing"
                     )
                 else:
                     record.add_data_provenance(
-                        key=k, source="man_prep", note="not_missing"
+                        key=k, source="man_prep", note="not-missing"
                     )
 
     def __drop_unnecessary_provenance_fiels(
@@ -156,7 +156,7 @@ class ExportManPrep(JsonSchemaMixin):
     ) -> None:
         colrev_data_provenance_keys_to_drop = []
         for key, items in record.data.get("colrev_data_provenance", {}).items():
-            if key not in record.data and "not_missing" not in items["note"]:
+            if key not in record.data and "not-missing" not in items["note"]:
                 colrev_data_provenance_keys_to_drop.append(key)
         for colrev_data_provenance_key_to_drop in colrev_data_provenance_keys_to_drop:
             del record.data["colrev_data_provenance"][
@@ -165,7 +165,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         colrev_masterdata_provenance_keys_to_drop = []
         for key, items in record.data.get("colrev_masterdata_provenance", {}).items():
-            if key not in record.data and "not_missing" not in items["note"]:
+            if key not in record.data and "not-missing" not in items["note"]:
                 colrev_masterdata_provenance_keys_to_drop.append(key)
         for (
             colrev_masterdata_provenance_key_to_drop
@@ -178,12 +178,11 @@ class ExportManPrep(JsonSchemaMixin):
         self, *, record_dict: dict, records: dict, imported_records: list
     ) -> None:
         record = colrev.record.PrepRecord(data=record_dict)
-        record.update_masterdata_provenance(qm=self.quality_model)
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
-        if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
-            imported_records.append(record.data["ID"])
         self.__update_provenance(record=record, records=records)
         self.__drop_unnecessary_provenance_fiels(record=record)
+        record.update_masterdata_provenance(qm=self.quality_model)
+        if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
+            imported_records.append(record.data["ID"])
         records[record_dict["ID"]] = record.get_data()
 
     def __import_prep_man(

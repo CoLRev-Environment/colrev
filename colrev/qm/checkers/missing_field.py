@@ -41,10 +41,9 @@ class MissingFieldChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the missing-field checks"""
 
-        masterdata_restrictions = self.get_applicable_restrictions(record=record)
-        if masterdata_restrictions:
+        if self.masterdata_restrictions:
             self.__check_completeness_curated_masterdata(
-                record=record, masterdata_restrictions=masterdata_restrictions
+                record=record, masterdata_restrictions=self.masterdata_restrictions
             )
         else:
             self.__check_completeness(record=record)
@@ -88,13 +87,13 @@ class MissingFieldChecker:
             missing_fields.remove("volume")
             record.data["colrev_masterdata_provenance"]["volume"] = {
                 "source": source,
-                "note": "not_missing",
+                "note": "not-missing",
             }
         if "number" in missing_fields:
             missing_fields.remove("number")
             record.data["colrev_masterdata_provenance"]["number"] = {
                 "source": source,
-                "note": "not_missing",
+                "note": "not-missing",
             }
 
     def __check_missing_fiels(self, *, record: colrev.record.Record) -> set:
@@ -105,7 +104,7 @@ class MissingFieldChecker:
             for missing_field in missing_fields:
                 if missing_field in record.data["colrev_masterdata_provenance"]:
                     if (
-                        "not_missing"
+                        "not-missing"
                         in record.data["colrev_masterdata_provenance"][missing_field][
                             "note"
                         ]
@@ -127,7 +126,20 @@ class MissingFieldChecker:
                 record.data["ENTRYTYPE"]
             ]
         for required_fields_key in required_fields_keys:
-            if record.data.get(required_fields_key, "UNKNOWN") == "UNKNOWN":
+            not_missing_note = False
+            if required_fields_key in record.data["colrev_masterdata_provenance"]:
+                if (
+                    "not-missing"
+                    in record.data["colrev_masterdata_provenance"][required_fields_key][
+                        "note"
+                    ]
+                ):
+                    not_missing_note = True
+
+            if (
+                record.data.get(required_fields_key, "UNKNOWN") == "UNKNOWN"
+                and not not_missing_note
+            ):
                 record.update_field(
                     key=required_fields_key,
                     value="UNKNOWN",

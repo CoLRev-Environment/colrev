@@ -232,7 +232,7 @@ class Search(colrev.operation.Operation):
                         and main_record_dict["colrev_masterdata_provenance"][key][
                             "note"
                         ]
-                        == "not_missing"
+                        == "not-missing"
                     ):
                         continue
                 main_record = colrev.record.Record(data=main_record_dict)

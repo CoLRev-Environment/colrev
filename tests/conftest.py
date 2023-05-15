@@ -277,3 +277,21 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
         "registry",
         test_json_path,
     )
+
+
+@pytest.fixture(name="v_t_record")
+def fixture_v_t_record() -> colrev.record.Record:
+    """Record for testing quality defects"""
+    return colrev.record.Record(
+        data={
+            "ID": "WagnerLukyanenkoParEtAl2022",
+            "ENTRYTYPE": "article",
+            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "journal": "Journal of Information Technology",
+            "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
+            "title": "Artificial intelligence and the conduct of literature reviews",
+            "year": "2022",
+            "volume": "37",
+            "number": "2",
+        }
+    )

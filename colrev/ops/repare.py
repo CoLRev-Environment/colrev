@@ -157,7 +157,7 @@ class Repare(colrev.operation.Operation):
             if (
                 key not in record.data
                 and "CURATED" != key
-                and "not_missing"
+                and "not-missing"
                 not in record.data["colrev_masterdata_provenance"][key]["note"]
             ):
                 mdk_to_remove += [key]

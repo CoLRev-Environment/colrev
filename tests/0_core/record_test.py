@@ -11,6 +11,7 @@ import colrev.record
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
 
+
 v1 = {
     "ID": "r1",
     "ENTRYTYPE": "article",
@@ -292,11 +293,9 @@ def test_change_entrytype_inproceedings(
     ):
         r1_mod.change_entrytype(new_entrytype="dialoge", qm=quality_model)
 
-    # assert "" == r1_mod.data
-
 
 def test_change_entrytype_article(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.change_entrytype(new_entrytype="article")"""
     input_value = {
@@ -352,7 +351,7 @@ def test_change_entrytype_article(
         "number": "UNKNOWN",
     }
     rec = colrev.record.Record(data=input_value)
-    rec.change_entrytype(new_entrytype="article", qm=base_repo_review_manager.get_qm())
+    rec.change_entrytype(new_entrytype="article", qm=quality_model)
     actual = rec.data
     assert expected == actual
 
@@ -1063,24 +1062,6 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     )
 
 
-@pytest.fixture(name="v_t_record")
-def fixture_v_t_record() -> colrev.record.Record:
-    """Record for testing quality defects"""
-    return colrev.record.Record(
-        data={
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
-            "journal": "Journal of Information Technology",
-            "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
-            "title": "Artificial intelligence and the conduct of literature reviews",
-            "year": "2022",
-            "volume": "37",
-            "number": "2",
-        }
-    )
-
-
 def test_get_container_title() -> None:
     """Test record.get_container_title()"""
 
@@ -1540,61 +1521,3 @@ def test_update_metadata_status(
     }
     actual = r1_mod.data
     assert expected == actual
-
-
-@pytest.mark.parametrize(
-    "author_str, defect",
-    [
-        ("RAI", True),  # all-caps
-        ("Rai, Arun and B", True),  # incomplete part
-        ("Rai, Phd, Arun", True),  # additional title
-        ("Rai, Arun; Straub, Detmar", True),  # incorrect delimiter
-        (
-            "Mathiassen, Lars and jonsson, katrin",
-            True,
-        ),  # author without capital letters
-        (
-            "University, Villanova and Sipior, Janice",
-            True,
-        ),  # University in author field
-        (
-            "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
-            False,
-        ),  # Special characters
-        ("DUTTON, JANE E. and ROBERTS, LAURA", True),  # Caps
-    ],
-)
-def test_get_quality_defects_author(
-    author_str: str,
-    defect: bool,
-    v_t_record: colrev.record.Record,
-    quality_model: colrev.qm.quality_model.QualityModel,
-) -> None:
-    """Test record.get_quality_defects() - author field"""
-    v_t_record.data["author"] = author_str
-    v_t_record.update_masterdata_provenance(qm=quality_model)
-    if defect:
-        assert v_t_record.has_quality_defects()
-    else:
-        assert not v_t_record.has_quality_defects()
-
-
-@pytest.mark.parametrize(
-    "title_str, defect",
-    [
-        ("EDITORIAL", True),  # all-caps
-    ],
-)
-def test_get_quality_defects_title(
-    title_str: str,
-    defect: bool,
-    v_t_record: colrev.record.Record,
-    quality_model: colrev.qm.quality_model.QualityModel,
-) -> None:
-    """Test record.get_quality_defects() - title field"""
-    v_t_record.data["title"] = title_str
-    v_t_record.update_masterdata_provenance(qm=quality_model)
-    if defect:
-        assert v_t_record.has_quality_defects()
-    else:
-        assert not v_t_record.has_quality_defects()

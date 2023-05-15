@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for the quality model"""
+"""Tests for the DOIPatternChecker."""
 from __future__ import annotations
 
 import pytest

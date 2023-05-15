@@ -28,6 +28,11 @@ class ErroneousTitleFieldChecker:
                 key="title", note="erroneous-title-field"
             )
 
+        else:
+            record.remove_masterdata_provenance_note(
+                key="title", note="erroneous-title-field"
+            )
+
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
     """Register the checker"""

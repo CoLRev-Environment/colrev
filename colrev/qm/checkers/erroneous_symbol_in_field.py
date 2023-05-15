@@ -28,6 +28,10 @@ class ErroneousSymbolInFieldChecker:
                 record.add_masterdata_provenance_note(
                     key=key, note="erroneous-symbol-in-field"
                 )
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="erroneous-symbol-in-field"
+                )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

@@ -17,19 +17,38 @@ class InconsistentContentChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the inconsistent-content checks"""
 
-        if "journal" in record.data and any(
-            x in record.data["journal"].lower() for x in ["conference", "workshop"]
-        ):
-            record.add_masterdata_provenance_note(
-                key="journal", note="inconsistent-content"
-            )
+        for key in ["journal", "booktitle", "author"]:
+            if key not in record.data:
+                continue
 
-        if "booktitle" in record.data and any(
-            x in record.data["booktitle"].lower() for x in ["journal"]
-        ):
-            record.add_masterdata_provenance_note(
-                key="booktitle", note="inconsistent-content"
-            )
+            if self.__inconsistent_content(record=record, key=key):
+                record.add_masterdata_provenance_note(
+                    key=key, note="inconsistent-content"
+                )
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="inconsistent-content"
+                )
+
+    def __inconsistent_content(self, *, record: colrev.record.Record, key: str) -> bool:
+        if key == "journal":
+            if "journal" in record.data and any(
+                x in record.data["journal"].lower() for x in ["conference", "workshop"]
+            ):
+                return True
+        if key == "booktitle":
+            if "booktitle" in record.data and any(
+                x in record.data["booktitle"].lower() for x in ["journal"]
+            ):
+                return True
+        if key == "author":
+            # Note: a thesis should be single-authored
+            if "thesis" in record.data["ENTRYTYPE"] and " and " in record.data.get(
+                "author", ""
+            ):
+                return True
+
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

@@ -1,5 +1,15 @@
 # Quality model
 
+The quality model specifies the necessary checks when a records should transition to ``md_prepared``. The functionality fixing errors is organized in the `prep` package endpoints.
+
+Similar to linters such as pylint, it should be possible to disable selected checks. Failed checks are made transparent by adding the corresponding codes (e.g., `mostly-upper`) to the `colrev_masterdata_provenance` (`notes` field).
+
+The quality model is applied through the `update_masterdata_provenance()` method at three points in the process:
+
+- At the end of the `load` operation
+- At the end of the `prep` operation
+- At the end of the `man-prep` operation
+
 <!--
 CHECK SYSTEMATICALLY:
 Resources: https://github.com/Kingsford-Group/biblint
@@ -32,18 +42,15 @@ Timeliness:
 
 Error, Warning, Convention (https://pylint.readthedocs.io/en/latest/user_guide/messages/message_control.html)
 
+TBD: At some point, the quality checks may be extracted as a standalone bibtex-linter - BUT: checks like not-in-toc require the CoLRev infrastructure...
 -->
 
-## Quality defects
-
-The check and fix should be separated.
-
-At some point, the quality defect analysis may be extracted as a standalone bibtex-linter
+## Quality checks
 
 ### Completeness
 
 - [x] missing-field: a mandatory masterdata field does not have a value (based on requirements for the respective ENTRYTYPE)
-- [ ] not-missing: not an error code!? (TBD. implicitly/without note?)
+- [ ] not-missing: not an error code. (TBD. implicitly/without note?)
 
 ### Semantic consistency (between fields and linked records)
 
@@ -51,7 +58,7 @@ At some point, the quality defect analysis may be extracted as a standalone bibt
 - [x] identical-values-between-title-and-container: e.g., title = Information Systems Journal, journal=Information Systems Journal, titlexjournal,titlexbooktitle (typical error in GROBID extracts)
 - [x] inconsistent-content: e.g., journal field with "conference" or booktitle field with "journal"
 TBD: the following is only discovered after prep/linking of masterdata (but the checker should run again after prep...):
-- [ ] record-not-in-toc: the record was not found in the tables of contents of the journal
+- [x] record-not-in-toc: the record was not found in the tables of contents of the journal
 - [ ] inconsistent-with-linked-record: e.g., metadata associated with doi is not similar to metadata of the record (global-id-conflict)
 
 ### Format

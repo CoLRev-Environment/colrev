@@ -29,6 +29,10 @@ class NameAbbreviatedChecker:
                 for abbrev in self.abbreviations
             ):
                 record.add_masterdata_provenance_note(key=key, note="name-abbreviated")
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="name-abbreviated"
+                )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

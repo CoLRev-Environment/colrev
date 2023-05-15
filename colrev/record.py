@@ -401,7 +401,7 @@ class Record:
             # field is not required
             if key not in self.data["colrev_masterdata_provenance"]:
                 self.data["colrev_masterdata_provenance"][key] = {}
-            self.data["colrev_masterdata_provenance"][key]["note"] = "not_missing"
+            self.data["colrev_masterdata_provenance"][key]["note"] = "not-missing"
             if source != "":
                 self.data["colrev_masterdata_provenance"][key]["source"] = source
         else:
@@ -431,7 +431,7 @@ class Record:
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "missing" in note and "not_missing" not in note:
+                if "missing" in note and "not-missing" not in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
                         "missing", ""
                     )
@@ -441,7 +441,7 @@ class Record:
                 if "volume" in self.data["colrev_masterdata_provenance"]:
                     self.data["colrev_masterdata_provenance"]["volume"][
                         "note"
-                    ] = "not_missing"
+                    ] = "not-missing"
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["volume"][
                             "source"
@@ -449,14 +449,14 @@ class Record:
                 else:
                     self.data["colrev_masterdata_provenance"]["volume"] = {
                         "source": source,
-                        "note": "not_missing",
+                        "note": "not-missing",
                     }
 
             if "number" not in self.data:
                 if "number" in self.data["colrev_masterdata_provenance"]:
                     self.data["colrev_masterdata_provenance"]["number"][
                         "note"
-                    ] = "not_missing"
+                    ] = "not-missing"
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["number"][
                             "source"
@@ -464,7 +464,7 @@ class Record:
                 else:
                     self.data["colrev_masterdata_provenance"]["number"] = {
                         "source": source,
-                        "note": "not_missing",
+                        "note": "not-missing",
                     }
 
     def set_masterdata_consistent(self) -> None:
@@ -1088,6 +1088,19 @@ class Record:
 
         return {"source": source, "note": note}
 
+    def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove a masterdata provenance note"""
+        if "colrev_masterdata_provenance" not in self.data:
+            return
+        if key not in self.data["colrev_masterdata_provenance"]:
+            return
+        notes = self.data["colrev_masterdata_provenance"][key]["note"].split(",")
+        if note not in notes:
+            return
+        self.data["colrev_masterdata_provenance"][key]["note"] = ",".join(
+            n for n in notes if n != note
+        )
+
     def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Add a masterdata provenance note (based on a key)"""
         if "colrev_masterdata_provenance" not in self.data:
@@ -1144,7 +1157,7 @@ class Record:
         if key in md_p_dict:
             if md_p_dict[key]["note"] == "" or "" == note:
                 md_p_dict[key]["note"] = note
-            elif "missing" == note and "not_missing" in md_p_dict[key]["note"].split(
+            elif "missing" == note and "not-missing" in md_p_dict[key]["note"].split(
                 ","
             ):
                 md_p_dict[key]["note"] = "missing"
@@ -1225,7 +1238,7 @@ class Record:
         return any(
             x["note"] != ""
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
-            if not any(y == x["note"] for y in ["not_missing"])
+            if not any(y == x["note"] for y in ["not-missing"])
         )
 
     def get_container_title(self) -> str:
@@ -1503,11 +1516,8 @@ class Record:
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
 
-    # TODO : should be check_quality() !?
     def update_masterdata_provenance(
-        self,
-        *,
-        qm: colrev.qm.quality_model.QualityModel,
+        self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
     ) -> None:
         """Update the masterdata provenance"""
 
@@ -1522,6 +1532,8 @@ class Record:
 
         if self.has_quality_defects():
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
+        elif set_prepared:
+            self.set_status(target_state=RecordState.md_prepared)
 
     def check_potential_retracts(self) -> bool:
         """Check for potential retracts"""
@@ -1841,7 +1853,7 @@ class PrepRecord(Record):
         """Format the field if it is mostly in upper case"""
         # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
         #     return
-        if key not in self.data:
+        if key not in self.data or self.data[key] == "UNKNOWN":
             return
         self.data[key] = self.data[key].replace("\n", " ")
 

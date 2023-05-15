@@ -27,6 +27,10 @@ class ContainerTitleAbbreviatedChecker:
                 record.add_masterdata_provenance_note(
                     key=key, note="container-title-abbreviated"
                 )
+            else:
+                record.remove_masterdata_provenance_note(
+                    key=key, note="container-title-abbreviated"
+                )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

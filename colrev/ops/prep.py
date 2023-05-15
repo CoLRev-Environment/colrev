@@ -260,8 +260,6 @@ class Prep(colrev.operation.Operation):
 
             if preparation_record.preparation_save_condition():
                 record.update_by_record(update_record=preparation_record)
-                if not self.polish:
-                    record.update_masterdata_provenance(qm=self.quality_model)
 
             if preparation_record.preparation_break_condition() and not self.polish:
                 record.update_by_record(update_record=preparation_record)
@@ -371,7 +369,9 @@ class Prep(colrev.operation.Operation):
                         record.remove_field(key=key)
                 record.update_by_record(update_record=preparation_record)
                 # Note: update_masterdata_provenance sets to md_needs_manual_preparation
-                record.update_masterdata_provenance(qm=self.quality_model)
+                record.update_masterdata_provenance(
+                    qm=self.quality_model, set_prepared=True
+                )
 
         if self.polish:
             record.set_status(target_state=prior_state)

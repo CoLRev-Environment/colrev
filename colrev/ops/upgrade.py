@@ -84,9 +84,6 @@ class Upgrade(colrev.operation.Operation):
             settings_version = CoLRevVersion("0.7.0")
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
-        if installed_colrev_version == settings_version:
-            return
-
         # version: indicates from which version on the migration should be applied
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
@@ -120,6 +117,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_2,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.8.3"),
+                "target_version": CoLRevVersion("0.8.4"),
+                "script": self.__migrate_0_8_3,
+                "released": False,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -137,6 +140,9 @@ class Upgrade(colrev.operation.Operation):
                 run_migration = True
             if not run_migration:
                 continue
+
+            if installed_colrev_version == settings_version and migrator["released"]:
+                return
 
             migration_script = migrator["script"]
             self.review_manager.logger.info(
@@ -291,6 +297,30 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
+        return self.repo.is_dirty()
+
+    def __migrate_0_8_3(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+        quality_model = self.review_manager.get_qm()
+
+        # delete the masterdata provenance notes and apply the new quality model
+        # replace not_missing > not-missing
+        for record_dict in tqdm(records.values()):
+            if "colrev_masterdata_provenance" not in record_dict:
+                continue
+            not_missing_fields = []
+            for key, prov in record_dict["colrev_masterdata_provenance"].items():
+                if "not_missing" in prov["note"]:
+                    not_missing_fields.append(key)
+                prov["note"] = ""
+            for key in not_missing_fields:
+                record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+            record = colrev.record.Record(data=record_dict)
+            record.update_masterdata_provenance(qm=quality_model)
+            if not_missing_fields:
+                print(record_dict)
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
 

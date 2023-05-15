@@ -27,6 +27,14 @@ class RecordNotInTOCChecker:
                 similarity_threshold=0.9,
                 include_file=False,
             )
+            if "journal" in record.data:
+                record.remove_masterdata_provenance_note(
+                    key="journal", note="record-not-in-toc"
+                )
+            elif "booktitle" in record.data:
+                record.remove_masterdata_provenance_note(
+                    key="booktitle", note="record-not-in-toc"
+                )
         except colrev.exceptions.RecordNotInIndexException:
             pass
         except colrev_exceptions.RecordNotInTOCException:
