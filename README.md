@@ -20,7 +20,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
@@ -61,6 +61,7 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/tmahmood"><img src="https://avatars.githubusercontent.com/u/34904?v=4?s=100" width="100px;" alt="Tarin Mahmood"/><br /><sub><b>Tarin Mahmood</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=tmahmood" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=tmahmood" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://julianprester.com"><img src="https://avatars.githubusercontent.com/u/4706870?v=4?s=100" width="100px;" alt="Julian Prester"/><br /><sub><b>Julian Prester</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=julianprester" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=julianprester" title="Documentation">📖</a> <a href="#data-julianprester" title="Data">🔣</a> <a href="#content-julianprester" title="Content">🖋</a></td>
     </tr>
   </tbody>
 </table>
