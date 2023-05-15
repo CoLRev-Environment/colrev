@@ -1,4 +1,7 @@
 # Collaborative Literature Reviews (CoLRev)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
@@ -53,6 +56,20 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tmahmood"><img src="https://avatars.githubusercontent.com/u/34904?v=4?s=100" width="100px;" alt="Tarin Mahmood"/><br /><sub><b>Tarin Mahmood</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=tmahmood" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=tmahmood" title="Tests">⚠️</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 
