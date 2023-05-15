@@ -15,6 +15,18 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "geritwagner",
+      "name": "Gerit Wagner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3872815?v=4",
+      "profile": "https://github.com/geritwagner",
+      "contributions": [
+        "code",
+        "doc",
+        "data",
+        "content"
+      ]
     }
   ],
   "contributorsPerLine": 7,
