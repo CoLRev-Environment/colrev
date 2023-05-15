@@ -28,19 +28,16 @@ class IncompleteFieldChecker:
                 )
 
     def __incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
-        if key in ["title", "journal", "booktitle", "author"]:
-            if record.data[key].endswith("...") or record.data[key].endswith("…"):
-                return True
-        if key == "author":
-            if (
+        """ check for incomplete field """
+        if record.data[key].endswith("...") or record.data[key].endswith("…"):
+            return True
+        return key == "author" and (
                 record.data[key].endswith("and others")
                 or record.data[key].endswith("et al.")
                 # heuristics for missing first names:
                 or ", and " in record.data[key]
                 or record.data[key].rstrip().endswith(",")
-            ):
-                return True
-        return False
+        )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
