@@ -13,7 +13,7 @@ import colrev.record
     [
         ("RAI", ["mostly-all-caps"]),
         ("Rai, Arun and B,", ["incomplete-field"]),
-        ("Rai, Arun and B", ['name-format-separators']),
+        ("Rai, Arun and B", ["name-format-separators"]),
         # additional title
         ("Rai, PhD, Arun", ["name-format-titles"]),
         ("Rai, Phd, Arun", ["name-format-titles"]),
@@ -161,10 +161,10 @@ def test_thesis_multiple_authors(
     ],
 )
 def test_year(
-        year: str,
-        defects: list,
-        v_t_record: colrev.record.Record,
-        quality_model: colrev.qm.quality_model.QualityModel,
+    year: str,
+    defects: list,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.get_quality_defects() - thesis with multiple authors"""
     v_t_record.data["year"] = year
@@ -183,24 +183,30 @@ def test_year(
 @pytest.mark.parametrize(
     "titles, defects",
     [
-        (["Test title", "journal", "Test title"], ["identical-values-between-title-and-container"]),
+        (
+            ["Test title", "journal", "Test title"],
+            ["identical-values-between-title-and-container"],
+        ),
         (["Test title", "booktitle", "Test Book"], []),
-        (["Test title", "booktitle", "Test title"], ["identical-values-between-title-and-container"]),
+        (
+            ["Test title", "booktitle", "Test title"],
+            ["identical-values-between-title-and-container"],
+        ),
     ],
 )
 def test_get_quality_defects_identical_title(
-        titles: list,
-        defects: list,
-        v_t_record: colrev.record.Record,
-        quality_model: colrev.qm.quality_model.QualityModel,
+    titles: list,
+    defects: list,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.get_quality_defects() - title field"""
     v_t_record.data["title"] = titles[0]
     v_t_record.data[titles[1]] = titles[2]
 
-    if titles[1] == 'booktitle':
-        v_t_record.data['ENTRYTYPE'] = 'incollection'
-        v_t_record.data['publisher'] = 'not missing'
+    if titles[1] == "booktitle":
+        v_t_record.data["ENTRYTYPE"] = "incollection"
+        v_t_record.data["publisher"] = "not missing"
 
     v_t_record.update_masterdata_provenance(qm=quality_model)
     if not defects:
@@ -215,8 +221,8 @@ def test_get_quality_defects_identical_title(
 
 
 def test_get_quality_defects_testing_missing_field_year_forthcoming(
-        v_t_record: colrev.record.Record,
-        quality_model: colrev.qm.quality_model.QualityModel,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ):
     """Tests for when year = forthcoming"""
 
@@ -224,8 +230,14 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
     del v_t_record.data["volume"]
     del v_t_record.data["number"]
     v_t_record.update_masterdata_provenance(qm=quality_model)
-    assert v_t_record.data['colrev_masterdata_provenance']["volume"]['note'] == "not-missing"
-    assert v_t_record.data['colrev_masterdata_provenance']["number"]['note'] == "not-missing"
+    assert (
+        v_t_record.data["colrev_masterdata_provenance"]["volume"]["note"]
+        == "not-missing"
+    )
+    assert (
+        v_t_record.data["colrev_masterdata_provenance"]["number"]["note"]
+        == "not-missing"
+    )
 
 
 @pytest.mark.parametrize(
@@ -236,16 +248,17 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
     ],
 )
 def test_get_quality_defects_language_format(
-        language: str,
-        defects: list,
-        v_t_record: colrev.record.Record,
-        quality_model: colrev.qm.quality_model.QualityModel,
+    language: str,
+    defects: list,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ):
     """Tests for invalid language code"""
 
     v_t_record.data["language"] = language
     v_t_record.update_masterdata_provenance(qm=quality_model)
     from pprint import pprint
+
     pprint(v_t_record)
     if not defects:
         assert not v_t_record.has_quality_defects()
@@ -261,33 +274,34 @@ def test_get_quality_defects_language_format(
 @pytest.mark.parametrize(
     "entrytype, missing, defects",
     [
-        ('article', [], []),
-        ('inproceedings', ['booktitle'], ['number', 'journal']),
-        ('incollection', ['booktitle', 'publisher'], []),
-        ('inbook', ['publisher', 'chapter'], ['journal']),
+        ("article", [], []),
+        ("inproceedings", ["booktitle"], ["number", "journal"]),
+        ("incollection", ["booktitle", "publisher"], []),
+        ("inbook", ["publisher", "chapter"], ["journal"]),
     ],
 )
 def test_get_quality_defects_missing_fields(
-        entrytype: str,
-        missing: [],
-        defects: [],
-        v_t_record: colrev.record.Record,
-        quality_model: colrev.qm.quality_model.QualityModel,
+    entrytype: str,
+    missing: [],
+    defects: [],
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
 ):
     """Tests for missing and inconsistent data for ENTRYTYPE"""
 
-    v_t_record.data['ENTRYTYPE'] = entrytype
+    v_t_record.data["ENTRYTYPE"] = entrytype
     v_t_record.update_masterdata_provenance(qm=quality_model)
     if not missing:
         assert not v_t_record.has_quality_defects()
         return
     for n in missing:
-        assert v_t_record.data['colrev_masterdata_provenance'][n]['note'] == 'missing'
-    for n in v_t_record.data['colrev_masterdata_provenance']:
+        assert v_t_record.data["colrev_masterdata_provenance"][n]["note"] == "missing"
+    for n in v_t_record.data["colrev_masterdata_provenance"]:
         if n in missing:
             continue
         assert n in defects
-        assert v_t_record.data['colrev_masterdata_provenance'][n]['note'] == 'inconsistent-with-entrytype'
+        assert (
+            v_t_record.data["colrev_masterdata_provenance"][n]["note"]
+            == "inconsistent-with-entrytype"
+        )
     assert v_t_record.has_quality_defects()
-
-

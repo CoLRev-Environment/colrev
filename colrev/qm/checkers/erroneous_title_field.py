@@ -24,7 +24,7 @@ class ErroneousTitleFieldChecker:
         checks = [
             " " not in record.data["title"],
             any(x in record.data["title"] for x in ["_", "."]),
-            any(char.isdigit() for char in record.data["title"])
+            any(char.isdigit() for char in record.data["title"]),
         ]
 
         if any(checks):
