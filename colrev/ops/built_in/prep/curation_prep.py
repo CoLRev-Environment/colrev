@@ -77,16 +77,7 @@ class CurationPrep(JsonSchemaMixin):
         colrev.record.Record(data=record.data).apply_restrictions(
             restrictions=applicable_restrictions
         )
-        if any(
-            "missing" in note
-            for note in [
-                x["note"]
-                for x in record.data.get("colrev_masterdata_provenance", {}).values()
-            ]
-        ):
-            colrev.record.Record(data=record.data).set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
+
         return record
 
 
