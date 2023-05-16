@@ -5,7 +5,6 @@ from __future__ import annotations
 import colrev.qm.quality_model
 import colrev.record
 
-
 # pylint: disable=too-few-public-methods
 
 
@@ -21,13 +20,10 @@ class ErroneousTitleFieldChecker:
         if "title" not in record.data:
             return
 
-        checks = [
-            " " not in record.data["title"],
-            any(x in record.data["title"] for x in ["_", "."]),
-            any(char.isdigit() for char in record.data["title"]),
-        ]
-
-        if any(checks):
+        if " " not in record.data["title"] and (
+            any(x in record.data["title"] for x in ["_", "."])
+            or any(char.isdigit() for char in record.data["title"])
+        ):
             record.add_masterdata_provenance_note(
                 key="title", note="erroneous-title-field"
             )
