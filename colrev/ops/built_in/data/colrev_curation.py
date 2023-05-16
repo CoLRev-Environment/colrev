@@ -162,6 +162,17 @@ class ColrevCuration(JsonSchemaMixin):
         output += "\n" + sub_header_lines
         ordered_stats = collections.OrderedDict(sorted(stats.items(), reverse=True))
 
+        output += self.__get_stats_markdown_table_cell(
+            ordered_stats=ordered_stats, sources=sources, cell_width=cell_width
+        )
+
+        output += "\n\nLegend: *md_imported*, md_processed, **pdf_prepared**"
+        return output
+
+    def __get_stats_markdown_table_cell(
+        self, *, ordered_stats: collections.OrderedDict, sources: list, cell_width: int
+    ) -> str:
+        output = ""
         for key, row in ordered_stats.items():
             output += f"\n|{key}".ljust(cell_width, " ") + "|"
             for source in sources:
@@ -186,8 +197,6 @@ class ColrevCuration(JsonSchemaMixin):
                         output += "-".rjust(cell_width, " ") + "|"
                 else:
                     output += row.get("all_merged", "").rjust(cell_width, " ") + "|"
-
-        output += "\n\nLegend: *md_imported*, md_processed, **pdf_prepared**"
         return output
 
     def __update_table_in_readme(
