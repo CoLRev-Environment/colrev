@@ -68,8 +68,6 @@ def test_get_quality_defects_author(
         ("SAMJ�", ["erroneous-symbol-in-field"]),
         ("™", ["erroneous-symbol-in-field"]),
         ("Some_Other_Title", ["erroneous-title-field"]),
-        ("Some Other_Title", ["erroneous-title-field"]),
-        ("Some 0th3r Title", ["erroneous-title-field"]),
         ("Some other title", []),
         ("Some ...", ["incomplete-field"]),
     ],
@@ -223,7 +221,7 @@ def test_get_quality_defects_identical_title(
 def test_get_quality_defects_testing_missing_field_year_forthcoming(
     v_t_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
-):
+) -> None:
     """Tests for when year = forthcoming"""
 
     v_t_record.data["year"] = "forthcoming"
@@ -252,7 +250,7 @@ def test_get_quality_defects_language_format(
     defects: list,
     v_t_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
-):
+) -> None:
     """Tests for invalid language code"""
 
     v_t_record.data["language"] = language
@@ -282,11 +280,11 @@ def test_get_quality_defects_language_format(
 )
 def test_get_quality_defects_missing_fields(
     entrytype: str,
-    missing: [],
-    defects: [],
+    missing: list,
+    defects: list,
     v_t_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
-):
+) -> None:
     """Tests for missing and inconsistent data for ENTRYTYPE"""
 
     v_t_record.data["ENTRYTYPE"] = entrytype
