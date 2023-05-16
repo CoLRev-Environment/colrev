@@ -12,36 +12,33 @@ import colrev.record
     "author_str, defects",
     [
         ("RAI", ["mostly-all-caps"]),
-        # this one passes, because of the `,`
         ("Rai, Arun and B,", ["incomplete-field"]),
         # FIXME: incomplete part, but error is not marked correctly
         # ("Rai, Arun and B", ["incomplete-field"]),
         # additional title
         ("Rai, PhD, Arun", ["name-format-titles"]),
         ("Rai, Phd, Arun", ["name-format-titles"]),
-        # This fails because of the PhD in name
         ("GuyPhD, Arun", []),  #
         (
             "Rai, Arun; Straub, Detmar",
             ["name-format-separators"],
-        ),  # incorrect delimiter
+        ),
         # author without capital letters
         # NOTE: it's not a separator error, should be something more relevant
         (
             "Mathiassen, Lars and jonsson, katrin",
             ["name-format-separators"],
         ),
-        # University in author field
         (
             "University, Villanova and Sipior, Janice",
             ["erroneous-term-in-field"],
         ),
-        # Special characters
         (
             "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
             [],
         ),
-        ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),  # Caps
+        ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),
+        ("Rai, Arun et al.", ["incomplete-field"]),
     ],
 )
 def test_get_quality_defects_author(
@@ -85,11 +82,11 @@ def test_get_quality_defects_title(
         assert not v_t_record.has_quality_defects()
         return
 
-    assert v_t_record.has_quality_defects()
     for defect in defects:
         assert defect in v_t_record.data["colrev_masterdata_provenance"]["title"][
             "note"
         ].split(",")
+    assert v_t_record.has_quality_defects()
 
 
 @pytest.mark.parametrize(
@@ -115,8 +112,35 @@ def test_get_quality_defects_journal(
         assert not v_t_record.has_quality_defects()
         return
 
-    assert v_t_record.has_quality_defects()
     for defect in defects:
         assert defect in v_t_record.data["colrev_masterdata_provenance"]["journal"][
             "note"
         ].split(",")
+    assert v_t_record.has_quality_defects()
+
+
+@pytest.mark.parametrize(
+    "name_str, defects",
+    [
+        ("Author, Name and Other, Author", ["thesis-with-multiple-authors"]),
+    ],
+)
+def test_thesis_multiple_authors(
+    name_str: str,
+    defects: list,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+    """Test record.get_quality_defects() - thesis with multiple authors"""
+    v_t_record.data["ENTRYTYPE"] = "thesis"
+    v_t_record.data["author"] = name_str
+
+    v_t_record.update_masterdata_provenance(qm=quality_model)
+    if not defects:
+        assert not v_t_record.has_quality_defects()
+        return
+    for defect in defects:
+        assert defect in v_t_record.data["colrev_masterdata_provenance"]["author"][
+            "note"
+        ].split(",")
+    assert v_t_record.has_quality_defects()

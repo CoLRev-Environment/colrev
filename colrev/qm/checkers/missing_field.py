@@ -58,7 +58,7 @@ class MissingFieldChecker:
                 replace_source=False,
             )
 
-    def get_missing_fields(self, *, record: colrev.record.Record) -> set:
+    def __get_missing_fields(self, *, record: colrev.record.Record) -> set:
         """Get the missing fields"""
         missing_field_keys = set()
         if record.data["ENTRYTYPE"] in self.record_field_requirements:
@@ -99,7 +99,7 @@ class MissingFieldChecker:
     def __check_missing_fiels(self, *, record: colrev.record.Record) -> set:
         missing_fields: Set[str] = set()
         try:
-            missing_fields = self.get_missing_fields(record=record)
+            missing_fields = self.__get_missing_fields(record=record)
             not_missing_fields = []
             for missing_field in missing_fields:
                 if missing_field in record.data["colrev_masterdata_provenance"]:

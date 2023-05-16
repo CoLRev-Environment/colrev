@@ -32,8 +32,8 @@ class QualityModel:
 
             try:
                 module = importlib.import_module("colrev.qm.checkers." + filename.stem)
-            except ValueError:
-                continue
+            except ValueError as exc:
+                print(exc)
             except ImportError as exc:
                 print(
                     f"Problem importing module {filename}: {exc}"

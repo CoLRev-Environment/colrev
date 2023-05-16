@@ -41,12 +41,6 @@ class InconsistentContentChecker:
                 x in record.data["booktitle"].lower() for x in ["journal"]
             ):
                 return True
-        if key == "author":
-            # Note: a thesis should be single-authored
-            if "thesis" in record.data["ENTRYTYPE"] and " and " in record.data.get(
-                "author", ""
-            ):
-                return True
 
         return False
 
