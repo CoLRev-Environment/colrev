@@ -48,7 +48,7 @@ class MissingFieldChecker:
         else:
             self.__check_completeness(record=record)
 
-        missing_fields = self.__check_missing_fiels(record=record)
+        missing_fields = self.__check_missing_fields(record=record)
 
         self.__check_forthcoming(record=record, missing_fields=missing_fields)
 
@@ -96,7 +96,7 @@ class MissingFieldChecker:
                 "note": "not-missing",
             }
 
-    def __check_missing_fiels(self, *, record: colrev.record.Record) -> set:
+    def __check_missing_fields(self, *, record: colrev.record.Record) -> set:
         missing_fields: Set[str] = set()
         try:
             missing_fields = self.__get_missing_fields(record=record)
