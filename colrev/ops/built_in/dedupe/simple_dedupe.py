@@ -207,9 +207,9 @@ class SimpleDedupe(JsonSchemaMixin):
                 dedupe_operation.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
                     "Active learning algorithms may perform better:\n"
-                    f"{colors.ORANGE}   colrev settings -m 'dedupe.scripts="
-                    '[{"endpoint": "active_learning_training"},'
-                    f'{{"endpoint": "active_learning_automated"}}]\'{colors.END}'
+                    f"{colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
+                    '[{"endpoint": "colrev.active_learning_training"},'
+                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{colors.END}'
                 )
                 raise colrev_exceptions.CoLRevException(
                     "To use simple duplicate identification, use\n"

@@ -2238,7 +2238,6 @@ class PrepRecord(Record):
         similarity = Record.get_record_similarity(
             record_a=record, record_b=retrieved_record
         )
-
         return similarity
 
     def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
