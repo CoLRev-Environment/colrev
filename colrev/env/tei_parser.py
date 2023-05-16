@@ -66,9 +66,7 @@ class TEIParser:
         self.tei_path = tei_path
         if pdf_path is not None and not pdf_path.is_file():
             raise FileNotFoundError
-        if not tei_path:
-            raise FileNotFoundError
-        if not tei_path.is_file():
+        if tei_path and not tei_path.is_file():
             raise FileNotFoundError
 
         load_from_tei = False
