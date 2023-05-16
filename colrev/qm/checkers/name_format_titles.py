@@ -2,6 +2,8 @@
 """Checker for name-format-titles."""
 from __future__ import annotations
 
+import re
+
 import colrev.qm.quality_model
 import colrev.record
 
@@ -13,6 +15,7 @@ class NameFormatTitleChecker:
 
     fields_to_check = ["author", "editor"]
     titles = ["MD", "Dr", "PhD", "Prof", "Dipl Ing"]
+    __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -24,7 +27,7 @@ class NameFormatTitleChecker:
             if key not in record.data:
                 continue
 
-            if any(title in record.data[key] for title in self.titles):
+            if self.__title_in_name(name=record.data[key]):
                 record.add_masterdata_provenance_note(
                     key=key, note="name-format-titles"
                 )
@@ -32,6 +35,10 @@ class NameFormatTitleChecker:
                 record.remove_masterdata_provenance_note(
                     key=key, note="name-format-titles"
                 )
+
+    def __title_in_name(self, *, name: str) -> bool:
+        name_parts = self.__words_rgx.findall(name.lower())
+        return any(title.lower() in name_parts for title in self.titles)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
