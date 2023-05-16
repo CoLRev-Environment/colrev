@@ -155,10 +155,11 @@ class Prescreen(colrev.operation.Operation):
             f"({nrecs} each)"
         )
 
-        added: list[str] = []
-        while len(added) < nrecs:
-            added.append(next(data["items"])["ID"])
-        prescreen_splits.append("colrev prescreen --split " + ",".join(added))
+        for _ in range(0, create_split):
+            added: list[str] = []
+            while len(added) < nrecs:
+                added.append(next(data["items"])["ID"])
+            prescreen_splits.append("colrev prescreen --split " + ",".join(added))
 
         return prescreen_splits
 
