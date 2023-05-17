@@ -8,6 +8,7 @@ import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
 
+import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
@@ -36,6 +37,7 @@ class ExportManPrep(JsonSchemaMixin):
     ci_supported: bool = False
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
+    RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
 
     @dataclass
     class ExportManPrepSettings(
@@ -72,6 +74,10 @@ class ExportManPrep(JsonSchemaMixin):
             self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_PATH
         )
 
+        self.prep_man_csv_path = (
+            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
+        )
+
         self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
@@ -99,10 +105,9 @@ class ExportManPrep(JsonSchemaMixin):
     def __export_prep_man(
         self,
         *,
-        prep_man_operation: colrev.ops.prep_man.PrepMan,
         records: typing.Dict[str, typing.Dict],
     ) -> None:
-        prep_man_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             f"Export records for man-prep to {self.prep_man_bib_path}"
         )
 
@@ -112,14 +117,64 @@ class ExportManPrep(JsonSchemaMixin):
             if colrev.record.RecordState.md_needs_manual_preparation
             == v["colrev_status"]
         }
-        prep_man_operation.review_manager.dataset.save_records_dict_to_file(
-            records=man_prep_recs, save_path=self.prep_man_bib_path
+
+        # Filter out fields that are not needed for manual preparation
+        fields_to_keep = [
+            "ENTRYTYPE",
+            "author",
+            "title",
+            "year",
+            "journal",
+            "booktitle",
+            "incollection",
+            "colrev_status",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+        ]
+        filtered_man_prep_recs = {}
+        for citation, fields in man_prep_recs.copy().items():
+            for key in fields.copy():
+                if key not in fields_to_keep:
+                    del fields[key]
+            filtered_man_prep_recs.update({citation: fields})
+
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=filtered_man_prep_recs, save_path=self.prep_man_bib_path
         )
         if any("file" in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
         if "pytest" not in os.getcwd():
             # os.system('%s %s' % (os.getenv('EDITOR'), self.prep_man_bib_path))
             webbrowser.open(str(self.prep_man_bib_path))
+
+    def __create_info_dataframe(
+        self,
+        *,
+        records: typing.Dict[str, typing.Dict],
+    ) -> None:
+        self.review_manager.logger.info(
+            f"Export info dataframe for man-prep to {self.prep_man_csv_path}"
+        )
+
+        man_prep_recs = [
+            v
+            for _, v in records.items()
+            if colrev.record.RecordState.md_needs_manual_preparation
+            == v["colrev_status"]
+        ]
+
+        man_prep_info = []
+        for record in man_prep_recs:
+            for field, value in record["colrev_masterdata_provenance"].items():
+                if value["note"]:
+                    man_prep_info.append(
+                        {"ID": record["ID"], "field": field, "note": value["note"]}
+                    )
+
+        man_prep_info_df = pd.DataFrame(man_prep_info)
+        man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
     def __update_provenance(
         self, *, record: colrev.record.Record, records: dict
@@ -177,29 +232,35 @@ class ExportManPrep(JsonSchemaMixin):
     def __import_record(
         self, *, record_dict: dict, records: dict, imported_records: list
     ) -> None:
-        record = colrev.record.PrepRecord(data=record_dict)
-        self.__update_provenance(record=record, records=records)
-        self.__drop_unnecessary_provenance_fiels(record=record)
-        record.update_masterdata_provenance(qm=self.quality_model)
-        if colrev.record.RecordState.md_prepared == record.data["colrev_status"]:
-            imported_records.append(record.data["ID"])
-        records[record_dict["ID"]] = record.get_data()
+        original_record = colrev.record.Record(data=records[record_dict["ID"]])
+        imported_records.append(original_record.data["ID"])
 
-    def __import_prep_man(
-        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan
-    ) -> None:
-        prep_man_operation.review_manager.logger.info(
+        for key, value in record_dict.items():
+            original_record.data[key] = value
+
+        if (
+            original_record.data["colrev_status"]
+            == colrev.record.RecordState.rev_prescreen_excluded
+        ):
+            return
+
+        self.__update_provenance(record=original_record, records=records)
+        self.__drop_unnecessary_provenance_fiels(record=original_record)
+        original_record.update_masterdata_provenance(qm=self.quality_model)
+
+    def __import_prep_man(self) -> None:
+        self.review_manager.logger.info(
             "Load import changes from "
-            f"{self.prep_man_bib_path.relative_to(prep_man_operation.review_manager.path)}"
+            f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
         )
 
         with open(self.prep_man_bib_path, encoding="utf8") as target_bib:
-            man_prep_recs = prep_man_operation.review_manager.dataset.load_records_dict(
+            man_prep_recs = self.review_manager.dataset.load_records_dict(
                 load_str=target_bib.read()
             )
 
         imported_records: typing.List[dict] = []
-        records = prep_man_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         for record_id, record_dict in man_prep_recs.items():
             if record_id not in records:
                 print(f"ID no longer in records: {record_id}")
@@ -210,12 +271,12 @@ class ExportManPrep(JsonSchemaMixin):
                 imported_records=imported_records,
             )
 
-        prep_man_operation.review_manager.dataset.save_records_dict(records=records)
-        prep_man_operation.review_manager.dataset.add_record_changes()
-        prep_man_operation.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
 
-        prep_man_operation.review_manager.dataset.set_ids(selected_ids=imported_records)
-        prep_man_operation.review_manager.create_commit(msg="Set IDs")
+        self.review_manager.dataset.set_ids(selected_ids=imported_records)
+        self.review_manager.create_commit(msg="Set IDs")
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
@@ -223,15 +284,14 @@ class ExportManPrep(JsonSchemaMixin):
         """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
 
         if not self.prep_man_bib_path.is_file():
-            self.__export_prep_man(
-                prep_man_operation=prep_man_operation, records=records
-            )
+            self.__create_info_dataframe(records=records)
+            self.__export_prep_man(records=records)
         else:
             selected_path = self.prep_man_bib_path.relative_to(
                 prep_man_operation.review_manager.path
             )
             if input(f"Import changes from {selected_path} [y,n]?") == "y":
-                self.__import_prep_man(prep_man_operation=prep_man_operation)
+                self.__import_prep_man()
 
         return records
 

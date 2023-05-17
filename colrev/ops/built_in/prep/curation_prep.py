@@ -71,16 +71,7 @@ class CurationPrep(JsonSchemaMixin):
         colrev.record.Record(data=record.data).update_masterdata_provenance(
             qm=self.quality_model
         )
-        if any(
-            "missing" in note
-            for note in [
-                x["note"]
-                for x in record.data.get("colrev_masterdata_provenance", {}).values()
-            ]
-        ):
-            colrev.record.Record(data=record.data).set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
+
         return record
 
 

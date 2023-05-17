@@ -668,10 +668,6 @@ class Checker:
                 "script": environment_manager.check_git_installed,
                 "params": [],
             },
-            {
-                "script": environment_manager.check_docker_installed,
-                "params": [],
-            },
             {"script": self.__check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},

@@ -104,7 +104,8 @@ class Validate(colrev.operation.Operation):
         return change_diff
 
     def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
-        merge_candidates_file = Path("merge_candidates_file.txt")
+        merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
+        merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
             for ref_rec_dict in tqdm(records):

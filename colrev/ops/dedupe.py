@@ -62,6 +62,7 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
         )
         self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
+        self.policy = self.review_manager.settings.dedupe.same_source_merges
 
     def __pre_process(self, *, key: str, value: str) -> str | None:
         if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
@@ -335,37 +336,37 @@ class Dedupe(colrev.operation.Operation):
             return True
         return True
 
-    def __export_same_source_merge(
+    def __notify_on_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> None:
-        if (
-            colrev.settings.SameSourceMergePolicy.apply
-            == self.review_manager.settings.dedupe.same_source_merges
+        merge_info = main_record.data["ID"] + " - " + dupe_record.data["ID"]
+        if not self.__same_source_merge(
+            main_record=main_record, dupe_record=dupe_record
         ):
+            self.review_manager.logger.info(
+                f" merge {main_record.data['ID']} - {dupe_record.data['ID']}"
+            )
             return
 
-        merge_info = main_record.data["ID"] + "," + dupe_record.data["ID"]
+        if self.policy == colrev.settings.SameSourceMergePolicy.apply:
+            return
 
-        if (
-            colrev.settings.SameSourceMergePolicy.warn
-            == self.review_manager.settings.dedupe.same_source_merges
-        ):
+        if self.policy == colrev.settings.SameSourceMergePolicy.warn:
             self.review_manager.logger.warning(
-                f"\n{colors.ORANGE}"
-                "Applying same source merge "
+                f"{colors.ORANGE}"
+                "Apply same source merge "
                 f"{colors.END} "
-                f"{main_record.data.get('colrev_origin', ['ERROR'])}/"
-                f"{dupe_record.data.get('colrev_origin', ['ERROR'])}\n"
+                f"{merge_info}\n"
                 f"  {main_record.format_bib_style()}\n"
-                f"  {dupe_record.format_bib_style()}"
+                f"  {dupe_record.format_bib_style()}\n"
+                f"  {main_record.data.get('colrev_origin', ['ERROR'])} x "
+                f"{dupe_record.data.get('colrev_origin', ['ERROR'])}\n"
             )
             with self.same_source_merge_file.open("a", encoding="utf8") as file:
                 file.write(merge_info + "\n")
+            return
 
-        if (
-            colrev.settings.SameSourceMergePolicy.prevent
-            == self.review_manager.settings.dedupe.same_source_merges
-        ):
+        if self.policy == colrev.settings.SameSourceMergePolicy.prevent:
             self.review_manager.logger.warning(
                 f"Prevented same-source merge: ({merge_info})"
             )
@@ -374,6 +375,11 @@ class Dedupe(colrev.operation.Operation):
                 "a", encoding="utf8"
             ) as file:
                 file.write(merge_info + "\n")
+
+            self.review_manager.logger.info(
+                "To force merge use colrev dedupe --merge "
+                f"{main_record.data['ID']},{dupe_record.data['ID']}"
+            )
 
     def __is_cross_level_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
@@ -417,7 +423,10 @@ class Dedupe(colrev.operation.Operation):
         complete_dedupe: bool,
         set_to_md_processed: list,
     ) -> None:
+        print()
+        self.review_manager.logger.info("Summary:")
         for record_id, duplicate_ids in duplicate_id_mappings.items():
+            duplicate_ids = [x.replace(record_id, "-") for x in duplicate_ids]
             if record_id not in records:
                 continue
             if (
@@ -426,14 +435,14 @@ class Dedupe(colrev.operation.Operation):
             ):
                 if complete_dedupe:
                     self.review_manager.logger.info(
-                        f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(
+                        f" {colors.GREEN}{record_id} ({'|'.join(duplicate_ids)}) ".ljust(
                             46
                         )
                         + f"md_prepared →  md_processed{colors.END}"
                     )
                 else:
                     self.review_manager.logger.info(
-                        f" {colors.GREEN}{record_id} ({','.join(duplicate_ids)})".ljust(
+                        f" {colors.GREEN}{record_id} ({'|'.join(duplicate_ids)}) ".ljust(
                             46
                         )
                         + f"md_prepared →  md_prepared{colors.END}"
@@ -478,6 +487,45 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         return set_to_md_processed
 
+    def __skip_merge_condition(
+        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+    ) -> bool:
+        if self.__is_cross_level_merge(
+            main_record=main_record, dupe_record=dupe_record
+        ):
+            self.review_manager.logger.info(
+                "Prevented cross-level merge: "
+                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+            )
+            return True
+
+        if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
+            self.review_manager.logger.info(
+                "Prevented merge with conflicting global IDs: "
+                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+            )
+            return True
+
+        if (
+            self.__same_source_merge(main_record=main_record, dupe_record=dupe_record)
+            and self.policy == colrev.settings.SameSourceMergePolicy.prevent
+        ):
+            return True
+
+        return False
+
+    def __update_duplicate_id_mappings(
+        self,
+        *,
+        duplicate_id_mappings: dict,
+        main_record: colrev.record.Record,
+        dupe_record: colrev.record.Record,
+    ) -> None:
+        if main_record.data["ID"] not in duplicate_id_mappings:
+            duplicate_id_mappings[main_record.data["ID"]] = [dupe_record.data["ID"]]
+        else:
+            duplicate_id_mappings[main_record.data["ID"]].append(dupe_record.data["ID"])
+
     def apply_merges(
         self,
         *,
@@ -517,70 +565,27 @@ class Dedupe(colrev.operation.Operation):
             ]
 
         records = self.review_manager.dataset.load_records_dict()
-
         removed_duplicates = []
-        duplicate_id_mappings = {}
-        records_to_merge = self.__get_records_to_merge(records=records, results=results)
-        for main_record, dupe_record, dupe in records_to_merge:
+        duplicate_id_mappings: typing.Dict[str, list] = {}
+        for main_record, dupe_record in self.__get_records_to_merge(
+            records=records, results=results
+        ):
             try:
-                if self.__is_cross_level_merge(
+                if self.__skip_merge_condition(
                     main_record=main_record, dupe_record=dupe_record
                 ):
-                    self.review_manager.logger.info(
-                        "Prevented cross-level merge: "
-                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                    )
                     continue
 
-                if self.__gids_conflict(
-                    main_record=main_record, dupe_record=dupe_record
-                ):
-                    self.review_manager.logger.info(
-                        "Prevented merge with conflicting global IDs: "
-                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                    )
-                    continue
-
-                if self.__same_source_merge(
-                    main_record=main_record, dupe_record=dupe_record
-                ):
-                    self.__export_same_source_merge(
-                        main_record=main_record,
-                        dupe_record=dupe_record,
-                    )
-
-                    if (
-                        colrev.settings.SameSourceMergePolicy.prevent
-                        == self.review_manager.settings.dedupe.same_source_merges
-                    ):
-                        self.review_manager.logger.info(
-                            "Prevented same-source merge: "
-                            f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                        )
-                        self.review_manager.logger.info(
-                            "To force merge use colrev dedupe --merge "
-                            f"{main_record.data['ID']},{dupe_record.data['ID']}"
-                        )
-
-                        continue  # with next pair
-
-                    self.review_manager.logger.info(
-                        "Applying same-source merge: "
-                        f"{main_record.data['ID']} - {dupe_record.data['ID']}"
-                    )
-
-                self.review_manager.logger.info(
-                    f" merge {main_record.data['ID']} - {dupe_record.data['ID']}"
+                self.__notify_on_merge(
+                    main_record=main_record,
+                    dupe_record=dupe_record,
                 )
-                if main_record.data["ID"] not in duplicate_id_mappings:
-                    duplicate_id_mappings[main_record.data["ID"]] = [
-                        dupe_record.data["ID"]
-                    ]
-                else:
-                    duplicate_id_mappings[main_record.data["ID"]].append(
-                        dupe_record.data["ID"]
-                    )
 
+                self.__update_duplicate_id_mappings(
+                    duplicate_id_mappings=duplicate_id_mappings,
+                    main_record=main_record,
+                    dupe_record=dupe_record,
+                )
                 dupe_record.data["MOVED_DUPE_ID"] = main_record.data["ID"]
                 main_record.merge(
                     merging_record=dupe_record,
@@ -589,17 +594,6 @@ class Dedupe(colrev.operation.Operation):
                 )
                 removed_duplicates.append(dupe_record.data["ID"])
 
-                if "score" in dupe:
-                    conf_details = (
-                        f"(confidence: {str(round(dupe['score'], 3))})"
-                        if "score" in dupe
-                        else ""
-                    )
-
-                    self.review_manager.logger.info(
-                        f"Removed duplicate{conf_details}: "
-                        + f'{main_record.data["ID"]} <- {dupe_record.data["ID"]}'
-                    )
             except colrev_exceptions.InvalidMerge as exc:
                 print(exc)
                 continue
@@ -650,7 +644,7 @@ class Dedupe(colrev.operation.Operation):
             main_record = colrev.record.Record(data=main_record_dict)
             dupe_record = colrev.record.Record(data=dupe_record_dict)
 
-            yield (main_record, dupe_record, dupe)
+            yield (main_record, dupe_record)
 
     def __unmerge_current_record_ids_records(self, *, current_record_ids: list) -> dict:
         ids_origins: typing.Dict[str, list] = {rid: [] for rid in current_record_ids}
