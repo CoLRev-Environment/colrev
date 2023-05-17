@@ -120,7 +120,20 @@ class ExportManPrep(JsonSchemaMixin):
         }
 
         # Filter out fields that are not needed for manual preparation
-        fields_to_keep = ["ENTRYTYPE", "author", "title", "year", "journal", "booktitle", "incollection", "colrev_status", "volume", "number", "pages", "doi"]
+        fields_to_keep = [
+            "ENTRYTYPE",
+            "author",
+            "title",
+            "year",
+            "journal",
+            "booktitle",
+            "incollection",
+            "colrev_status",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+        ]
         filtered_man_prep_recs = {}
         for citation, fields in man_prep_recs.copy().items():
             for k, v in fields.copy().items():
