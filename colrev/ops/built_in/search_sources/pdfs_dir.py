@@ -743,6 +743,12 @@ class PDFSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key="journal", case="title")
         record.format_if_mostly_upper(key="booktitle", case="title")
         record.format_if_mostly_upper(key="author", case="title")
+
+        if "author" in record.data:
+            record.data["author"] = record.data["author"].rstrip(
+                " and T I C L E I N F O, A. R"
+            )
+
         # Typical error in old papers: title fields are equal to journal/booktitle fields
         if record.data.get("title", "no_title").lower() == record.data.get(
             "journal", "no_journal"
