@@ -282,7 +282,8 @@ class Prescreen(colrev.operation.Operation):
         split = []
         if split_str != "NA":
             split = split_str.split(",")
-            split.remove("")
+            if "" in split:
+                split.remove("")
 
         records = self.review_manager.dataset.load_records_dict()
 
