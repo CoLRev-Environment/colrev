@@ -22,6 +22,10 @@ def fixture_doi_not_matching_pattern_checker(
     [
         ("10.1177/02683962211048201", True),
         ("https://journals.sagepub.com/doi/10.1177/02683962211048201", False),
+        # Even though it is lexically correct, this should be a
+        # problematic doi, according to this:
+        # https://www.crossref.org/documentation/member-setup/constructing-your-dois/
+        ("10.5555/2014-04-01", True),
     ],
 )
 def test_doi_not_matching_pattern(
