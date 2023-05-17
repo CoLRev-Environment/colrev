@@ -36,6 +36,11 @@ class Helpers:
             target,
         )
 
+    @staticmethod
+    def retrieve_test_file_content(*, source: Path) -> str:
+        """Retrieve the content of a test file"""
+        return (Helpers.test_data_path / source).read_text(encoding="utf-8")
+
 
 @pytest.fixture(scope="session", name="helpers")
 def get_helpers():  # type: ignore
