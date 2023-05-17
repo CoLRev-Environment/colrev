@@ -435,6 +435,9 @@ class Record:
         if key in self.data:
             del self.data[key]
 
+        if "colrev_masterdata_provenance" not in self.data:
+            self.data["colrev_masterdata_provenance"] = {}
+
         if not_missing_note and key in self.identifying_field_keys:
             # Example: journal without number
             # we should keep that information that a particular masterdata
@@ -446,10 +449,10 @@ class Record:
                 self.data["colrev_masterdata_provenance"][key]["source"] = source
         else:
             if key in self.identifying_field_keys:
-                if key in self.data.get("colrev_masterdata_provenance", ""):
+                if key in self.data.get("colrev_masterdata_provenance", {}):
                     del self.data["colrev_masterdata_provenance"][key]
             else:
-                if key in self.data.get("colrev_data_provenance", ""):
+                if key in self.data.get("colrev_data_provenance", {}):
                     del self.data["colrev_data_provenance"][key]
 
     def masterdata_is_complete(self) -> bool:
