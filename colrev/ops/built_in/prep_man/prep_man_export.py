@@ -118,8 +118,18 @@ class ExportManPrep(JsonSchemaMixin):
             if colrev.record.RecordState.md_needs_manual_preparation
             == v["colrev_status"]
         }
+
+        # Filter out fields that are not needed for manual preparation
+        fields_to_keep = ["ENTRYTYPE", "author", "title", "year", "journal", "booktitle", "incollection", "colrev_status", "volume", "number", "pages", "doi"]
+        filtered_man_prep_recs = {}
+        for citation, fields in man_prep_recs.copy().items():
+            for k, v in fields.copy().items():
+                if not k in fields_to_keep:
+                    del fields[k]
+            filtered_man_prep_recs.update({citation: fields})
+
         prep_man_operation.review_manager.dataset.save_records_dict_to_file(
-            records=man_prep_recs, save_path=self.prep_man_bib_path
+            records=filtered_man_prep_recs, save_path=self.prep_man_bib_path
         )
         if any("file" in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
