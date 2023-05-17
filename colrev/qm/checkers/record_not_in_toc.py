@@ -13,6 +13,8 @@ import colrev.record
 class RecordNotInTOCChecker:
     """The RecordNotInTOCChecker"""
 
+    msg = "record-not-in-toc"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
         self.local_index = colrev.env.local_index.LocalIndex(verbose_mode=False)
@@ -28,24 +30,16 @@ class RecordNotInTOCChecker:
                 include_file=False,
             )
             if "journal" in record.data:
-                record.remove_masterdata_provenance_note(
-                    key="journal", note="record-not-in-toc"
-                )
+                record.remove_masterdata_provenance_note(key="journal", note=self.msg)
             elif "booktitle" in record.data:
-                record.remove_masterdata_provenance_note(
-                    key="booktitle", note="record-not-in-toc"
-                )
+                record.remove_masterdata_provenance_note(key="booktitle", note=self.msg)
         except colrev.exceptions.RecordNotInIndexException:
             pass
         except colrev_exceptions.RecordNotInTOCException:
             if "journal" in record.data:
-                record.add_masterdata_provenance_note(
-                    key="journal", note="record-not-in-toc"
-                )
+                record.add_masterdata_provenance_note(key="journal", note=self.msg)
             elif "booktitle" in record.data:
-                record.add_masterdata_provenance_note(
-                    key="booktitle", note="record-not-in-toc"
-                )
+                record.add_masterdata_provenance_note(key="booktitle", note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

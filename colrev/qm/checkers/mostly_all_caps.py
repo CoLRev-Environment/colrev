@@ -12,6 +12,8 @@ import colrev.record
 class MostlyAllCapsFieldChecker:
     """The MostlyAllCapsFieldChecker"""
 
+    msg = "mostly-all-caps"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -28,16 +30,14 @@ class MostlyAllCapsFieldChecker:
                 )
                 < 0.7
             ):
-                record.remove_masterdata_provenance_note(
-                    key=key, note="mostly-all-caps"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
                 continue
 
             # container-title-abbreviated
             if key in ["journal", "booktitle"] and len(record.data[key]) < 6:
                 continue
 
-            record.add_masterdata_provenance_note(key=key, note="mostly-all-caps")
+            record.add_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

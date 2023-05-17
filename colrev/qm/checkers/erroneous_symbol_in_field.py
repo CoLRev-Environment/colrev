@@ -13,6 +13,7 @@ class ErroneousSymbolInFieldChecker:
 
     fields_to_check = ["author", "title", "editor", "journal", "booktitle"]
     erroneous_symbols = ["�", "™"]
+    msg = "erroneous-symbol-in-field"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -25,13 +26,9 @@ class ErroneousSymbolInFieldChecker:
                 continue
 
             if any(x in record.data[key] for x in self.erroneous_symbols):
-                record.add_masterdata_provenance_note(
-                    key=key, note="erroneous-symbol-in-field"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="erroneous-symbol-in-field"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

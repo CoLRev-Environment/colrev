@@ -14,6 +14,8 @@ import colrev.record
 class NameFormatSeparatorsChecker:
     """The NameFormatSeparatorsChecker"""
 
+    msg = "name-format-separators"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -26,15 +28,13 @@ class NameFormatSeparatorsChecker:
                 continue
 
             if self.__name_separator_error(record=record, key=key):
-                record.add_masterdata_provenance_note(
-                    key=key, note="name-format-separators"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="name-format-separators"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __name_separator_error(self, *, record: colrev.record.Record, key: str) -> bool:
+        if "," not in record.data[key]:
+            return False
         sanitized_names_list = re.sub(
             "[^a-zA-Z, ;1]+",
             "",

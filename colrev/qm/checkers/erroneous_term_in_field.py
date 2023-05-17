@@ -12,6 +12,7 @@ class ErroneousTermInFieldChecker:
     """The ErroneousTermInFieldChecker"""
 
     erroneous_terms = {"author": ["http", "University"]}
+    msg = "erroneous-term-in-field"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -24,13 +25,9 @@ class ErroneousTermInFieldChecker:
                 continue
 
             if any(x in record.data[key] for x in erroneous_term_list):
-                record.add_masterdata_provenance_note(
-                    key=key, note="erroneous-term-in-field"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="erroneous-term-in-field"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

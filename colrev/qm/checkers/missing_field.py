@@ -34,6 +34,8 @@ class MissingFieldChecker:
 
     # book, inbook: author <- editor
 
+    msg = "missing"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
         self.masterdata_restrictions = self.__get_masterdata_restrictions()
@@ -111,7 +113,7 @@ class MissingFieldChecker:
                     ):
                         not_missing_fields.append(missing_field)
                         continue
-                record.add_masterdata_provenance_note(key=missing_field, note="missing")
+                record.add_masterdata_provenance_note(key=missing_field, note=self.msg)
 
             for not_missing_field in not_missing_fields:
                 missing_fields.remove(not_missing_field)
@@ -144,7 +146,7 @@ class MissingFieldChecker:
                     key=required_fields_key,
                     value="UNKNOWN",
                     source="generic_field_requirements",
-                    note="missing",
+                    note=self.msg,
                     append_edit=False,
                 )
 
@@ -157,7 +159,7 @@ class MissingFieldChecker:
             colrev.record.Record(data=record.data).add_masterdata_provenance(
                 key=required_field,
                 source="colrev_curation.masterdata_restrictions",
-                note="missing",
+                note=self.msg,
             )
 
     def __check_completeness_curated_masterdata(
@@ -178,7 +180,7 @@ class MissingFieldChecker:
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
                     key="volume",
                     source="colrev_curation.masterdata_restrictions",
-                    note="missing",
+                    note=self.msg,
                 )
 
         if "number" in masterdata_restrictions:
@@ -189,7 +191,7 @@ class MissingFieldChecker:
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
                     key="number",
                     source="colrev_curation.masterdata_restrictions",
-                    note="missing",
+                    note=self.msg,
                 )
             elif not masterdata_restrictions["number"] and "number" in record.data:
                 record.remove_field(

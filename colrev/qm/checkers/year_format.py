@@ -13,6 +13,8 @@ import colrev.record
 class YearFormatChecker:
     """The YearFormatChecker"""
 
+    msg = "year-format"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -21,11 +23,13 @@ class YearFormatChecker:
 
         if "year" not in record.data:
             return
+        if record.data["year"] == "UNKNOWN":
+            return
 
         if not re.match(r"^\d{4}$", record.data["year"]):
-            record.add_masterdata_provenance_note(key="year", note="year-format")
+            record.add_masterdata_provenance_note(key="year", note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="year", note="year-format")
+            record.remove_masterdata_provenance_note(key="year", note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

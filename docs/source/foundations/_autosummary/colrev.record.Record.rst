@@ -54,6 +54,7 @@ colrev.record.Record
       ~Record.print_pdf_prep_man
       ~Record.print_prescreen_record
       ~Record.remove_field
+      ~Record.remove_masterdata_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
       ~Record.set_masterdata_complete

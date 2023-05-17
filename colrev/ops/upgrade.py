@@ -300,6 +300,16 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
     def __migrate_0_8_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        settings["prep"]["defects_to_ignore"] = []
+        if "curated_metadata" in str(self.review_manager.path):
+            settings["prep"]["defects_to_ignore"] = ["record-not-in-toc"]
+        self.__save_settings(settings)
+        self.review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(self.review_manager.path)
+        )
+        self.review_manager.load_settings()
+        self.review_manager.get_load_operation()
         records = self.review_manager.dataset.load_records_dict()
         quality_model = self.review_manager.get_qm()
 
@@ -316,7 +326,12 @@ class Upgrade(colrev.operation.Operation):
             for key in not_missing_fields:
                 record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
             record = colrev.record.Record(data=record_dict)
+            prior_state = record.data["colrev_status"]
             record.update_masterdata_provenance(qm=quality_model)
+            if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
+                record.data[  # pylint: disable=direct-status-assign
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_excluded
             if not_missing_fields:
                 print(record_dict)
         self.review_manager.dataset.save_records_dict(records=records)

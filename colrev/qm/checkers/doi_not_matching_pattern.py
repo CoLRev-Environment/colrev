@@ -13,6 +13,8 @@ import colrev.record
 class DOIPatternChecker:
     """The DOIPatternChecker"""
 
+    msg = "doi-not-matching-pattern"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -24,13 +26,9 @@ class DOIPatternChecker:
 
         # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
         if not re.match(r"^10.\d{4,9}\/", record.data["doi"]):
-            record.add_masterdata_provenance_note(
-                key="doi", note="doi-not-matching-pattern"
-            )
+            record.add_masterdata_provenance_note(key="doi", note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(
-                key="doi", note="doi-not-matching-pattern"
-            )
+            record.remove_masterdata_provenance_note(key="doi", note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

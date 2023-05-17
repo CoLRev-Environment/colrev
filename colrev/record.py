@@ -1232,7 +1232,6 @@ class Record:
 
         return True
 
-    # TODO : test the method!
     def has_quality_defects(self) -> bool:
         """Check whether a record has quality defects"""
         return any(

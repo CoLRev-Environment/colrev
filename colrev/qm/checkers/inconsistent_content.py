@@ -11,6 +11,8 @@ import colrev.record
 class InconsistentContentChecker:
     """The InconsistentContentChecker"""
 
+    msg = "inconsistent-content"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -22,13 +24,9 @@ class InconsistentContentChecker:
                 continue
 
             if self.__inconsistent_content(record=record, key=key):
-                record.add_masterdata_provenance_note(
-                    key=key, note="inconsistent-content"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="inconsistent-content"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __inconsistent_content(self, *, record: colrev.record.Record, key: str) -> bool:
         if key == "journal":

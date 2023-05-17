@@ -11,6 +11,8 @@ import colrev.record
 class IncompleteFieldChecker:
     """The IncompleteFieldChecker"""
 
+    msg = "incomplete-field"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -21,22 +23,19 @@ class IncompleteFieldChecker:
             if key not in record.data:
                 continue
             if self.__incomplete_field(record=record, key=key):
-                record.add_masterdata_provenance_note(key=key, note="incomplete-field")
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="incomplete-field"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
         """check for incomplete field"""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
         return key == "author" and (
-            record.data[key].endswith("and others")
-            or record.data[key].endswith("et al.")
             # heuristics for missing first names:
-            or ", and " in record.data[key]
+            ", and " in record.data[key]
             or record.data[key].rstrip().endswith(",")
+            or "," not in record.data[key]
         )
 
 

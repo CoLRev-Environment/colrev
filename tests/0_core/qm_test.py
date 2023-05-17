@@ -37,9 +37,9 @@ import colrev.record
             [],
         ),
         ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),
-        ("Rai, Arun et al.", ["incomplete-field"]),
-        ("Rai, Arun, and others", ["name-abbreviated", "incomplete-field"]),
-        ("Rai, and others", ["incomplete-field"]),
+        ("Rai, Arun et al.", ["name-abbreviated"]),
+        ("Rai, Arun, and others", ["name-abbreviated"]),
+        ("Rai, and others", ["name-abbreviated"]),
     ],
 )
 def test_get_quality_defects_author(
@@ -335,4 +335,32 @@ def test_get_quality_defects_missing_fields(
             v_t_record.data["colrev_masterdata_provenance"][key]["note"]
             == "inconsistent-with-entrytype"
         )
+    assert v_t_record.has_quality_defects()
+
+
+@pytest.mark.parametrize(
+    "doi, defect",
+    [
+        ("10.1177/02683962211048201", False),
+        ("10.5555/2014-04-01", False),
+        ("https://journals.sagepub.com/doi/10.1177/02683962211048201", True),
+    ],
+)
+def test_doi_not_matching_pattern(
+    doi: str,
+    defect: bool,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+    """Test the doi-not-matching-pattern checker"""
+    v_t_record.data["doi"] = doi
+    v_t_record.update_masterdata_provenance(qm=quality_model)
+
+    if not defect:
+        assert not v_t_record.has_quality_defects()
+        return
+    assert (
+        v_t_record.data["colrev_masterdata_provenance"]["doi"]["note"]
+        == "doi-not-matching-pattern"
+    )
     assert v_t_record.has_quality_defects()

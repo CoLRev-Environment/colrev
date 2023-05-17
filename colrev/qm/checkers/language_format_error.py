@@ -12,6 +12,8 @@ import colrev.record
 class LanguageFormatChecker:
     """The LanguageFormatChecker"""
 
+    msg = "language-format-error"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
         self.language_service = colrev.env.language_service.LanguageService()
@@ -27,13 +29,9 @@ class LanguageFormatChecker:
                 lang_code_list=[record.data["language"]]
             )
         except colrev_exceptions.InvalidLanguageCodeException:
-            record.add_masterdata_provenance_note(
-                key="language", note="language-format-error"
-            )
+            record.add_masterdata_provenance_note(key="language", note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(
-                key="language", note="language-format-error"
-            )
+            record.remove_masterdata_provenance_note(key="language", note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

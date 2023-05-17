@@ -12,6 +12,7 @@ class ContainerTitleAbbreviatedChecker:
     """The ContainerTitleAbbreviatedChecker"""
 
     fields_to_check = ["journal", "booktitle"]
+    msg = "container-title-abbreviated"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -24,13 +25,9 @@ class ContainerTitleAbbreviatedChecker:
                 continue
 
             if len(record.data[key]) < 6 and record.data[key].isupper():
-                record.add_masterdata_provenance_note(
-                    key=key, note="container-title-abbreviated"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="container-title-abbreviated"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

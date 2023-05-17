@@ -11,6 +11,8 @@ import colrev.record
 class IdenticalValuesChecker:
     """The IdenticalValuesChecker"""
 
+    msg = "identical-values-between-title-and-container"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -18,13 +20,9 @@ class IdenticalValuesChecker:
         """Run the identical-values-between-title-and-container checks"""
 
         if self.__identical_values_between_title_and_container(record=record):
-            record.add_masterdata_provenance_note(
-                key="title", note="identical-values-between-title-and-container"
-            )
+            record.add_masterdata_provenance_note(key="title", note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(
-                key="title", note="identical-values-between-title-and-container"
-            )
+            record.remove_masterdata_provenance_note(key="title", note=self.msg)
 
     def __identical_values_between_title_and_container(
         self, *, record: colrev.record.Record

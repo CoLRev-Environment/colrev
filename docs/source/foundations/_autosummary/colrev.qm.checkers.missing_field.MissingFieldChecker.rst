@@ -17,7 +17,6 @@ colrev.qm.checkers.missing\_field.MissingFieldChecker
       :nosignatures:
 
       ~MissingFieldChecker.get_applicable_restrictions
-      ~MissingFieldChecker.get_missing_fields
       ~MissingFieldChecker.run
 
 

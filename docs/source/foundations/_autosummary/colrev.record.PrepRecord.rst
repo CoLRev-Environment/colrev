@@ -60,6 +60,7 @@ colrev.record.PrepRecord
       ~PrepRecord.print_pdf_prep_man
       ~PrepRecord.print_prescreen_record
       ~PrepRecord.remove_field
+      ~PrepRecord.remove_masterdata_provenance_note
       ~PrepRecord.rename_field
       ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes

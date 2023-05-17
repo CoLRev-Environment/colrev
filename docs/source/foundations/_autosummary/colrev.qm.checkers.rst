@@ -42,4 +42,5 @@ colrev.qm.checkers
    colrev.qm.checkers.name_format_separators
    colrev.qm.checkers.name_format_titles
    colrev.qm.checkers.record_not_in_toc
+   colrev.qm.checkers.thesis_with_multiple_authors
    colrev.qm.checkers.year_format

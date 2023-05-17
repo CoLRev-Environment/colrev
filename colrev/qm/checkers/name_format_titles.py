@@ -17,6 +17,8 @@ class NameFormatTitleChecker:
     titles = ["MD", "Dr", "PhD", "Prof", "Dipl Ing"]
     __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 
+    msg = "name-format-titles"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -28,13 +30,9 @@ class NameFormatTitleChecker:
                 continue
 
             if self.__title_in_name(name=record.data[key]):
-                record.add_masterdata_provenance_note(
-                    key=key, note="name-format-titles"
-                )
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=key, note="name-format-titles"
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __title_in_name(self, *, name: str) -> bool:
         name_parts = self.__words_rgx.findall(name.lower())

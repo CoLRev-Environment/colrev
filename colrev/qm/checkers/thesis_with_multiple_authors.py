@@ -11,6 +11,8 @@ import colrev.record
 class ThesisWithMultipleAuthorsChecker:
     """The ThesisWithMultipleAuthorsChecker"""
 
+    msg = "thesis-with-multiple-authors"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -18,13 +20,9 @@ class ThesisWithMultipleAuthorsChecker:
         """Run the thesis-with-multiple-authors checks"""
 
         if self.__multiple_authored_thesis(record=record):
-            record.add_masterdata_provenance_note(
-                key="author", note="thesis-with-multiple-authors"
-            )
+            record.add_masterdata_provenance_note(key="author", note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(
-                key="author", note="thesis-with-multiple-authors"
-            )
+            record.remove_masterdata_provenance_note(key="author", note=self.msg)
 
     def __multiple_authored_thesis(self, *, record: colrev.record.Record) -> bool:
         if "thesis" in record.data["ENTRYTYPE"] and " and " in record.data.get(

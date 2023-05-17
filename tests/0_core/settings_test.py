@@ -44,6 +44,7 @@ def test_settings_load() -> None:
         "load": {},
         "prep": {
             "fields_to_keep": [],
+            "defects_to_ignore": [],
             "prep_rounds": [
                 {
                     "name": "prep",

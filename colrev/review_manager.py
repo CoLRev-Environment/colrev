@@ -379,8 +379,6 @@ class ReviewManager:
     def get_qm(self) -> colrev.qm.quality_model.QualityModel:
         """Get the quality model"""
 
-        # TODO : add params (config: deactivate checkers)
-
         return colrev.qm.quality_model.QualityModel(review_manager=self)
 
     def get_status_stats(

@@ -15,10 +15,9 @@ class QualityModel:
     __checker_path = Path(__file__).parent / Path("checkers")
     checkers = []  # type: ignore
 
-    # TODO : "centralize" defect codes!
-
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
+        self.defects_to_ignore = self.review_manager.settings.prep.defects_to_ignore
         self.__register_checkers()
 
     def __register_checkers(self) -> None:
@@ -49,6 +48,8 @@ class QualityModel:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the checkers"""
         for checker in self.checkers:
+            if checker.msg in self.defects_to_ignore:
+                continue
             checker.run(record=record)
 
 

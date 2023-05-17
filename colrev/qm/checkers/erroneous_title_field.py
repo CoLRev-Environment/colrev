@@ -11,6 +11,8 @@ import colrev.record
 class ErroneousTitleFieldChecker:
     """The ErroneousTitleFieldChecker"""
 
+    msg = "erroneous-title-field"
+
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
@@ -24,14 +26,10 @@ class ErroneousTitleFieldChecker:
             any(x in record.data["title"] for x in ["_", "."])
             or any(char.isdigit() for char in record.data["title"])
         ):
-            record.add_masterdata_provenance_note(
-                key="title", note="erroneous-title-field"
-            )
+            record.add_masterdata_provenance_note(key="title", note=self.msg)
 
         else:
-            record.remove_masterdata_provenance_note(
-                key="title", note="erroneous-title-field"
-            )
+            record.remove_masterdata_provenance_note(key="title", note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
