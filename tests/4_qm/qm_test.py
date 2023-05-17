@@ -2,6 +2,8 @@
 """Tests for the quality model"""
 from __future__ import annotations
 
+from pprint import pprint
+
 import pytest
 
 import colrev.qm.quality_model
@@ -255,7 +257,6 @@ def test_get_quality_defects_language_format(
 
     v_t_record.data["language"] = language
     v_t_record.update_masterdata_provenance(qm=quality_model)
-    from pprint import pprint
 
     pprint(v_t_record)
     if not defects:
@@ -292,14 +293,17 @@ def test_get_quality_defects_missing_fields(
     if not missing:
         assert not v_t_record.has_quality_defects()
         return
-    for n in missing:
-        assert v_t_record.data["colrev_masterdata_provenance"][n]["note"] == "missing"
-    for n in v_t_record.data["colrev_masterdata_provenance"]:
-        if n in missing:
-            continue
-        assert n in defects
+    for missing_key in missing:
         assert (
-            v_t_record.data["colrev_masterdata_provenance"][n]["note"]
+            v_t_record.data["colrev_masterdata_provenance"][missing_key]["note"]
+            == "missing"
+        )
+    for key in v_t_record.data["colrev_masterdata_provenance"]:
+        if key in missing:
+            continue
+        assert key in defects
+        assert (
+            v_t_record.data["colrev_masterdata_provenance"][key]["note"]
             == "inconsistent-with-entrytype"
         )
     assert v_t_record.has_quality_defects()
