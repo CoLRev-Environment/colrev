@@ -2,8 +2,6 @@
 """Tests for the quality model"""
 from __future__ import annotations
 
-from pprint import pprint
-
 import pytest
 
 import colrev.qm.quality_model
@@ -40,7 +38,8 @@ import colrev.record
         ),
         ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),
         ("Rai, Arun et al.", ["incomplete-field"]),
-        ("Rai, Arun, and others", ["name-abbreviated"]),
+        ("Rai, Arun, and others", ["name-abbreviated", "incomplete-field"]),
+        ("Rai, and others", ["incomplete-field"]),
     ],
 )
 def test_get_quality_defects_author(
@@ -241,6 +240,37 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
 
 
 @pytest.mark.parametrize(
+    "booktitle, defects",
+    [
+        ("JAMS", ["container-title-abbreviated"]),
+        ("Normal book", []),
+    ],
+)
+def test_get_quality_defects_book_title_abbr(
+    booktitle: str,
+    defects: list,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+    """Test if booktitle is abbreviated"""
+
+    v_t_record.data["ENTRYTYPE"] = "inbook"
+    v_t_record.data["booktitle"] = booktitle
+    v_t_record.data["chapter"] = 10
+    v_t_record.data["publisher"] = "nobody"
+    del v_t_record.data["journal"]
+    v_t_record.update_masterdata_provenance(qm=quality_model)
+    if not defects:
+        assert not v_t_record.has_quality_defects()
+        return
+    for defect in defects:
+        assert defect in v_t_record.data["colrev_masterdata_provenance"]["booktitle"][
+            "note"
+        ].split(",")
+    assert v_t_record.has_quality_defects()
+
+
+@pytest.mark.parametrize(
     "language, defects",
     [
         ("eng", []),
@@ -258,7 +288,6 @@ def test_get_quality_defects_language_format(
     v_t_record.data["language"] = language
     v_t_record.update_masterdata_provenance(qm=quality_model)
 
-    pprint(v_t_record)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
