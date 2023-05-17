@@ -9,7 +9,7 @@ import colrev.exceptions as colrev_exceptions
 
 # pylint: disable=duplicate-code
 
-TAG_RE = re.compile(r"<[^>]+>")
+TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
 def __get_year(*, item: dict) -> str:

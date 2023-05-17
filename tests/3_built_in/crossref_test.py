@@ -35,6 +35,63 @@ def fixture_crossref_prep(
     "doi, expected_dict",
     [
         (
+            "10.2196/22081",
+            {
+                "doi": "10.2196/22081",
+                "ENTRYTYPE": "article",
+                "author": "Grenier Ouimet, Antoine and Wagner, Gerit and Raymond, Louis and "
+                "Pare, Guy",
+                "journal": "Journal of Medical Internet Research",
+                "language": "en",
+                "number": "11",
+                "pages": "e22081",
+                "title": "Investigating Patients’ Intention to Continue Using "
+                "Teleconsultation to Anticipate Postcrisis Momentum: Survey Study",
+                "abstract": "Background The COVID-19 crisis has drastically changed care "
+                "delivery with teleconsultation platforms experiencing "
+                "substantial spikes in demand, helping patients and care "
+                "providers avoid infections and maintain health care services. "
+                "Beyond the current pandemic, teleconsultation is considered a "
+                "significant opportunity to address persistent health system "
+                "challenges, including accessibility, continuity, and cost of "
+                "care, while ensuring quality. Objective This study aims at "
+                "identifying the determinants of patients’ intention to continue "
+                "using a teleconsultation platform. It extends prior research on "
+                "information technology use continuance intention and "
+                "teleconsultation services. Methods Data was collected in "
+                "November 2018 and May 2019 with Canadian patients who had access "
+                "to a teleconsultation platform. Measures included patients’ "
+                "intention to continue their use; teleconsultation usefulness; "
+                "teleconsultation quality; patients’ trust toward the digital "
+                "platform, its provider. and health care professionals; and "
+                "confirmation of patients’ expectations toward teleconsultation. "
+                "We used structural equation modeling employing the partial least "
+                "squares component-based technique to test our research model and "
+                "hypotheses. Results We analyzed a sample of 178 participants who "
+                "had used teleconsultation services. Our findings revealed that "
+                "confirmation of expectations had the greatest influence on "
+                "continuance intention (total effects=0.722; P<.001), followed by "
+                "usefulness (total effects=0.587; P<.001) and quality (total "
+                "effects=0.511; P<.001). Usefulness (β=.60; P<.001) and quality "
+                "(β=.34; P=.01) had direct effects on the dependent variable. The "
+                "confirmation of expectations had direct effects both on "
+                "usefulness (β=.56; P<.001) and quality (β=.75; P<.001) in "
+                "addition to having an indirect effect on usefulness (indirect "
+                "effects=0.282; P<.001). Last, quality directly influenced "
+                "usefulness (β=.34; P=.002) and trust (β=.88; P<.001). Trust does "
+                "not play a role in the context under study. Conclusions "
+                "Teleconsultation is central to care going forward, and it "
+                "represents a significant lever for an improved, digital delivery "
+                "of health care in the future. We believe that our findings will "
+                "help drive long-term teleconsultation adoption and use, "
+                "including in the aftermath of the current COVID-19 crisis, so "
+                "that general care improvement and greater preparedness for "
+                "exceptional situations can be achieved.",
+                "volume": "22",
+                "year": "2020",
+            },
+        ),
+        (
             "10.17705/1cais.04607",
             {
                 "doi": "10.17705/1CAIS.04607",
