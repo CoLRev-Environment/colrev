@@ -28,3 +28,4 @@ colrev.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
 
       ~NameAbbreviatedChecker.abbreviations
       ~NameAbbreviatedChecker.fields_to_check
+      ~NameAbbreviatedChecker.msg

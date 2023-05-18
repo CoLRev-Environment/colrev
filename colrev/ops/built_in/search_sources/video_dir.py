@@ -60,7 +60,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         self.prep_operation = self.review_manager.get_prep_operation()
         self.url_connector = website_connector.WebsiteConnector(
-            source_operation=self.prep_operation
+            review_manager=self.review_manager
         )
         self.zotero_lock = Lock()
 
@@ -174,9 +174,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         if "url" in record.data:
             self.zotero_lock = Lock()
             url_record = record.copy_prep_rec()
-            self.url_connector.retrieve_md_from_website(
-                record=url_record, prep_operation=self.prep_operation
-            )
+            self.url_connector.retrieve_md_from_website(record=url_record)
             if url_record.data.get("author", "") != "":
                 record.update_field(
                     key="author", value=url_record.data["author"], source="website"

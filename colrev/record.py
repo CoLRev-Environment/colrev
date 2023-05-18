@@ -35,7 +35,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
-import colrev.qm.quality_model
 import colrev.ui_cli.cli_colors as colors
 
 if False:  # pylint: disable=using-constant-test
@@ -43,6 +42,7 @@ if False:  # pylint: disable=using-constant-test
 
     if TYPE_CHECKING:
         import colrev.review_manager
+        import colrev.qm.quality_model
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods

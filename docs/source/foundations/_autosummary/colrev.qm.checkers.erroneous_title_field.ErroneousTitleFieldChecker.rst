@@ -17,3 +17,13 @@ colrev.qm.checkers.erroneous\_title\_field.ErroneousTitleFieldChecker
       :nosignatures:
 
       ~ErroneousTitleFieldChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ErroneousTitleFieldChecker.msg

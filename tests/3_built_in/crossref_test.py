@@ -12,8 +12,8 @@ import colrev.ops.prep
 # pylint: disable=line-too-long
 
 
-@pytest.fixture(scope="package", name="crossref_prep")
-def fixture_crossref_prep(
+@pytest.fixture(scope="package", name="crossref_search_source")
+def fixture_crossref_search_source(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource:
     """Fixture for crossref prep"""
@@ -141,11 +141,15 @@ def fixture_crossref_prep(
 def test_crossref_query(  # type: ignore
     doi: str,
     expected_dict: dict,
-    crossref_prep: colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource,
+    crossref_search_source: colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource,
     helpers,
 ) -> None:
     """Test the crossref query_doi()"""
     # note: replace the / in filenames by _
+    etiquette = crossref_search_source.get_etiquette(
+        review_manager=crossref_search_source.review_manager
+    )
+
     json_str = helpers.retrieve_test_file_content(
         source=Path(f"api_output/crossref/{doi.replace('/', '_')}.json")
     )
@@ -154,7 +158,7 @@ def test_crossref_query(  # type: ignore
             f"https://api.crossref.org/works/{doi}", content=json_str.encode("utf-8")
         )
 
-        actual = crossref_prep.query_doi(doi=doi)
+        actual = crossref_search_source.query_doi(doi=doi, etiquette=etiquette)
         expected = colrev.record.PrepRecord(data=expected_dict)
 
         assert actual.data == expected.data

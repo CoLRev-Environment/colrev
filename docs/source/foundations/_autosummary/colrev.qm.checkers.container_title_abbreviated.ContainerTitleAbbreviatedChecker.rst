@@ -27,3 +27,4 @@ colrev.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviatedChecke
    .. autosummary::
 
       ~ContainerTitleAbbreviatedChecker.fields_to_check
+      ~ContainerTitleAbbreviatedChecker.msg

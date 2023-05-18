@@ -17,3 +17,13 @@ colrev.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChec
       :nosignatures:
 
       ~ThesisWithMultipleAuthorsChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ThesisWithMultipleAuthorsChecker.msg

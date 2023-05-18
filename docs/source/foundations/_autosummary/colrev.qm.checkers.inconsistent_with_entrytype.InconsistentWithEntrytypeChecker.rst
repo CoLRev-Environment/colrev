@@ -26,4 +26,5 @@ colrev.qm.checkers.inconsistent\_with\_entrytype.InconsistentWithEntrytypeChecke
 
    .. autosummary::
 
+      ~InconsistentWithEntrytypeChecker.msg
       ~InconsistentWithEntrytypeChecker.record_field_inconsistencies

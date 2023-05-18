@@ -66,7 +66,9 @@ class PDFPrepMan(colrev.operation.Operation):
                 == x["colrev_status"]
             ]
         )
-        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
+        pad = 0
+        if record_header_list:
+            pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[

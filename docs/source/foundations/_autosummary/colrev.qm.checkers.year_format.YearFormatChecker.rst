@@ -17,3 +17,13 @@ colrev.qm.checkers.year\_format.YearFormatChecker
       :nosignatures:
 
       ~YearFormatChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~YearFormatChecker.msg

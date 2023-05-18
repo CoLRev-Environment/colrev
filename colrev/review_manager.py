@@ -21,6 +21,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.operation
+import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors

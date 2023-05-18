@@ -28,3 +28,4 @@ colrev.qm.checkers.erroneous\_symbol\_in\_field.ErroneousSymbolInFieldChecker
 
       ~ErroneousSymbolInFieldChecker.erroneous_symbols
       ~ErroneousSymbolInFieldChecker.fields_to_check
+      ~ErroneousSymbolInFieldChecker.msg

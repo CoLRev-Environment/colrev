@@ -17,3 +17,13 @@ colrev.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
       :nosignatures:
 
       ~MostlyAllCapsFieldChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~MostlyAllCapsFieldChecker.msg

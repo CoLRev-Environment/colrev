@@ -17,3 +17,13 @@ colrev.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
       :nosignatures:
 
       ~NameFormatSeparatorsChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~NameFormatSeparatorsChecker.msg

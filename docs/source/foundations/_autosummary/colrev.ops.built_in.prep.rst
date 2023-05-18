@@ -39,7 +39,6 @@ colrev.ops.built\_in.prep
    colrev.ops.built_in.prep.exclude_languages
    colrev.ops.built_in.prep.exclude_non_latin_alphabets
    colrev.ops.built_in.prep.general_polish
-   colrev.ops.built_in.prep.global_id_consistency
    colrev.ops.built_in.prep.local_index_prep
    colrev.ops.built_in.prep.open_library_prep
    colrev.ops.built_in.prep.pubmed_metadata_prep

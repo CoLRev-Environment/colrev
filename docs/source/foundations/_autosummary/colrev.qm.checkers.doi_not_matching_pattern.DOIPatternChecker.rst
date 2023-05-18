@@ -17,3 +17,13 @@ colrev.qm.checkers.doi\_not\_matching\_pattern.DOIPatternChecker
       :nosignatures:
 
       ~DOIPatternChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DOIPatternChecker.msg

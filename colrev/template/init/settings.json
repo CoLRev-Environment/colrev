@@ -61,9 +61,6 @@
                         "endpoint": "colrev.remove_broken_ids"
                     },
                     {
-                        "endpoint": "colrev.global_ids_consistency_check"
-                    },
-                    {
                         "endpoint": "colrev.get_doi_from_urls"
                     },
                     {

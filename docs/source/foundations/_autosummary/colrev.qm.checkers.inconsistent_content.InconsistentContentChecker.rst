@@ -17,3 +17,13 @@ colrev.qm.checkers.inconsistent\_content.InconsistentContentChecker
       :nosignatures:
 
       ~InconsistentContentChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~InconsistentContentChecker.msg

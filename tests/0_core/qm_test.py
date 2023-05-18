@@ -355,7 +355,10 @@ def test_doi_not_matching_pattern(
     """Test the doi-not-matching-pattern checker"""
     v_t_record.data["doi"] = doi
     v_t_record.update_masterdata_provenance(qm=quality_model)
-
+    # Ignore defects that should be tested separately
+    v_t_record.remove_masterdata_provenance_note(
+        key="doi", note="inconsistent-with-doi-metadata"
+    )
     if not defect:
         assert not v_t_record.has_quality_defects()
         return

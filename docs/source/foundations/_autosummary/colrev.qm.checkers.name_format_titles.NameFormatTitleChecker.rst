@@ -27,4 +27,5 @@ colrev.qm.checkers.name\_format\_titles.NameFormatTitleChecker
    .. autosummary::
 
       ~NameFormatTitleChecker.fields_to_check
+      ~NameFormatTitleChecker.msg
       ~NameFormatTitleChecker.titles

@@ -34,7 +34,9 @@ colrev.qm.checkers
    colrev.qm.checkers.identical_values_between_title_and_container
    colrev.qm.checkers.incomplete_field
    colrev.qm.checkers.inconsistent_content
+   colrev.qm.checkers.inconsistent_with_doi_metadata
    colrev.qm.checkers.inconsistent_with_entrytype
+   colrev.qm.checkers.inconsistent_with_url_metadata
    colrev.qm.checkers.language_format_error
    colrev.qm.checkers.missing_field
    colrev.qm.checkers.mostly_all_caps

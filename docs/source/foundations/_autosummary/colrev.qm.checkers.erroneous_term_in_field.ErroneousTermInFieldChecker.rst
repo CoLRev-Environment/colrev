@@ -27,3 +27,4 @@ colrev.qm.checkers.erroneous\_term\_in\_field.ErroneousTermInFieldChecker
    .. autosummary::
 
       ~ErroneousTermInFieldChecker.erroneous_terms
+      ~ErroneousTermInFieldChecker.msg

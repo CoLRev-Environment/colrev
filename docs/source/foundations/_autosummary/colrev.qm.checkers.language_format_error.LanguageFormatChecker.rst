@@ -17,3 +17,13 @@ colrev.qm.checkers.language\_format\_error.LanguageFormatChecker
       :nosignatures:
 
       ~LanguageFormatChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~LanguageFormatChecker.msg

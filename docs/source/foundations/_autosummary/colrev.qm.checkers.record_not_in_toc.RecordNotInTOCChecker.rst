@@ -17,3 +17,13 @@ colrev.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
       :nosignatures:
 
       ~RecordNotInTOCChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~RecordNotInTOCChecker.msg

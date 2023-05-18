@@ -57,6 +57,9 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=source_operation.review_manager
+        )
         self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
@@ -131,7 +134,9 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
         """Source-specific preparation for systematic-review-datasets"""
 
         if "doi" in record.data:
-            retrieved_record = self.crossref_connector.query_doi(doi=record.data["doi"])
+            retrieved_record = self.crossref_connector.query_doi(
+                doi=record.data["doi"], etiquette=self.__etiquette
+            )
             record.change_entrytype(
                 new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
             )

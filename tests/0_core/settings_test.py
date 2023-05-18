@@ -59,7 +59,6 @@ def test_settings_load() -> None:
                         {"endpoint": "colrev.exclude_languages"},
                         {"endpoint": "colrev.remove_urls_with_500_errors"},
                         {"endpoint": "colrev.remove_broken_ids"},
-                        {"endpoint": "colrev.global_ids_consistency_check"},
                         {"endpoint": "colrev.get_doi_from_urls"},
                         {"endpoint": "colrev.get_year_from_vol_iss_jour"},
                         {"endpoint": "colrev.get_masterdata_from_crossref"},

@@ -304,6 +304,12 @@ class Upgrade(colrev.operation.Operation):
         settings["prep"]["defects_to_ignore"] = []
         if "curated_metadata" in str(self.review_manager.path):
             settings["prep"]["defects_to_ignore"] = ["record-not-in-toc"]
+            for p_round in settings["prep"]["prep_rounds"]:
+                p_round["prep_package_endpoints"] = [
+                    x
+                    for x in p_round["prep_package_endpoints"]
+                    if x["endpoint"] != "colrev.global_ids_consistency_check"
+                ]
         self.__save_settings(settings)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.review_manager.path)

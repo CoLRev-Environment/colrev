@@ -503,14 +503,6 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.global_ids_consistency_check",
-            "endpoint": "colrev.ops.built_in.prep.global_id_consistency.GlobalIDConsistencyPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records by removing IDs (DOIs/URLs) that do not match with the metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/global_id_consistency.md>`_)",
-            "ci_supported": true
-        },
-        {
             "package_endpoint_identifier": "colrev.remove_broken_ids",
             "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep",
             "status": "|MATURING|",

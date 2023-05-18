@@ -17,3 +17,13 @@ colrev.qm.checkers.identical\_values\_between\_title\_and\_container.IdenticalVa
       :nosignatures:
 
       ~IdenticalValuesChecker.run
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~IdenticalValuesChecker.msg

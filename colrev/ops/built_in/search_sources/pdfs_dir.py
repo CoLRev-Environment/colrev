@@ -90,6 +90,9 @@ class PDFSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
+        )
 
     def __update_if_pdf_renamed(
         self,
@@ -681,7 +684,9 @@ class PDFSearchSource(JsonSchemaMixin):
         if "doi" not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_connector.query_doi(doi=record_dict["doi"])
+            retrieved_record = self.crossref_connector.query_doi(
+                doi=record_dict["doi"], etiquette=self.__etiquette
+            )
             if (
                 colrev.record.PrepRecord.get_retrieval_similarity(
                     record_original=colrev.record.Record(data=record_dict),

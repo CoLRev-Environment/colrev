@@ -105,15 +105,22 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
 
-        _, self.email = source_operation.review_manager.get_committer()
+        self.review_manager = source_operation.review_manager
+        self.etiquette = self.get_etiquette(review_manager=self.review_manager)
+        self.email = self.review_manager.get_committer()
 
-        self.etiquette = Etiquette(
+    @classmethod
+    def get_etiquette(
+        cls, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> Etiquette:
+        """Get the etiquette for the crossref api"""
+        _, email = review_manager.get_committer()
+        return Etiquette(
             "CoLRev",
             version("colrev"),
             "https://github.com/CoLRev-Environment/colrev",
-            self.email,
+            email,
         )
-        self.review_manager = source_operation.review_manager
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
@@ -163,10 +170,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
         crossref_query_return = works.query(**kwargs).sort("deposited").order("desc")
         yield from crossref_query_return
 
-    def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
+    @classmethod
+    def query_doi(cls, *, doi: str, etiquette: Etiquette) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
-        works = Works(etiquette=self.etiquette)
+        works = Works(etiquette=etiquette)
         try:
             crossref_query_return = works.doi(doi)
             if crossref_query_return is None:
@@ -435,7 +443,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         try:
             if "doi" in record.data:
-                retrieved_record = self.query_doi(doi=record.data["doi"])
+                retrieved_record = self.query_doi(
+                    doi=record.data["doi"], etiquette=self.etiquette
+                )
             else:
                 retrieved_records = self.crossref_query(
                     record_input=record,
@@ -532,7 +542,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         try:
-            retrieved_record = self.query_doi(doi=record.data["doi"])
+            retrieved_record = self.query_doi(
+                doi=record.data["doi"], etiquette=self.etiquette
+            )
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
@@ -680,7 +692,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                retrieved_record = self.query_doi(doi=feed_record_dict["doi"])
+                retrieved_record = self.query_doi(
+                    doi=feed_record_dict["doi"], etiquette=self.etiquette
+                )
 
                 if retrieved_record.data["doi"] != feed_record.data["doi"]:
                     continue
