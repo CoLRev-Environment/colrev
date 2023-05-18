@@ -2110,10 +2110,18 @@ def env(
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-g",
+    "--update_global",
+    is_flag=True,
+    default=False,
+    help="Global settings to update",
+)
 @click.pass_context
 def settings(
     ctx: click.core.Context,
     update_hooks: bool,
+    update_global: bool,
     modify: str,
     verbose: bool,
     force: bool,
@@ -2168,20 +2176,26 @@ def settings(
         # '[{"endpoint":"colrev.simple_dedupe"}]'
 
         path, value_string = modify.split("=")
-        value = ast.literal_eval(value_string)
-        review_manager.logger.info("Change settings.%s to %s", path, value)
+        if update_global:
+            from colrev.env.environment_manager import EnvironmentManager
 
-        with open("settings.json", encoding="utf-8") as file:
-            project_settings = json.load(file)
+            env_man = EnvironmentManager()
+            print(f"Updating registry settings:\n{path} = {value_string}")
+            env_man.update_registry(path, value_string)
+        else:
+            value = ast.literal_eval(value_string)
+            review_manager.logger.info("Change settings.%s to %s", path, value)
 
-        glom.assign(project_settings, path, value)
+            with open("settings.json", encoding="utf-8") as file:
+                project_settings = json.load(file)
 
-        with open("settings.json", "w", encoding="utf-8") as outfile:
-            json.dump(project_settings, outfile, indent=4)
+            glom.assign(project_settings, path, value)
 
-        review_manager.dataset.add_changes(path=Path("settings.json"))
-        review_manager.create_commit(msg="Change settings", manual_author=True)
-        return
+            with open("settings.json", "w", encoding="utf-8") as outfile:
+                json.dump(project_settings, outfile, indent=4)
+
+            review_manager.dataset.add_changes(path=Path("settings.json"))
+            review_manager.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2866,37 +2880,3 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
-
-
-@main.command(help_priority=36)
-@click.option(
-    "-u",
-    "--update-global",
-    type=str,
-    required=True,
-    help="Global settings to update",
-)
-@click.option(
-    "-v",
-    "--value",
-    type=str,
-    required=True,
-    help="New value of the settings",
-)
-@click.pass_context
-def registry(
-    ctx: click.core.Context,
-    update_global: str,
-    value: str,
-) -> None:
-    """Settings of the CoLRev project"""
-
-    # pylint: disable=import-outside-toplevel
-    # pylint: disable=reimported
-    # pylint: disable=too-many-locals
-
-    from colrev.env.environment_manager import EnvironmentManager
-
-    env_man = EnvironmentManager()
-    print(f"Updating registry settings:\n{update_global} = {value}")
-    env_man.update_registry(update_global, value)

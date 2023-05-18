@@ -35,11 +35,6 @@ class EnvironmentManager:
     registry_yaml = colrev_path.joinpath(REGISTRY_RELATIVE_YAML)
     load_yaml = False
 
-    possible_settings = [
-        "packages.pdf_get.colrev.unpaywall.username",
-        "packages.pdf_get.colrev.unpaywall.email",
-    ]
-
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
         self.__registered_ports: typing.List[str] = []
@@ -377,20 +372,19 @@ class EnvironmentManager:
 
     def get_settings_by_key(self, key: str) -> str | None:
         """Loads setting by the given key"""
-        if key not in self.possible_settings:
-            raise colrev_exceptions.InvalidRegistryKeyException(key)
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
         if dict_keys_exists(environment_registry, *keys):
             return get_by_path(environment_registry, keys)
-        print("Key not found")
         return None
 
     def update_registry(self, key: str, value: str) -> None:
         """updates given key in the registry with new value"""
-        if key not in self.possible_settings:
-            raise colrev_exceptions.InvalidRegistryKeyException(key)
+
         keys = key.split(".")
+        # We don't want to allow user to replace any core settings, so check for packages key
+        if keys[0] != "packages":
+            raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
         self.save_environment_registry(updated_registry=self.environment_registry)

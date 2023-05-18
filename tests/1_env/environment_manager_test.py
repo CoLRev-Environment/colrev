@@ -137,12 +137,10 @@ def test_setting_value(_patch_registry):  # type: ignore
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
     test_user = {"username": "Test User", "email": "test@email.com"}
-    env_man.update_registry(
-        "packages.pdf_get.colrev.unpaywall.username", test_user["username"]
-    )
-    env_man.update_registry(
-        "packages.pdf_get.colrev.unpaywall.email", test_user["email"]
-    )
+    from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
+
+    env_man.update_registry(Unpaywall.SETTINGS["username"], test_user["username"])
+    env_man.update_registry(Unpaywall.SETTINGS["email"], test_user["email"])
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
 

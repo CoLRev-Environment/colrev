@@ -29,6 +29,11 @@ class Unpaywall(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
 
+    SETTINGS = {
+        "username": "packages.pdf_get.colrev.unpaywall.username",
+        "email": "packages.pdf_get.colrev.unpaywall.email",
+    }
+
     def __init__(
         self,
         *,
@@ -48,10 +53,10 @@ class Unpaywall(JsonSchemaMixin):
         """
 
         _username = self.review_manager.environment_manager.get_settings_by_key(
-            "packages.pdf_get.colrev.unpaywall.username"
+            self.SETTINGS["username"]
         )
         _email = self.review_manager.environment_manager.get_settings_by_key(
-            "packages.pdf_get.colrev.unpaywall.email"
+            self.SETTINGS["email"]
         )
         (
             username,
