@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
+import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -713,6 +714,10 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for PDF directories (GROBID)"""
 
+        missing_field_checker = colrev.qm.checkers.missing_field.MissingFieldChecker(
+            quality_model=load_operation.review_manager.get_qm()
+        )
+
         for record_dict in records.values():
             if "grobid-version" in record_dict:
                 del record_dict["grobid-version"]
@@ -724,14 +729,9 @@ class PDFSearchSource(JsonSchemaMixin):
             record_dict = self.__update_fields_based_on_pdf_dirs(
                 record_dict=record_dict, params=self.search_source.search_parameters
             )
-            applicable_restrictions = (
-                load_operation.review_manager.dataset.get_applicable_restrictions(
-                    record_dict=record_dict,
-                )
-            )
-            colrev.record.Record(data=record_dict).apply_restrictions(
-                restrictions=applicable_restrictions
-            )
+            record = colrev.record.Record(data=record_dict)
+            missing_field_checker.apply_curation_restrictions(record=record)
+
         return records
 
     def prepare(

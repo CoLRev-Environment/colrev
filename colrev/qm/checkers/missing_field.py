@@ -2,8 +2,7 @@
 """Checker for missing fields."""
 from __future__ import annotations
 
-from typing import Set
-
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
 import colrev.record
@@ -23,11 +22,13 @@ class MissingFieldChecker:
         "proceedings": ["booktitle", "editor"],
         "book": ["author", "title", "publisher", "year"],
         "phdthesis": ["author", "title", "school", "year"],
+        "thesis": ["author", "title", "school", "year"],
         "masterthesis": ["author", "title", "school", "year"],
         "techreport": ["author", "title", "institution", "year"],
         "unpublished": ["title", "author", "year"],
         "misc": ["author", "title", "year"],
         "software": ["author", "title", "url"],
+        "online": ["author", "title", "url"],
         "other": ["author", "title", "year"],
     }
     """Fields requirements for respective ENTRYTYPE"""
@@ -38,95 +39,112 @@ class MissingFieldChecker:
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
-        self.masterdata_restrictions = self.__get_masterdata_restrictions()
+        self.curation_restrictions = self.__load_curation_restrictions()
+        self.__complementary_material_strings = (
+            colrev.env.utils.load_complementary_material_strings()
+        )
+        self.__complementary_material_keywords = (
+            colrev.env.utils.load_complementary_material_keywords()
+        )
+
+    def __load_curation_restrictions(self) -> dict:
+        curation_restrictions = {}
+        curated_endpoints = [
+            x
+            for x in self.quality_model.review_manager.settings.data.data_package_endpoints
+            if x["endpoint"] == "colrev.colrev_curation"
+        ]
+        if curated_endpoints:
+            curated_endpoint = curated_endpoints[0]
+            curation_restrictions = curated_endpoint.get("masterdata_restrictions", {})
+        return curation_restrictions
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the missing-field checks"""
 
-        if self.masterdata_restrictions:
-            self.__check_completeness_curated_masterdata(
-                record=record, masterdata_restrictions=self.masterdata_restrictions
-            )
+        if self.curation_restrictions:
+            self.__check_completeness_curated_masterdata(record=record)
         else:
             self.__check_completeness(record=record)
 
-        missing_fields = self.__check_missing_fields(record=record)
+        self.__ignore_exceptions(record=record)
+        self.__check_forthcoming(record=record)
 
-        self.__check_forthcoming(record=record, missing_fields=missing_fields)
-
-        if not missing_fields:
+        if not self.__has_missing_fields(record=record):
             record.set_masterdata_complete(
                 source="update_masterdata_provenance",
                 replace_source=False,
             )
 
-    def __get_missing_fields(self, *, record: colrev.record.Record) -> set:
-        """Get the missing fields"""
-        missing_field_keys = set()
-        if record.data["ENTRYTYPE"] in self.record_field_requirements:
-            reqs = self.record_field_requirements[record.data["ENTRYTYPE"]]
-            missing_field_keys = {
-                x
-                for x in reqs
-                if x not in record.data.keys()
-                or "" == record.data[x]
-                or "UNKNOWN" == record.data[x]
-            }
-            return missing_field_keys
-        raise colrev_exceptions.MissingRecordQualityRuleSpecification(
-            msg=f"Missing record_field_requirements for {record.data['ENTRYTYPE']}"
-        )
+    def __ignore_exceptions(self, *, record: colrev.record.Record) -> None:
+        # No authors for complementary materials or errata required
+        if (
+            any(
+                x == record.data.get("title", "UNKNOWN").lower()
+                for x in self.__complementary_material_strings
+            )
+            or any(
+                x in record.data.get("title", "UNKNOWN").lower()
+                for x in self.__complementary_material_keywords
+            )
+            or any(
+                x in record.data.get("title", "UNKNOWN").lower()
+                for x in ["errata", "erratum", "corrigendum"]
+            )
+        ):
+            if "author" in record.data["colrev_masterdata_provenance"] and any(
+                x == "missing"
+                for x in record.data["colrev_masterdata_provenance"]["author"][
+                    "note"
+                ].split(",")
+            ):
+                record.remove_field(
+                    key="author", not_missing_note=True, source="ignored_exception"
+                )
 
-    def __check_forthcoming(
-        self, *, record: colrev.record.Record, missing_fields: set
-    ) -> None:
+    def __has_missing_fields(self, *, record: colrev.record.Record) -> bool:
+        if any(
+            "missing" in x["note"].split(",")
+            for x in record.data["colrev_masterdata_provenance"].values()
+        ):
+            return True
+        return False
+
+    def __check_forthcoming(self, *, record: colrev.record.Record) -> None:
         if record.data.get("year", "") != "forthcoming":
             return
         source = "NA"
         if "year" in record.data["colrev_masterdata_provenance"]:
             source = record.data["colrev_masterdata_provenance"]["year"]["source"]
-        if "volume" in missing_fields:
-            missing_fields.remove("volume")
-            record.data["colrev_masterdata_provenance"]["volume"] = {
-                "source": source,
-                "note": "not-missing",
-            }
-        if "number" in missing_fields:
-            missing_fields.remove("number")
-            record.data["colrev_masterdata_provenance"]["number"] = {
-                "source": source,
-                "note": "not-missing",
-            }
+        if record.data.get("volume", "") in ["", "UNKNOWN"]:
+            record.remove_masterdata_provenance_note(key="volume", note="missing")
+            record.add_masterdata_provenance(
+                key="volume", source=source, note="not-missing"
+            )
+        if record.data.get("number", "") in ["", "UNKNOWN"]:
+            record.remove_masterdata_provenance_note(key="number", note="missing")
+            record.add_masterdata_provenance(
+                key="number", source=source, note="not-missing"
+            )
 
-    def __check_missing_fields(self, *, record: colrev.record.Record) -> set:
-        missing_fields: Set[str] = set()
-        try:
-            missing_fields = self.__get_missing_fields(record=record)
-            not_missing_fields = []
-            for missing_field in missing_fields:
-                if missing_field in record.data["colrev_masterdata_provenance"]:
-                    if (
-                        "not-missing"
-                        in record.data["colrev_masterdata_provenance"][missing_field][
-                            "note"
-                        ]
-                    ):
-                        not_missing_fields.append(missing_field)
-                        continue
-                record.add_masterdata_provenance_note(key=missing_field, note=self.msg)
-
-            for not_missing_field in not_missing_fields:
-                missing_fields.remove(not_missing_field)
-        except colrev_exceptions.MissingRecordQualityRuleSpecification:
-            pass
-        return missing_fields
-
-    def __check_completeness(self, *, record: colrev.record.Record) -> None:
+    def __check_completeness(
+        self, *, record: colrev.record.Record, curation_restrictions: bool = False
+    ) -> None:
         required_fields_keys = self.record_field_requirements["other"]
         if record.data["ENTRYTYPE"] in self.record_field_requirements:
             required_fields_keys = self.record_field_requirements[
                 record.data["ENTRYTYPE"]
             ]
+        else:
+            raise colrev_exceptions.MissingRecordQualityRuleSpecification(
+                msg=f"Missing record_field_requirements for {record.data['ENTRYTYPE']}"
+            )
+
+        if curation_restrictions:
+            source = "colrev_curation.curation_restrictions"
+        else:
+            source = "generic_field_requirements"
+
         for required_fields_key in required_fields_keys:
             not_missing_note = False
             if required_fields_key in record.data["colrev_masterdata_provenance"]:
@@ -145,7 +163,7 @@ class MissingFieldChecker:
                 record.update_field(
                     key=required_fields_key,
                     value="UNKNOWN",
-                    source="generic_field_requirements",
+                    source=source,
                     note=self.msg,
                     append_edit=False,
                 )
@@ -153,75 +171,68 @@ class MissingFieldChecker:
         for required_field in ["author", "title", "year"]:
             if required_field in record.data:
                 continue
-            # self.set_status(
-            #     target_state=colrev.record.RecordState.md_needs_manual_preparation
-            # )
             colrev.record.Record(data=record.data).add_masterdata_provenance(
                 key=required_field,
-                source="colrev_curation.masterdata_restrictions",
+                source=source,
                 note=self.msg,
             )
 
     def __check_completeness_curated_masterdata(
-        self, *, record: colrev.record.Record, masterdata_restrictions: dict
+        self, *, record: colrev.record.Record
     ) -> None:
-        for exact_match in ["ENTRYTYPE", "journal", "booktitle"]:
-            if exact_match in masterdata_restrictions:
-                if masterdata_restrictions[exact_match] != record.data.get(
-                    exact_match, ""
-                ):
-                    record.data[exact_match] = masterdata_restrictions[exact_match]
+        applicable_curation_restrictions = self.__get_applicable_curation_restrictions(
+            record=record
+        )
 
-        if "volume" in masterdata_restrictions:
-            if masterdata_restrictions["volume"] and "volume" not in record.data:
-                # self.set_status(
-                #     target_state=colrev.record.RecordState.md_needs_manual_preparation
-                # )
+        self.__check_completeness(record=record, curation_restrictions=True)
+
+        if "volume" in applicable_curation_restrictions:
+            if (
+                applicable_curation_restrictions["volume"]
+                and "volume" not in record.data
+            ):
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
                     key="volume",
-                    source="colrev_curation.masterdata_restrictions",
+                    source="colrev_curation.curation_restrictions",
+                    note=self.msg,
+                )
+            else:
+                colrev.record.Record(
+                    data=record.data
+                ).remove_masterdata_provenance_note(
+                    key="volume",
                     note=self.msg,
                 )
 
-        if "number" in masterdata_restrictions:
-            if masterdata_restrictions["number"] and "number" not in record.data:
-                # self.set_status(
-                #     target_state=colrev.record.RecordState.md_needs_manual_preparation
-                # )
+        if "number" in applicable_curation_restrictions:
+            if (
+                applicable_curation_restrictions["number"]
+                and "number" not in record.data
+            ):
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
                     key="number",
-                    source="colrev_curation.masterdata_restrictions",
+                    source="colrev_curation.curation_restrictions",
                     note=self.msg,
                 )
-            elif not masterdata_restrictions["number"] and "number" in record.data:
-                record.remove_field(
-                    key="number",
-                    not_missing_note=True,
-                    source="colrev_curation.masterdata_restrictions",
+            else:
+                colrev.record.Record(
+                    data=record.data
+                ).remove_masterdata_provenance_note(
+                    key="volume",
+                    note=self.msg,
                 )
 
-    def __get_masterdata_restrictions(self) -> dict:
-        masterdata_restrictions = {}
-        curated_endpoints = [
-            x
-            for x in self.quality_model.review_manager.settings.data.data_package_endpoints
-            if x["endpoint"] == "colrev.colrev_curation"
-        ]
-        if curated_endpoints:
-            curated_endpoint = curated_endpoints[0]
-            masterdata_restrictions = curated_endpoint.get(
-                "masterdata_restrictions", {}
-            )
-        return masterdata_restrictions
+        self.apply_curation_restrictions(record=record)
 
-    def get_applicable_restrictions(self, *, record: colrev.record.Record) -> dict:
-        """Get the applicable masterdata restrictions"""
+    def __get_applicable_curation_restrictions(
+        self, *, record: colrev.record.Record
+    ) -> dict:
+        """Get the applicable curation restrictions"""
 
         if not str(record.data.get("year", "NA")).isdigit():
             return {}
 
-        start_year_values = list(self.masterdata_restrictions.keys())
-
+        start_year_values = list(self.curation_restrictions.keys())
         year_index_diffs = [
             int(record.data["year"]) - int(x) for x in start_year_values
         ]
@@ -231,11 +242,38 @@ class MissingFieldChecker:
             return {}
 
         index_min = min(range(len(year_index_diffs)), key=year_index_diffs.__getitem__)
-        applicable_restrictions = self.masterdata_restrictions[
+        applicable_curation_restrictions = self.curation_restrictions[
             start_year_values[index_min]
         ]
+        return applicable_curation_restrictions
 
-        return applicable_restrictions
+    # Extract the restrictions to a qm-utility function?
+    def apply_curation_restrictions(self, *, record: colrev.record.Record) -> None:
+        """Apply the curation restrictions"""
+        applicable_curation_restrictions = self.__get_applicable_curation_restrictions(
+            record=record
+        )
+
+        for exact_match in ["ENTRYTYPE", "journal", "booktitle"]:
+            if exact_match in applicable_curation_restrictions:
+                if applicable_curation_restrictions[exact_match] != record.data.get(
+                    exact_match, ""
+                ):
+                    record.change_entrytype(
+                        new_entrytype=applicable_curation_restrictions[exact_match],
+                        qm=self.quality_model,
+                    )
+
+        if (
+            "number" in applicable_curation_restrictions
+            and not applicable_curation_restrictions["number"]
+            and "number" in record.data
+        ):
+            record.remove_field(
+                key="number",
+                not_missing_note=True,
+                source="colrev_curation.curation_restrictions",
+            )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

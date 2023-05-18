@@ -20,7 +20,7 @@ class IncompleteFieldChecker:
         """Run the missing-field checks"""
 
         for key in ["title", "journal", "booktitle", "author"]:
-            if key not in record.data:
+            if record.data.get(key, "UNKNOWN") == "UNKNOWN":
                 continue
             if self.__incomplete_field(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
