@@ -21,8 +21,6 @@ colrev.record.Record
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
-      ~Record.apply_fields_keys_requirements
-      ~Record.apply_restrictions
       ~Record.change_entrytype
       ~Record.check_potential_retracts
       ~Record.cleanup_pdf_processing_fields
@@ -39,10 +37,6 @@ colrev.record.Record
       ~Record.get_data
       ~Record.get_diff
       ~Record.get_field_provenance
-      ~Record.get_incomplete_fields
-      ~Record.get_inconsistencies
-      ~Record.get_missing_fields
-      ~Record.get_quality_defects
       ~Record.get_record_change_score
       ~Record.get_record_similarity
       ~Record.get_similarity
@@ -50,11 +44,8 @@ colrev.record.Record
       ~Record.get_tei_filename
       ~Record.get_toc_key
       ~Record.get_value
-      ~Record.has_incomplete_fields
-      ~Record.has_inconsistent_fields
       ~Record.has_overlapping_colrev_id
       ~Record.has_quality_defects
-      ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.prescreen_exclude
@@ -63,10 +54,9 @@ colrev.record.Record
       ~Record.print_pdf_prep_man
       ~Record.print_prescreen_record
       ~Record.remove_field
-      ~Record.remove_quality_defect_notes
+      ~Record.remove_masterdata_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
-      ~Record.set_fields_complete
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
       ~Record.set_pages_in_pdf
@@ -91,7 +81,5 @@ colrev.record.Record
       ~Record.pp
       ~Record.preferred_sources
       ~Record.provenance_keys
-      ~Record.record_field_inconsistencies
-      ~Record.record_field_requirements
       ~Record.time_variant_fields
       ~Record.data

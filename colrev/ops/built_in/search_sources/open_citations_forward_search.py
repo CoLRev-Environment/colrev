@@ -53,6 +53,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
+        )
 
     @classmethod
     def get_default_source(cls) -> colrev.settings.SearchSource:
@@ -127,7 +130,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             items = json.loads(ret.text)
 
             for doi in [x["citing"] for x in items]:
-                retrieved_record = self.crossref_connector.query_doi(doi=doi)
+                retrieved_record = self.crossref_connector.query_doi(
+                    doi=doi, etiquette=self.__etiquette
+                )
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
                 retrieved_record.data["ID"] = retrieved_record.data["doi"]

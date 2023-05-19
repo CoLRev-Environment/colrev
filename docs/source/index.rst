@@ -115,6 +115,7 @@ Further information is provided in the `documentation <index.html>`_, the develo
    manual/data
    manual/collaboration
    manual/curation
+   manual/quality_model
    manual/extensions
    manual/reference_manager
    manual/credits

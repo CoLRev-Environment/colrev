@@ -65,6 +65,9 @@ class BackwardSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
+        )
 
     @classmethod
     def get_default_source(cls) -> colrev.settings.SearchSource:
@@ -152,7 +155,9 @@ class BackwardSearchSource(JsonSchemaMixin):
 
             for doi in [x["cited"] for x in items]:
                 try:
-                    retrieved_record = self.crossref_connector.query_doi(doi=doi)
+                    retrieved_record = self.crossref_connector.query_doi(
+                        doi=doi, etiquette=self.__etiquette
+                    )
                     # if not crossref_query_return:
                     #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
                     retrieved_record.data["ID"] = retrieved_record.data["doi"]
@@ -287,8 +292,6 @@ class BackwardSearchSource(JsonSchemaMixin):
                     new_record["bwsearch_ref"] = (
                         record["ID"] + "_backward_search_" + new_record["ID"]
                     )
-                    new_record["cited_by_ID"] = record["ID"]
-                    new_record["cited_by_file"] = record["file"]
                     try:
                         pdf_backward_search_feed.set_id(record_dict=new_record)
                     except colrev_exceptions.NotFeedIdentifiableException:

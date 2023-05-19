@@ -27,6 +27,7 @@
     "load": {},
     "prep": {
         "fields_to_keep": [],
+        "defects_to_ignore": [],
         "prep_rounds": [
             {
                 "name": "prep",
@@ -58,9 +59,6 @@
                     },
                     {
                         "endpoint": "colrev.remove_broken_ids"
-                    },
-                    {
-                        "endpoint": "colrev.global_ids_consistency_check"
                     },
                     {
                         "endpoint": "colrev.get_doi_from_urls"

@@ -11,6 +11,7 @@ import colrev.record
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
 
+
 v1 = {
     "ID": "r1",
     "ENTRYTYPE": "article",
@@ -155,7 +156,7 @@ def test_remove_field() -> None:
             "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
-            "number": {"source": "test", "note": "not_missing"},
+            "number": {"source": "test", "note": "not-missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {},
@@ -172,23 +173,6 @@ def test_remove_field() -> None:
     actual = r2_mod.data
     print(actual)
     assert expected == actual
-
-
-def test_masterdata_is_complete() -> None:
-    """Test record.masterdata_is_complete()"""
-
-    r1_mod = r1.copy()
-
-    r1_mod.remove_field(key="number", not_missing_note=True, source="test")
-    assert r1_mod.masterdata_is_complete()
-
-    r1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "missing"
-    assert not r1_mod.masterdata_is_complete()
-
-    r1_mod.data["colrev_masterdata_provenance"] = {
-        "CURATED": {"source": ":https...", "note": ""}
-    }
-    assert r1_mod.masterdata_is_complete()
 
 
 def test_diff() -> None:
@@ -260,7 +244,9 @@ def test_diff() -> None:
     assert expected == actual
 
 
-def test_change_entrytype_inproceedings() -> None:
+def test_change_entrytype_inproceedings(
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
     """Test record.change_entrytype(new_entrytype="inproceedings")"""
 
     r1_mod = r1.copy()
@@ -271,9 +257,9 @@ def test_change_entrytype_inproceedings() -> None:
         key="publisher",
         value="Elsevier",
         source="import.bib/id_0001",
-        note="inconsistent with entrytype",
+        note="inconsistent-with-entrytype",
     )
-    r1_mod.change_entrytype(new_entrytype="inproceedings")
+    r1_mod.change_entrytype(new_entrytype="inproceedings", qm=quality_model)
     print(r1_mod.data)
     expected = {
         "ID": "r1",
@@ -305,12 +291,12 @@ def test_change_entrytype_inproceedings() -> None:
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        r1_mod.change_entrytype(new_entrytype="dialoge")
-
-    # assert "" == r1_mod.data
+        r1_mod.change_entrytype(new_entrytype="dialoge", qm=quality_model)
 
 
-def test_change_entrytype_article() -> None:
+def test_change_entrytype_article(
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
     """Test record.change_entrytype(new_entrytype="article")"""
     input_value = {
         "ID": "r1",
@@ -365,21 +351,9 @@ def test_change_entrytype_article() -> None:
         "number": "UNKNOWN",
     }
     rec = colrev.record.Record(data=input_value)
-    rec.change_entrytype(new_entrytype="article")
+    rec.change_entrytype(new_entrytype="article", qm=quality_model)
     actual = rec.data
     assert expected == actual
-
-
-def test_get_inconsistencies() -> None:
-    """Test record.get_inconsistencies()"""
-    r1_mod = r1.copy()
-    r1_mod.data["ENTRYTYPE"] = "phdthesis"
-    r1_mod.data["author"] = "Author, Name and Other, Author"
-    expected = {"volume", "number", "journal", "author"}
-    actual = r1_mod.get_inconsistencies()
-    assert expected == actual
-
-    assert r1_mod.has_inconsistent_fields()
 
 
 def test_add_provenance_all() -> None:
@@ -436,17 +410,6 @@ def test_print_citation_format() -> None:
 def test_shares_origins() -> None:
     """Test record.shares_origins()"""
     assert r1.shares_origins(other_record=r2)
-
-
-def test_set_status() -> None:
-    """Test record.set_status()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data["author"] = "UNKNOWN"
-    r1_mod.set_status(target_state=colrev.record.RecordState.md_prepared)
-    expected = colrev.record.RecordState.md_needs_manual_preparation
-    actual = r1_mod.data["colrev_status"]
-    assert expected == actual
 
 
 def test_get_value() -> None:
@@ -604,8 +567,8 @@ def test_set_masterdata_complete() -> None:
             "title": {"source": "import.bib/id_0001", "note": ""},
             "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
-            "volume": {"source": "test", "note": "not_missing"},
-            "number": {"source": "test", "note": "not_missing"},
+            "volume": {"source": "test", "note": "not-missing"},
+            "number": {"source": "test", "note": "not-missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {},
@@ -636,8 +599,8 @@ def test_set_masterdata_complete() -> None:
             "title": {"source": "import.bib/id_0001", "note": ""},
             "author": {"source": "import.bib/id_0001", "note": ""},
             "journal": {"source": "import.bib/id_0001", "note": ""},
-            "volume": {"source": "test", "note": "not_missing"},
-            "number": {"source": "test", "note": "not_missing"},
+            "volume": {"source": "test", "note": "not-missing"},
+            "number": {"source": "test", "note": "not-missing"},
             "pages": {"source": "import.bib/id_0001", "note": ""},
         },
         "colrev_data_provenance": {},
@@ -701,7 +664,7 @@ def test_set_masterdata_consistent() -> None:
     r1_mod = r1.copy()
     r1_mod.data["colrev_masterdata_provenance"]["journal"][
         "note"
-    ] = "inconsistent with ENTRYTYPE"
+    ] = "inconsistent-with-entrytype"
     expected = {
         "ID": "r1",
         "ENTRYTYPE": "article",
@@ -751,53 +714,6 @@ def test_set_masterdata_consistent() -> None:
     actual = r1_mod.data
     print(actual)
     assert expected == actual
-
-
-def test_set_fields_complete() -> None:
-    """Test record.set_fields_complete()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data["colrev_masterdata_provenance"]["number"]["note"] = "incomplete"
-    expected = {
-        "ID": "r1",
-        "ENTRYTYPE": "article",
-        "colrev_masterdata_provenance": {
-            "year": {"source": "import.bib/id_0001", "note": ""},
-            "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "import.bib/id_0001", "note": ""},
-            "journal": {"source": "import.bib/id_0001", "note": ""},
-            "volume": {"source": "import.bib/id_0001", "note": ""},
-            "number": {"source": "import.bib/id_0001", "note": ""},
-            "pages": {"source": "import.bib/id_0001", "note": ""},
-        },
-        "colrev_data_provenance": {},
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_origin": ["import.bib/id_0001"],
-        "year": "2020",
-        "title": "EDITORIAL",
-        "author": "Rai, Arun",
-        "journal": "MIS Quarterly",
-        "volume": "45",
-        "number": "1",
-        "pages": "1--3",
-    }
-
-    r1_mod.set_fields_complete()
-    actual = r1_mod.data
-    print(actual)
-    assert expected == actual
-
-
-def test_get_missing_fields() -> None:
-    """Test record.get_missing_fields()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data["ENTRYTYPE"] = "dialogue"
-
-    with pytest.raises(
-        colrev.exceptions.MissingRecordQualityRuleSpecification,
-    ):
-        r1_mod.get_missing_fields()
 
 
 def test_reset_pdf_provenance_notes() -> None:
@@ -954,23 +870,6 @@ def test_get_record_similarity() -> None:
     expected = 0.854
     actual = colrev.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     assert expected == actual
-
-
-def test_get_incomplete_fields() -> None:
-    """Test record.get_incomplete_fields()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data["title"] = "Editoria…"
-    expected = {"title"}
-    actual = r1_mod.get_incomplete_fields()
-    assert expected == actual
-
-    r1_mod.data["author"] = "Rai, Arun et al."
-    expected = {"title", "author"}
-    actual = r1_mod.get_incomplete_fields()
-    assert expected == actual
-
-    assert r1_mod.has_incomplete_fields()
 
 
 def test_merge_select_non_all_caps() -> None:
@@ -1161,126 +1060,6 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
             "colrev_id1:|a|information-systems-research|15|2|2004|fichman|real-options-and-it-platform-adoption-implications-for-theory-and-practice"
         ],
     )
-
-
-@pytest.fixture(name="v_t_record")
-def fixture_v_t_record() -> colrev.record.Record:
-    """Record for testing quality defects"""
-    return colrev.record.Record(
-        data={
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
-        }
-    )
-
-
-@pytest.mark.parametrize(
-    "author_str, defect",
-    [
-        ("RAI", True),  # all-caps
-        ("Rai, Arun and B", True),  # incomplete part
-        ("Rai, Phd, Arun", True),  # additional title
-        ("Rai, Arun; Straub, Detmar", True),  # incorrect delimiter
-        (
-            "Mathiassen, Lars and jonsson, katrin",
-            True,
-        ),  # author without capital letters
-        (
-            "University, Villanova and Sipior, Janice",
-            True,
-        ),  # University in author field
-        (
-            "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
-            False,
-        ),  # Special characters
-        ("DUTTON, JANE E. and ROBERTS, LAURA", True),  # Caps
-    ],
-)
-def test_get_quality_defects_author(
-    author_str: str, defect: bool, v_t_record: colrev.record.Record
-) -> None:
-    """Test record.get_quality_defects() - author field"""
-
-    v_t_record.data["author"] = author_str
-    if defect:
-        expected = {"author"}
-    else:
-        expected = set()
-    actual = set(v_t_record.get_quality_defects())
-    assert expected == actual
-    if defect:
-        assert v_t_record.has_quality_defects()
-    else:
-        assert not v_t_record.has_quality_defects()
-
-
-@pytest.mark.parametrize(
-    "title_str, defect",
-    [
-        ("EDITORIAL", True),  # all-caps
-    ],
-)
-def test_get_quality_defects_title(
-    title_str: str, defect: bool, v_t_record: colrev.record.Record
-) -> None:
-    """Test record.get_quality_defects() - title field"""
-    v_t_record.data["title"] = title_str
-    if defect:
-        expected = {"title"}
-    else:
-        expected = set()
-    actual = set(v_t_record.get_quality_defects())
-    assert expected == actual
-    if defect:
-        assert v_t_record.has_quality_defects()
-    else:
-        assert not v_t_record.has_quality_defects()
-
-
-def test_apply_restrictions() -> None:
-    """Test record.apply_restrictions()"""
-
-    input_dict = {"ENTRYTYPE": "phdthesis"}
-    r_test = colrev.record.Record(data=input_dict)
-    restrictions = {
-        "ENTRYTYPE": "article",
-        "journal": "MISQ",
-        "booktitle": "ICIS",
-        "volume": True,
-        "number": True,
-    }
-    r_test.apply_restrictions(restrictions=restrictions)
-    expected = {
-        "ENTRYTYPE": "article",
-        "colrev_status": colrev.record.RecordState.md_needs_manual_preparation,
-        "colrev_masterdata_provenance": {
-            "author": {
-                "source": "colrev_curation.masterdata_restrictions",
-                "note": "missing",
-            },
-            "title": {
-                "source": "colrev_curation.masterdata_restrictions",
-                "note": "missing",
-            },
-            "year": {
-                "source": "colrev_curation.masterdata_restrictions",
-                "note": "missing",
-            },
-            "volume": {
-                "source": "colrev_curation.masterdata_restrictions",
-                "note": "missing",
-            },
-            "number": {
-                "source": "colrev_curation.masterdata_restrictions",
-                "note": "missing",
-            },
-        },
-        "journal": "MISQ",
-        "booktitle": "ICIS",
-    }
-    actual = r_test.data
-    assert expected == actual
 
 
 def test_get_container_title() -> None:
@@ -1646,7 +1425,9 @@ def test_preparation_break_condition() -> None:
     assert expected == actual
 
 
-def test_update_metadata_status() -> None:
+def test_update_metadata_status(
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
     """Test record.update_metadata_status()"""
 
     # Retracted (crossmark)
@@ -1710,14 +1491,18 @@ def test_update_metadata_status() -> None:
     # Quality defect
     r1_mod = r1.copy_prep_rec()
     r1_mod.data["author"] = "Rai, Arun, ARUN"
+    r1_mod.update_masterdata_provenance(qm=quality_model)
     r1_mod.update_metadata_status()
     expected = {
         "ID": "r1",
         "ENTRYTYPE": "article",
         "colrev_masterdata_provenance": {
             "year": {"source": "import.bib/id_0001", "note": ""},
-            "title": {"source": "import.bib/id_0001", "note": ""},
-            "author": {"source": "import.bib/id_0001", "note": ""},
+            "title": {"source": "import.bib/id_0001", "note": "mostly-all-caps"},
+            "author": {
+                "source": "import.bib/id_0001",
+                "note": "name-format-separators",
+            },
             "journal": {"source": "import.bib/id_0001", "note": ""},
             "volume": {"source": "import.bib/id_0001", "note": ""},
             "number": {"source": "import.bib/id_0001", "note": ""},

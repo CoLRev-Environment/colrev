@@ -42,6 +42,7 @@ class ScopusSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -123,13 +124,17 @@ class ScopusSearchSource(JsonSchemaMixin):
 
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":
-                record.change_entrytype(new_entrytype="inproceedings")
+                record.change_entrytype(
+                    new_entrytype="inproceedings", qm=self.quality_model
+                )
 
             elif record.data["document_type"] == "Conference Review":
-                record.change_entrytype(new_entrytype="proceedings")
+                record.change_entrytype(
+                    new_entrytype="proceedings", qm=self.quality_model
+                )
 
             elif record.data["document_type"] == "Article":
-                record.change_entrytype(new_entrytype="article")
+                record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
             record.remove_field(key="document_type")
 

@@ -84,9 +84,6 @@ class Upgrade(colrev.operation.Operation):
             settings_version = CoLRevVersion("0.7.0")
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
-        if installed_colrev_version == settings_version:
-            return
-
         # version: indicates from which version on the migration should be applied
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
@@ -120,6 +117,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_2,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.8.3"),
+                "target_version": CoLRevVersion("0.8.4"),
+                "script": self.__migrate_0_8_3,
+                "released": False,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -137,6 +140,9 @@ class Upgrade(colrev.operation.Operation):
                 run_migration = True
             if not run_migration:
                 continue
+
+            if installed_colrev_version == settings_version and migrator["released"]:
+                return
 
             migration_script = migrator["script"]
             self.review_manager.logger.info(
@@ -291,6 +297,53 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
+        return self.repo.is_dirty()
+
+    def __migrate_0_8_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        settings["prep"]["defects_to_ignore"] = []
+        if "curated_metadata" in str(self.review_manager.path):
+            settings["prep"]["defects_to_ignore"] = ["record-not-in-toc"]
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.global_ids_consistency_check"
+            ]
+        self.__save_settings(settings)
+        self.review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(self.review_manager.path)
+        )
+        self.review_manager.load_settings()
+        self.review_manager.get_load_operation()
+        records = self.review_manager.dataset.load_records_dict()
+        quality_model = self.review_manager.get_qm()
+
+        # delete the masterdata provenance notes and apply the new quality model
+        # replace not_missing > not-missing
+        for record_dict in tqdm(records.values()):
+            if "colrev_masterdata_provenance" not in record_dict:
+                continue
+            not_missing_fields = []
+            for key, prov in record_dict["colrev_masterdata_provenance"].items():
+                if "not_missing" in prov["note"]:
+                    not_missing_fields.append(key)
+                prov["note"] = ""
+            for key in not_missing_fields:
+                record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+            if "cited_by_file" in record_dict:
+                del record_dict["cited_by_file"]
+            if "cited_by_id" in record_dict:
+                del record_dict["cited_by_id"]
+            record = colrev.record.Record(data=record_dict)
+            prior_state = record.data["colrev_status"]
+            record.update_masterdata_provenance(qm=quality_model)
+            if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
+                record.data[  # pylint: disable=direct-status-assign
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_excluded
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
 

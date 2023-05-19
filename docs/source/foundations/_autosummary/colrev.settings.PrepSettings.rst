@@ -37,3 +37,4 @@ colrev.settings.PrepSettings
       ~PrepSettings.fields_to_keep
       ~PrepSettings.prep_rounds
       ~PrepSettings.prep_man_package_endpoints
+      ~PrepSettings.defects_to_ignore

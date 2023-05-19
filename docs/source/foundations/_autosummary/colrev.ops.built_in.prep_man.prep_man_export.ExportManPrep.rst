@@ -35,6 +35,7 @@ colrev.ops.built\_in.prep\_man.prep\_man\_export.ExportManPrep
 
    .. autosummary::
 
+      ~ExportManPrep.RELATIVE_PREP_MAN_INFO_PATH
       ~ExportManPrep.RELATIVE_PREP_MAN_PATH
       ~ExportManPrep.ci_supported
       ~ExportManPrep.settings
