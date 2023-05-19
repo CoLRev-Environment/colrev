@@ -125,7 +125,6 @@ def fixture_crossref_search_source(
                 + "encourage design science research and a broader constructive "
                 + "discourse on shaping the future of AILRs in research.",
                 "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
-                "doi": "10.1177/02683962211048201",
                 "fulltext": "http://journals.sagepub.com/doi/pdf/10.1177/02683962211048201",
                 "journal": "Journal of Information Technology",
                 "language": "en",
