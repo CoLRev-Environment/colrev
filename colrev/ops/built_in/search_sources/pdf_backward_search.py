@@ -289,6 +289,8 @@ class BackwardSearchSource(JsonSchemaMixin):
                 )
 
                 for new_record in new_records:
+                    if "tei_id" in new_record:
+                        del new_record["tei_id"]
                     new_record["bwsearch_ref"] = (
                         record["ID"] + "_backward_search_" + new_record["ID"]
                     )
