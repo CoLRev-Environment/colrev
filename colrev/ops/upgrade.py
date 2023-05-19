@@ -304,12 +304,12 @@ class Upgrade(colrev.operation.Operation):
         settings["prep"]["defects_to_ignore"] = []
         if "curated_metadata" in str(self.review_manager.path):
             settings["prep"]["defects_to_ignore"] = ["record-not-in-toc"]
-            for p_round in settings["prep"]["prep_rounds"]:
-                p_round["prep_package_endpoints"] = [
-                    x
-                    for x in p_round["prep_package_endpoints"]
-                    if x["endpoint"] != "colrev.global_ids_consistency_check"
-                ]
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.global_ids_consistency_check"
+            ]
         self.__save_settings(settings)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.review_manager.path)
@@ -342,8 +342,6 @@ class Upgrade(colrev.operation.Operation):
                 record.data[  # pylint: disable=direct-status-assign
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_excluded
-            if not_missing_fields:
-                print(record_dict)
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
