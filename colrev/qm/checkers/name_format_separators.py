@@ -64,9 +64,9 @@ class NameFormatSeparatorsChecker:
 
         # Note : patterns like "I N T R O D U C T I O N"
         # that may result from grobid imports
-        if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", record.data["author"]):
+        if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", record.data[key]):
             return True
-        if len(record.data["author"]) < 5:
+        if len(record.data[key]) < 5:
             return True
 
         return False
