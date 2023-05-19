@@ -14,7 +14,10 @@ class ISBNPatternChecker:
 
     msg = "isbn-not-matching-pattern"
 
-    __ISBN_REGEX = re.compile("(?:[0-9]{3}-)?[0-9]{1,5}-[0-9]{1,7}-[0-9]{1,6}-[0-9]")
+    __ISBN_REGEX = re.compile(
+        "^(?:ISBN(?:-1[03])?:? )?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)"
+        "(?:97[89][- ]?)?[0-9]{1,5}[- ]?(?:[0-9]+[- ]?){2}[0-9X]$"
+    )
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
