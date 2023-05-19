@@ -21,14 +21,22 @@ class ErroneousTitleFieldChecker:
         if "title" not in record.data:
             return
 
-        if " " not in record.data["title"] and (
-            any(x in record.data["title"] for x in ["_", "."])
-            or any(char.isdigit() for char in record.data["title"])
-        ):
+        if self.__title_has_errors(title=record.data["title"]):
             record.add_masterdata_provenance_note(key="title", note=self.msg)
 
         else:
             record.remove_masterdata_provenance_note(key="title", note=self.msg)
+
+    def __title_has_errors(self, *, title: str) -> bool:
+        # Cover common errors
+        if title == "A I S ssociation for nformation ystems":
+            return True
+
+        if " " not in title and (
+            any(x in title for x in ["_", "."]) or any(char.isdigit() for char in title)
+        ):
+            return True
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
