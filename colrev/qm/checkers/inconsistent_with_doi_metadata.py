@@ -7,7 +7,6 @@ from thefuzz import fuzz
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.qm.quality_model
-import colrev.record
 
 # pylint: disable=too-few-public-methods
 

@@ -6,7 +6,6 @@ import re
 
 import colrev.env.utils
 import colrev.qm.quality_model
-import colrev.record
 
 # pylint: disable=too-few-public-methods
 

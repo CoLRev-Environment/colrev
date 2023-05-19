@@ -5,7 +5,6 @@ from __future__ import annotations
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
-import colrev.record
 
 # pylint: disable=too-few-public-methods
 

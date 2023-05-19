@@ -6,7 +6,6 @@ from thefuzz import fuzz
 
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.qm.quality_model
-import colrev.record
 
 # pylint: disable=too-few-public-methods
 
