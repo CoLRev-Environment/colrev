@@ -331,6 +331,10 @@ class Upgrade(colrev.operation.Operation):
                 prov["note"] = ""
             for key in not_missing_fields:
                 record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+            if "cited_by_file" in record_dict:
+                del record_dict["cited_by_file"]
+            if "cited_by_id" in record_dict:
+                del record_dict["cited_by_id"]
             record = colrev.record.Record(data=record_dict)
             prior_state = record.data["colrev_status"]
             record.update_masterdata_provenance(qm=quality_model)

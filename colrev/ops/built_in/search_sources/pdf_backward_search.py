@@ -292,8 +292,6 @@ class BackwardSearchSource(JsonSchemaMixin):
                     new_record["bwsearch_ref"] = (
                         record["ID"] + "_backward_search_" + new_record["ID"]
                     )
-                    new_record["cited_by_ID"] = record["ID"]
-                    new_record["cited_by_file"] = record["file"]
                     try:
                         pdf_backward_search_feed.set_id(record_dict=new_record)
                     except colrev_exceptions.NotFeedIdentifiableException:
