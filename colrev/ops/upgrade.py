@@ -340,16 +340,17 @@ class Upgrade(colrev.operation.Operation):
                 record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
-            if "cited_by_file" in record_dict["colrev_data_provenance"]:
-                del record_dict["colrev_data_provenance"]["cited_by_file"]
             if "cited_by_id" in record_dict:
                 del record_dict["cited_by_id"]
-            if "cited_by_id" in record_dict["colrev_data_provenance"]:
-                del record_dict["colrev_data_provenance"]["cited_by_id"]
             if "tei_id" in record_dict:
                 del record_dict["tei_id"]
-            if "tei_id" in record_dict["colrev_data_provenance"]:
-                del record_dict["colrev_data_provenance"]["tei_id"]
+            if "colrev_data_provenance" in record_dict:
+                if "cited_by_file" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["cited_by_file"]
+                if "cited_by_id" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["cited_by_id"]
+                if "tei_id" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["tei_id"]
 
             record = colrev.record.Record(data=record_dict)
             prior_state = record.data["colrev_status"]
