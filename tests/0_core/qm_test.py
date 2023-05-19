@@ -40,6 +40,10 @@ import colrev.record
         ("Rai, Arun et al.", ["name-abbreviated"]),
         ("Rai, Arun, and others", ["name-abbreviated"]),
         ("Rai, and others", ["name-abbreviated"]),
+        # (
+        #     "Þórðarson, Kristinn and Oskarsdottir, Maria",
+        #     [],
+        # ),
     ],
 )
 def test_get_quality_defects_author(

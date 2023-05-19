@@ -10,7 +10,10 @@ import colrev.qm.quality_model
 class ErroneousTermInFieldChecker:
     """The ErroneousTermInFieldChecker"""
 
-    erroneous_terms = {"author": ["http", "University"]}
+    erroneous_terms = {
+        "author": ["http", "University", "orcid", "student", "Harvard"],
+        "title": ["research paper", "completed research", "research in progress"],
+    }
     msg = "erroneous-term-in-field"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
@@ -23,7 +26,7 @@ class ErroneousTermInFieldChecker:
             if key not in record.data:
                 continue
 
-            if any(x in record.data[key] for x in erroneous_term_list):
+            if any(x.lower() in record.data[key].lower() for x in erroneous_term_list):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
