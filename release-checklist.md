@@ -16,6 +16,7 @@
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION`.
 - Test `colrev upgrade` in local repositories
+- Run `git push` and wait for the GitHub actions to complete successfully.
 - Run `git push --atomic origin main $VERSION`.
 
 - Create [new release on Github](https://github.com/CoLRev-Environment/colrev/releases/new)

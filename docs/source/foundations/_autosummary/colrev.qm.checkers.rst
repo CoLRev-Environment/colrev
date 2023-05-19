@@ -37,6 +37,7 @@ colrev.qm.checkers
    colrev.qm.checkers.inconsistent_with_doi_metadata
    colrev.qm.checkers.inconsistent_with_entrytype
    colrev.qm.checkers.inconsistent_with_url_metadata
+   colrev.qm.checkers.isbn_not_matching_pattern
    colrev.qm.checkers.language_format_error
    colrev.qm.checkers.missing_field
    colrev.qm.checkers.mostly_all_caps

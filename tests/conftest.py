@@ -83,6 +83,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     colrev.review_manager.get_init_operation(
         review_type="literature_review",
         target_path=test_repo_dir,
+        light=True,
     )
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True

@@ -121,7 +121,7 @@ class Upgrade(colrev.operation.Operation):
                 "version": CoLRevVersion("0.8.3"),
                 "target_version": CoLRevVersion("0.8.4"),
                 "script": self.__migrate_0_8_3,
-                "released": False,
+                "released": True,
             },
         ]
 
@@ -303,7 +303,13 @@ class Upgrade(colrev.operation.Operation):
         settings = self.__load_settings_dict()
         settings["prep"]["defects_to_ignore"] = []
         if "curated_metadata" in str(self.review_manager.path):
-            settings["prep"]["defects_to_ignore"] = ["record-not-in-toc"]
+            settings["prep"]["defects_to_ignore"] = [
+                "record-not-in-toc",
+                "inconsistent-with-url-metadata",
+            ]
+        else:
+            settings["prep"]["defects_to_ignore"] = ["inconsistent-with-url-metadata"]
+
         for p_round in settings["prep"]["prep_rounds"]:
             p_round["prep_package_endpoints"] = [
                 x

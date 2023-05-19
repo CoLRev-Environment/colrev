@@ -44,7 +44,7 @@ def test_settings_load() -> None:
         "load": {},
         "prep": {
             "fields_to_keep": [],
-            "defects_to_ignore": [],
+            "defects_to_ignore": ["inconsistent-with-url-metadata"],
             "prep_rounds": [
                 {
                     "name": "prep",
