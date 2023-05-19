@@ -490,6 +490,8 @@ class Dedupe(colrev.operation.Operation):
     def __skip_merge_condition(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
+        if self.review_manager.force_mode:
+            return False
         if self.__is_cross_level_merge(
             main_record=main_record, dupe_record=dupe_record
         ):
