@@ -12,8 +12,8 @@ import pytest
 from pybtex.database.input import bibtex
 
 import colrev.env.local_index
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -40,6 +40,24 @@ class Helpers:
     def retrieve_test_file_content(*, source: Path) -> str:
         """Retrieve the content of a test file"""
         return (Helpers.test_data_path / source).read_text(encoding="utf-8")
+
+    # @staticmethod
+    # def reset_commit(*, commit_id: str, path: Path = None) -> None:
+    #     if path is not None:
+    #         os.chdir(str(path))
+    #         repo = git.Repo(path)
+    #     else:
+    #         repo = git.Repo()
+    #     repo.head.reset(commit_id, index=True, working_tree=True)
+
+    @staticmethod
+    def reset_commit(
+        *, review_manager: colrev.review_manager.ReviewManager, commit: str
+    ) -> None:
+        os.chdir(str(review_manager.path))
+        repo = git.Repo(review_manager.path)
+        commit_id = getattr(review_manager, commit)
+        repo.head.reset(commit_id, index=True, working_tree=True)
 
 
 @pytest.fixture(scope="session", name="helpers")
@@ -136,6 +154,80 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
                 curation_url="gh...",
                 curated_masterdata=False,
             )
+
+    dedupe_operation = review_manager.get_dedupe_operation()
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = True
+    with pytest.raises(colrev_exceptions.NoRecordsError):
+        colrev.record.RecordStateModel.check_operation_precondition(
+            operation=dedupe_operation
+        )
+    dedupe_operation.review_manager.settings.project.delay_automated_processing = False
+
+    helpers.retrieve_test_file(
+        source=Path("search_files/test_records.bib"),
+        target=Path("data/search/test_records.bib"),
+    )
+    review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
+
+    review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
+        {"endpoint": "colrev.resolve_crossrefs"},
+        {"endpoint": "colrev.source_specific_prep"},
+        # {"endpoint": "colrev.exclude_non_latin_alphabets"},
+        # {"endpoint": "colrev.exclude_collections"},
+    ]
+    review_manager.settings.dedupe.dedupe_package_endpoints = [
+        {"endpoint": "colrev.simple_dedupe"}
+    ]
+    review_manager.settings.prescreen.prescreen_package_endpoints = [
+        {"endpoint": "colrev.conditional_prescreen"}
+    ]
+
+    review_manager.settings.pdf_get.pdf_get_package_endpoints = [
+        {"endpoint": "colrev.local_index"}
+    ]
+    review_manager.settings.pdf_prep.pdf_prep_package_endpoints = []
+    review_manager.settings.screen.screen_package_endpoints = []
+    review_manager.settings.data.data_package_endpoints = []
+    review_manager.save_settings()
+    review_manager.create_commit(msg="add test_records.bib", manual_author=True)
+
+    load_operation = review_manager.get_load_operation()
+    new_sources = load_operation.get_new_sources(skip_query=True)
+    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+    review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
+
+    prep_operation = review_manager.get_prep_operation()
+    prep_operation.main(keep_ids=False)
+    review_manager.prep_commit = review_manager.dataset.get_last_commit_sha()
+
+    dedupe_operation = review_manager.get_dedupe_operation(
+        notify_state_transition_operation=True
+    )
+    dedupe_operation.main()
+    review_manager.dedupe_commit = review_manager.dataset.get_last_commit_sha()
+
+    prescreen_operation = review_manager.get_prescreen_operation()
+    prescreen_operation.main(split_str="NA")
+    review_manager.prescreen_commit = review_manager.dataset.get_last_commit_sha()
+
+    pdf_get_operation = review_manager.get_pdf_get_operation(
+        notify_state_transition_operation=True
+    )
+    pdf_get_operation.main()
+    review_manager.pdf_get_commit = review_manager.dataset.get_last_commit_sha()
+
+    pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=False)
+    pdf_prep_operation.main(batch_size=0)
+    review_manager.pdf_prep_commit = review_manager.dataset.get_last_commit_sha()
+
+    screen_operation = review_manager.get_screen_operation()
+    screen_operation.main(split_str="NA")
+    review_manager.screen_commit = review_manager.dataset.get_last_commit_sha()
+
+    data_operation = review_manager.get_data_operation()
+    data_operation.main()
+    review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+    review_manager.data_commit = review_manager.dataset.get_last_commit_sha()
 
     return review_manager
 
