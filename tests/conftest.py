@@ -67,6 +67,9 @@ def get_test_local_index_dir(tmp_path_factory):  # type: ignore
 @pytest.fixture(scope="session", name="base_repo_review_manager")
 def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):  # type: ignore
     """Fixture returning the base review_manager"""
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-statements
+
     session_mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
         return_value=("Tester Name", "tester@email.de"),
