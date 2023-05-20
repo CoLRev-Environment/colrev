@@ -41,15 +41,6 @@ class Helpers:
         """Retrieve the content of a test file"""
         return (Helpers.test_data_path / source).read_text(encoding="utf-8")
 
-    # @staticmethod
-    # def reset_commit(*, commit_id: str, path: Path = None) -> None:
-    #     if path is not None:
-    #         os.chdir(str(path))
-    #         repo = git.Repo(path)
-    #     else:
-    #         repo = git.Repo()
-    #     repo.head.reset(commit_id, index=True, working_tree=True)
-
     @staticmethod
     def reset_commit(
         *, review_manager: colrev.review_manager.ReviewManager, commit: str
