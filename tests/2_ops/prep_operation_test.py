@@ -3,7 +3,9 @@
 import colrev.review_manager
 
 
-def test_prep(base_repo_review_manager: colrev.review_manager.ReviewManager, helpers) -> None:  # type: ignore
+def test_prep(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> None:
     """Test the prep operation"""
 
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")

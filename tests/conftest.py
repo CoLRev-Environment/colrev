@@ -45,6 +45,7 @@ class Helpers:
     def reset_commit(
         *, review_manager: colrev.review_manager.ReviewManager, commit: str
     ) -> None:
+        """Reset to the selected commit"""
         os.chdir(str(review_manager.path))
         repo = git.Repo(review_manager.path)
         commit_id = getattr(review_manager, commit)
@@ -238,8 +239,8 @@ def language_service() -> colrev.env.language_service.LanguageService:  # type: 
     return colrev.env.language_service.LanguageService()
 
 
-@pytest.fixture(scope="package")
-def prep_operation(
+@pytest.fixture(scope="package", name="prep_operation")
+def fixture_prep_operation(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> colrev.ops.prep.Prep:
     """Fixture returning a prep operation"""
