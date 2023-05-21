@@ -685,12 +685,10 @@ class Dedupe(colrev.operation.Operation):
     def __unmerge_previous_id_lists_records(self, *, previous_id_lists: list) -> dict:
         records = self.review_manager.dataset.load_records_dict()
         git_repo = self.review_manager.dataset.get_repo()
+        # print(self.review_manager.dataset.RECORDS_FILE_RELATIVE.is_file())
+        # r_path = join_path_native("data", "records.bib")
         revlist = (
-            (
-                (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read()
-            )
+            (commit.tree / "data" / "records.bib").data_stream.read()
             for commit in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
             )

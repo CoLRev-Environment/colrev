@@ -62,23 +62,21 @@ def test_dedupe(  # type: ignore
             Path("data/records.bib"),
             helpers.test_data_path / Path("dedupe/records_expected.bib"),
         )
-        if (helpers.test_data_path / expected_file).is_file():
-            raise Exception(
-                f"Updated the expected_file ({expected_file.name}) based on the expected data."
-            )
-
-        else:
+        if not (helpers.test_data_path / expected_file).is_file():
             raise Exception(
                 f"The expected_file ({expected_file.name}) was not (yet) available. "
                 f"An initial version was created in {expected_file}. "
                 "Please check, update, and add/commit it. Afterwards, rerun the tests."
             )
+        raise Exception(
+            f"Updated the expected_file ({expected_file.name}) based on the expected data."
+        )
 
     assert expected == actual
 
 
-def test_dedupe_skip_prescreen(  # type: ignore
-    dedupe_test_setup: colrev.review_manager.ReviewManager, helpers
+def test_dedupe_skip_prescreen(
+    dedupe_test_setup: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the skipping of prescreens after the dedupe operation"""
 
@@ -90,8 +88,8 @@ def test_dedupe_skip_prescreen(  # type: ignore
     # TODO : add testing of results
 
 
-def test_dedupe_get_info(  # type: ignore
-    dedupe_test_setup: colrev.review_manager.ReviewManager, helpers
+def test_dedupe_get_info(
+    dedupe_test_setup: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the get_info of dedupe"""
 
