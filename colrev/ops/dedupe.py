@@ -778,82 +778,17 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
-    def fix_errors(self) -> None:
-        """Fix errors as highlighted in the Excel files"""
+    def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
+        """Fix lists of errors"""
 
-        # pylint: disable=too-many-branches
-
-        self.review_manager.report_logger.info("Dedupe: fix errors")
-        self.review_manager.logger.info("Dedupe: fix errors")
-
-        if self.dupe_file.is_file():
-            dupes = pd.read_excel(self.dupe_file)
-            dupes.fillna("", inplace=True)
-            c_to_correct = dupes.loc[dupes["error"] != "", "cluster_id"].to_list()
-            dupes = dupes[dupes["cluster_id"].isin(c_to_correct)]
-            previous_ids_to_unmerge = (
-                dupes.groupby(["cluster_id"], group_keys=False)["ID"]
-                .apply(list)
-                .tolist()
-            )
-
-            if previous_ids_to_unmerge:
-                self.unmerge_records(previous_id_lists=previous_ids_to_unmerge)
-
-        if self.non_dupe_file_xlsx.is_file() or self.non_dupe_file_txt.is_file():
-            ids_to_merge = []
-            if self.non_dupe_file_xlsx.is_file():
-                non_dupes = pd.read_excel(self.non_dupe_file_xlsx)
-                non_dupes.fillna("", inplace=True)
-                c_to_correct = non_dupes.loc[
-                    non_dupes["error"] != "", "cluster_id"
-                ].to_list()
-                non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
-                ids_to_merge = (
-                    non_dupes.groupby(["cluster_id"], group_keys=False)["ID"]
-                    .apply(list)
-                    .tolist()
-                )
-            if self.non_dupe_file_txt.is_file():
-                content = self.non_dupe_file_txt.read_text()
-                ids_to_merge = [x.split(",") for x in content.splitlines()]
-                for id_1, id_2 in ids_to_merge:
-                    print(f"{id_1} - {id_2}")
-
-            dedupe_errors = []
-            for id_list in ids_to_merge:
-                if 2 == len(id_list):
-                    dedupe_errors.append(
-                        {
-                            "ID1": id_list[0],
-                            "ID2": id_list[1],
-                            "decision": "duplicate",
-                        }
-                    )
-                else:
-                    for i, idc in enumerate(id_list):
-                        if 0 == i:
-                            continue
-                        dedupe_errors.append(
-                            {
-                                "ID1": id_list[0],
-                                "ID2": idc,
-                                "decision": "duplicate",
-                            }
-                        )
-            self.apply_merges(results=dedupe_errors, complete_dedupe=False)
+        self.unmerge_records(previous_id_lists=false_positives)
+        self.apply_merges(results=false_negatives, complete_dedupe=False)
 
         if self.review_manager.dataset.records_changed():
             self.review_manager.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
             )
-        if not (
-            self.dupe_file.is_file()
-            or self.non_dupe_file_xlsx.is_file()
-            or self.non_dupe_file_txt.is_file()
-        ):
-            self.review_manager.logger.error("No file with potential errors found.")
 
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
