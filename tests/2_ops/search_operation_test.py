@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import colrev.review_manager
+import colrev.settings
 
 
 def test_search(base_repo_review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -12,6 +13,33 @@ def test_search(base_repo_review_manager: colrev.review_manager.ReviewManager) -
     search_operation.main(rerun=True)
 
     search_operation.view_sources()
+
+
+def test_search_add_source(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers, mocker
+) -> None:
+    """Test the search add_source"""
+
+    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    search_operation = base_repo_review_manager.get_search_operation()
+    add_source = colrev.settings.SearchSource(
+        endpoint="colrev.crossref",
+        filename=(
+            base_repo_review_manager.path / Path("data/search/crossref_search.bib")
+        ),
+        search_type=colrev.settings.SearchType.DB,
+        search_parameters={"query": "test"},
+        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+        comment="",
+    )
+
+    with mocker.patch.object(
+        colrev.ops.search.Search,
+        "main",
+        return_value=10,
+    ):
+        # patch search_operation.main
+        search_operation.add_source(add_source=add_source)
 
 
 def test_search_get_unique_filename(
@@ -24,3 +52,13 @@ def test_search_get_unique_filename(
     actual = search_operation.get_unique_filename(file_path_string="test_records.bib")
     print(actual)
     assert expected == actual
+
+
+def test_prep_setup_custom_script(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> None:
+    """Test search setup_custom_script"""
+
+    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    search_operation = base_repo_review_manager.get_search_operation()
+    search_operation.setup_custom_script()

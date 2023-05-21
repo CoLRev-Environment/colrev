@@ -58,9 +58,6 @@ class Search(colrev.operation.Operation):
     def add_source(self, *, add_source: colrev.settings.SearchSource) -> None:
         """Add a new source"""
 
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-branches
-
         package_manager = self.review_manager.get_package_manager()
         endpoint_dict = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
@@ -78,8 +75,11 @@ class Search(colrev.operation.Operation):
         print()
 
         self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
+        fname = add_source.filename
+        if fname.is_absolute():
+            fname = add_source.filename.relative_to(self.review_manager.path)
         self.review_manager.create_commit(
-            msg=f"Add search source {add_source.filename.relative_to(self.review_manager.path)}",
+            msg=f"Add search source {fname}",
         )
 
     def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
