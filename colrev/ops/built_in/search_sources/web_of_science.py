@@ -142,6 +142,9 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         if record.data.get("title", "UNKNOWN") != "UNKNOWN":
             record.format_if_mostly_upper(key="title")
 
+        record.remove_field(key="researcherid-numbers")
+        record.remove_field(key="orcid-numbers")
+
         return record
 
 

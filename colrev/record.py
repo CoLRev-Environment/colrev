@@ -62,6 +62,7 @@ class Record:
         "volume",
         "number",
         "pages",
+        "editor",
     ]
     """Keys of identifying fields considered for masterdata provenance"""
 
@@ -369,6 +370,9 @@ class Record:
         for value in self.data.get("colrev_masterdata_provenance", {}).values():
             if "inconsistent-with-entrytype" in value["note"]:
                 value["note"] = ""
+            if "missing" in value["note"]:
+                value["note"] = ""
+
         self.data["ENTRYTYPE"] = new_entrytype
         if new_entrytype in ["inproceedings", "proceedings"]:
             if self.data.get("volume", "") == "UNKNOWN":

@@ -564,7 +564,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             return result
 
         if "dblp computer science bibliography" in data:
-            if data.count("dblp computer science bibliography") > data.count("\n@"):
+            if data.count("dblp computer science bibliography") >= data.count("\n@"):
                 result["confidence"] = 1.0
 
         return result
@@ -623,6 +623,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                 source="dblp",
                 keep_source_if_equal=True,
             )
+        record.remove_field(key="bibsource")
+        record.remove_field(key="url")
+        record.remove_field(key="timestamp")
 
         return record
 

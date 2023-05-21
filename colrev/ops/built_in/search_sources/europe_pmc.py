@@ -513,6 +513,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         if "europe_pmc_id" in data:
             result["confidence"] = 1.0
 
+        if "https://europepmc.org" in data:
+            if data.count("https://europepmc.org") >= data.count("\n@"):
+                result["confidence"] = 1.0
+
         return result
 
     @classmethod

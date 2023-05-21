@@ -364,6 +364,9 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
 
+# TODO : move editor field to identifying_fields
+
+
 class CoLRevVersion:
     """Class for handling the CoLRev version"""
 
