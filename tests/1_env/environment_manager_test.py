@@ -10,6 +10,7 @@ import git
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.review_manager
+from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
 
 EnvTestConf = namedtuple(
     "EnvTestConf",
@@ -137,7 +138,6 @@ def test_setting_value(_patch_registry):  # type: ignore
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
     test_user = {"username": "Test User", "email": "test@email.com"}
-    from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
 
     env_man.update_registry(Unpaywall.SETTINGS["username"], test_user["username"])
     env_man.update_registry(Unpaywall.SETTINGS["email"], test_user["email"])
