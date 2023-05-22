@@ -80,7 +80,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if query.startswith("http"):
+        if query.startswith("url="):
             filename = search_operation.get_unique_filename(
                 file_path_string=query.split("/")[-1]
             )
@@ -88,7 +88,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 endpoint="colrev.colrev_project",
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
-                search_parameters={"scope": {"url": query}},
+                search_parameters={"scope": {"url": query[4:]}},
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
