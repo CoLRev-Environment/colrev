@@ -372,6 +372,9 @@ class Record:
                 value["note"] = ""
             if "missing" in value["note"]:
                 value["note"] = ""
+        missing_fields = [k for k, v in self.data.items() if v == "UNKNOWN"]
+        for missing_field in missing_fields:
+            self.remove_field(key=missing_field)
 
         self.data["ENTRYTYPE"] = new_entrytype
         if new_entrytype in ["inproceedings", "proceedings"]:
