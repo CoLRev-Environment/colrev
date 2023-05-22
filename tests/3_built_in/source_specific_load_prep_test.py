@@ -13,6 +13,7 @@ import colrev.settings
 
 # pylint: disable=line-too-long
 
+
 @pytest.fixture(name="ssp_review_manager")
 def fixture_ssp_review_manager(  # type: ignore
     session_mocker, tmp_path: Path, helpers
