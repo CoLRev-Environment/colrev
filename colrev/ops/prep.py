@@ -448,9 +448,7 @@ class Prep(colrev.operation.Operation):
             (
                 commit.hexsha,
                 commit.message,
-                (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
