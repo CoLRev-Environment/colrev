@@ -58,11 +58,11 @@ class Status(colrev.operation.Operation):
                     "commit_id": commit_id,
                     "commit_author": commit_author,
                     "committed_date": committed_date,
-                    "search": data_loaded["colrev_status"]["overall"]["md_retrieved"],
-                    "included": data_loaded["colrev_status"]["overall"]["rev_included"],
+                    "search": data_loaded["overall"]["md_retrieved"],
+                    "included": data_loaded["overall"]["rev_included"],
                 }
-            except (IndexError, KeyError):
-                pass
+            except (IndexError, KeyError) as exc:
+                print(exc)
 
         keys = list(analytics_dict.values())[0].keys()
 
