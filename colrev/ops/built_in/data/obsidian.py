@@ -51,6 +51,9 @@ class Obsidian(JsonSchemaMixin):
         "data/obsidian/.obsidian/core-plugins.json",
         "data/obsidian/.obsidian/workspace.json",
         "data/obsidian/.obsidian/core-plugins-migration.json",
+        "data/obsidian/.obsidian/app.json",
+        "data/obsidian/.obsidian/hotkeys.json",
+        "data/obsidian/.obsidian/appearance.json",
     ]
 
     def __init__(
