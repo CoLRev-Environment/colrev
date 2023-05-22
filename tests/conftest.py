@@ -101,9 +101,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
-    repo = git.Repo()
-    commit = repo.head.object.hexsha
-    review_manager.commit = commit
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
@@ -158,12 +155,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         )
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
-    helpers.retrieve_test_file(
-        source=Path("search_files/test_records.bib"),
-        target=Path("data/search/test_records.bib"),
-    )
-    review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
-
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.resolve_crossrefs"},
         {"endpoint": "colrev.source_specific_prep"},
@@ -184,7 +175,20 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.settings.screen.screen_package_endpoints = []
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
+    review_manager.create_commit(msg="change settings", manual_author=True)
+    review_manager.changed_settings_commit = (
+        review_manager.dataset.get_last_commit_sha()
+    )
+
+    helpers.retrieve_test_file(
+        source=Path("search_files/test_records.bib"),
+        target=Path("data/search/test_records.bib"),
+    )
+    review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
     review_manager.create_commit(msg="add test_records.bib", manual_author=True)
+    review_manager.add_test_records_commit = (
+        review_manager.dataset.get_last_commit_sha()
+    )
 
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
