@@ -7,17 +7,6 @@
   "commitConvention": "angular",
   "contributors": [
     {
-      "login": "tmahmood",
-      "name": "Tarin Mahmood",
-      "avatar_url": "https://avatars.githubusercontent.com/u/34904?v=4",
-      "profile": "https://github.com/tmahmood",
-      "contributions": [
-        "code",
-        "test",
-        "doc"
-      ]
-    },
-    {
       "login": "geritwagner",
       "name": "Gerit Wagner",
       "avatar_url": "https://avatars.githubusercontent.com/u/3872815?v=4",
@@ -42,6 +31,17 @@
         "content",
         "bug",
         "ideas"
+      ]
+    },
+    {
+      "login": "tmahmood",
+      "name": "Tarin Mahmood",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34904?v=4",
+      "profile": "https://github.com/tmahmood",
+      "contributions": [
+        "code",
+        "test",
+        "doc"
       ]
     },
     {
