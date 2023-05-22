@@ -44,7 +44,10 @@ def fixture_ops_test_review_manager(  # type: ignore
     )
 
     colrev.review_manager.get_init_operation(
-        review_type="literature_review", example=False, target_path=test_repo_dir
+        review_type="literature_review",
+        example=False,
+        target_path=test_repo_dir,
+        light=True,
     )
 
     # Note: the strategy is to test the workflow and the endpoints separately
@@ -103,6 +106,7 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
         review_type="curated_masterdata",
         example=False,
         local_pdf_collection=True,
+        light=True,
     )
 
 
@@ -133,6 +137,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
             example=True,
             local_pdf_collection=True,
             target_path=tmp_path,
+            light=True,
         )
 
     with pytest.raises(colrev_exceptions.ParameterError):
@@ -157,7 +162,10 @@ def test_non_empty_dir_error_init(tmp_path) -> None:  # type: ignore
     (tmp_path / Path("test.txt")).write_text("test", encoding="utf-8")
     with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
         colrev.review_manager.get_init_operation(
-            review_type="literature_review", example=False, target_path=tmp_path
+            review_type="literature_review",
+            example=False,
+            target_path=tmp_path,
+            light=True,
         )
     Path("test.txt").unlink()
 
@@ -364,7 +372,7 @@ def test_checks(ops_test_review_manager: colrev.review_manager.ReviewManager) ->
 
     checker = colrev.checker.Checker(review_manager=ops_test_review_manager)
 
-    expected = ["0.8.3", "0.8.3"]
+    expected = ["0.8.4", "0.8.4"]
     actual = checker.get_colrev_versions()
     assert expected == actual
 
@@ -402,14 +410,14 @@ def test_checks(ops_test_review_manager: colrev.review_manager.ReviewManager) ->
 
     if current_platform in ["Linux"]:
         expected = [  # type: ignore
-            {  # type: ignore
-                "endpoint": "colrev.pdfs_dir",
-                "filename": Path("data/search/pdfs.bib"),
-                "search_type": colrev.settings.SearchType.PDFS,
-                "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-                "comment": "",
-            },
+            # {  # type: ignore
+            #     "endpoint": "colrev.pdfs_dir",
+            #     "filename": Path("data/search/pdfs.bib"),
+            #     "search_type": colrev.settings.SearchType.PDFS,
+            #     "search_parameters": {"scope": {"path": "data/pdfs"}},
+            #     "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
+            #     "comment": "",
+            # },
             {  # type: ignore
                 "endpoint": "colrev.unknown_source",
                 "filename": Path("data/search/test_records.bib"),

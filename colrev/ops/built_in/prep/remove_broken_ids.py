@@ -2,10 +2,8 @@
 """Removal of broken IDs as a prep operation"""
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 
-import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -52,25 +50,19 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
             return record
 
         if "doi" in record.data:
-            # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-            doi_match = re.match(r"^10.\d{4,9}\/", record.data["doi"])
-            if not doi_match:
-                record.remove_field(key="doi")
-        if "isbn" in record.data:
-            try:
-                session = prep_operation.review_manager.get_cached_session()
+            if "doi" in record.data.get("colrev_masterdata_provenance", {}):
+                if "doi-not-matching-pattern" in record.data[
+                    "colrev_masterdata_provenance"
+                ]["doi"]["note"].split(","):
+                    record.remove_field(key="doi")
 
-                isbn = record.data["isbn"].replace("-", "").replace(" ", "")
-                url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = session.request(
-                    "GET",
-                    url,
-                    headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
-                )
-                ret.raise_for_status()
-            except requests.exceptions.RequestException:
-                record.remove_field(key="isbn")
+        if "isbn" in record.data:
+            if "isbn" in record.data.get("colrev_masterdata_provenance", {}):
+                if "isbn-not-matching-pattern" in record.data[
+                    "colrev_masterdata_provenance"
+                ]["isbn"]["note"].split(","):
+                    record.remove_field(key="isbn")
+
         return record
 
 

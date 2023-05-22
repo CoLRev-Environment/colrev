@@ -85,6 +85,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             self.pubmed_lock = Lock()
 
         self.review_manager = source_operation.review_manager
+        self.quality_model = self.review_manager.get_qm()
         _, self.email = source_operation.review_manager.get_committer()
 
     @classmethod
@@ -690,7 +691,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
         # TBD: how to distinguish other types?
-        record.change_entrytype(new_entrytype="article")
+        record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
         return record
 

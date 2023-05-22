@@ -49,6 +49,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         self.review_manager = prep_operation.review_manager
         self.local_index = prep_operation.review_manager.get_local_index()
         self.vol_nr_dict = self.__get_vol_nr_dict()
+        self.quality_model = self.review_manager.get_qm()
 
     def __get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
@@ -125,7 +126,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                     source="year_vol_iss_prep",
                     note="",
                 )
-                record.update_masterdata_provenance()
+                record.update_masterdata_provenance(qm=self.quality_model)
         else:
             if isinstance(
                 self.vol_nr_dict[record.data["journal"]][record.data["volume"]],
@@ -139,7 +140,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                     source="year_vol_iss_prep",
                     note="",
                 )
-                record.update_masterdata_provenance()
+                record.update_masterdata_provenance(qm=self.quality_model)
 
     def __get_year_from_crossref(
         self, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep

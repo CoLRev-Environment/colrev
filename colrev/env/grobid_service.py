@@ -19,7 +19,7 @@ class GrobidService:
     def __init__(
         self, *, environment_manager: colrev.env.environment_manager.EnvironmentManager
     ) -> None:
-        self.grobid_image = "lfoppiano/grobid:0.7.2"
+        self.grobid_image = "lfoppiano/grobid:0.7.3"
         environment_manager.build_docker_image(imagename=self.grobid_image)
         self.start()
         if not self.check_grobid_availability():

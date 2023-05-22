@@ -85,7 +85,6 @@ class Dataset:
             temp_f = io.StringIO()
             pybtex.io.stderr = temp_f
 
-        self.masterdata_restrictions = self.__get_masterdata_restrictions()
         self.update_gitignore(
             add=self.DEFAULT_GIT_IGNORE_ITEMS, remove=self.DEPRECATED_GIT_IGNORE_ITEMS
         )
@@ -676,7 +675,7 @@ class Dataset:
 
     def format_records_file(self) -> bool:
         """Format the records file"""
-
+        quality_model = self.review_manager.get_qm()
         records = self.load_records_dict()
         for record_dict in records.values():
             if "colrev_status" not in record_dict:
@@ -687,11 +686,7 @@ class Dataset:
             if record_dict["colrev_status"] in [
                 colrev.record.RecordState.md_needs_manual_preparation,
             ]:
-                record.update_masterdata_provenance(
-                    masterdata_restrictions=self.get_applicable_restrictions(
-                        record_dict=record_dict
-                    )
-                )
+                record.update_masterdata_provenance(qm=quality_model)
                 record.update_metadata_status()
 
             if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
@@ -935,43 +930,6 @@ class Dataset:
                     line = file.readline()
         max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
         return max_id
-
-    def __get_masterdata_restrictions(self) -> dict:
-        masterdata_restrictions = {}
-        curated_endpoints = [
-            x
-            for x in self.review_manager.settings.data.data_package_endpoints
-            if x["endpoint"] == "colrev.colrev_curation"
-        ]
-        if curated_endpoints:
-            curated_endpoint = curated_endpoints[0]
-            masterdata_restrictions = curated_endpoint.get(
-                "masterdata_restrictions", {}
-            )
-        return masterdata_restrictions
-
-    def get_applicable_restrictions(self, *, record_dict: dict) -> dict:
-        """Get the applicable masterdata restrictions"""
-
-        if not str(record_dict.get("year", "NA")).isdigit():
-            return {}
-
-        start_year_values = list(self.masterdata_restrictions.keys())
-
-        year_index_diffs = [
-            int(record_dict["year"]) - int(x) for x in start_year_values
-        ]
-        year_index_diffs = [x if x >= 0 else 2000 for x in year_index_diffs]
-
-        if not year_index_diffs:
-            return {}
-
-        index_min = min(range(len(year_index_diffs)), key=year_index_diffs.__getitem__)
-        applicable_restrictions = self.masterdata_restrictions[
-            start_year_values[index_min]
-        ]
-
-        return applicable_restrictions
 
     # GIT operations -----------------------------------------------
 

@@ -83,6 +83,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     colrev.review_manager.get_init_operation(
         review_type="literature_review",
         target_path=test_repo_dir,
+        light=True,
     )
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
@@ -137,6 +138,14 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             )
 
     return review_manager
+
+
+@pytest.fixture(scope="session", name="quality_model")
+def fixture_quality_model(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.qm.quality_model.QualityModel:
+    """Fixture returning the quality model"""
+    return base_repo_review_manager.get_qm()
 
 
 @pytest.fixture(scope="module")
@@ -273,4 +282,22 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
         colrev.env.environment_manager.EnvironmentManager,
         "registry",
         test_json_path,
+    )
+
+
+@pytest.fixture(name="v_t_record")
+def fixture_v_t_record() -> colrev.record.Record:
+    """Record for testing quality defects"""
+    return colrev.record.Record(
+        data={
+            "ID": "WagnerLukyanenkoParEtAl2022",
+            "ENTRYTYPE": "article",
+            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "journal": "Journal of Information Technology",
+            "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
+            "title": "Artificial intelligence and the conduct of literature reviews",
+            "year": "2022",
+            "volume": "37",
+            "number": "2",
+        }
     )

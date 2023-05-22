@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.8.4 - 2023-05-19
+
+### Changed
+
+- Implemented new quality model
+- Quality defects (colrev_masterdata_provenance notes) change
+- The `colrev.global_ids_consistency_check` prep-endpoint is removed (integrated into the quality model)
+- Individual quality checks can be disabled through the `prep/defects_to_ignore` settings
+- Redundant fields for the backward search are removed (`cited_by_file` and `cited_by_id`)
+
 ## 0.8.3 - 2023-04-22
 
 ### Changed

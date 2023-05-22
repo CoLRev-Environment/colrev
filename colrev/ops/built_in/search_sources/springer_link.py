@@ -46,6 +46,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     def validate_source(
         self,
@@ -131,20 +132,24 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     if "publication_title" in record_dict:
                         record_dict["journal"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="article")
+                    record.change_entrytype(
+                        new_entrytype="article", qm=self.quality_model
+                    )
 
                 if record_dict["content_type"] == "Book":
                     if "publication_title" in record_dict:
                         record_dict["series"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="book")
+                    record.change_entrytype(new_entrytype="book", qm=self.quality_model)
 
                 if record_dict["content_type"] == "Chapter":
                     record_dict["chapter"] = record_dict["title"]
                     if "publication_title" in record_dict:
                         record_dict["title"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="inbook")
+                    record.change_entrytype(
+                        new_entrytype="inbook", qm=self.quality_model
+                    )
 
                 del record_dict["content_type"]
 

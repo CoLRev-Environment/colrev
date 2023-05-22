@@ -304,6 +304,8 @@ class PrepSettings(JsonSchemaMixin):
 
     prep_man_package_endpoints: list
 
+    defects_to_ignore: list
+
     def __str__(self) -> str:
         return (
             " - prep_rounds:\n   - "

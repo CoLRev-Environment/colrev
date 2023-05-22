@@ -215,10 +215,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.global_ids_consistency_check",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.resolve_crossrefs",
             "status": "MATURING"
         },

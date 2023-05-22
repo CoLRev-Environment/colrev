@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
+import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -88,6 +89,9 @@ class PDFSearchSource(JsonSchemaMixin):
             colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
                 source_operation=source_operation
             )
+        )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
         )
 
     def __update_if_pdf_renamed(
@@ -680,7 +684,9 @@ class PDFSearchSource(JsonSchemaMixin):
         if "doi" not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_connector.query_doi(doi=record_dict["doi"])
+            retrieved_record = self.crossref_connector.query_doi(
+                doi=record_dict["doi"], etiquette=self.__etiquette
+            )
             if (
                 colrev.record.PrepRecord.get_retrieval_similarity(
                     record_original=colrev.record.Record(data=record_dict),
@@ -713,6 +719,10 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for PDF directories (GROBID)"""
 
+        missing_field_checker = colrev.qm.checkers.missing_field.MissingFieldChecker(
+            quality_model=load_operation.review_manager.get_qm()
+        )
+
         for record_dict in records.values():
             if "grobid-version" in record_dict:
                 del record_dict["grobid-version"]
@@ -724,14 +734,9 @@ class PDFSearchSource(JsonSchemaMixin):
             record_dict = self.__update_fields_based_on_pdf_dirs(
                 record_dict=record_dict, params=self.search_source.search_parameters
             )
-            applicable_restrictions = (
-                load_operation.review_manager.dataset.get_applicable_restrictions(
-                    record_dict=record_dict,
-                )
-            )
-            colrev.record.Record(data=record_dict).apply_restrictions(
-                restrictions=applicable_restrictions
-            )
+            record = colrev.record.Record(data=record_dict)
+            missing_field_checker.apply_curation_restrictions(record=record)
+
         return records
 
     def prepare(
@@ -745,8 +750,8 @@ class PDFSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key="author", case="title")
 
         if "author" in record.data:
-            record.data["author"] = record.data["author"].rstrip(
-                " and T I C L E I N F O, A. R"
+            record.data["author"] = record.data["author"].replace(
+                " and T I C L E I N F O, A. R", ""
             )
 
         # Typical error in old papers: title fields are equal to journal/booktitle fields

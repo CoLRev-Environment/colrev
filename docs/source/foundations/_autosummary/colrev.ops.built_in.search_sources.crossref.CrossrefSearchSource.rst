@@ -24,6 +24,7 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
       ~CrossrefSearchSource.from_dict
       ~CrossrefSearchSource.from_json
       ~CrossrefSearchSource.from_object
+      ~CrossrefSearchSource.get_etiquette
       ~CrossrefSearchSource.get_masterdata
       ~CrossrefSearchSource.heuristic
       ~CrossrefSearchSource.json_schema

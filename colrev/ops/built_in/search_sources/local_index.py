@@ -339,21 +339,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     pass
         return False
 
-    def __set_not_in_toc_info(
-        self, *, record: colrev.record.Record, toc_key: str
-    ) -> None:
-        record.set_status(
-            target_state=colrev.record.RecordState.md_needs_manual_preparation
-        )
-        if "journal" in record.data:
-            record.add_masterdata_provenance_note(
-                key="journal", note=f"record_not_in_toc {toc_key}"
-            )
-        elif "booktitle" in record.data:
-            record.add_masterdata_provenance_note(
-                key="booktitle", note=f"record_not_in_toc {toc_key}"
-            )
-
     def __retrieve_record_from_local_index(
         self,
         *,
@@ -379,8 +364,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
-            except colrev_exceptions.RecordNotInTOCException as exc:
-                self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
+            except colrev_exceptions.RecordNotInTOCException:
                 return record
 
             except colrev_exceptions.RecordNotInIndexException:
@@ -392,10 +376,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         include_file=False,
                         search_across_tocs=True,
                     )
-                except colrev_exceptions.RecordNotInTOCException as exc:
-                    self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
-                    return record
-                except (colrev_exceptions.RecordNotInIndexException,):
+                except (
+                    colrev_exceptions.RecordNotInIndexException,
+                    colrev_exceptions.RecordNotInTOCException,
+                ):
                     return record
             except colrev_exceptions.NotTOCIdentifiableException:
                 return record

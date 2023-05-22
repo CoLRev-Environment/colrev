@@ -77,14 +77,13 @@ class PDFCheckOCR(JsonSchemaMixin):
             f"{str(docker_home_path / pdf_path.name)}"
         )
 
-        client = docker.from_env()
+        client = docker.from_env(timeout=120)
         client.containers.run(
             image=self.ocrmypdf_image,
             command=args,
             auto_remove=True,
             user=f"{os.geteuid()}:{os.getegid()}",
             volumes=[f"{orig_path}:/home/docker"],
-            healthcheck={"timeout": 300},
         )
 
         record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")

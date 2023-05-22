@@ -100,7 +100,7 @@ class EnvironmentManager:
         self.environment_registry = self.load_environment_registry()
         if "local_index" not in self.environment_registry:
             return []
-        if "repos" not in self.environment_registry:
+        if "repos" not in self.environment_registry["local_index"]:
             return []
         return self.environment_registry["local_index"]["repos"]
 

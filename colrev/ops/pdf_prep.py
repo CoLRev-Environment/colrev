@@ -181,8 +181,9 @@ class PDFPrep(colrev.operation.Operation):
                 msg_str = msg_str.replace("colrev.", "")
                 detailed_msgs.append(f"{colors.ORANGE}{msg_str}{colors.END}")
 
-            if failed:
-                break
+            # Note: if we break, the teis will not be generated.
+            # if failed:
+            #     break
 
         # Each pdf_prep_package_endpoint can create a new file
         # previous/temporary pdfs are deleted when the process is successful

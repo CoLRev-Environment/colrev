@@ -21,6 +21,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.operation
+import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -375,6 +376,11 @@ class ReviewManager:
         """Get a checker object"""
 
         return colrev.checker.Checker(review_manager=self)
+
+    def get_qm(self) -> colrev.qm.quality_model.QualityModel:
+        """Get the quality model"""
+
+        return colrev.qm.quality_model.QualityModel(review_manager=self)
 
     def get_status_stats(
         self, *, records: Optional[dict] = None

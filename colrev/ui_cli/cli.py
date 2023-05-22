@@ -630,7 +630,7 @@ def prep(
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
         print("You can use the force mode to override")
-        print("  colrev prep -f")
+        print(f"  {colors.ORANGE}colrev prep -f{colors.END}")
         return
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
