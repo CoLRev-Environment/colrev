@@ -149,11 +149,10 @@ class ReviewManager:
                         + f"{colors.ORANGE}git switch main{colors.END}"
                     )
 
-            if force_mode:
-                if debug_mode:
-                    self.logger.debug(exc)
-            else:
+            if not force_mode:
                 raise exc
+            if debug_mode:
+                self.logger.debug(exc)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
