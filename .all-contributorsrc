@@ -43,6 +43,17 @@
         "bug",
         "ideas"
       ]
+    },
+    {
+      "login": "dengdenglele",
+      "name": "dengdenglele",
+      "avatar_url": "https://avatars.githubusercontent.com/u/28404427?v=4",
+      "profile": "https://github.com/dengdenglele",
+      "contributions": [
+        "data",
+        "doc",
+        "test"
+      ]
     }
   ],
   "contributorsPerLine": 7,
