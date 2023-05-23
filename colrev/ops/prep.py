@@ -1053,13 +1053,18 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
-    def __add_journal_ranking_to_metadata(self, record) -> None:
+    def __add_journal_ranking_to_metadata(self, record) -> str:
         with open('/Project/test/data/records.bib', encoding="utf-8") as bibtex_file:
             bibtex_str = bibtex_file.read()
             bib_database = bibtexparser.load(bibtex_str)
 
         journal = record["journal"]
-        print(journal)
+        
+        """add function search_in_database here with journal and database"""
+
+        """add journal ranking to record"""
+
+        return(record)
 
     def search_in_database(self,journalname, database) -> None:
         pointer = database.cursor()
