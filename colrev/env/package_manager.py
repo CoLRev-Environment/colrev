@@ -787,18 +787,6 @@ class PackageManager:
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Load the packages for a particular package_type"""
 
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=unnecessary-dict-index-lookup
-        # pylint: disable=too-many-locals
-
-        # Note : when iterating over packages_dict.items(),
-        # changes to the values (or del k) would not persist
-
-        if package_type not in self.package_type_overview:
-            raise colrev_exceptions.MissingDependencyError(
-                f"package_type {package_type} not available"
-            )
-
         packages_dict = self.__get_packages_dict(
             selected_packages=selected_packages,
             package_type=package_type,
@@ -849,8 +837,7 @@ class PackageManager:
             else:
                 packages_dict[package_identifier] = package_class["endpoint"]
 
-        for i_to_remove in to_remove:
-            del packages_dict[i_to_remove]
+        packages_dict = {k: v for k, v in packages_dict.items() if k not in to_remove}
 
         return packages_dict
 
