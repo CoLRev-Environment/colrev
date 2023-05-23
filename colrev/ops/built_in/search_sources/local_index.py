@@ -504,13 +504,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 base_repos.append(repo_path)
 
         base_repos = list(set(base_repos))
-
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
         local_base_repos = {
             x["repo_source_url"]: x["repo_source_path"]
             for x in environment_manager.local_repos()
-            if x["repo_source_url"] in base_repos
+            if x.get("repo_source_url", "NA") in base_repos
         }
         return local_base_repos
 
@@ -585,9 +583,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
 
-        for local_base_repo in local_base_repos:
+        for local_base_repo_url, local_base_repo_path in local_base_repos.items():
             selected_changes = self.__print_changes(
-                local_base_repo=local_base_repo, change_itemsets=change_itemsets
+                local_base_repo=local_base_repo_url, change_itemsets=change_itemsets
             )
 
             response = ""
@@ -598,7 +596,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             if response == "y":
                 self.__apply_correction(
-                    source_url=local_base_repo,
+                    source_url=local_base_repo_path,
                     change_list=selected_changes,
                 )
             elif response == "n":
