@@ -22,6 +22,7 @@ class MissingFieldChecker:
         "conference": ["booktitle", "editor", "year"],
         "book": ["author", "title", "publisher", "year"],
         "phdthesis": ["author", "title", "school", "year"],
+        "bachelorthesis": ["author", "title", "school", "year"],
         "thesis": ["author", "title", "school", "year"],
         "masterthesis": ["author", "title", "school", "year"],
         "techreport": ["author", "title", "institution", "year"],
