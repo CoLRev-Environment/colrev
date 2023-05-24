@@ -742,25 +742,30 @@ class PDFSearchSource(JsonSchemaMixin):
     def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
         # TODO : extract to separate scripts and also apply upon loading tei content
         if "title" in record.data:
-            record.data["title"] = (record.data["title"].replace("n ˜", "ñ")
-            .replace("u ´", "ú")
-            .replace("ı ´", "í")
-            .replace("a ´", "á")
-            .replace("o ´", "ó")
-            .replace("e ´", "é")
-            .repalce("c ¸","ç" )
-            .replace("a ˜", "ã"))
+            record.data["title"] = (
+                record.data["title"]
+                .replace("n ˜", "ñ")
+                .replace("u ´", "ú")
+                .replace("ı ´", "í")
+                .replace("a ´", "á")
+                .replace("o ´", "ó")
+                .replace("e ´", "é")
+                .repalce("c ¸", "ç")
+                .replace("a ˜", "ã")
+            )
 
         if "author" in record.data:
-            record.data["author"] = (record.data["author"].replace("n ˜", "ñ")
-            .replace("u ´", "ú")
-            .replace("ı ´", "í")
-            .replace("a ´", "á")
-            .replace("o ´", "ó")
-            .replace("e ´", "é")
-            .repalce("c ¸","ç" )
-            .replace("a ˜", "ã"))
-
+            record.data["author"] = (
+                record.data["author"]
+                .replace("n ˜", "ñ")
+                .replace("u ´", "ú")
+                .replace("ı ´", "í")
+                .replace("a ´", "á")
+                .replace("o ´", "ó")
+                .replace("e ´", "é")
+                .repalce("c ¸", "ç")
+                .replace("a ˜", "ã")
+            )
 
     def __fix_title_suffix(self, *, record: colrev.record.Record) -> None:
         if "title" not in record.data:
