@@ -125,12 +125,12 @@ def __format_fields(*, record_dict: dict) -> dict:
 
 
 def __set_forthcoming(*, record_dict: dict) -> dict:
-    if (
-        not any(x in record_dict for x in ["published-print", "published"])
-        and "year" in record_dict
+    if not any(x in record_dict for x in ["published-print", "published"]) or not any(
+        x in record_dict for x in ["volume", "number"]
     ):
-        record_dict.update(published_online=record_dict["year"])
         record_dict.update(year="forthcoming")
+        if "year" in record_dict:
+            record_dict.update(published_online=record_dict["year"])
     return record_dict
 
 

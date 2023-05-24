@@ -113,6 +113,8 @@ class MissingFieldChecker:
 
     def __check_forthcoming(self, *, record: colrev.record.Record) -> None:
         if record.data.get("year", "") != "forthcoming":
+            record.remove_masterdata_provenance_note(key="volume", note="forthcoming")
+            record.remove_masterdata_provenance_note(key="number", note="forthcoming")
             return
         source = "NA"
         if "year" in record.data["colrev_masterdata_provenance"]:
@@ -120,12 +122,12 @@ class MissingFieldChecker:
         if record.data.get("volume", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="volume", note="missing")
             record.add_masterdata_provenance(
-                key="volume", source=source, note="not-missing"
+                key="volume", source=source, note="forthcoming"
             )
         if record.data.get("number", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="number", note="missing")
             record.add_masterdata_provenance(
-                key="number", source=source, note="not-missing"
+                key="number", source=source, note="forthcoming"
             )
 
     def __check_completeness(
