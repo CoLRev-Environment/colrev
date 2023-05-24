@@ -325,7 +325,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.remove_field(key="warning")
         else:
             assert "" != crossref_source
-            record.set_masterdata_complete(source=crossref_source)
+            record.set_masterdata_complete(
+                source=crossref_source,
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
     def __get_crossref_query_items(
@@ -915,7 +918,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             if str(source.filename).replace("data/search/", "") in x
         ]
         if source_item:
-            record.set_masterdata_complete(source=source_item[0])
+            record.set_masterdata_complete(
+                source=source_item[0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
 
         return record
 

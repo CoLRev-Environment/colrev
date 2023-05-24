@@ -682,7 +682,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                             default_source=retrieved_record.data["colrev_origin"][0],
                         )
                         record.set_masterdata_complete(
-                            source=retrieved_record.data["colrev_origin"][0]
+                            source=retrieved_record.data["colrev_origin"][0],
+                            masterdata_repository=self.review_manager.settings.is_curated_repo(),
                         )
                         record.set_status(
                             target_state=colrev.record.RecordState.md_prepared

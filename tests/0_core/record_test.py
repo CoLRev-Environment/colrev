@@ -580,7 +580,7 @@ def test_set_masterdata_complete() -> None:
         "journal": "MIS Quarterly",
         "pages": "1--3",
     }
-    r1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test", masterdata_repository=False)
     actual = r1_mod.data
     print(r1_mod.data)
     assert expected == actual
@@ -612,7 +612,7 @@ def test_set_masterdata_complete() -> None:
         "journal": "MIS Quarterly",
         "pages": "1--3",
     }
-    r1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test", masterdata_repository=False)
     actual = r1_mod.data
     print(r1_mod.data)
     assert expected == actual
@@ -645,7 +645,7 @@ def test_set_masterdata_complete() -> None:
         "pages": "1--3",
     }
 
-    r1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test", masterdata_repository=False)
     actual = r1_mod.data
     print(r1_mod.data)
     assert expected == actual
@@ -653,9 +653,9 @@ def test_set_masterdata_complete() -> None:
     r1_mod.data["colrev_masterdata_provenance"] = {
         "CURATED": {"source": ":https...", "note": ""}
     }
-    r1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test", masterdata_repository=False)
     del r1_mod.data["colrev_masterdata_provenance"]
-    r1_mod.set_masterdata_complete(source="test")
+    r1_mod.set_masterdata_complete(source="test", masterdata_repository=False)
 
 
 def test_set_masterdata_consistent() -> None:

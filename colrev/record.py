@@ -423,11 +423,11 @@ class Record:
                     del self.data["colrev_data_provenance"][key]
 
     def set_masterdata_complete(
-        self, *, source: str, replace_source: bool = True
+        self, *, source: str, masterdata_repository: bool, replace_source: bool = True
     ) -> None:
         """Set the masterdata to complete"""
         # pylint: disable=too-many-branches
-        if self.masterdata_is_curated():
+        if self.masterdata_is_curated() or masterdata_repository:
             return
 
         if "colrev_masterdata_provenance" not in self.data:
