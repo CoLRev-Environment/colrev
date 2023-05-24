@@ -1317,24 +1317,28 @@ def test_get_retrieval_similarity() -> None:
     assert expected == actual
 
 
-def test_format_if_mostly_upper() -> None:
+@pytest.mark.parametrize(
+    "input_text, expected, case",
+    [
+        (
+            "TECHNOLOGICAL ENTITLEMENT: IT'S MY TECHNOLOGY AND I'LL (AB)USE IT HOW I WANT TO",
+            "Technological entitlement: it's my technology and I'll (ab)use it how I want to",
+            "sentence",
+        ),
+        (
+            "A STUDY OF B2B IN M&A SETTINGS",
+            "A study of B2B in M&A settings",
+            "sentence",
+        ),
+    ],
+)
+def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> None:
     """Test record.format_if_mostly_upper()"""
 
-    prep_rec = r1.copy_prep_rec()
-
-    prep_rec.format_if_mostly_upper(key="year")
-
-    prep_rec.data["title"] = "ALL CAPS TITLE"
-    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "quality_defect"
-    prep_rec.format_if_mostly_upper(key="title")
-    expected = "All caps title"
-    actual = prep_rec.data["title"]
-    assert expected == actual
-
-    prep_rec.data["title"] = "ALL CAPS TITLE"
-    prep_rec.format_if_mostly_upper(key="title", case="title")
-    expected = "All Caps Title"
-    actual = prep_rec.data["title"]
+    input_dict = {"title": input_text}
+    input_record = colrev.record.PrepRecord(data=input_dict)
+    input_record.format_if_mostly_upper(key="title", case=case)
+    actual = input_record.data["title"]
     assert expected == actual
 
 

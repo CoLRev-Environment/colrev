@@ -395,7 +395,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 
-        record.format_if_mostly_upper(key="title", case="title")
+        record.format_if_mostly_upper(key="title", case="sentence")
         record.format_if_mostly_upper(key="journal", case="title")
         record.format_if_mostly_upper(key="booktitle", case="title")
         record.format_if_mostly_upper(key="author", case="title")

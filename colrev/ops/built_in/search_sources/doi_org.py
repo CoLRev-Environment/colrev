@@ -85,7 +85,7 @@ class DOIConnector:
                 record.remove_field(key="warning")
 
             if "title" in record.data:
-                record.format_if_mostly_upper(key="title")
+                record.format_if_mostly_upper(key="title", case="sentence")
 
         except (
             requests.exceptions.RequestException,
