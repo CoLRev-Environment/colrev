@@ -739,6 +739,39 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return records
 
+    def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
+        # TODO : extract to separate scripts and also apply upon loading tei content
+        if "title" in record.data:
+            record.data["title"] = (record.data["title"].replace("n ˜", "ñ")
+            .replace("u ´", "ú")
+            .replace("ı ´", "í")
+            .replace("a ´", "á")
+            .replace("o ´", "ó")
+            .replace("e ´", "é")
+            .repalce("c ¸","ç" )
+            .replace("a ˜", "ã"))
+
+        if "author" in record.data:
+            record.data["author"] = (record.data["author"].replace("n ˜", "ñ")
+            .replace("u ´", "ú")
+            .replace("ı ´", "í")
+            .replace("a ´", "á")
+            .replace("o ´", "ó")
+            .replace("e ´", "é")
+            .repalce("c ¸","ç" )
+            .replace("a ˜", "ã"))
+
+
+    def __fix_title_suffix(self, *, record: colrev.record.Record) -> None:
+        if "title" not in record.data:
+            return
+        if record.data["title"].endswith("Formula 1"):
+            return
+        if re.match(r"\d{4}$", record.data["title"]):
+            return
+        if record.data.get("title", "").endswith(" 1"):
+            record.data["title"] = record.data["title"][:-2]
+
     def prepare(
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
@@ -769,6 +802,8 @@ class PDFSearchSource(JsonSchemaMixin):
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
+        self.__fix_title_suffix(record=record)
+        self.__fix_special_chars(record=record)
 
         return record
 
