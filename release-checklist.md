@@ -26,3 +26,5 @@
     - The PyPI version is published through a [github action](https://github.com/CoLRev-Environment/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
     - The zenodo version is published automatically
     - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
+
+- Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
