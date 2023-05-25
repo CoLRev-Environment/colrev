@@ -750,7 +750,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 .replace("a ´", "á")
                 .replace("o ´", "ó")
                 .replace("e ´", "é")
-                .repalce("c ¸", "ç")
+                .replace("c ¸", "ç")
                 .replace("a ˜", "ã")
             )
 
@@ -763,7 +763,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 .replace("a ´", "á")
                 .replace("o ´", "ó")
                 .replace("e ´", "é")
-                .repalce("c ¸", "ç")
+                .replace("c ¸", "ç")
                 .replace("a ˜", "ã")
             )
 
