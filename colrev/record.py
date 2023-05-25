@@ -62,6 +62,7 @@ class Record:
         "volume",
         "number",
         "pages",
+        "editor",
     ]
     """Keys of identifying fields considered for masterdata provenance"""
 
@@ -369,6 +370,12 @@ class Record:
         for value in self.data.get("colrev_masterdata_provenance", {}).values():
             if "inconsistent-with-entrytype" in value["note"]:
                 value["note"] = ""
+            if "missing" in value["note"]:
+                value["note"] = ""
+        missing_fields = [k for k, v in self.data.items() if v == "UNKNOWN"]
+        for missing_field in missing_fields:
+            self.remove_field(key=missing_field)
+
         self.data["ENTRYTYPE"] = new_entrytype
         if new_entrytype in ["inproceedings", "proceedings"]:
             if self.data.get("volume", "") == "UNKNOWN":
@@ -416,11 +423,11 @@ class Record:
                     del self.data["colrev_data_provenance"][key]
 
     def set_masterdata_complete(
-        self, *, source: str, replace_source: bool = True
+        self, *, source: str, masterdata_repository: bool, replace_source: bool = True
     ) -> None:
         """Set the masterdata to complete"""
         # pylint: disable=too-many-branches
-        if self.masterdata_is_curated():
+        if self.masterdata_is_curated() or masterdata_repository:
             return
 
         if "colrev_masterdata_provenance" not in self.data:
@@ -1850,7 +1857,7 @@ class PrepRecord(Record):
         )
         return similarity
 
-    def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
+    def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
         """Format the field if it is mostly in upper case"""
         # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
         #     return
@@ -1858,27 +1865,53 @@ class PrepRecord(Record):
             return
         self.data[key] = self.data[key].replace("\n", " ")
 
-        if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
-            if case == "capitalize":
-                self.data[key] = self.data[key].capitalize()
-            if case == "title":
-                self.data[key] = (
-                    self.data[key]
-                    .title()
-                    .replace(" Of ", " of ")
-                    .replace(" For ", " for ")
-                    .replace(" The ", " the ")
-                    .replace("Ieee", "IEEE")
-                    .replace("Acm", "ACM")
-                    .replace(" And ", " and ")
-                )
+        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.7:
+            return
 
-            if key in self.data.get("colrev_masterdata_provenance", {}):
-                note = self.data["colrev_masterdata_provenance"][key]["note"]
-                if "quality_defect" in note:
-                    self.data["colrev_masterdata_provenance"][key][
-                        "note"
-                    ] = note.replace("quality_defect", "")
+        # Note: the truecase package is not very reliable (yet)
+
+        if case == "sentence":
+            self.data[key] = self.data[key].capitalize()
+
+            self.data[key] = (
+                self.data[key]
+                .replace("Ieee", "IEEE")
+                .replace("Acm", "ACM")
+                .replace("'S ", "'s ")
+                .replace("m&a", "M&A")
+                .replace("u.s.", "U.S.")
+                .replace("b2b", "B2B")
+            )
+
+            self.data[key] = re.sub(r"it-(\w)", r"IT-\1", self.data[key])
+            self.data[key] = re.sub(r"is-(\w)", r"IS-\1", self.data[key])
+
+        if case == "title":
+            self.data[key] = self.data[key].title()
+
+            self.data[key] = (
+                self.data[key]
+                .replace(" Of ", " of ")
+                .replace(" For ", " for ")
+                .replace(" The ", " the ")
+                .replace("Ieee", "IEEE")
+                .replace("Acm", "ACM")
+                .replace(" And ", " and ")
+                .replace("'S ", "'s ")
+                .replace("M&a", "M&A")
+            )
+
+            self.data[key] = re.sub(r"It-(\w)", r"IT-\1", self.data[key])
+            self.data[key] = re.sub(r"Is-(\w)", r"IS-\1", self.data[key])
+
+        self.data[key] = self.data[key].replace(" i ", " I ").replace(" i'", " I'")
+
+        if key in self.data.get("colrev_masterdata_provenance", {}):
+            note = self.data["colrev_masterdata_provenance"][key]["note"]
+            if "quality_defect" in note:
+                self.data["colrev_masterdata_provenance"][key]["note"] = note.replace(
+                    "quality_defect", ""
+                )
 
     def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
         """Convenience function for the prep scripts (to rename fields)"""

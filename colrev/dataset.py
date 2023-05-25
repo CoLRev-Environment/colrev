@@ -190,7 +190,7 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -994,7 +994,7 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)

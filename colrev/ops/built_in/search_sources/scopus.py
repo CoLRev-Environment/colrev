@@ -157,9 +157,8 @@ class ScopusSearchSource(JsonSchemaMixin):
         if "author" in record.data:
             record.data["author"] = record.data["author"].replace("; ", " and ")
 
-        drop = ["source"]
-        for field_to_drop in drop:
-            record.remove_field(key=field_to_drop)
+        record.remove_field(key="source")
+        record.remove_field(key="art_number")
 
         return record
 

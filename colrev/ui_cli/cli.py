@@ -21,6 +21,7 @@ import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
+import colrev.ui_cli.dedupe_errors
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -780,7 +781,27 @@ def dedupe(
             dedupe_operation.merge_based_on_global_ids(apply=True)
             return
         if fix_errors:
-            dedupe_operation.fix_errors()
+            review_manager.report_logger.info("Dedupe: fix errors")
+            review_manager.logger.info("Dedupe: fix errors")
+            if not (
+                dedupe_operation.dupe_file.is_file()
+                or dedupe_operation.non_dupe_file_xlsx.is_file()
+                or dedupe_operation.non_dupe_file_txt.is_file()
+            ):
+                review_manager.logger.error("No file with potential errors found.")
+                return
+
+            false_positives = colrev.ui_cli.dedupe_errors.load_dedupe_false_positives(
+                dedupe_operation=dedupe_operation
+            )
+            false_negatives = colrev.ui_cli.dedupe_errors.load_dedupe_false_negatives(
+                dedupe_operation=dedupe_operation
+            )
+
+            dedupe_operation.fix_errors(
+                false_positives=false_positives,
+                false_negatives=false_negatives,
+            )
             print(
                 "You can manually remove the duplicates_to_validate.xlsx, "
                 "non_duplicates_to_validate.xlsx, and dupes.txt files."

@@ -140,7 +140,10 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Web of Science"""
 
         if record.data.get("title", "UNKNOWN") != "UNKNOWN":
-            record.format_if_mostly_upper(key="title")
+            record.format_if_mostly_upper(key="title", case="sentence")
+
+        record.remove_field(key="researcherid-numbers")
+        record.remove_field(key="orcid-numbers")
 
         return record
 

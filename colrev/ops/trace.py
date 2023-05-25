@@ -95,25 +95,20 @@ class Trace(colrev.operation.Operation):
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            try:
-                filecontents = (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read()
+            filecontents = (commit.tree / "data" / "records.bib").data_stream.read()
 
-                commit_message_first_line = str(commit.message).partition("\n")[0]
+            commit_message_first_line = str(commit.message).partition("\n")[0]
 
-                if self.review_manager.verbose_mode:
-                    print(
-                        "\n\n"
-                        + time.strftime(
-                            "%Y-%m-%d %H:%M",
-                            time.gmtime(commit.committed_date),
-                        )
-                        + f" {commit} ".ljust(40, " ")
-                        + f" {commit_message_first_line} (by {commit.author.name})"
+            if self.review_manager.verbose_mode:
+                print(
+                    "\n\n"
+                    + time.strftime(
+                        "%Y-%m-%d %H:%M",
+                        time.gmtime(commit.committed_date),
                     )
-            except KeyError:
-                continue
+                    + f" {commit} ".ljust(40, " ")
+                    + f" {commit_message_first_line} (by {commit.author.name})"
+                )
 
             records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")

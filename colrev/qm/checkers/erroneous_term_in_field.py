@@ -11,7 +11,15 @@ class ErroneousTermInFieldChecker:
     """The ErroneousTermInFieldChecker"""
 
     erroneous_terms = {
-        "author": ["http", "University", "orcid", "student", "Harvard"],
+        "author": [
+            "http",
+            "University",
+            "orcid",
+            "student",
+            "Harvard",
+            "Conference",
+            "Mrs",
+        ],
         "title": ["research paper", "completed research", "research in progress"],
     }
     msg = "erroneous-term-in-field"

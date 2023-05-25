@@ -18,9 +18,11 @@ class MissingFieldChecker:
         "inproceedings": ["author", "title", "booktitle", "year"],
         "incollection": ["author", "title", "booktitle", "publisher", "year"],
         "inbook": ["author", "title", "chapter", "publisher", "year"],
-        "proceedings": ["booktitle", "editor"],
+        "proceedings": ["booktitle", "editor", "year"],
+        "conference": ["booktitle", "editor", "year"],
         "book": ["author", "title", "publisher", "year"],
         "phdthesis": ["author", "title", "school", "year"],
+        "bachelorthesis": ["author", "title", "school", "year"],
         "thesis": ["author", "title", "school", "year"],
         "masterthesis": ["author", "title", "school", "year"],
         "techreport": ["author", "title", "institution", "year"],
@@ -72,6 +74,7 @@ class MissingFieldChecker:
         if not self.__has_missing_fields(record=record):
             record.set_masterdata_complete(
                 source="update_masterdata_provenance",
+                masterdata_repository=False,
                 replace_source=False,
             )
 
@@ -111,6 +114,8 @@ class MissingFieldChecker:
 
     def __check_forthcoming(self, *, record: colrev.record.Record) -> None:
         if record.data.get("year", "") != "forthcoming":
+            record.remove_masterdata_provenance_note(key="volume", note="forthcoming")
+            record.remove_masterdata_provenance_note(key="number", note="forthcoming")
             return
         source = "NA"
         if "year" in record.data["colrev_masterdata_provenance"]:
@@ -118,12 +123,12 @@ class MissingFieldChecker:
         if record.data.get("volume", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="volume", note="missing")
             record.add_masterdata_provenance(
-                key="volume", source=source, note="not-missing"
+                key="volume", source=source, note="forthcoming"
             )
         if record.data.get("number", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="number", note="missing")
             record.add_masterdata_provenance(
-                key="number", source=source, note="not-missing"
+                key="number", source=source, note="forthcoming"
             )
 
     def __check_completeness(

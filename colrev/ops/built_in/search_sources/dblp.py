@@ -564,7 +564,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             return result
 
         if "dblp computer science bibliography" in data:
-            if data.count("dblp computer science bibliography") > data.count("\n@"):
+            if data.count("dblp computer science bibliography") >= data.count("\n@"):
                 result["confidence"] = 1.0
 
         return result
@@ -623,6 +623,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                 source="dblp",
                 keep_source_if_equal=True,
             )
+        record.remove_field(key="bibsource")
+        record.remove_field(key="url")
+        record.remove_field(key="timestamp")
 
         return record
 
@@ -679,7 +682,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                             default_source=retrieved_record.data["colrev_origin"][0],
                         )
                         record.set_masterdata_complete(
-                            source=retrieved_record.data["colrev_origin"][0]
+                            source=retrieved_record.data["colrev_origin"][0],
+                            masterdata_repository=self.review_manager.settings.is_curated_repo(),
                         )
                         record.set_status(
                             target_state=colrev.record.RecordState.md_prepared

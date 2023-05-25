@@ -121,6 +121,11 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for ACM Digital Library"""
         record.remove_field(key="url")
+        record.remove_field(key="numpages")
+        record.remove_field(key="issue_date")
+        record.remove_field(key="publisher")
+        record.remove_field(key="address")
+        record.remove_field(key="month")
 
         return record
 

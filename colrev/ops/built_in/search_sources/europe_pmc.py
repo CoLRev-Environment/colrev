@@ -260,7 +260,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     source = (
                         f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
                     )
-                    retrieved_record.set_masterdata_complete(source=source)
+                    retrieved_record.set_masterdata_complete(
+                        source=source,
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
 
                     if not most_similar_only:
                         record_list.append(retrieved_record)
@@ -348,7 +351,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     )
 
                     record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0]
+                        source=retrieved_record.data["colrev_origin"][0],
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
@@ -466,7 +470,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     source = (
                         f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
                     )
-                    retrieved_record.set_masterdata_complete(source=source)
+                    retrieved_record.set_masterdata_complete(
+                        source=source,
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
 
                     europe_pmc_feed.set_id(record_dict=retrieved_record.data)
                     added = europe_pmc_feed.add_record(record=retrieved_record)
@@ -512,6 +519,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         result = {"confidence": 0.0}
         if "europe_pmc_id" in data:
             result["confidence"] = 1.0
+
+        if "https://europepmc.org" in data:  # nosec
+            if data.count("https://europepmc.org") >= data.count("\n@"):
+                result["confidence"] = 1.0
 
         return result
 
