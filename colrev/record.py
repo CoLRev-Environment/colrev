@@ -653,6 +653,8 @@ class Record:
             # Part 2: other fields
             else:
                 # keep existing values per default
+                if key in self.data:
+                    continue
                 self.update_field(
                     key=key,
                     value=str(val),

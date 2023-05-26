@@ -254,6 +254,8 @@ class Search(colrev.operation.Operation):
                     " - ", ": "
                 ):
                     continue
+                if key == "url" and "dblp.org" in value and key in main_record.data:
+                    continue
                 main_record.update_field(
                     key=key,
                     value=value,
