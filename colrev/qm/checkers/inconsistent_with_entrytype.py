@@ -39,15 +39,11 @@ class InconsistentWithEntrytypeChecker:
         inconsistent_fields = self.record_field_inconsistencies[
             record.data["ENTRYTYPE"]
         ]
-        for inconsistent_field in inconsistent_fields:
-            if inconsistent_field in record.data:
-                record.add_masterdata_provenance_note(
-                    key=inconsistent_field, note=self.msg
-                )
+        for key in record.data:
+            if key in inconsistent_fields:
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=inconsistent_field, note=self.msg
-                )
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
