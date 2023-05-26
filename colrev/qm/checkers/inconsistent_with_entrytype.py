@@ -20,6 +20,8 @@ class InconsistentWithEntrytypeChecker:
         "masterthesis": ["volume", "issue", "number", "journal", "booktitle"],
         "techreport": ["volume", "issue", "number", "journal", "booktitle"],
         "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
+        "online": ["journal", "booktitle"],
+        "misc": ["journal", "booktitle"],
     }
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
