@@ -269,7 +269,7 @@ class ExportManPrep(JsonSchemaMixin):
             )
         if override:
             original_record.set_status(
-                target_state=colrev.record.RecordState.md_prepared
+                target_state=colrev.record.RecordState.md_prepared, force=True
             )
 
         self.__print_stats(original_record=original_record)
