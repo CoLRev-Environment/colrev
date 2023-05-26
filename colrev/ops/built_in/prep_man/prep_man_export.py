@@ -256,13 +256,20 @@ class ExportManPrep(JsonSchemaMixin):
         )
 
         self.__drop_unnecessary_provenance_fiels(record=original_record)
-
+        override = (
+            original_record.data["colrev_status"]
+            == colrev.record.RecordState.md_prepared
+        )
         if (
             man_prepped_record_dict["colrev_status"]
             != colrev.record.RecordState.rev_prescreen_excluded
         ):
             original_record.update_masterdata_provenance(
                 qm=self.quality_model, set_prepared=True
+            )
+        if override:
+            original_record.set_status(
+                target_state=colrev.record.RecordState.md_prepared
             )
 
         self.__print_stats(original_record=original_record)

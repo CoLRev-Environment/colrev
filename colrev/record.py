@@ -249,9 +249,9 @@ class Record:
         """Check whether the record masterdata is curated"""
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
 
-    def set_status(self, *, target_state: RecordState) -> None:
+    def set_status(self, *, target_state: RecordState, force: bool = False) -> None:
         """Set the record status"""
-        if RecordState.md_prepared == target_state:
+        if RecordState.md_prepared == target_state and not force:
             if self.has_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
         # pylint: disable=direct-status-assign
