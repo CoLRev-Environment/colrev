@@ -2,6 +2,7 @@
 """Checker for inconsistent-with-doi-metadata."""
 from __future__ import annotations
 
+import requests.exceptions
 from thefuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
@@ -72,6 +73,8 @@ class InconsistentWithDOIMetadataChecker:
         except (
             colrev_exceptions.RecordNotFoundInPrepSourceException,
             colrev_exceptions.RecordNotParsableException,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
         ):
             return False
         return False
