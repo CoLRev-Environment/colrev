@@ -285,6 +285,60 @@ class Prep(colrev.operation.Operation):
             else:
                 raise exc
 
+    def __print_post_package_prep_polish_info(
+        self,
+        *,
+        record: colrev.record.PrepRecord,
+        prior_state: colrev.record.RecordState,
+        progress: str,
+    ) -> None:
+        # records in post_md_prepared remain in that state (in polish mode)
+        if (
+            record.data["colrev_status"]
+            in colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.md_prepared
+            )
+            and prior_state != colrev.record.RecordState.md_needs_manual_preparation
+        ):
+            self.review_manager.logger.info(
+                f" {record.data['ID']}".ljust(41) + f"{progress} - "
+            )
+        elif (
+            record.data["colrev_status"]
+            == colrev.record.RecordState.rev_prescreen_excluded
+        ):
+            self.review_manager.logger.info(
+                f" {colors.RED}{record.data['ID']}".ljust(46)
+                + f"{progress}{prior_state} →  {record.data['colrev_status']}"
+                + f"{colors.END}"
+            )
+        elif (
+            record.data["colrev_status"]
+            == colrev.record.RecordState.md_needs_manual_preparation
+        ):
+            self.review_manager.logger.info(
+                f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"{progress}{prior_state} →  {record.data['colrev_status']}{colors.END}"
+            )
+        elif record.data["colrev_status"] == colrev.record.RecordState.md_prepared:
+            curation_addition = "   "
+            if record.masterdata_is_curated():
+                curation_addition = " ✔ "
+            self.review_manager.logger.info(
+                f" {colors.GREEN}{record.data['ID']}".ljust(46)
+                + f"{progress}{prior_state} →  "
+                f"{record.data['colrev_status']}{colors.END}{curation_addition}"
+            )
+
+        elif (
+            record.data["colrev_status"]
+            == colrev.record.RecordState.md_needs_manual_preparation
+        ):
+            self.review_manager.logger.info(
+                f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"{progress}{prior_state} →  {record.data['colrev_status']}{colors.END}"
+            )
+
     def __print_post_package_prep_info(
         self,
         record: colrev.record.PrepRecord,
@@ -300,53 +354,50 @@ class Prep(colrev.operation.Operation):
                 12, " "
             )
 
-        if record.preparation_break_condition():
-            if (
-                colrev.record.RecordState.rev_prescreen_excluded
-                == record.data["colrev_status"]
-            ):
-                if self.review_manager.verbose_mode:
+        if self.polish:
+            self.__print_post_package_prep_polish_info(
+                record=record, prior_state=prior_state, progress=progress
+            )
+        else:
+            if record.preparation_break_condition():
+                if (
+                    colrev.record.RecordState.rev_prescreen_excluded
+                    == record.data["colrev_status"]
+                ):
+                    if self.review_manager.verbose_mode:
+                        self.review_manager.logger.info(
+                            f" {colors.RED}{record.data['ID']}".ljust(46)
+                            + f"Detected: {record.data.get('prescreen_exclusion', 'NA')}"
+                            + f"{colors.END}"
+                        )
+                    target_state = colrev.record.RecordState.rev_prescreen_excluded
                     self.review_manager.logger.info(
                         f" {colors.RED}{record.data['ID']}".ljust(46)
-                        + f"Detected: {record.data.get('prescreen_exclusion', 'NA')}"
+                        + f"{progress}{prior_state} →  {target_state}"
                         + f"{colors.END}"
                     )
-                target_state = colrev.record.RecordState.rev_prescreen_excluded
-                if self.polish:
-                    target_state = prior_state
+                else:
+                    target_state = colrev.record.RecordState.md_needs_manual_preparation
+                    self.review_manager.logger.info(
+                        f" {colors.ORANGE}{record.data['ID']}".ljust(46)
+                        + f"{progress}{prior_state} →  {target_state}{colors.END}"
+                    )
+
+            elif record.preparation_save_condition():
+                curation_addition = "   "
+                if record.masterdata_is_curated():
+                    curation_addition = " ✔ "
+                target_state = colrev.record.RecordState.md_prepared
                 self.review_manager.logger.info(
-                    f" {colors.RED}{record.data['ID']}".ljust(46)
-                    + f"{progress}{prior_state} →  {target_state}"
-                    + f"{colors.END}"
+                    f" {colors.GREEN}{record.data['ID']}".ljust(46)
+                    + f"{progress}{prior_state} →  {target_state}{colors.END}{curation_addition}"
                 )
             else:
                 target_state = colrev.record.RecordState.md_needs_manual_preparation
-                if self.polish:
-                    target_state = prior_state
                 self.review_manager.logger.info(
                     f" {colors.ORANGE}{record.data['ID']}".ljust(46)
                     + f"{progress}{prior_state} →  {target_state}{colors.END}"
                 )
-
-        elif record.preparation_save_condition():
-            curation_addition = "   "
-            if record.masterdata_is_curated():
-                curation_addition = " ✔ "
-            target_state = colrev.record.RecordState.md_prepared
-            if self.polish:
-                target_state = prior_state
-            self.review_manager.logger.info(
-                f" {colors.GREEN}{record.data['ID']}".ljust(46)
-                + f"{progress}{prior_state} →  {target_state}{colors.END}{curation_addition}"
-            )
-        else:
-            target_state = colrev.record.RecordState.md_needs_manual_preparation
-            if self.polish:
-                target_state = prior_state
-            self.review_manager.logger.info(
-                f" {colors.ORANGE}{record.data['ID']}".ljust(46)
-                + f"{progress}{prior_state} →  {target_state}{colors.END}"
-            )
 
     def __post_package_prep(
         self,
@@ -355,11 +406,6 @@ class Prep(colrev.operation.Operation):
         item: dict,
         prior_state: colrev.record.RecordState,
     ) -> None:
-        if not self.review_manager.verbose_mode:
-            self.__print_post_package_prep_info(
-                record=record, item=item, prior_state=prior_state
-            )
-
         if self.last_round and not self.polish:
             if record.status_to_prepare():
                 for key in list(record.data.keys()):
@@ -374,7 +420,34 @@ class Prep(colrev.operation.Operation):
                 )
 
         if self.polish:
-            record.set_status(target_state=prior_state)
+            errors_prior = {
+                k: y
+                for k, v in record.data.get("colrev_masterdata_provenance", {}).items()
+                for y in v["note"].split(",")
+                if y != "not-missing"
+            }
+            record.update_masterdata_provenance(qm=self.quality_model)
+            errors_post = {
+                k: y
+                for k, v in record.data.get("colrev_masterdata_provenance", {}).items()
+                for y in v["note"].split(",")
+                if y != "not-missing"
+            }
+            additional_errors = set(errors_post.items()) - set(errors_prior.items())
+            if additional_errors:
+                record.set_status(
+                    target_state=colrev.record.RecordState.md_needs_manual_preparation,
+                    force=True,
+                )
+            elif prior_state == colrev.record.RecordState.md_needs_manual_preparation:
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            else:
+                record.set_status(target_state=prior_state, force=True)
+
+        if not self.review_manager.verbose_mode:
+            self.__print_post_package_prep_info(
+                record=record, item=item, prior_state=prior_state
+            )
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
@@ -1115,7 +1188,7 @@ class Prep(colrev.operation.Operation):
                 ) from exc
             raise exc
 
-        if not keep_ids and not self.debug_mode:
+        if not keep_ids and not self.debug_mode and not self.polish:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
             self.review_manager.create_commit(msg="Set IDs")
