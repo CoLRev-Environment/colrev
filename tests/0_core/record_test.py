@@ -102,7 +102,11 @@ def test_update_field() -> None:
     # Test append_edit=True (without key in *provenance) / identifying field
     del r2_mod.data["colrev_masterdata_provenance"]["journal"]
     r2_mod.update_field(
-        key="journal", value="Mis Quarterly", source="test", append_edit=True
+        key="journal",
+        value="Mis Quarterly",
+        source="test",
+        append_edit=True,
+        keep_source_if_equal=False,
     )
     expected = "original|test"
     actual = r2_mod.data["colrev_masterdata_provenance"]["journal"]["source"]

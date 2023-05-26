@@ -303,7 +303,7 @@ class Record:
         value: str,
         source: str,
         note: str = "",
-        keep_source_if_equal: bool = False,
+        keep_source_if_equal: bool = True,
         append_edit: bool = True,
     ) -> None:
         """Update a record field (including provenance information)"""

@@ -299,6 +299,10 @@ class Prep(colrev.operation.Operation):
                 state=colrev.record.RecordState.md_prepared
             )
             and prior_state != colrev.record.RecordState.md_needs_manual_preparation
+        ) or (
+            prior_state == colrev.record.RecordState.md_needs_manual_preparation
+            and record.data["colrev_status"]
+            == colrev.record.RecordState.md_needs_manual_preparation
         ):
             self.review_manager.logger.info(
                 f" {record.data['ID']}".ljust(41) + f"{progress} - "
