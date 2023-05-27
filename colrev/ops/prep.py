@@ -428,19 +428,19 @@ class Prep(colrev.operation.Operation):
                 k: y
                 for k, v in record.data.get("colrev_masterdata_provenance", {}).items()
                 for y in v["note"].split(",")
-                if y != "not-missing"
+                if y not in ["not-missing", "forthcoming"]
             }
             record.update_masterdata_provenance(qm=self.quality_model)
             errors_post = {
                 k: y
                 for k, v in record.data.get("colrev_masterdata_provenance", {}).items()
                 for y in v["note"].split(",")
-                if y != "not-missing"
+                if y not in ["not-missing", "forthcoming"]
             }
             additional_errors = set(errors_post.items()) - set(errors_prior.items())
             if (
                 additional_errors
-                and record.data["colrev_status"]
+                and prior_state
                 != colrev.record.RecordState.rev_prescreen_excluded
             ):
                 record.set_status(
