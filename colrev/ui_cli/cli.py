@@ -2056,10 +2056,16 @@ def env(
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-g",
+    "--update-global",
+    help="Global settings to update",
+)
 @click.pass_context
 def settings(
     ctx: click.core.Context,
     update_hooks: bool,
+    update_global: str,
     modify: str,
     verbose: bool,
     force: bool,
@@ -2104,6 +2110,13 @@ def settings(
         print("Successfully updated pre-commit hooks")
         return
 
+    if update_global:
+        from colrev.env.environment_manager import EnvironmentManager
+
+        env_man = EnvironmentManager()
+        path, value_string = update_global.split("=")
+        print(f"Updating registry settings:\n{path} = {value_string}")
+        env_man.update_registry(path, value_string)
     if modify:
         # TBD: maybe use glom.delete?
         # There is no simply append...
@@ -2127,7 +2140,6 @@ def settings(
 
         review_manager.dataset.add_changes(path=Path("settings.json"))
         review_manager.create_commit(msg="Change settings", manual_author=True)
-        return
 
     # import colrev_ui.ui_web.settings_editor
 

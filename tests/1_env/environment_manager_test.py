@@ -10,6 +10,7 @@ import git
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.review_manager
+from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
 
 EnvTestConf = namedtuple(
     "EnvTestConf",
@@ -131,48 +132,41 @@ def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
         assert data.expected_json == actual_json
 
 
-# def test_environment_manager(mocker, tmp_path, script_loc) -> None:  # type: ignore
-#
-#     if not continue_test():
-#         return
-#
-#     with mocker.patch.object(
-#             colrev.env.environment_manager.EnvironmentManager,
-#             "registry",
-#             tmp_path / Path("reg.yml"),
-#     ):
-#         env_man = colrev.env.environment_manager.EnvironmentManager()
-#
-#         env_man.register_repo(path_to_register=Path(script_loc.parents[1]))
-#         actual = env_man.environment_registry  # type: ignore
-#
-#         expected = [  # type: ignore
-#             {
-#                 "repo_name": "colrev",
-#                 "repo_source_path": Path(colrev.__file__).parents[1],
-#                 "repo_source_url": actual[0]["repo_source_url"],
-#             }
-#         ]
-#         assert expected == actual
-#
-#         expected = {  # type: ignore
-#             "index": {
-#                 "size": 0,
-#                 "last_modified": "NOT_INITIATED",
-#                 "path": "/home/gerit/colrev",
-#                 "status": "TODO",
-#             },
-#             "local_repos": {
-#                 "repos": [],
-#                 "broken_links": [
-#                     {
-#                         "repo_name": "colrev",
-#                         "repo_source_path": str(Path(colrev.__file__).parents[1]),
-#                         "repo_source_url": str(actual[0]["repo_source_url"]),
-#                     }
-#                 ],
-#             },
-#         }
-#         actual = env_man.get_environment_details()  # type: ignore
-#         actual["index"]["path"] = "/home/gerit/colrev"  # type: ignore
-#         assert expected == actual
+def test_setting_value(_patch_registry):  # type: ignore
+    """
+    Updating the registry
+    """
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    test_user = {"email": "test@email.com"}
+
+    env_man.update_registry(Unpaywall.SETTINGS["email"], test_user["email"])
+    # Check with new env_man
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+
+    cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
+
+    assert test_user["email"] == cfg_email
+
+
+def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
+    """
+    Updating the registry
+    """
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    test_user = {
+        "username": "Tester Name",  # this value is set from mock
+        "email": "test@email.com",
+    }
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywall.username", test_user["username"]
+    )
+    env_man.update_registry(
+        "packages.pdf_get.colrev.unpaywall.email", test_user["email"]
+    )
+    # Check with new env_man
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    cfg_username = env_man.get_settings_by_key(
+        "packages.pdf_get.colrev.unpaywall.username"
+    )
+    cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
+    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)

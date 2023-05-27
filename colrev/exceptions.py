@@ -591,3 +591,21 @@ class InvalidLanguageCodeException(CoLRevException):
     def __init__(self, invalid_language_codes: list) -> None:
         self.invalid_language_codes = invalid_language_codes
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
+
+
+class InvalidRegistryKeyException(CoLRevException):
+    """Invalid registry key provided"""
+
+    def __init__(self, invalid_key: str) -> None:
+        self.invalid_key = invalid_key
+        super().__init__(f"Invalid Registry Key: {invalid_key}")
+
+
+class PackageSettingMustStartWithPackagesException(CoLRevException):
+    """package settings must start with `packages` key"""
+
+    def __init__(self, invalid_key: str) -> None:
+        self.invalid_key = invalid_key
+        super().__init__(
+            f"Package settings must start with `packages` key. {invalid_key}"
+        )

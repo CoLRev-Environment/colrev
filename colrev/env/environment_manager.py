@@ -19,6 +19,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
+from colrev.env.utils import dict_keys_exists
+from colrev.env.utils import dict_set_nested
+from colrev.env.utils import get_by_path
 
 
 class EnvironmentManager:
@@ -366,6 +369,25 @@ class EnvironmentManager:
                 print(exc)
 
         return curated_outlets
+
+    def get_settings_by_key(self, key: str) -> str | None:
+        """Loads setting by the given key"""
+        environment_registry = self.load_environment_registry()
+        keys = key.split(".")
+        if dict_keys_exists(environment_registry, *keys):
+            return get_by_path(environment_registry, keys)
+        return None
+
+    def update_registry(self, key: str, value: str) -> None:
+        """updates given key in the registry with new value"""
+
+        keys = key.split(".")
+        # We don't want to allow user to replace any core settings, so check for packages key
+        if keys[0] != "packages":
+            raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
+        self.environment_registry = self.load_environment_registry()
+        dict_set_nested(self.environment_registry, keys, value)
+        self.save_environment_registry(updated_registry=self.environment_registry)
 
 
 if __name__ == "__main__":

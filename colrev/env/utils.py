@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Collection of utility functions"""
+import operator
 import pkgutil
 import typing
 import unicodedata
 from enum import Enum
+from functools import reduce
 from pathlib import Path
 
 from jinja2 import Environment
@@ -137,6 +139,39 @@ def load_complementary_material_strings() -> list:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
 
     return complementary_material_keywords
+
+
+def dict_keys_exists(element: dict, *keys: str) -> bool:
+    """Check if *keys (nested) exists in `element` (dict)."""
+    if len(keys) == 0:
+        raise AttributeError("keys_exists() expects at least two arguments, one given.")
+
+    _element = element
+    for key in keys:
+        try:
+            _element = _element[key]
+        except KeyError:
+            return False
+    return True
+
+
+def get_by_path(root: dict, items: typing.List[str]) -> typing.Any:
+    """Access a nested object in root by item sequence."""
+
+    return reduce(operator.getitem, items, root)
+
+
+def set_by_path(root: dict, items: typing.List[str], value: typing.Any) -> None:
+    """Set a value in a nested object in root by item sequence."""
+
+    get_by_path(root, items[:-1])[items[-1]] = value
+
+
+def dict_set_nested(root: dict, keys: typing.List[str], value: typing.Any) -> None:
+    """Set dict value by nested key, this works on empty dict"""
+    for key in keys[:-1]:
+        root = root.setdefault(key, {})
+    root[keys[-1]] = value
 
 
 if __name__ == "__main__":
