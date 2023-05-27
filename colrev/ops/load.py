@@ -739,7 +739,7 @@ class Load(colrev.operation.Operation):
                 f"with {len(search_records)} records"
             )
         else:
-            self.review_manager.logger.error(
+            self.review_manager.logger.debug(
                 f"Did not find bib file {source.get_corresponding_bib_file().name} "
             )
             return []
