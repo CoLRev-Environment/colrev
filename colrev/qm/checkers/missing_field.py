@@ -269,13 +269,16 @@ class MissingFieldChecker:
                 except colrev_exceptions.MissingRecordQualityRuleSpecification as exc:
                     print(exc)
 
-        for exact_match in ["journal", "booktitle"]:
-            if exact_match in applicable_curation_restrictions:
-                record.update_field(
-                    key=exact_match,
-                    value=applicable_curation_restrictions[exact_match],
-                    source="colrev_curation.curation_restrictions",
-                )
+        for field in ["journal", "booktitle"]:
+            if field not in applicable_curation_restrictions:
+                continue
+            if applicable_curation_restrictions[field] == record.data.get(field, ""):
+                continue
+            record.update_field(
+                key=field,
+                value=applicable_curation_restrictions[field],
+                source="colrev_curation.curation_restrictions",
+            )
         if (
             "number" in applicable_curation_restrictions
             and not applicable_curation_restrictions["number"]
