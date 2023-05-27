@@ -8,8 +8,6 @@ import multiprocessing as mp
 import random
 import time
 import typing
-import bibtexparser
-import sqlite3 
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
@@ -1053,29 +1051,7 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
-    def __add_journal_ranking_to_metadata(self, record) -> str:
-        with open('/Project/test/data/records.bib', encoding="utf-8") as bibtex_file:
-            bibtex_str = bibtex_file.read()
-            bib_database = bibtexparser.load(bibtex_str)
-
-        journal = record["journal"]
-        
-        """add function search_in_database here with journal and database"""
-
-        """add journal ranking to record"""
-
-        return(record)
-
-    def search_in_database(self,journalname, database) -> None:
-        pointer = database.cursor()
-        pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journalname,))
-        content = pointer.fetchall()
-        if content is None:
-            print("Warte auf andere Anweisung")
-        else:
-            for row in content:
-                print (content)
-        database.close() 
+    
 
 
     def main(
@@ -1116,10 +1092,7 @@ class Prep(colrev.operation.Operation):
                     for item in preparation_data:
                         record = self.prepare(item)
 
-                        """add journal rankings to metadata"""
-                        record = self.__add_journal_ranking_to_metadada(record)
-
-                        prepared_records.append(record)
+                        
                 else:
                     pool = self.__get_prep_pool(prep_round=prep_round)
                     prepared_records = pool.map(self.prepare, preparation_data)
