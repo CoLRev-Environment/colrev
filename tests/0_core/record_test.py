@@ -1334,6 +1334,16 @@ def test_get_retrieval_similarity() -> None:
             "A study of B2B in M&A settings",
             "sentence",
         ),
+        (
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency aNd gender in the u.s. and india",
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the U.S. and india",
+            "sentence",
+        ),
+        (
+            "Organizations like ieee, ACM operate b2B and c2c businesses",
+            "Organizations like IEEE, ACM operate B2B and C2C businesses",
+            "sentence",
+        ),
     ],
 )
 def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> None:
