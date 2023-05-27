@@ -2112,16 +2112,14 @@ def env(
 )
 @click.option(
     "-g",
-    "--update_global",
-    is_flag=True,
-    default=False,
+    "--update-global",
     help="Global settings to update",
 )
 @click.pass_context
 def settings(
     ctx: click.core.Context,
     update_hooks: bool,
-    update_global: bool,
+    update_global: str,
     modify: str,
     verbose: bool,
     force: bool,
@@ -2166,6 +2164,13 @@ def settings(
         print("Successfully updated pre-commit hooks")
         return
 
+    if update_global:
+        from colrev.env.environment_manager import EnvironmentManager
+
+        env_man = EnvironmentManager()
+        path, value_string = update_global.split("=")
+        print(f"Updating registry settings:\n{path} = {value_string}")
+        env_man.update_registry(path, value_string)
     if modify:
         # TBD: maybe use glom.delete?
         # There is no simply append...
@@ -2176,26 +2181,19 @@ def settings(
         # '[{"endpoint":"colrev.simple_dedupe"}]'
 
         path, value_string = modify.split("=")
-        if update_global:
-            from colrev.env.environment_manager import EnvironmentManager
+        value = ast.literal_eval(value_string)
+        review_manager.logger.info("Change settings.%s to %s", path, value)
 
-            env_man = EnvironmentManager()
-            print(f"Updating registry settings:\n{path} = {value_string}")
-            env_man.update_registry(path, value_string)
-        else:
-            value = ast.literal_eval(value_string)
-            review_manager.logger.info("Change settings.%s to %s", path, value)
+        with open("settings.json", encoding="utf-8") as file:
+            project_settings = json.load(file)
 
-            with open("settings.json", encoding="utf-8") as file:
-                project_settings = json.load(file)
+        glom.assign(project_settings, path, value)
 
-            glom.assign(project_settings, path, value)
+        with open("settings.json", "w", encoding="utf-8") as outfile:
+            json.dump(project_settings, outfile, indent=4)
 
-            with open("settings.json", "w", encoding="utf-8") as outfile:
-                json.dump(project_settings, outfile, indent=4)
-
-            review_manager.dataset.add_changes(path=Path("settings.json"))
-            review_manager.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.add_changes(path=Path("settings.json"))
+        review_manager.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 

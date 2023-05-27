@@ -28,16 +28,16 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     unpaywall,
 ):
     """
-    When user have specified username and email, we should use that, instead of
-    Git.
+    When user have specified an email, we should use that, instead of
+    the one registered for Git.
     """
     # Test without settings
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    username, email = env_man.get_name_mail_from_git()
-    cfg_username, cfg_email = unpaywall.get_user_specified_email()
-    assert (username, email) == (cfg_username, cfg_email)
+    _, email = env_man.get_name_mail_from_git()
+    cfg_email = unpaywall.get_email()
+    assert email == cfg_email
     # now create a new settings
-    test_user = {"username": "Test User", "email": "test@email.com"}
+    test_user = {"email": "test@email.com"}
     reg = json.dumps(
         {
             "local_index": {
@@ -51,6 +51,6 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     ) as file:
         file.write(reg)
     # Check with new env_man
-    cfg_username, cfg_email = unpaywall.get_user_specified_email()
-    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
+    cfg_email = unpaywall.get_email()
+    assert test_user["email"] == cfg_email
     (base_repo_review_manager.path / Path("reg.json")).unlink()

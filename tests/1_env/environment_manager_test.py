@@ -137,19 +137,15 @@ def test_setting_value(_patch_registry):  # type: ignore
     Updating the registry
     """
     env_man = colrev.env.environment_manager.EnvironmentManager()
-    test_user = {"username": "Test User", "email": "test@email.com"}
+    test_user = {"email": "test@email.com"}
 
-    env_man.update_registry(Unpaywall.SETTINGS["username"], test_user["username"])
     env_man.update_registry(Unpaywall.SETTINGS["email"], test_user["email"])
     # Check with new env_man
     env_man = colrev.env.environment_manager.EnvironmentManager()
 
-    cfg_username = env_man.get_settings_by_key(
-        "packages.pdf_get.colrev.unpaywall.username"
-    )
     cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
 
-    assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
+    assert test_user["email"] == cfg_email
 
 
 def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
