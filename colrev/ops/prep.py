@@ -438,7 +438,11 @@ class Prep(colrev.operation.Operation):
                 if y != "not-missing"
             }
             additional_errors = set(errors_post.items()) - set(errors_prior.items())
-            if additional_errors:
+            if (
+                additional_errors
+                and record.data["colrev_status"]
+                != colrev.record.RecordState.rev_prescreen_excluded
+            ):
                 record.set_status(
                     target_state=colrev.record.RecordState.md_needs_manual_preparation,
                     force=True,
