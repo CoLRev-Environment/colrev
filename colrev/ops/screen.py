@@ -29,6 +29,26 @@ class Screen(colrev.operation.Operation):
 
         self.verbose = True
 
+    def __include_all_in_screen_precondition(self, *, records: dict) -> bool:
+        if not [
+            r
+            for r in records.values()
+            if r["colrev_status"] == colrev.record.RecordState.pdf_prepared
+        ]:
+            if [
+                r
+                for r in records.values()
+                if r["colrev_status"] == colrev.record.RecordState.md_processed
+            ]:
+                self.review_manager.logger.warning(
+                    "No records to screen. Use "
+                    f"{colors.ORANGE}colrev prescreen --include_all{colors.END} instead"
+                )
+            else:
+                self.review_manager.logger.warning("No records to screen.")
+            return False
+        return True
+
     def include_all_in_screen(self, *, persist: bool) -> None:
         """Include all records in the screen"""
 
@@ -37,6 +57,15 @@ class Screen(colrev.operation.Operation):
             self.review_manager.save_settings()
 
         records = self.review_manager.dataset.load_records_dict()
+
+        if not self.__include_all_in_screen_precondition(records=records):
+            return
+
+        selected_record_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.pdf_prepared == r["colrev_status"]
+        ]
 
         screening_criteria = self.get_screening_criteria()
 
@@ -59,6 +88,7 @@ class Screen(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
+        self.__print_stats(selected_record_ids=selected_record_ids)
         self.review_manager.create_commit(
             msg="Screen (include_all)",
             manual_author=False,

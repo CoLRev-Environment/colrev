@@ -57,6 +57,26 @@ class Prescreen(colrev.operation.Operation):
             import_table_path=import_table_path,
         )
 
+    def __include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
+        if not [
+            r
+            for r in records.values()
+            if r["colrev_status"] == colrev.record.RecordState.md_processed
+        ]:
+            if [
+                r
+                for r in records.values()
+                if r["colrev_status"] == colrev.record.RecordState.pdf_prepared
+            ]:
+                self.review_manager.logger.warning(
+                    "No records to prescreen. Use "
+                    f"{colors.ORANGE}colrev screen --include_all{colors.END} instead"
+                )
+            else:
+                self.review_manager.logger.warning("No records to prescreen.")
+            return False
+        return True
+
     def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
 
@@ -64,13 +84,23 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.settings.prescreen.prescreen_package_endpoints = []
             self.review_manager.save_settings()
 
+        records = self.review_manager.dataset.load_records_dict()
+        if not self.__include_all_in_prescreen_precondition(records=records):
+            return
+
+        selected_record_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.md_processed == r["colrev_status"]
+        ]
+
         endpoint = (
             colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
                 prescreen_operation=self, settings={"endpoint": "include_all"}
             )
         )
-        records = self.review_manager.dataset.load_records_dict()
         endpoint.run_prescreen(self, records, [])
+        self.__print_stats(selected_record_ids=selected_record_ids)
 
     def include_records(self, *, ids: str) -> None:
         """Include records in the prescreen"""
