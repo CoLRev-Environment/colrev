@@ -1,18 +1,43 @@
-def __add_journal_ranking_to_metadata(self, record) -> None:
-        with open('/Project/test/data/records.bib', encoding="utf-8") as bibtex_file:
-            bibtex_str = bibtex_file.read()
-            bib_database = bibtexparser.load(bibtex_str)
-        journal = record["journal"]
-        print(journal)
-        return(journal)
+#! /usr/bin/env python
+"""adds journal rankings to metadata"""
+from __future__ import annotations
 
-def search_in_database(self,journalname, database) -> None:
-        pointer = database.cursor()
-        pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journalname,))
-        content = pointer.fetchall()
-        if content is None:
-            print("Warte auf andere Anweisung")
-        else:
-            for row in content:
-                print (content)
-        database.close() 
+from dataclasses import dataclass
+
+import zope.interface
+from dataclasses_jsonschema import JsonSchemaMixin
+
+import colrev.env.package_manager
+import colrev.ops.search_sources
+import colrev.record
+import sqlite3
+
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@dataclass
+class AddJournalRanking(JsonSchemaMixin):
+
+    settings_class = colrev.env.package_manager.DefaultSettings
+    ci_supported: bool = True
+     
+    def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
+            
+            journal = record["journal"]
+            database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
+            ranking = search_in_database(journal, database)
+
+            return record
+
+    def search_in_database(journal, database) -> str:
+            pointer = database.cursor()
+            pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journal))
+            content = pointer.fetchall()
+            if content is None:
+                return "Not in a ranking"
+            else:
+                for row in content:
+                    return "is ranked"
+            database.close() 
+
+
+if __name__ == "__main__":  
+    pass
