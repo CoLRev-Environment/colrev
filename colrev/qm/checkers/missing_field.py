@@ -257,17 +257,25 @@ class MissingFieldChecker:
         applicable_curation_restrictions = self.__get_applicable_curation_restrictions(
             record=record
         )
-
-        for exact_match in ["ENTRYTYPE", "journal", "booktitle"]:
-            if exact_match in applicable_curation_restrictions:
-                if applicable_curation_restrictions[exact_match] != record.data.get(
-                    exact_match, ""
-                ):
+        if "ENTRYTYPE" in applicable_curation_restrictions:
+            if applicable_curation_restrictions["ENTRYTYPE"] != record.data.get(
+                "ENTRYTYPE", ""
+            ):
+                try:
                     record.change_entrytype(
-                        new_entrytype=applicable_curation_restrictions[exact_match],
+                        new_entrytype=applicable_curation_restrictions["ENTRYTYPE"],
                         qm=self.quality_model,
                     )
+                except colrev_exceptions.MissingRecordQualityRuleSpecification as exc:
+                    print(exc)
 
+        for exact_match in ["journal", "booktitle"]:
+            if exact_match in applicable_curation_restrictions:
+                record.update_field(
+                    key=exact_match,
+                    value=applicable_curation_restrictions[exact_match],
+                    source="colrev_curation.curation_restrictions",
+                )
         if (
             "number" in applicable_curation_restrictions
             and not applicable_curation_restrictions["number"]
