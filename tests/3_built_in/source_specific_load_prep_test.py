@@ -11,6 +11,7 @@ import colrev.settings
 
 
 # pylint: disable=line-too-long
+# pylint: disable=too-many-arguments
 
 
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
