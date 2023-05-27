@@ -788,8 +788,10 @@ class PDFSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key="author", case="title")
 
         if "author" in record.data:
-            record.data["author"] = record.data["author"].replace(
-                " and T I C L E I N F O, A. R", ""
+            record.data["author"] = (
+                record.data["author"]
+                .replace(" and T I C L E I N F O, A. R", "")
+                .replace(" and Quarterly, Mis", "")
             )
 
         # Typical error in old papers: title fields are equal to journal/booktitle fields
