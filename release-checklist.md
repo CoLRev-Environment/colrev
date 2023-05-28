@@ -8,7 +8,7 @@
 - Update Docker image versions and test.
 - Collect release notes and update the `CHANGELOG.md`.
 - Update version in `CITATION.cff`.
-- Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated.
+- Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Update the Github milestones, make plans for the next milestones
 - Commit the changes.
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
