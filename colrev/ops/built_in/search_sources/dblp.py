@@ -709,7 +709,3 @@ class DBLPSearchSource(JsonSchemaMixin):
             pass
 
         return record
-
-
-if __name__ == "__main__":
-    pass

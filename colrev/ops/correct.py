@@ -222,7 +222,3 @@ class Corrections:
                         original_record=prior_r,
                         corrected_record=corrected_record,
                     )
-
-
-if __name__ == "__main__":
-    pass

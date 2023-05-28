@@ -186,7 +186,3 @@ class VideoDirSearchSource(JsonSchemaMixin):
             self.zotero_lock.release()
 
         return record
-
-
-if __name__ == "__main__":
-    pass

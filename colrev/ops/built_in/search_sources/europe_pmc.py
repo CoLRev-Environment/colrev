@@ -572,7 +572,3 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         record.data["author"].rstrip(".")
         record.data["title"].rstrip(".")
         return record
-
-
-if __name__ == "__main__":
-    pass

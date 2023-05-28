@@ -284,7 +284,3 @@ class PrepMan(colrev.operation.Operation):
             )
             endpoint = endpoint_dict[prep_man_package_endpoint["endpoint"]]
             records = endpoint.prepare_manual(self, records)  # type: ignore
-
-
-if __name__ == "__main__":
-    pass

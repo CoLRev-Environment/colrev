@@ -835,7 +835,3 @@ class TEIParser:
             tree.write(str(self.tei_path))
 
         return self.root
-
-
-if __name__ == "__main__":
-    pass

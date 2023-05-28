@@ -657,7 +657,3 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
         )
-
-
-if __name__ == "__main__":
-    pass

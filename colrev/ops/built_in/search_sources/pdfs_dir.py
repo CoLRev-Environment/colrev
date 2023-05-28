@@ -813,7 +813,3 @@ class PDFSearchSource(JsonSchemaMixin):
         self.__fix_special_chars(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

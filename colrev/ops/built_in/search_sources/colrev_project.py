@@ -247,7 +247,3 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         """Source-specific preparation for CoLRev projects"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

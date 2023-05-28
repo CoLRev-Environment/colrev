@@ -918,7 +918,3 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 f"\n{colors.GREEN}Thank you for supporting other researchers "
                 f"by sharing your corrections ❤{colors.END}\n"
             )
-
-
-if __name__ == "__main__":
-    pass

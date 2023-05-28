@@ -175,7 +175,3 @@ class DOIConnector:
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
             ) from exc
-
-
-if __name__ == "__main__":
-    pass

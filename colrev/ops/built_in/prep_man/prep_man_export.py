@@ -367,7 +367,3 @@ class ExportManPrep(JsonSchemaMixin):
                 self.__import_prep_man()
 
         return records
-
-
-if __name__ == "__main__":
-    pass

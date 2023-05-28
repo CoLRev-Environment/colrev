@@ -149,7 +149,3 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             record.remove_field(key="abstract")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

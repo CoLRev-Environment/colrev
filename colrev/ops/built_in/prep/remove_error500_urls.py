@@ -74,7 +74,3 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
             pass
 
         return record
-
-
-if __name__ == "__main__":
-    pass

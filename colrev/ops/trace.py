@@ -125,7 +125,3 @@ class Trace(colrev.operation.Operation):
                 record_id=record_id,
                 prev_record=prev_record,
             )
-
-
-if __name__ == "__main__":
-    pass

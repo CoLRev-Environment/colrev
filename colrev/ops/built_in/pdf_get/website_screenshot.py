@@ -59,7 +59,3 @@ class WebsiteScreenshot(JsonSchemaMixin):
             pdf_get_operation.import_file(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

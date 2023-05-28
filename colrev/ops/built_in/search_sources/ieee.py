@@ -127,7 +127,3 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Source-specific preparation for IEEEXplore"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

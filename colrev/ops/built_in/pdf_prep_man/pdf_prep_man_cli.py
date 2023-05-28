@@ -286,7 +286,3 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
 class QuitPressedException(Exception):
     """Quit-pressed exception"""
-
-
-if __name__ == "__main__":
-    pass

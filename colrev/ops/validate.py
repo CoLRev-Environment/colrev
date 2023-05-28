@@ -577,7 +577,3 @@ class Validate(colrev.operation.Operation):
             validation_details["merge"] = self.validate_merge_changes()
 
         return validation_details
-
-
-if __name__ == "__main__":
-    pass

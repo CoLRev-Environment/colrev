@@ -325,7 +325,3 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Source-specific preparation for OpenLibrary"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

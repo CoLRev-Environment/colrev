@@ -128,7 +128,3 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         record.remove_field(key="month")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

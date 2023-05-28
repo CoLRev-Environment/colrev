@@ -47,7 +47,3 @@ def create_colrev_pdf_id(*, pdf_path: Path) -> str:
     """Get the PDF hash"""
 
     return "cpid2:" + get_pdf_hash(pdf_path=pdf_path, page_nr=1, hash_size=32)
-
-
-if __name__ == "__main__":
-    pass

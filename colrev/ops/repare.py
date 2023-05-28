@@ -400,7 +400,3 @@ class Repare(colrev.operation.Operation):
         self.__fix_files(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
-
-
-if __name__ == "__main__":
-    pass

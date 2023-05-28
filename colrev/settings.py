@@ -683,7 +683,3 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
     with open("settings.json", "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
     review_manager.dataset.add_changes(path=Path("settings.json"))
-
-
-if __name__ == "__main__":
-    pass

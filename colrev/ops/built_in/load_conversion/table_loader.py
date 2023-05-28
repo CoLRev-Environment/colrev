@@ -259,7 +259,3 @@ class ExcelLoader:
             load_operation, source=source, records=records
         )
         return records
-
-
-if __name__ == "__main__":
-    pass

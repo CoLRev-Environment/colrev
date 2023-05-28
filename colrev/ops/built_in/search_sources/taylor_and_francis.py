@@ -108,7 +108,3 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         record.remove_field(key="publisher")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

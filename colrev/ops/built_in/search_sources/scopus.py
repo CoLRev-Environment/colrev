@@ -161,7 +161,3 @@ class ScopusSearchSource(JsonSchemaMixin):
         record.remove_field(key="art_number")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

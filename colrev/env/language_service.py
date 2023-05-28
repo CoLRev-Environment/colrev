@@ -99,7 +99,3 @@ class LanguageService:
                 ]
 
         self.validate_iso_639_3_language_codes(lang_code_list=[record.data["language"]])
-
-
-if __name__ == "__main__":
-    pass

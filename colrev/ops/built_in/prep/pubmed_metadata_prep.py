@@ -74,7 +74,3 @@ class PubmedMetadataPrep(JsonSchemaMixin):
 
         self.pubmed_source.get_masterdata(prep_operation=prep_operation, record=record)
         return record
-
-
-if __name__ == "__main__":
-    pass

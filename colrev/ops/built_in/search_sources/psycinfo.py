@@ -117,7 +117,3 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Source-specific preparation for PsycINFO"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

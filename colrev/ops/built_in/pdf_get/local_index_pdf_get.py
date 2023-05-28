@@ -76,7 +76,3 @@ class LocalIndexPDFGet(JsonSchemaMixin):
                     shutil.copy(tei_ext_path, new_path)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

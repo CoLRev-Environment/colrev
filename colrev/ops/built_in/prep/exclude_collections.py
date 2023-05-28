@@ -51,7 +51,3 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
             record.prescreen_exclude(reason="collection/proceedings")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -175,7 +175,3 @@ def json_to_record(*, item: dict) -> dict:
         ) from exc
 
     return record_dict
-
-
-if __name__ == "__main__":
-    pass

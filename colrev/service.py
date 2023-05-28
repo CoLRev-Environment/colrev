@@ -316,7 +316,3 @@ class Service:
                 self.service_queue.task_done()
         except KeyboardInterrupt:
             print("Shutting down service")
-
-
-if __name__ == "__main__":
-    pass

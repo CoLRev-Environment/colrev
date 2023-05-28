@@ -50,7 +50,3 @@ class UpdateMetadataStatusPrep(JsonSchemaMixin):
 
         record.update_metadata_status()
         return record
-
-
-if __name__ == "__main__":
-    pass

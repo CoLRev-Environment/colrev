@@ -497,7 +497,3 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self.__exclude_complementary_material(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -1201,7 +1201,3 @@ class Prep(colrev.operation.Operation):
             self.review_manager.create_commit(msg="Set IDs")
 
         self.__post_prep()
-
-
-if __name__ == "__main__":
-    pass

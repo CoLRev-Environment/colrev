@@ -247,7 +247,3 @@ class Commit:
         report = self.__get_commit_report()
         with open(msg_file, "a", encoding="utf8") as file:
             file.write(report)
-
-
-if __name__ == "__main__":
-    pass

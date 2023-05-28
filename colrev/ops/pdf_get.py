@@ -664,7 +664,3 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-get operation{colors.END}"
         )
-
-
-if __name__ == "__main__":
-    pass

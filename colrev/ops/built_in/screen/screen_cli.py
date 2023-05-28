@@ -293,7 +293,3 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         records = self.__screen_cli(screen_operation, split)
 
         return records
-
-
-if __name__ == "__main__":
-    pass

@@ -121,7 +121,3 @@ class Distribute(colrev.operation.Operation):
                 )
 
                 self.review_manager.dataset.add_changes(path=target_bib_file)
-
-
-if __name__ == "__main__":
-    pass

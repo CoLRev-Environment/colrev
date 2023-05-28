@@ -74,7 +74,3 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
             record.prescreen_exclude(reason="non_latin_alphabet")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -119,7 +119,3 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Source-specific preparation for JSTOR"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

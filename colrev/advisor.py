@@ -768,7 +768,3 @@ class Advisor:
             ]
         )
         return {"msg": msgs, "status": status_code}
-
-
-if __name__ == "__main__":
-    pass

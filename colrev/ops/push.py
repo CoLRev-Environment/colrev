@@ -154,7 +154,3 @@ class Push(colrev.operation.Operation):
             for change_item in change_list:
                 if Path(change_item["file"]).is_file():
                     Path(change_item["file"]).unlink()
-
-
-if __name__ == "__main__":
-    pass

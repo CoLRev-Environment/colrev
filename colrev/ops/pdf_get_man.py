@@ -213,7 +213,3 @@ class PDFGetMan(colrev.operation.Operation):
             ]
 
             records = endpoint.pdf_get_man(self, records)  # type: ignore
-
-
-if __name__ == "__main__":
-    pass

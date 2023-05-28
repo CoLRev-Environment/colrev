@@ -46,7 +46,3 @@ class ScientometricReview(JsonSchemaMixin):
         ]
         settings.pdf_get.pdf_required_for_screen_and_synthesis = False
         return settings
-
-
-if __name__ == "__main__":
-    pass

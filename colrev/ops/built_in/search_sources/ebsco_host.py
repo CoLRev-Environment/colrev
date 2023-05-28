@@ -103,7 +103,3 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         """Source-specific preparation for EBSCOHost"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -23,7 +23,3 @@ def capitalize_entities(input_str: str) -> str:
     input_str = re.sub(r"is-(\w)", r"IS-\1", input_str, flags=re.IGNORECASE)
 
     return input_str
-
-
-if __name__ == "__main__":
-    pass

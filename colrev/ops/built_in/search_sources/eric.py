@@ -117,7 +117,3 @@ class ERICSearchSource(JsonSchemaMixin):
         """Source-specific preparation for ERIC"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

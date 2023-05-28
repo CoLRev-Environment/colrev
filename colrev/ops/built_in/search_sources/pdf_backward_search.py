@@ -424,7 +424,3 @@ class BackwardSearchSource(JsonSchemaMixin):
             record.data["ENTRYTYPE"] = "book"
 
         return record
-
-
-if __name__ == "__main__":
-    pass

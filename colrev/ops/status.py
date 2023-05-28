@@ -565,7 +565,3 @@ class StatusStats:
                     file_path=search_file
                 )
             return number_search
-
-
-if __name__ == "__main__":
-    pass

@@ -388,7 +388,3 @@ class EnvironmentManager:
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
         self.save_environment_registry(updated_registry=self.environment_registry)
-
-
-if __name__ == "__main__":
-    pass

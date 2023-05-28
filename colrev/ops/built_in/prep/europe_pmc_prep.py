@@ -54,7 +54,3 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
             prep_operation=prep_operation, record=record
         )
         return record
-
-
-if __name__ == "__main__":
-    pass

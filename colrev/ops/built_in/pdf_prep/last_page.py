@@ -137,7 +137,3 @@ class PDFLastPage(JsonSchemaMixin):
                 f'removed last page for ({record.data["ID"]})'
             )
         return record.data
-
-
-if __name__ == "__main__":
-    pass

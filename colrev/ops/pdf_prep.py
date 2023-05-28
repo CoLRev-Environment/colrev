@@ -456,7 +456,3 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )
-
-
-if __name__ == "__main__":
-    pass

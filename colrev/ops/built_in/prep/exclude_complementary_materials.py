@@ -69,7 +69,3 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             record.prescreen_exclude(reason="complementary material")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

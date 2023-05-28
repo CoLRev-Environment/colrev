@@ -394,7 +394,3 @@ class CoLRevVersion:
 
     def __str__(self) -> str:
         return f"{self.major}.{self.minor}.{self.patch}"
-
-
-if __name__ == "__main__":
-    pass

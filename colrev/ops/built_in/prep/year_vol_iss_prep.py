@@ -210,7 +210,3 @@ class YearVolIssPrep(JsonSchemaMixin):
         self.__get_year_from_crossref(record=record, prep_operation=prep_operation)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -143,7 +143,3 @@ def add_data(
     data_operation.review_manager.logger.info(
         f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
     )
-
-
-if __name__ == "__main__":
-    pass

@@ -368,7 +368,3 @@ class CurationMissingDedupe(JsonSchemaMixin):
             )
 
         self.__create_dedupe_source_stats(dedupe_operation=dedupe_operation)
-
-
-if __name__ == "__main__":
-    pass

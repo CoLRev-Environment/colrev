@@ -216,7 +216,3 @@ def validate(
 
     if validate_operation.review_manager.dataset.records_changed():
         validate_operation.review_manager.create_commit(msg="validate")
-
-
-if __name__ == "__main__":
-    pass

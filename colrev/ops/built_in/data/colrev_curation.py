@@ -405,7 +405,3 @@ class ColrevCuration(JsonSchemaMixin):
             }
 
         return advice
-
-
-if __name__ == "__main__":
-    pass

@@ -81,7 +81,3 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
         del record.data["crossref"]
 
         return record
-
-
-if __name__ == "__main__":
-    pass

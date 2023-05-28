@@ -172,7 +172,3 @@ def dict_set_nested(root: dict, keys: typing.List[str], value: typing.Any) -> No
     for key in keys[:-1]:
         root = root.setdefault(key, {})
     root[keys[-1]] = value
-
-
-if __name__ == "__main__":
-    pass

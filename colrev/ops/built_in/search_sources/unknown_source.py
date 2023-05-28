@@ -375,7 +375,3 @@ class UnknownSearchSource(JsonSchemaMixin):
         self.__unify_special_characters(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

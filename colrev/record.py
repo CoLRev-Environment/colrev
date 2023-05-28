@@ -2304,7 +2304,3 @@ class RecordStateModel:
                 raise colrev_exceptions.ProcessOrderViolation(
                     operation.type.name, str(state), list(intersection)
                 )
-
-
-if __name__ == "__main__":
-    pass

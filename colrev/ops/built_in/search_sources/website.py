@@ -186,7 +186,3 @@ class WebsiteConnector:
             pass
 
         self.zotero_lock.release()
-
-
-if __name__ == "__main__":
-    pass

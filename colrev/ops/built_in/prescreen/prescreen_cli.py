@@ -154,7 +154,3 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
             msg="Pre-screening (manual)", manual_author=True
         )
         return records
-
-
-if __name__ == "__main__":
-    pass

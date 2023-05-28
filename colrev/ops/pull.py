@@ -52,7 +52,3 @@ class Pull(colrev.operation.Operation):
                 f"{colors.RED}Returned flag {res[0].flags}{colors.END}"
             )
         print()
-
-
-if __name__ == "__main__":
-    pass

@@ -1136,7 +1136,3 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             dedupe_operation.review_manager.logger.info(
                 "\nNo same-origin merges detected."
             )
-
-
-if __name__ == "__main__":
-    pass

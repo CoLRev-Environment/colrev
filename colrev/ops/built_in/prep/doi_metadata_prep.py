@@ -62,7 +62,3 @@ class DOIMetadataPrep(JsonSchemaMixin):
             review_manager=prep_operation.review_manager,
         )
         return record
-
-
-if __name__ == "__main__":
-    pass

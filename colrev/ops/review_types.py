@@ -34,7 +34,3 @@ class ReviewTypes:
             operation=check_operation,
             ignore_not_available=False,
         )
-
-
-if __name__ == "__main__":
-    pass

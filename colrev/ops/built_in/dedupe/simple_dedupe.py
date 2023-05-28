@@ -372,7 +372,3 @@ class SimpleDedupe(JsonSchemaMixin):
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
         )
-
-
-if __name__ == "__main__":
-    pass

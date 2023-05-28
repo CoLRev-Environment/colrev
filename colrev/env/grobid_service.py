@@ -69,7 +69,3 @@ class GrobidService:
         )
 
         self.check_grobid_availability()
-
-
-if __name__ == "__main__":
-    pass

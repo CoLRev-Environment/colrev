@@ -249,7 +249,3 @@ class Merge(colrev.operation.Operation):
         # Note : cannot add/create commit yet - not yet supported by gitpython:
         # https://github.com/gitpython-developers/GitPython/issues/1185
         # our_index.write(ignore_extension_data=True)
-
-
-if __name__ == "__main__":
-    pass

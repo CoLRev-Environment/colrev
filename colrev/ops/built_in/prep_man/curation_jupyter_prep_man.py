@@ -59,7 +59,3 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
             "Press Enter to continue."
         )
         return records
-
-
-if __name__ == "__main__":
-    pass

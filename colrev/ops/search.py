@@ -621,7 +621,3 @@ class GeneralOriginFeed:
                 except (FileExistsError, OSError, json.decoder.JSONDecodeError):
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
-
-
-if __name__ == "__main__":
-    pass

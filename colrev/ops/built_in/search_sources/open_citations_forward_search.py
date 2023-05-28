@@ -257,7 +257,3 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record
-
-
-if __name__ == "__main__":
-    pass

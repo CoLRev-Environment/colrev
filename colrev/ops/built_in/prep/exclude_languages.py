@@ -153,7 +153,3 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             )
 
         return record
-
-
-if __name__ == "__main__":
-    pass

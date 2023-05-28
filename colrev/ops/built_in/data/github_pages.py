@@ -367,7 +367,3 @@ class GithubPages(JsonSchemaMixin):
             ] += "\n    - The page is updated automatically (gh-pages branch)"
 
         return advice
-
-
-if __name__ == "__main__":
-    pass

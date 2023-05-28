@@ -154,7 +154,3 @@ class SystematicReviewDatasetsSearchSource(JsonSchemaMixin):
                     record.data[key] = retrieved_record.data[key]
 
         return record
-
-
-if __name__ == "__main__":
-    pass

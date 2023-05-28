@@ -128,7 +128,3 @@ class PDFCheckOCR(JsonSchemaMixin):
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
         return record.data
-
-
-if __name__ == "__main__":
-    pass

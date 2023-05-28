@@ -72,7 +72,3 @@ def load_dedupe_false_negatives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -
                         }
                     )
     return false_negatives
-
-
-if __name__ == "__main__":
-    pass

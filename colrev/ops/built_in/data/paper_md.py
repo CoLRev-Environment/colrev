@@ -845,7 +845,3 @@ class PaperMarkdownRecordSourceTagError(Exception):
     def __init__(self, msg: str) -> None:
         self.message = f" {msg}"
         super().__init__(self.message)
-
-
-if __name__ == "__main__":
-    pass

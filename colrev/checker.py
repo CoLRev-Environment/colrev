@@ -766,7 +766,3 @@ class Checker:
         if failure_items:
             return {"status": ExitCodes.FAIL, "msg": "  " + "\n  ".join(failure_items)}
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-
-if __name__ == "__main__":
-    pass

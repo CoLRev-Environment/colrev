@@ -223,7 +223,3 @@ class CheckOperation(Operation):
             operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
-
-
-if __name__ == "__main__":
-    pass

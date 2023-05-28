@@ -369,7 +369,3 @@ class Prescreen(colrev.operation.Operation):
         )
         if self.review_manager.in_ci_environment():
             print("\n\n")
-
-
-if __name__ == "__main__":
-    pass

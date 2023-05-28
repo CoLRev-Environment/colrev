@@ -238,7 +238,3 @@ class TableScreen(JsonSchemaMixin):
                     msg="Screen", manual_author=True
                 )
         return records
-
-
-if __name__ == "__main__":
-    pass

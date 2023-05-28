@@ -205,7 +205,3 @@ class PDFCoverPage(JsonSchemaMixin):
                 f'removed cover page for ({record.data["ID"]})'
             )
         return record.data
-
-
-if __name__ == "__main__":
-    pass

@@ -266,7 +266,3 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         )
     else:
         print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
-
-
-if __name__ == "__main__":
-    pass

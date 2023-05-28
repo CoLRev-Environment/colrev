@@ -446,7 +446,3 @@ class Initializer:
             self.logger.info("Created local_pdf_collection repository")
 
         os.chdir(self.target_path)
-
-
-if __name__ == "__main__":
-    pass

@@ -78,7 +78,3 @@ class ZoteroTranslationService:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="Zotero (Docker)", detailed_trace=exc
             ) from exc
-
-
-if __name__ == "__main__":
-    pass

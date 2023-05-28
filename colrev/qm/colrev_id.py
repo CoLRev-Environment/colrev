@@ -181,7 +181,3 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
         )
 
     return srep
-
-
-if __name__ == "__main__":
-    pass

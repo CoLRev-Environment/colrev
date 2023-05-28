@@ -119,7 +119,3 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
         """Source-specific preparation for Transport Research International Documentation"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

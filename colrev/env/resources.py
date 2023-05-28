@@ -56,7 +56,3 @@ class Resources:
                 f"Error: repo does not contain a data/records.bib/linked repos {repo_dir}"
             )
         return True
-
-
-if __name__ == "__main__":
-    pass

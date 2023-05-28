@@ -51,7 +51,3 @@ class QualityModel:
             if checker.msg in self.defects_to_ignore:
                 continue
             checker.run(record=record)
-
-
-if __name__ == "__main__":
-    pass

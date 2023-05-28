@@ -63,7 +63,3 @@ class Remove(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
         self.review_manager.create_commit(msg="Remove records", manual_author=False)
-
-
-if __name__ == "__main__":
-    pass

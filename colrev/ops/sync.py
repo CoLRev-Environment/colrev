@@ -250,7 +250,3 @@ class Sync:
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
         self.__save_to_bib(records=records_dict, save_path=references_file)
-
-
-if __name__ == "__main__":
-    pass

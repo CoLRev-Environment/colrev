@@ -996,7 +996,3 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
-
-
-if __name__ == "__main__":
-    pass

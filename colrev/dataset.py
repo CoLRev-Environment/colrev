@@ -1144,7 +1144,3 @@ class Dataset:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
-
-
-if __name__ == "__main__":
-    pass

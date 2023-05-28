@@ -325,7 +325,3 @@ Example 2:
         else:
             advice = {}
         return advice
-
-
-if __name__ == "__main__":
-    pass

@@ -1368,7 +1368,3 @@ class LocalIndex:
             pass
 
         return "unknown"
-
-
-if __name__ == "__main__":
-    pass

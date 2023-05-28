@@ -753,7 +753,3 @@ def get_init_operation(
         target_path=target_path,
         exact_call=exact_call,
     )
-
-
-if __name__ == "__main__":
-    pass

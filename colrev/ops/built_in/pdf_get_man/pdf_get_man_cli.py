@@ -314,7 +314,3 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
 
         return records
-
-
-if __name__ == "__main__":
-    pass

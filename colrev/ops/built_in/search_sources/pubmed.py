@@ -695,7 +695,3 @@ class PubMedSearchSource(JsonSchemaMixin):
         record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

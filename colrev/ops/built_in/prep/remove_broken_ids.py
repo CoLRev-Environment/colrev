@@ -64,7 +64,3 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
                     record.remove_field(key="isbn")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

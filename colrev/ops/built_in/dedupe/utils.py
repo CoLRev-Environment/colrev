@@ -64,7 +64,3 @@ def console_duplicate_instance_label(
                 if user_input in valid_responses:
                     valid_response = True
     return user_input
-
-
-if __name__ == "__main__":
-    pass

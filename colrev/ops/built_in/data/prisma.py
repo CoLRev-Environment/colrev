@@ -256,7 +256,3 @@ class PRISMA(JsonSchemaMixin):
             "detailed_msg": "TODO",
         }
         return advice
-
-
-if __name__ == "__main__":
-    pass

@@ -230,7 +230,3 @@ class ScopePrescreen(JsonSchemaMixin):
             manual_author=False,
         )
         return records
-
-
-if __name__ == "__main__":
-    pass

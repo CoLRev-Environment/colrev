@@ -180,7 +180,3 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Springer Link"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

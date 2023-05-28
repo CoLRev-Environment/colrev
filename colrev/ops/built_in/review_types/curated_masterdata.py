@@ -130,7 +130,3 @@ class CuratedMasterdata(JsonSchemaMixin):
         # (no data endpoint -> automatically rev_synthesized)
 
         return settings
-
-
-if __name__ == "__main__":
-    pass
