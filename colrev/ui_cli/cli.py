@@ -231,6 +231,32 @@ def status(
         print(exc)
 
 
+# add dashboard operation
+@main.command(help_priority=100)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.pass_context
+def dashboard(
+    ctx: click.core.Context,
+    verbose: bool,
+) -> None:
+    """Allows to track project progress through dashboard"""
+    # pylint: disable=import-outside-toplevel
+    import colrev.ops.dashboard
+
+    try:
+        colrev.ops.dashboard.main()
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
+        print(exc)
+        
+
 @main.command(help_priority=3)
 @click.option(
     "-v",
