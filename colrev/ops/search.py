@@ -395,10 +395,13 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except (requests.exceptions.ConnectionError,) as exc:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    source.endpoint
-                ) from exc
+            except (colrev.exceptions.ServiceNotAvailableException) as exc:
+                # requests.exceptions.ConnectionError,
+                if not self.review_manager.force_mode:
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        source.endpoint
+                    ) from exc
+                self.review_manager.logger.warning("ServiceNotAvailableException")
 
             if source.filename.is_file():
                 if not self.review_manager.settings.search.retrieve_forthcoming:
