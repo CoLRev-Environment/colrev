@@ -1864,7 +1864,7 @@ class PrepRecord(Record):
         if key not in self.data or self.data[key] == "UNKNOWN":
             return
 
-        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.7:
+        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.6:
             return
 
         # Note: the truecase package is not very reliable (yet)
@@ -1873,8 +1873,12 @@ class PrepRecord(Record):
 
         if case == "sentence":
             self.data[key] = self.data[key].capitalize()
-        if case == "title":
+        elif case == "title":
             self.data[key] = self.data[key].title()
+        else:
+            raise colrev_exceptions.ParameterError(
+                parameter="case", value=case, options=["sentence", "title"]
+            )
 
         self.data[key] = prep_utils.capitalize_entities(self.data[key])
 

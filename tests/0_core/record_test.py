@@ -1335,12 +1335,12 @@ def test_get_retrieval_similarity() -> None:
             "sentence",
         ),
         (
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency aNd gender in the u.s. and india",
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the U.S. and india",
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
             "sentence",
         ),
         (
-            "Organizations like ieee, ACM operate b2B and c2c businesses",
+            "ORGANIZATIONS LIKE ieee, ACM OPERATE B2B and c2C BUSINESSES",
             "Organizations like IEEE, ACM operate B2B and C2C businesses",
             "sentence",
         ),

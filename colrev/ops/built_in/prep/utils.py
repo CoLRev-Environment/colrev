@@ -13,13 +13,21 @@ def capitalize_entities(input_str: str) -> str:
     """Utility function to capitalize entities"""
 
     for all_cap in ALL_CAPS:
-        input_str = re.sub(r"\b%s\b" % all_cap, all_cap, input_str, flags=re.IGNORECASE)
+        input_str = re.sub(
+            rf"\b{all_cap.lower()}\b", all_cap.upper(), input_str, flags=re.IGNORECASE
+        )
 
     for all_cap, repl in ALL_CAPS_DICT.items():
-        input_str = re.sub(r"\b%s\b" % all_cap, repl, input_str, flags=re.IGNORECASE)
+        input_str = re.sub(
+            rf"\b{all_cap.lower()}\b", repl, input_str, flags=re.IGNORECASE
+        )
 
     for no_cap in NO_CAPS:
-        input_str = re.sub(r"^$\b%s\b" % no_cap, no_cap, input_str, flags=re.IGNORECASE)
+        if input_str.startswith(no_cap):
+            continue
+        input_str = re.sub(
+            rf"\b{no_cap.lower()}\b", no_cap, input_str, flags=re.IGNORECASE
+        )
 
     input_str = input_str.replace(" i'", " I'").replace("'S ", "'s ")
 
