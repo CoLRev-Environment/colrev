@@ -41,12 +41,17 @@ app = Dash(__name__)                                # initializing the dashboard
 
 app.layout = html.Div(                              # defining th content
     children=[
-        html.H1(children="currently synthesized records"),
+        html.Div(children=[html.H1(children="currently synthesized records")]),
+        html.Div(children=[
+            html.Div(children="sort by ", className="menu-title"),
+            dcc.Dropdown(
+                id="sortby",
+                options=["index","year", "author (alphabetically)"],
+            )
+        ]),
         html.Table([html.Tr([html.Td(col) for col in data.columns])] + 
-        [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))]
-        )
-    ]
-)
+        [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))])
+    ])
 
 
 def main() -> None:
