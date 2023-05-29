@@ -9,7 +9,6 @@ from pathlib import Path
 from random import randint
 from typing import Optional
 
-import requests
 from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
@@ -395,7 +394,7 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except (colrev.exceptions.ServiceNotAvailableException) as exc:
+            except colrev.exceptions.ServiceNotAvailableException as exc:
                 # requests.exceptions.ConnectionError,
                 if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(
