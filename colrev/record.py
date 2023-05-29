@@ -1860,17 +1860,16 @@ class PrepRecord(Record):
 
     def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
         """Format the field if it is mostly in upper case"""
-        # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
-        #     return
+
         if key not in self.data or self.data[key] == "UNKNOWN":
             return
-        self.data[key] = self.data[key].replace("\n", " ")
 
         if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.7:
-            self.data[key] = prep_utils.capitalize_entities(self.data[key])
             return
 
         # Note: the truecase package is not very reliable (yet)
+
+        self.data[key] = self.data[key].replace("\n", " ")
 
         if case == "sentence":
             self.data[key] = self.data[key].capitalize()
