@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -15,11 +16,9 @@ import colrev.ops.search_sources
 import colrev.record
 
 # pylint: disable=duplicate-code
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
 
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 

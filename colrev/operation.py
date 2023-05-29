@@ -5,17 +5,15 @@ from __future__ import annotations
 from enum import auto
 from enum import Enum
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import git
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class OperationsType(Enum):

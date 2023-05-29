@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING
 
 import dictdiffer
 
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import git.objects.commit
+if TYPE_CHECKING:
+    import git.objects.commit
 
 
 class Trace(colrev.operation.Operation):

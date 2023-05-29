@@ -8,6 +8,7 @@ import typing
 from collections import Counter
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -17,11 +18,8 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 # pylint: disable=too-many-lines
 

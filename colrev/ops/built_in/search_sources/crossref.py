@@ -13,6 +13,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -30,12 +31,9 @@ import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.search
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.search
+    import colrev.ops.prep
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

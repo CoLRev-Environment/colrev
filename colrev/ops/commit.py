@@ -10,17 +10,15 @@ import tempfile
 from importlib.metadata import version
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Commit:

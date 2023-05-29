@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -17,11 +18,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)

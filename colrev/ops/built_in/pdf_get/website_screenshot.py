@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -12,11 +13,9 @@ import colrev.env.package_manager
 import colrev.record
 
 # pylint: disable=duplicate-code
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
 
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_get
+if TYPE_CHECKING:
+    import colrev.ops.pdf_get
 
 # pylint: disable=too-few-public-methods
 

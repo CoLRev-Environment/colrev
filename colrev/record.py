@@ -13,6 +13,7 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import dictdiffer
 import pandas as pd
@@ -38,12 +39,9 @@ import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
-        import colrev.qm.quality_model
+if TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.qm.quality_model
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods

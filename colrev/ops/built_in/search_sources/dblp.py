@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
@@ -22,11 +23,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.settings
-
-if False:  # pylint: disable=using-constant-test
-    import typing
-
-    # from typing import TYPE_CHECKING
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

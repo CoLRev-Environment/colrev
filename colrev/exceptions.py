@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.record
+if TYPE_CHECKING:
+    import colrev.record
 
 
 class CoLRevException(Exception):

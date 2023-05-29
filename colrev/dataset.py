@@ -12,6 +12,7 @@ import typing
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import git
 import pybtex.errors
@@ -28,11 +29,8 @@ import colrev.operation
 import colrev.record
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-lines

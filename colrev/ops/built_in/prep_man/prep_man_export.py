@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -20,11 +21,8 @@ import colrev.ui_cli.cli_colors as colors
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep_man
+if TYPE_CHECKING:
+    import colrev.ops.prep_man
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)

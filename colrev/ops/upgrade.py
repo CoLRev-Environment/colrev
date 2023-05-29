@@ -7,6 +7,7 @@ import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 from tqdm import tqdm
@@ -16,11 +17,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
