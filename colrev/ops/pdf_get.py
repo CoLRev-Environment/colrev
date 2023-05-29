@@ -631,7 +631,9 @@ class PDFGet(colrev.operation.Operation):
 
         pdf_get_data = self.__get_data()
 
-        if pdf_get_data["nr_tasks"] > 0:
+        if pdf_get_data["nr_tasks"] == 0:
+            self.review_manager.logger.info("No additional pdfs to retrieve")
+        else:
             self.review_manager.logger.info(
                 "PDFs to get".ljust(38) + f'{pdf_get_data["nr_tasks"]} PDFs'
             )
@@ -647,18 +649,10 @@ class PDFGet(colrev.operation.Operation):
 
             self._print_stats(retrieved_record_list=retrieved_record_list)
 
-            # Note: rename should be after copy.
-            # Note : do not pass records as an argument.
-            if self.review_manager.settings.pdf_get.rename_pdfs:
-                self.rename_pdfs()
-
-        else:
-            self.review_manager.logger.info("No additional pdfs to retrieve")
-
-            # Note: rename should be after copy.
-            # Note : do not pass records as an argument.
-            if self.review_manager.settings.pdf_get.rename_pdfs:
-                self.rename_pdfs()
+        # Note: rename should be after copy.
+        # Note : do not pass records as an argument.
+        if self.review_manager.settings.pdf_get.rename_pdfs:
+            self.rename_pdfs()
 
         self.review_manager.create_commit(msg="Get PDFs")
         self.review_manager.logger.info(
