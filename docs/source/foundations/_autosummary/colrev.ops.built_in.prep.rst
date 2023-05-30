@@ -47,5 +47,4 @@ colrev.ops.built\_in.prep
    colrev.ops.built_in.prep.semantic_scholar_prep
    colrev.ops.built_in.prep.source_specific_prep
    colrev.ops.built_in.prep.update_masterdata_status
-   colrev.ops.built_in.prep.utils
    colrev.ops.built_in.prep.year_vol_iss_prep
