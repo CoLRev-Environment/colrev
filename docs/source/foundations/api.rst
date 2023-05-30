@@ -7,7 +7,7 @@ API reference
    (not declared in any toctree) to remove an unnecessary intermediate page; index.rst instead points directly to the
    package page. DO NOT REMOVE THIS FILE!
 
-.. figure:: ../../figures/architecture.svg
+.. figure:: ../../figures/architecture.png
    :width: 700
    :align: center
    :alt: Logo

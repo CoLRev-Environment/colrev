@@ -13,7 +13,7 @@ CoLRev is based on a shared model of six methodological **steps** of the literat
 
 These steps, which typically involve iterations, are operationalized through operations as displayed in the figure:
 
-.. figure:: ../../figures/steps_operations.svg
+.. figure:: ../../figures/steps_operations.png
    :width: 800
    :alt: Overview of states
 

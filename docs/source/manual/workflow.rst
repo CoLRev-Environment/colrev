@@ -14,7 +14,7 @@ Repeatedly calling ``colrev status`` should guide you through the different step
 
 The workflow, as illustrated in the following, consists of a three-step cycle that iterates from ``colrev status`` to a ``colrev [operation]`` to ``colrev validate`` and back to ``colrev status``:
 
-.. figure:: ../../figures/workflow.svg
+.. figure:: ../../figures/workflow.png
    :width: 600
    :align: center
    :alt: Workflow cycle

@@ -12,7 +12,7 @@ Our goal is to provide a manual that is self-contained. Yet, it can help to be f
 
 .. TODO : elaborate on prerequisites?
 
-.. figure:: ../../figures/manual_overview.svg
+.. figure:: ../../figures/manual_overview.png
     :align: center
     :figwidth: 600px
 
