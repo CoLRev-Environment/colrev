@@ -777,6 +777,25 @@ class PDFSearchSource(JsonSchemaMixin):
         if record.data.get("title", "").endswith(" 1"):
             record.data["title"] = record.data["title"][:-2]
 
+    def __fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+        # Erroneous suffixes in IS conferences
+        if record.data.get("booktitle", "") in [
+            "Americas Conference on Information Systems",
+            "International Conference on Information Systems",
+            "European Conference on Information Systems",
+        ]:
+            for suffix in [
+                "completed research paper",
+                "full research paper",
+                "research in progress",
+                "complete research",
+            ]:
+                if record.data["title"].lower().endswith(suffix):
+                    record.data["title"] = record.data["title"][: -len(suffix)].rstrip(
+                        " -"
+                    )
+        # elif ...
+
     def prepare(
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
@@ -811,5 +830,6 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         self.__fix_title_suffix(record=record)
         self.__fix_special_chars(record=record)
+        self.__fix_special_outlets(record=record)
 
         return record

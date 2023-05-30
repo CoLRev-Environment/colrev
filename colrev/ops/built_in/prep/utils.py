@@ -23,7 +23,7 @@ def capitalize_entities(input_str: str) -> str:
         )
 
     for no_cap in NO_CAPS:
-        if input_str.startswith(no_cap):
+        if input_str.lower().startswith(no_cap):
             continue
         input_str = re.sub(
             rf"\b{no_cap.lower()}\b", no_cap, input_str, flags=re.IGNORECASE
