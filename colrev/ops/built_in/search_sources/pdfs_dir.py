@@ -786,9 +786,10 @@ class PDFSearchSource(JsonSchemaMixin):
         ]:
             for suffix in [
                 "completed research paper",
+                "completed research",
+                "complete research",
                 "full research paper",
                 "research in progress",
-                "complete research",
             ]:
                 if record.data["title"].lower().endswith(suffix):
                     record.data["title"] = record.data["title"][: -len(suffix)].rstrip(
