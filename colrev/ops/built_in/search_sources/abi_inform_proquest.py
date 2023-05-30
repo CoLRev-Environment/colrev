@@ -42,6 +42,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -126,6 +127,11 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
+
+        if record.data.get("journal", "").lower().endswith("conference proceedings."):
+            record.change_entrytype(
+                new_entrytype="inproceedings", qm=self.quality_model
+            )
 
         if "language" in record.data:
             if record.data["language"] in ["ENG", "English"]:
