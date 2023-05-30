@@ -2,7 +2,7 @@
 
 .. _Problem formulation:
 
-Step 1: Problem formulation
+Step 0: Problem formulation
 ==================================
 
 Literature reviews begin with the problem formulation step in which reviewers **specify the objective, the review type, and the plans for how the review team will conduct the review**.
@@ -55,9 +55,3 @@ Review protocols often involve the following:
    **Classifications of literature review types**
 
    Paré, G., Trudel, M. C., Jaana, M., & Kitsiou, S. (2015). Synthesizing information systems knowledge: A typology of literature reviews. Information & Management, 52(2), 183-199. `link <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Operations
-
-   problem_formulation/init

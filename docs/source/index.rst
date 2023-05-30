@@ -70,7 +70,7 @@ After each operation, `validate the changes <manual/workflow.html#colrev-validat
 
 For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
 
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/settings.png
+.. figure:: ../figures/settings.png
    :width: 600
    :align: center
    :alt: Settings
@@ -86,7 +86,7 @@ It can substantially reduce required efforts and improve richness, e.g., through
 The more records are curated, the more you can focus on the synthesis.
 
 
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/51b566b6a2fffedda1a5ab5df14a0f387326460b/docs/figures/reuse-vision_loop.png
+.. figure:: ../figures/reuse-vision_loop.png
    :width: 800
    :align: center
    :alt: Reuse vision
@@ -108,6 +108,7 @@ Further information is provided in the `documentation <index.html>`_, the develo
    manual/operations
    manual/workflow
    manual/problem_formulation
+   manual/setup
    manual/metadata_retrieval
    manual/metadata_prescreen
    manual/pdf_retrieval
