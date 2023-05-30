@@ -363,6 +363,8 @@ class Upgrade(colrev.operation.Operation):
 
 
 # TODO : move editor field to identifying_fields
+# Note: we can ask users to make decisions (when defaults are not clear)
+# via input() or simply cancel the process (raise a CoLrevException)
 
 
 class CoLRevVersion:

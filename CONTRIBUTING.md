@@ -106,6 +106,14 @@ It is because the `/tmp` folder is not in same drive as your home drive. Use `py
 
 Beware, everything inside the folder will be deleted, so make sure you use the folder only for test.
 
+### Iterative testing
+
+To test and develop code, it may be helpful to use an example dataset (CoLRev repository) with chained commands, which automatically reset to the previous version and repeat the operation. For example, such a command could look like this:
+
+```
+git reset --hard faaf5d7f5e6 && colrev prep && gitk
+```
+
 ## Pull Request Guidelines
 
 Before you submit a pull request, check that it meets these guidelines:
