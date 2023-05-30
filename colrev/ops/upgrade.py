@@ -317,7 +317,7 @@ class Upgrade(colrev.operation.Operation):
             ]
         self.__save_settings(settings)
         self.review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(self.review_manager.path)
+            path_str=str(self.review_manager.path), force_mode=True
         )
         self.review_manager.load_settings()
         self.review_manager.get_load_operation()
