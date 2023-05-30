@@ -193,6 +193,29 @@ class PrepPackageEndpointInterface(
     def prepare(prep_operation: colrev.ops.prep.Prep, prep_record: dict) -> dict:  # type: ignore
         """Run the prep operation"""
 
+class AddJournalRankingInterface(
+    zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint interface for adding journal"""
+
+    settings_class = zope.interface.Attribute("""Class for the package settings""")
+    source_correction_hint = zope.interface.Attribute(
+        """Hint on how to correct metadata at source"""
+    )
+
+    always_apply_changes = zope.interface.Attribute(
+        """Flag indicating whether changes should always be applied
+        (even if the colrev_status does not transition to md_prepared)"""
+    )
+
+    # pylint: disable=no-self-argument
+    def add_journal_ranking_to_metadata(record: colrev.record.PrepRecord, database) -> None:  # type: ignore
+        """Add journal ranking to metadata"""
+    
+    # pylint: disable=no-self-argument
+    def search_in_database(journal, database) -> str:  # type: ignore
+        """Search for journal ranking in database"""
+
 
 # pylint: disable=too-few-public-methods
 class PrepManPackageEndpointInterface(

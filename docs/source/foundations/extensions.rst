@@ -40,3 +40,6 @@ Extension interfaces
 
 .. autointerface:: colrev.env.package_manager.DataPackageEndpointInterface
    :members:
+
+.. autointerface:: colrev.env.package_manager.AddJournalRankingInterface
+   :members:
