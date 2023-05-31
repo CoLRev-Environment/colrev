@@ -367,16 +367,14 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
-
     def __migrate_0_8_4(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
-            if "editor" not in record.get('colrev_data_provenance', {}):
+            if "editor" not in record.get("colrev_data_provenance", {}):
                 continue
-            ed_val = record['colrev_data_provenance']["editor"]
-            del record['colrev_data_provenance']["editor"]
-            record['colrev_masterdata_provenance']["editor"] = ed_val
-
+            ed_val = record["colrev_data_provenance"]["editor"]
+            del record["colrev_data_provenance"]["editor"]
+            record["colrev_masterdata_provenance"]["editor"] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -384,7 +382,6 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
 
-# TODO : move editor field to identifying_fields
 # Note: we can ask users to make decisions (when defaults are not clear)
 # via input() or simply cancel the process (raise a CoLrevException)
 

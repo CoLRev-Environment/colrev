@@ -3,7 +3,7 @@
 - Run `make linkcheck` in the docs and fix broken links.
 - Run `poetry update`.
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script
-- Update version in `tests/2_ops/ops_test.py`
+- Update version in `tests/2_ops/check_test.py`
 - Run `colrev env --update_package_list`.
 - Update Docker image versions and test.
 - Collect release notes and update the `CHANGELOG.md`.
@@ -11,10 +11,10 @@
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Update the Github milestones, make plans for the next milestones
 - Commit the changes.
+- Run `git tag -s $VERSION`.
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Check whether the tests pass locally (``pytest tests``).
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
-- Run `git tag -s $VERSION`.
 - Test `colrev upgrade` in local repositories
 - Run `git push` and wait for the GitHub actions to complete successfully.
 - Run `git push --atomic origin main $VERSION`.
