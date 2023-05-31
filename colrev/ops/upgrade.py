@@ -121,6 +121,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_3,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.8.4"),
+                "target_version": CoLRevVersion("0.9.0"),
+                "script": self.__migrate_0_8_4,
+                "released": True,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -359,6 +365,22 @@ class Upgrade(colrev.operation.Operation):
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
+        return self.repo.is_dirty()
+
+
+    def __migrate_0_8_4(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if "editor" not in record.get('colrev_data_provenance', {}):
+                continue
+            ed_val = record['colrev_data_provenance']["editor"]
+            del record['colrev_data_provenance']["editor"]
+            record['colrev_masterdata_provenance']["editor"] = ed_val
+
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
         return self.repo.is_dirty()
 
 
