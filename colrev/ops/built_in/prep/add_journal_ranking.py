@@ -21,22 +21,26 @@ class AddJournalRanking(JsonSchemaMixin):
      
     def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
             
-            journal = record["journal"]
-            database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
-            ranking = search_in_database(journal, database)
+        journal = record["journal"]
+        database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
+        ranking = search_in_database(journal, database)
 
-            return record
+        record.add_data_provenance_note(
+            key="journal_ranking", 
+            note=ranking)
+
+        return record
 
     def search_in_database(journal, database) -> str:
-            pointer = database.cursor()
-            pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journal))
-            content = pointer.fetchall()
-            if content is None:
-                return "Not in a ranking"
-            else:
-                for row in content:
-                    return "is ranked"
-            database.close() 
+        pointer = database.cursor()
+        pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journal))
+        content = pointer.fetchall()
+        if content is None:
+            return "Not in a ranking"
+        else:
+            for row in content:
+                return "is ranked"
+        database.close() 
 
 
 if __name__ == "__main__":  

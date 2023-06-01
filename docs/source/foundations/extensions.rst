@@ -2,43 +2,43 @@
 Extension interfaces
 ========================================
 
-.. autointerface:: colrev.env.package_manager.ReviewTypePackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.ReviewTypePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.SearchSourcePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.LoadConversionPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.LoadConversionPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrepPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PrepPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrepManPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PrepManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.DedupePackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.DedupePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrescreenPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PrescreenPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFGetPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PDFGetPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFGetManPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PDFGetManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFPrepPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PDFPrepPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFPrepManPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.PDFPrepManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.ScreenPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.ScreenPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.DataPackageEndpointInterface
+#.. autointerface:: colrev.env.package_manager.DataPackageEndpointInterface
    :members:
 
 .. autointerface:: colrev.env.package_manager.AddJournalRankingInterface
