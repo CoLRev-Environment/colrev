@@ -121,4 +121,10 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
 
         record.rename_field(key="eprint", new_key="fulltext")
 
+        if record.data.get("ENTRYTYPE", "") == "inbook":
+            record.rename_field(key="title", new_key="chapter")
+            record.rename_field(key="booktitle", new_key="title")
+
+        record.rename_field(key="eprint", new_key="fulltext")
+
         return record

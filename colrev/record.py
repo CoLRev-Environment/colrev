@@ -338,6 +338,8 @@ class Record:
 
     def rename_field(self, *, key: str, new_key: str) -> None:
         """Rename a field"""
+        if key not in self.data:
+            return
         value = self.data[key]
         self.data[new_key] = value
 
