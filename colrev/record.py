@@ -388,6 +388,21 @@ class Record:
         elif new_entrytype == "article":
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
+        elif new_entrytype in [
+            "inbook",
+            "book",
+            "incollection",
+            "phdthesis",
+            "thesis",
+            "masterthesis",
+            "bachelorthesis",
+            "techreport",
+            "unpublished",
+            "misc",
+            "software",
+            "online",
+        ]:
+            pass
         else:
             raise colrev_exceptions.MissingRecordQualityRuleSpecification(
                 f"No ENTRYTYPE specification ({new_entrytype})"

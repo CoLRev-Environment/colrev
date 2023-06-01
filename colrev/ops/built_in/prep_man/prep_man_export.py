@@ -189,6 +189,12 @@ class ExportManPrep(JsonSchemaMixin):
     def __update_original_record_based_on_man_prepped(
         self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict
     ) -> None:
+        if original_record.data["ENTRYTYPE"] != man_prepped_record_dict["ENTRYTYPE"]:
+            original_record.change_entrytype(
+                new_entrytype=man_prepped_record_dict["ENTRYTYPE"],
+                qm=self.quality_model,
+            )
+
         dropped_keys = [
             k
             for k in original_record.data
