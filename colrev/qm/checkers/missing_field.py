@@ -122,11 +122,13 @@ class MissingFieldChecker:
             source = record.data["colrev_masterdata_provenance"]["year"]["source"]
         if record.data.get("volume", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="volume", note="missing")
+            record.remove_masterdata_provenance_note(key="volume", note="not-missing")
             record.add_masterdata_provenance(
                 key="volume", source=source, note="forthcoming"
             )
         if record.data.get("number", "") in ["", "UNKNOWN"]:
             record.remove_masterdata_provenance_note(key="number", note="missing")
+            record.remove_masterdata_provenance_note(key="number", note="not-missing")
             record.add_masterdata_provenance(
                 key="number", source=source, note="forthcoming"
             )
