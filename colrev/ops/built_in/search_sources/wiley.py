@@ -119,4 +119,6 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Wiley"""
 
+        record.rename_field(key="eprint", new_key="fulltext")
+
         return record

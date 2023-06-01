@@ -783,6 +783,7 @@ class PDFSearchSource(JsonSchemaMixin):
             "Americas Conference on Information Systems",
             "International Conference on Information Systems",
             "European Conference on Information Systems",
+            "Pacific Asia Conference on Information Systems",
         ]:
             for suffix in [
                 "completed research paper",
