@@ -352,6 +352,10 @@ Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
     + "(not just the most recent ones)",
 )
 @click.option(
+    "-bws",
+    help="Backward search on a selected paper",
+)
+@click.option(
     "-f",
     "--force",
     is_flag=True,
@@ -387,6 +391,7 @@ def search(
     view: bool,
     selected: str,
     rerun: bool,
+    bws: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -414,6 +419,12 @@ def search(
         search_operation.setup_custom_script()
         print("Activated custom_search_script.py.")
         print("Please update the source in settings.json and commit.")
+    elif bws:
+        import colrev.ui_cli.search_backward_selective
+
+        colrev.ui_cli.search_backward_selective.main(
+            search_operation=search_operation, bws=bws
+        )
 
     else:
         search_operation.main(selection_str=selected, rerun=rerun)
