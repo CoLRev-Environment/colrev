@@ -356,7 +356,8 @@ class Search(colrev.operation.Operation):
                     ],
                 )
 
-        self.review_manager.logger.info("Search")
+        rerun_flag = "" if not rerun else f" ({colors.GREEN}rerun{colors.END})"
+        self.review_manager.logger.info(f"Search{rerun_flag}")
         self.review_manager.logger.info(
             "Retrieve new records from an API or files (search sources)."
         )

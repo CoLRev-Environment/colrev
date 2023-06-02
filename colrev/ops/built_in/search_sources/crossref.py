@@ -681,6 +681,21 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 # )
                 yield from self.__query(**crossref_query)
 
+    def __restore_url(
+        self,
+        *,
+        record: colrev.record.Record,
+        feed: colrev.ops.search.GeneralOriginFeed,
+    ) -> None:
+        """Restore the url from the feed if it exists
+        (url-resolution is not always available)"""
+        if record.data["ID"] not in feed.feed_records:
+            return
+        prev_url = feed.feed_records[record.data["ID"]].get("url", None)
+        if prev_url is None:
+            return
+        record.data["url"] = prev_url
+
     def __run_md_search_update(
         self,
         *,
@@ -713,6 +728,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     retrieved_record.data["ID"]
                 ]
 
+            self.__restore_url(record=retrieved_record, feed=crossref_feed)
             crossref_feed.add_record(record=retrieved_record)
 
             changed = search_operation.update_existing_record(
@@ -755,28 +771,32 @@ class CrossrefSearchSource(JsonSchemaMixin):
         records = search_operation.review_manager.dataset.load_records_dict()
         for item in self.__get_crossref_query_return(rerun=rerun):
             try:
-                record_dict = connector_utils.json_to_record(item=item)
-                crossref_feed.set_id(record_dict=record_dict)
+                retrieved_record_dict = connector_utils.json_to_record(item=item)
+                crossref_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
-                if record_dict["ID"] in crossref_feed.feed_records:
+                if retrieved_record_dict["ID"] in crossref_feed.feed_records:
                     prev_record_dict_version = deepcopy(
-                        crossref_feed.feed_records[record_dict["ID"]]
+                        crossref_feed.feed_records[retrieved_record_dict["ID"]]
                     )
 
-                record = colrev.record.Record(data=record_dict)
-                self.__prep_crossref_record(record=record, prep_main_record=False)
+                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                self.__prep_crossref_record(
+                    record=retrieved_record, prep_main_record=False
+                )
 
-                added = crossref_feed.add_record(record=record)
+                self.__restore_url(record=retrieved_record, feed=crossref_feed)
+
+                added = crossref_feed.add_record(record=retrieved_record)
 
                 if added:
                     search_operation.review_manager.logger.info(
-                        " retrieve " + record.data["doi"]
+                        " retrieve " + retrieved_record.data["doi"]
                     )
                     crossref_feed.nr_added += 1
                 else:
                     changed = search_operation.update_existing_record(
                         records=records,
-                        record_dict=record.data,
+                        record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
