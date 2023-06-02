@@ -1350,7 +1350,7 @@ def pdfs(
     help="Rename the PDF files according to record IDs",
 )
 @click.option(
-    "--relink_files",
+    "--relink_pdfs",
     is_flag=True,
     default=False,
     help="Recreate links to PDFs based on colrev pdf-IDs (when PDFs were renamed)",
@@ -1382,7 +1382,7 @@ def pdf_get(
     ctx: click.core.Context,
     copy_to_repo: bool,
     rename: bool,
-    relink_files: bool,
+    relink_pdfs: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -1398,13 +1398,13 @@ def pdf_get(
         },
     )
 
-    state_transition_operation = not relink_files and not setup_custom_script
+    state_transition_operation = not relink_pdfs and not setup_custom_script
     pdf_get_operation = review_manager.get_pdf_get_operation(
         notify_state_transition_operation=state_transition_operation
     )
 
-    if relink_files:
-        pdf_get_operation.relink_files()
+    if relink_pdfs:
+        pdf_get_operation.relink_pdfs()
         return
     if copy_to_repo:
         pdf_get_operation.copy_pdfs_to_repo()
