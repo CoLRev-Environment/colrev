@@ -169,7 +169,7 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_info_df = pd.DataFrame(man_prep_info)
         if platform.system() == "Windows":
             with pd.ExcelWriter(self.prep_man_xlsx_path) as writer:
-                man_prep_info_df.to_excel(writer)
+                man_prep_info_df.to_excel(writer, index=False)
         else:
             man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
