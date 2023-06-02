@@ -116,7 +116,7 @@ class ExportManPrep(JsonSchemaMixin):
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if len(pdf_reader.pages) >= 1:
                         writer = PdfFileWriter()
-                        writer.addPage(pdf_reader.getPage(0))
+                        writer.addPage(pdf_reader.pages[0])
                         with open(target_path, "wb") as outfile:
                             writer.write(outfile)
 
