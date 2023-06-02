@@ -2,6 +2,7 @@
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
+import platform
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +36,7 @@ class ExportManPrep(JsonSchemaMixin):
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
     RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
+    RELATIVE_PREP_MAN_INFO_PATH_XLS = Path("records_prep_man_info.xlsx")
 
     __FIELDS_TO_KEEP = [
         "ENTRYTYPE",
@@ -88,6 +90,10 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.prep_man_csv_path = (
             self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
+        )
+
+        self.prep_man_xlsx_path = (
+            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH_XLS
         )
 
         self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
@@ -161,7 +167,11 @@ class ExportManPrep(JsonSchemaMixin):
                     )
 
         man_prep_info_df = pd.DataFrame(man_prep_info)
-        man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
+        if platform.system() == "Windows":
+            with pd.ExcelWriter(self.prep_man_xlsx_path) as writer:
+                man_prep_info_df.to_excel(writer)
+        else:
+            man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
     def __drop_unnecessary_provenance_fiels(
         self, *, record: colrev.record.Record
@@ -334,9 +344,14 @@ class ExportManPrep(JsonSchemaMixin):
 
     def __print_export_prep_man_instructions(self) -> None:
         print("Created two files:")
-        print(
-            f" - {self.prep_man_csv_path.relative_to(self.review_manager.path)}  (CSV file)"
-        )
+        if platform.system() == "Windows":
+            print(
+                f" - {self.prep_man_xlsx_path.relative_to(self.review_manager.path)}  (EXCEL file)"
+            )
+        else:
+            print(
+                f" - {self.prep_man_csv_path.relative_to(self.review_manager.path)}  (CSV file)"
+            )
         print(
             f" - {self.prep_man_bib_path.relative_to(self.review_manager.path)}       (BIB file)"
         )
