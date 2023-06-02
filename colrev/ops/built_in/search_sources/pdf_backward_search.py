@@ -196,7 +196,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __complement_with_open_citations_data(
         self,
         *,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
@@ -239,7 +239,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         self,
         *,
         record: dict,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         search_operation: colrev.ops.search.Search,
         records: dict,
         rerun: bool,
@@ -286,7 +286,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 pdf_backward_search_feed.nr_added += 1
             elif rerun:
                 # Note : only re-index/update
-                changed = search_operation.update_existing_record(
+                changed = pdf_backward_search_feed.update_existing_record(
                     records=records,
                     record_dict=new_record,
                     prev_record_dict_version=prev_record_dict_version,

@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 
 if TYPE_CHECKING:
     import colrev.review_manager
+    import colrev.ops.search_feed
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -227,13 +228,13 @@ class SearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search.GeneralOriginFeed:
+    ) -> colrev.ops.search_feed.GeneralOriginFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        import colrev.ops.search
+        import colrev.ops.search_feed
 
-        return colrev.ops.search.GeneralOriginFeed(
+        return colrev.ops.search_feed.GeneralOriginFeed(
             review_manager=review_manager,
             search_source=self,
             source_identifier=source_identifier,

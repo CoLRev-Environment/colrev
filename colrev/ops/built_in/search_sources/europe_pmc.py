@@ -422,7 +422,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        europe_pmc_feed: colrev.ops.search.GeneralOriginFeed,
+        europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -485,7 +485,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         )
                         europe_pmc_feed.nr_added += 1
                     else:
-                        changed = search_operation.update_existing_record(
+                        changed = europe_pmc_feed.update_existing_record(
                             records=records,
                             record_dict=retrieved_record.data,
                             prev_record_dict_version=prev_record_dict_version,

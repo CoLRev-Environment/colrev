@@ -494,7 +494,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -537,7 +537,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     )
                     pubmed_feed.nr_added += 1
                 else:
-                    changed = search_operation.update_existing_record(
+                    changed = pubmed_feed.update_existing_record(
                         records=records,
                         record_dict=prep_record.data,
                         prev_record_dict_version=prev_record_dict_version,
@@ -573,7 +573,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -603,7 +603,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             pubmed_feed.add_record(record=colrev.record.Record(data=retrieved_record))
 
-            changed = search_operation.update_existing_record(
+            changed = pubmed_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record,
                 prev_record_dict_version=prev_record_dict_version,

@@ -455,7 +455,7 @@ class PDFSearchSource(JsonSchemaMixin):
         self,
         *,
         pdf_path: Path,
-        pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
+        pdfs_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
         linked_pdf_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -548,7 +548,7 @@ class PDFSearchSource(JsonSchemaMixin):
         *,
         search_operation: colrev.ops.search.Search,
         records: dict,
-        pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
+        pdfs_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
         local_index: colrev.env.local_index.LocalIndex,
         linked_pdf_paths: list,
         rerun: bool,
@@ -580,7 +580,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
                 elif self.review_manager.force_mode:
                     # Note : only re-index/update
-                    if search_operation.update_existing_record(
+                    if pdfs_dir_feed.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,

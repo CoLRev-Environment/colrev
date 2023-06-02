@@ -165,7 +165,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -195,7 +195,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
 
-            changed = search_operation.update_existing_record(
+            changed = local_index_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record_dict,
                 prev_record_dict_version=prev_record_dict_version,
@@ -216,7 +216,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -240,7 +240,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 local_index_feed.nr_added += 1
 
             else:
-                changed = search_operation.update_existing_record(
+                changed = local_index_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record_dict,
                     prev_record_dict_version=prev_record_dict_version,

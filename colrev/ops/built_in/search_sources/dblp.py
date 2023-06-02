@@ -369,7 +369,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -394,7 +394,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
 
                 dblp_feed.add_record(record=retrieved_record)
-                changed = search_operation.update_existing_record(
+                changed = dblp_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record.data,
                     prev_record_dict_version=prev_record_dict_version,
@@ -414,7 +414,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         *,
         query: str,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
         rerun: bool,
     ) -> None:
@@ -465,7 +465,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     dblp_feed.nr_added += 1
 
                 else:
-                    changed = search_operation.update_existing_record(
+                    changed = dblp_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
@@ -500,7 +500,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()

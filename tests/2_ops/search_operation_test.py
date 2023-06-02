@@ -4,12 +4,16 @@ from pathlib import Path
 
 import colrev.review_manager
 import colrev.settings
+from unittest.mock import patch
 
-
-def test_search(base_repo_review_manager: colrev.review_manager.ReviewManager) -> None:
+@patch("colrev.review_manager.ReviewManager.in_ci_environment")
+def test_search(ci_env_patcher, base_repo_review_manager: colrev.review_manager.ReviewManager) -> None:
     """Test the search operation"""
 
+    ci_env_patcher.return_value = True
+
     search_operation = base_repo_review_manager.get_search_operation()
+    # base_repo_review_manager.settings.sources.append()
     search_operation.main(rerun=True)
 
     search_operation.view_sources()

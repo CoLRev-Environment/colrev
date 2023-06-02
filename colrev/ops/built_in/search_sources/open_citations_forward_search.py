@@ -198,7 +198,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                     forward_search_feed.nr_added += 1
                 elif rerun:
                     # Note : only re-index/update
-                    changed = search_operation.update_existing_record(
+                    changed = forward_search_feed.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
