@@ -25,10 +25,12 @@ def test_search(  # type: ignore
     search_operation.main(rerun=True)
 
 
-def test_search_selection(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
+def test_search_selection( # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search selection"""
+    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+
     search_operation = base_repo_review_manager.get_search_operation()
 
     with pytest.raises(

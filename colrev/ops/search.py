@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 
 import colrev.exceptions as colrev_exceptions
@@ -78,15 +79,13 @@ class Search(colrev.operation.Operation):
         self, *, selection_str: Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
         sources_selected = self.sources
-        if selection_str:
-            if selection_str != "all":
-                sources_selected = [
-                    f
-                    for f in self.sources
-                    if str(f.filename) in selection_str.split(",")
-                ]
-            assert len(sources_selected) != 0
+        if selection_str and selection_str != "all":
+            selected_filenames = {Path(f).name for f in selection_str.split(",")}
+            sources_selected = [
+                s for s in self.sources if s.filename.name in selected_filenames
+            ]
 
+        assert len(sources_selected) != 0
         for source in sources_selected:
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
@@ -111,6 +110,37 @@ class Search(colrev.operation.Operation):
                 records=records, save_path=source.get_corresponding_bib_file()
             )
 
+    # pylint: disable=no-self-argument
+    def check_source_selection_exists(var_name: str) -> Callable:  # type: ignore
+        """Check if the source selection exists"""
+
+        # pylint: disable=no-self-argument
+        def check_accepts(func_in: Callable) -> Callable:
+            def new_f(self, *args, **kwds) -> Callable:  # type: ignore
+                if kwds.get(var_name, None) is None:
+                    return func_in(self, *args, **kwds)
+                for search_source in kwds[var_name].split(","):
+                    if Path(search_source) not in [
+                        s.filename for s in self.review_manager.settings.sources
+                    ]:
+                        raise colrev_exceptions.ParameterError(
+                            parameter="select",
+                            value=kwds[var_name],
+                            options=[
+                                str(s.filename)
+                                for s in self.review_manager.settings.sources
+                            ],
+                        )
+                return func_in(self, *args, **kwds)
+
+            new_f.__name__ = func_in.__name__
+            return new_f
+
+        return check_accepts
+
+    @check_source_selection_exists(  # pylint: disable=too-many-function-args
+        "selection_str"
+    )
     @colrev.operation.Operation.decorate()
     def main(
         self,
@@ -120,18 +150,6 @@ class Search(colrev.operation.Operation):
         skip_commit: bool = False,
     ) -> None:
         """Search for records (main entrypoint)"""
-
-        if selection_str:
-            if Path(selection_str) not in [
-                s.filename for s in self.review_manager.settings.sources
-            ]:
-                raise colrev_exceptions.ParameterError(
-                    parameter="select",
-                    value=selection_str,
-                    options=[
-                        str(s.filename) for s in self.review_manager.settings.sources
-                    ],
-                )
 
         rerun_flag = "" if not rerun else f" ({colors.GREEN}rerun{colors.END})"
         self.review_manager.logger.info(f"Search{rerun_flag}")
