@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """Tests of the CoLRev pdf-get operation"""
 from pathlib import Path
-import pytest
-import colrev.review_manager
-import colrev.exceptions as colrev_exceptions
 from unittest.mock import patch
+
+import pytest
+
+import colrev.exceptions as colrev_exceptions
+import colrev.review_manager
+
 
 def test_pdf_get(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
@@ -185,10 +188,13 @@ def test_pdf_get_get_relink_pdfs(  # type: ignore
     )
     base_repo_review_manager.settings.sources[0] = original_source
 
+
 # TODO : collect ci_environment tests in a single test script
 @patch("colrev.review_manager.ReviewManager.in_ci_environment")
 def test_pdf_get_ci_environemnt(  # type: ignore
-    ci_env_patcher, base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    ci_env_patcher,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    helpers,
 ) -> None:
     """Test the pdf-get in ci_environemnt"""
 

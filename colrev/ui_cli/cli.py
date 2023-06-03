@@ -529,10 +529,15 @@ def search(
         )
 
     elif view:
-        search_operation.view_sources()
+        for source in search_operation.sources:
+            search_operation.review_manager.p_printer.pprint(source)
 
     elif setup_custom_script:
-        search_operation.setup_custom_script()
+        import colrev.ui_cli.setup_custom_scripts
+
+        colrev.ui_cli.setup_custom_scripts.setup_custom_search_script(
+            review_manager=review_manager
+        )
         print("Activated custom_search_script.py.")
         print("Please update the source in settings.json and commit.")
     elif bws:

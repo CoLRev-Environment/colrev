@@ -2,11 +2,6 @@
 """CoLRev search operation: Search for relevant records."""
 from __future__ import annotations
 
-<<<<<<< HEAD
-import json
-import time
-=======
->>>>>>> 8913e1a6 (split search / search_feed)
 from pathlib import Path
 from typing import Optional
 
@@ -40,7 +35,6 @@ class Search(colrev.operation.Operation):
 
         if file_path_string.endswith(suffix):
             file_path_string = file_path_string.rstrip(suffix)
-            # suffix = ""
         filename = Path(f"data/search/{file_path_string}{suffix}")
         existing_filenames = [x.filename for x in self.sources]
         if filename not in existing_filenames:
@@ -91,19 +85,15 @@ class Search(colrev.operation.Operation):
                     for f in self.sources
                     if str(f.filename) in selection_str.split(",")
                 ]
-            if len(sources_selected) == 0:
-                available_options = [str(f.filename) for f in self.sources]
-                raise colrev_exceptions.ParameterError(
-                    parameter="selection_str",
-                    value=selection_str,
-                    options=available_options,
-                )
+            assert len(sources_selected) != 0
 
         for source in sources_selected:
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
-    def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+    def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+        """Remove forthcoming papers from a SearchSource"""
+
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
@@ -112,16 +102,11 @@ class Search(colrev.operation.Operation):
             record_list = list(records.values())
             before = len(record_list)
             record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
-            changed = len(record_list) - before
-            if changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
-                )
-            else:
-                self.review_manager.logger.info(f"Removed {changed} forthcoming")
-
+            removed = before - len(record_list)
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Removed {removed} forthcoming{colors.END}"
+            )
             records = {r["ID"]: r for r in record_list}
-
             self.review_manager.dataset.save_records_dict_to_file(
                 records=records, save_path=source.get_corresponding_bib_file()
             )
@@ -169,8 +154,8 @@ class Search(colrev.operation.Operation):
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),
             )
-            # if source.endpoint.lower() not in endpoint_dict:
-            #     continue
+            if source.endpoint.lower() not in endpoint_dict:
+                continue
             endpoint = endpoint_dict[source.endpoint.lower()]
             endpoint.validate_source(search_operation=self, source=source)  # type: ignore
 
@@ -193,7 +178,8 @@ class Search(colrev.operation.Operation):
                 self.review_manager.logger.warning("ServiceNotAvailableException")
 
             if source.filename.is_file():
-                self.__format_source_file(source=source)
+                if not self.review_manager.settings.search.retrieve_forthcoming:
+                    self.remove_forthcoming(source=source)
 
                 self.review_manager.dataset.format_records_file()
                 self.review_manager.dataset.add_record_changes()
@@ -201,35 +187,6 @@ class Search(colrev.operation.Operation):
                 if not skip_commit:
                     self.review_manager.create_commit(msg="Run search")
 
-    def setup_custom_script(self) -> None:
-        """Setup a custom search script"""
-
-        filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_scripts/custom_search_source_script.py")
-        )
-
-        if filedata:
-            with open("custom_search_source_script.py", "w", encoding="utf-8") as file:
-                file.write(filedata.decode("utf-8"))
-
-        self.review_manager.dataset.add_changes(
-            path=Path("custom_search_source_script.py")
-        )
-
-        new_source = colrev.settings.SearchSource(
-            endpoint="custom_search_source_script",
-            filename=Path("data/search/custom_search.bib"),
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={},
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
-            comment="",
-        )
-
-        self.review_manager.settings.sources.append(new_source)
-        self.review_manager.save_settings()
-
-    def view_sources(self) -> None:
-        """View the sources info"""
-
-        for source in self.sources:
-            self.review_manager.p_printer.pprint(source)
+        if self.review_manager.in_ci_environment():
+            print("\n\n")
+    
