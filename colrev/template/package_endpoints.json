@@ -259,11 +259,11 @@
             "ci_supported": false
         },
         {
-            "package_endpoint_identifier": "colrev.systematic_review_datasets",
-            "endpoint": "colrev.ops.built_in.search_sources.systematic_review_datasets.SystematicReviewDatasetsSearchSource",
+            "package_endpoint_identifier": "colrev.synergy_datasets",
+            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for systematic-review-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.md>`_)",
+            "short_description": "SearchSource for SYNERGY-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.md>`_)",
             "ci_supported": false
         },
         {

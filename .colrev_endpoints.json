@@ -216,8 +216,8 @@
             {"package_endpoint_identifier": "colrev.abi_inform_proquest",
             "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource"
             },
-            {"package_endpoint_identifier": "colrev.systematic_review_datasets",
-            "endpoint": "colrev.ops.built_in.search_sources.systematic_review_datasets.SystematicReviewDatasetsSearchSource"
+            {"package_endpoint_identifier": "colrev.synergy_datasets",
+            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource"
             },
             {"package_endpoint_identifier": "colrev.taylor_and_francis",
             "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource"
