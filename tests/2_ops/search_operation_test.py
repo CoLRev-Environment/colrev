@@ -25,7 +25,7 @@ def test_search(  # type: ignore
     search_operation.main(rerun=True)
 
 
-def test_search_selection( # type: ignore
+def test_search_selection(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search selection"""

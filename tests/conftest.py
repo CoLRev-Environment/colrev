@@ -14,6 +14,7 @@ from pybtex.database.input import bibtex
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+import colrev.ui_cli.cli_load
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -218,8 +219,11 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
-    load_operation.main(new_sources=new_sources, keep_ids=False)
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
+    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()

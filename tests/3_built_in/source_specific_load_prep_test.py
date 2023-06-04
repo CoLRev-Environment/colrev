@@ -8,7 +8,7 @@ import pytest
 
 import colrev.review_manager
 import colrev.settings
-
+import colrev.ui_cli.cli_load
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-arguments
@@ -160,9 +160,12 @@ def test_source(  # type: ignore
 
     # Run load and test the heuristics
     load_operation = base_repo_review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
-    if source_filepath.suffix == ".ris" or source_filepath == "ais.txt":
-        new_sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
+
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
+    load_operation.main(new_sources=new_sources)
     if custom_source:
         new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]

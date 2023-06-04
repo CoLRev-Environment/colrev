@@ -176,7 +176,7 @@ class SearchSource(JsonSchemaMixin):
     def setup_for_load(
         self,
         *,
-        record_list: typing.List[typing.Dict],
+        source_records_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
         """Set the SearchSource up for the load process (initialize statistics)"""
@@ -185,10 +185,10 @@ class SearchSource(JsonSchemaMixin):
         # attributes are temporary. They should not be
         # saved to settings.json.
 
-        self.to_import = len(record_list)
+        self.to_import = len(source_records_list)
         self.imported_origins: typing.List[str] = imported_origins
         self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = record_list
+        self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""

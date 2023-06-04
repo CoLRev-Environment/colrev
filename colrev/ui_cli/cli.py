@@ -23,6 +23,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
@@ -421,7 +422,10 @@ def retrieve(
 
     review_manager.exact_call = "colrev prep"
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
     load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -603,19 +607,23 @@ def load(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=skip_query)
-    if include:
-        print()
-        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
-            f"{colors.GREEN}Automatically include records from "
-            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
-        )
+
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
+
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
     load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
 
     if include:
+        print()
+        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
+            f"{colors.GREEN}Automatically include records from "
+            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
+        )
         print()
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
