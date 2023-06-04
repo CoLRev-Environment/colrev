@@ -157,7 +157,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
     def __print_same_toc_recs(
         self, *, same_toc_recs: list, record: colrev.record.Record
-    ) -> None:
+    ) -> list:
         for same_toc_rec in same_toc_recs:
             same_toc_rec["similarity"] = colrev.record.PrepRecord.get_record_similarity(
                 record_a=colrev.record.Record(data=same_toc_rec), record_b=record
@@ -181,6 +181,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
 
             else:
                 print(f"{i + 1} - {author_title_string}")
+        return same_toc_recs
 
     def __get_nr_recs_to_merge(self, *, records: dict) -> int:
         if self.review_manager.force_mode:
@@ -233,7 +234,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
             record.print_citation_format()
             print(colors.END)
 
-            self.__print_same_toc_recs(same_toc_recs=same_toc_recs, record=record)
+            same_toc_recs = self.__print_same_toc_recs(
+                same_toc_recs=same_toc_recs, record=record
+            )
             i = len(same_toc_recs)
             valid_selection = False
             quit_pressed = False
