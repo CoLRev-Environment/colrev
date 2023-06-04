@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
+﻿colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
 ==========================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.dblp

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
+﻿colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
 ======================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.ebsco_host

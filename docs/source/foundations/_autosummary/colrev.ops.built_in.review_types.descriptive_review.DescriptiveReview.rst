@@ -1,4 +1,4 @@
-colrev.ops.built\_in.review\_types.descriptive\_review.DescriptiveReview
+﻿colrev.ops.built\_in.review\_types.descriptive\_review.DescriptiveReview
 ========================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.descriptive_review

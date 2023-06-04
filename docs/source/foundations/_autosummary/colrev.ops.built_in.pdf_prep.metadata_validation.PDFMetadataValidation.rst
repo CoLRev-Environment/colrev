@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_prep.metadata\_validation.PDFMetadataValidation
+﻿colrev.ops.built\_in.pdf\_prep.metadata\_validation.PDFMetadataValidation
 =========================================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_prep.metadata_validation

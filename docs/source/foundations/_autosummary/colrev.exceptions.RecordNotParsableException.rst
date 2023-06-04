@@ -1,4 +1,4 @@
-colrev.exceptions.RecordNotParsableException
+﻿colrev.exceptions.RecordNotParsableException
 ============================================
 
 .. currentmodule:: colrev.exceptions

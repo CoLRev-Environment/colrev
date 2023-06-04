@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.local\_index\_prep.LocalIndexPrep
+﻿colrev.ops.built\_in.prep.local\_index\_prep.LocalIndexPrep
 ===========================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.local_index_prep

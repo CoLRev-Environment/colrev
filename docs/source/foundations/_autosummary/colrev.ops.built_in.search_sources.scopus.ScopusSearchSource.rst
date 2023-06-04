@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
+﻿colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.scopus

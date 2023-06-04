@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prescreen.conditional\_prescreen.ConditionalPrescreen
+﻿colrev.ops.built\_in.prescreen.conditional\_prescreen.ConditionalPrescreen
 ==========================================================================
 
 .. currentmodule:: colrev.ops.built_in.prescreen.conditional_prescreen

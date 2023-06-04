@@ -1,4 +1,4 @@
-colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
+﻿colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
 =======================================================
 
 .. currentmodule:: colrev.ops.built_in.screen.screen_cli

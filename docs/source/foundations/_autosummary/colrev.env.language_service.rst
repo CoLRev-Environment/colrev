@@ -1,4 +1,4 @@
-colrev.env.language\_service
+﻿colrev.env.language\_service
 ============================
 
 .. automodule:: colrev.env.language_service

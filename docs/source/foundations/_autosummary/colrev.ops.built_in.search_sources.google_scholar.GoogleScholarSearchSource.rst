@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
+﻿colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
 ==============================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.google_scholar

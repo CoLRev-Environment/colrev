@@ -1,4 +1,4 @@
-colrev.ops.built\_in.load\_conversion.table\_loader.ExcelLoader
+﻿colrev.ops.built\_in.load\_conversion.table\_loader.ExcelLoader
 ===============================================================
 
 .. currentmodule:: colrev.ops.built_in.load_conversion.table_loader

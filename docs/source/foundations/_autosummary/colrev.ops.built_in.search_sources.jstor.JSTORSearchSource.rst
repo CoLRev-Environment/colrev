@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
+﻿colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
 ============================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.jstor

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prescreen.asreview.ASReviewPrescreen
+﻿colrev.ops.built\_in.prescreen.asreview.ASReviewPrescreen
 =========================================================
 
 .. currentmodule:: colrev.ops.built_in.prescreen.asreview

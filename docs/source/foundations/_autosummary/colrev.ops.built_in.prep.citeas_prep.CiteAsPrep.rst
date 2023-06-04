@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.citeas\_prep.CiteAsPrep
+﻿colrev.ops.built\_in.prep.citeas\_prep.CiteAsPrep
 =================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.citeas_prep

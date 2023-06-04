@@ -1,4 +1,4 @@
-colrev.exceptions.ProcessOrderViolation
+﻿colrev.exceptions.ProcessOrderViolation
 =======================================
 
 .. currentmodule:: colrev.exceptions

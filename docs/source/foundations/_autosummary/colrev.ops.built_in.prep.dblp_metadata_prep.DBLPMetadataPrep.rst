@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
+﻿colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
 ===============================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.dblp_metadata_prep

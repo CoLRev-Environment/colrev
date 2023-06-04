@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.exclude\_complementary\_materials.ExcludeComplementaryMaterialsPrep
+﻿colrev.ops.built\_in.prep.exclude\_complementary\_materials.ExcludeComplementaryMaterialsPrep
 =============================================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.exclude_complementary_materials

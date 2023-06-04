@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
+﻿colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.pubmed

@@ -1,4 +1,4 @@
-colrev.env.utils.custom\_asdict\_factory
+﻿colrev.env.utils.custom\_asdict\_factory
 ========================================
 
 .. currentmodule:: colrev.env.utils

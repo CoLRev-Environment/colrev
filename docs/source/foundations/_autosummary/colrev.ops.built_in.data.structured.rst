@@ -1,4 +1,4 @@
-colrev.ops.built\_in.data.structured
+﻿colrev.ops.built\_in.data.structured
 ====================================
 
 .. automodule:: colrev.ops.built_in.data.structured

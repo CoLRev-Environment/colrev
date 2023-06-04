@@ -1,4 +1,4 @@
-colrev.exceptions.UnstagedGitChangesError
+﻿colrev.exceptions.UnstagedGitChangesError
 =========================================
 
 .. currentmodule:: colrev.exceptions

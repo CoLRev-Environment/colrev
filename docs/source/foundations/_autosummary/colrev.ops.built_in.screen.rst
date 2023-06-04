@@ -1,4 +1,4 @@
-colrev.ops.built\_in.screen
+﻿colrev.ops.built\_in.screen
 ===========================
 
 .. automodule:: colrev.ops.built_in.screen

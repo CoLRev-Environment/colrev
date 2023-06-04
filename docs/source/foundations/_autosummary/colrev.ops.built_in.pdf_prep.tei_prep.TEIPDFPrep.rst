@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_prep.tei\_prep.TEIPDFPrep
+﻿colrev.ops.built\_in.pdf\_prep.tei\_prep.TEIPDFPrep
 ===================================================
 
 .. currentmodule:: colrev.ops.built_in.pdf_prep.tei_prep

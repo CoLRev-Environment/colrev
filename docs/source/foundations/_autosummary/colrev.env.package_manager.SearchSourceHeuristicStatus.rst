@@ -1,4 +1,4 @@
-colrev.env.package\_manager.SearchSourceHeuristicStatus
+﻿colrev.env.package\_manager.SearchSourceHeuristicStatus
 =======================================================
 
 .. currentmodule:: colrev.env.package_manager

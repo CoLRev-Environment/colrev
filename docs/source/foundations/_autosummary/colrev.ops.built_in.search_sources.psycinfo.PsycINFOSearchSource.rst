@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
+﻿colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
 ==================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.psycinfo

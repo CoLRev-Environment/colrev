@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSearchSource
+﻿colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSearchSource
 ========================================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.abi_inform_proquest

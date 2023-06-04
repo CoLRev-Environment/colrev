@@ -1,4 +1,4 @@
-colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitationsSearchSource
+﻿colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitationsSearchSource
 ===============================================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.open_citations_forward_search

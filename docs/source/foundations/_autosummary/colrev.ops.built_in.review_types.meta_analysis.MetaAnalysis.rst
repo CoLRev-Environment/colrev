@@ -1,4 +1,4 @@
-colrev.ops.built\_in.review\_types.meta\_analysis.MetaAnalysis
+﻿colrev.ops.built\_in.review\_types.meta\_analysis.MetaAnalysis
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.meta_analysis

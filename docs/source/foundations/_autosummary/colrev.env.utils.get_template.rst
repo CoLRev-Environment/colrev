@@ -1,4 +1,4 @@
-colrev.env.utils.get\_template
+﻿colrev.env.utils.get\_template
 ==============================
 
 .. currentmodule:: colrev.env.utils

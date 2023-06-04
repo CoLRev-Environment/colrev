@@ -1,4 +1,4 @@
-colrev.hooks.format.main
+﻿colrev.hooks.format.main
 ========================
 
 .. currentmodule:: colrev.hooks.format

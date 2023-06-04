@@ -1,4 +1,4 @@
-colrev.exceptions
+﻿colrev.exceptions
 =================
 
 .. automodule:: colrev.exceptions
@@ -40,6 +40,7 @@ colrev.exceptions
       InvalidMerge
       InvalidPDFException
       InvalidQueryException
+      InvalidRegistryKeyException
       InvalidSettingsError
       MissingDependencyError
       MissingRecordQualityRuleSpecification
@@ -53,6 +54,7 @@ colrev.exceptions
       OriginError
       PDFHashError
       PackageParameterError
+      PackageSettingMustStartWithPackagesException
       ParameterError
       PortAlreadyRegisteredException
       PreparationBreak

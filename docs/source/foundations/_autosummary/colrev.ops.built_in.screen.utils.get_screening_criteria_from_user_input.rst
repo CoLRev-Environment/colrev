@@ -1,4 +1,4 @@
-colrev.ops.built\_in.screen.utils.get\_screening\_criteria\_from\_user\_input
+﻿colrev.ops.built\_in.screen.utils.get\_screening\_criteria\_from\_user\_input
 =============================================================================
 
 .. currentmodule:: colrev.ops.built_in.screen.utils

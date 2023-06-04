@@ -1,4 +1,4 @@
-colrev.ops.built\_in.review\_types.conceptual\_review.ConceptualReview
+﻿colrev.ops.built\_in.review\_types.conceptual\_review.ConceptualReview
 ======================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.conceptual_review

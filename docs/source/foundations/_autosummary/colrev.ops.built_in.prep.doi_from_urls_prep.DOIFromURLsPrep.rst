@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.doi\_from\_urls\_prep.DOIFromURLsPrep
+﻿colrev.ops.built\_in.prep.doi\_from\_urls\_prep.DOIFromURLsPrep
 ===============================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.doi_from_urls_prep

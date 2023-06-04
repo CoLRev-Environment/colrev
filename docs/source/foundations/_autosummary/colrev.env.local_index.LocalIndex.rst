@@ -1,4 +1,4 @@
-colrev.env.local\_index.LocalIndex
+﻿colrev.env.local\_index.LocalIndex
 ==================================
 
 .. currentmodule:: colrev.env.local_index

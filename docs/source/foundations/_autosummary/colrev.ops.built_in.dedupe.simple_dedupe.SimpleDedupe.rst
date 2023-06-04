@@ -1,4 +1,4 @@
-colrev.ops.built\_in.dedupe.simple\_dedupe.SimpleDedupe
+﻿colrev.ops.built\_in.dedupe.simple\_dedupe.SimpleDedupe
 =======================================================
 
 .. currentmodule:: colrev.ops.built_in.dedupe.simple_dedupe

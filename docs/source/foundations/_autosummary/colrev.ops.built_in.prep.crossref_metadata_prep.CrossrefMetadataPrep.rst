@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
+﻿colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
 =======================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.crossref_metadata_prep

@@ -1,4 +1,4 @@
-colrev.ops.built\_in.pdf\_get\_man
+﻿colrev.ops.built\_in.pdf\_get\_man
 ==================================
 
 .. automodule:: colrev.ops.built_in.pdf_get_man

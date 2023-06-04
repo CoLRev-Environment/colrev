@@ -1,4 +1,4 @@
-colrev.advisor
+﻿colrev.advisor
 ==============
 
 .. automodule:: colrev.advisor

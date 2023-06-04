@@ -1,4 +1,4 @@
-colrev.ops.built\_in.review\_types.scientometric
+﻿colrev.ops.built\_in.review\_types.scientometric
 ================================================
 
 .. automodule:: colrev.ops.built_in.review_types.scientometric

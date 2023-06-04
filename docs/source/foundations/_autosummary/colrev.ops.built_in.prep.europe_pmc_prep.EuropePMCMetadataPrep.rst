@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.europe\_pmc\_prep.EuropePMCMetadataPrep
+﻿colrev.ops.built\_in.prep.europe\_pmc\_prep.EuropePMCMetadataPrep
 =================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.europe_pmc_prep

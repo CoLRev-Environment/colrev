@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.year\_vol\_iss\_prep.YearVolIssPrep
+﻿colrev.ops.built\_in.prep.year\_vol\_iss\_prep.YearVolIssPrep
 =============================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.year_vol_iss_prep

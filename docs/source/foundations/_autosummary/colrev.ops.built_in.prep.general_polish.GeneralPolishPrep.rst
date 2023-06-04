@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.general\_polish.GeneralPolishPrep
+﻿colrev.ops.built\_in.prep.general\_polish.GeneralPolishPrep
 ===========================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.general_polish

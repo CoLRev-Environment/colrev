@@ -1,4 +1,4 @@
-colrev.logger
+﻿colrev.logger
 =============
 
 .. automodule:: colrev.logger

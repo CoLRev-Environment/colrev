@@ -1,4 +1,4 @@
-colrev.exceptions.PreparationBreak
+﻿colrev.exceptions.PreparationBreak
 ==================================
 
 .. currentmodule:: colrev.exceptions

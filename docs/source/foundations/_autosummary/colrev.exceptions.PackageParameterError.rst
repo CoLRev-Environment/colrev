@@ -1,4 +1,4 @@
-colrev.exceptions.PackageParameterError
+﻿colrev.exceptions.PackageParameterError
 =======================================
 
 .. currentmodule:: colrev.exceptions

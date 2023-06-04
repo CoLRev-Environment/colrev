@@ -1,4 +1,4 @@
-colrev.ops.built\_in.prep.source\_specific\_prep.SourceSpecificPrep
+﻿colrev.ops.built\_in.prep.source\_specific\_prep.SourceSpecificPrep
 ===================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.source_specific_prep

@@ -1,4 +1,4 @@
-colrev.hooks.share.main
+﻿colrev.hooks.share.main
 =======================
 
 .. currentmodule:: colrev.hooks.share

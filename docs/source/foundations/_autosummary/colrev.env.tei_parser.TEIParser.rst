@@ -1,4 +1,4 @@
-colrev.env.tei\_parser.TEIParser
+﻿colrev.env.tei\_parser.TEIParser
 ================================
 
 .. currentmodule:: colrev.env.tei_parser
