@@ -707,27 +707,26 @@ class PackageManager:
             packages_dict[package_identifier] = {}
 
             packages_dict[package_identifier]["settings"] = selected_package
-            # print(self.packages[package_type])
-            # print(package_identifier)
+
             # 1. Load built-in packages
-            # if package_identifier in cls.packages[package_type]
-            if package_identifier in self.packages[package_type]:
+            if package_identifier.split(".")[0] == "colrev":
+                if package_identifier not in self.packages[package_type]:
+                    raise colrev_exceptions.MissingDependencyError(
+                        "Built-in dependency "
+                        + f"{package_identifier} ({package_type}) not in package_endpoints.json. "
+                    )
                 if not self.packages[package_type][package_identifier][
                     "installed"
                 ]:  # pragma: no cover
                     raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        + f"{package_identifier} ({package_type}) not found. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
+                        f"Dependency {package_identifier} ({package_type}) not found. "
+                        f"Please install it\n  pip install {package_identifier.split('.')[0]}"
                     )
-
-                if self.packages[package_type][package_identifier]["installed"]:
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = self.load_package_endpoint(
-                        package_type=package_type, package_identifier=package_identifier
-                    )
+                packages_dict[package_identifier][
+                    "endpoint"
+                ] = self.load_package_endpoint(
+                    package_type=package_type, package_identifier=package_identifier
+                )
 
             # 2. Load module packages
             elif not Path(package_identifier + ".py").is_file():
@@ -746,7 +745,7 @@ class PackageManager:
                         continue
                     raise colrev_exceptions.MissingDependencyError(
                         "Dependency "
-                        + f"{package_identifier} ({package_type}) not found. "
+                        f"{package_identifier} ({package_type}) not installed. "
                         "Please install it\n  pip install "
                         f"{package_identifier.split('.')[0]}"
                     ) from exc
@@ -792,7 +791,6 @@ class PackageManager:
             package_type=package_type,
             ignore_not_available=ignore_not_available,
         )
-
         self.__drop_broken_packages(
             packages_dict=packages_dict,
             package_type=package_type,
