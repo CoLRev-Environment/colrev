@@ -24,10 +24,18 @@ Everything is specified in the settings.json (simply add the extension/script na
 The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
 
 Registered extensions are public Python packages that can be installed via PyPI.
-They contain an ``.colrev_endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/.colrev_endpoints.json>`_ provides an example).
-To register a new extension, create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/packages.json>`_.
-When the review is passed, the details will be added to the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_endpoints.json>`_, which also makes them available in the documentation.
-The development status is automatically added to the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_status.json>`_ and can be updated manually once the review is completed.
+An extension can have different `endpoints` (see `extension interfaces <../foundations/extensions.html>`_ for the interfaces).
+Registered extensions contain a ``.colrev_endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/.colrev_endpoints.json>`_ provides an example).
+
+To *register a new extension*:
+
+1. Create a pull request briefly describing the extension and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/packages.json>`_. If you add an endpoint to CoLRev (built-in), you can skip this step.
+
+To create a new extension endpoint:
+
+1. Add the extension endpoint to the ``.colrev_endpoints.json`` file in the project.
+2. Run the ``colrev env --update_package_list`` command, which updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_endpoints.json>`_, and the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/package_status.json>`_. This makes the extension available to CoLRev users and in the documentation.
+3. Create a pull request.
 
 **Recommendations**:
 
