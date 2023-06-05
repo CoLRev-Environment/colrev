@@ -12,7 +12,7 @@ import colrev.ops.search_sources
 import colrev.record
 import sqlite3
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(colrev.env.package_manager.AddJournalRankingInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
 
