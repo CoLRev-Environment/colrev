@@ -1,4 +1,4 @@
-﻿colrev.exceptions.CleanRepoRequiredError
+colrev.exceptions.CleanRepoRequiredError
 ========================================
 
 .. currentmodule:: colrev.exceptions

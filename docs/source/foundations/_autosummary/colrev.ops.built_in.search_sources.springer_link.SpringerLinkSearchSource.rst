@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
+colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
 ============================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.springer_link

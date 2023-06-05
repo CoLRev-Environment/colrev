@@ -1,4 +1,4 @@
-﻿colrev.exceptions.RecordNotInTOCException
+colrev.exceptions.RecordNotInTOCException
 =========================================
 
 .. currentmodule:: colrev.exceptions

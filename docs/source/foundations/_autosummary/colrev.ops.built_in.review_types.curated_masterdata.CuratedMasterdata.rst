@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.curated\_masterdata.CuratedMasterdata
+colrev.ops.built\_in.review\_types.curated\_masterdata.CuratedMasterdata
 ========================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.curated_masterdata

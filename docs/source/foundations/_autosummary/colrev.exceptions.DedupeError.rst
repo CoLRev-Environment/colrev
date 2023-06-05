@@ -1,4 +1,4 @@
-﻿colrev.exceptions.DedupeError
+colrev.exceptions.DedupeError
 =============================
 
 .. currentmodule:: colrev.exceptions

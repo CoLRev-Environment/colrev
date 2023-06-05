@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prescreen.prescreen\_cli
+colrev.ops.built\_in.prescreen.prescreen\_cli
 =============================================
 
 .. automodule:: colrev.ops.built_in.prescreen.prescreen_cli

@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
+colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
 =============================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.update_masterdata_status

@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeAutomated
+colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeAutomated
 =====================================================================================
 
 .. currentmodule:: colrev.ops.built_in.dedupe.active_learning_dedup_io

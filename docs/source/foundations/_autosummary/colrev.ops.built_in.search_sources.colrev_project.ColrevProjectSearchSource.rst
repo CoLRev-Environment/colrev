@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
+colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
 ==============================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.colrev_project

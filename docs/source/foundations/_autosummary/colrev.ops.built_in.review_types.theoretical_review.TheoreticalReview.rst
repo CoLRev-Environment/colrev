@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
+colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
 ========================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.theoretical_review

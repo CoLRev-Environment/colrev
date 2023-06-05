@@ -1,4 +1,4 @@
-﻿colrev.hooks.format
+colrev.hooks.format
 ===================
 
 .. automodule:: colrev.hooks.format

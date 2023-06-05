@@ -1,4 +1,4 @@
-﻿colrev.hooks.update.main
+colrev.hooks.update.main
 ========================
 
 .. currentmodule:: colrev.hooks.update

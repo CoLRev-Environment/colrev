@@ -1,4 +1,4 @@
-﻿colrev.exceptions.DuplicateIDsError
+colrev.exceptions.DuplicateIDsError
 ===================================
 
 .. currentmodule:: colrev.exceptions

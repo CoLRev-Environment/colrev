@@ -1,4 +1,4 @@
-﻿colrev.env.resources.Resources
+colrev.env.resources.Resources
 ==============================
 
 .. currentmodule:: colrev.env.resources

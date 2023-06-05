@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep\_man.curation\_jupyter\_prep\_man.CurationJupyterNotebookManPrep
+colrev.ops.built\_in.prep\_man.curation\_jupyter\_prep\_man.CurationJupyterNotebookManPrep
 ==========================================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep_man.curation_jupyter_prep_man

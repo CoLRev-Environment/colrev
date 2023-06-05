@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets
+colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets
 ========================================================
 
 .. automodule:: colrev.ops.built_in.prep.exclude_non_latin_alphabets

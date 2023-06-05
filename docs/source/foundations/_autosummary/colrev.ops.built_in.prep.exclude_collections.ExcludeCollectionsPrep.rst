@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.exclude\_collections.ExcludeCollectionsPrep
+colrev.ops.built\_in.prep.exclude\_collections.ExcludeCollectionsPrep
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.exclude_collections

@@ -1,4 +1,4 @@
-﻿colrev.operation
+colrev.operation
 ================
 
 .. automodule:: colrev.operation

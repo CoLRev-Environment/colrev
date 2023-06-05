@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
+colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.prescreen.scope_prescreen

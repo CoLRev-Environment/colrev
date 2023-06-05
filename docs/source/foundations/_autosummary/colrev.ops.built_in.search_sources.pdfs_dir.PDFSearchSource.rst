@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
+colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.pdfs_dir

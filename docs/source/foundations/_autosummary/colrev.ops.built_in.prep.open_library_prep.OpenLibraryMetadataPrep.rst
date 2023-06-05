@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
+colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
 =====================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.open_library_prep

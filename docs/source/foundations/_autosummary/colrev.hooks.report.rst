@@ -1,4 +1,4 @@
-﻿colrev.hooks.report
+colrev.hooks.report
 ===================
 
 .. automodule:: colrev.hooks.report

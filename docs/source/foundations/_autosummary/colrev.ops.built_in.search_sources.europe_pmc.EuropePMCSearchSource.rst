@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
+colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
 ======================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.europe_pmc

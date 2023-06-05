@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.pubmed\_metadata\_prep.PubmedMetadataPrep
+colrev.ops.built\_in.prep.pubmed\_metadata\_prep.PubmedMetadataPrep
 ===================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.pubmed_metadata_prep

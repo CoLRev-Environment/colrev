@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.curation\_prep.CurationPrep
+colrev.ops.built\_in.prep.curation\_prep.CurationPrep
 =====================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.curation_prep

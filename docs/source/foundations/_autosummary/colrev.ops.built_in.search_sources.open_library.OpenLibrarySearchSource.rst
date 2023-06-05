@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
+colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
 ==========================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.open_library

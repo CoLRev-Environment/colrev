@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.exclude\_languages.ExcludeLanguagesPrep
+colrev.ops.built\_in.prep.exclude\_languages.ExcludeLanguagesPrep
 =================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.exclude_languages

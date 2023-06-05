@@ -1,4 +1,4 @@
-﻿colrev.checker.Checker
+colrev.checker.Checker
 ======================
 
 .. currentmodule:: colrev.checker

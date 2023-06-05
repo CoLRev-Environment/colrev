@@ -1,4 +1,4 @@
-﻿colrev.env.environment\_manager.EnvironmentManager
+colrev.env.environment\_manager.EnvironmentManager
 ==================================================
 
 .. currentmodule:: colrev.env.environment_manager

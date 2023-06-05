@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.bibtex\_crossref\_resolution.BibTexCrossrefResolutionPrep
+colrev.ops.built\_in.prep.bibtex\_crossref\_resolution.BibTexCrossrefResolutionPrep
 ===================================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.bibtex_crossref_resolution

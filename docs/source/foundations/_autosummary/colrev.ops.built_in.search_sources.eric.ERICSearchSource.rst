@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
+colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
 ==========================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.eric

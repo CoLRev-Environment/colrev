@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.qualitative\_systematic\_review.QualitativeSystematicReview
+colrev.ops.built\_in.review\_types.qualitative\_systematic\_review.QualitativeSystematicReview
 ==============================================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.qualitative_systematic_review

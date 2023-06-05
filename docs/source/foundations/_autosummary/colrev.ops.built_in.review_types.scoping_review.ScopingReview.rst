@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.scoping\_review.ScopingReview
+colrev.ops.built\_in.review\_types.scoping\_review.ScopingReview
 ================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.scoping_review

@@ -1,4 +1,4 @@
-﻿colrev.exceptions.CorrectionPreconditionException
+colrev.exceptions.CorrectionPreconditionException
 =================================================
 
 .. currentmodule:: colrev.exceptions

@@ -1,4 +1,4 @@
-﻿colrev.env.screenshot\_service
+colrev.env.screenshot\_service
 ==============================
 
 .. automodule:: colrev.env.screenshot_service

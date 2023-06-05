@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep\_man.prep\_man\_export.ExportManPrep
+colrev.ops.built\_in.prep\_man.prep\_man\_export.ExportManPrep
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.prep_man.prep_man_export

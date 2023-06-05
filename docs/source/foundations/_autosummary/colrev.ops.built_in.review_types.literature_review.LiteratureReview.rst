@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.literature\_review.LiteratureReview
+colrev.ops.built\_in.review\_types.literature\_review.LiteratureReview
 ======================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.literature_review

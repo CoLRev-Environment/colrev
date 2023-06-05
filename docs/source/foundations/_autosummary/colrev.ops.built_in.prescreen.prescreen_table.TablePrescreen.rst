@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
+colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
 ==============================================================
 
 .. currentmodule:: colrev.ops.built_in.prescreen.prescreen_table

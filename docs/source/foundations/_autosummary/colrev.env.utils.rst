@@ -1,4 +1,4 @@
-﻿colrev.env.utils
+colrev.env.utils
 ================
 
 .. automodule:: colrev.env.utils

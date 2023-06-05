@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
+colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
 ===============================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.pdf_backward_search

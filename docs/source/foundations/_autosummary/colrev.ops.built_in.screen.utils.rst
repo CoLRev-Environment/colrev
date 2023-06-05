@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.screen.utils
+colrev.ops.built\_in.screen.utils
 =================================
 
 .. automodule:: colrev.ops.built_in.screen.utils

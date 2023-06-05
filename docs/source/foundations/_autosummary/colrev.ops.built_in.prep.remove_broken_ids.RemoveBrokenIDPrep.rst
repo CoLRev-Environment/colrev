@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.prep.remove\_broken\_ids.RemoveBrokenIDPrep
+colrev.ops.built\_in.prep.remove\_broken\_ids.RemoveBrokenIDPrep
 ================================================================
 
 .. currentmodule:: colrev.ops.built_in.prep.remove_broken_ids

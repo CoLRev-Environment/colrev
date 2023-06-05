@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.screen.screen\_table.TableScreen
+colrev.ops.built\_in.screen.screen\_table.TableScreen
 =====================================================
 
 .. currentmodule:: colrev.ops.built_in.screen.screen_table

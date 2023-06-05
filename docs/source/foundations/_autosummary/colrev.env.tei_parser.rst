@@ -1,4 +1,4 @@
-﻿colrev.env.tei\_parser
+colrev.env.tei\_parser
 ======================
 
 .. automodule:: colrev.env.tei_parser

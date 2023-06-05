@@ -1,4 +1,4 @@
-﻿colrev.env.grobid\_service.GrobidService
+colrev.env.grobid\_service.GrobidService
 ========================================
 
 .. currentmodule:: colrev.env.grobid_service

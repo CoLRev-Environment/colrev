@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.review\_types.critical\_review.CriticalReview
+colrev.ops.built\_in.review\_types.critical\_review.CriticalReview
 ==================================================================
 
 .. currentmodule:: colrev.ops.built_in.review_types.critical_review

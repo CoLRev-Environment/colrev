@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
+colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
 ========================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.local_index

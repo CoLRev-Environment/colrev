@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.data.obsidian.Obsidian
+colrev.ops.built\_in.data.obsidian.Obsidian
 ===========================================
 
 .. currentmodule:: colrev.ops.built_in.data.obsidian

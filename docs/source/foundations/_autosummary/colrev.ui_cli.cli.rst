@@ -9,6 +9,14 @@ colrev.ui\_cli.cli
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      catch_exception
+
 
 
 
