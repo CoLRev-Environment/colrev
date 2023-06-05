@@ -12,16 +12,14 @@ import colrev.ops.search_sources
 import colrev.record
 import sqlite3
 
-@zope.interface.implementer(colrev.env.package_manager.AddJournalRankingInterface)
+@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
 
     #wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
     settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = True
      
-    #init instanzieierung noch miteinfügen
-    
     def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
             
         
