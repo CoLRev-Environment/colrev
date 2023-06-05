@@ -31,11 +31,11 @@ class AddJournalRanking(JsonSchemaMixin):
             
         journal = record["journal"]
         database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
-        ranking = search_in_database(journal, database)
+        self.search_in_database(journal, database)
 
         record.add_data_provenance_note(
             key="journal_ranking", 
-            note=ranking)
+            note=self)
 
         return record
 
