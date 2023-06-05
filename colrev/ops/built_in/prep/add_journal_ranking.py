@@ -16,18 +16,22 @@ import sqlite3
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
 
+    #wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
     settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = False
      
+    #init instanzieierung noch miteinfügen
+    
     def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
             
+        
         journal = record["journal"]
         database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
-        ranking = search_in_database(journal, database)
+        self.search_in_database(journal, database)
 
         record.add_data_provenance_note(
             key="journal_ranking", 
-            note=ranking)
+            note=self)
 
         return record
 
