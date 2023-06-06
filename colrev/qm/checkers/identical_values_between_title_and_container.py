@@ -26,6 +26,8 @@ class IdenticalValuesChecker:
     def __identical_values_between_title_and_container(
         self, *, record: colrev.record.Record
     ) -> bool:
+        if record.data.get("title", "UNKNOWN") == "UNKNOWN":
+            return False
         if (
             "booktitle" in record.data
             and "title" in record.data
