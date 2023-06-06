@@ -195,6 +195,14 @@
             "ci_supported": true
         },
         {
+            "package_endpoint_identifier": "colrev.open_alex",
+            "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "SearchSource for the OpenAlex API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_alex.md>`_)",
+            "ci_supported": true
+        },
+        {
             "package_endpoint_identifier": "colrev.open_citations_forward_search",
             "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
             "status": "|MATURING|",
@@ -500,6 +508,14 @@
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on year-volume-issue dependency (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.md>`_)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex_prep",
+            "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "Prepares records based on OpenAlex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_alex_metadata_prep.md>`_)",
             "ci_supported": true
         },
         {

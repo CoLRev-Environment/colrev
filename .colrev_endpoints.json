@@ -24,6 +24,9 @@
             }
         ],
         "prep": [
+            {"package_endpoint_identifier": "colrev.open_alex_prep",
+             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep"
+            },
             {"package_endpoint_identifier": "colrev.source_specific_prep",
              "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep"
             },
@@ -207,6 +210,9 @@
             }
         ],
         "search_source": [
+            {"package_endpoint_identifier": "colrev.open_alex",
+             "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource"
+            },
             {"package_endpoint_identifier": "colrev.open_library",
              "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource"
             },

@@ -519,7 +519,9 @@ class GeneralOriginFeed:
         """
 
         if self.source_identifier not in record_dict:
-            raise colrev_exceptions.NotFeedIdentifiableException()
+            raise colrev_exceptions.NotFeedIdentifiableException(
+                f"Not feed-identifiable ({self.source_identifier} in record)"
+            )
 
         if record_dict[self.source_identifier] in self.__available_ids:
             record_dict["ID"] = self.__available_ids[

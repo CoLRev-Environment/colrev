@@ -157,6 +157,10 @@
         {
             "package_endpoint_identifier": "colrev.trid",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
+            "status": "RED"
         }
     ],
     "load_conversion": [
@@ -273,6 +277,10 @@
         {
             "package_endpoint_identifier": "colrev.curation_prep",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex_prep",
+            "status": "RED"
         }
     ],
     "prep_man": [

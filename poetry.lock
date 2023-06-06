@@ -2492,6 +2492,25 @@ files = [
 test = ["enum34", "ipaddress", "mock", "pywin32", "wmi"]
 
 [[package]]
+name = "pyalex"
+version = "0.10"
+description = "Python interface to the OpenAlex database"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pyalex-0.10-py3-none-any.whl", hash = "sha256:955b748933fa17d132d63a8b076440afa0beb1b954a9acb4ee69ceaa8a834851"},
+    {file = "pyalex-0.10.tar.gz", hash = "sha256:4fd1ff64d77730280753151399313c64c38eacc76686d95d3301fdccc822f668"},
+]
+
+[package.dependencies]
+requests = "*"
+
+[package.extras]
+lint = ["flake8", "flake8-import-order"]
+test = ["pytest"]
+
+[[package]]
 name = "pybtex"
 version = "0.24.0"
 description = "A BibTeX-compatible bibliography processor in Python"
@@ -4345,4 +4364,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "bb3bde5e8a7610c28c8075db466b35256b5dd26c98eb62be5409a610a7730011"
+content-hash = "f78969c9a14ffae2e73a46e32d861f304e656b8f86117844ee633c1289539fb0"
