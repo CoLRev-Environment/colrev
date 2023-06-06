@@ -80,6 +80,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
 
+        if record.data.get("title", "UNKNOWN") == "UNKNOWN":
+            record.remove_field(key="language")
+            return record
+
         if "language" in record.data:
             if record.data["language"] not in self.languages_to_include:
                 record.prescreen_exclude(
