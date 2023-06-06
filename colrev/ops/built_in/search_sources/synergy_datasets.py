@@ -80,6 +80,13 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager
         )
 
+        # Note: may interfere with concurrency lock from crossref prep?
+        self.__crossref_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier="doi",
+            update_only=False,
+        )
+
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for SYNERGY-datasets"""
@@ -208,31 +215,41 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
         return records
 
+    def __join_crossref_metadata(self, *, record: colrev.record.Record) -> None:
+        if "doi" not in record.data:
+            return
+        retrieved_record = self.crossref_connector.query_doi(
+            doi=record.data["doi"], etiquette=self.__etiquette
+        )
+        record.change_entrytype(
+            new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
+        )
+        for key in [
+            "journal",
+            "booktitle",
+            "volume",
+            "number",
+            "year",
+            "pages",
+            "author",
+            "title",
+        ]:
+            if key in retrieved_record.data:
+                record.data[key] = retrieved_record.data[key]
+
+        self.__crossref_feed.set_id(record_dict=retrieved_record.data)
+        self.__crossref_feed.add_record(record=retrieved_record)
+        self.__crossref_feed.save_feed_file()
+
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
 
-        # TODO : add crossref records to separate (crossref feed) and link to original record
-        # TODO : same for pmid and openalex
-        if "doi" in record.data:
-            retrieved_record = self.crossref_connector.query_doi(
-                doi=record.data["doi"], etiquette=self.__etiquette
-            )
-            record.change_entrytype(
-                new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
-            )
-            for key in [
-                "journal",
-                "booktitle",
-                "volume",
-                "number",
-                "year",
-                "pages",
-                "author",
-                "title",
-            ]:
-                if key in retrieved_record.data:
-                    record.data[key] = retrieved_record.data[key]
+        self.__join_crossref_metadata(record=record)
+        # note: pmid data is already joined.
+        # self.__join_pubmed_metadata(record=record)
+        # for openalex:
+        # https://github.com/J535D165/pyalex
 
         return record
