@@ -27,6 +27,7 @@ import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=too-many-lines
+# pylint: disable=too-many-ancestors
 
 
 # Inspiration for package descriptions:
@@ -67,8 +68,20 @@ class PackageEndpointType(Enum):
 
 
 # pylint: disable=too-few-public-methods
+class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    """The General Interface for all package endpoints
+
+    Each package endpoint must implement the following attributes (methods)"""
+
+    ci_supported = zope.interface.Attribute(
+        """Flag indicating whether the extension can be run in
+        continuous integration environments (e.g. GitHub Actions)"""
+    )
+
+
+# pylint: disable=too-few-public-methods
 class ReviewTypePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for ReviewTypes"""
 
@@ -92,7 +105,7 @@ class SearchSourceHeuristicStatus(Enum):
 
 
 class SearchSourcePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for SearchSources"""
 
@@ -159,7 +172,7 @@ class SearchSourcePackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class LoadConversionPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for loading (different filetypes)"""
 
@@ -175,7 +188,7 @@ class LoadConversionPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep operations"""
 
@@ -196,7 +209,7 @@ class PrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep-man operations"""
 
@@ -211,7 +224,7 @@ class PrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class DedupePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for dedupe operations"""
 
@@ -224,7 +237,7 @@ class DedupePackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrescreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prescreen operations"""
 
@@ -239,7 +252,7 @@ class PrescreenPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get operations"""
 
@@ -253,7 +266,7 @@ class PDFGetPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get-man operations"""
 
@@ -269,7 +282,7 @@ class PDFGetManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep operations"""
 
@@ -288,7 +301,7 @@ class PDFPrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep-man operations"""
 
@@ -304,7 +317,7 @@ class PDFPrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class ScreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for screen operations"""
 
@@ -318,7 +331,7 @@ class ScreenPackageEndpointInterface(
 
 
 class DataPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for data operations"""
 
