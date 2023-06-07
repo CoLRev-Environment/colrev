@@ -200,6 +200,18 @@ class Search(colrev.operation.Operation):
             main_record_dict["year"] = record.data["year"]
             record = colrev.record.PrepRecord(data=main_record_dict)
 
+    def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
+        # Forthcoming paper published if volume and number are assigned
+        # i.e., no longer UNKNOWN
+        if (
+            record_dict.get("volume", "") != "UNKNOWN"
+            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            and record_dict.get("number", "") != "UNKNOWN"
+            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+        ):
+            return True
+        return False
+
     def __update_existing_record_fields(
         self,
         *,
@@ -223,7 +235,7 @@ class Search(colrev.operation.Operation):
             if key in colrev.record.Record.provenance_keys + ["ID"]:
                 continue
 
-            if key not in main_record_dict:
+            if main_record_dict.get(key, "UNKNOWN") == "UNKNOWN":
                 if key in main_record_dict.get("colrev_masterdata_provenance", {}):
                     if (
                         main_record_dict["colrev_masterdata_provenance"][key]["source"]
@@ -322,7 +334,13 @@ class Search(colrev.operation.Operation):
             record_a_orig=record_dict, record_b_orig=prev_record_dict_version
         ):
             changed = True
-            if similarity_score > 0.98:
+            if self.__forthcoming_published(
+                record_dict=record_dict, prev_record=prev_record_dict_version
+            ):
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}forthcoming paper published: {main_record_dict['ID']}{colors.END}"
+                )
+            elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")
             else:
                 self.review_manager.logger.info(
