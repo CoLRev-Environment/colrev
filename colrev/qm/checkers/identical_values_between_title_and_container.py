@@ -31,13 +31,15 @@ class IdenticalValuesChecker:
         if (
             "booktitle" in record.data
             and "title" in record.data
-            and record.data["title"].lower() == record.data["booktitle"].lower()
+            and record.data["title"].lower().replace("the ", "")
+            == record.data["booktitle"].lower().replace("the ", "")
         ):
             return True
         if (
             "journal" in record.data
             and "title" in record.data
-            and record.data["title"].lower() == record.data["journal"].lower()
+            and record.data["title"].lower().replace("the ", "")
+            == record.data["journal"].lower().replace("the ", "")
         ):
             return True
         return False
