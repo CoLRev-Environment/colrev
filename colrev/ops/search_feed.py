@@ -326,6 +326,18 @@ class GeneralOriginFeed:
                     append_edit=False,
                 )
 
+    def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
+        # Forthcoming paper published if volume and number are assigned
+        # i.e., no longer UNKNOWN
+        if (
+            record_dict.get("volume", "") != "UNKNOWN"
+            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            and record_dict.get("number", "") != "UNKNOWN"
+            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+        ):
+            return True
+        return False
+                
     def update_existing_record(
         self,
         *,
@@ -385,7 +397,9 @@ class GeneralOriginFeed:
             record_a_orig=record_dict, record_b_orig=prev_record_dict_version
         ):
             changed = True
-            if similarity_score > 0.98:
+            if self.__forthcoming_published(record_dict=record_dict, prev_record=prev_record_dict_version):
+                self.review_manager.logger.info(f" {colors.GREEN}forthcoming paper published: {main_record_dict['ID']}{colors.END}")
+            elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")
             else:
                 self.review_manager.logger.info(
