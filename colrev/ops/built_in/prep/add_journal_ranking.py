@@ -27,8 +27,15 @@ class AddJournalRanking(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings) 
+    
+    def prepare(
+        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+    ) -> colrev.record.Record:
+        """Add Journalranking to Metadata"""
+        self.add_journal_ranking_to_metadata(record=self)
 
-    def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
+
+    def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord) -> None:
             
         
         journal = record["journal"]
