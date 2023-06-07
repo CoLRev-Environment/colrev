@@ -40,6 +40,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.ieee
    colrev.ops.built_in.search_sources.jstor
    colrev.ops.built_in.search_sources.local_index
+   colrev.ops.built_in.search_sources.open_alex
    colrev.ops.built_in.search_sources.open_citations_forward_search
    colrev.ops.built_in.search_sources.open_library
    colrev.ops.built_in.search_sources.pdf_backward_search
