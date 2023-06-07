@@ -18,8 +18,16 @@ class AddJournalRanking(JsonSchemaMixin):
 
     #wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
     settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = True
-     
+    ci_supported: bool = False
+
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings) 
+
     def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
             
         
