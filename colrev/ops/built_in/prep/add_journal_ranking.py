@@ -16,27 +16,48 @@ import sqlite3
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
 
+    #wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
     settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = True
-     
-    def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord, database) -> None:
-            
-            journal = record["journal"]
-            database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
-            ranking = search_in_database(journal, database)
+    ci_supported: bool = False
 
-            return record
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings) 
+    
+    def prepare(
+        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+    ) -> colrev.record.Record:
+        """Add Journalranking to Metadata"""
+        self.add_journal_ranking_to_metadata(record=self)
+
+
+    def add_journal_ranking_to_metadata(self, record: colrev.record.PrepRecord) -> None:
+            
+        
+        journal = record["journal"]
+        database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
+        self.search_in_database(journal, database)
+
+        record.add_data_provenance_note(
+            key="journal_ranking", 
+            note=self)
+
+        return record
 
     def search_in_database(journal, database) -> str:
-            pointer = database.cursor()
-            pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journal))
-            content = pointer.fetchall()
-            if content is None:
-                return "Not in a ranking"
-            else:
-                for row in content:
-                    return "is ranked"
-            database.close() 
+        pointer = database.cursor()
+        pointer.execute('SELECT * FROM main.Ranking WHERE Name = ?', (journal))
+        content = pointer.fetchall()
+        if content is None:
+            return "Not in a ranking"
+        else:
+            for row in content:
+                return "is ranked"
+        database.close() 
 
 
 if __name__ == "__main__":  
