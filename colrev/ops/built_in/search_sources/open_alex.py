@@ -107,10 +107,15 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         record_dict = {}
         record_dict["openalex_id"] = item["id"].replace("https://openalex.org/", "")
 
-        record_dict["title"] = item.get("title", None)
+        record_dict["title"] = item.get("title", "")
+        if record_dict["title"] is None:
+            del record_dict["title"]
         if item["type"] == "journal-article":
             record_dict["ENTRYTYPE"] = "article"
-            record_dict["journal"] = item["primary_location"]["source"]["display_name"]
+            if item["primary_location"].get("source", None) is not None:
+                record_dict["journal"] = item["primary_location"]["source"][
+                    "display_name"
+                ]
 
         if "publication_year" in item:
             record_dict["year"] = str(item["publication_year"])
@@ -120,7 +125,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         if "is_retracted" in item and item["is_retracted"]:
             record_dict["retracted"] = item["is_retracted"]
 
-        if "doi" in item:
+        if "doi" in item and item["doi"] is not None:
             record_dict["doi"] = item["doi"].upper().replace("HTTPS://DOI.ORG/", "")
 
         record_dict["cited_by"] = item["cited_by_count"]
@@ -142,11 +147,11 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     def __get_masterdata_record(
         self, *, record: colrev.record.Record
     ) -> colrev.record.Record:
-        retrieved_record = self.__parse_item_to_record(
-            item=Works()[record.data["openalex_id"]]
-        )
-
         try:
+            retrieved_record = self.__parse_item_to_record(
+                item=Works()[record.data["openalex_id"]]
+            )
+
             self.open_alex_lock.acquire(timeout=120)
 
             # Note : need to reload file because the object is not shared between processes
@@ -164,6 +169,11 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 default_source=retrieved_record.data["colrev_origin"][0],
             )
             open_alex_feed.save_feed_file()
+        except (
+            colrev_exceptions.InvalidMerge,
+            colrev_exceptions.RecordNotParsableException,
+        ):
+            pass
         finally:
             self.open_alex_lock.release()
 

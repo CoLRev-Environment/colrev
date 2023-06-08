@@ -218,9 +218,16 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def __join_crossref_metadata(self, *, record: colrev.record.Record) -> None:
         if "doi" not in record.data:
             return
-        retrieved_record = self.crossref_connector.query_doi(
-            doi=record.data["doi"], etiquette=self.__etiquette
-        )
+        try:
+            retrieved_record = self.crossref_connector.query_doi(
+                doi=record.data["doi"], etiquette=self.__etiquette
+            )
+        except (
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
+        ):
+            return
+
         record.change_entrytype(
             new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
         )

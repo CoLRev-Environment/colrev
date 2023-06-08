@@ -189,6 +189,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.ConnectTimeout,
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
         ) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
