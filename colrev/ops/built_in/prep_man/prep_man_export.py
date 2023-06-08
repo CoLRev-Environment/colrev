@@ -168,6 +168,8 @@ class ExportManPrep(JsonSchemaMixin):
 
         man_prep_info_df = pd.DataFrame(man_prep_info)
         if platform.system() == "Windows":
+            # until https://github.com/pylint-dev/pylint/issues/3060 is resolved
+            # pylint: disable=abstract-class-instantiated
             with pd.ExcelWriter(self.prep_man_xlsx_path) as writer:
                 man_prep_info_df.to_excel(writer, index=False)
         else:
