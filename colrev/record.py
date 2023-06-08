@@ -62,7 +62,7 @@ class Record:
         "volume",
         "number",
         "pages",
-        "journal_ranking"
+        "journal_ranking",
     ]
     """Keys of identifying fields considered for masterdata provenance"""
 

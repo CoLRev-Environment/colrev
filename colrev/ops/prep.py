@@ -1051,9 +1051,6 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
-    
-
-
     def main(
         self,
         *,
@@ -1092,7 +1089,6 @@ class Prep(colrev.operation.Operation):
                     for item in preparation_data:
                         record = self.prepare(item)
 
-                        
                 else:
                     pool = self.__get_prep_pool(prep_round=prep_round)
                     prepared_records = pool.map(self.prepare, preparation_data)
