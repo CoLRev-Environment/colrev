@@ -22,20 +22,24 @@ data = (                                            # the data we want to use la
 )
 data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
 
-data.pop("ID")
-data.pop("abstract")
-data.pop("fulltext")
-data.pop("booktitle")
-data.pop("month")
-data.pop("publisher")
-data.pop("colrev_status")
-data.pop("colrev_masterdata_provenance")
-data.pop("colrev_origin")
-data.pop("colrev_data_provenance")
-data.pop("ENTRYTYPE")
-data.pop("dblp_key")
-data.pop("doi")
-data.pop("language")
+for title in data:
+    if title != "title" and title != "author" and title != "year" and title != "url":
+        data.pop(title)
+
+#data.pop("ID")
+#data.pop("abstract")
+#data.pop("fulltext")
+#data.pop("booktitle")
+#data.pop("month")
+#data.pop("publisher")
+#data.pop("colrev_status")
+#data.pop("colrev_masterdata_provenance")
+#data.pop("colrev_origin")
+#data.pop("colrev_data_provenance")
+#data.pop("ENTRYTYPE")
+#data.pop("dblp_key")
+#data.pop("doi")
+#data.pop("language")
 
 app = Dash(__name__)                                # initializing the dashboard app
 
