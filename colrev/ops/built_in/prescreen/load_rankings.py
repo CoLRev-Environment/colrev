@@ -27,3 +27,4 @@ def __load_predatory_journals_beall() -> dict():
         data = csv.reader(f,delimiter=',')
         predatory_journals_beall = {rows[6]:rows[7] for rows in data}
     return predatory_journals_beall
+
