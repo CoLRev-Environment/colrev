@@ -649,10 +649,10 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-                if line.lstrip()[:7] == "journal":
+                if line.lstrip()[:8] == "journal ":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
-                if line.lstrip()[:9] == "booktitle":
+                if line.lstrip()[:10] == "booktitle ":
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 
@@ -671,7 +671,7 @@ class Advisor:
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
-                if candidate not in curated_outlets
+                if candidate not in curated_outlets + ["", "UNKNOWN"]
             ]
 
             journals = "\n   - " + "\n   - ".join(
