@@ -72,7 +72,9 @@
             {"package_endpoint_identifier": "colrev.get_masterdata_from_dblp",
              "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep"
             },
-            
+            {"package_endpoint_identifier": "colrev.get_masterdata_from_open_library",
+             "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep"
+            },
             {"package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
              "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep"
             },
