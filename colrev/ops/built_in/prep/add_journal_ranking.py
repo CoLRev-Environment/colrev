@@ -54,5 +54,6 @@ class AddJournalRanking(JsonSchemaMixin):
         else:
             return "is ranked"
 
+
 if __name__ == "__main__":
     pass
