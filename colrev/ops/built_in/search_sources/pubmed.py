@@ -284,6 +284,11 @@ class PubMedSearchSource(JsonSchemaMixin):
         retrieved_record_dict = {
             k: v for k, v in retrieved_record_dict.items() if v != ""
         }
+        if (
+            retrieved_record_dict.get("pii", "pii").lower()
+            == retrieved_record_dict.get("doi", "doi").lower()
+        ):
+            del retrieved_record_dict["pii"]
 
         return retrieved_record_dict
 
