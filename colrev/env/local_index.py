@@ -130,6 +130,16 @@ class LocalIndex:
         self.sqlite_connection.row_factory = self.__dict_factory
         return self.sqlite_connection.cursor()
         # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
+        
+    def __load_journal_rankings(self) -> none:
+        import sqlite3
+        import pandas as pd
+        vRankingsCsv = 'template/ops/journal_rankings.csv' #saves csv in variable
+        conn = sqlite3.connect(self.SQLITE_PATH) #connects to db
+        df = pd.read_csv(vRankingsCsv, encoding = 'cp850') #creates data frame
+        df.to_sql('rankings', conn, if_exists='replace', index=False) #saves csv content in new table
+        conn.commit() #safes changes in database
+        conn.close() #closes database connection
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
