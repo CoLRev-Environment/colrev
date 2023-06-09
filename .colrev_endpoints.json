@@ -89,14 +89,7 @@
             },
             {"package_endpoint_identifier": "colrev.general_polish",
              "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep"
-            },
-            {"package_endpoint_identifier": "colrev.curation_prep",
-            "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep"
-            },
-            {"package_endpoint_identifier": "colrev.add_journal_ranking",
-            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking"
             }
-
 
         ],
         "prep_man": [
