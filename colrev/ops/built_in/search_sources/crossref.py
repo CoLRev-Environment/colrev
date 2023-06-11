@@ -172,8 +172,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def query_doi(cls, *, doi: str, etiquette: Etiquette) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
-        works = Works(etiquette=etiquette)
         try:
+            works = Works(etiquette=etiquette)
             crossref_query_return = works.doi(doi)
             if crossref_query_return is None:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
@@ -189,7 +189,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.ConnectTimeout,
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
         ) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
@@ -534,6 +533,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ) as exc:
             if prep_operation.review_manager.verbose_mode:
                 print(exc)
@@ -566,6 +566,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ):
             pass
 
