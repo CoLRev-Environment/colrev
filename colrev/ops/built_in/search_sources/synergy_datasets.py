@@ -58,34 +58,8 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.crossref_connector = (
-            colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
-                source_operation=source_operation
-            )
-        )
-        self.__etiquette = self.crossref_connector.get_etiquette(
-            review_manager=source_operation.review_manager
-        )
         self.quality_model = source_operation.review_manager.get_qm()
-
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
-
-        self.crossref_connector = (
-            colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
-                source_operation=source_operation
-            )
-        )
-        self.__etiquette = self.crossref_connector.get_etiquette(
-            review_manager=self.review_manager
-        )
-
-        # Note: may interfere with concurrency lock from crossref prep?
-        self.__crossref_feed = self.search_source.get_feed(
-            review_manager=self.review_manager,
-            source_identifier="doi",
-            update_only=False,
-        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -215,48 +189,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
         return records
 
-    def __join_crossref_metadata(self, *, record: colrev.record.Record) -> None:
-        if "doi" not in record.data:
-            return
-        try:
-            retrieved_record = self.crossref_connector.query_doi(
-                doi=record.data["doi"], etiquette=self.__etiquette
-            )
-        except (
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-            colrev_exceptions.RecordNotParsableException,
-        ):
-            return
-
-        record.change_entrytype(
-            new_entrytype=retrieved_record.data["ENTRYTYPE"], qm=self.quality_model
-        )
-        for key in [
-            "journal",
-            "booktitle",
-            "volume",
-            "number",
-            "year",
-            "pages",
-            "author",
-            "title",
-        ]:
-            if key in retrieved_record.data:
-                record.data[key] = retrieved_record.data[key]
-
-        self.__crossref_feed.set_id(record_dict=retrieved_record.data)
-        self.__crossref_feed.add_record(record=retrieved_record)
-        self.__crossref_feed.save_feed_file()
-
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
-
-        self.__join_crossref_metadata(record=record)
-        # note: pmid data is already joined.
-        # self.__join_pubmed_metadata(record=record)
-        # for openalex:
-        # https://github.com/J535D165/pyalex
-
+        if not any(x in record.data for x in ["pmid", "doi", "openalex_id"]):
+            record.prescreen_exclude(reason="no-metadata-available")
         return record

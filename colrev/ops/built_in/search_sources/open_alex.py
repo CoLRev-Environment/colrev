@@ -91,9 +91,13 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     ) -> None:
         """Check status (availability) of the OpenAlex API"""
 
-    def __get_author_from_item(self, *, item: dict) -> str:
+    def __set_author_from_item(self, *, record_dict: dict, item: dict) -> None:
         ret_str = ""
         for author in item["authorships"]:
+            if "author" not in author:
+                continue
+            if author["author"].get("display_name", None) is None:
+                continue
             author_string = colrev.record.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
@@ -101,7 +105,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 ret_str = author_string
             else:
                 ret_str += " and " + author_string
-        return ret_str
+        if ret_str != "":
+            record_dict["author"] = ret_str
 
     def __parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
         record_dict = {}
@@ -112,14 +117,19 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             del record_dict["title"]
         if item["type"] == "journal-article":
             record_dict["ENTRYTYPE"] = "article"
-            if item["primary_location"].get("source", None) is not None:
+            if (
+                item.get("primary_location", None) is not None
+                and item["primary_location"].get("source", None) is not None
+            ):
                 record_dict["journal"] = item["primary_location"]["source"][
                     "display_name"
                 ]
+        else:
+            record_dict["ENTRYTYPE"] = "misc"
 
-        if "publication_year" in item:
+        if "publication_year" in item and item["publication_year"] is not None:
             record_dict["year"] = str(item["publication_year"])
-        if "language" in item:
+        if "language" in item and item["language"] is not None:
             record_dict["language"] = item["language"]
 
         if "is_retracted" in item and item["is_retracted"]:
@@ -130,7 +140,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         record_dict["cited_by"] = item["cited_by_count"]
 
-        if "volume" in item["biblio"]:
+        if "volume" in item["biblio"] and item["biblio"]["volume"] is not None:
             record_dict["volume"] = item["biblio"]["volume"]
         if "issue" in item["biblio"] and item["biblio"]["issue"] is not None:
             record_dict["number"] = item["biblio"]["issue"]
@@ -139,10 +149,19 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         if "last_page" in item["biblio"] and item["biblio"]["last_page"] is not None:
             record_dict["pages"] += "--" + item["biblio"]["last_page"]
 
-        record_dict["author"] = self.__get_author_from_item(item=item)
+        self.__set_author_from_item(record_dict=record_dict, item=item)
         record = colrev.record.Record(data=record_dict)
-        self.language_service.unify_to_iso_639_3_language_codes(record=record)
+
+        self.__fix_errors(record=record)
         return record
+
+    def __fix_errors(self, *, record: colrev.record.Record) -> None:
+        if "PubMed" == record.data.get("journal", ""):
+            record.remove_field(key="journal")
+        try:
+            self.language_service.unify_to_iso_639_3_language_codes(record=record)
+        except colrev_exceptions.InvalidLanguageCodeException:
+            record.remove_field(key="language")
 
     def __get_masterdata_record(
         self, *, record: colrev.record.Record
@@ -174,6 +193,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             colrev_exceptions.RecordNotParsableException,
         ):
             pass
+        except Exception as e:
+            raise e
         finally:
             self.open_alex_lock.release()
 
@@ -187,9 +208,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         timeout: int = 30,
     ) -> colrev.record.Record:
         """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
-
-        # To test the metadata provided for a particular DOI use:
-        # https://api.openalex.org/works/OPEN_ALEX_ID
 
         if "openalex_id" not in record.data:
             # Note: not yet implemented
