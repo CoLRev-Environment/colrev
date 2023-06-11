@@ -897,10 +897,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        if query.startswith("jissn="):
-            query = query.replace("jissn=", "")
+        if query.startswith("issn="):
+            query = query.replace("issn=", "")
             filename = search_operation.get_unique_filename(
-                file_path_string=f"crossref_jissn_{query}"
+                file_path_string=f"crossref_issn_{query}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
