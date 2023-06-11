@@ -132,6 +132,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_synthesized,
                     colrev.record.RecordState.rev_included,
                 ]
+                and record.get("year", "UNKNOWN").isdigit()
             ]
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
