@@ -160,7 +160,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "status": "RED"
+            "status": "EXPERIMENTAL"
         }
     ],
     "load_conversion": [

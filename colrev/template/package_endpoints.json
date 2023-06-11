@@ -197,8 +197,8 @@
         {
             "package_endpoint_identifier": "colrev.open_alex",
             "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
-            "status": "RED",
-            "status_linked": "RED",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
             "short_description": "SearchSource for the OpenAlex API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_alex.md>`_)",
             "ci_supported": true
         },
