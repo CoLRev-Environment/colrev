@@ -215,7 +215,7 @@ class Sync:
         if not self.paper_md.is_file():
             return
 
-        if self.paper_md.read_text().startswith("---"):
+        if self.paper_md.read_text(encoding="utf-8").startswith("---"):
             self.__export_to_bib()
 
         else:
@@ -223,7 +223,7 @@ class Sync:
             self.__append_as_citations()
 
     def __append_as_citations(self) -> None:
-        if "# References" in self.paper_md.read_text():
+        if "# References" in self.paper_md.read_text(encoding="utf-8"):
             print("Already contains a reference section.")
             return
 
