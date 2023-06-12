@@ -20,6 +20,11 @@ jobs:
       - name: Install poetry dependencies
         run: |
           poetry install --with dev || poetry install --with dev || echo "No dev dependency group"
+      - name: Setup git
+        run: |
+          git config --global user.name "CoLRev update"
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run poetry tests (minimal-deps)
         run: poetry run pytest tests/0_core/
 
@@ -41,5 +46,10 @@ jobs:
       - name: Install poetry dependencies
         run: |
           poetry install --with dev || poetry install --with dev || echo "No dev dependency group"
+      - name: Setup git
+        run: |
+          git config --global user.name "CoLRev update"
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run poetry tests
         run: poetry run pytest
