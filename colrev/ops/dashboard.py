@@ -38,16 +38,26 @@ class Dashboard():
 
         app.layout = html.Div(                              # defining th content
             children=[
-                html.Div(children=[html.H1(children="currently synthesized records")]),
-                html.Div(children=[
-                    html.Div(children="sort by ", className="menu-title"),
-                    dcc.Dropdown(
-                        id="sortby",
-                        options=["index","year", "author (alphabetically)"],
-                    )
-                ]),
-                html.Table([html.Tr([html.Td(col) for col in data.columns])] + 
-                [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))])
+                    html.Div(
+                    children=[
+                        html.Img(src="assets/favicon.ico", className="logo"), 
+                        html.H1(children="DASHBOARD", className= "header-title")], className="header"),
+
+                    html.Div(children=[    
+                        html.H1(children="CURRENTLY SYNTHESIZED RECORDS", className="table-header"),
+
+                        html.Div(children=[
+                            html.Div(children="sort by ", className="menu-title"),
+                            dcc.Dropdown(
+                                id="sortby",
+                                options=["index","year", "author (alphabetically)"],
+                            )])
+                             ], className="flexboxtable"),
+                    html.Table(
+                        #[html.Tr(html.Thead([html.Td("URL"),html.Td("Year"),html.Td("Title"),html.Td("Author")]))]+
+                        [html.Tr([html.Th(col) for col in data.columns])] + 
+                        [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
+                        className="styled-table")    
             ])
 
         return app

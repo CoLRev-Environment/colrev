@@ -1,0 +1,74 @@
+:root{
+    --white-background: white;
+}
+body {
+    font-family: "Lato", sans-serif;
+}
+
+
+.header{
+    display: flex;
+    align-items: center;
+    background-color: var(--white-background);
+}
+
+.logo {
+    max-width: 20%;
+}
+
+.header-title {
+
+}
+
+.flexboxtable{
+    display: flex;
+    align-items: center;
+    background-color: var(--white-background);
+}
+
+.dash-dropdown{
+    align-self: right;
+    width: 30%;
+    color:#A4CE4A;
+}
+
+.menu-title{
+}
+
+.table-header{
+    font-size: medium;
+}
+
+
+.styled-table {
+    background-color:var(--white-background);
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+}
+
+.styled-table tr {
+    background-color:--white-background;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 8px 11px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+
+
+
