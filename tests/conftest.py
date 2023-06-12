@@ -102,6 +102,12 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         path_str=str(test_repo_dir), force_mode=True
     )
 
+    review_manager.get_load_operation()
+    git_repo = review_manager.dataset.get_repo()
+    if review_manager.in_ci_environment():
+        git_repo.config_writer().set_value("user", "name", "Tester").release()
+        git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
+
     def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
         bib_files_to_index = test_data_path / Path("local_index")
