@@ -221,6 +221,7 @@ class ReviewManager:
         import colrev.ops.commit
         import colrev.ops.correct
 
+        print("CALLED THIS")
         with open(msg_file, encoding="utf8") as file:
             available_contents = file.read()
 

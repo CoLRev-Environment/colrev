@@ -320,6 +320,16 @@ class Initializer:
         with open("data/records.bib", mode="w", encoding="utf-8") as file:
             file.write("\n")
 
+        # https://stackoverflow.com/questions/12410164/github-for-windows-pre-commit-hook
+        if any(platform.win32_ver()):
+            with open(".git/hooks/pre-commit", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            lines[0] = """#!C:/Program\\ Files/Git/usr/bin/sh.exe\n"""
+
+            with open(".git/hooks/pre-commit", "w", encoding="utf-8") as f:
+                f.writelines(lines)
+
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.git.add(all=True)
 

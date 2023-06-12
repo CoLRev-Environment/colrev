@@ -27,7 +27,10 @@ def test_corrections(  # type: ignore
     base_repo_review_manager.dataset.save_records_dict(records)
 
     # Note: corrections (hooks) are not created with the create_commit methods
-    git.Git(str(base_repo_review_manager.path)).execute(["git", "commit", "-m", "test"])
+    ret = git.Git(str(base_repo_review_manager.path)).execute(
+        ["git", "commit", "-m", "test"]
+    )
+    print(ret)
     base_repo_review_manager.dataset.get_repo().git.log(p=True)
     print(base_repo_review_manager.corrections_path.is_dir())
     print(base_repo_review_manager.dataset.get_repo().head.commit.message)

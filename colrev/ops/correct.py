@@ -170,6 +170,7 @@ class Corrections:
         corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
         filepath = corrections_path / Path(f"{corrected_record['ID']}.json")
         filepath.parent.mkdir(exist_ok=True)
+        print(filepath)
 
         with open(filepath, "w", encoding="utf8") as corrections_file:
             json.dump(dict_to_save, corrections_file, indent=4)
@@ -183,6 +184,7 @@ class Corrections:
         # to test run
         # colrev-hooks-report .report.log
 
+        print("ENTERING")
         if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
             return
 
