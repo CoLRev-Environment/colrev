@@ -277,6 +277,10 @@
         {
             "package_endpoint_identifier": "colrev.curation_prep",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "status": "RED"
         }
     ],
     "prep_man": [

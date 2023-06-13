@@ -367,6 +367,14 @@
     ],
     "prep": [
         {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "AddJournalRanking(*, prep_operation: 'colrev.ops.prep.Prep', settings: 'dict') -> 'None' (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/add_journal_ranking.md>`_)",
+            "ci_supported": false
+        },
+        {
             "package_endpoint_identifier": "colrev.curation_prep",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
             "status": "|EXPERIMENTAL|",
