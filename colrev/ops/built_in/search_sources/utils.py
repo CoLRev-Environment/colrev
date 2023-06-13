@@ -119,7 +119,7 @@ def __format_fields(*, record_dict: dict) -> dict:
         if key == "abstract":
             if value.startswith("Abstract "):
                 value = value[8:]
-        record_dict[key] = value
+        record_dict[key] = value.lstrip().rstrip()
 
     return record_dict
 
