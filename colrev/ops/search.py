@@ -338,7 +338,9 @@ class Search(colrev.operation.Operation):
                 record_dict=record_dict, prev_record=prev_record_dict_version
             ):
                 self.review_manager.logger.info(
-                    f" {colors.GREEN}forthcoming paper published: {main_record_dict['ID']}{colors.END}"
+                    f" {colors.GREEN}"
+                    f"forthcoming paper published: {main_record_dict['ID']}"
+                    f"{colors.END}"
                 )
             elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")

@@ -193,8 +193,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             colrev_exceptions.RecordNotParsableException,
         ):
             pass
-        except Exception as e:
-            raise e
+        except Exception as exc:
+            raise exc
         finally:
             self.open_alex_lock.release()
 
