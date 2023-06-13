@@ -23,6 +23,9 @@ if False:  # pylint: disable=using-constant-test
 class AddJournalRanking(JsonSchemaMixin):
     # wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
     settings_class = colrev.env.package_manager.DefaultSettings
+
+    source_correction_hint = "check with the developer"
+    always_apply_changes = False
     ci_supported: bool = False
 
     def __init__(
@@ -52,7 +55,7 @@ class AddJournalRanking(JsonSchemaMixin):
         ranking = self.search_in_database(journal, database)
         database.close()
         record.add_data_provenance_note(key="journal_ranking", note=ranking)
-        
+
         return record
 
 
