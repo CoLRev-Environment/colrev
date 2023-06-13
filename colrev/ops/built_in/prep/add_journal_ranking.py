@@ -51,7 +51,7 @@ class AddJournalRanking(JsonSchemaMixin):
         """Add Journalranking to Metadata"""
 
         journal = record.data.get("journal")
-        database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
+        database = sqlite3.connect("~/Test/ranking.db")
         ranking = self.search_in_database(journal, database)
         database.close()
         record.add_data_provenance_note(key="journal_ranking", note=ranking)
