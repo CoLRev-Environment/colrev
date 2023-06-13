@@ -12,6 +12,11 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
+if False:  # pylint: disable=using-constant-test
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        import colrev.ops.prep
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
