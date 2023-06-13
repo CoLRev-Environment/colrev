@@ -61,5 +61,3 @@ def main() -> None:
         app.run_server(debug=True)
     except Exception as e: # catching Exception
         print("Fehler:", str(e)) # print error
-
-   
