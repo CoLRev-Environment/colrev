@@ -2072,8 +2072,7 @@ def env(
 
     if index:
         local_index.index()
-        local_index._load_journal_rankings()
-
+        local_index.__load_journal_rankings()
     elif start:
         print("Started.")
 
