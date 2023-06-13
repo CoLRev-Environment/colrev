@@ -23,6 +23,7 @@ colrev.env.utils
       get_template
       inplace_change
       load_complementary_material_keywords
+      load_complementary_material_prefixes
       load_complementary_material_strings
       percent_upper_chars
       remove_accents

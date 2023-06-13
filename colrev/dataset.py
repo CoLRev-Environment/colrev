@@ -973,7 +973,7 @@ class Dataset:
             path = path.relative_to(self.review_manager.path)
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1) # nosec
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         try:
@@ -1045,14 +1045,14 @@ class Dataset:
     def add_record_changes(self) -> None:
         """Add changes in records to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1) # nosec
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
         self.__git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1) # nosec
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
