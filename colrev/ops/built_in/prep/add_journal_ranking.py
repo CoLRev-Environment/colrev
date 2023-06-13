@@ -31,24 +31,7 @@ class AddJournalRanking(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
-
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
-        """Add Journalranking to Metadata"""
-        self.add_journal_ranking_to_metadata(record=self)
-        return record
-
-    def add_journal_ranking_to_metadata(
-        self, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
-        journal = record.data.get("journal")
-        database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
-        ranking = self.search_in_database(journal, database)
-        database.close()
-        record.add_data_provenance_note(key="journal_ranking", note=ranking)
-        return record
+        self.settings = self.settings_class.load_settings(data=settings)        
 
     def search_in_database(self, journal, database) -> str:
         pointer = database.cursor()
@@ -58,6 +41,20 @@ class AddJournalRanking(JsonSchemaMixin):
             return "Not in a ranking"
         else:
             return "is ranked"
+
+    def prepare(
+        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+        ) -> colrev.record.Record:
+        """Add Journalranking to Metadata"""
+
+        journal = record.data.get("journal")
+        database = sqlite3.connect("~/Home/Project/colrev/ranking.db")
+        ranking = self.search_in_database(journal, database)
+        database.close()
+        record.add_data_provenance_note(key="journal_ranking", note=ranking)
+        
+        return record
+
 
 
 if __name__ == "__main__":
