@@ -16,6 +16,7 @@ The following features stand out:
 - Builds on git and its transparent collaboration model for the entire literature review process
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, content curation, and reuse
+- Provides validate and undo operations
 - Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
 Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/dev_status.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
@@ -33,23 +34,19 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # ... and start with the main command
    colrev status
 
-The CoLRev environment provides the following support for the whole literature review process:
-
-- Self-explanatory workflow (colrev status)
-- Git-based collaborative versioning
-- Validate and undo operations
-- Extensible platform
+The CoLRev environment supports for the whole literature review process:
 
 .. figure:: ../figures/figure-docs.png
    :width: 600
    :align: center
    :alt: Workflow cycle
 
+
 Completing a literature review should be as simple as running the following commands:
 
 .. code-block::
 
-   # Initialize the project, formulate the objectives, specify the review type
+   # Formulate the objectives, initialize the project, specify the review type
    colrev init
 
    # Store search results in the data/search directory
