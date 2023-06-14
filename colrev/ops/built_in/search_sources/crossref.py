@@ -364,7 +364,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         ):
             return []
 
-        return data["message"]["items"]
+        return data["message"].get("items", [])
 
     def crossref_query(
         self,
