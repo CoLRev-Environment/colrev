@@ -142,6 +142,16 @@ class LocalIndex:
         conn.commit()  # safes changes in database
         conn.close()  # closes database connection
 
+    def search_in_database(self, journal) -> str:
+        connection = sqlite3.connect(self.SQLITE_PATH)
+        cur = self.sqlite_connection.cursor()
+        cur.execute("SELECT * FROM main.Ranking WHERE Name = ?", (journal))
+        content = cur.fetchall()
+        if content is None:
+            return "Not in a ranking"
+        else:
+            return "is ranked"
+
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
         for idx, col in enumerate(cursor.description):
