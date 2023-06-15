@@ -18,6 +18,7 @@ if False:  # pylint: disable=using-constant-test
     if TYPE_CHECKING:
         import colrev.ops.prep
 
+
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
@@ -34,7 +35,7 @@ class AddJournalRanking(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)        
+        self.settings = self.settings_class.load_settings(data=settings)
 
     def search_in_database(self, journal, database) -> str:
         pointer = database.cursor()
@@ -47,17 +48,21 @@ class AddJournalRanking(JsonSchemaMixin):
 
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-        ) -> colrev.record.Record:
+    ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""
 
-        journal = record.data.get("journal")
-        database = sqlite3.connect("~/Test/ranking.db")
-        ranking = self.search_in_database(journal, database)
-        database.close()
-        record.add_data_provenance_note(key="journal_ranking", note=ranking)
+        """variable to compare journals in metadata with the rankings in the sqlite_database"""
+        journal = record.data["journal"]
+
+        """local variable for testing only"""
+        ranking = "is in ranking"
+
+        """adds the ranking to record.data as well as masterdata_provenence"""
+        record.update_field(
+            key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
+        )
 
         return record
-
 
 
 if __name__ == "__main__":
