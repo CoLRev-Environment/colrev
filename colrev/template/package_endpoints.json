@@ -365,6 +365,14 @@
             "ci_supported": false
         },
         {
+            "package_endpoint_identifier": "colrev.rispy",
+            "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "Loads BibTeX files (based on rispy) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/ris_rispy_loader.md>`_)",
+            "ci_supported": true
+        },
+        {
             "package_endpoint_identifier": "colrev.zotero_translate",
             "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
             "status": "|MATURING|",

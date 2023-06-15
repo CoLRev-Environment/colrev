@@ -76,6 +76,7 @@ asreview = "^1.2"
 requests-mock = "^1.10.0"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
 pyalex = "^0.10"
+rispy = "^0.7.1"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"
