@@ -69,6 +69,12 @@ import colrev.settings
             ),
             Path("pdfs_dir_result.bib"),
         ),
+        (
+            Path("lorem_ipsum.ris"),
+            "colrev.unknown_source",
+            None,
+            Path("lorem_ipsum_result.bib"),
+        ),
     ],
 )
 def test_source(  # type: ignore

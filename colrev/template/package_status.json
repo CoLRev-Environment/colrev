@@ -187,6 +187,10 @@
         {
             "package_endpoint_identifier": "colrev.bibutils",
             "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev.rispy",
+            "status": "RED"
         }
     ],
     "prep": [
