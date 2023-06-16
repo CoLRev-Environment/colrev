@@ -367,8 +367,8 @@
         {
             "package_endpoint_identifier": "colrev.rispy",
             "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader",
-            "status": "RED",
-            "status_linked": "RED",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
             "short_description": "Loads BibTeX files (based on rispy) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/ris_rispy_loader.md>`_)",
             "ci_supported": true
         },
