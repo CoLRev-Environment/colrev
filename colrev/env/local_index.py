@@ -150,9 +150,9 @@ class LocalIndex:
         cur.execute("SELECT * FROM rankings WHERE journal_name = ?", (journal))
         content = cur.fetchall()
         if content is None:
-            return "Not in a ranking"
+            return "Journal is not included in any ranking"
         else:
-            return "is ranked"
+            return "Journal is ranked"
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
