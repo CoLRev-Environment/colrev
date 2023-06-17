@@ -371,6 +371,17 @@ class ImportException(CoLRevException):
         super().__init__(self.message)
 
 
+class SourceHeuristicsException(CoLRevException):
+    """An error occured in the SearchSource heuristics."""
+
+    def __init__(
+        self,
+        msg: str,
+    ) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class UnsupportedImportFormatError(CoLRevException):
     """The file format is not supported."""
 
@@ -380,8 +391,7 @@ class UnsupportedImportFormatError(CoLRevException):
     ) -> None:
         self.import_path = import_path
         self.message = (
-            "Format of search result file not (yet) supported "
-            + f"({self.import_path.name}) "
+            f"Format of SearchSource file not supported ({self.import_path.name}) "
         )
         super().__init__(self.message)
 
