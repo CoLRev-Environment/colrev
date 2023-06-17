@@ -132,10 +132,11 @@ class LocalIndex:
         return self.sqlite_connection.cursor()
         # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
 
-    def __load_journal_rankings(self) -> None:
-        vRankingsCsv = "template/ops/journal_rankings.csv"  # saves csv in variable
+    def load_journal_rankings(self) -> None:
+        vpath = Path("/home/ubuntu/Git Repository/colrev/colrev/template/ops/journal_rankings.csv") #For test purposes use relative part on your machine
+        # for integration use the following string "/home/ubuntu/colrev/colrev/template/ops/journal_rankings.csv" or Path.home().joinpath("colrev") / colrev/template/ops/journal_rankings.csv
         conn = sqlite3.connect(self.SQLITE_PATH)  # connects to db
-        df = pd.read_csv(vRankingsCsv, encoding="cp850")  # creates data frame
+        df = pd.read_csv(vpath, encoding="cp850")  # creates data frame
         df.to_sql(
             "rankings", conn, if_exists="replace", index=False
         )  # saves csv content in new table
