@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+import colrev.ops.built_in.search_sources.local_index as local_index_connector
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -36,6 +37,9 @@ class AddJournalRanking(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.local_index_source = local_index_connector.LocalIndexSearchSource(
+            source_operation=prep_operation
+        )
 
     def search_in_database(self, journal, database) -> str:
         pointer = database.cursor()
