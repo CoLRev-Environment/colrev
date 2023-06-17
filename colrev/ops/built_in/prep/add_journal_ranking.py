@@ -2,13 +2,13 @@
 """adds journal rankings to metadata"""
 from __future__ import annotations
 
-import sqlite3
 from dataclasses import dataclass
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -37,14 +37,9 @@ class AddJournalRanking(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-    def search_in_database(self, journal, database) -> str:
-        pointer = database.cursor()
-        pointer.execute("SELECT * FROM main.Ranking WHERE Name = ?", (journal))
-        content = pointer.fetchall()
-        if content is None:
-            return "Not in a ranking"
-        else:
-            return "is ranked"
+        self.local_index_source = local_index_connector.LocalIndexSearchSource(
+            source_operation=prep_operation
+        )
 
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
