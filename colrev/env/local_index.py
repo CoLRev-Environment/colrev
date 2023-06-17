@@ -143,9 +143,8 @@ class LocalIndex:
         conn.close()  # closes database connection
 
     def search_in_database(self, journal) -> str:
-        connection = sqlite3.connect(self.SQLITE_PATH)
-        cur = self.sqlite_connection.cursor()
-        cur.execute("SELECT * FROM main.Ranking WHERE Name = ?", (journal))
+        cur = self.__get_sqlite_cursor(init=False)
+        cur.execute("SELECT * FROM rankings WHERE journal_name = ?", (journal))
         content = cur.fetchall()
         if content is None:
             return "Not in a ranking"
